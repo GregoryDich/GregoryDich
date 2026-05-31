@@ -1,0 +1,62 @@
+{
+  "name": "Jarvis Notify Outbound",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "jarvis-notify",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "notify-webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"{{ $json.body.chat_id }}\",\n  \"text\": {{ JSON.stringify($json.body.text) }},\n  \"parse_mode\": \"{{ $json.body.parse_mode || 'HTML' }}\"\n}",
+        "options": {}
+      },
+      "id": "send-telegram",
+      "name": "Send Telegram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nreturn [{ json: { ok: resp.ok, message_id: resp.result?.message_id } }];"
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{ "node": "Send Telegram", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send Telegram": {
+      "main": [
+        [{ "node": "Format Response", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [{ "name": "jarvis" }],
+  "triggerCount": 1,
+  "active": false
+}

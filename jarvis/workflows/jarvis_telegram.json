@@ -1,0 +1,237 @@
+{
+  "name": "Jarvis Telegram Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "jarvis-telegram",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": false },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.message.text }}",
+                    "rightValue": "/ping",
+                    "operator": { "type": "string", "operation": "startsWith" }
+                  }
+                ]
+              },
+              "renameOutput": "ping"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.message.text }}",
+                    "rightValue": "/status",
+                    "operator": { "type": "string", "operation": "startsWith" }
+                  }
+                ]
+              },
+              "renameOutput": "status"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.message.text }}",
+                    "rightValue": "/help",
+                    "operator": { "type": "string", "operation": "startsWith" }
+                  }
+                ]
+              },
+              "renameOutput": "help"
+            }
+          ],
+          "fallbackOutput": {
+            "renameOutput": "unknown"
+          }
+        }
+      },
+      "id": "switch-command",
+      "name": "Route Command",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "chat_id", "value": "={{ $('Webhook').item.json.body.message.chat.id }}" },
+            { "name": "text", "value": "=pong 🏓 {{ new Date().toISOString() }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "reply-ping",
+      "name": "Reply Ping",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 140]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT metric, value, status, checked_at FROM v_fitscan_current ORDER BY metric;",
+        "options": {}
+      },
+      "id": "query-status",
+      "name": "Query FitScan",
+      "type": "n8n-nodes-base.sqlite",
+      "typeVersion": 1,
+      "position": [700, 300],
+      "credentials": {
+        "sqlite": { "id": "SQLITE_CREDENTIAL_ID", "name": "Jarvis State DB" }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json);\nif (rows.length === 0) {\n  return [{ json: { text: '📊 FitScan: нет данных. Collector ещё не запускался.' } }];\n}\nconst icons = { ok: '✅', warn: '⚠️', error: '❌', unknown: '❓' };\nconst lines = rows.map(r => `${icons[r.status] || '❓'} ${r.metric}: ${r.value} (${r.checked_at})`);\nconst text = `📊 FitScan Status:\\n\\n${lines.join('\\n')}`;\nreturn [{ json: { text } }];"
+      },
+      "id": "format-status",
+      "name": "Format Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "chat_id", "value": "={{ $('Webhook').item.json.body.message.chat.id }}" },
+            { "name": "text", "value": "={{ $json.text }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "send-status",
+      "name": "Send Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1140, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "chat_id", "value": "={{ $('Webhook').item.json.body.message.chat.id }}" },
+            { "name": "text", "value": "🤖 Jarvis Commands:\n\n/ping — проверка связи\n/status — статус FitScan\n/help — эта справка" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "reply-help",
+      "name": "Reply Help",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 460]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "chat_id", "value": "={{ $('Webhook').item.json.body.message.chat.id }}" },
+            { "name": "text", "value": "❓ Неизвестная команда. /help для списка." }
+          ]
+        },
+        "options": {}
+      },
+      "id": "reply-unknown",
+      "name": "Reply Unknown",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 600]
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {}
+      },
+      "id": "respond-ok",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1360, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{ "node": "Route Command", "type": "main", "index": 0 }]
+      ]
+    },
+    "Route Command": {
+      "main": [
+        [{ "node": "Reply Ping", "type": "main", "index": 0 }],
+        [{ "node": "Query FitScan", "type": "main", "index": 0 }],
+        [{ "node": "Reply Help", "type": "main", "index": 0 }],
+        [{ "node": "Reply Unknown", "type": "main", "index": 0 }]
+      ]
+    },
+    "Reply Ping": {
+      "main": [
+        [{ "node": "Respond OK", "type": "main", "index": 0 }]
+      ]
+    },
+    "Query FitScan": {
+      "main": [
+        [{ "node": "Format Status", "type": "main", "index": 0 }]
+      ]
+    },
+    "Format Status": {
+      "main": [
+        [{ "node": "Send Status", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send Status": {
+      "main": [
+        [{ "node": "Respond OK", "type": "main", "index": 0 }]
+      ]
+    },
+    "Reply Help": {
+      "main": [
+        [{ "node": "Respond OK", "type": "main", "index": 0 }]
+      ]
+    },
+    "Reply Unknown": {
+      "main": [
+        [{ "node": "Respond OK", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [{ "name": "jarvis" }],
+  "triggerCount": 1,
+  "active": false
+}
