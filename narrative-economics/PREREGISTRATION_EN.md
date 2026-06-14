@@ -48,7 +48,7 @@ We will not access outcome data until this plan is locked.
 
 *Creation narrative (X+).* Same pipeline applied to a second lexical channel: "AI side hustle," "vibe coding," "AI democratizes," and related phrases. Comparing R₀(X−) to R₀(X+) directly tests H6.
 
-*Creation benchmark.* Census Business Formation Statistics (new business applications), Lightcast and Indeed postings for AI-adjacent roles, creator-economy proxies (Steam, GitHub new repos, Hugging Face uploads, App Store), and Upwork/Fiverr AI-service listings (extending Hui 2024). We use these to show where the creation narrative departs from the creation reality — we are not attributing job creation to AI causally.
+*Creation benchmark.* Census Business Formation Statistics (new business applications), Lightcast and Indeed postings for AI-adjacent roles, creator-economy proxies (Steam, GitHub new repos, Hugging Face uploads, App Store), and Upwork/Fiverr AI-service listings (extending Hui, Reshef, and Zhou 2024). We use these to show where the creation narrative departs from the creation reality — we are not attributing job creation to AI causally.
 
 *Behavioral outcomes (Y).* Revelio Labs occupation-transition flows (career pivots into fields less exposed to AI) and course-enrollment proxies. The narrative data (X) and behavioral data (Y) come from physically separate sources, which is important for ruling out mechanical correlation.
 
