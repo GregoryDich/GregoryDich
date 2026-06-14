@@ -1,17 +1,50 @@
-# Narrative Economics — исследовательский проект
+# Narrative Economics — Research Project
 
-Партнёрство **G.D. (PI, Тель-Авив) + AI-соавтор**. Цель — основать измеримую, фальсифицируемую версию нарративной экономики (открытая дверь Шиллера) и довести её до публикации.
+Partnership **G.D. (PI, Tel Aviv) + AI co-investigator**. Goal: build a measurable, falsifiable version of narrative economics (Shiller's open door) and bring it to publication.
 
-**Тезис в одну строку:** нарратив «ИИ заберёт работу» причинно сдвинул поведение людей раньше, чем ИИ сдвинул производительность; заразность истории (R₀) измерима из текста и предсказывает размер реального следа.
+**One-line thesis:** The "AI will take your job" narrative causally shifted labor-market behavior before AI shifted productivity; story contagiousness (R₀) is measurable from text and predicts the size of the real-world footprint.
 
-## Файлы
-- **`ROADMAP.md`** — живой монитор: дашборд, стек процессов, реестр рисков, лог решений, очередь действий.
-- **`PREREGISTRATION.md`** — пред-анализ-план (H1–H5) под OSF.
-- **`NARRATIVE_SHOCKS_REGISTRY.md`** — хронологический каталог нарративных шоков (2022–2026).
-- **`DEEP_ANALYSIS.md`** — глубокий анализ: ландшафт конкурентов, состязательная рецензия 4 судей, синергии улучшений.
+## Project Documents
+- **`ROADMAP.md`** — live monitor: dashboard, process stack, risk register, decision log, action queue.
+- **`PREREGISTRATION.md`** — pre-analysis plan (H1–H6) for OSF (Russian working version).
+- **`PREREGISTRATION_EN.md`** — English version ready for OSF upload.
+- **`NARRATIVE_SHOCKS_REGISTRY.md`** — chronological catalog of narrative shocks (2022–2026).
+- **`DEEP_ANALYSIS.md`** — competitor landscape, adversarial review by 4 judges, synergies.
 
-- **`DEEP_ANALYSIS.md`** — ландшафт конкурентов, рецензия 4 судей, синергии.
-- **`code/`** — рабочий пайплайн: Hawkes-движок, симулятор конкурирующих нарративов, оценка R₀, кривые заражения (`build_poc.py`). GDELT-клиент wired (нужен egress-allowlist).
+## Code Pipeline (`code/`)
 
-## Где мы сейчас
-~8% по шкале. PoC Hawkes-движка построен и прогнан (Рис. 1–2 в `code/figures/`); прибор воспроизводит H6 на симуляции. Фаза 1 автономна. Следующий шаг: shock-aware baseline μ(t) для де-смещения + залочить пред-регистрацию.
+Full analysis pipeline validated on simulated data. Run `python run_all.py` — ALL 5 CHECKS PASS.
+
+| Module | File | What it validates |
+|--------|------|-------------------|
+| Hawkes R₀ | `hawkes.py`, `build_poc.py` | Shock-aware MLE recovers true branching ratio (bias 1%) |
+| DiD | `did_simulate.py` | TWFE recovers true β (bias 1.1%), flat pre-trends |
+| LP-IRF | `local_projection.py` | Behavior responds to narrative BEFORE productivity (H1) |
+| Placebo | `placebo_test.py` | Fictitious shocks yield null (p=0.000) |
+| Exposure | `exposure_scores.py` | 26 key occupations with Eloundou GPT-α scores |
+| Simulation | `simulate.py` | Two competing narratives with known R₀ |
+| Growth proxy | `growth.py` | Exponential-growth R₀ from early take-off |
+| GDELT | `gdelt_client.py` | Wired, needs egress allowlist |
+| Master | `run_all.py` | Orchestrates all modules, unified report |
+
+### Figures (generated)
+- `fig1_infection_curves.png` — competing narrative intensity over time
+- `fig2_branching_ratios.png` — naive vs shock-aware Hawkes comparison
+- `fig3_shock_baseline.png` — estimated time-varying baseline μ(t)
+- `fig4_event_study.png` — DiD event study with flat pre-trends
+- `fig5_lp_irf.png` — LP-IRF showing narrative → behavior → productivity ordering
+- `fig6_placebo.png` — placebo distribution vs real effect
+
+### Quick Start
+```bash
+cd code
+pip install -r requirements.txt
+python run_all.py          # full pipeline (~11s)
+python build_poc.py        # Hawkes only (with figures)
+python did_simulate.py     # DiD only
+python local_projection.py # LP-IRF only
+python placebo_test.py     # placebo only
+```
+
+## Current Status
+~12% on the scale. Full analysis pipeline validated on simulation (ALL CHECKS PASS). Pre-registration (EN) ready for OSF. Phase 1 autonomous. **Next blockers:** real data (GDELT egress / Revelio / YouTube transcripts) + lock pre-registration on OSF.
