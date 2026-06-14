@@ -11,6 +11,8 @@
     background: radial-gradient(120% 90% at 50% 0%, #5cb6e0 0%, #2a86bd 30%, #18639b 65%, #0c4a78 100%);
   }
   #tank { display: block; width: 100vw; height: 100vh; cursor: default; }
+  /* 3D-рыбы рисуются прозрачным слоем поверх 2D-рифа */
+  #fish3d { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 5; }
   body.hide-cursor #tank { cursor: none; }
   #hint {
     position: fixed; left: 18px; bottom: 16px; margin: 0; padding: 9px 14px;
@@ -29,12 +31,16 @@
 </head>
 <body>
   <canvas id="tank"></canvas>
+  <canvas id="fish3d"></canvas>
   <p id="hint">
     <b>F</b> — на весь экран&nbsp;&nbsp;·&nbsp;&nbsp;<b>Пробел</b> — пауза&nbsp;&nbsp;·&nbsp;&nbsp;<b>Клик</b> — покормить&nbsp;&nbsp;·&nbsp;&nbsp;<b>+ / −</b> — рыбок
   </p>
 
 <!-- Список рыб (имена/описания/картинки). Если файла нет — рисуются векторные рыбки. -->
 <script src="fish/manifest.js"></script>
+<!-- 3D-рыбы (Three.js). Если WebGL недоступен — остаются 2D-рыбки ниже. -->
+<script src="lib/three.bundle.js"></script>
+<script src="fish3d.js"></script>
 <script>
 "use strict";
 /* ============================================================
@@ -61,7 +67,7 @@
   const PARAMS = new URLSearchParams(location.search);
   const WALLPAPER = PARAMS.has("wallpaper") || window.__WALLPAPER === true;
   let POWER = "high";
-  window.aquariumSetPower = (m) => { POWER = (m === "low" || m === "paused") ? m : "high"; };
+  window.aquariumSetPower = (m) => { POWER = (m === "low" || m === "paused") ? m : "high"; window.__AQ_POWER = POWER; };
 
   /* ---------- math / color helpers ---------- */
   const rand = (a, b) => a + Math.random() * (b - a);
@@ -927,7 +933,7 @@
     const t = now / 1000;
 
     if (!paused) {
-      for (const f of fishes) updateFish(f, dt, t);
+      if (!window.__FISH3D) for (const f of fishes) updateFish(f, dt, t);
       bubbleTimer -= dt;
       if (bubbleTimer <= 0) { bubbles.push(makeBubble()); bubbleTimer = rand(0.12, 0.4); }
       // непрерывный вертикальный поток пузырьков из одной точки рифа
@@ -945,7 +951,7 @@
     // ---- render ----
     if (bgReady) {
       drawCover(bgImg);
-      drawRays(t);
+      // фотофон уже содержит свет/лучи — поверх только живые пузырьки и рыбы
     } else {
       drawWater();
       drawSurface(t);
@@ -958,8 +964,10 @@
       drawReef(t);
     }
 
-    fishes.sort((a, b) => a.depth - b.depth);
-    for (const f of fishes) drawFish(f, t);
+    if (!window.__FISH3D) {
+      fishes.sort((a, b) => a.depth - b.depth);
+      for (const f of fishes) drawFish(f, t);
+    }
     for (const p of pellets) drawPellet(p);
     for (const b of bubbles) drawBubble(b);
     drawVignette();
