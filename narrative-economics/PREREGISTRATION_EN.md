@@ -1,162 +1,154 @@
-# PRE-ANALYSIS PLAN
+# Pre-Analysis Plan
 
-**Title:** Competing Narratives of Creative Destruction: Why the AI-Displacement Story Outran Both the Opportunity Story and the Facts
+**Competing Narratives of Creative Destruction: Why the AI-Displacement Story Outran Both the Opportunity Story and the Facts**
 
-**Authors:** G. D. (Tel Aviv, independent researcher); AI co-investigator
-**Status:** Pre-analysis plan, registered prior to data access and prior to any estimation on outcome data.
-**Registry:** OSF Registries (Part A — observational) + AEA RCT Registry (Part B — experiment, Phase 2).
+G. Dichenko (Tel Aviv)
 
----
-
-## 0. Hypothesis Map
-
-**Framework:** Two competing narratives about AI-driven creative destruction coexist — a **destruction narrative** ("AI will take your job") and a **creation narrative** ("AI gives new opportunity"). This paper provides the first empirical test of the competing-narratives model (Eliaz & Spiegler, 2020, AER) in a macroeconomic labor-market setting. The creation side is measured as a **reality benchmark**, NOT as a causal net-employment accounting exercise (see scope limitation in A.2).
-
-- **H1 (co-primary):** The intensity of the destruction narrative causally precedes labor-market behavioral shifts — before any measurable effect of AI on productivity. *The narrative leads the fundamental.*
-- **H2 (secondary):** The narrative's R₀ (branching ratio) predicts the magnitude of the behavioral response.
-- **H3 (secondary):** The effect is concentrated in high-AI-exposure occupations (dose-response).
-- **H4 (Phase 2, RCT):** Random exposure to the narrative causally shifts incentivized behavior.
-- **H5 (secondary):** Contagion follows epidemic dynamics (Hawkes/SIR); narrative burnout predicts mean-reversion of behavior.
-- **H6 (co-primary, valence asymmetry):** The negative narrative (destruction) has a higher R₀ and greater behavioral elasticity than the positive narrative (creation), even controlling for objective creation indicators. *Bad news is more contagious than good; the dominant narrative is selected by virality, not accuracy.*
-
-**Primary tests:** H1 and H6 (Bonferroni-corrected, α = 0.025 each). Secondary family (H2, H3, H5): Romano-Wolf FWER control.
+Registered prior to accessing outcome data or running any estimation. Part A (observational) filed on OSF; Part B (experiment) to be filed on AEA RCT Registry upon IRB approval.
 
 ---
 
-## PART A. Quasi-Experiment: Pre-Analysis Plan (OSF)
+## Hypotheses
 
-### A.1. Design
+The starting observation is that two narratives about AI and work compete for attention: one about destruction ("AI will take your job") and one about creation ("AI opens new doors"). Eliaz and Spiegler (2020, AER) formalized how competing narratives shape beliefs; we test their model empirically in a labor-market setting. The creation narrative serves as a factual benchmark — we measure it to show that the destruction story dominates attention disproportionately to underlying reality, not to do net-employment accounting (that is Acemoglu and Autor territory, and we stay out of it).
 
-Difference-in-differences with continuous treatment intensity. Treatment: occupation-level AI exposure. Shock: surge in destruction-narrative intensity following the ChatGPT launch (November 30, 2022) and subsequent media peaks (GPT-4, Goldman report, WGA strike, etc.). Outcome data will not be accessed until this plan is locked.
+**H1 (co-primary).** The destruction narrative causally precedes labor-market behavioral shifts, arriving before any measurable AI effect on productivity.
 
-- **Sample period:** January 2022 — March 2026 (pre-treatment: Jan–Nov 2022; post-treatment: Dec 2022 — Mar 2026).
-- **Unit of observation:** occupation (SOC 6-digit) × week.
-- **Treatment onset:** week of November 28, 2022 (ChatGPT public launch).
-- **Minimum sample:** ≥ 50 SOC codes with valid exposure scores and behavioral outcome data.
+**H2.** A narrative's estimated R₀ (Hawkes branching ratio) predicts the magnitude of the subsequent behavioral response across occupations.
 
-### A.2. Data
+**H3.** The effect concentrates in high-AI-exposure occupations (dose-response).
 
-**Narrative — Destruction (X−):**
-YouTube auto-transcripts (Data API v3), Reddit archives (Arctic Shift), GDELT Global Knowledge Graph, Google Trends. Weekly index of "AI × occupation" narrative intensity via co-occurrence + LLM context classification. Validation: human-coded subsample (≥ 1,000 fragments, ≥ 2 coders, inter-rater κ ≥ 0.70).
+**H4 (Phase 2).** Randomly showing subjects the destruction narrative shifts their incentivized career-investment decisions.
 
-**Narrative — Creation (X+):**
-Same pipeline, second channel: "AI side hustle / vibe coding / AI democratizes access / build with AI." Comparison of R₀(X−) vs R₀(X+) tests H6.
+**H5.** Narrative contagion follows epidemic dynamics; the burnout phase predicts mean-reversion in behavior.
 
-**Creation reality benchmark (NOT causal):**
-Census Business Formation Statistics (new business applications); Lightcast/Indeed (new AI-adjacent roles); creator proxies (Steam, itch.io, GitHub new repos, Hugging Face model uploads, App/Play Store); Upwork/Fiverr "AI services" listings (extends Hui 2024); Autor "new work" taxonomy.
+**H6 (co-primary).** The destruction narrative has a higher R₀ and a larger behavioral elasticity than the creation narrative, controlling for objective creation indicators. The dominant story is selected by contagiousness, not by accuracy.
 
-> **SCOPE LIMITATION:** The creation side is used AS A BENCHMARK against which narrative distortion is visible. We do NOT causally attribute job creation to AI and do NOT claim net-employment accounting. That is the domain of Acemoglu/Autor/central banks. Our causal claim is about the narrative, not about net employment.
+H1 and H6 are tested at α = 0.025 each (Bonferroni for two co-primaries). H2, H3, H5 form a secondary family under Romano-Wolf step-down control at 5%.
 
-**Behavioral outcomes (Y):**
-Revelio Labs (occupation transitions, career pivots into "AI-safe" fields); course enrollment proxies. Narrative source (X) and outcome source (Y) are **physically distinct datasets** — by design.
+---
 
-**Exposure scores:**
-Eloundou et al. (2023) GPT-exposure α (primary); Felten AIOE, Webb patent-based AI exposure (robustness).
+## Part A — Observational Study (OSF)
 
-**Fundamental (lags behavior per H1):**
-Industry/task-level AI productivity proxies.
+### A.1 Design
 
-### A.3. Specification
+Difference-in-differences with continuous treatment. The treatment variable is occupation-level AI exposure; the shock is the surge in destruction-narrative intensity after the ChatGPT launch on November 30, 2022, and the media peaks that followed (GPT-4, the Goldman "300 million jobs" report, the WGA strike, and others documented in our narrative-shocks registry).
 
-**Primary estimating equation (TWFE):**
+We will not access outcome data until this plan is locked.
+
+- Sample period: January 2022 through March 2026.
+- Pre-treatment window: January–November 2022.
+- Unit of observation: occupation (6-digit SOC) by week.
+- Treatment onset: week of November 28, 2022.
+- We require at least 50 SOC codes with valid exposure scores and behavioral data.
+
+### A.2 Data
+
+*Destruction narrative (X−).* Weekly intensity index constructed from YouTube auto-transcripts (Data API v3), Reddit archives (Arctic Shift), the GDELT Global Knowledge Graph, and Google Trends. Each text fragment is classified for AI-occupation co-occurrence using both a keyword dictionary and an LLM classifier. Validation requires a human-coded subsample of at least 1,000 fragments with two independent coders reaching κ ≥ 0.70.
+
+*Creation narrative (X+).* Same pipeline applied to a second lexical channel: "AI side hustle," "vibe coding," "AI democratizes," and related phrases. Comparing R₀(X−) to R₀(X+) directly tests H6.
+
+*Creation benchmark.* Census Business Formation Statistics (new business applications), Lightcast and Indeed postings for AI-adjacent roles, creator-economy proxies (Steam, GitHub new repos, Hugging Face uploads, App Store), and Upwork/Fiverr AI-service listings (extending Hui 2024). We use these to show where the creation narrative departs from the creation reality — we are not attributing job creation to AI causally.
+
+*Behavioral outcomes (Y).* Revelio Labs occupation-transition flows (career pivots into fields less exposed to AI) and course-enrollment proxies. The narrative data (X) and behavioral data (Y) come from physically separate sources, which is important for ruling out mechanical correlation.
+
+*Exposure.* Eloundou et al. (2023) GPT-exposure scores as the primary measure. Felten AIOE and Webb patent-based scores for robustness.
+
+*Productivity fundamental.* Industry- and task-level proxies of actual AI-driven productivity gains. Under H1 these should lag both the narrative and the behavioral response.
+
+### A.3 Specification
+
+The primary estimating equation is a two-way fixed-effects model:
 
     Y_it = α_i + γ_t + β · Exposure_i · NarrativeIntensity_t + X'_it δ + ε_it
 
-Where:
-- Y_it: behavioral outcome for occupation i at week t
-- α_i, γ_t: occupation and time fixed effects
-- Exposure_i: Eloundou GPT-exposure score (continuous, 0–1)
-- NarrativeIntensity_t: weekly destruction-narrative index
-- X_it: controls (region FE where available)
-- β: causal parameter of interest (H1: β > 0)
+with occupation fixed effects α_i, week fixed effects γ_t, the Eloundou exposure score interacted with the weekly narrative index, and optional regional controls. β is the parameter of interest; under H1 it should be positive.
 
-**Event-study form:**
+The event-study version replaces the continuous narrative interaction with binned relative-time dummies:
 
     Y_it = α_i + γ_t + Σ_k β_k · Exposure_i · 1(t ∈ bin_k) + ε_it
 
-Reference period: last 8 weeks before ChatGPT launch (weeks −8 to −1 relative to treatment).
+The omitted category is weeks −8 to −1 relative to the ChatGPT launch. We use 8-week bins.
 
-- Two-way fixed effects (occupation, time) + region where available.
-- **Primary estimator:** Callaway & Sant'Anna (2021) for heterogeneous/staggered treatment; TWFE for comparability only.
-- **Pre-trend test (falsification):** Joint F-statistic on all β_k for k < 0 must not reject H₀ at the 10% level. Rejection invalidates the design.
-- Clustering at occupation level; wild-cluster bootstrap when the number of clusters is small (< 50).
+The primary estimator is Callaway and Sant'Anna (2021), which handles heterogeneous treatment timing. Standard TWFE is reported for comparability. Standard errors are clustered at the occupation level. If the number of clusters falls below 50, we switch to wild-cluster bootstrap.
 
-### A.4. Narrative-Leads-Fundamental Test (Core of H1)
+The pre-trend test is the joint F-statistic on all pre-treatment β_k. If it rejects at the 10% level, we treat the design as compromised and report H1 as unsupported.
 
-Temporal ordering: narrative index → behavioral shift → (later) productivity shift. Lags are pre-specified: 4, 8, 12, 16 weeks. Local-projection impulse-response functions. Lag length is NOT selected by significance — all are reported.
+### A.4 Temporal-ordering test
 
-### A.5. Epidemic Model and R₀ (H2, H5, H6)
+This is the core of H1. We estimate local-projection impulse-response functions (Jordà 2005) at pre-specified horizons of 4, 8, 12, and 16 weeks. The prediction: the narrative index should affect behavior at shorter horizons (4–8 weeks) than it affects productivity (12+ weeks). All horizons are reported; we do not select lags by significance.
 
-**Hawkes model with shock-aware baseline:**
+### A.5 Epidemic model
 
-    λ(t) = μ(t) + α · Σ_{j: t_j < t} exp(−β(t − t_j))
-    μ(t) = μ₀ + Σ_k δ_k · exp(−γ(t − s_k)) · 1(t ≥ s_k)
+We fit a univariate Hawkes self-exciting point process to each narrative's event stream. The conditional intensity is:
 
-Branching ratio n = α/β is the R₀ analog. Known exogenous shock times s_k are taken from the public narrative-shocks registry (ChatGPT launch, GPT-4, Goldman report, etc.).
+    λ(t) = μ(t) + α Σ_{j: t_j < t} exp(−β(t − t_j))
 
-- **H6 test:** One-sided: n̂(X−) > n̂(X+). Significance at α = 0.025 (Bonferroni-adjusted). Parametric bootstrap 90% CIs on each estimate. H6 is supported if the lower bound of [n̂(X−) − n̂(X+)] exceeds zero.
-- **H2 test:** Cross-occupation regression of behavioral response magnitude on narrative R₀ (estimated per occupation cluster).
-- **H5 test:** Post-peak phase (n declining below 1) predicts mean-reversion of behavioral outcome via local-projection IRF.
-- SIR/Bass models as exposition/robustness. Primary = Hawkes (shock-aware).
+where the baseline μ(t) absorbs known exogenous shocks (ChatGPT launch, GPT-4, etc.) via exponential decay terms:
 
-### A.6. Robustness and Placebo Tests (Pre-Specified)
+    μ(t) = μ₀ + Σ_k δ_k exp(−γ(t − s_k)) · 1(t ≥ s_k)
 
-1. Placebo shocks on fictitious dates before November 2022 (no effect expected).
-2. Alternative exposure scores (Felten AIOE, Webb).
-3. Alternative index constructions (dictionary-based vs LLM-based; dual-index robustness per D18).
-4. Leave-one-source-out (drop YouTube / Reddit / GDELT one at a time).
-5. Sensitivity to LLM classification (reproduce on human-coded subsample).
-6. Sun & Abraham (2021) as alternative estimator.
-7. Israel multilingual diffusion lag (EN→HE→RU→AR via GDELT language filters) as additional identification variation.
+The branching ratio n = α/β is the R₀ analog. For H6, we test n̂(X−) > n̂(X+) one-sided at α = 0.025 using parametric-bootstrap confidence intervals. H6 is supported if the lower bound of the difference exceeds zero. For H2, we regress the occupation-level behavioral response on the occupation-cluster R₀. For H5, we check whether the post-peak decline in n predicts behavioral mean-reversion via local-projection IRF. SIR and Bass models appear in the paper as exposition but are not primary.
 
-### A.7. Multiple Testing
+### A.6 Robustness battery
 
-Co-primary: H1 + H6. Bonferroni correction for 2 tests: α = 0.025 each.
-Secondary family (H2, H3, H5): Romano-Wolf step-down procedure controlling FWER at 5%.
+All pre-specified:
 
-### A.8. What Falsifies H1 (Pre-Declared)
+1. Placebo shocks at fictitious dates before November 2022.
+2. Felten AIOE and Webb scores replacing Eloundou.
+3. Dictionary-only index vs. LLM-only index (if both agree, the result is robust to the classification method).
+4. Leave-one-source-out: drop YouTube, Reddit, or GDELT in turn.
+5. Reproduce the main result on the human-coded subsample only.
+6. Sun and Abraham (2021) as an alternative heterogeneity-robust estimator.
+7. Israel multilingual lag: GDELT distinguishes languages, so we can trace diffusion from English to Hebrew to Russian to Arabic and use the lag structure as additional identification.
 
-Any of the following leads us to report that H1 is not supported:
-- (a) Non-flat pre-trends (joint F rejects at 10%).
-- (b) Behavior moves only AFTER (not before) a measurable productivity shift.
-- (c) No dose-response (high-exposure occupations respond the same as low-exposure).
+### A.7 Multiple testing
+
+H1 + H6 are co-primary, corrected via Bonferroni (α = 0.025 each). The secondary family {H2, H3, H5} is corrected via Romano-Wolf step-down at FWER = 5%.
+
+### A.8 Falsification
+
+We commit in advance: H1 is reported as unsupported if any of the following holds:
+
+(a) Pre-trends are not flat (joint F rejects at 10%).
+(b) Behavioral shifts appear only after — not before — a measurable productivity change.
+(c) There is no dose-response across exposure levels.
 
 ---
 
-## PART B. RCT: Pre-Registration (AEA RCT Registry) — Phase 2
+## Part B — RCT (AEA RCT Registry, Phase 2)
 
-### B.1. Design
+### B.1 Design
 
-Information experiment in the tradition of Stantcheva (2023); Haaland, Roth & Wohlfart (2023). Individual-level randomization on Prolific, stratified by occupation AI-exposure.
+Information-provision experiment following Haaland, Roth, and Wohlfart (2023). Individual-level randomization on Prolific, stratified by occupation AI-exposure.
 
-### B.2. Sample and Recruitment
+### B.2 Sample
 
-Employed adults recruited via Prolific; stratification by high/low AI-exposure of current occupation. Optional multilingual arm (Hebrew/Russian/Arabic recruitment via social-media ads in Israel) — extension, not primary. Exclusion criteria: failed attention checks, duplicate IP/device.
+Employed adults on Prolific. Stratification: high vs. low AI-exposure of current occupation. An optional multilingual arm recruits participants in Israel (Hebrew, Russian, Arabic) via social-media ads — this is an extension, not part of the primary analysis. We exclude respondents who fail attention checks or appear as duplicates by IP or device fingerprint.
 
-### B.3. Treatment Arms
+### B.3 Arms
 
-- **Control:** No information treatment.
-- **T1 (narrative):** Real news montage: "AI is displacing workers" (actual headlines, clips).
-- **T2 (neutral/counter):** Neutral technology information — separates "narrative" from "any AI information."
-- **(Optional) T3 (dose):** Intensified version for dose-response test.
+- Control: no treatment.
+- T1: a montage of real news clips about AI displacing workers.
+- T2: neutral technology information (separates "narrative about AI jobs" from "any information about AI").
+- T3 (optional): intensified T1 for a dose-response check.
 
-### B.4. Outcomes
+### B.4 Outcomes
 
-- **Primary (incentivized, behavioral):** Real allocation of bonus payment between investment in an "AI-safe" skill (e.g., course credit) and cash; and/or incentivized WTP for a real online course. Behavior with money, not stated intentions.
-- **Secondary:** Stated intention to change career/reskill; subjective probability of own displacement; savings/portfolio reallocation intention.
+Primary (incentivized): subjects allocate a real bonus between an "AI-safe" skill investment (e.g., a course credit) and cash. This measures behavior with money, not stated intentions. Secondary: intention to reskill or switch careers; subjective displacement probability; savings reallocation intention.
 
-### B.5. Hypotheses
+### B.5 Hypotheses
 
-H4: T1 shifts primary outcome relative to Control. Dose-response: T3 > T1. Pre-specified heterogeneity: AI-exposure, age, baseline beliefs.
+H4: T1 shifts the primary outcome relative to Control. Dose-response: T3 > T1. Pre-specified heterogeneity dimensions: AI-exposure, age, prior beliefs about AI.
 
-### B.6. Power
+### B.6 Power
 
-Target MDE = 0.15 SD at 80% power, α = 0.05. Required N per arm to be calculated and locked before data collection (order of magnitude: several hundred per arm). Analysis code written and tested against simulated data before real collection.
+We target an MDE of 0.15 SD at 80% power with α = 0.05. The exact N per arm will be computed and locked before any data collection. Order of magnitude: several hundred per arm. Analysis code is written and tested against simulated data before data collection begins.
 
-### B.7. Analysis
+### B.7 Analysis
 
-ITT, OLS with pre-specified covariates (age, exposure, baseline beliefs); multiple-testing correction for secondary outcomes; manipulation/attention checks reported; mandatory debriefing.
+Intent-to-treat, OLS with pre-specified covariates (age, exposure, prior beliefs). Secondary outcomes corrected for multiplicity. Manipulation and attention checks reported. Debriefing is mandatory.
 
-### B.8. Ethics
+### B.8 Ethics
 
-Presentation of real news clips is a standard low-risk information-provision procedure. Informed consent; debriefing post-survey; no deception beyond the standard. IRB approval required (institutional or commercial) before data collection begins.
+Showing participants real news clips is a standard low-risk information-provision procedure used widely in experimental economics. Informed consent is obtained; debriefing follows the survey; no deception is involved. IRB approval (institutional or commercial) is required before data collection.
