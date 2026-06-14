@@ -1,6 +1,6 @@
 # Narrative Economics — Research Project
 
-Partnership **G. Diachenko (PI, Tel Aviv) + AI co-investigator**. Goal: build a measurable, falsifiable version of narrative economics (Shiller's open door) and bring it to publication.
+Partnership **Gregory Diachenko (PI, Tel Aviv) + AI co-investigator**. Goal: build a measurable, falsifiable version of narrative economics (Shiller's open door) and bring it to publication.
 
 **One-line thesis:** The "AI will take your job" narrative causally shifted labor-market behavior before AI shifted productivity; story contagiousness (R₀) is measurable from text and predicts the size of the real-world footprint.
 

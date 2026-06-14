@@ -4,7 +4,7 @@
 
 > Ранее: «Narrative Contagion and the Real Economy: Did the AI-Displacement Narrative Move Labor-Market Behavior Before AI Moved Productivity?» Переименовано после D20 — рамка конкурирующих нарративов сильнее одностороннего «doom».
 
-**Authors:** G. Diachenko (Tel Aviv, independent researcher) + AI co-investigator
+**Authors:** Gregory Diachenko (Tel Aviv, independent researcher) + AI co-investigator
 **Status:** Pre-analysis plan, registered prior to data access and prior to any estimation.
 **Targets:** OSF (Part A — observational pre-analysis plan) + AEA RCT Registry (Part B — experiment).
 

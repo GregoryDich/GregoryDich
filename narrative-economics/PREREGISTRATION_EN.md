@@ -2,7 +2,7 @@
 
 **Competing Narratives of Creative Destruction: Why the AI-Displacement Story Outran Both the Opportunity Story and the Facts**
 
-G. Diachenko (Tel Aviv)
+Gregory Diachenko (Tel Aviv)
 
 Registered prior to accessing outcome data or running any estimation. Part A (observational) filed on OSF; Part B (experiment) to be filed on AEA RCT Registry upon IRB approval.
 
