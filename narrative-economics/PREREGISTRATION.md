@@ -31,6 +31,11 @@ Primary outcome — **H1**. H6 — co-primary (центральна для вк�
 
 **A.1. Дизайн.** Difference-in-differences с непрерывной интенсивностью лечения. Лечение = экспозиция профессии к ИИ; шок = резкий рост нарратива после запуска ChatGPT (30.11.2022) и пиков (GPT-4, медиа-волны). Данные исходов не открываются до фиксации этого плана.
 
+- **Sample period:** January 2022 — March 2026 (pre: Jan–Nov 2022; post: Dec 2022 — Mar 2026).
+- **Unit of observation:** occupation (SOC 6-digit) × week.
+- **Treatment onset:** week of November 28, 2022 (ChatGPT launch week).
+- **Minimum N (occupations):** ≥ 50 SOC codes with valid exposure scores and behavioral data.
+
 **A.2. Данные.**
 - **Нарратив разрушения (X−):** YouTube auto-transcripts (Data API), Reddit-архивы (Arctic Shift), GDELT, Google Trends. Недельный индекс интенсивности «ИИ × профессия» через ко-встречаемость + LLM-классификацию контекста. Валидация: подвыборка ручного кодирования (≥1000 фрагментов, ≥2 кодировщика, κ-согласие).
 - **Нарратив созидания (X+):** тот же движок, второй канал — «AI side hustle / vibe coding / собери сам / ИИ демократизирует». Сравнение R₀(X−) vs R₀(X+) — тест H6.
@@ -41,18 +46,49 @@ Primary outcome — **H1**. H6 — co-primary (центральна для вк�
 - **Фундаментал (отстаёт по H1):** отраслевые/задачные прокси производительности от ИИ.
 
 **A.3. Спецификация.**
+
+Primary estimating equation (TWFE):
+
+    Y_it = α_i + γ_t + β · Exposure_i · NarrativeIntensity_t + X'_it δ + ε_it
+
+Where:
+- Y_it — behavioral outcome for occupation i at week t
+- α_i, γ_t — occupation and time fixed effects
+- Exposure_i — Eloundou GPT-exposure score (continuous, 0–1)
+- NarrativeIntensity_t — weekly destruction-narrative index (from WS1 pipeline)
+- X_it — controls (region FE where available)
+- β — the causal parameter (H1: β > 0, narrative exposure drives behavior)
+
+Event-study form:
+
+    Y_it = α_i + γ_t + Σ_k β_k · Exposure_i · 1(t ∈ bin_k) + ε_it
+
+Reference period: last 8 weeks before ChatGPT launch (weeks -8 to -1).
+
 - Двусторонние фикс-эффекты (профессия, время) + регион, где доступно.
 - Primary-оценщик: Callaway–Sant'Anna (гетерогенное/ступенчатое лечение); TWFE — только для сопоставимости.
-- **Event-study график пре-трендов** — главный тест на фальсификацию: до-шоковые коэффициенты обязаны быть статистически плоскими.
+- **Event-study график пре-трендов** — главный тест на фальсификацию: до-шоковые коэффициенты обязаны быть статистически плоскими. **Критерий:** совместная F-статистика на всех β_k для k < 0 не отвергает H0 на уровне 10%.
 - Кластеризация на уровне профессии; wild-cluster bootstrap при малом числе кластеров.
 
 **A.4. Тест «нарратив ведёт фундаментал» (ядро H1).** Упорядочение во времени: индекс нарратива → сдвиг поведения → (позже) сдвиг производительности. Лаги пред-специфицированы; local-projection IRF; лаг не подбирается по значимости.
 
-**A.5. Эпид-модель и R₀ (H2, H5).** Primary — процесс Хокса; branching ratio n как аналог R₀ по раннему потоку упоминаний, с ДИ. SIR/Bass — экспозиция и робастность. H2: регрессия величины отклика на R₀ по профессиям. H5: фаза выгорания (n<1) предсказывает mean-reversion.
+**A.5. Эпид-модель и R₀ (H2, H5, H6).**
+
+Hawkes model with shock-aware baseline:
+
+    λ(t) = μ(t) + α · Σ_{j: t_j < t} exp(−β(t − t_j))
+    μ(t) = μ₀ + Σ_k δ_k · exp(−γ(t − s_k)) · 1(t ≥ s_k)
+
+Branching ratio n = α/β is the R₀ analog. Shock times s_k from `NARRATIVE_SHOCKS_REGISTRY.md`.
+
+- H6 test: n̂(X−) > n̂(X+). One-sided test at α=0.05 with bootstrap 90% CIs on each. H6 supported if lower bound of n̂(X−) − n̂(X+) > 0.
+- H2: cross-occupation regression of behavioral response magnitude on narrative R₀.
+- H5: фаза выгорания (n<1, post-peak) предсказывает mean-reversion поведения.
+- SIR/Bass — экспозиция и робастность. Primary = Hawkes (shock-aware).
 
 **A.6. Робастность и плацебо (пред-специфицировано).** Плацебо-шоки на фиктивных датах до 2022; альтернативные баллы экспозиции; альтернативные конструкции индекса; leave-one-source-out; чувствительность к LLM-кодированию (воспроизведение на ручной подвыборке); Sun–Abraham как альтернативный оценщик.
 
-**A.7. Множественность.** Primary = H1 (без коррекции, одна заявленная ставка). Семейства secondary — Romano–Wolf (контроль FWER).
+**A.7. Множественность.** Co-primary = H1 + H6 (поправка Bonferroni на 2: α=0.025 для каждого). Семейства secondary (H2, H3, H5) — Romano–Wolf (контроль FWER).
 
 **A.8. Что фальсифицирует H1 (заявлено заранее).** (а) неплоские пре-тренды; (б) поведение двигается только после, а не до сдвига производительности; (в) отсутствие доза-эффекта. Любое — и мы пишем, что H1 не подтвердилась.
 
