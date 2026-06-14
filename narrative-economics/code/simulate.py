@@ -37,6 +37,17 @@ SHOCKS = {
 TRUE_N_MINUS = 0.85   # destruction: highly contagious
 TRUE_N_PLUS = 0.55    # creation:    less contagious
 
+SHOCK_TIMES_MINUS = [
+    SHOCKS["ChatGPT launch"], SHOCKS["GPT-4"],
+    SHOCKS["Goldman 300M"], SHOCKS["WGA strike"],
+    SHOCKS["IMF 40%"], SHOCKS["Oracle 30k"],
+]
+
+SHOCK_TIMES_PLUS = [
+    SHOCKS["ChatGPT launch"], SHOCKS["GPT-4"],
+    _d(2023, 6, 1), _d(2024, 2, 1), SHOCKS["Oracle 30k"],
+]
+
 
 def make_narratives(seed=42):
     """Return (events_minus, events_plus, T, SHOCKS, truth)."""
