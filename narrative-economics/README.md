@@ -47,4 +47,4 @@ python placebo_test.py     # placebo only
 ```
 
 ## Current Status
-~12% on the scale. Full analysis pipeline validated on simulation (ALL CHECKS PASS). Pre-registration (EN) ready for OSF. Phase 1 autonomous. **Next blockers:** real data (GDELT egress / Revelio / YouTube transcripts) + lock pre-registration on OSF.
+~14% on the scale. **Pre-registration LOCKED on OSF** (2026-06-14, observational Part A, OSF Preregistration schema, ~12-month embargo, node J89yt) — first irreversible priority anchor. Full analysis pipeline validated on simulation (ALL CHECKS PASS). Phase 1 autonomous. **Next blockers:** real data (GDELT egress / Revelio / YouTube transcripts).
