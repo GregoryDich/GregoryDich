@@ -47,4 +47,4 @@ python placebo_test.py     # placebo only
 ```
 
 ## Current Status
-~14% on the scale. **Pre-registration LOCKED on OSF** (2026-06-14, observational Part A, OSF Preregistration schema, ~12-month embargo, node J89yt) — first irreversible priority anchor. Full analysis pipeline validated on simulation (ALL CHECKS PASS). Phase 1 autonomous. **Next blockers:** real data (GDELT egress / Revelio / YouTube transcripts).
+~14% on the scale. **Pre-registration LOCKED on OSF** (2026-06-20, observational Part A, registration osf.io/ehrac, project osf.io/j89yt, OSF Preregistration schema, embargo until 2027-06-23) — first irreversible priority anchor. Full analysis pipeline validated on simulation (ALL CHECKS PASS). Phase 1 autonomous. **Next blockers:** real data (GDELT egress / Revelio / YouTube transcripts).
