@@ -47,15 +47,27 @@ DISPLACE_TERMS = [   # X- (destruction)
     "replace humans", "replacing humans", "no way in", "stop hiring",
     "hiring freeze", "avoid hiring",
 ]
-CREATE_TERMS = [     # X+ (creation / augmentation / skeptical-debunk)
+CREATE_TERMS = [     # X+ (creation / augmentation)
     "new job", "new jobs", "new role", "new roles", "created", "creating",
-    "job creation", "create jobs", "hiring back", "rehire", "rehiring",
-    "rehired", "augment", "augmentation", "opportunity", "opportunities",
-    "demand for", "complement", "ai won't", "won't replace", "not replace",
-    "didn't replace", "doesn't replace", "no evidence", "overstated",
-    "exaggerat", "cover story", "excuse", "ai washing", "myth", "not happening",
-    "no good evidence", "isn't replacing", "negligible", "augmenting",
-    "new opportunities", "didn't take", "create new", "won't take your job",
+    "job creation", "create jobs", "augment", "augmentation", "opportunity",
+    "opportunities", "demand for", "complement", "augmenting",
+    "new opportunities", "create new", "increasing demand", "more valuable",
+]
+
+# X+ via STANCE: fragment quotes destruction vocabulary but rejects/debunks
+# the "AI takes jobs" narrative. Presence of any of these overrides the raw
+# displacement-word count (the dictionary's main blind spot, found at WS1.0).
+SKEPTICAL_TERMS = [
+    "cover story", "excuse", "was a lie", "is a lie", "no good evidence",
+    "no evidence", "not happening", "doesn't work", "does not work",
+    "didn't reduce", "did not reduce", "rehire", "rehiring", "rehired",
+    "hire back", "hiring back", "begging", "come back", "regret",
+    "overstated", "exaggerat", "ai washing", "math doesn't add up",
+    "nowhere near", "negligible", "costs more than", "won't replace",
+    "won't take your job", "not replace", "didn't replace", "doesn't replace",
+    "isn't replacing", "not looking true", "not looking like that", "myth",
+    "quietly revers", "backtrack", "0.4%", "four-tenths", "not a surefire",
+    "no measurable", "not as much", "augment", "not the case for",
 ]
 
 BRACKET = re.compile(r"\[[^\]]*\]")            # [music], [laughter], ...
@@ -86,16 +98,19 @@ def classify(frag):
     occ = has_any(low, OCC_TERMS)
     dis = has_any(low, DISPLACE_TERMS)
     cre = has_any(low, CREATE_TERMS)
-    relevant = bool(ai) and bool(occ) and (bool(dis) or bool(cre))
+    sk = has_any(low, SKEPTICAL_TERMS)
+    relevant = bool(ai) and bool(occ) and (bool(dis) or bool(cre) or bool(sk))
     if not relevant:
         valence = "none"
+    elif sk:                       # stance override: debunking the X- story
+        valence = "plus"           # quotes displacement vocab but rejects it
     elif len(dis) > len(cre):
         valence = "minus"
     elif len(cre) > len(dis):
         valence = "plus"
     else:
         valence = "mixed"
-    return ai, occ, dis, cre, relevant, valence
+    return ai, occ, dis, cre, sk, relevant, valence
 
 
 def segment(text, target_words):
@@ -143,11 +158,12 @@ def main():
         frags = segment(text, args.target_words)
         counts = {"n": 0, "rel": 0, "minus": 0, "plus": 0, "mixed": 0}
         for j, fr in enumerate(frags):
-            ai, occ, dis, cre, rel, val = classify(fr)
+            ai, occ, dis, cre, sk, rel, val = classify(fr)
             rows.append({
                 "video_id": vid, "frag_id": f"{vid}_{j:03d}", "text": fr,
                 "ai": "|".join(ai), "occ": "|".join(occ),
                 "displace": "|".join(dis), "create": "|".join(cre),
+                "skeptical": "|".join(sk),
                 "relevant": int(rel), "valence_dict": val,
             })
             counts["n"] += 1
