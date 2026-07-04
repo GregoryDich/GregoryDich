@@ -1,0 +1,21 @@
+services:
+  jarvis:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+
+  # Telegram-бот: включи профилем `docker compose --profile bot up`
+  jarvis-bot:
+    build: .
+    command: python -m app.alerts.bot
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+    profiles: ["bot"]

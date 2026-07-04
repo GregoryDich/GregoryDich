@@ -1,0 +1,22 @@
+# Личные данные, портфель, профиль, ключи — НИКОГДА не коммитятся (репозиторий публичный)
+data/
+*.duckdb
+*.duckdb.wal
+profile.local.yaml
+.env
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Прочее
+.DS_Store
+*.log
+screenshots/
