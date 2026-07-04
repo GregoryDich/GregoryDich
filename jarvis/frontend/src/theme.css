@@ -56,14 +56,41 @@ html, body, #root {
 .cards { display: grid; gap: 8px; }
 .card {
   background: var(--panel2); border: 1px solid var(--border);
-  border-radius: 6px; padding: 10px 12px;
+  border-radius: 8px; padding: 12px 14px;
+  transition: border-color 0.18s ease-out;
 }
+.card:hover { border-color: #2a3550; }
 .card h3 {
-  margin: 0 0 6px; font-size: 11px; font-weight: 600;
-  color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px;
+  margin: 0 0 8px; font-size: 10px; font-weight: 600;
+  color: var(--muted); text-transform: uppercase; letter-spacing: 1px;
 }
-.big { font-size: 22px; font-weight: 700; font-family: var(--mono); }
-.sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.big {
+  font-size: 28px; font-weight: 700; font-family: var(--mono);
+  font-variant-numeric: tabular-nums; letter-spacing: -0.5px; line-height: 1.1;
+}
+.sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* Hero-карточка: акцентная верхняя кромка */
+.card.hero { border-top: 2px solid var(--accent); }
+
+/* Радиальный датчик */
+.gauge svg { width: 100%; max-width: 240px; display: block; margin: 0 auto; }
+.gauge-value {
+  font-family: var(--mono); font-size: 30px; font-weight: 700;
+  fill: var(--accent); font-variant-numeric: tabular-nums;
+}
+.gauge-label { font-size: 9px; fill: var(--muted); letter-spacing: 1.2px; text-transform: uppercase; }
+
+/* Пульс демо/live-бейджа */
+@keyframes badge-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.badge.demo { animation: badge-pulse 2.4s ease-in-out infinite; }
+.badge.live::before {
+  content: '●'; margin-right: 5px; color: var(--up);
+  animation: badge-pulse 1.6s ease-in-out infinite;
+}
 
 .up { color: var(--up); }
 .down { color: var(--down); }
@@ -71,7 +98,10 @@ html, body, #root {
 .mono { font-family: var(--mono); }
 
 /* Таблицы */
-table.grid { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
+table.grid {
+  width: 100%; border-collapse: collapse; font-family: var(--mono);
+  font-size: 11.5px; font-variant-numeric: tabular-nums;
+}
 table.grid th {
   text-align: right; font-weight: 600; color: var(--muted); font-size: 10px;
   text-transform: uppercase; letter-spacing: 0.5px;
@@ -149,6 +179,21 @@ button.ghost:hover { border-color: var(--accent); color: var(--accent); }
 .chip.on { border-color: var(--accent); color: var(--accent); }
 
 .disclaimer { font-size: 10px; color: var(--muted); margin-top: 10px; font-style: italic; }
+
+/* Вероятностная полоса рост/флэт/падение */
+.probbar {
+  display: flex; height: 10px; border-radius: 5px; overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+/* Чат копайлота */
+.chat { display: flex; flex-direction: column; height: 100%; }
+.chat-log { flex: 1; overflow: auto; padding: 4px 0; }
+.msg { max-width: 78%; margin: 6px 0; padding: 8px 12px; border-radius: 10px; white-space: pre-wrap; }
+.msg.user { margin-left: auto; background: #1c2740; }
+.msg.bot { background: var(--panel2); border: 1px solid var(--border); }
+.chat-input { display: flex; gap: 8px; padding-top: 8px; }
+.chat-input input { flex: 1; }
 
 /* Панель здоровья данных (дропдаун из шапки) */
 .health-panel {

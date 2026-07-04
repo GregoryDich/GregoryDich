@@ -10,7 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app import config
-from app.api import alerts_api, freedom, macro, markets, portfolio_api, profile_api
+from app.api import (ai_api, alerts_api, calendar_api, freedom, macro, markets,
+                     narratives_api, navigator_api, portfolio_api, profile_api,
+                     screener_api)
 from app.services import market_data
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
@@ -35,6 +37,9 @@ def _start_scheduler() -> None:
     scheduler.add_job(engine.morning_digest, "cron",
                       hour=config.DIGEST_HOUR, minute=config.DIGEST_MINUTE,
                       id="morning_digest")
+    from app.alerts import notify
+    scheduler.add_job(notify.ping_watchdog, "interval",
+                      minutes=config.REFRESH_MINUTES, id="watchdog")
     scheduler.start()
     log.info("Scheduler started: refresh every %s min, digest %02d:%02d %s",
              config.REFRESH_MINUTES, config.DIGEST_HOUR, config.DIGEST_MINUTE,
@@ -53,6 +58,30 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="JARVIS — персональный экономический менеджер",
               lifespan=lifespan)
 
+
+@app.middleware("http")
+async def basic_auth(request, call_next):
+    """Пароль обязателен, если задан JARVIS_PASSWORD (для VPS/AWS-деплоя)."""
+    if config.JARVIS_PASSWORD:
+        import base64
+
+        header = request.headers.get("authorization", "")
+        ok = False
+        if header.startswith("Basic "):
+            try:
+                _, _, pw = base64.b64decode(header[6:]).decode().partition(":")
+                ok = pw == config.JARVIS_PASSWORD
+            except Exception:
+                ok = False
+        elif header == f"Bearer {config.JARVIS_PASSWORD}":
+            ok = True
+        if not ok:
+            from starlette.responses import Response
+
+            return Response(status_code=401,
+                            headers={"WWW-Authenticate": 'Basic realm="JARVIS"'})
+    return await call_next(request)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -60,7 +89,9 @@ app.add_middleware(
 )
 
 for r in (markets.router, macro.router, portfolio_api.router,
-          freedom.router, profile_api.router, alerts_api.router):
+          freedom.router, profile_api.router, alerts_api.router,
+          navigator_api.router, screener_api.router, calendar_api.router,
+          ai_api.router, narratives_api.router):
     app.include_router(r)
 
 

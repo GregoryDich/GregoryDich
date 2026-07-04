@@ -129,9 +129,122 @@ export type DataHealth = {
   sources: { kind: string; source: string; items: number; last_update: string | null }[]
 }
 
+export type NavChannel = {
+  key: string
+  title: string
+  proxy: string | null
+  note: string
+  data_source: string
+  probabilities: { rise: number | null; flat: number | null; fall: number | null }
+  windows: number | null
+  expected_return_pct: number
+  momentum_6m_pct: number
+  ann_vol_pct: number
+  max_drawdown_pct: number
+  score: number
+  costs: {
+    fees_usd: number
+    spread_usd: number
+    tax_on_expected_gain_usd: number
+    total_usd: number
+    share_of_tranche_pct: number
+  }
+  reason: string
+}
+
+export type NavigatorResponse = {
+  horizon_months: number
+  tranche_usd: number
+  available_tranches: number
+  risk_profile: string
+  channels: NavChannel[]
+  currency_note: string
+  disclaimer: string
+}
+
+export type ScreenerRow = {
+  symbol: string
+  name: string
+  sector: string
+  pe: number
+  pb: number
+  dividend_yield: number
+  roe: number
+  net_margin: number
+  rev_growth: number
+  source: string
+  value_rank: number
+  momentum_rank: number
+  quality_rank: number
+  composite: number
+  mom6m_pct: number
+}
+
+export type TickerDeepDive = {
+  symbol: string
+  name: string
+  sector: string
+  currency: string
+  country: string
+  quote: { price: number; change_pct: number; source: string } | null
+  stats: { high_52w?: number; low_52w?: number; ret_1y_pct?: number }
+  fundamentals: ScreenerRow | null
+  dividends: { date: string; amount: number; source: string }[]
+}
+
+export type CalendarEvent = {
+  date: string
+  kind: 'dividend' | 'earnings' | 'macro' | 'cb'
+  title: string
+  symbol: string | null
+  importance: string
+  source: string
+}
+
+export type NarrativeTheme = {
+  key: string
+  title: string
+  source: string
+  dates: string[]
+  values: number[]
+  r0: { r0: number | null; note?: string }
+  spike: { z: number; level: string }
+  query: string
+}
+
+export type StressResponse = {
+  historical: {
+    available: boolean
+    horizon_days?: number
+    positions?: { symbol: string; value_usd: number; worst_move_pct: number; loss_usd: number }[]
+    total_loss_usd?: number
+    total_loss_pct?: number
+    note?: string
+  }
+  hypothetical: {
+    available: boolean
+    scenarios?: { key: string; title: string; assumption: string; impact_usd: number; impact_pct: number }[]
+  }
+}
+
 export const api = {
   overview: () => http<MarketsOverview>('/api/markets/overview'),
   dataHealth: () => http<DataHealth>('/api/health/data'),
+  navigator: (tranche = 1000, horizon = 12) =>
+    http<NavigatorResponse>(`/api/navigator?tranche=${tranche}&horizon=${horizon}`),
+  screener: (params: string) => http<{ rows: ScreenerRow[] }>(`/api/screener${params}`),
+  ticker: (symbol: string) => http<TickerDeepDive>(`/api/ticker/${encodeURIComponent(symbol)}`),
+  calendarEvents: (days = 45) => http<{ events: CalendarEvent[]; note: string }>(`/api/calendar?days=${days}`),
+  narratives: () => http<{ themes: NarrativeTheme[]; method: string }>('/api/narratives'),
+  stress: () => http<StressResponse>('/api/portfolio/stress'),
+  rebalance: () => http<{ available: boolean; reason?: string; trades?: { symbol: string; action: string; qty: number; approx_usd: number }[]; note?: string }>('/api/portfolio/rebalance'),
+  aiStatus: () => http<{ llm_enabled: boolean; model: string | null }>('/api/ai/status'),
+  aiChat: (message: string, history: object[]) =>
+    http<{ reply: string; used_llm: boolean }>('/api/ai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, history }),
+    }),
   watchlist: () => http<{ items: Quote[] }>('/api/markets/watchlist'),
   history: (symbol: string, days = 365) =>
     http<{ symbol: string; name: string; source: string; candles: Candle[] }>(

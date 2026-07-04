@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { api, fmt, type PortfolioPositions, type RiskMetrics } from '../api'
+import { api, fmt, type PortfolioPositions, type RiskMetrics, type StressResponse } from '../api'
 import Echart from '../components/Echart'
 
 /** PORT: портфель и риск — позиции, VaR, кривая капитала, импорт сделок. */
@@ -7,6 +7,8 @@ export default function PortfolioScreen() {
   const [pos, setPos] = useState<PortfolioPositions | null>(null)
   const [risk, setRisk] = useState<RiskMetrics | null>(null)
   const [curve, setCurve] = useState<{ date: string; value: number }[]>([])
+  const [stress, setStress] = useState<StressResponse | null>(null)
+  const [rebalance, setRebalance] = useState<Awaited<ReturnType<typeof api.rebalance>> | null>(null)
   const [form, setForm] = useState({ dt: '', symbol: '', side: 'buy', qty: '', price: '' })
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -14,6 +16,8 @@ export default function PortfolioScreen() {
     api.positions().then(setPos).catch(console.error)
     api.risk().then(setRisk).catch(console.error)
     api.equityCurve().then((r) => setCurve(r.points)).catch(console.error)
+    api.stress().then(setStress).catch(console.error)
+    api.rebalance().then(setRebalance).catch(console.error)
   }
   useEffect(load, [])
 
@@ -147,6 +151,45 @@ export default function PortfolioScreen() {
                 }}
               />
             </div>
+          </div>
+          <div className="card" style={{ marginBottom: 8 }}>
+            <h3>Стресс-тесты (Aladdin-for-one)</h3>
+            {stress?.hypothetical.available ? (
+              <table className="grid">
+                <tbody>
+                  {stress.hypothetical.scenarios!.map((s) => (
+                    <tr key={s.key} title={s.assumption}>
+                      <td>{s.title}</td>
+                      <td className={s.impact_usd < 0 ? 'down' : 'up'}>
+                        {fmt.usd(s.impact_usd)} ({fmt.pct(s.impact_pct)})
+                      </td>
+                    </tr>
+                  ))}
+                  {stress.historical.available && (
+                    <tr title={stress.historical.note}>
+                      <td><b>Худший месяц истории (все сразу)</b></td>
+                      <td className="down"><b>{fmt.usd(stress.historical.total_loss_usd)} ({fmt.pct(stress.historical.total_loss_pct)})</b></td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            ) : <div className="muted">Нужны позиции</div>}
+            {rebalance?.available && rebalance.trades && rebalance.trades.length > 0 && (
+              <>
+                <h3 style={{ marginTop: 10 }}>Ребалансировка к равным весам</h3>
+                <table className="grid">
+                  <tbody>
+                    {rebalance.trades.map((t) => (
+                      <tr key={t.symbol}>
+                        <td>{t.action} <b>{t.symbol}</b></td>
+                        <td>{fmt.num(t.qty, 4)} шт ≈ {fmt.usd(t.approx_usd)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="sub">{rebalance.note}</div>
+              </>
+            )}
           </div>
           <div className="card">
             <h3>Кривая капитала (норм.)</h3>

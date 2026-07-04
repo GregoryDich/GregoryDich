@@ -101,6 +101,7 @@ def ensure_data() -> None:
     demo_seed.seed_prices()
     demo_seed.seed_macro()
     demo_seed.seed_dividends()
+    demo_seed.seed_fundamentals()
 
 
 def data_status() -> dict:

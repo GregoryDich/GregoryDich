@@ -101,6 +101,19 @@ def risk_metrics() -> dict:
     return m
 
 
+@router.get("/stress")
+def stress() -> dict:
+    from app.analytics import stress as stress_mod
+    return {"historical": stress_mod.historical_worst(),
+            "hypothetical": stress_mod.hypothetical()}
+
+
+@router.get("/rebalance")
+def rebalance() -> dict:
+    from app.analytics import stress as stress_mod
+    return stress_mod.rebalance_suggestion()
+
+
 @router.get("/equity-curve")
 def equity_curve() -> dict:
     returns = portfolio.portfolio_daily_returns()

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api, fmt, type FreedomSummary } from '../api'
+import Gauge from '../components/Gauge'
 
 const EXPENSE_LABELS: Record<string, string> = {
   rent: 'Аренда/жильё',
@@ -21,10 +22,17 @@ export default function FreedomScreen() {
 
   if (!d) return <div className="screen muted">Загрузка…</div>
 
-  const pct = Math.min(d.progress * 100, 100)
   return (
     <div className="screen">
-      <div className="cards" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))' }}>
+      <div className="cards" style={{ gridTemplateColumns: '260px repeat(auto-fit, minmax(180px, 1fr))' }}>
+        <div className="card hero" style={{ gridRow: 'span 2' }}>
+          <h3>Точка безубыточности</h3>
+          <Gauge
+            value={d.progress}
+            label="прогресс к свободе"
+            sublabel={`${fmt.usd(d.current_capital)} из ${fmt.usd(d.target_capital)}`}
+          />
+        </div>
         <div className="card">
           <h3>Цель (правило {Math.round(d.swr * 100)}%)</h3>
           <div className="big">{fmt.usd(d.target_capital)}</div>
@@ -53,11 +61,6 @@ export default function FreedomScreen() {
             (~{(d.base_real_return * 100).toFixed(1)}% сверх инфляции)
           </div>
         </div>
-      </div>
-
-      <div className="card" style={{ marginTop: 8 }}>
-        <h3>Прогресс к точке безубыточности — {(d.progress * 100).toFixed(1)}%</h3>
-        <div className="progressbar"><div style={{ width: `${pct}%` }} /></div>
       </div>
 
       <div className="cards" style={{ gridTemplateColumns: '1fr 1fr', marginTop: 8 }}>

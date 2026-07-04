@@ -34,6 +34,11 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 NTFY_TOPIC = os.getenv("NTFY_TOPIC", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
+# Пароль для доступа к терминалу (обязателен при выгрузке на VPS/AWS)
+JARVIS_PASSWORD = os.getenv("JARVIS_PASSWORD", "")
+# Dead-man's switch: URL healthchecks.io, пингуется после каждого фонового цикла
+HEALTHCHECKS_URL = os.getenv("HEALTHCHECKS_URL", "")
+
 DIGEST_HOUR = int(os.getenv("DIGEST_HOUR", "7"))
 DIGEST_MINUTE = int(os.getenv("DIGEST_MINUTE", "30"))
 TIMEZONE = os.getenv("JARVIS_TZ", "Asia/Jerusalem")

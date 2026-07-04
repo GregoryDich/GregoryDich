@@ -5,17 +5,27 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { api, type DataHealth } from './api'
 import Palette, { type Command } from './components/Palette'
 import AlertsScreen from './screens/AlertsScreen'
+import CalendarScreen from './screens/CalendarScreen'
+import CopilotScreen from './screens/CopilotScreen'
 import FreedomScreen from './screens/FreedomScreen'
 import MacroScreen from './screens/MacroScreen'
 import MarketsScreen from './screens/MarketsScreen'
+import NarrativesScreen from './screens/NarrativesScreen'
+import NavigatorScreen from './screens/NavigatorScreen'
 import Onboarding from './screens/Onboarding'
 import PortfolioScreen from './screens/PortfolioScreen'
+import ScreenerScreen from './screens/ScreenerScreen'
 
 const SCREENS: Record<string, { title: string; component: React.FC }> = {
   freedom: { title: 'FIRE · Свобода', component: FreedomScreen },
+  navigator: { title: 'NAV · Навигатор', component: NavigatorScreen },
   markets: { title: 'WEI · Рынки', component: MarketsScreen },
   portfolio: { title: 'PORT · Портфель', component: PortfolioScreen },
   macro: { title: 'ECO · Макро', component: MacroScreen },
+  screener: { title: 'EQS · Скринер', component: ScreenerScreen },
+  news: { title: 'NEWS · Нарративы', component: NarrativesScreen },
+  calendar: { title: 'CAL · Календарь', component: CalendarScreen },
+  ai: { title: 'AI · Копайлот', component: CopilotScreen },
   alerts: { title: 'ALRT · Алерты', component: AlertsScreen },
 }
 
@@ -108,6 +118,19 @@ export default function App() {
       id: 'alerts', component: 'alerts', title: SCREENS.alerts.title,
       position: { referencePanel: 'portfolio', direction: 'within' },
     })
+    dv.addPanel({
+      id: 'navigator', component: 'navigator', title: SCREENS.navigator.title,
+      position: { referencePanel: 'freedom', direction: 'within' },
+    })
+    dv.addPanel({
+      id: 'news', component: 'news', title: SCREENS.news.title,
+      position: { referencePanel: 'markets', direction: 'within' },
+    })
+    dv.addPanel({
+      id: 'ai', component: 'ai', title: SCREENS.ai.title,
+      position: { referencePanel: 'markets', direction: 'within' },
+    })
+    dv.getPanel('markets')?.api.setActive()
     dv.getPanel('portfolio')?.api.setActive()
     dv.getPanel('freedom')?.api.setActive()
   }
@@ -147,9 +170,14 @@ export default function App() {
 
   const commands: Command[] = [
     { code: 'FIRE', title: 'Свобода — точка безубыточности', run: () => openScreen('freedom') },
+    { code: 'NAV', title: 'Навигатор аллокации — транши по каналам', run: () => openScreen('navigator') },
     { code: 'WEI', title: 'Обзор рынков', run: () => openScreen('markets') },
-    { code: 'PORT', title: 'Портфель и риск', run: () => openScreen('portfolio') },
+    { code: 'PORT', title: 'Портфель, риск, стресс-тесты', run: () => openScreen('portfolio') },
     { code: 'ECO', title: 'Макроэкономика: США + Израиль', run: () => openScreen('macro') },
+    { code: 'EQS', title: 'Скринер: ранги value/momentum/quality', run: () => openScreen('screener') },
+    { code: 'NEWS', title: 'Нарративы: внимание и R₀', run: () => openScreen('news') },
+    { code: 'CAL', title: 'Календарь событий', run: () => openScreen('calendar') },
+    { code: 'AI', title: 'Копайлот — чат с вашими данными', run: () => openScreen('ai') },
     { code: 'ALRT', title: 'Алерты и дайджест', run: () => openScreen('alerts') },
     {
       code: 'REFR', title: 'Обновить рыночные данные', hint: 'live → фолбэк → demo',

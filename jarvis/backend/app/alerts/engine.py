@@ -67,5 +67,7 @@ def morning_digest() -> str:
         lines += ["", f"🎯 Свобода: {f['progress']:.1%} пути, пассивный доход "
                       f"${f['passive_income_monthly']:,.0f}/мес из ${monthly:,.0f} нужных"]
     text = "\n".join(lines)
+    from app.ai import copilot
+    text = copilot.polish_digest(text)  # LLM-редактура при наличии ключа
     notify.send("JARVIS: утренний дайджест", text)
     return text

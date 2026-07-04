@@ -78,6 +78,37 @@ CREATE TABLE IF NOT EXISTS dividends (
     PRIMARY KEY (symbol, date)
 );
 
+CREATE TABLE IF NOT EXISTS fundamentals (
+    symbol         VARCHAR PRIMARY KEY,
+    pe             DOUBLE,             -- P/E
+    pb             DOUBLE,             -- P/B
+    dividend_yield DOUBLE,             -- %, годовая
+    roe            DOUBLE,             -- %, return on equity
+    net_margin     DOUBLE,             -- %
+    rev_growth     DOUBLE,             -- %, рост выручки г/г
+    market_cap     DOUBLE,             -- USD
+    source         VARCHAR,            -- yahoo | demo
+    updated_at     TIMESTAMP DEFAULT current_timestamp
+);
+
+-- Журнал прогнозов Навигатора (петля самоулучшения S1):
+-- прогноз пишется ДО исхода; когда горизонт истечёт, outcome заполняется
+-- и считается калибровка (Brier score).
+CREATE SEQUENCE IF NOT EXISTS forecasts_seq;
+CREATE TABLE IF NOT EXISTS forecasts (
+    id                  INTEGER PRIMARY KEY DEFAULT nextval('forecasts_seq'),
+    made_at             TIMESTAMP DEFAULT current_timestamp,
+    channel             VARCHAR,
+    proxy               VARCHAR,
+    horizon_months      INTEGER,
+    p_rise              DOUBLE, p_flat DOUBLE, p_fall DOUBLE,
+    expected_return_pct DOUBLE,
+    score               DOUBLE,
+    outcome             VARCHAR,       -- rise | flat | fall (после истечения горизонта)
+    outcome_return_pct  DOUBLE,
+    scored_at           TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS watchlist (
     symbol   VARCHAR PRIMARY KEY,
     added_at TIMESTAMP DEFAULT current_timestamp

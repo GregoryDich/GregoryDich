@@ -127,6 +127,30 @@ def seed_dividends() -> int:
     return seeded
 
 
+def seed_fundamentals() -> int:
+    """Демо-фундаментал для акций/ETF: правдоподобные детерминированные
+    значения (source='demo') — чтобы скринер и дип-дайв жили без сети."""
+    seeded = 0
+    for sym, meta in UNIVERSE.items():
+        if meta["asset_class"] not in ("equity", "etf"):
+            continue
+        (have,) = db.fetchall(
+            "SELECT count(*) FROM fundamentals WHERE symbol=?", [sym])[0]
+        if have > 0:
+            continue
+        rng = np.random.RandomState(_seed_for(sym + ":fund"))
+        is_tech = meta.get("sector") == "Technology"
+        pe = float(rng.uniform(22, 55) if is_tech else rng.uniform(8, 30))
+        db.execute(
+            "INSERT OR REPLACE INTO fundamentals VALUES (?,?,?,?,?,?,?,?,?, current_timestamp)",
+            [sym, pe, float(rng.uniform(1.2, 12)),
+             float(rng.uniform(0.0, 3.0)), float(rng.uniform(5, 45)),
+             float(rng.uniform(3, 35)), float(rng.uniform(-5, 40)),
+             float(meta["base"] * rng.uniform(1e8, 2e9)), "demo"])
+        seeded += 1
+    return seeded
+
+
 def seed_macro() -> int:
     seeded = 0
     for sid, cfg in MACRO_SERIES.items():
@@ -150,4 +174,4 @@ def seed_macro() -> int:
 def seed_all() -> dict:
     seed_securities()
     return {"prices": seed_prices(), "macro": seed_macro(),
-            "dividends": seed_dividends()}
+            "dividends": seed_dividends(), "fundamentals": seed_fundamentals()}

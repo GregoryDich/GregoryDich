@@ -21,6 +21,18 @@ def channels() -> list[str]:
     return urls
 
 
+def ping_watchdog() -> None:
+    """Пинг healthchecks.io после успешного фонового цикла (петля надёжности)."""
+    if not config.HEALTHCHECKS_URL:
+        return
+    try:
+        import requests
+
+        requests.get(config.HEALTHCHECKS_URL, timeout=10)
+    except Exception as e:
+        log.debug("healthchecks ping failed: %s", e)
+
+
 def send(title: str, body: str) -> dict:
     """Возвращает {sent: bool, channels: n}. Без каналов — пишет в лог (dry-run)."""
     urls = channels()
