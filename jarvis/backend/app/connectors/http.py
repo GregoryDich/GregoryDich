@@ -22,7 +22,18 @@ def get_session() -> requests.Session:
     return _session
 
 
-def get(url: str, timeout: int = 20, **kwargs) -> requests.Response:
-    r = get_session().get(url, timeout=timeout, **kwargs)
-    r.raise_for_status()
-    return r
+def get(url: str, timeout: int = 20, retries: int = 3, **kwargs) -> requests.Response:
+    """GET с экспоненциальным backoff (0.5с, 1с): free-API временами моргают."""
+    import time
+
+    last: Exception | None = None
+    for attempt in range(retries):
+        try:
+            r = get_session().get(url, timeout=timeout, **kwargs)
+            r.raise_for_status()
+            return r
+        except Exception as e:
+            last = e
+            if attempt < retries - 1:
+                time.sleep(0.5 * 2 ** attempt)
+    raise last  # type: ignore[misc]

@@ -34,12 +34,26 @@ def _store_history(symbol: str, df: pd.DataFrame, source: str) -> None:
         )
 
 
+def _store_dividends(symbol: str) -> None:
+    div = live.yahoo_dividends(symbol)
+    if div.empty:
+        return
+    db.insert_df(
+        "INSERT OR REPLACE INTO dividends SELECT symbol, date, amount, source FROM _df",
+        div.assign(symbol=symbol, source="yahoo"))
+
+
 def refresh_symbol(symbol: str) -> str:
     """Обновить один тикер. Возвращает использованный источник."""
     for source, fn in (("yahoo", live.yahoo_history), ("stooq", live.stooq_history)):
         try:
             df = fn(symbol)
             _store_history(symbol, df, source)
+            if source == "yahoo":
+                try:
+                    _store_dividends(symbol)
+                except Exception as e:
+                    log.debug("dividends failed for %s: %s", symbol, e)
             return source
         except Exception as e:  # сеть/лимит/парсинг — пробуем следующий источник
             log.debug("%s failed for %s: %s", source, symbol, e)
@@ -86,8 +100,7 @@ def ensure_data() -> None:
     demo_seed.seed_securities()
     demo_seed.seed_prices()
     demo_seed.seed_macro()
-    for sym in db.fetchall("SELECT symbol FROM watchlist"):
-        pass  # watchlist наполняется в profile.store при онбординге
+    demo_seed.seed_dividends()
 
 
 def data_status() -> dict:
@@ -99,3 +112,27 @@ def data_status() -> dict:
     demo_share = by_source.get("demo", 0) / total
     mode = "demo" if demo_share > 0.5 else ("mixed" if demo_share > 0 else "live")
     return {"mode": mode, "by_source": by_source}
+
+
+def data_health() -> dict:
+    """Детально по источникам: свежесть и режим — панель «здоровье данных»."""
+    quote_rows = db.fetchall(
+        "SELECT source, count(*), max(ts) FROM quotes_latest GROUP BY source")
+    price_rows = db.fetchall(
+        "SELECT source, count(DISTINCT symbol), max(date) FROM prices_eod GROUP BY source")
+    macro_rows = db.fetchall(
+        """SELECT s.source, count(DISTINCT s.series_id), max(o.date)
+           FROM macro_series s JOIN macro_observations o USING(series_id)
+           GROUP BY s.source""")
+    div_rows = db.fetchall(
+        "SELECT source, count(DISTINCT symbol), max(date) FROM dividends GROUP BY source")
+
+    def pack(kind: str, rows) -> list[dict]:
+        return [{"kind": kind, "source": r[0], "items": r[1],
+                 "last_update": str(r[2]) if r[2] else None} for r in rows]
+
+    return {
+        "status": data_status(),
+        "sources": (pack("котировки", quote_rows) + pack("история цен", price_rows)
+                    + pack("макро", macro_rows) + pack("дивиденды", div_rows)),
+    }

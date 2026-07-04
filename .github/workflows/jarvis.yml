@@ -1,0 +1,42 @@
+name: jarvis
+
+on:
+  push:
+    paths:
+      - "jarvis/**"
+      - ".github/workflows/jarvis.yml"
+  pull_request:
+    paths:
+      - "jarvis/**"
+      - ".github/workflows/jarvis.yml"
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: jarvis/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: jarvis/backend/requirements.txt
+      - run: pip install -r requirements.txt
+      - run: python -m pytest tests -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: jarvis/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: jarvis/frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build

@@ -2,7 +2,7 @@ import type { DockviewApi, DockviewReadyEvent, IDockviewPanelProps } from 'dockv
 import { themeAbyss } from 'dockview'
 import { DockviewReact } from 'dockview-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { api } from './api'
+import { api, type DataHealth } from './api'
 import Palette, { type Command } from './components/Palette'
 import AlertsScreen from './screens/AlertsScreen'
 import FreedomScreen from './screens/FreedomScreen'
@@ -63,6 +63,8 @@ export default function App() {
   const [needOnboarding, setNeedOnboarding] = useState(false)
   const [dataMode, setDataMode] = useState('')
   const [clock, setClock] = useState('')
+  const [health, setHealth] = useState<DataHealth | null>(null)
+  const [showHealth, setShowHealth] = useState(false)
 
   useEffect(() => {
     api.freedom().then((f) => setNeedOnboarding(!f.onboarded)).catch(() => {})
@@ -85,28 +87,51 @@ export default function App() {
     dv.addPanel({ id, component: id, title: SCREENS[id].title })
   }, [])
 
-  const onReady = (e: DockviewReadyEvent) => {
-    apiRef.current = e.api
+  const LAYOUT_KEY = 'jarvis.layout.v1'
+
+  const defaultLayout = (dv: DockviewApi) => {
     // Стартовая раскладка: Свобода — главный экран, рядом рынки, ниже — портфель/макро
-    e.api.addPanel({ id: 'freedom', component: 'freedom', title: SCREENS.freedom.title })
-    e.api.addPanel({
+    dv.addPanel({ id: 'freedom', component: 'freedom', title: SCREENS.freedom.title })
+    dv.addPanel({
       id: 'markets', component: 'markets', title: SCREENS.markets.title,
       position: { referencePanel: 'freedom', direction: 'right' },
     })
-    e.api.addPanel({
+    dv.addPanel({
       id: 'portfolio', component: 'portfolio', title: SCREENS.portfolio.title,
       position: { referencePanel: 'freedom', direction: 'below' },
     })
-    e.api.addPanel({
+    dv.addPanel({
       id: 'macro', component: 'macro', title: SCREENS.macro.title,
       position: { referencePanel: 'portfolio', direction: 'within' },
     })
-    e.api.addPanel({
+    dv.addPanel({
       id: 'alerts', component: 'alerts', title: SCREENS.alerts.title,
       position: { referencePanel: 'portfolio', direction: 'within' },
     })
-    e.api.getPanel('portfolio')?.api.setActive()
-    e.api.getPanel('freedom')?.api.setActive()
+    dv.getPanel('portfolio')?.api.setActive()
+    dv.getPanel('freedom')?.api.setActive()
+  }
+
+  const onReady = (e: DockviewReadyEvent) => {
+    apiRef.current = e.api
+    const saved = localStorage.getItem(LAYOUT_KEY)
+    let restored = false
+    if (saved) {
+      try {
+        e.api.fromJSON(JSON.parse(saved))
+        restored = true
+      } catch {
+        localStorage.removeItem(LAYOUT_KEY) // битая/устаревшая раскладка
+      }
+    }
+    if (!restored) defaultLayout(e.api)
+    e.api.onDidLayoutChange(() => {
+      // лёгкий дебаунс: перетаскивание панелей шлёт всплеск событий
+      window.clearTimeout((window as { _jl?: number })._jl)
+      ;(window as { _jl?: number })._jl = window.setTimeout(() => {
+        localStorage.setItem(LAYOUT_KEY, JSON.stringify(e.api.toJSON()))
+      }, 400)
+    })
   }
 
   useEffect(() => {
@@ -131,6 +156,10 @@ export default function App() {
       run: () => { fetch('/api/markets/refresh', { method: 'POST' }); fetch('/api/macro/refresh', { method: 'POST' }) },
     },
     { code: 'DIG', title: 'Отправить дайджест сейчас', run: () => api.digest() },
+    {
+      code: 'RESET', title: 'Сбросить раскладку панелей', hint: 'вернуть стартовую',
+      run: () => { localStorage.removeItem(LAYOUT_KEY); location.reload() },
+    },
   ]
 
   return (
@@ -141,7 +170,15 @@ export default function App() {
         </div>
         <div className="spacer" />
         {dataMode && (
-          <span className={`badge ${dataMode}`} title="Источник данных: live / mixed / demo">
+          <span
+            className={`badge ${dataMode}`}
+            style={{ cursor: 'pointer' }}
+            title="Источники данных: клик — детали свежести"
+            onClick={() => {
+              if (!showHealth) api.dataHealth().then(setHealth).catch(() => {})
+              setShowHealth((v) => !v)
+            }}
+          >
             {dataMode === 'demo' ? 'ДЕМО-ДАННЫЕ' : dataMode.toUpperCase()}
           </span>
         )}
@@ -151,6 +188,27 @@ export default function App() {
       <div className="workspace">
         <DockviewReact components={panelComponents} onReady={onReady} theme={themeAbyss} />
       </div>
+      {showHealth && (
+        <div className="health-panel">
+          <h3>Здоровье данных</h3>
+          <table className="grid">
+            <thead>
+              <tr><th>Слой</th><th>Источник</th><th>Позиций</th><th>Обновлено</th></tr>
+            </thead>
+            <tbody>
+              {(health?.sources ?? []).map((s, i) => (
+                <tr key={i}>
+                  <td>{s.kind}</td>
+                  <td><span className={`badge ${s.source === 'demo' ? 'demo' : 'live'}`}>{s.source}</span></td>
+                  <td>{s.items}</td>
+                  <td className="muted">{s.last_update ?? '—'}</td>
+                </tr>
+              ))}
+              {!health && <tr><td colSpan={4} className="muted">Загрузка…</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      )}
       <Palette commands={commands} open={paletteOpen} onClose={() => setPaletteOpen(false)} />
       {needOnboarding && (
         <Onboarding

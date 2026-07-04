@@ -75,9 +75,13 @@ def beta(returns: pd.Series, benchmark: pd.Series) -> float:
     return float(cov / var_b) if var_b else 0.0
 
 
+RELIABLE_MIN_DAYS = 120  # меньше ~полугода истории — метрики ненадёжны
+
+
 def metrics(returns: pd.Series, benchmark: pd.Series | None = None,
             capital: float | None = None) -> dict:
     out = {
+        "reliability": "ok" if len(returns) >= RELIABLE_MIN_DAYS else "low",
         "ann_return": annualized_return(returns),
         "ann_vol": annualized_vol(returns),
         "sharpe": sharpe(returns),

@@ -70,6 +70,14 @@ CREATE TABLE IF NOT EXISTS alerts (
     last_triggered_at TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS dividends (
+    symbol VARCHAR,
+    date   DATE,
+    amount DOUBLE,                     -- на одну бумагу, в валюте инструмента
+    source VARCHAR,                    -- yahoo | demo
+    PRIMARY KEY (symbol, date)
+);
+
 CREATE TABLE IF NOT EXISTS watchlist (
     symbol   VARCHAR PRIMARY KEY,
     added_at TIMESTAMP DEFAULT current_timestamp

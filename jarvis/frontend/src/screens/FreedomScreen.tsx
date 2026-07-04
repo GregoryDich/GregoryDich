@@ -48,7 +48,10 @@ export default function FreedomScreen() {
           <div className="big">
             {d.years_to_target_base != null ? `${d.years_to_target_base} лет` : '—'}
           </div>
-          <div className="sub">при текущем взносе и 6% годовых</div>
+          <div className="sub">
+            при текущем взносе, {(d.base_nominal_return * 100).toFixed(0)}% номинальных
+            (~{(d.base_real_return * 100).toFixed(1)}% сверх инфляции)
+          </div>
         </div>
       </div>
 
@@ -59,7 +62,12 @@ export default function FreedomScreen() {
 
       <div className="cards" style={{ gridTemplateColumns: '1fr 1fr', marginTop: 8 }}>
         <div className="card">
-          <h3>Сценарии: взнос × доходность → лет до цели</h3>
+          <h3>
+            Сценарии: взнос × номинальная доходность → лет до цели{' '}
+            <span className="muted">
+              (цель в сегодняшних деньгах, рост за вычетом инфляции {(d.inflation * 100).toFixed(0)}%)
+            </span>
+          </h3>
           <table className="grid">
             <thead>
               <tr>

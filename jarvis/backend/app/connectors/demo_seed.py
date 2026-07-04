@@ -103,6 +103,30 @@ def seed_prices(symbols: list[str] | None = None) -> int:
     return seeded
 
 
+def seed_dividends() -> int:
+    """Демо-дивиденды для ETF/акций: квартальные, годовая доходность 0.5–2.5%
+    (детерминированно от тикера). Крипта/FX/индексы не платят."""
+    seeded = 0
+    for sym, meta in UNIVERSE.items():
+        if meta["asset_class"] not in ("etf", "equity"):
+            continue
+        (have,) = db.fetchall("SELECT count(*) FROM dividends WHERE symbol=?", [sym])[0]
+        if have > 0:
+            continue
+        rng = np.random.RandomState(_seed_for(sym + ":div"))
+        annual_yield = 0.005 + rng.random() * 0.02
+        quarterly = meta["base"] * annual_yield / 4
+        dates = _trading_dates(DEMO_DAYS)[::63]  # ~раз в квартал
+        rows = pd.DataFrame({"date": dates,
+                             "amount": [quarterly] * len(dates)})
+        rows = rows.assign(symbol=sym, source="demo")
+        db.insert_df(
+            "INSERT OR REPLACE INTO dividends SELECT symbol, date, amount, source FROM _df",
+            rows)
+        seeded += 1
+    return seeded
+
+
 def seed_macro() -> int:
     seeded = 0
     for sid, cfg in MACRO_SERIES.items():
@@ -125,4 +149,5 @@ def seed_macro() -> int:
 
 def seed_all() -> dict:
     seed_securities()
-    return {"prices": seed_prices(), "macro": seed_macro()}
+    return {"prices": seed_prices(), "macro": seed_macro(),
+            "dividends": seed_dividends()}

@@ -62,7 +62,8 @@ def morning_digest() -> str:
     monthly = fire.monthly_expenses_total(prof["monthly_expenses"])
     if monthly:
         f = fire.summary(capital, prof["monthly_expenses"], prof["swr"],
-                         prof["monthly_contribution_usd"])
+                         prof["monthly_contribution_usd"],
+                         inflation=prof.get("expected_inflation", 0.03))
         lines += ["", f"🎯 Свобода: {f['progress']:.1%} пути, пассивный доход "
                       f"${f['passive_income_monthly']:,.0f}/мес из ${monthly:,.0f} нужных"]
     text = "\n".join(lines)

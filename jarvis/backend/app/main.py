@@ -69,6 +69,11 @@ def health() -> dict:
     return {"ok": True, "data": market_data.data_status()}
 
 
+@app.get("/api/health/data")
+def health_data() -> dict:
+    return market_data.data_health()
+
+
 # Прод-режим: собранный фронтенд раздаётся тем же процессом
 _dist = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
 if _dist.exists():

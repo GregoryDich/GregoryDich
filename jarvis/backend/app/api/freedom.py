@@ -20,7 +20,8 @@ def freedom() -> dict:
     # капитал = инвестируемый кэш из профиля + текущая стоимость портфеля
     capital = prof["capital"]["investable_usd"] + port["totals"]["value_usd"]
     s = fire.summary(capital, prof["monthly_expenses"], prof["swr"],
-                     prof["monthly_contribution_usd"])
+                     prof["monthly_contribution_usd"],
+                     inflation=prof.get("expected_inflation", 0.03))
     s["portfolio_value_usd"] = port["totals"]["value_usd"]
     s["cash_usd"] = prof["capital"]["cash_usd"]
     s["cash_ils"] = prof["capital"]["cash_ils"]

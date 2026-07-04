@@ -149,5 +149,17 @@ button.ghost:hover { border-color: var(--accent); color: var(--accent); }
 .chip.on { border-color: var(--accent); color: var(--accent); }
 
 .disclaimer { font-size: 10px; color: var(--muted); margin-top: 10px; font-style: italic; }
+
+/* Панель здоровья данных (дропдаун из шапки) */
+.health-panel {
+  position: fixed; top: 34px; right: 12px; z-index: 80;
+  width: 420px; max-height: 60vh; overflow: auto;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px; box-shadow: 0 14px 40px rgba(0,0,0,0.55);
+}
+.health-panel h3 {
+  margin: 0 0 8px; font-size: 11px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.8px;
+}
 .chart-box { height: 260px; }
 .fill { height: 100%; }

@@ -78,6 +78,16 @@ async def import_csv(file: UploadFile) -> dict:
     return {"imported": imported}
 
 
+@router.get("/realized")
+def realized() -> dict:
+    df = portfolio.realized_pnl(portfolio.load_trades())
+    if df.empty:
+        return {"items": [], "total_pnl": 0.0}
+    import json
+    return {"items": json.loads(df.to_json(orient="records")),
+            "total_pnl": float(df["pnl"].sum())}
+
+
 @router.get("/risk")
 def risk_metrics() -> dict:
     returns = portfolio.portfolio_daily_returns()

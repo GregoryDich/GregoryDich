@@ -35,6 +35,7 @@ DEFAULT_PROFILE: dict = {
     },
     "monthly_contribution_usd": 500.0,
     "swr": 0.04,
+    "expected_inflation": 0.03,  # цель FIRE в сегодняшних деньгах → путь на реальной ставке
     "risk_profile": "balanced",   # conservative | balanced | aggressive
     "horizon_years": 10,
     "channels": [],               # доступные каналы: ibkr, tase, crypto, deposits, bonds
@@ -66,6 +67,10 @@ ONBOARDING_QUESTIONS: list[dict] = [
      ]},
     {"id": "monthly_contribution_usd", "type": "number",
      "title": "Сколько готовы откладывать в месяц (USD)?"},
+    {"id": "expected_inflation_pct", "type": "number",
+     "title": "Ожидаемая инфляция, % в год",
+     "hint": "По умолчанию 3%. Цель считается в сегодняшних деньгах, "
+             "доходность — за вычетом инфляции."},
     {"id": "channels", "type": "multiselect", "title": "Какие каналы инвестиций вам доступны?",
      "options": [
          {"v": "ibkr", "label": "Interactive Brokers (США/глобал)"},
@@ -94,6 +99,9 @@ def load() -> dict:
 
 def save(updates: dict) -> dict:
     profile = load()
+    pct = updates.pop("expected_inflation_pct", None)  # ответ онбординга в процентах
+    if pct is not None:
+        updates["expected_inflation"] = float(pct) / 100
     _deep_update(profile, updates)
     profile["onboarded"] = True
     config.PROFILE_PATH.write_text(

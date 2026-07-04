@@ -34,6 +34,9 @@ export type FreedomSummary = {
   monthly_expenses: number
   expenses_breakdown: Record<string, number>
   swr: number
+  inflation: number
+  base_nominal_return: number
+  base_real_return: number
   target_capital: number
   current_capital: number
   progress: number
@@ -57,6 +60,7 @@ export type Position = {
   currency: string
   value_usd: number
   value_ils: number
+  dividends_usd: number
   pnl_usd: number
   pnl_pct: number
   weight_pct: number
@@ -68,6 +72,8 @@ export type PortfolioPositions = {
     value_usd: number
     value_ils: number
     cost_usd: number
+    dividends_usd: number
+    realized_pnl_usd: number
     pnl_usd: number
     pnl_pct: number
     usd_ils: number
@@ -78,6 +84,7 @@ export type PortfolioPositions = {
 export type RiskMetrics = {
   available: boolean
   reason?: string
+  reliability?: 'ok' | 'low'
   ann_return: number
   ann_vol: number
   sharpe: number
@@ -117,8 +124,14 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
   return r.json() as Promise<T>
 }
 
+export type DataHealth = {
+  status: { mode: string; by_source: Record<string, number> }
+  sources: { kind: string; source: string; items: number; last_update: string | null }[]
+}
+
 export const api = {
   overview: () => http<MarketsOverview>('/api/markets/overview'),
+  dataHealth: () => http<DataHealth>('/api/health/data'),
   watchlist: () => http<{ items: Quote[] }>('/api/markets/watchlist'),
   history: (symbol: string, days = 365) =>
     http<{ symbol: string; name: string; source: string; candles: Candle[] }>(

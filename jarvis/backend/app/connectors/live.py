@@ -29,6 +29,18 @@ def yahoo_history(symbol: str, period: str = "2y") -> pd.DataFrame:
         ["date", "open", "high", "low", "close", "volume"]]
 
 
+def yahoo_dividends(symbol: str, period: str = "2y") -> pd.DataFrame:
+    """Дивиденды на одну бумагу: DataFrame(date, amount). Пустой — если не платит."""
+    import yfinance as yf
+
+    s = yf.Ticker(symbol).history(period=period, interval="1d", actions=True)
+    if s.empty or "Dividends" not in s.columns:
+        return pd.DataFrame(columns=["date", "amount"])
+    div = s[s["Dividends"] > 0]["Dividends"].reset_index()
+    return pd.DataFrame({"date": pd.to_datetime(div["Date"]).dt.date,
+                         "amount": div["Dividends"].astype(float)})
+
+
 # --- Stooq (фолбэк, CSV без ключа) -----------------------------------------
 
 def _stooq_symbol(symbol: str) -> str:

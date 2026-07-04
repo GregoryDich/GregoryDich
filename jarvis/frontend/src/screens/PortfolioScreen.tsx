@@ -34,14 +34,22 @@ export default function PortfolioScreen() {
           <div className="sub">{t ? `₪${fmt.num(t.value_ils, 0)} · курс ${fmt.num(t.usd_ils)}` : ''}</div>
         </div>
         <div className="card">
-          <h3>P&L</h3>
+          <h3>P&L (total return)</h3>
           <div className={`big ${t && t.pnl_usd >= 0 ? 'up' : 'down'}`}>
             {t ? fmt.usd(t.pnl_usd) : '—'}
           </div>
-          <div className="sub">{t ? fmt.pct(t.pnl_pct) : ''}</div>
+          <div className="sub">
+            {t ? `${fmt.pct(t.pnl_pct)} · дивиденды ${fmt.usd(t.dividends_usd)}` : ''}
+            {t && t.realized_pnl_usd !== 0 ? ` · реализовано ${fmt.usd(t.realized_pnl_usd)}` : ''}
+          </div>
         </div>
         <div className="card">
-          <h3>VaR 95% / день</h3>
+          <h3>
+            VaR 95% / день{' '}
+            {risk?.available && risk.reliability === 'low' && (
+              <span className="badge demo" title="Меньше ~полугода истории — метрики риска ненадёжны">мало истории</span>
+            )}
+          </h3>
           <div className="big">{risk?.available ? fmt.pct(-risk.var95_daily * 100, 2) : '—'}</div>
           <div className="sub">
             {risk?.available && risk.var95_daily_usd ? `≈ ${fmt.usd(-risk.var95_daily_usd)}` : 'потеря, не превышаемая в 95% дней'}
@@ -66,7 +74,7 @@ export default function PortfolioScreen() {
             <thead>
               <tr>
                 <th>Тикер</th><th>Кол-во</th><th>Ср. цена</th><th>Цена</th>
-                <th>Стоимость $</th><th>P&L $</th><th>P&L %</th><th>Вес</th>
+                <th>Стоимость $</th><th>Дивид. $</th><th>P&L $</th><th>P&L %</th><th>Вес</th>
               </tr>
             </thead>
             <tbody>
@@ -77,13 +85,14 @@ export default function PortfolioScreen() {
                   <td>{fmt.num(p.avg_cost)}</td>
                   <td>{fmt.num(p.price)}</td>
                   <td>{fmt.num(p.value_usd, 0)}</td>
+                  <td>{fmt.num(p.dividends_usd, 0)}</td>
                   <td className={p.pnl_usd >= 0 ? 'up' : 'down'}>{fmt.num(p.pnl_usd, 0)}</td>
                   <td className={p.pnl_pct >= 0 ? 'up' : 'down'}>{fmt.pct(p.pnl_pct)}</td>
                   <td>{p.weight_pct.toFixed(1)}%</td>
                 </tr>
               ))}
               {(!pos || pos.positions.length === 0) && (
-                <tr><td colSpan={8} className="muted">Нет позиций — добавьте сделку или импортируйте CSV</td></tr>
+                <tr><td colSpan={9} className="muted">Нет позиций — добавьте сделку или импортируйте CSV</td></tr>
               )}
             </tbody>
           </table>
