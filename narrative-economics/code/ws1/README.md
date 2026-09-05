@@ -13,9 +13,12 @@ before spending weeks on the full index.
    ~50-word fragments and applies the transparent keyword-dictionary channel
    (deterministic, reproducible). Outputs `fragments.csv`, `coding_sample.csv`,
    `ws1_summary.md`.
-3. **Human coding.** Two independent coders label `coding_sample.csv`
-   (`human_relevant_0_1`, `human_valence_minus_plus_none`), blind to each
-   other and to the machine labels.
+3. **Human coding.** Two independent coders label the 300 fragments, blind
+   to each other and to the machine labels, following `CODEBOOK.md`. Two
+   equivalent instruments show one fragment at a time in a per-coder random
+   order: `ws1_survey.html` (open in a browser; no server, no going back) or
+   a Google Form built by `gforms/` (see `gforms/README.md`). Both yield
+   `frag_id, text, human_relevant_0_1, human_valence_minus_plus_none`.
 4. **LLM channel.** The same fragments are classified by an LLM with a fixed
    rubric (the second pre-registered channel).
 5. **κ gate.** `ws1_kappa.py` computes agreement between any two label
