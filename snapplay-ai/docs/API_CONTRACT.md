@@ -1,8 +1,13 @@
-# SnapPlay AI — API & Data Contract (v1)
+# SnapPlay AI — API & Data Contract (v2)
 
 This document is the single source of truth shared by the JUCE plugin client
-(`plugin/`), the FastAPI backend (`backend/`), and the Supabase schema (`db/`).
-Any change here must be mirrored in all three.
+(`plugin/`), the FastAPI backend (`backend/`), the Supabase schema (`db/`), the AWS
+deployment (`infra/aws/`), and the growth engine (`growth/`). Any change here must be
+mirrored in all of them.
+
+Changes in v2: free tier 5 → 3 credits; upload cap 25 → 10 MB; latency target 2.5 → 2.0 s
+on A10G; selectable Scale-Snap modes (§8); in-plugin paywall and `checkout_url` (§3);
+AWS as the default production path (§10); first-class API keys (§11); affiliates (§12).
 
 Base URL: `https://api.snapplay.ai` (configurable in the plugin as `apiBaseUrl`).
 All routes are versioned under `/v1`. All request/response bodies are JSON
@@ -53,7 +58,7 @@ Proxy to GoTrue password grant so the plugin talks to one host only.
 ### `POST /v1/jobs`   (auth, multipart/form-data)
 | field     | type   | notes |
 |-----------|--------|-------|
-| `audio`   | file   | FLAC (preferred, produced client-side with `juce::FlacAudioFormat`), WAV, MP3, OGG, AIFF. Max **25 MB**, max **60 s** (longer input is truncated server-side to the first 60 s, and `truncated: true` is reported). |
+| `audio`   | file   | FLAC (preferred, produced client-side with `juce::FlacAudioFormat`), WAV, MP3, OGG, AIFF. Max **10 MB**, max **60 s** (longer input is truncated server-side to the first 60 s, and `truncated: true` is reported). |
 | `options` | string | JSON, see below |
 
 `options` JSON (all optional):
@@ -170,13 +175,26 @@ Cancels a queued job and releases its reservation. `409` if already running.
   "next_cursor": null }
 ```
 
-### `GET /v1/plans`   (public)
+### `GET /v1/plans`   (public, `user_id` attached when called with auth)
 ```json
 { "plans": [
-  { "id": "free",         "name": "Free",          "credits": 5,  "price_usd": 0,    "interval": null },
-  { "id": "pack_50",      "name": "50 Credits",    "credits": 50, "price_usd": 9.00, "interval": null },
-  { "id": "sub_monthly",  "name": "Pro Monthly",   "credits": 60, "price_usd": 7.99, "interval": "month" } ] }
+  { "id": "free",         "name": "Free",          "credits": 3,  "price_usd": 0,    "interval": null,    "checkout_url": null },
+  { "id": "pack_50",      "name": "50 Credits",    "credits": 50, "price_usd": 9.00, "interval": null,    "checkout_url": "https://…/checkout/buy/…?checkout[custom][user_id]=…" },
+  { "id": "sub_monthly",  "name": "Pro Monthly",   "credits": 60, "price_usd": 7.99, "interval": "month", "checkout_url": "https://…" } ] }
 ```
+`checkout_url` carries the caller's `user_id` as provider custom data so the webhook can
+attribute the purchase without an email lookup. When the request is unauthenticated the
+URL is returned without that parameter. New accounts are granted **3 credits** at signup.
+
+### In-plugin paywall
+When `balance.available` reaches 0 the plugin shows a prompt built from `/v1/plans`:
+"You've used your 3 free credits — unlock 50 more for $9, or subscribe for $7.99/mo",
+with buttons opening the corresponding `checkout_url` in the system browser. The plugin
+polls `GET /v1/me` every 5 s while the prompt is open so the balance updates within a
+second of the webhook landing.
+
+### `GET /v1/plans` for machines
+The growth engine (see §11) authenticates with an API key and never sees this prompt.
 
 ## 4. Payment webhooks
 
@@ -263,7 +281,7 @@ class PipelineResult(BaseModel):   # mirrors JobResult minus job_id/credits/urls
 def run_pipeline(audio_bytes: bytes, options: PipelineOptions,
                  progress: Callable[[str, float], None]) -> PipelineResult: ...
 ```
-Stages and the 2.5 s budget on an RTX 4090 for a 30 s stereo clip:
+Stages and the **2.0 s** budget on an A10G (`g5.xlarge`) for a 30 s stereo clip:
 
 | stage | tool | budget |
 |-------|------|--------|
@@ -274,15 +292,33 @@ Stages and the 2.5 s budget on an RTX 4090 for a 30 s stereo clip:
 | package | WAV encode, MIDI write, upload to storage | 300 ms |
 | **total** | | **≈1.8 s** (+ network) |
 
-The worker exposes `run_pipeline` behind Modal (`worker/modal_app.py`) and
-RunPod (`worker/runpod_handler.py`). `SNAPPLAY_PIPELINE=fake` swaps in a
-deterministic CPU stub for tests and local development.
+The budget holds only on A10G-class hardware. On a T4 (`g4dn.xlarge`) separation alone
+costs ~3–5 s, so a T4 deployment must advertise a ~5 s target instead; the instance type
+is a deployment variable, not a contract guarantee.
+
+`SNAPPLAY_PIPELINE` selects the backend: `fake` (deterministic CPU stub for tests and
+local development), `local` (in-process, requires the GPU extras), `modal`
+(`worker/modal_app.py`), `runpod` (`worker/runpod_handler.py`), or `aws`
+(SQS queue + ECS GPU worker, `worker/aws_worker.py` — see §10).
 
 ## 8. Plugin-side derived values
 
 * Root transposition: `semitones = target_root_midi - stem.root_midi`.
-* Scale-Lock uses `analysis.key.scale_pitch_classes`; incoming MIDI notes are
-  snapped to the nearest pitch class in the set (ties resolve downward).
+* Scale-Snap is client-side. The `scale_mode` parameter selects the pitch-class set,
+  and `scale_root` (0–11, default = `analysis.key.root_midi % 12`) rotates it:
+
+  | `scale_mode` | intervals from root | source |
+  |--------------|--------------------|--------|
+  | `detected` (default) | — | `analysis.key.scale_pitch_classes` verbatim |
+  | `major` | 0 2 4 5 7 9 11 | computed |
+  | `minor` | 0 2 3 5 7 8 10 | computed (natural minor) |
+  | `pentatonic_major` | 0 2 4 7 9 | computed |
+  | `pentatonic_minor` | 0 3 5 7 10 | computed |
+  | `off` | — | passthrough, no snapping |
+
+  Incoming MIDI notes snap to the nearest pitch class in the set; ties resolve downward.
+  A note-off always uses the pitch its note-on was snapped to, even if the mode changed
+  while the note was held.
 * Auto-ADSR: use `suggested_adsr` when present, else derive from the stem's
   envelope (see `plugin/Source/Core/Envelope.h`).
 * Drum mode: `slices[i]` mapped to MIDI note `slices[i].midi_note`; if absent,
@@ -299,3 +335,43 @@ deterministic CPU stub for tests and local development.
   fine_pitch u8, u1 u8, release u8, midi_channel u8, pan u8, velocity u8,
   mod_x u8, mod_y u8). This layout follows community reverse-engineering
   (PyFLP); `.mid` remains the guaranteed interchange path.
+
+## 10. AWS deployment (default production path)
+
+**Storage.** `S3StorageService` (boto3) writes to `s3://<bucket>/jobs/<user_id>/<job_id>/`
+and returns presigned GET URLs valid until `expires_at`. Setting `S3_ENDPOINT_URL` points
+the same code at Cloudflare R2. A bucket lifecycle rule expires objects after 24 h.
+CloudFront (OAC to the bucket, signed URLs) is optional and changes nothing client-side —
+`stems[].url` stays an opaque signed URL.
+
+**Queue.** `POST /v1/jobs` enqueues `{job_id, user_id, input_key, options}` on SQS after
+`create_job` reserves the credit. The worker long-polls, extends message visibility while
+processing, uploads results, and calls `complete_job` / `fail_job` idempotently. Three
+failed receives move the message to a DLQ. A reaper releases reservations for jobs left
+`running` past `JOB_TIMEOUT_SECONDS`, so a dead worker never silently consumes a credit.
+
+**Control plane.** FastAPI on ECS Fargate behind an ALB. API Gateway HTTP APIs do not
+support SSE, which §2 requires, so Lambda is not used for the job routes.
+
+Config keys: `AWS_REGION`, `S3_BUCKET`, `S3_ENDPOINT_URL`, `CLOUDFRONT_DOMAIN`,
+`CLOUDFRONT_KEY_PAIR_ID`, `SQS_JOB_QUEUE_URL`, `SQS_DLQ_URL`, `JOB_TIMEOUT_SECONDS`,
+`GPU_INSTANCE_TYPE` (Terraform `var.gpu_instance_type`, default `g5.xlarge`).
+
+## 11. API keys and the growth engine
+
+Machine clients authenticate with `X-API-Key: sp_live_<32 chars>`, stored as a SHA-256
+hash in `api_keys` (`prefix` kept in clear for display). Keys carry the owning user's
+credit balance and are subject to the same rate limits. `POST /v1/api-keys` (auth)
+creates one and returns the plaintext exactly once; `DELETE /v1/api-keys/{id}` revokes it.
+
+The UGC automation engine (`growth/`) uses such a key to submit jobs and never touches
+user JWTs.
+
+## 12. Affiliates
+
+Tables `affiliates` (user, code, commission rate, payout details), `referral_codes`
+(code → affiliate, uses, active), and `affiliate_commissions` (purchase, affiliate,
+`amount_cents` = 30 % of net revenue after provider fees, status `pending|paid|void`).
+A checkout carries `checkout[custom][ref]`; the webhook resolves it to an affiliate and
+writes a commission row in the same transaction as the credit grant, keyed by the same
+idempotency key so a replayed webhook cannot double-pay.
