@@ -1,0 +1,6 @@
+# Copy to backend.hcl (git-ignored) and pass with `terraform init -backend-config=backend.hcl`.
+bucket         = "snapplay-terraform-state-<account-id>"
+key            = "snapplay/prod/terraform.tfstate"
+region         = "us-east-1"
+dynamodb_table = "snapplay-terraform-locks"
+encrypt        = true

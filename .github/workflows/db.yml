@@ -1,0 +1,38 @@
+name: db
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "snapplay-ai/db/**"
+      - ".github/workflows/db.yml"
+  pull_request:
+    paths:
+      - "snapplay-ai/db/**"
+      - ".github/workflows/db.yml"
+
+concurrency:
+  group: db-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: schema tests (PostgreSQL 16)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      # ubuntu-latest ships PostgreSQL 16 but its binaries refuse to run as
+      # root, and run_tests.sh runs initdb itself: hand the tree to the
+      # preinstalled postgres user and run the script as that user.
+      - name: Run db/tests/run_tests.sh as postgres
+        working-directory: snapplay-ai
+        run: |
+          test -x /usr/lib/postgresql/16/bin/initdb
+          sudo chown -R postgres:postgres db
+          sudo -u postgres env PATH="/usr/lib/postgresql/16/bin:$PATH" HOME=/var/lib/postgresql \
+            bash db/tests/run_tests.sh

@@ -1,0 +1,50 @@
+name: growth
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "snapplay-ai/growth/**"
+      - ".github/workflows/growth.yml"
+  pull_request:
+    paths:
+      - "snapplay-ai/growth/**"
+      - ".github/workflows/growth.yml"
+
+concurrency:
+  group: growth-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: snapplay-ai/growth
+
+jobs:
+  test:
+    name: pytest
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: snapplay-ai/growth/requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          if [ -f requirements-dev.txt ]; then
+            pip install -r requirements-dev.txt
+          else
+            pip install pytest pytest-asyncio respx
+          fi
+
+      - name: Test
+        run: python -m pytest -q
