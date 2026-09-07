@@ -97,6 +97,10 @@ SNAPPLAY_TEST(transientsOfToneOnsetAndOverBackground)
     SNAPPLAY_CHECK_EQ (toneOnsets.size(), 1u);
     SNAPPLAY_CHECK (containsOnsetNear (toneOnsets, 0.5));
 
+    // A tone that stops is not an onset: the offset smears energy across bins (positive flux)
+    // but the frame loses energy, so only the tone's start is reported.
+    SNAPPLAY_CHECK (! containsOnsetNear (toneOnsets, 1.0));
+
     // Clicks on top of a sustained tone that starts at t = 0 (itself an onset).
     std::vector<float> mixed (static_cast<std::size_t> (1.2 * sampleRate), 0.0f);
     addTone (mixed, 0.0, 1.2, 220.0, 0.3);

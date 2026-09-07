@@ -119,10 +119,10 @@ SNAPPLAY_TEST(fscNoteRecordFieldOffsets)
     const std::size_t record = headerSize + versionEventSize + 2;   // notes id + one-byte varint
     SNAPPLAY_CHECK_EQ (record + 24, bytes.size());
 
-    SNAPPLAY_CHECK_EQ (readU32LE (bytes, record + 0), 48u);        // position: 0.5 s at 120 BPM, PPQ 96
+    SNAPPLAY_CHECK_EQ (readU32LE (bytes, record + 0), 96u);        // position: 0.5 s at 120 BPM, PPQ 96
     SNAPPLAY_CHECK_EQ (readU16LE (bytes, record + 4), 0x4000);     // flags
     SNAPPLAY_CHECK_EQ (readU16LE (bytes, record + 6), 0);          // rack_channel
-    SNAPPLAY_CHECK_EQ (readU32LE (bytes, record + 8), 24u);        // length
+    SNAPPLAY_CHECK_EQ (readU32LE (bytes, record + 8), 48u);        // length: 0.25 s
     SNAPPLAY_CHECK_EQ (readU32LE (bytes, record + 12), 62u);       // key (pyflp key u16 + group u16 = 0)
     SNAPPLAY_CHECK_EQ (int (bytes.at (record + 16)), 120);         // fine_pitch
     SNAPPLAY_CHECK_EQ (int (bytes.at (record + 17)), 0);           // u1

@@ -174,7 +174,10 @@ inline std::vector<std::uint8_t> writeFsc (const std::vector<Track>& tracks, dou
         return a.position < b.position;
     });
 
-    std::vector<std::uint8_t> version (std::begin (fscVersionText), std::end (fscVersionText));   // includes the NUL
+    std::vector<std::uint8_t> version;                       // the version text and its NUL terminator
+    version.reserve (sizeof (fscVersionText));
+    for (const char character : fscVersionText)
+        version.push_back (static_cast<std::uint8_t> (character));
 
     std::vector<std::uint8_t> notes;
     notes.reserve (records.size() * static_cast<std::size_t> (fscNoteRecordSize));

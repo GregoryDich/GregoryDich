@@ -10,7 +10,8 @@ ScaleLockProcessor::ScaleLockProcessor()
 
 void ScaleLockProcessor::prepare (int maximumEvents)
 {
-    scratch.ensureSize (static_cast<size_t> (juce::jmax (1, maximumEvents)) * 8u);
+    // 4-byte position + 2-byte size + up to 3 data bytes per channel message, plus slack.
+    scratch.ensureSize (static_cast<size_t> (juce::jmax (1, maximumEvents)) * 12u);
     reset();
 }
 
@@ -33,8 +34,9 @@ void ScaleLockProcessor::process (juce::MidiBuffer& midi)
 
     const auto mask = activeMask.load (std::memory_order_acquire);
 
-    // Rewritten events have the same byte size as the originals, so copying them back into
-    // `midi` after clear() (which keeps its storage) never grows either buffer.
+    // Events are rebuilt into the scratch buffer and swapped back, so no event is copied and
+    // neither buffer allocates once both have grown to a block's worth of storage. clear()
+    // keeps the underlying capacity.
     scratch.clear();
 
     for (const auto metadata : midi)
@@ -74,8 +76,9 @@ void ScaleLockProcessor::process (juce::MidiBuffer& midi)
         scratch.addEvent (data, metadata.numBytes, metadata.samplePosition);
     }
 
-    midi.clear();
-    midi.addEvents (scratch, 0, -1, 0);
+    // Swapping preserves every event, its order and its timestamp exactly - including any at a
+    // negative sample position, which addEvents (from sample 0) would discard.
+    midi.swapWith (scratch);
 }
 
 void ScaleLockProcessor::reset() noexcept

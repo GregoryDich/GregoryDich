@@ -75,12 +75,21 @@ inline void fftInPlace (std::vector<double>& re, std::vector<double>& im)
     }
 }
 
+/** One analysis frame: its half-wave rectified flux and the energy of its spectrum. */
+struct FluxFrame
+{
+    double flux = 0.0;
+    double energy = 0.0;
+};
+
 /**
  * Half-wave rectified spectral flux per analysis frame (Hann window, frames start at
  * multiples of the hop, zero-padded past the end of the signal). The first frame is
  * compared against silence so a signal that starts abruptly at t = 0 registers an onset.
+ * The frame energy travels with each frame so callers can reject note offsets, whose
+ * truncated partials smear across bins — raising the flux — while the energy falls.
  */
-inline std::vector<double> spectralFlux (const float* mono, int numSamples)
+inline std::vector<FluxFrame> spectralFlux (const float* mono, int numSamples)
 {
     constexpr int frameSize = transientFrameSize;
     constexpr int hop = transientHopSize;
@@ -92,8 +101,8 @@ inline std::vector<double> spectralFlux (const float* mono, int numSamples)
                                                                       / static_cast<double> (frameSize)));
 
     const int numFrames = (numSamples + hop - 1) / hop;
-    std::vector<double> flux;
-    flux.reserve (static_cast<std::size_t> (numFrames));
+    std::vector<FluxFrame> frames;
+    frames.reserve (static_cast<std::size_t> (numFrames));
 
     std::vector<double> re (static_cast<std::size_t> (frameSize)), im (static_cast<std::size_t> (frameSize));
     std::vector<double> previous (numBins, 0.0), current (numBins, 0.0);
@@ -112,60 +121,58 @@ inline std::vector<double> spectralFlux (const float* mono, int numSamples)
 
         fftInPlace (re, im);
 
-        double sum = 0.0;
+        FluxFrame result;
         for (std::size_t k = 0; k < numBins; ++k)
         {
             current[k] = std::sqrt (re[k] * re[k] + im[k] * im[k]);
-            sum += std::max (0.0, current[k] - previous[k]);
+            result.flux += std::max (0.0, current[k] - previous[k]);
+            result.energy += current[k] * current[k];
         }
 
-        flux.push_back (sum);
+        frames.push_back (result);
         std::swap (previous, current);
     }
 
-    return flux;
+    return frames;
 }
 
 /**
- * Refines an onset inside the frame starting at `frameStart` to the start of the 32-sample
- * block with the largest rise in mean energy over its predecessor (the block before the
- * frame, or silence at the very beginning).
+ * Locates the onset inside the frame starting at `frameStart`: the first 32-sample block whose
+ * mean energy crosses the midpoint between the quietest and the loudest block of that frame.
+ * A frame is only flagged when its energy rose, so its loudest block belongs to the new event
+ * and its quietest one to whatever was sounding before — the midpoint separates the two even
+ * when the new event arrives over a sustained background.
  */
 inline double refineOnset (const float* mono, int numSamples, int frameStart, double sampleRate)
 {
-    constexpr int block = 32;
+    constexpr int blockSize = 32;
 
-    const auto meanEnergy = [mono] (int start, int count)
+    const int frameEnd = std::min (numSamples, frameStart + transientFrameSize);
+    const int numBlocks = std::max (1, (frameEnd - frameStart) / blockSize);
+
+    std::vector<double> energies (static_cast<std::size_t> (numBlocks), 0.0);
+    for (int block = 0; block < numBlocks; ++block)
     {
+        const int start = frameStart + block * blockSize;
         double sum = 0.0;
-        for (int i = 0; i < count; ++i)
+
+        for (int i = 0; i < blockSize && start + i < frameEnd; ++i)
         {
             const double sample = mono[start + i];
             sum += sample * sample;
         }
-        return count > 0 ? sum / static_cast<double> (count) : 0.0;
-    };
 
-    const int frameEnd = std::min (numSamples, frameStart + transientFrameSize);
-    double previous = frameStart >= block ? meanEnergy (frameStart - block, block) : 0.0;
-    double bestRise = -1.0;
-    int bestStart = frameStart;
-
-    for (int start = frameStart; start < frameEnd; start += block)
-    {
-        const double energy = meanEnergy (start, std::min (block, frameEnd - start));
-        const double rise = energy - previous;
-
-        if (rise > bestRise)
-        {
-            bestRise = rise;
-            bestStart = start;
-        }
-
-        previous = energy;
+        energies[static_cast<std::size_t> (block)] = sum / blockSize;
     }
 
-    return static_cast<double> (bestStart) / sampleRate;
+    const auto [quietest, loudest] = std::minmax_element (energies.begin(), energies.end());
+    const double threshold = 0.5 * (*quietest + *loudest);
+
+    for (int block = 0; block < numBlocks; ++block)
+        if (energies[static_cast<std::size_t> (block)] >= threshold)
+            return static_cast<double> (frameStart + block * blockSize) / sampleRate;
+
+    return static_cast<double> (frameStart) / sampleRate;
 }
 
 } // namespace detail
@@ -175,11 +182,13 @@ inline double refineOnset (const float* mono, int numSamples, int frameStart, do
  *
  * Spectral-flux method: 1024-sample Hann-windowed frames every 256 samples (radix-2 FFT),
  * half-wave rectified flux of the magnitude spectra, and an adaptive threshold of
- * `0.02 * max flux + 1.5 * median (flux over +-8 frames)` plus a -60 dBFS floor. A frame
- * whose flux is a local maximum above the threshold is an onset; its time is refined to the
- * start of the 32-sample block inside that frame where the signal energy rises most, so
- * clicks are located to about a millisecond. Onsets closer than 30 ms to the previous one
- * are dropped.
+ * `0.02 * max flux + 1.5 * median (flux over +-8 frames)` plus a -60 dBFS floor. A frame is
+ * an onset when its flux is a local maximum above that threshold and its spectrum is louder
+ * carries more energy than the previous frame's — the energy test rejects note offsets, whose
+ * truncated partials smear across bins and so produce positive flux as well. The onset time is
+ * refined from the detected frame's start to the first 32-sample block inside it whose energy
+ * crosses the midpoint between that frame's quietest and loudest block, which locates onsets to
+ * a few milliseconds. Onsets closer than 30 ms to the previous one are dropped.
  *
  * @return onset times in seconds, strictly increasing; empty for silent input.
  */
@@ -194,8 +203,13 @@ inline std::vector<double> detectTransients (const float* mono, int numSamples, 
     if (mono == nullptr || numSamples <= 0 || ! (sampleRate > 0.0))
         return {};
 
-    const std::vector<double> flux = detail::spectralFlux (mono, numSamples);
-    const int numFrames = static_cast<int> (flux.size());
+    const std::vector<detail::FluxFrame> frames = detail::spectralFlux (mono, numSamples);
+    const int numFrames = static_cast<int> (frames.size());
+
+    std::vector<double> flux (frames.size());
+    for (std::size_t i = 0; i < frames.size(); ++i)
+        flux[i] = frames[i].flux;
+
     const double maxFlux = *std::max_element (flux.begin(), flux.end());
 
     if (! (maxFlux >= absoluteFloor))
@@ -217,6 +231,12 @@ inline std::vector<double> detectTransients (const float* mono, int numSamples, 
             continue;
 
         if (frame + 1 < numFrames && value < flux[static_cast<std::size_t> (frame + 1)])
+            continue;
+
+        // A note offset smears its truncated partials across bins, which also raises the flux;
+        // only a frame carrying more energy than its predecessor is a real onset.
+        const double previousEnergy = frame > 0 ? frames[static_cast<std::size_t> (frame - 1)].energy : 0.0;
+        if (frames[static_cast<std::size_t> (frame)].energy <= previousEnergy)
             continue;
 
         neighbourhood.assign (flux.begin() + std::max (0, frame - medianRadius),

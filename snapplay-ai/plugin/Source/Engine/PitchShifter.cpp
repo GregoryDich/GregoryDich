@@ -120,8 +120,7 @@ namespace
         drain();
         return output;
     }
-#endif
-
+#else
     /** Resampling fallback: reading the input `pitchScale` times faster raises the pitch and
         shortens the result to round(length / pitchScale) samples. Lagrange interpolation,
         processed in blocks; no anti-alias filtering. */
@@ -160,6 +159,7 @@ namespace
 
         return output;
     }
+#endif
 } // namespace
 
 bool PitchShifter::hasRubberBand() noexcept

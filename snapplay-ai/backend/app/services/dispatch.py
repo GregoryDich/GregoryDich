@@ -24,8 +24,8 @@ from app.services.jobs import package_result
 
 log = logging.getLogger("snapplay.dispatch")
 
-MODAL_FUNCTION_NAME = "process_job"
-"""Name of the Modal function declared in ``worker/modal_app.py``."""
+MODAL_CLASS_NAME = "SnapPlayWorker"
+"""Modal class declared in ``worker/modal_app.py``; its ``run`` method takes one job."""
 RUNPOD_API_BASE = "https://api.runpod.ai/v2"
 
 
@@ -168,9 +168,15 @@ class ModalDispatch:
             raise ApiException(WORKER_UNAVAILABLE, message="Modal SDK is not installed.") from exc
         if not self._app_name:
             raise ApiException(WORKER_UNAVAILABLE, message="MODAL_APP_NAME is not configured.")
+        message = job_message(job_id, user_id, input_key, options)
         try:
-            function = modal.Function.from_name(self._app_name, MODAL_FUNCTION_NAME)
-            call = await function.spawn.aio(job_message(job_id, user_id, input_key, options))
+            worker = modal.Cls.from_name(self._app_name, MODAL_CLASS_NAME)()
+            call = await worker.run.spawn.aio(
+                message["job_id"],
+                message["options"],
+                user_id=message["user_id"],
+                input_key=message["input_key"],
+            )
         except Exception as exc:
             log.warning("modal spawn failed", extra={"job_id": str(job_id)}, exc_info=exc)
             raise ApiException(WORKER_UNAVAILABLE, message="Modal worker unavailable.") from exc
@@ -247,7 +253,7 @@ class RunPodDispatch:
 
 
 __all__ = [
-    "MODAL_FUNCTION_NAME",
+    "MODAL_CLASS_NAME",
     "RUNPOD_API_BASE",
     "LocalDispatch",
     "ModalDispatch",
