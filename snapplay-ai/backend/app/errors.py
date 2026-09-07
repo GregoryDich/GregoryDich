@@ -32,8 +32,6 @@ VALIDATION_ERROR = "validation_error"
 RATE_LIMITED = "rate_limited"
 INTERNAL_ERROR = "internal_error"
 WORKER_UNAVAILABLE = "worker_unavailable"
-# Scaffolding only: raised by route stubs that are not implemented yet (not part of §5).
-NOT_IMPLEMENTED = "not_implemented"
 
 STATUS_BY_CODE: dict[str, int] = {
     BAD_REQUEST: 400,
@@ -48,7 +46,6 @@ STATUS_BY_CODE: dict[str, int] = {
     VALIDATION_ERROR: 422,
     RATE_LIMITED: 429,
     INTERNAL_ERROR: 500,
-    NOT_IMPLEMENTED: 501,
     WORKER_UNAVAILABLE: 503,
 }
 
@@ -64,7 +61,6 @@ CODE_BY_STATUS: dict[int, str] = {
     422: VALIDATION_ERROR,
     429: RATE_LIMITED,
     500: INTERNAL_ERROR,
-    501: NOT_IMPLEMENTED,
     503: WORKER_UNAVAILABLE,
 }
 
@@ -81,7 +77,6 @@ DEFAULT_MESSAGES: dict[str, str] = {
     VALIDATION_ERROR: "Validation error.",
     RATE_LIMITED: "Too many requests.",
     INTERNAL_ERROR: "Internal server error.",
-    NOT_IMPLEMENTED: "Not implemented.",
     WORKER_UNAVAILABLE: "No worker is available; retry later.",
 }
 

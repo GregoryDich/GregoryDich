@@ -66,6 +66,10 @@ def configure_logging(settings: Settings) -> None:
         root.addHandler(handler)
     root.setLevel(logging.DEBUG if settings.env == "development" else logging.INFO)
     logging.getLogger("uvicorn.access").disabled = True
+    # sse-starlette logs every chunk it sends at DEBUG, which under ENV=development
+    # would put whole JobResult bodies -- including signed stem and MIDI URLs -- into
+    # the log. docs/SECURITY.md requires that response bodies never reach logs.
+    logging.getLogger("sse_starlette.sse").setLevel(logging.INFO)
 
 
 class RequestContextMiddleware:
