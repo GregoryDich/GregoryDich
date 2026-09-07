@@ -13,7 +13,7 @@ import asyncio
 from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from app.errors import CONFLICT, INTERNAL_ERROR, NOT_FOUND, ApiException
 from app.schemas import (
@@ -37,6 +37,8 @@ from app.services.supabase import SupabaseClient
 
 JOB_CREDITS = 1
 """Credits reserved per job; ``create_job`` reserves exactly this many (§2, §6)."""
+SERVER_IDEMPOTENCY_PREFIX = "auto:"
+"""Marks a key this service minted because the client sent none (see :meth:`create`)."""
 MIDI_FILE = "score.mid"
 CANCELLED_ERROR = JobError(code="cancelled", message="The job was cancelled.")
 EventsMode = Literal["bus", "poll"]
@@ -210,13 +212,19 @@ class SupabaseJobsService:
     ) -> JobStatus:
         if credits_reserved != JOB_CREDITS:
             raise ValueError("create_job reserves exactly one credit per job")
+        # create_job inserts the job and reserves the credit in one transaction, so a
+        # replay without a key would charge twice and strand the first job in `queued`
+        # forever. Every call therefore carries a key -- the client's when it sent one,
+        # otherwise a fresh one -- which makes the RPC replayable (a repeat returns the
+        # job the first attempt created).
+        idempotency_key = options.idempotency_key or f"{SERVER_IDEMPOTENCY_PREFIX}{uuid4()}"
         row = await self._client.rpc(
             "create_job",
             {
                 "p_user_id": str(user_id),
                 "p_options": options.model_dump(mode="json"),
                 "p_input_meta": {"input_name": input_key},
-                "p_idempotency_key": options.idempotency_key,
+                "p_idempotency_key": idempotency_key,
             },
         )
         return job_status_from_record(row)
@@ -296,6 +304,7 @@ __all__ = [
     "DEFAULT_POLL_INTERVAL_SECONDS",
     "JOB_CREDITS",
     "MIDI_FILE",
+    "SERVER_IDEMPOTENCY_PREFIX",
     "EventsMode",
     "SupabaseJobsService",
     "input_name_of",

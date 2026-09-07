@@ -3,6 +3,53 @@
 PostgreSQL 16 / Supabase schema for the credit ledger, jobs, billing, API keys and
 affiliates described in `docs/API_CONTRACT.md` (§3, §6, §10, §11, §12).
 
+> ## ⚠ The seed cannot sell anything until you fill in `provider_variant_ids`
+>
+> `0001_schema.sql` seeds `plans` with prices and a `checkout_url_template`, but
+> `provider_variant_ids` keeps its column default `'{}'::jsonb` — the ids belong to your
+> LemonSqueezy / Paddle store, so no migration can know them.
+>
+> The backend's `build_checkout_url()` returns `None` when a template contains
+> `{variant_id}` and the plan has no id for any provider. So on a freshly migrated
+> database **`GET /v1/plans` returns `"checkout_url": null` for every plan**, and the
+> plugin's `PaywallPrompt` ignores plans without a checkout URL: the paywall opens with
+> **no buttons**, showing only "You've used your 3 free credits. Visit snapplay.ai to add
+> more."
+>
+> **Nothing fails loudly.** The migration succeeds, RLS is correct, the API is healthy,
+> every test passes, and the plugin does exactly what it was written to do. The only
+> symptom is that nobody can pay.
+>
+> Fix it immediately after applying the migrations:
+>
+> ```sql
+> update public.plans
+>    set provider_variant_ids = '{"lemonsqueezy": "<variant id>"}'::jsonb   -- or {"paddle": "<price id>"}
+>  where id = 'pack_50';
+> update public.plans
+>    set provider_variant_ids = '{"lemonsqueezy": "<variant id>"}'::jsonb
+>  where id = 'sub_monthly';
+> ```
+>
+> and verify from outside:
+>
+> ```sh
+> curl -s "$API/v1/plans" | jq -r '.plans[] | select(.price_usd > 0) | "\(.id) \(.checkout_url // "MISSING")"'
+> ```
+>
+> Any line ending in `MISSING` is a plan nobody can buy. Put that check in the deployment
+> checklist; it is the only alarm there is. The webhook side depends on the same column:
+> before calling `record_purchase` the handler resolves the event's variant to a plan with
+> `find_by_variant(provider, variant_id)`, falling back to a `plan_id` passed in the
+> checkout's custom data. With `provider_variant_ids` empty and no `plan_id` in the custom
+> data, that lookup raises `404 No plan matches this purchase.` — the delivery stays
+> unprocessed and the provider keeps retrying. So a payment taken through a checkout link
+> built outside this system would not grant credits either.
+>
+> `checkout_url_template` is seeded for the `snapplay.lemonsqueezy.com` store; change it if
+> your store subdomain or provider differs. `{variant_id}`, `{user_id}` and `{ref}` are
+> substituted by the backend, and parameters left empty are dropped from the query string.
+
 ```
 db/
 ├── migrations/
@@ -43,12 +90,10 @@ Never apply `tests/00_local_auth_shim.sql` to Supabase; it exists only so a plai
 PostgreSQL cluster has something for the `profiles` foreign key and the signup trigger to
 point at.
 
-After applying, set `plans.provider_variant_ids` (for example
-`{"lemonsqueezy": "<variant id>", "paddle": "<price id>"}`) and, if the store subdomain
-differs, `plans.checkout_url_template` (`{variant_id}`, `{user_id}` and `{ref}` are
-substituted by the backend). Users that existed before the migration need a one-off
-backfill of `profiles` and `credit_accounts`; the `on_auth_user_created` trigger only
-covers new signups.
+After applying, set `plans.provider_variant_ids` — see the warning at the top of this
+file; it is the one step whose omission is completely silent. Users that existed before
+the migration need a one-off backfill of `profiles` and `credit_accounts`; the
+`on_auth_user_created` trigger only covers new signups.
 
 ## Invariants
 
@@ -117,3 +162,7 @@ The script needs the PostgreSQL 16 binaries (`PGBIN`, default
 `tests/test_*.sql`, runs a two-session race for the last credit, and always stops and
 removes the cluster on exit. Any failed assertion, SQL error or unexpected race outcome
 exits non-zero.
+
+A passing run ends with `ALL TESTS PASSED (6 test groups)`: the five
+`tests/test_*.sql` files (affiliates, api_keys, jobs, ledger, rls) plus the concurrency
+race, which must end with exactly one winner and one `insufficient_credits`.

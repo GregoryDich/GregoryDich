@@ -1,10 +1,13 @@
 """§4 — LemonSqueezy and Paddle webhooks (raw body first, then HMAC, then parsing).
 
 Both providers land in the same flow: verify the signature over the raw bytes, claim the
-event's idempotency key in ``webhook_events`` (a duplicate answers ``{"status":
-"duplicate"}``), resolve the buyer and the plan, then record the purchase — which grants
-the plan's credits and writes the affiliate commission under that same key, so a replay
-can neither double-grant nor double-pay (§12, §13).
+event's idempotency key in ``webhook_events`` (an already-processed event answers
+``{"status": "duplicate"}``), resolve the buyer and the plan, then record the purchase —
+which grants the plan's credits and writes the affiliate commission under that same key,
+so a replay can neither double-grant nor double-pay (§12, §13). One sale reaches
+``record_purchase`` through exactly one event (``purchase_grants_credits``); the others
+only move subscription and plan state. An application that fails leaves the claim
+releasable, so the provider's retry runs it again instead of being answered "duplicate".
 
 Subscription renewals grant perishable credits: the grant is issued here with
 ``expires_at`` = the end of the billing period, under the webhook's idempotency key, so
@@ -38,17 +41,22 @@ router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
 MAX_WEBHOOK_BYTES = 1024 * 1024
 PADDLE_TOLERANCE_SECONDS = 300
-LEMONSQUEEZY_PURCHASE_EVENTS = frozenset(
-    {"order_created", "subscription_created", "subscription_payment_success"}
+# LemonSqueezy sends three events for one subscription checkout — order_created (an
+# order), subscription_created (the subscription) and subscription_payment_success (an
+# invoice) — each with a different data.id. Only one of them may grant credits and pay a
+# commission: the order event owns one-off packs, the invoice event owns every
+# subscription period, first one included. See ``purchase_grants_credits``.
+LEMONSQUEEZY_ORDER_EVENT = "order_created"
+LEMONSQUEEZY_INVOICE_EVENT = "subscription_payment_success"
+LEMONSQUEEZY_PURCHASE_EVENTS = frozenset({LEMONSQUEEZY_ORDER_EVENT, LEMONSQUEEZY_INVOICE_EVENT})
+# Events whose ``data`` is the subscription object itself, so data.id is its provider id.
+LEMONSQUEEZY_SUBSCRIPTION_OBJECT_EVENTS = frozenset(
+    {"subscription_created", "subscription_cancelled", "subscription_expired"}
 )
-LEMONSQUEEZY_SUBSCRIPTION_EVENTS = frozenset(
-    {
-        "subscription_created",
-        "subscription_payment_success",
-        "subscription_cancelled",
-        "subscription_expired",
-    }
-)
+LEMONSQUEEZY_SUBSCRIPTION_EVENTS = LEMONSQUEEZY_SUBSCRIPTION_OBJECT_EVENTS | {
+    LEMONSQUEEZY_INVOICE_EVENT
+}
+PADDLE_PURCHASE_EVENT = "transaction.completed"
 LEMONSQUEEZY_STATUS: dict[str, SubscriptionStatus] = {
     "on_trial": "trialing",
     "active": "active",
@@ -71,9 +79,26 @@ ACTIVE_PLAN_STATUSES = frozenset({"trialing", "active", "past_due", "paused"})
 # --- signatures --------------------------------------------------------------------------
 
 
+def _digests_match(expected: str, provided: str) -> bool:
+    """Constant-time comparison over bytes: ``compare_digest`` raises ``TypeError`` on a
+    ``str`` holding non-ASCII, and a header is attacker-controlled text."""
+    return hmac.compare_digest(
+        expected.encode("utf-8"), provided.strip().lower().encode("utf-8")
+    )
+
+
+def _require_secret(secret: str) -> str:
+    """An unset provider secret must never be used as an HMAC key: with ``""`` anyone can
+    sign their own events, so the endpoint rejects the delivery instead (§4)."""
+    if not secret:
+        raise ApiException(INVALID_SIGNATURE)
+    return secret
+
+
 def verify_lemonsqueezy(raw: bytes, header: str | None, secret: str) -> None:
+    _require_secret(secret)
     expected = hmac.new(secret.encode("utf-8"), raw, hashlib.sha256).hexdigest()
-    if not header or not hmac.compare_digest(expected, header.strip().lower()):
+    if not header or not _digests_match(expected, header):
         raise ApiException(INVALID_SIGNATURE)
 
 
@@ -88,6 +113,7 @@ def parse_paddle_signature(header: str) -> tuple[int, str]:
 
 
 def verify_paddle(raw: bytes, header: str | None, secret: str, *, now: float | None = None) -> None:
+    _require_secret(secret)
     if not header:
         raise ApiException(INVALID_SIGNATURE)
     ts, h1 = parse_paddle_signature(header)
@@ -97,7 +123,7 @@ def verify_paddle(raw: bytes, header: str | None, secret: str, *, now: float | N
     expected = hmac.new(
         secret.encode("utf-8"), f"{ts}:".encode() + raw, hashlib.sha256
     ).hexdigest()
-    if not hmac.compare_digest(expected, h1.strip().lower()):
+    if not _digests_match(expected, h1):
         raise ApiException(INVALID_SIGNATURE)
 
 
@@ -127,15 +153,6 @@ class WebhookEvent:
     @property
     def idempotency_key(self) -> str:
         return f"{self.provider}:{self.event_type}:{self.event_id}"
-
-    @property
-    def is_purchase(self) -> bool:
-        return self.order_id is not None and (
-            self.provider == "lemonsqueezy"
-            and self.event_type in LEMONSQUEEZY_PURCHASE_EVENTS
-            or self.provider == "paddle"
-            and self.event_type == "transaction.completed"
-        )
 
 
 def _mapping(value: Any) -> dict[str, Any]:
@@ -184,14 +201,17 @@ def parse_lemonsqueezy(payload: Mapping[str, Any]) -> WebhookEvent:
     total = _int(attributes.get("total"))
     tax = _int(attributes.get("tax"))
     status = LEMONSQUEEZY_STATUS.get(str(attributes.get("status") or ""))
-    subscription_id = (
-        event_id if event_type.startswith("subscription_") else None
-    ) or _str_or_none(attributes.get("subscription_id"))
+    # A subscription-invoice payload names its subscription in the attributes; only the
+    # subscription events carry the subscription itself as ``data``.
+    subscription_id = _str_or_none(attributes.get("subscription_id")) or (
+        event_id if event_type in LEMONSQUEEZY_SUBSCRIPTION_OBJECT_EVENTS else None
+    )
     return WebhookEvent(
         provider="lemonsqueezy",
         event_type=event_type,
         event_id=event_id,
-        order_id=event_id,
+        # The sale's identity: the order id, or the invoice id of a subscription period.
+        order_id=event_id if event_type in LEMONSQUEEZY_PURCHASE_EVENTS else None,
         variant_id=variant_id,
         plan_id=_str_or_none(custom.get("plan_id")),
         user_id=_uuid(custom.get("user_id")),
@@ -247,6 +267,24 @@ def parse_paddle(payload: Mapping[str, Any]) -> WebhookEvent:
 # --- processing ------------------------------------------------------------------------------
 
 
+def purchase_grants_credits(event: WebhookEvent, plan: PlanRecord) -> bool:
+    """Whether this event is the one that pays for ``plan`` — the single event per sale
+    that grants credits and writes the affiliate commission (§4, §13).
+
+    Paddle bills every period as its own transaction. LemonSqueezy splits a subscription
+    checkout over three events with three different ``data.id`` values, so the plan decides:
+    a one-off pack is paid for by its order, a subscription period by its invoice. Every
+    other event only updates subscription and plan state.
+    """
+    if event.order_id is None:
+        return False
+    if event.provider == "paddle":
+        return event.event_type == PADDLE_PURCHASE_EVENT
+    return event.event_type == (
+        LEMONSQUEEZY_INVOICE_EVENT if plan.interval is not None else LEMONSQUEEZY_ORDER_EVENT
+    )
+
+
 def plan_kind_for(status: SubscriptionStatus, period_end: datetime | None) -> PlanKind:
     """A cancelled subscription keeps its plan until the period ends (§13)."""
     if status in ACTIVE_PLAN_STATUSES:
@@ -279,6 +317,13 @@ async def resolve_plan(services: Services, event: WebhookEvent) -> PlanRecord:
 
 
 async def process_event(services: Services, event: WebhookEvent) -> WebhookAck:
+    """Claim the event, apply it, then close the claim.
+
+    ``mark_processed`` with an error keeps the row but leaves it claimable again, so the
+    provider's retry of a delivery that failed halfway re-runs it — a paid event is never
+    answered "duplicate" without having been applied. Only an event that was applied
+    without error is a duplicate.
+    """
     if not await services.webhook_events.claim(
         event.idempotency_key, event.provider, event.event_type, event.payload
     ):
@@ -298,8 +343,9 @@ async def process_event(services: Services, event: WebhookEvent) -> WebhookAck:
 async def _apply(services: Services, event: WebhookEvent) -> None:
     user_id = await resolve_user(services, event)
     plan: PlanRecord | None = None
-    if event.is_purchase:
+    if event.order_id is not None:
         plan = await resolve_plan(services, event)
+    if plan is not None and purchase_grants_credits(event, plan):
         assert event.order_id is not None
         if plan.interval is not None and plan.credits > 0 and event.period_end is not None:
             # Subscription credits expire with the billing period; the grant is issued

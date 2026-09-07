@@ -4,10 +4,15 @@ The accepted algorithm set is fixed by configuration — ``HS256`` with
 ``SUPABASE_JWT_SECRET`` or ``RS256``/``ES256`` with ``SUPABASE_JWKS_URL`` — and the token's
 ``alg`` header is only ever compared against it, never used to pick a key. JWKS keys are
 cached in-process for an hour; an unknown ``kid`` triggers at most one refetch per minute.
+
+The JWKS fetch is blocking urllib under a lock, so :meth:`JwtVerifier.verify_async` --
+the entry point of the async auth path -- runs it in a worker thread with a short
+timeout: a slow or hanging JWKS endpoint may cost one thread, never the event loop.
 """
 
 from __future__ import annotations
 
+import asyncio
 import threading
 import time
 from typing import Any
@@ -26,6 +31,8 @@ HS_ALGORITHMS: tuple[str, ...] = ("HS256",)
 JWKS_ALGORITHMS: tuple[str, ...] = ("RS256", "ES256")
 JWKS_CACHE_SECONDS = 3600
 JWKS_REFETCH_INTERVAL_SECONDS = 60
+JWKS_TIMEOUT_SECONDS = 3.0
+"""Socket timeout for the JWKS fetch; PyJWT would otherwise wait 30 s."""
 
 
 class JwtVerifier:
@@ -39,7 +46,10 @@ class JwtVerifier:
             self._algorithms = HS_ALGORITHMS
         elif settings.supabase_jwks_url:
             self._jwks = PyJWKClient(
-                settings.supabase_jwks_url, cache_jwk_set=True, lifespan=JWKS_CACHE_SECONDS
+                settings.supabase_jwks_url,
+                cache_jwk_set=True,
+                lifespan=JWKS_CACHE_SECONDS,
+                timeout=JWKS_TIMEOUT_SECONDS,
             )
             self._algorithms = JWKS_ALGORITHMS
         base = settings.supabase_url.rstrip("/")
@@ -52,7 +62,25 @@ class JwtVerifier:
         return bool(self._algorithms)
 
     def verify(self, token: str) -> dict[str, Any]:
-        """Return the claims of a valid token or raise ``unauthorized`` / ``token_expired``."""
+        """Return the claims of a valid token or raise ``unauthorized`` / ``token_expired``.
+
+        Blocking: on a JWKS deployment an unknown ``kid`` fetches the key set inline.
+        Async callers use :meth:`verify_async`.
+        """
+        kid = self._checked_kid(token)
+        key = self._secret if self._secret is not None else self._signing_key(kid)
+        return self._decode(token, key)
+
+    async def verify_async(self, token: str) -> dict[str, Any]:
+        """:meth:`verify` with the JWKS fetch handed to a worker thread."""
+        kid = self._checked_kid(token)
+        if self._secret is not None:
+            return self._decode(token, self._secret)
+        key = await asyncio.to_thread(self._signing_key, kid)
+        return self._decode(token, key)
+
+    def _checked_kid(self, token: str) -> object:
+        """Validate the header against the configured algorithms; return its ``kid``."""
         if not self.configured:
             raise ApiException(UNAUTHORIZED, message="Token verification is not configured.")
         try:
@@ -61,26 +89,29 @@ class JwtVerifier:
             raise ApiException(UNAUTHORIZED, message="Malformed access token.") from exc
         if header.get("alg") not in self._algorithms:
             raise ApiException(UNAUTHORIZED, message="Unsupported token algorithm.")
+        return header.get("kid")
 
-        key: str | PyJWK = (
-            self._secret if self._secret is not None else self._signing_key(header.get("kid"))
-        )
+    def _decode(self, token: str, key: str | PyJWK) -> dict[str, Any]:
+        required = list(REQUIRED_CLAIMS)
+        if self._issuer:
+            # Required, not "checked when present": a token minted by another Supabase
+            # project simply omits `iss` and would otherwise pass.
+            required.append("iss")
         try:
             claims = jwt.decode(
                 token,
                 key,
                 algorithms=list(self._algorithms),
                 audience=AUDIENCE,
+                issuer=self._issuer or None,
                 leeway=LEEWAY_SECONDS,
-                options={"require": list(REQUIRED_CLAIMS)},
+                options={"require": required},
             )
         except jwt.ExpiredSignatureError as exc:
             raise ApiException(TOKEN_EXPIRED) from exc
         except jwt.PyJWTError as exc:
             raise ApiException(UNAUTHORIZED, message="Invalid access token.") from exc
 
-        if self._issuer and "iss" in claims and claims["iss"] != self._issuer:
-            raise ApiException(UNAUTHORIZED, message="Invalid token issuer.")
         try:
             UUID(str(claims["sub"]))
         except ValueError as exc:
@@ -119,4 +150,4 @@ class JwtVerifier:
         return None
 
 
-__all__ = ["AUDIENCE", "LEEWAY_SECONDS", "JwtVerifier"]
+__all__ = ["AUDIENCE", "JWKS_TIMEOUT_SECONDS", "LEEWAY_SECONDS", "JwtVerifier"]

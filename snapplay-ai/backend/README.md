@@ -8,7 +8,8 @@ mirrors it field for field.
 
 ```
 app/
-  main.py          create_app() factory, CORS, request-id + JSON access log, routers under /v1
+  main.py          create_app() factory, CORS, request-id + JSON access log, routers under
+                   /v1 (plus the health router mounted a second time unversioned)
   config.py        Settings (pydantic-settings), get_settings(), override_settings()
   schemas.py       contract payloads (§1–§3, §5, §7, §11)
   errors.py        ApiException + §5 error envelope handlers and code constants
@@ -45,6 +46,11 @@ curl -s localhost:8000/v1/health              # {"status":"ok"}
 `uvicorn app.main:app` uses `create_app()` with settings from the environment/`.env`.
 Interactive docs are at `/docs` outside production.
 
+`create_app` includes `routers.health` twice — once with no prefix and once under `/v1` —
+so `GET /health` is a working alias of `GET /v1/health` for probes that cannot be given a
+prefix. It is the only unversioned route; everything shipped here (the ALB target group,
+the API container's `HEALTHCHECK`, `infra/aws/README.md`) points at `/v1/health`.
+
 ## Authentication (§1, §11)
 
 * `Authorization: Bearer <supabase jwt>` — verified with `SUPABASE_JWT_SECRET` (HS256) or
@@ -66,6 +72,14 @@ Interactive docs are at `/docs` outside production.
 | dispatch | `SNAPPLAY_PIPELINE` | `fake`/`local` in-process, `modal`, `runpod`, `aws` (SQS) |
 | job events | `SNAPPLAY_PIPELINE` | in-process bus for `fake`/`local`, DB polling for remote workers |
 
+PostgreSQL errors coming back through PostgREST are translated by
+`SQLSTATE_ERRORS` in `app/services/supabase.py`: `P0402` → `402 insufficient_credits`,
+`P0404` → `404 not_found`, `P0409` and `23505` → `409 conflict`, `22023` →
+`422 validation_error`, and `42501` (`insufficient_privilege`) → **`403` with the code
+`unauthorized`**. That last one is a deployment alarm, not a user-facing authorisation
+answer: it means the deployed grants or RLS policies do not match
+`db/migrations/0003_rls.sql`. Unmapped SQLSTATEs are logged and answered `500`.
+
 `app/services/memory.py` mirrors `db/migrations/0002_functions.sql` function by function —
 the same idempotency keys (`reserve:<job_id>`, `signup:<user_id>`, `expire:<grant id>`),
 the same job state machine and the same `insufficient_credits` / `conflict` / `not_found`
@@ -84,9 +98,13 @@ errors — so the routes behave identically on either backend.
 ## Test
 
 ```bash
-python3 -m pytest -q
+python3 -m pytest -q       # 209 collected: 99 tests/api, 46 tests/pipeline, 50 tests/aws, 14 top-level
 ruff check app tests
 ```
+
+The two skips are `tests/pipeline/test_pipeline_real.py` (GPU extras: torch, demucs,
+basic-pitch) and `tests/pipeline/test_worker_serverless.py` (modal not installed); with
+neither installed the suite reports **207 passed, 2 skipped**.
 
 Tests are fully offline: `STORAGE_BACKEND=memory`, `SNAPPLAY_PIPELINE=fake`, HS256 test
 JWTs minted in `tests/conftest.py`, AWS via moto, HTTP via respx. `tests/api` covers the

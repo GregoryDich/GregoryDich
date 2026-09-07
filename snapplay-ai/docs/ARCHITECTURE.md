@@ -115,8 +115,11 @@ Directory responsibilities:
 * GPU worker — `run_pipeline` (§7) plus the transport wrapper selected by
   `SNAPPLAY_PIPELINE`: `fake` for tests, `local` in-process, `modal`, `runpod`, or `aws`
   (SQS long-poll + ECS).
-* `db/migrations` — tables, RLS, the `credit_balance` composite and the six credit
-  functions (§6).
+* `db/migrations` — tables, RLS, the `credit_balance` composite and the `SECURITY
+  DEFINER` functions of §6: the credit ledger (`reserve_credits`, `settle_reservation`,
+  `grant_credits`, `adjust_credits`, `refund_job`, `get_balance`, `expire_credits`), the
+  job lifecycle (`create_job` … `reap_stale_jobs`), `record_purchase`, and the API-key
+  trio.
 * `infra/aws` — Terraform for §10.
 * `growth/mcp_server` — MCP tools that drive the public API with an API key (§11).
 
@@ -403,7 +406,7 @@ flowchart LR
     SQS -- "ReceiveMessage, long poll" --> ASG["ECS capacity provider\nEC2 ASG of g5.xlarge\n(GPU-optimised ECS AMI)"]
     ASG --> W1["worker task"]
     ASG --> W2["worker task"]
-    CW["CloudWatch metric\nApproximateNumberOfMessagesVisible / running tasks"] -. "target tracking" .-> ASG
+    CW["CloudWatch alarms\nApproximateNumberOfMessagesVisible"] -. "step scaling" .-> ASG
     W1 & W2 -- "GET input, PUT results" --> S3[("S3 bucket\nlifecycle: expire 24 h")]
     W1 & W2 -- "complete_job / fail_job" --> ALB
     API1 & API2 -- "presign" --> S3
@@ -411,7 +414,7 @@ flowchart LR
     CF --> Plugin
     SM["Secrets Manager\nJWT secret, service-role key,\nwebhook secrets, CF key pair"] -. "task secrets" .-> API1
     SM -. "task secrets" .-> W1
-    SCH["EventBridge Scheduler"] -- "every minute" --> REAPER["reaper task\nrelease reservations past JOB_TIMEOUT_SECONDS"]
+    SCH["EventBridge rule\nrate(5 minutes)"] --> REAPER["reaper task\npython -m app.services.aws.reaper\nrelease reservations past JOB_TIMEOUT_SECONDS"]
     REAPER --> PG
 ```
 
@@ -428,18 +431,25 @@ flowchart LR
   `complete_job` / `fail_job` idempotently. `maxReceiveCount = 3` routes poison
   messages to the DLQ. Ordering is irrelevant (each job is independent), so a FIFO queue
   is not needed.
-* **GPU tier: ECS on EC2, scaled on queue depth.** A capacity provider over an
-  auto-scaling group of `GPU_INSTANCE_TYPE` instances (Terraform
-  `var.gpu_instance_type`, default `g5.xlarge`). Target-tracking on backlog per running
-  task keeps roughly one visible message per worker; scale-in protection is set while a
-  task holds a message. Fargate has no GPU, so this tier is EC2.
+* **GPU tier: ECS on EC2, scaled on queue depth.** A capacity provider (managed scaling
+  at 100 % target, managed termination protection) over an auto-scaling group of
+  `GPU_INSTANCE_TYPE` instances (Terraform `var.gpu_instance_type`, default
+  `g5.xlarge`). Worker tasks are step-scaled from CloudWatch alarms on
+  `ApproximateNumberOfMessagesVisible`: +1 task at one visible message, +2 from five,
+  and back down to `worker_min_capacity` after ten minutes with nothing visible or
+  in flight. Managed termination protection keeps an instance alive while it still runs
+  a task. Fargate has no GPU, so this tier is EC2.
 * **Storage: S3 with a 24 h lifecycle rule.** Objects under
   `jobs/<user_id>/<job_id>/`; presigned GET URLs valid until `expires_at`. Setting
   `S3_ENDPOINT_URL` points the same code at Cloudflare R2 (free egress). CloudFront
   with OAC and signed URLs is optional and changes nothing client-side: `stems[].url`
   is an opaque URL either way.
-* **Reaper.** A scheduled task selects jobs `running` longer than `JOB_TIMEOUT_SECONDS`
-  and settles them as failed, so a dead worker never silently consumes a credit.
+* **Reaper.** An EventBridge rule (`rate(5 minutes)`, `var.reaper_schedule_expression`)
+  runs a one-off Fargate task on the API image with the command overridden to
+  `python -m app.services.aws.reaper`. It selects jobs `running` longer than
+  `JOB_TIMEOUT_SECONDS` and settles them as failed, so a dead worker never silently
+  consumes a credit. `infra/supabase/cleanup.sql` gives non-AWS deployments the same
+  guarantee from inside the database.
 * **Secrets** are in Secrets Manager and injected as ECS task secrets; nothing secret
   is in the image, in Terraform variables or in logs (see `SECURITY.md`).
 
@@ -451,7 +461,7 @@ Config keys (§10): `AWS_REGION`, `S3_BUCKET`, `S3_ENDPOINT_URL`, `CLOUDFRONT_DO
 
 | thread | owner | may it block? | what it does |
 |--------|-------|---------------|--------------|
-| audio | host | **never** | `processBlock`: read MIDI, snap pitches (`Core/ScaleLock`), render voices from the current `StemSound`s, apply ADSR. No allocation, no locks, no I/O. |
+| audio | host | **never** | `processBlock`: read MIDI, snap pitches (`plugin/Source/Core/ScaleLock.h`), render voices from the current `StemSound`s, apply ADSR. No allocation, no locks, no I/O. |
 | message | JUCE | yes | UI, parameter changes, drag-out initiation, deferred deletion of retired stem buffers. |
 | network | `Cloud` | yes | FLAC encode, multipart upload, SSE read loop (`juce::WebInputStream`), signed-URL downloads, token refresh. |
 | decode | `Cloud` / `Engine` | yes | WAV → `juce::AudioBuffer<float>`, envelope and root analysis fallbacks, slice tables. |
@@ -478,11 +488,19 @@ Handoff rules:
 
 ```
 s3://<S3_BUCKET>/jobs/<user_id>/<job_id>/
-    input.flac            what the plugin uploaded (after server-side 60 s truncation)
+    input.<ext>           what the client uploaded, named after the sniffed container
+                          (flac from the plugin; wav / mp3 / ogg / aiff are accepted too)
     bass.wav  drums.wav  other.wav  vocals.wav
     score.mid             SMF type 1, PPQ 480
-    result.json           the JobResult minus signed URLs
 ```
+
+The `JobResult` itself is **not** an object: the URLs are signed once when the result is
+assembled at completion, and `complete_job(p_job_id, p_result)` stores the whole result —
+signed URLs and all — in `jobs.result` (§6). `GET /v1/jobs/{id}` returns that stored copy,
+so `stems[].url` stops working at `expires_at` even though the row survives. The plugin
+keeps its own copy under
+`<user application data>/SnapPlay/jobs/<job_id>/` (`result.json`, the stem WAVs and
+`score.mid`), which is what `JobClient::loadCachedJob` reloads without a credit.
 
 * The same layout is used by Supabase Storage in the non-AWS path (§2) and by R2 via
   `S3_ENDPOINT_URL` (§10).

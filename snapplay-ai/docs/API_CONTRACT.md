@@ -9,9 +9,28 @@ Changes in v2: free tier 5 → 3 credits; upload cap 25 → 10 MB; latency targe
 on A10G; selectable Scale-Snap modes (§8); in-plugin paywall and `checkout_url` (§3);
 AWS as the default production path (§10); first-class API keys (§11); affiliates (§12).
 
-Base URL: `https://api.snapplay.ai` (configurable in the plugin as `apiBaseUrl`).
+Clarified against the shipped implementation (no behaviour changed): WebSocket auth is
+`?token=` only (§2); `GET /health` is documented as an unversioned alias of
+`GET /v1/health` (below); `403 unauthorized` is added to the §5 table for the
+`SQLSTATE 42501` RLS-misconfiguration case.
+
+Base URL: `https://api.snapplay.ai` (the plugin's default; overridable at runtime with
+`snapplay::cloud::ApiClient::setBaseUrl()`, which sets `ApiClient::Config::baseUrl`).
 All routes are versioned under `/v1`. All request/response bodies are JSON
 unless stated. Timestamps are RFC 3339 UTC strings. IDs are UUID v4 strings.
+
+### `GET /v1/health` (public) — and the unversioned `GET /health` alias
+
+```json
+{ "status": "ok" }
+```
+
+The health router is mounted twice: once unversioned and once under `/v1`, so both
+`GET /health` and `GET /v1/health` answer `200 {"status": "ok"}`. `/health` exists only
+as a compatibility alias for probes that cannot be given a prefix; everything shipped in
+this repository — the ALB target-group health check, the API container's own
+`HEALTHCHECK`, and the smoke steps in the READMEs — uses `/v1/health`. It is the single
+exception to "all routes are versioned under `/v1`"; do not add others.
 
 ## 1. Authentication
 
@@ -91,7 +110,7 @@ Behaviour:
 ### `GET /v1/jobs/{job_id}`   (auth)
 → `200` JobStatus:
 ```json
-{ "job_id": "<uuid>", "status": "queued|running|succeeded|failed",
+{ "job_id": "<uuid>", "status": "queued|running|succeeded|failed|cancelled",
   "stage": "upload|separate|transcribe|analyze|package|done",
   "progress": 0.0,
   "created_at": "...", "started_at": "...", "finished_at": "...",
@@ -116,12 +135,24 @@ data: {"code":"...","message":"..."}
 A `result` or `error` event ends the stream. Heartbeat comment lines (`: ping`)
 are sent every 5 s.
 
-### `WS /v1/jobs/{job_id}/ws`   (auth via `?token=` query or first message)
+### `WS /v1/jobs/{job_id}/ws`   (auth via `?token=` query **only**)
 Same payloads as SSE, as JSON text frames. Provided for web clients; the plugin
-uses SSE.
+uses SSE. The access token is carried by the `?token=` query parameter and nothing
+else — there is no in-band authentication frame, and `Authorization` headers are not
+read on this route (`docs/SECURITY.md` §2.1 explains why the query form is the only one
+and how tokens are kept out of logs).
+
+Authentication, the read rate limit and job ownership are all checked **before** the
+handshake is accepted. On failure the application closes with code **4401** and the §5
+error code as the close reason (`unauthorized`, `token_expired`, `rate_limited`,
+`not_found`). Because that close is emitted before `websocket.accept()`, an ASGI server
+that cannot deliver a close frame during the upgrade reports the rejection as an HTTP
+**403** on the handshake instead — uvicorn does exactly that. A client must therefore
+treat both a 4401 close and a 403 handshake rejection as "not authorised for this job".
 
 ### `DELETE /v1/jobs/{job_id}`   (auth)
-Cancels a queued job and releases its reservation. `409` if already running.
+Cancels a queued job and releases its reservation. → `204` with an empty body;
+`409 conflict` if the job is already running, `404` if it is not the caller's.
 
 ### JobResult
 ```json
@@ -225,6 +256,7 @@ The growth engine (see §11) authenticates with an API key and never sees this p
 | 400 | `bad_request` |
 | 401 | `unauthorized`, `token_expired`, `invalid_signature` |
 | 402 | `insufficient_credits` |
+| 403 | `unauthorized` (RLS / grant misconfiguration — see below) |
 | 404 | `not_found` |
 | 409 | `conflict` |
 | 413 | `payload_too_large` |
@@ -233,6 +265,20 @@ The growth engine (see §11) authenticates with an API key and never sees this p
 | 429 | `rate_limited` (headers `Retry-After`, `X-RateLimit-Remaining`) |
 | 500 | `internal_error` |
 | 503 | `worker_unavailable` |
+
+`403` is not a route-level authorisation answer: user-scoped lookups answer `404` so
+existence never leaks (§2). It appears only when PostgreSQL refuses the backend's own
+statement with `SQLSTATE 42501` (`insufficient_privilege`) — that is, when the deployed
+role grants or RLS policies of §6 do not match `db/migrations/0003_rls.sql`, for example
+a service-role key that is missing `EXECUTE` on a `SECURITY DEFINER` credit function.
+`backend/app/services/supabase.py` maps `42501` to `403` with the code `unauthorized` so the
+misconfiguration is visible in the response rather than hidden inside a `500`. A
+correctly deployed database never produces it; seeing it in production means the
+migrations or the key are wrong, not that the caller lacked rights.
+
+Other SQLSTATEs the same mapper translates: `P0402` → `402 insufficient_credits`,
+`P0404` → `404 not_found`, `P0409` / `23505` → `409 conflict`, `22023` →
+`422 validation_error`. Anything else is logged and answered `500 internal_error`.
 
 Rate limits: 10 job submissions / minute / user, 60 reads / minute / user.
 
@@ -259,6 +305,13 @@ service-role key only; RLS blocks direct ledger writes):
 | `expire_credits()` | `int` | Cron helper: expires grants past `expires_at` (ledger `expire`), returns rows affected. |
 
 `credit_balance` is a composite type `(credits int, reserved int, available int)`.
+
+The same migration defines the job, billing and API-key functions the rest of this
+contract refers to, under the same rules (`SECURITY DEFINER`, `service_role` only):
+`create_job`, `start_job`, `update_job_progress`, `complete_job`, `fail_job`,
+`cancel_job`, `reap_stale_jobs` (§10), `record_purchase` (§4, §12, §13),
+`adjust_credits`, and `create_api_key` / `authenticate_api_key` / `revoke_api_key`
+(§11). `db/README.md` lists their exact signatures.
 
 Job lifecycle in `jobs.status`: `queued → running → succeeded | failed | cancelled`.
 
@@ -298,8 +351,8 @@ is a deployment variable, not a contract guarantee.
 
 `SNAPPLAY_PIPELINE` selects the backend: `fake` (deterministic CPU stub for tests and
 local development), `local` (in-process, requires the GPU extras), `modal`
-(`worker/modal_app.py`), `runpod` (`worker/runpod_handler.py`), or `aws`
-(SQS queue + ECS GPU worker, `worker/aws_worker.py` — see §10).
+(`backend/worker/modal_app.py`), `runpod` (`backend/worker/runpod_handler.py`), or `aws`
+(SQS queue + ECS GPU worker, `backend/worker/aws_worker.py` — see §10).
 
 ## 8. Plugin-side derived values
 
@@ -360,9 +413,19 @@ Config keys: `AWS_REGION`, `S3_BUCKET`, `S3_ENDPOINT_URL`, `CLOUDFRONT_DOMAIN`,
 ## 11. API keys and the growth engine
 
 Machine clients authenticate with `X-API-Key: sp_live_<32 chars>`, stored as a SHA-256
-hash in `api_keys` (`prefix` kept in clear for display). Keys carry the owning user's
-credit balance and are subject to the same rate limits. `POST /v1/api-keys` (auth)
-creates one and returns the plaintext exactly once; `DELETE /v1/api-keys/{id}` revokes it.
+hash in `api_keys` (`prefix` — the first 12 characters — kept in clear for display).
+Keys carry the owning user's credit balance and are subject to the same rate limits.
+
+`POST /v1/api-keys` (auth, JWT only) takes `{ "name": "ci" }` (optional, default
+`"default"`) and answers `201` with the plaintext exactly once:
+
+```json
+{ "id": "<uuid>", "name": "ci", "prefix": "sp_live_ab12", "key": "sp_live_<32 chars>",
+  "created_at": "..." }
+```
+
+`DELETE /v1/api-keys/{id}` (auth, JWT only) revokes it and answers `204`; an unknown or
+foreign id is `404`. An API key cannot manage keys or call `/v1/auth/*`.
 
 The UGC automation engine (`growth/`) uses such a key to submit jobs and never touches
 user JWTs.

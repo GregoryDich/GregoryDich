@@ -15,9 +15,11 @@ on a $9 pack, "85–87 % margin") differ from the arithmetic, §12 says so.
 
 One credit is one job (§2): up to 60 s of audio → four stems, MIDI and analysis. A
 credit is reserved at submission and captured only on success; failed jobs cost
-nothing (§6). Subscription grants may carry `expires_at` and be swept by
-`expire_credits()` (§6); whether monthly credits roll over is a policy choice the
-contract leaves open, and it matters for breakage (§11).
+nothing (§6). Subscription credits **do not roll over** (§13): each renewal grants the
+plan's credits with `expires_at` = the end of that billing period and `expire_credits()`
+sweeps the remainder, expiring balances being spent before non-expiring ones. Credit-pack
+credits never expire. That is what makes breakage a real line in §11 for subscribers and
+not for pack buyers.
 
 The revenue target discussed throughout is **$135 / day**, which is exactly 15 packs
 a day (15 × $9), or ≈ $4,050 / month, or ≈ 507 active monthly subscribers.
@@ -145,15 +147,17 @@ fraction *f* of sales comes through affiliates, contribution per pack is
 $7.93 − $2.42 × *f*, and the `g5.xlarge` break-even rises from 3.4 to 4.9 packs / day
 at *f* = 1.
 
-Policy points the contract leaves open and which change the numbers materially:
+Two consequences of the settled policy in contract §13:
 
-* **Recurring commission.** Commissions are keyed per purchase, and every
-  `subscription_payment_success` is a purchase, so by default an affiliate earns 30 % of
-  every renewal for the life of the subscriber. Capping at the first *n* months is
-  common and should be decided before the first affiliate signs up.
+* **Commissions recur, with no cap.** Every purchase event that reaches
+  `record_purchase` — a pack, a subscription's first payment and each renewal — writes
+  one commission row at the affiliate's rate on `net_cents`. An affiliate therefore earns
+  30 % of every renewal for the life of the subscriber. Capping at the first *n* months
+  is common in this market; it is a product decision, and changing it means changing
+  `record_purchase` and §13, not just a spreadsheet.
 * **Voids.** A refund or chargeback must set the commission to `void` before payout;
   a payout hold longer than the card-network chargeback window (typically 30 days or
-  more) avoids clawbacks.
+  more) avoids clawbacks. The `commission_status` enum is `pending | paid | void`.
 
 ## 7. Fixed floor: always-on GPU vs scale-to-zero
 

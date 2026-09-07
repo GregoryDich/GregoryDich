@@ -90,6 +90,10 @@ class Settings(BaseSettings):
             problems.append("SUPABASE_URL is required")
         if not (self.supabase_jwt_secret.get_secret_value() or self.supabase_jwks_url):
             problems.append("SUPABASE_JWT_SECRET or SUPABASE_JWKS_URL is required")
+        if not self.lemonsqueezy_webhook_secret.get_secret_value():
+            problems.append("LEMONSQUEEZY_WEBHOOK_SECRET is required")
+        if not self.paddle_webhook_secret.get_secret_value():
+            problems.append("PADDLE_WEBHOOK_SECRET is required")
         if self.snapplay_pipeline == "fake":
             problems.append("SNAPPLAY_PIPELINE=fake is not allowed")
         if self.storage_backend == "memory":

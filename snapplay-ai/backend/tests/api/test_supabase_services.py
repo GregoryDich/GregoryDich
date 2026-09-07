@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 from typing import Any
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import httpx
 import pytest
@@ -16,7 +16,7 @@ from app.schemas import JobOptions
 from app.services.api_keys import SupabaseApiKeysService
 from app.services.credits import SupabaseCreditsService
 from app.services.events import JobEventBus
-from app.services.jobs import SupabaseJobsService
+from app.services.jobs import SERVER_IDEMPOTENCY_PREFIX, SupabaseJobsService
 from app.services.plans import SupabasePlansService, build_checkout_url
 from app.services.supabase import SupabaseClient
 from app.services.users import SupabaseUsersService
@@ -224,18 +224,33 @@ async def test_record_purchase_rpc(supabase: SupabaseClient) -> None:
 
 
 @respx.mock
-async def test_webhook_claim_ignores_duplicates(supabase: SupabaseClient) -> None:
+async def test_webhook_claim_ignores_duplicates_but_retakes_a_failed_event(
+    supabase: SupabaseClient,
+) -> None:
     events = SupabaseWebhookEventsService(supabase)
     route = respx.post(f"{BASE}/rest/v1/webhook_events").mock(
         side_effect=[
             httpx.Response(201, json=[{"id": str(uuid4())}]),
             httpx.Response(201, json=[]),
+            httpx.Response(201, json=[]),
+        ]
+    )
+    # The conditional update only matches a row that failed to apply, so a genuine
+    # duplicate stays a no-op while a retry of a failed delivery is re-claimed.
+    retake = respx.patch(f"{BASE}/rest/v1/webhook_events").mock(
+        side_effect=[
+            httpx.Response(200, json=[]),
+            httpx.Response(200, json=[{"id": str(uuid4())}]),
         ]
     )
     assert await events.claim("k", "paddle", "transaction.completed", {}) is True
     assert await events.claim("k", "paddle", "transaction.completed", {}) is False
     assert route.calls.last.request.url.params["on_conflict"] == "idempotency_key"
     assert "ignore-duplicates" in route.calls.last.request.headers["prefer"]
+    assert await events.claim("k", "paddle", "transaction.completed", {}) is True
+    params = retake.calls.last.request.url.params
+    assert params["idempotency_key"] == "eq.k" and params["error"] == "not.is.null"
+    assert json.loads(retake.calls.last.request.content)["error"] is None
     await supabase.aclose()
 
 
@@ -289,4 +304,65 @@ async def test_plans_are_read_from_the_table(supabase: SupabaseClient) -> None:
     expected = f"https://shop.test/buy/v1?u={user}&ref=friend"
     assert build_checkout_url(plan, user, "friend") == expected
     assert build_checkout_url(plan, None, None) == "https://shop.test/buy/v1"
+    await supabase.aclose()
+
+
+@respx.mock
+async def test_create_job_survives_a_retry_without_reserving_twice(
+    supabase: SupabaseClient,
+) -> None:
+    """M1: a 502 on the way out used to make the client POST ``create_job`` again, so
+    two jobs were inserted and two credits reserved while only the second was ever
+    dispatched — the first stayed ``queued`` holding a credit for good."""
+    jobs = SupabaseJobsService(supabase, JobEventBus())
+    user = uuid4()
+    inserted: dict[str, dict[str, Any]] = {}
+    attempts = 0
+
+    def create_job(request: httpx.Request) -> httpx.Response:
+        """The SQL function: an existing key returns its job, anything else inserts."""
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            return httpx.Response(502)
+        key = json.loads(request.content)["p_idempotency_key"]
+        assert key is not None, "create_job must always carry an idempotency key"
+        if key not in inserted:
+            inserted[key] = {
+                "id": str(uuid4()),
+                "user_id": str(user),
+                "status": "queued",
+                "stage": "upload",
+                "progress": 0.0,
+                "created_at": "2026-09-01T00:00:00Z",
+            }
+        return httpx.Response(200, json=inserted[key])
+
+    respx.post(f"{BASE}/rest/v1/rpc/create_job").mock(side_effect=create_job)
+    status = await jobs.create(user, JobOptions(), "input.wav", 1)
+
+    assert attempts == 2, "the transport failure is retried"
+    assert len(inserted) == 1, "the retry must not insert a second job"
+    assert str(status.job_id) == next(iter(inserted.values()))["id"]
+    await supabase.aclose()
+
+
+@respx.mock
+async def test_create_job_prefers_the_client_idempotency_key(supabase: SupabaseClient) -> None:
+    jobs = SupabaseJobsService(supabase, JobEventBus())
+    row = {
+        "id": str(uuid4()),
+        "status": "queued",
+        "stage": "upload",
+        "progress": 0.0,
+        "created_at": "2026-09-01T00:00:00Z",
+    }
+    generated = rpc("create_job", row)
+    await jobs.create(uuid4(), JobOptions(), "input.wav", 1)
+    key = sent(generated)["p_idempotency_key"]
+    assert key.startswith(SERVER_IDEMPOTENCY_PREFIX)
+    UUID(key.removeprefix(SERVER_IDEMPOTENCY_PREFIX))
+
+    await jobs.create(uuid4(), JobOptions(idempotency_key="client-key"), "input.wav", 1)
+    assert sent(generated)["p_idempotency_key"] == "client-key"
     await supabase.aclose()

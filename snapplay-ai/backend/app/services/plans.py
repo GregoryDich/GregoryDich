@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any, Protocol
+from urllib.parse import quote
 from uuid import UUID
 
 from pydantic import BaseModel, field_validator
@@ -11,6 +13,24 @@ from app.schemas import PlanInfo, PlanInterval
 from app.services.supabase import SupabaseClient
 
 CHECKOUT_PROVIDERS: tuple[str, ...] = ("lemonsqueezy", "paddle")
+REFERRAL_CODE_PATTERN = r"^[A-Za-z0-9_-]{1,64}$"
+"""Referral codes as ``referral_codes.code`` holds them: letters, digits, ``-`` and ``_``.
+
+Anything else is refused rather than interpolated: a ``ref`` carrying ``&`` or ``=`` would
+otherwise append parameters of its own to the checkout URL — a second
+``checkout[custom][user_id]`` wins under last-value-wins parsing and redirects the credits
+(and the commission) of someone else's payment to the attacker (§3, §4).
+"""
+_REFERRAL_CODE = re.compile(REFERRAL_CODE_PATTERN)
+
+
+def is_referral_code(value: str | None) -> bool:
+    return value is not None and _REFERRAL_CODE.match(value) is not None
+
+
+def _encoded(value: str | None) -> str:
+    """Percent-encode a value for a URL, reserved characters included."""
+    return quote(value, safe="") if value else ""
 
 
 class PlanRecord(BaseModel):
@@ -61,7 +81,10 @@ class PlansService(Protocol):
 def build_checkout_url(plan: PlanRecord, user_id: UUID | None, ref: str | None) -> str | None:
     """Fill ``{variant_id}``, ``{user_id}`` and ``{ref}`` in the plan's template and drop
     query parameters left empty (an anonymous caller gets no ``user_id`` parameter, §3).
-    ``None`` when the plan has no template or needs a variant id that is not configured."""
+    ``None`` when the plan has no template or needs a variant id that is not configured.
+
+    Every substituted value is percent-encoded, and a ``ref`` that is not a referral code
+    is dropped: an interpolated value must never be able to add a parameter of its own."""
     template = plan.checkout_url_template
     if not template:
         return None
@@ -69,9 +92,9 @@ def build_checkout_url(plan: PlanRecord, user_id: UUID | None, ref: str | None) 
     if "{variant_id}" in template and not variant:
         return None
     url = (
-        template.replace("{variant_id}", variant or "")
-        .replace("{user_id}", str(user_id) if user_id else "")
-        .replace("{ref}", ref or "")
+        template.replace("{variant_id}", _encoded(variant))
+        .replace("{user_id}", _encoded(str(user_id) if user_id else None))
+        .replace("{ref}", _encoded(ref if is_referral_code(ref) else None))
     )
     base, _, query = url.partition("?")
     kept = [pair for pair in query.split("&") if pair and pair.partition("=")[2] != ""]
@@ -101,8 +124,10 @@ class SupabasePlansService:
 
 __all__ = [
     "CHECKOUT_PROVIDERS",
+    "REFERRAL_CODE_PATTERN",
     "PlanRecord",
     "PlansService",
     "SupabasePlansService",
     "build_checkout_url",
+    "is_referral_code",
 ]

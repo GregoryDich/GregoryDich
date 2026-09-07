@@ -42,15 +42,22 @@ Supabase Auth (GoTrue) issues the tokens; the backend only verifies them.
   token is stored in the OS keychain (macOS Keychain, Windows DPAPI), never in the DAW
   project file or plugin state. The password is never stored (§1). One refresh-and-
   retry per request; a second `401` surfaces to the UI.
-* **WebSocket auth (§2).** The `?token=` query form exists for web clients; the plugin
-  uses SSE with a header. Access logs at the ALB and application strip query strings so
-  a token never lands in a log line.
+* **WebSocket auth (§2).** `?token=` is the *only* accepted form on `WS
+  /v1/jobs/{job_id}/ws`: there is no in-band authentication frame to smuggle a token
+  through, and no header path on that route. It exists for web clients; the plugin uses
+  SSE with an `Authorization` header. The token, the read rate limit and job ownership
+  are all checked before the handshake is accepted, so an unauthorised socket is never
+  upgraded: the application closes with code `4401` and the §5 error code as the reason,
+  which uvicorn surfaces to the client as an HTTP `403` on the handshake. Access logs at
+  the ALB and in the application strip query strings so a token never lands in a log
+  line.
 
 ### 2.2 API keys (§11)
 
-* **Format.** `sp_live_` + 32 characters from a CSPRNG (≥ 190 bits). The plaintext is
-  returned exactly once by `POST /v1/api-keys`; the row stores `sha256(key)` and the
-  `prefix` for display.
+* **Format.** `sp_live_` + 32 hex characters from a CSPRNG (`secrets.token_hex(16)` —
+  128 bits of entropy; `backend/app/auth/api_keys.py` accepts `[A-Za-z0-9]{32}` on the way in).
+  The plaintext is returned exactly once by `POST /v1/api-keys`; the row stores
+  `sha256(key)` and the 12-character `prefix` for display.
 * **Lookup.** The request key is hashed, the row is fetched by hash (unique index),
   and the stored hash is then compared with `hmac.compare_digest`. High-entropy keys do
   not need salting or slow hashing; the constant-time compare is what prevents a
@@ -108,6 +115,11 @@ Rules applied to both:
   Manager). The backend still filters every query by the caller's `user_id` and answers
   `404` for anything else (§2); "the key can see everything" is never relied on to mean
   "the caller can".
+* If those grants are ever deployed wrong, PostgreSQL answers the backend's own
+  statement with `SQLSTATE 42501` and `backend/app/services/supabase.py` turns that into
+  `403 unauthorized` (contract §5) rather than a generic `500`. A `403` in production is
+  therefore a deployment alarm — the migrations or the key do not match
+  `db/migrations/0003_rls.sql` — never a statement about the end user's rights.
 * The GPU worker has no database credential. It reports through the backend's
   `complete_job` / `fail_job`, which are authenticated with a worker credential
   distinct from user auth.
@@ -200,7 +212,7 @@ signature header or a request body (rule shared across all components).
 | **Oversized upload** | send > 10 MB with a lying `Content-Length` | ALB limit plus streaming byte count in the handler → `413` | §2 |
 | **Worker-death credit leak** | a crashed worker leaves a job `running` and a credit reserved forever | reaper settles jobs past `JOB_TIMEOUT_SECONDS` as failed → `release`; SQS redelivery and DLQ handle the message side; `settle_reservation` is idempotent | §6, §10 |
 | **Balance tampering** | write to `credit_ledger` / `credit_accounts` through PostgREST | RLS: no write policies; functions callable by `service_role` only | §6 |
-| **Token in logs** | `?token=` on the WebSocket route | query strings stripped from access logs; SSE (header auth) is the plugin path | §2 |
+| **Token in logs** | `?token=` on the WebSocket route | query strings stripped from access logs; the socket is rejected before the upgrade (4401 close / 403 handshake) so no session exists to log; SSE (header auth) is the plugin path | §2 |
 | **Growth engine over-spend** | a runaway daily batch burns the owner's credits | the engine budgets jobs per batch and stops at a configured balance floor; keys are per environment; 10 submissions / min | §5, §11 |
 
 ## 10. Logging and privacy

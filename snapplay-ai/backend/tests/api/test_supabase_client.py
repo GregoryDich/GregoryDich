@@ -11,7 +11,13 @@ import respx
 
 from app.config import Settings
 from app.errors import ApiException
-from app.services.supabase import SupabaseClient, encode_filters, postgrest_error
+from app.services.supabase import (
+    SupabaseClient,
+    credit_counters,
+    encode_filters,
+    postgrest_error,
+    rpc_is_retryable,
+)
 
 BASE = "http://supabase.test"
 
@@ -141,3 +147,91 @@ async def test_auth_grant_uses_the_anon_key_and_hides_provider_detail(
         await supabase.auth_grant("password", {"email": "a", "password": "b"})
     assert info.value.status == 401 and "credentials" in info.value.message.lower()
     await supabase.aclose()
+
+
+@respx.mock
+async def test_non_idempotent_rpcs_are_never_replayed(supabase: SupabaseClient) -> None:
+    """A retried ``create_job`` without an idempotency key would insert a second job and
+    reserve a second credit, stranding the first reservation in ``queued`` forever."""
+    route = respx.post(f"{BASE}/rest/v1/rpc/create_job").mock(
+        side_effect=[httpx.Response(502), httpx.Response(200, json={"id": "job-b"})]
+    )
+    with pytest.raises(ApiException) as info:
+        await supabase.rpc("create_job", {"p_user_id": "u", "p_idempotency_key": None})
+    assert info.value.status == 500 and route.call_count == 1
+
+    respx.post(f"{BASE}/rest/v1/rpc/create_api_key").mock(side_effect=httpx.ConnectError("down"))
+    with pytest.raises(ApiException):
+        await supabase.rpc("create_api_key", {"p_user_id": "u", "p_name": "ci"})
+    assert respx.calls.call_count == 2
+    await supabase.aclose()
+
+
+@respx.mock
+async def test_idempotent_rpcs_are_replayed(supabase: SupabaseClient) -> None:
+    keyed = respx.post(f"{BASE}/rest/v1/rpc/create_job").mock(
+        side_effect=[httpx.Response(503), httpx.Response(200, json={"id": "job-a"})]
+    )
+    row = await supabase.rpc("create_job", {"p_user_id": "u", "p_idempotency_key": "k"})
+    assert row == {"id": "job-a"} and keyed.call_count == 2
+
+    started = respx.post(f"{BASE}/rest/v1/rpc/start_job").mock(
+        side_effect=[httpx.Response(502), httpx.Response(200, json={"id": "job-a"})]
+    )
+    await supabase.rpc("start_job", {"p_job_id": "job-a", "p_worker_ref": None})
+    assert started.call_count == 2
+    await supabase.aclose()
+
+
+def test_retryable_rpcs_are_an_allowlist() -> None:
+    assert rpc_is_retryable("get_balance", {}) is True
+    assert rpc_is_retryable("settle_reservation", {"p_job_id": "j"}) is True
+    assert rpc_is_retryable("cancel_job", {"p_job_id": "j"}) is False
+    assert rpc_is_retryable("create_api_key", {"p_user_id": "u"}) is False
+    assert rpc_is_retryable("create_job", {"p_idempotency_key": None}) is False
+    assert rpc_is_retryable("create_job", {"p_idempotency_key": "k"}) is True
+
+
+@respx.mock
+async def test_auth_grant_is_never_replayed(supabase: SupabaseClient) -> None:
+    """A replay spends the caller's budget against GoTrue's own lockout twice."""
+    route = respx.post(f"{BASE}/auth/v1/token").mock(
+        side_effect=[httpx.Response(503), httpx.Response(200, json={"access_token": "jwt"})]
+    )
+    with pytest.raises(ApiException) as info:
+        await supabase.auth_grant("password", {"email": "a", "password": "b"})
+    assert info.value.status == 500 and route.call_count == 1
+    await supabase.aclose()
+
+
+def test_constraint_violations_do_not_leak_database_internals() -> None:
+    """23505 names the constraint and the offending value; none of it may reach a client."""
+    duplicate = postgrest_error(
+        409,
+        {
+            "code": "23505",
+            "message": 'duplicate key value violates unique constraint "profiles_email_key"',
+            "details": "Key (email)=(player@example.test) already exists.",
+            "hint": None,
+        },
+    )
+    envelope = json.dumps(duplicate.envelope().model_dump(mode="json"))
+    assert duplicate.status == 409 and duplicate.code == "conflict"
+    assert duplicate.message == "Conflict."
+    assert duplicate.details is None
+    for secret in ("profiles_email_key", "player@example.test", "duplicate key", "Key ("):
+        assert secret not in envelope
+
+
+def test_only_the_credit_counters_survive_the_detail_string() -> None:
+    forbidden = postgrest_error(
+        403, {"code": "42501", "message": "permission denied for table credit_ledger"}
+    )
+    assert forbidden.details is None and "credit_ledger" not in forbidden.message
+
+    noisy = postgrest_error(
+        400, {"code": "P0402", "details": "available=0 requested=1 account=fbc0 email=a@b.test"}
+    )
+    assert noisy.details == {"available": 0, "requested": 1}
+    assert noisy.message == "You have 0 credits."
+    assert credit_counters("insufficient credits for user fbc0") is None

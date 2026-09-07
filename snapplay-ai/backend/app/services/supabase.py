@@ -4,8 +4,11 @@ Every data-plane call uses the service-role key (RLS is bypassed, so callers sco
 themselves); the GoTrue proxy uses the anon key. Filters are built from
 ``(column, operator, value)`` triples into query parameters — user input is never
 interpolated into a filter string — and PostgREST error payloads are mapped from their
-SQLSTATE to :class:`app.errors.ApiException`. Transport failures and 5xx responses are
-retried with exponential backoff.
+SQLSTATE to :class:`app.errors.ApiException`.
+
+Retrying is opt-in per call (``_send(..., retry=...)``): a transport failure or a 5xx
+gives no evidence about whether the request committed, so only calls that are safe to
+apply twice are replayed. See :data:`IDEMPOTENT_RPCS`.
 """
 
 from __future__ import annotations
@@ -47,6 +50,53 @@ SQLSTATE_ERRORS: dict[str, tuple[str, int]] = {
 RETRY_STATUSES = frozenset({500, 502, 503, 504})
 _LIST_RESERVED = ',.:()"\\ '
 
+# RPCs a failed request may be repeated on. Each one is either a pure read, or converges
+# on the same rows when applied twice:
+#   get_balance, authenticate_api_key  read-only (the latter only stamps last_used_at).
+#   reserve_credits, settle_reservation, refund_job
+#                                      the ledger row is keyed `<entry_type>:<job_id>`;
+#                                      a second call finds it and returns the balance.
+#   grant_credits, record_purchase     refuse to act twice under the caller's
+#                                      idempotency key (`purchases` is also unique on
+#                                      (provider, provider_order_id)).
+#   start_job, complete_job, fail_job  return the row unchanged once the job already
+#                                      holds the target status.
+#   update_job_progress                writes absolute stage/progress values.
+#   revoke_api_key                     `revoked_at = coalesce(revoked_at, now())`.
+#   reap_stale_jobs                    fails whatever is still stale; a second sweep
+#                                      finds nothing left to do.
+# Deliberately absent:
+#   create_job      inserts a job and reserves a credit, so a replay charges twice and
+#                   strands the first reservation in `queued` forever — unless the call
+#                   carries an idempotency key, which `rpc_is_retryable` checks for.
+#   create_api_key  every call mints a new key.
+#   cancel_job      accepts `queued` only, so a replay answers 409 for a cancellation
+#                   that in fact succeeded.
+IDEMPOTENT_RPCS: frozenset[str] = frozenset(
+    {
+        "authenticate_api_key",
+        "complete_job",
+        "fail_job",
+        "get_balance",
+        "grant_credits",
+        "reap_stale_jobs",
+        "record_purchase",
+        "refund_job",
+        "reserve_credits",
+        "revoke_api_key",
+        "settle_reservation",
+        "start_job",
+        "update_job_progress",
+    }
+)
+
+
+def rpc_is_retryable(name: str, params: Mapping[str, Any]) -> bool:
+    """Whether ``name`` may be re-sent after a transport failure or a 5xx."""
+    if name == "create_job":
+        return params.get("p_idempotency_key") is not None
+    return name in IDEMPOTENT_RPCS
+
 
 def _encode_value(value: Any) -> str:
     if isinstance(value, bool):
@@ -79,36 +129,54 @@ def encode_filters(filters: Iterable[Filter]) -> dict[str, str]:
     return params
 
 
-def _parse_detail(detail: Any) -> dict[str, Any] | None:
-    """``"available=0 requested=1"`` → ``{"available": 0, "requested": 1}``."""
+CREDIT_COUNTERS = ("available", "requested")
+"""The only DETAIL fields ever forwarded to a client (§5 ``insufficient_credits``)."""
+
+
+def credit_counters(detail: Any) -> dict[str, int] | None:
+    """``"available=0 requested=1"`` → ``{"available": 0, "requested": 1}``.
+
+    Only the two integer counters survive; every other token of the DETAIL string is
+    dropped, so nothing that PostgreSQL puts there can reach the client.
+    """
     if not isinstance(detail, str) or not detail:
         return None
-    parsed: dict[str, Any] = {}
+    parsed: dict[str, int] = {}
     for token in detail.split():
         key, sep, raw = token.partition("=")
-        if not sep or not key:
-            return {"detail": detail}
-        parsed[key] = int(raw) if raw.lstrip("-").isdigit() else raw
-    return parsed
+        if sep and key in CREDIT_COUNTERS and raw.lstrip("-").isdigit():
+            parsed[key] = int(raw)
+    return parsed or None
 
 
 def postgrest_error(status: int, payload: Any) -> ApiException:
-    """Map a PostgREST / PostgreSQL error response to the §5 envelope."""
+    """Map a PostgREST / PostgreSQL error response to the §5 envelope.
+
+    PostgreSQL's own ``message`` and ``details`` name constraints, columns and the
+    offending values (23505 reports ``Key (email)=(a@b.test) already exists.``), so they
+    are logged here and never returned: the client gets the generic sentence for the
+    mapped §5 code, and the only details forwarded are the credit counters §2 requires.
+    """
     body: Mapping[str, Any] = payload if isinstance(payload, Mapping) else {}
     sqlstate = str(body.get("code") or "")
     mapped = SQLSTATE_ERRORS.get(sqlstate)
+    raw = {
+        "status": status,
+        "sqlstate": sqlstate or None,
+        "db_message": body.get("message"),
+        "db_details": body.get("details"),
+        "db_hint": body.get("hint"),
+    }
     if mapped is None:
-        log.error(
-            "unmapped postgrest error", extra={"status": status, "sqlstate": sqlstate or None}
-        )
+        log.error("unmapped postgrest error", extra=raw)
         return ApiException(INTERNAL_ERROR, message="Database request failed.")
     code, http_status = mapped
-    details = _parse_detail(body.get("details"))
-    message: str | None = None
-    if code == INSUFFICIENT_CREDITS and details and isinstance(details.get("available"), int):
-        message = f"You have {details['available']} credits."
-    elif isinstance(body.get("message"), str) and body["message"] not in (code, ""):
-        message = body["message"]
+    log.info("postgrest error", extra={**raw, "code": code})
+    if code != INSUFFICIENT_CREDITS:
+        return ApiException(code, http_status)
+    details = credit_counters(body.get("details"))
+    available = details.get("available") if details else None
+    message = f"You have {available} credits." if available is not None else None
     return ApiException(code, http_status, message, details)
 
 
@@ -144,13 +212,17 @@ class SupabaseClient:
         method: str,
         path: str,
         *,
+        retry: bool,
         headers: Mapping[str, str],
         params: Mapping[str, str] | None = None,
         json: Any = None,
         content: bytes | None = None,
     ) -> httpx.Response:
+        """Send one request, replaying it on a transport failure or a 5xx only when
+        ``retry`` says applying it twice is safe."""
+        attempts = self._max_attempts if retry else 1
         response: httpx.Response | None = None
-        for attempt in range(self._max_attempts):
+        for attempt in range(attempts):
             if attempt:
                 await asyncio.sleep(self._backoff * 2 ** (attempt - 1))
             try:
@@ -163,7 +235,7 @@ class SupabaseClient:
                     extra={"method": method, "path": path, "attempt": attempt + 1},
                     exc_info=exc,
                 )
-                if attempt + 1 == self._max_attempts:
+                if attempt + 1 == attempts:
                     raise ApiException(INTERNAL_ERROR, message="Database unavailable.") from exc
                 continue
             if response.status_code not in RETRY_STATUSES:
@@ -196,6 +268,7 @@ class SupabaseClient:
         response = await self._send(
             "POST",
             f"/rest/v1/rpc/{quote(name, safe='')}",
+            retry=rpc_is_retryable(name, params),
             headers={**self._service_headers, "Content-Type": "application/json"},
             json=dict(params),
         )
@@ -216,7 +289,11 @@ class SupabaseClient:
         if limit is not None:
             params["limit"] = str(limit)
         response = await self._send(
-            "GET", f"/rest/v1/{quote(table, safe='')}", headers=self._service_headers, params=params
+            "GET",
+            f"/rest/v1/{quote(table, safe='')}",
+            retry=True,
+            headers=self._service_headers,
+            params=params,
         )
         rows = self._check(response)
         return list(rows) if isinstance(rows, list) else []
@@ -241,6 +318,9 @@ class SupabaseClient:
         response = await self._send(
             "POST",
             f"/rest/v1/{quote(table, safe='')}",
+            # A plain insert would add a second row on a replay; a conflict resolution
+            # makes it converge on the row that is already there.
+            retry=bool(resolution and on_conflict),
             headers={
                 **self._service_headers,
                 "Content-Type": "application/json",
@@ -267,6 +347,8 @@ class SupabaseClient:
         response = await self._send(
             "PATCH",
             f"/rest/v1/{quote(table, safe='')}",
+            # Literal values under a filter: the same PATCH twice leaves the same rows.
+            retry=True,
             headers={
                 **self._service_headers,
                 "Content-Type": "application/json",
@@ -288,6 +370,7 @@ class SupabaseClient:
         response = await self._send(
             "PUT",
             f"/storage/v1/object/{self._object_path(bucket, path)}",
+            retry=True,  # x-upsert: the same bytes land at the same key.
             headers={**self._service_headers, "Content-Type": content_type, "x-upsert": "true"},
             content=data,
         )
@@ -298,6 +381,7 @@ class SupabaseClient:
         response = await self._send(
             "GET",
             f"/storage/v1/object/{self._object_path(bucket, path)}",
+            retry=True,
             headers=self._service_headers,
         )
         self._check_storage(response)
@@ -307,6 +391,7 @@ class SupabaseClient:
         response = await self._send(
             "POST",
             f"/storage/v1/object/sign/{self._object_path(bucket, path)}",
+            retry=True,  # signing mints a token; it stores nothing.
             headers={**self._service_headers, "Content-Type": "application/json"},
             json={"expiresIn": int(expires_in)},
         )
@@ -335,6 +420,9 @@ class SupabaseClient:
         response = await self._send(
             "POST",
             "/auth/v1/token",
+            # Never replayed: a repeat spends the caller's budget against GoTrue's own
+            # per-IP lockout twice and, for refresh_token, may burn a rotated token.
+            retry=False,
             headers={**self._anon_headers, "Content-Type": "application/json"},
             params={"grant_type": grant_type},
             json=dict(payload),
@@ -349,10 +437,13 @@ class SupabaseClient:
 
 
 __all__ = [
+    "IDEMPOTENT_RPCS",
     "RETRY_STATUSES",
     "SQLSTATE_ERRORS",
     "Filter",
     "SupabaseClient",
+    "credit_counters",
     "encode_filters",
     "postgrest_error",
+    "rpc_is_retryable",
 ]

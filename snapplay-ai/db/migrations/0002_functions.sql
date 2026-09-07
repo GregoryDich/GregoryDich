@@ -232,10 +232,16 @@ returns public.credit_balance
 language plpgsql stable security definer set search_path = public as $$
 declare
   v_caller uuid;
+  v_role text;
   v_account public.credit_accounts;
 begin
   v_caller := auth.uid();
-  if v_caller is not null and v_caller <> p_user_id then
+  v_role := current_setting('role', true);
+  -- `is distinct from`, not `<>`: a token without a subject leaves auth.uid() null, and a
+  -- null must not read as "no caller" and pass the check. PostgREST switches to the API
+  -- role for the request, so service_role (the backend) and the owner (cron, migrations)
+  -- keep reading any account.
+  if v_role in ('authenticated', 'anon') and v_caller is distinct from p_user_id then
     raise exception 'forbidden' using errcode = '42501', detail = 'get_balance is limited to the caller''s own account';
   end if;
   select * into v_account from public.credit_accounts where user_id = p_user_id;
@@ -246,17 +252,46 @@ begin
 end;
 $$;
 
--- Cron helper. Expiring credits are treated as spent first: a grant's unspent remainder is
--- max(0, amount - credits captured/deducted since the grant), capped at the available
--- balance so reserved credits are never expired. One `expire` row per grant, keyed by
--- 'expire:<grant ledger id>', so a grant is processed exactly once.
+-- The perishable pool: expiring credits are spent before non-expiring ones (§13), so every
+-- capture comes out of the pool first and only the overflow touches permanent credits.
+-- Replaying the user's ledger in order is what keeps a spend attributed to the grant it
+-- actually consumed; a plain "everything captured after this grant" sum charges the same
+-- spend to every earlier grant as well, and leaves credits that were never granted behind
+-- month after month.
+create function public.perishable_pool(p_user_id uuid) returns integer
+language plpgsql stable as $$
+declare
+  v_row public.credit_ledger;
+  v_pool integer := 0;
+begin
+  for v_row in
+    select * from public.credit_ledger where user_id = p_user_id order by seq
+  loop
+    if v_row.entry_type = 'grant' and v_row.expires_at is not null then
+      v_pool := v_pool + v_row.amount;
+    elsif v_row.entry_type = 'expire'
+       or (v_row.amount < 0 and v_row.entry_type in ('capture', 'adjust')) then
+      v_pool := greatest(v_pool + v_row.amount, 0);
+    end if;
+  end loop;
+  return v_pool;
+end;
+$$;
+
+-- Cron helper. Grants are expired in `expires_at` order, so the grant being processed is
+-- the head of the perishable pool: everything spent so far came off it, and what is left
+-- for it is the pool minus the perishable grants queued behind it. Capped at the grant's
+-- own amount and at the available balance, so reserved credits are never expired. One
+-- `expire` row per grant, keyed by 'expire:<grant ledger id>', so a grant is processed
+-- exactly once.
 create function public.expire_credits()
 returns integer
 language plpgsql security definer set search_path = public as $$
 declare
   v_grant public.credit_ledger;
   v_account public.credit_accounts;
-  v_spent integer;
+  v_pool integer;
+  v_behind integer;
   v_remaining integer;
   v_count integer := 0;
 begin
@@ -269,11 +304,15 @@ begin
     v_account := public.lock_credit_account(v_grant.user_id);
     continue when exists (select 1 from public.credit_ledger e where e.idempotency_key = 'expire:' || v_grant.id::text);
 
-    select coalesce(-sum(amount), 0) into v_spent
-      from public.credit_ledger
-     where user_id = v_grant.user_id and seq > v_grant.seq
-       and entry_type in ('capture', 'adjust') and amount < 0;
-    v_remaining := least(greatest(v_grant.amount - v_spent, 0), v_account.balance - v_account.reserved);
+    v_pool := public.perishable_pool(v_grant.user_id);
+    select coalesce(sum(g.amount), 0) into v_behind
+      from public.credit_ledger g
+     where g.user_id = v_grant.user_id and g.entry_type = 'grant' and g.expires_at is not null
+       and (g.expires_at, g.seq) > (v_grant.expires_at, v_grant.seq)
+       and not exists (select 1 from public.credit_ledger e where e.idempotency_key = 'expire:' || g.id::text);
+
+    v_remaining := least(least(greatest(v_pool - v_behind, 0), v_grant.amount),
+                         v_account.balance - v_account.reserved);
 
     update public.credit_accounts set balance = balance - v_remaining
      where user_id = v_grant.user_id returning * into v_account;
@@ -457,29 +496,54 @@ begin
 end;
 $$;
 
--- Reaper (contract §10): fails jobs left running past the timeout and releases their credit.
-create function public.reap_stale_jobs(p_timeout_seconds integer)
+-- Reaper (contract §10): fails jobs left running past the timeout and releases their credit,
+-- and does the same for jobs never picked up at all. A job whose message was lost before
+-- start_job — a worker that died, a malformed body, a dead-lettered message — stays 'queued'
+-- with its credit reserved forever, and every leak permanently lowers the owner's usable
+-- balance. Queued jobs get the longer grace of p_queued_timeout_seconds, since a queue
+-- backlog is not yet a failure.
+create function public.reap_stale_jobs(p_timeout_seconds integer, p_queued_timeout_seconds integer)
 returns integer
 language plpgsql security definer set search_path = public as $$
 declare
-  v_job_id uuid;
+  v_job record;
   v_count integer := 0;
 begin
   if p_timeout_seconds is null or p_timeout_seconds <= 0 then
     raise exception 'invalid_argument' using errcode = '22023', detail = 'p_timeout_seconds must be positive';
   end if;
-  for v_job_id in
-    select id from public.jobs
-     where status = 'running'
-       and coalesce(started_at, created_at) < now() - make_interval(secs => p_timeout_seconds)
+  if p_queued_timeout_seconds is null or p_queued_timeout_seconds <= 0 then
+    raise exception 'invalid_argument' using errcode = '22023', detail = 'p_queued_timeout_seconds must be positive';
+  end if;
+  for v_job in
+    select id, status from public.jobs
+     where (status = 'running'
+            and coalesce(started_at, created_at) < now() - make_interval(secs => p_timeout_seconds))
+        or (status = 'queued'
+            and created_at < now() - make_interval(secs => p_queued_timeout_seconds))
      for update skip locked
   loop
-    perform public.fail_job(v_job_id, jsonb_build_object(
+    perform public.fail_job(v_job.id, jsonb_build_object(
       'code', 'worker_timeout',
-      'message', format('no completion within %s seconds', p_timeout_seconds)));
+      'message', format('no completion within %s seconds',
+                        case when v_job.status = 'running' then p_timeout_seconds
+                             else p_queued_timeout_seconds end)));
     v_count := v_count + 1;
   end loop;
   return v_count;
+end;
+$$;
+
+-- The cron entry point keeps its one-argument shape (0003_rls.sql grants this signature):
+-- a job that was never picked up waits ten worker timeouts before it is failed.
+create function public.reap_stale_jobs(p_timeout_seconds integer)
+returns integer
+language plpgsql security definer set search_path = public as $$
+begin
+  if p_timeout_seconds is null or p_timeout_seconds <= 0 then
+    raise exception 'invalid_argument' using errcode = '22023', detail = 'p_timeout_seconds must be positive';
+  end if;
+  return public.reap_stale_jobs(p_timeout_seconds, p_timeout_seconds * 10);
 end;
 $$;
 

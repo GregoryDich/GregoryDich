@@ -11,6 +11,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import SecretStr
 
 from app.services.memory import MemoryStore
 
@@ -44,26 +45,26 @@ def ls_order(
     tax: int = 0,
     event_name: str = "order_created",
     renews_at: str | None = None,
+    subscription_id: str | None = None,
 ) -> bytes:
     custom: dict[str, Any] = {"user_id": str(user_id)}
     if ref is not None:
         custom["ref"] = ref
+    attributes: dict[str, Any] = {
+        "user_email": "player@example.test",
+        "total": total,
+        "tax": tax,
+        "status": "active" if event_name.startswith("subscription") else "paid",
+        "renews_at": renews_at,
+        "first_order_item": {"variant_id": variant_id},
+        "variant_id": variant_id,
+    }
+    if subscription_id is not None:
+        attributes["subscription_id"] = subscription_id
     return json.dumps(
         {
             "meta": {"event_name": event_name, "custom_data": custom},
-            "data": {
-                "id": event_id,
-                "type": "orders",
-                "attributes": {
-                    "user_email": "player@example.test",
-                    "total": total,
-                    "tax": tax,
-                    "status": "active" if event_name.startswith("subscription") else "paid",
-                    "renews_at": renews_at,
-                    "first_order_item": {"variant_id": variant_id},
-                    "variant_id": variant_id,
-                },
-            },
+            "data": {"id": event_id, "type": "orders", "attributes": attributes},
         }
     ).encode()
 
@@ -214,11 +215,12 @@ def test_subscription_renewal_grants_expiring_credits(
     period_end = datetime.now(UTC) + timedelta(days=30)
     body = ls_order(
         registered_user,
-        event_id="ls-sub-1",
+        event_id="ls-invoice-1",
         variant_id=SUB_VARIANT,
         event_name="subscription_payment_success",
         total=799,
         renews_at=period_end.isoformat(),
+        subscription_id="ls-sub-1",
     )
     headers = sign_lemonsqueezy(body, settings.lemonsqueezy_webhook_secret.get_secret_value())
     assert client.post("/v1/webhooks/lemonsqueezy", content=body, headers=headers).json() == {
@@ -358,3 +360,177 @@ def test_unknown_user_is_404_and_unhandled_events_are_acknowledged(
         "/v1/webhooks/lemonsqueezy", content=ignored, headers=sign_lemonsqueezy(ignored, secret)
     ).json() == {"status": "ok"}
     assert len(store.purchases) == 0
+
+
+def test_one_lemonsqueezy_sale_grants_and_pays_once_across_its_three_events(
+    client: TestClient,
+    auth: dict[str, str],
+    store: MemoryStore,
+    registered_user: UUID,
+    sign_lemonsqueezy: Callable[[bytes, str], dict[str, str]],
+    settings: Any,
+) -> None:
+    """§4: one subscription checkout, three events, three different ``data.id`` values.
+
+    Only the invoice event pays for the period: the order and the subscription event carry
+    the same sale under a different id and must not grant credits or pay a commission
+    again.
+    """
+    affiliate_user = uuid4()
+    store.ensure_user(affiliate_user, "affiliate@example.test")
+    store.add_affiliate(affiliate_user, "FRIEND")
+    secret = settings.lemonsqueezy_webhook_secret.get_secret_value()
+    period_end = datetime.now(UTC) + timedelta(days=30)
+    common = {
+        "variant_id": SUB_VARIANT,
+        "ref": "friend",
+        "total": 900,
+        "tax": 100,
+        "renews_at": period_end.isoformat(),
+        "subscription_id": "ls-sub-9",
+    }
+    sequence = [
+        ls_order(registered_user, event_id="ls-order-9", event_name="order_created", **common),
+        ls_order(
+            registered_user, event_id="ls-sub-9", event_name="subscription_created", **common
+        ),
+        ls_order(
+            registered_user,
+            event_id="ls-invoice-9",
+            event_name="subscription_payment_success",
+            **common,
+        ),
+    ]
+    for body in sequence:
+        response = client.post(
+            "/v1/webhooks/lemonsqueezy", content=body, headers=sign_lemonsqueezy(body, secret)
+        )
+        assert response.status_code == 200 and response.json() == {"status": "ok"}
+
+    assert len(store.purchases) == 1
+    assert client.get("/v1/me", headers=auth).json()["balance"]["credits"] == 63
+    commissions = list(store.commissions.values())
+    assert len(commissions) == 1 and commissions[0].amount_cents == 240
+    assert store.referral_codes["friend"].uses == 1
+    assert len(store.subscriptions) == 1
+    assert store.find_subscription("lemonsqueezy", "ls-sub-9") is not None
+
+
+def test_renewal_grants_again_for_the_next_period(
+    client: TestClient,
+    auth: dict[str, str],
+    store: MemoryStore,
+    registered_user: UUID,
+    sign_lemonsqueezy: Callable[[bytes, str], dict[str, str]],
+    settings: Any,
+) -> None:
+    """Each period is its own invoice, so a renewal grants once more (§13)."""
+    secret = settings.lemonsqueezy_webhook_secret.get_secret_value()
+    for invoice, days in (("ls-invoice-a", 30), ("ls-invoice-b", 60)):
+        body = ls_order(
+            registered_user,
+            event_id=invoice,
+            variant_id=SUB_VARIANT,
+            event_name="subscription_payment_success",
+            total=799,
+            renews_at=(datetime.now(UTC) + timedelta(days=days)).isoformat(),
+            subscription_id="ls-sub-renew",
+        )
+        assert client.post(
+            "/v1/webhooks/lemonsqueezy", content=body, headers=sign_lemonsqueezy(body, secret)
+        ).json() == {"status": "ok"}
+
+    assert len(store.purchases) == 2
+    assert client.get("/v1/me", headers=auth).json()["balance"]["credits"] == 123
+    assert len(store.subscriptions) == 1
+
+
+def test_a_failed_delivery_is_retried_and_credits_exactly_once(
+    client: TestClient,
+    auth: dict[str, str],
+    store: MemoryStore,
+    registered_user: UUID,
+    sign_lemonsqueezy: Callable[[bytes, str], dict[str, str]],
+    settings: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """§4: an event that failed halfway must not be answered ``duplicate`` on retry — the
+    customer has paid, and the provider's retry is the only remaining delivery."""
+    body = ls_order(registered_user)
+    headers = sign_lemonsqueezy(body, settings.lemonsqueezy_webhook_secret.get_secret_value())
+    grant_credits = store.grant_credits
+    calls: list[int] = []
+
+    def failing_grant(*args: Any, **kwargs: Any) -> Any:
+        calls.append(1)
+        if len(calls) == 1:
+            raise RuntimeError("ledger unavailable")
+        return grant_credits(*args, **kwargs)
+
+    monkeypatch.setattr(store, "grant_credits", failing_grant)
+    first = client.post("/v1/webhooks/lemonsqueezy", content=body, headers=headers)
+    assert first.status_code == 500
+    assert store.purchases == {}
+    assert client.get("/v1/me", headers=auth).json()["balance"]["credits"] == 3
+
+    retry = client.post("/v1/webhooks/lemonsqueezy", content=body, headers=headers)
+    assert retry.status_code == 200 and retry.json() == {"status": "ok"}
+    assert len(store.purchases) == 1
+    assert client.get("/v1/me", headers=auth).json()["balance"]["credits"] == 53
+
+    again = client.post("/v1/webhooks/lemonsqueezy", content=body, headers=headers)
+    assert again.json() == {"status": "duplicate"}
+    assert client.get("/v1/me", headers=auth).json()["balance"]["credits"] == 53
+
+
+def test_an_unset_webhook_secret_rejects_every_delivery(
+    client: TestClient,
+    store: MemoryStore,
+    registered_user: UUID,
+    sign_lemonsqueezy: Callable[[bytes, str], dict[str, str]],
+    sign_paddle: Callable[..., dict[str, str]],
+    settings: Any,
+) -> None:
+    """An empty secret must not be used as an HMAC key: anyone could sign their own
+    events and grant themselves credits (§4)."""
+    settings.lemonsqueezy_webhook_secret = SecretStr("")
+    settings.paddle_webhook_secret = SecretStr("")
+    body = ls_order(registered_user)
+    forged = client.post(
+        "/v1/webhooks/lemonsqueezy", content=body, headers=sign_lemonsqueezy(body, "")
+    )
+    assert forged.status_code == 401
+    assert forged.json()["error"]["code"] == "invalid_signature"
+
+    paddle_body = paddle_event(registered_user)
+    assert (
+        client.post(
+            "/v1/webhooks/paddle", content=paddle_body, headers=sign_paddle(paddle_body, "")
+        ).status_code
+        == 401
+    )
+    assert store.purchases == {}
+
+
+def test_a_non_ascii_signature_header_is_401(
+    client: TestClient, store: MemoryStore, registered_user: UUID
+) -> None:
+    """``hmac.compare_digest`` raises ``TypeError`` on non-ASCII ``str``; a header is
+    attacker-controlled text and must never reach a 500."""
+    body = ls_order(registered_user)
+    # Sent as raw bytes, the way a client can: the header reaches the app as text.
+    response = client.post(
+        "/v1/webhooks/lemonsqueezy", content=body, headers={b"X-Signature": "é".encode()}
+    )
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "invalid_signature"
+
+    paddle_body = paddle_event(registered_user)
+    stamped = client.post(
+        "/v1/webhooks/paddle",
+        content=paddle_body,
+        headers={b"Paddle-Signature": f"ts={int(time.time())};h1=é".encode()},
+    )
+    assert stamped.status_code == 401
+    assert stamped.json()["error"]["code"] == "invalid_signature"
+    assert store.purchases == {}

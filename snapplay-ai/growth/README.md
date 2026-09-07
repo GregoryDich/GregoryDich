@@ -22,6 +22,15 @@ voiceover → Remotion render (FFmpeg fallback) → Instagram / Facebook / TikTo
   §2). Re-processing a known clip returns the stored content item instead of a new job.
 * Publishing is idempotent per (content item, platform): a repeat call returns the stored post
   id, and a failed attempt resumes from its last checkpoint (container id, upload, …).
+* **Attribution and AI disclosure are yours to add.** `list_source_clips` reports each clip's
+  `license` and `attribution`, but `write_script` does not put them in the caption — what
+  `publish_video` posts is `hook + cta_line` plus the brief's hashtags. Nothing sets a
+  platform AI-generated flag either, although `run_daily_batch` voices every item when
+  `ELEVENLABS_API_KEY` is present. Pass the credit line in `caption` and set the disclosure
+  in each platform's own composer. `docs/GROWTH.md` §2 and §6 spell out the obligations.
+* **There is no credit budget.** `run_daily_batch` spends one credit per new clip until it
+  runs out of unprocessed clips in `LICENSED_CLIPS_DIR` or the API answers `402`. Bound it
+  with `count` and by topping the engine account up deliberately.
 
 ## Setup
 
@@ -113,5 +122,8 @@ ruff check .
 ```
 
 Every external API (SnapPlay including the SSE stream, ElevenLabs, Meta, TikTok, YouTube) is
-mocked with respx; no test reaches the network. The Remotion smoke render is skipped when Node
-or the Remotion install is missing.
+mocked with respx; no test reaches the network. A full run reports **81 passed, 1 skipped** —
+the skip is the Remotion smoke render when Node or the Remotion install is missing.
+`tests/test_tools_schema.py` pins every tool's JSON schema against
+`tests/snapshots/tools.json`, so a changed signature fails the suite instead of silently
+drifting from `docs/GROWTH.md` §3.

@@ -22,8 +22,8 @@ plugin ──HTTPS──> ALB ──> ECS Fargate (api)  ──SQS──> ECS EC
 | `modules/queue` | job queue (visibility 300 s, long polling) + DLQ, redrive after 3 receives |
 | `modules/iam` | execution/task roles (least privilege on `jobs/` prefix, SQS, secrets), ECS instance role, GitHub OIDC deploy role |
 | `modules/secrets` | Secrets Manager placeholders (`SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `LEMONSQUEEZY_WEBHOOK_SECRET`, `PADDLE_WEBHOOK_SECRET`, plus `CLOUDFRONT_PRIVATE_KEY` when CloudFront is on) |
-| `modules/ecs-api` | ACM certificate, ALB (HTTP→HTTPS, health check `/v1/health`), Fargate service with CPU autoscaling, reaper scheduled task |
-| `modules/ecs-gpu-worker` | GPU launch template + ASG + capacity provider, worker task (GPU=1), queue-depth scaling with scale-to-zero |
+| `modules/ecs-api` | ACM certificate, ALB (HTTP→HTTPS, health check `/v1/health`), Fargate service with target-tracking CPU autoscaling, reaper scheduled task (`var.reaper_schedule_expression`, default `rate(5 minutes)`) |
+| `modules/ecs-gpu-worker` | GPU launch template + ASG + capacity provider, worker task (GPU=1), step scaling on queue depth with scale-to-zero |
 | `modules/observability` | SNS topic, alarms (DLQ depth, ALB 5xx rate, queue age), monthly budget |
 | `production.tfvars` | non-secret sizing for production |
 | `backend.hcl.example` | template for the S3 backend configuration |
@@ -103,13 +103,19 @@ Run from `snapplay-ai/infra/aws` with administrator credentials.
    aws ecs update-service --cluster snapplay-prod --service snapplay-prod-api --force-new-deployment
    ```
 6. **Wire GitHub Actions** with `terraform output github_deploy_role_arn` (below).
-7. Verify: `curl -i https://api.snapplay.ai/v1/health` returns 200 and
+7. Verify: `curl -i https://<domain_name>/v1/health` returns 200 and
    `terraform output` lists the queue URLs and bucket.
+8. Verify the paywall can actually take money:
+   `curl -s https://<domain_name>/v1/plans | jq -r '.plans[] | select(.price_usd > 0) | "\(.id) \(.checkout_url // "MISSING")"'`.
+   A fresh database seeds `plans.provider_variant_ids` empty, so every `checkout_url` is
+   `null` and the in-plugin paywall shows no buttons — silently. See `db/README.md`.
 
-Later deployments are done by `.github/workflows/deploy.yml`: on every push to
-`main` it builds and pushes both images tagged with the commit SHA, runs
+Later deployments are done by `.github/workflows/deploy.yml` (the workflows live at the
+**repository root**, one level above `snapplay-ai/`): on every push to `main` it builds
+and pushes both images tagged with the commit SHA, runs
 `terraform plan -var image_tag=<sha>`, and applies after approval of the
-`production` GitHub environment.
+`production` GitHub environment. Note that no workflow runs `terraform validate` or
+`terraform fmt -check`; run them yourself before pushing infrastructure changes.
 
 ## TLS and DNS
 

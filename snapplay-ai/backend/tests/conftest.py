@@ -19,6 +19,8 @@ from app.config import Settings, override_settings
 from app.main import create_app
 
 TEST_JWT_SECRET = "test-jwt-secret-not-for-production"
+TEST_ISSUER = "http://supabase.test/auth/v1"
+"""``iss`` of the ``settings`` fixture's Supabase project; the verifier requires it."""
 
 
 @pytest.fixture
@@ -55,7 +57,8 @@ def client(app: FastAPI) -> Iterator[TestClient]:
 @pytest.fixture
 def mint_jwt() -> Callable[..., str]:
     """``mint_jwt(sub=None, *, expires_in=3600, aud="authenticated", secret=..., **claims)``
-    returns an HS256 token accepted by the Supabase-style verifier."""
+    returns an HS256 token accepted by the Supabase-style verifier. ``iss`` defaults to
+    the ``settings`` fixture's project and can be overridden through ``**claims``."""
 
     def _mint(
         sub: str | None = None,
@@ -70,6 +73,7 @@ def mint_jwt() -> Callable[..., str]:
         payload: dict[str, Any] = {
             "sub": sub or str(uuid4()),
             "aud": aud,
+            "iss": TEST_ISSUER,
             "email": email,
             "role": "authenticated",
             "iat": int(now.timestamp()),

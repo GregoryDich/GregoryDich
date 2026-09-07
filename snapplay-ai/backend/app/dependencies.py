@@ -39,7 +39,7 @@ async def authenticate(
     """Resolve a JWT (preferred) or an API key to a :class:`Principal`, else ``401``.
     A JWT caller's profile is created on first sight (signup credits, §3)."""
     if bearer:
-        claims = services.jwt.verify(bearer)
+        claims = await services.jwt.verify_async(bearer)
         user_id = UUID(str(claims["sub"]))
         email = str(claims.get("email") or "")
         await services.users.ensure(user_id, email)

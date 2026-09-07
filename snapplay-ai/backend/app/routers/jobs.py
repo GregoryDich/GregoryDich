@@ -16,18 +16,26 @@ from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile, 
 from fastapi.responses import Response
 from pydantic import ValidationError
 from sse_starlette.sse import EventSourceResponse, ServerSentEvent
+from starlette.background import BackgroundTask
 from starlette.websockets import WebSocketDisconnect
 
 from app.auth import Principal
 from app.dependencies import authenticate, get_principal, get_services
 from app.errors import (
     NOT_FOUND,
-    PAYLOAD_TOO_LARGE,
     UNSUPPORTED_MEDIA_TYPE,
     VALIDATION_ERROR,
     ApiException,
+    rate_limited,
 )
-from app.middleware.rate_limit import enforce, rate_limit
+from app.middleware.body_limit import payload_too_large
+from app.middleware.rate_limit import (
+    STREAM_RETRY_AFTER_SECONDS,
+    ConcurrencyLimiter,
+    StreamSlot,
+    enforce,
+    rate_limit,
+)
 from app.schemas import JobOptions, JobStatus, JobSubmitResponse, PipelineOptions
 from app.services.events import TERMINAL_EVENTS
 from app.services.factory import Services
@@ -40,6 +48,8 @@ SSE_PING_SECONDS = 5
 CHUNK_BYTES = 64 * 1024
 WS_UNAUTHORIZED = 4401
 """WebSocket close code for a rejected token (application range, mirrors HTTP 401)."""
+WS_RATE_LIMITED = 4429
+"""WebSocket close code for an exhausted budget (mirrors HTTP 429)."""
 
 AUDIO_CONTENT_TYPES: dict[str, str] = {
     "flac": "audio/flac",
@@ -113,22 +123,18 @@ def parse_options(raw: str | None) -> JobOptions:
         ) from exc
 
 
-def _too_large(max_bytes: int) -> ApiException:
-    return ApiException(
-        PAYLOAD_TOO_LARGE,
-        message=f"The upload exceeds {max_bytes} bytes.",
-        details={"max_bytes": max_bytes},
-    )
-
-
 async def read_upload(upload: UploadFile, max_bytes: int) -> bytes:
-    """Read the upload in chunks, aborting with 413 the moment the cap is passed."""
+    """Read the upload in chunks, aborting with 413 the moment the cap is passed.
+
+    Defence in depth behind :class:`app.middleware.body_limit.BodyLimitMiddleware`,
+    which already bounded the whole request: this bounds the audio part alone.
+    """
     chunks: list[bytes] = []
     total = 0
     while chunk := await upload.read(CHUNK_BYTES):
         total += len(chunk)
         if total > max_bytes:
-            raise _too_large(max_bytes)
+            raise payload_too_large(max_bytes)
         chunks.append(chunk)
     return b"".join(chunks)
 
@@ -212,6 +218,20 @@ async def get_job(
     return await _job_or_404(services, job_id, principal.user_id)
 
 
+def hold_stream(request: Request | WebSocket, principal: Principal) -> StreamSlot:
+    """Claim one of the principal's concurrent event streams, or raise 429.
+
+    Opening a stream costs a single read token but then holds a connection — and, in
+    poll mode, one PostgREST query per second — for as long as the client keeps it, so
+    the number held at once is capped as well as the rate at which they are opened.
+    """
+    streams: ConcurrencyLimiter = request.app.state.rate_limits.streams
+    slot = streams.acquire(str(principal.user_id))
+    if slot is None:
+        raise rate_limited(STREAM_RETRY_AFTER_SECONDS, 0)
+    return slot
+
+
 @router.get("/{job_id}/events", dependencies=[Depends(rate_limit("reads"))])
 async def job_events(
     request: Request,
@@ -221,19 +241,28 @@ async def job_events(
 ) -> EventSourceResponse:
     """SSE stream of ``progress`` events ending with ``result`` or ``error`` (§2)."""
     await _job_or_404(services, job_id, principal.user_id)
+    slot = hold_stream(request, principal)
 
     async def publish() -> AsyncIterator[ServerSentEvent]:
-        async for event in services.jobs.events(job_id):
-            if await request.is_disconnected():
-                return
-            yield ServerSentEvent(event=event["event"], data=json.dumps(event["data"]))
-            if event["event"] in TERMINAL_EVENTS:
-                return
+        try:
+            async for event in services.jobs.events(job_id):
+                if await request.is_disconnected():
+                    return
+                yield ServerSentEvent(event=event["event"], data=json.dumps(event["data"]))
+                if event["event"] in TERMINAL_EVENTS:
+                    return
+        finally:
+            # Runs on a client abort too: sse-starlette throws into the suspended
+            # generator when the disconnect watcher fires.
+            slot.release()
 
     return EventSourceResponse(
         publish(),
         ping=SSE_PING_SECONDS,
         ping_message_factory=lambda: ServerSentEvent(comment="ping"),
+        # Releases the slot even if the response is torn down before the generator
+        # ever starts; releasing twice is a no-op.
+        background=BackgroundTask(slot.release),
     )
 
 
@@ -249,8 +278,14 @@ async def job_ws(
         job = await services.jobs.get(job_id, principal.user_id)
         if job is None:
             raise ApiException(NOT_FOUND, message="Job not found.")
+        slot = hold_stream(websocket, principal)
     except ApiException as exc:
-        await websocket.close(code=WS_UNAUTHORIZED, reason=exc.code)
+        code = (
+            WS_RATE_LIMITED
+            if exc.status == status.HTTP_429_TOO_MANY_REQUESTS
+            else WS_UNAUTHORIZED
+        )
+        await websocket.close(code=code, reason=exc.code)
         return
 
     await websocket.accept()
@@ -262,6 +297,8 @@ async def job_ws(
         await websocket.close()
     except WebSocketDisconnect:
         pass
+    finally:
+        slot.release()
 
 
 @router.delete(

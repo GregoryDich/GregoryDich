@@ -62,6 +62,8 @@ LEMONSQUEEZY_TEMPLATE = (
 )
 _POSITIVE = frozenset({"grant", "refund", "release"})
 _NEGATIVE = frozenset({"reserve", "capture"})
+QUEUED_TIMEOUT_FACTOR = 10
+"""Default queued grace as a multiple of the running timeout (``reap_stale_jobs``)."""
 
 
 def seed_plans() -> list[PlanRecord]:
@@ -404,6 +406,22 @@ class MemoryStore:
             return CreditBalance(credits=0, reserved=0, available=0)
         return account.snapshot()
 
+    def perishable_pool(self, user_id: UUID) -> int:
+        """The balance held in credits that expire. Expiring credits are spent before
+        non-expiring ones (§13), so a capture takes from the pool first and only the
+        overflow touches permanent credits."""
+        pool = 0
+        for row in self.ledger:
+            if row.user_id != user_id:
+                continue
+            if row.entry_type == "grant" and row.expires_at is not None:
+                pool += row.amount
+            elif row.entry_type == "expire" or (
+                row.amount < 0 and row.entry_type in ("capture", "adjust")
+            ):
+                pool = max(pool + row.amount, 0)
+        return pool
+
     def expire_credits(self) -> int:
         now = self.now()
         due = [
@@ -418,15 +436,22 @@ class MemoryStore:
         count = 0
         for grant in due:
             account = self._lock_account(grant.user_id)
-            spent = -sum(
-                r.amount
-                for r in self.ledger
-                if r.user_id == grant.user_id
-                and r.seq > grant.seq
-                and r.entry_type in ("capture", "adjust")
-                and r.amount < 0
+            # Grants expire in expires_at order, so this one is the head of the perishable
+            # pool: every credit spent so far came off it, and what is left for it is the
+            # pool minus the perishable grants queued behind it.
+            behind = sum(
+                g.amount
+                for g in self.ledger
+                if g.user_id == grant.user_id
+                and g.entry_type == "grant"
+                and g.expires_at is not None
+                and (g.expires_at, g.seq) > (grant.expires_at, grant.seq)
+                and f"expire:{g.id}" not in self._ledger_keys
             )
-            remaining = min(max(grant.amount - spent, 0), account.balance - account.reserved)
+            pool = self.perishable_pool(grant.user_id)
+            remaining = min(
+                max(pool - behind, 0), grant.amount, account.balance - account.reserved
+            )
             account.balance -= remaining
             self._append(
                 account,
@@ -567,21 +592,39 @@ class MemoryStore:
         job.finished_at = self.now()
         return job
 
-    def reap_stale_jobs(self, timeout_seconds: int) -> list[UUID]:
+    def reap_stale_jobs(
+        self, timeout_seconds: int, queued_timeout_seconds: int | None = None
+    ) -> list[UUID]:
+        """Fail and release jobs whose worker never finished — and jobs a worker never
+        picked up. A message lost before ``start_job`` (crash, malformed body, dead-letter
+        queue) would otherwise hold its reservation forever, permanently lowering the
+        owner's usable balance. Queued jobs get the longer grace, since a queue backlog is
+        not yet a failure."""
         if timeout_seconds <= 0:
             raise _invalid_argument("p_timeout_seconds must be positive")
-        cutoff = self.now() - timedelta(seconds=timeout_seconds)
+        queued_timeout = (
+            timeout_seconds * QUEUED_TIMEOUT_FACTOR
+            if queued_timeout_seconds is None
+            else queued_timeout_seconds
+        )
+        if queued_timeout <= 0:
+            raise _invalid_argument("p_queued_timeout_seconds must be positive")
+        now = self.now()
+        running_cutoff = now - timedelta(seconds=timeout_seconds)
+        queued_cutoff = now - timedelta(seconds=queued_timeout)
         stale = [
             job.id
             for job in self.jobs.values()
-            if job.status == "running" and (job.started_at or job.created_at) < cutoff
+            if (job.status == "running" and (job.started_at or job.created_at) < running_cutoff)
+            or (job.status == "queued" and job.created_at < queued_cutoff)
         ]
         for job_id in stale:
+            seconds = timeout_seconds if self.jobs[job_id].status == "running" else queued_timeout
             self.fail_job(
                 job_id,
                 {
                     "code": "worker_timeout",
-                    "message": f"no completion within {timeout_seconds} seconds",
+                    "message": f"no completion within {seconds} seconds",
                 },
             )
         return stale
@@ -681,13 +724,17 @@ class MemoryStore:
         )
         self.purchases[purchase.id] = purchase
         if plan.credits > 0:
-            self.grant_credits(
-                user_id,
-                plan.credits,
-                f"{provider}:order:{provider_order_id}",
-                idempotency_key,
-                plan.name,
-            )
+            try:
+                self.grant_credits(
+                    user_id,
+                    plan.credits,
+                    f"{provider}:order:{provider_order_id}",
+                    idempotency_key,
+                    plan.name,
+                )
+            except Exception:
+                del self.purchases[purchase.id]  # the SQL transaction rolls the insert back
+                raise
         profile = self.profiles[user_id]
         if plan.interval is not None:
             profile.plan = "subscription"
@@ -811,10 +858,13 @@ class MemoryStore:
     def claim_webhook_event(
         self, idempotency_key: str, provider: str, event_name: str, payload: dict[str, Any]
     ) -> bool:
-        if idempotency_key in self.webhook_events:
+        """An event is claimed once; a row that failed to apply (``error`` set) is
+        re-claimable so the provider's retry runs it instead of getting ``duplicate``."""
+        existing = self.webhook_events.get(idempotency_key)
+        if existing is not None and existing.error is None:
             return False
         self.webhook_events[idempotency_key] = WebhookEventRow(
-            id=uuid4(),
+            id=existing.id if existing is not None else uuid4(),
             provider=provider,
             event_name=event_name,
             idempotency_key=idempotency_key,

@@ -13,24 +13,24 @@ Read §2 before anything else. The pipeline's default behaviour is shaped by it.
 
 ```mermaid
 flowchart LR
-    S["source\nlicensed clip manifest\n(license id per clip)"] --> P["process\nPOST /v1/jobs with X-API-Key\nSSE → JobResult → download"]
-    P --> W["script\nhook + beats + CTA from\nanalysis: bpm, key, stems"]
-    W --> V["voiceover\nTTS, flagged synthetic"]
-    V --> R["render\nffmpeg 9:16 1080×1920\nstems, keys, captions, AI label"]
-    R --> PUB["publish\nTikTok / Instagram / YouTube\nquotas, visibility, disclosure flags"]
-    PUB --> M["measure\nplatform insights + UTM\n→ signups, purchases"]
+    S["source\nlicensed_folder | free_music_archive | urls\n(licence recorded per clip)"] --> P["process\nPOST /v1/jobs with X-API-Key\nSSE → JobResult → download → stem scoring"]
+    P --> W["script\nangle template: hook + beats + CTA\nfrom bpm, key, chosen stem"]
+    W --> V["voiceover\nElevenLabs TTS, word timings"]
+    V --> R["render\nRemotion 1080×1920 @30fps, 450 frames\n(FFmpeg showwaves fallback)"]
+    R --> PUB["publish\nInstagram / Facebook / TikTok / YouTube\ndaily caps, visibility, idempotent"]
+    PUB --> M["measure\nplatform insight APIs\n→ views, likes, CTR"]
     M -. "next batch: what worked" .-> S
 ```
 
 | step | input | output | side effects |
 |------|-------|--------|--------------|
-| **source** | the licensed clip manifest under `growth/` (path, license id, licensor, permitted uses, attribution) | a clip that is cleared for advertising use | none — read-only |
-| **process** | clip + `options` (stems, `drum_slices`, `target_root_midi`) | `JobResult` (§2) and local copies of stems + MIDI | one credit from the key owner's balance |
-| **script** | `analysis` (BPM, key, downbeats), which stems came out strongest, a hook style | a 15–30 s script: hook line, 3–5 beats aligned to `downbeats_seconds`, CTA, caption, hashtags | none |
-| **voiceover** | script text, a voice id | audio track, duration, `is_synthetic = true` | TTS provider usage |
-| **render** | job result, script, voiceover, a template | 9:16 MP4 with the original clip, the separated stems lighting up per keyboard region, captions, the AI-generated label baked into the metadata and the license id in the file's comment tag | CPU time |
-| **publish** | rendered file, platform, caption, visibility, disclosure flags, UTM-tagged link | platform post id and URL | a public (or private, see §5) post; counts against per-platform quotas |
-| **measure** | since-timestamp | per-post views, likes, shares, comments, link clicks; landing sessions, signups, purchases by UTM | none |
+| **source** | one of three providers: `licensed_folder` (audio under `LICENSED_CLIPS_DIR`, with optional `<name>.json` sidecars carrying `title`, `license`, `attribution`), `free_music_archive`, or explicit `urls` | candidate clips with their recorded licence | none — read-only |
+| **process** | clip path/URL + `options` (contract §2 `options`, plus `source` and `force`) | a content item: `JobResult` (§2), local stems + MIDI, and the stem `scoring.py` picked | one credit from the key owner's balance |
+| **script** | clip metadata (title, chosen stem, BPM, key, note count) + an angle | a 15 s brief: hook, timed beats, on-screen text, CTA, caption, hashtags — filled from templates, no LLM call | none |
+| **voiceover** | narration text, a voice id | mp3 plus word timings from ElevenLabs `with-timestamps` | TTS provider usage |
+| **render** | content item, script, voiceover, scene and presenter choice | 1080×1920 MP4, 450 frames at 30 fps, via `npx remotion render` (FFmpeg `showwaves` + `drawtext` fallback) | CPU time |
+| **publish** | content item, platforms, caption, hashtags, optional `schedule_at` | per-platform post id, URL and resulting visibility | a post (private on an unaudited TikTok app, see §5); counts against the configured daily cap |
+| **measure** | since-timestamp | per-post views, likes, comments, shares, impressions and a CTR, stored on the content item | none |
 
 Everything the engine renders is derived from a job the product actually ran; there
 is no faked output.
@@ -51,13 +51,19 @@ publishing nothing.
 
 Therefore:
 
-* **`list_source_clips` returns only clips from the licensed manifest.** Every entry
-  carries a license record (type, licensor, license or invoice id, permitted uses
-  including "advertising / promotional use" and "derivative works / stems", attribution
-  requirement). A clip with no record is not a source.
-* **`process_clip` refuses a clip whose license does not permit advertising use or
-  derivative works.** The refusal is the default; overriding it is not a tool
-  parameter.
+* **`list_source_clips` never invents a licence.** The `licensed_folder` provider lists
+  only what the operator put under `LICENSED_CLIPS_DIR` and reports the `license` /
+  `attribution` from each clip's `<name>.json` sidecar (falling back to
+  `"operator-licensed"`). The `free_music_archive` provider filters on the FMA's own
+  `license_title` with `license_allows_ads()`: CC0, public domain, CC BY and CC BY-SA
+  pass; anything matching NonCommercial or NoDerivatives is dropped. The `urls` provider
+  records the licence as `"asserted by caller"` — it is the caller's declaration, not a
+  check.
+* **What the code does not do:** `process_clip` accepts whatever reference it is given
+  and records the provider; there is no machine-readable permitted-uses field and no
+  automatic refusal at that step. **The gate is at the source, and for the `urls`
+  provider it is you.** Putting an unlicensed file in `LICENSED_CLIPS_DIR` or passing its
+  URL will produce a video, and nothing downstream will stop it.
 * **Acceptable sources**, in order of preference:
   1. Recordings made for this purpose by the team (full ownership).
   2. Clips commissioned from producers under a written buy-out covering advertising
@@ -74,8 +80,12 @@ Therefore:
   restricted to the commercial libraries, and API-published content that uses a
   library track is muted or rejected. The engine renders its own audio and never picks
   a platform track.
-* **Attribution** (CC-BY and similar) is written into the caption by `write_script`
-  from the manifest field; it is not optional.
+* **Attribution** (CC-BY and similar) is carried on the `SourceClip.attribution` field
+  and parsed into `ClipMetadata`, but `write_brief` does **not** put it in the caption
+  today: the caption `publish_video` sends is `hook + cta_line` plus the brief's
+  hashtags. Where the licence requires credit, the operator must pass it in the
+  `caption` argument. Treat this as a compliance step you own, not one the engine
+  performs.
 * **Trademarks.** DAW names and screenshots (FL Studio, Ableton Live, Logic) may appear
   to state compatibility, not to imply endorsement; the publishers' brand guidelines
   apply and their logos are not used as design elements.
@@ -84,24 +94,31 @@ Therefore:
 
 ## 3. MCP tool surface (`growth/mcp_server`)
 
-The server authenticates to the API with `SNAPPLAY_API_KEY` from the environment
-(§11); it never handles user JWTs. Every tool that spends credits or publishes takes
-`dry_run`.
+The server (`FastMCP("snapplay-growth")`) authenticates to the API with
+`SNAPPLAY_API_KEY` from the environment (§11); it never handles user JWTs. Signatures
+below are the tool schemas as registered — `growth/tests/snapshots/tools.json` is the
+snapshot the test suite pins them against.
 
-| tool | purpose | key inputs | returns | guardrails |
-|------|---------|-----------|---------|------------|
-| `list_source_clips` | enumerate cleared source material | optional `tag`, `license_type`, `limit` | clips with `clip_id`, duration, tags and the full license record | reads the manifest only; clips without a license record are never listed |
-| `process_clip` | run a clip through the product | `clip_id`, `options` (§2 `options` JSON), `dry_run` | `job_id`, `JobResult`, local paths of stems + MIDI, `credits_charged`, `balance_after` | refuses clips whose license forbids ads or derivatives; stops when the owner's `balance.available` is below the configured floor; uses `idempotency_key` = hash(clip, options) so a re-run is free |
-| `write_script` | turn a result into a story | `job_id`, `hook_style`, `length_s`, target platform | hook, timed beats, CTA, caption (with attribution), hashtags, on-screen text | never claims unmeasured results ("10× faster"); never presents the presenter as a customer |
-| `generate_voiceover` | synthesise narration | script, `voice_id`, `language` | audio file, duration, `is_synthetic = true` | the synthetic flag is carried to `render_video` and `publish_video`; cloned voices of real people are out of scope |
-| `render_video` | produce the post | `job_id`, script, voiceover, `template`, `aspect` (default 9:16) | MP4 path, duration, embedded AI-generated label and license id, thumbnail | audio is the licensed clip and its stems only; the AI label cannot be disabled when a voiceover or presenter is synthetic |
-| `publish_video` | post it | video path, `platform`, caption, `visibility`, `disclosure` (AI-generated, own-brand promotion), UTM parameters, `scheduled_at`, `dry_run` | platform post id, URL, resulting visibility, quota remaining | honours §5 quotas and audit state; sets the platform's AI-generated and promotional-content flags; refuses a video without a license id |
-| `report_metrics` | close the loop | `since`, optional `platform`, `batch_id` | per-post platform metrics, landing sessions, signups, purchases by UTM; a per-batch summary | read-only; metrics come from official insight APIs and the product's own tables |
-| `run_daily_batch` | orchestrate | `n_clips`, platforms, `hook_styles`, `credit_budget`, `dry_run` | `batch_id`, per-item outcomes, credits used, items skipped with reasons (license, quota, balance floor) | stops at `credit_budget` or the balance floor, whichever first; respects remaining platform quota; never exceeds 10 submissions / minute (§5) |
+| tool | signature | what it does | guardrails that actually exist |
+|------|-----------|--------------|--------------------------------|
+| `list_source_clips` | `(source="licensed_folder"\|"free_music_archive"\|"urls", limit=10, urls=None)` | candidate clips with `ref`, `title`, `source`, `license`, `attribution`, `duration_seconds` | read-only; the FMA provider drops NC / ND licences (`license_allows_ads`) |
+| `process_clip` | `(clip_path_or_url, options=None)` | multipart `POST /v1/jobs`, SSE follow with a polling fallback, downloads stems + MIDI, scores the stems and stores a content item | a clip already processed is returned from the store instead of re-submitted unless `options.force` is true; one credit otherwise |
+| `write_script` | `(clip_metadata, angle)` — angle ∈ `speed`, `bass`, `sample_flip`, `tutorial` | a deterministic 15 s brief (hook, timed beats, on-screen text, CTA, hashtags) filled from templates | no LLM call, so no invented claims; the CTA is the fixed "3 free credits" line |
+| `generate_voiceover` | `(text, voice_id=None, content_item_id=None)` | ElevenLabs `with-timestamps` → mp3 + word timings, attached to the content item when one is given | needs `ELEVENLABS_API_KEY`; `run_daily_batch` renders text-only without it |
+| `render_video` | `(content_item_id, scene="plugin_ui"\|"daw", presenter="waveform"\|"avatar_clip", avatar_clip=None)` | props JSON → `npx remotion render` at 1080×1920, 450 frames @ 30 fps; FFmpeg `showwaves` + `drawtext` fallback | the audio is the content item's own clip and stems |
+| `publish_video` | `(content_item_id, platforms, caption, hashtags, schedule_at=None)` | the adapters in `growth/mcp_server/publishers/` (instagram, facebook, tiktok, youtube) | idempotent per (item, platform): a repeat returns the stored post id, a failed attempt resumes from its checkpoint; TikTok posts `SELF_ONLY` and reports `status: "restricted"` |
+| `report_metrics` | `(since_iso)` | per-post views, likes, comments, shares, impressions and a CTR from each platform's insight API, stored on the item | read-only |
+| `run_daily_batch` | `(count=3, accounts=None, dry_run=True)` | publishes anything already due, then processes → scripts → voices → renders `count` new `licensed_folder` clips, cycling the four angles, and publishes them | `dry_run=True` is the default and skips publishing; per-platform daily caps from `GROWTH_MAX_POSTS_PER_DAY_<PLATFORM>` are counted in the store so a restart cannot exceed them |
 
-`run_daily_batch` is the only tool a scheduler calls; the others exist so an operator
-can re-run one stage (a new script for an existing job, a re-render with another
-template) without paying for another job.
+`run_daily_batch` is the only tool a scheduler needs; the others exist so an operator can
+re-run one stage (a new script for an existing item, a re-render with another scene)
+without paying for another job.
+
+**Guardrails that are policy, not code.** There is no `credit_budget` argument and no
+balance floor: `run_daily_batch` will keep spending credits until it runs out of
+unprocessed clips or the API answers `402`. Bound it with `count`, with the size of
+`LICENSED_CLIPS_DIR`, and by topping the engine's account up deliberately (§8). Rate
+limiting is likewise the API's (§5), not the engine's.
 
 ## 4. The five-touch funnel
 
@@ -129,6 +146,12 @@ flowchart LR
 `ECONOMICS.md` §9 puts numbers on this: reaching $135 / day needs on the order of 500
 sign-ups a day at a 3 % conversion, which is what this funnel has to deliver.
 
+Only touches 1 and 5 exist in this repository — the engine (`growth/`) and the in-plugin
+paywall (`plugin/Source/PluginEditor.cpp`, driven by `/v1/plans`). The landing page,
+the pixel/CAPI retargeting audiences, the email sequence and the UTM plumbing that would
+connect them (§7) are not built here. The funnel is the plan; two of its five touches are
+the product.
+
 ## 5. Platform constraints
 
 | platform | publishing route | before app review / audit | quotas and rules |
@@ -138,54 +161,78 @@ sign-ups a day at a 3 % conversion, which is what this funnel has to deliver.
 | **YouTube** | Data API `videos.insert` (Shorts are ordinary vertical uploads) | uploads from **unverified API projects are set to private**; the compliance audit lifts this | default **10,000 quota units / day**; `videos.insert` costs 1,600 → about 6 uploads / day per project without a quota extension; the "altered or synthetic content" disclosure at upload |
 | **Ad platforms** (retargeting) | Meta / TikTok / Google ads managers | business verification | music in ads must be licensed (§2); no misleading performance claims; creatives reviewed per platform policy |
 
-`publish_video` reads the audit state and quota remaining per platform from
-configuration and its own log, and reports the visibility it actually obtained rather
-than the one requested. During the review period the engine still runs end to end —
-private posts are useful for QA — but the funnel's touch 1 is effectively off until
-audits pass, and the launch plan should assume weeks for them.
+`publish_video` reports the visibility it actually obtained rather than the one
+requested — an unaudited TikTok app yields `status: "restricted"` with a note, never a
+claim that the post is public. The daily caps it honours are the local
+`GROWTH_MAX_POSTS_PER_DAY_<PLATFORM>` settings counted in the store; the platforms' own
+quotas above are not queried, so keep the local caps at or below them. During the review
+period the engine still runs end to end — private posts are useful for QA — but the
+funnel's touch 1 is effectively off until audits pass, and the launch plan should assume
+weeks for them.
 
 ## 6. Disclosure
 
-* **Synthetic presenters and voices are labelled.** Anything with a TTS voiceover or a
-  generated presenter carries the platform's AI-generated flag (TikTok's AI content
-  label, YouTube's synthetic-content disclosure, Meta's AI info label) and a visible
-  on-screen line. The label is set by `render_video` and `publish_video` from the
-  `is_synthetic` flag and cannot be switched off by a caption edit.
+**None of this is implemented.** `render_video` bakes no AI label, the publishers send no
+AI-generated or branded-content flag (TikTok's request carries `post_info` with a privacy
+level, nothing else), and there is no `is_synthetic` field anywhere in `growth/`. Until
+that changes, disclosure is an operator obligation carried out by hand — in the caption
+you pass to `publish_video` and in each platform's own composer. The rules below are the
+requirements the engine has to grow into; treat them as a to-do list, not as behaviour.
+
+* **Synthetic presenters and voices must be labelled.** Anything with a TTS voiceover or
+  a generated presenter needs the platform's AI-generated flag (TikTok's AI content
+  label, YouTube's altered-or-synthetic disclosure at upload, Meta's AI info label) and a
+  visible on-screen line. Because `generate_voiceover` is on by default in
+  `run_daily_batch` whenever `ELEVENLABS_API_KEY` is set, **assume every batch output is
+  synthetic** and label it.
 * **No fake testimonials.** A synthetic presenter may explain the product; it may not
   claim to be a user, describe "my experience", or read a review. The FTC's rule on
-  consumer reviews and testimonials prohibits fabricated or AI-generated testimonials
-  and the Endorsement Guides require endorsements to reflect real experience. Real
-  user quotes are used only with permission and only verbatim.
+  consumer reviews and testimonials prohibits fabricated or AI-generated testimonials and
+  the Endorsement Guides require endorsements to reflect real experience. The shipped
+  angle templates (`speed`, `bass`, `sample_flip`, `tutorial`) are written in the second
+  person about the product and make no first-person user claim — keep it that way when
+  adding angles.
 * **Own-brand promotion is disclosed** where the platform has a flag for it (TikTok's
   disclosure toggles; "paid partnership" tools elsewhere are for third parties and are
   not used for first-party content).
 * **EU audiences.** The AI Act's transparency obligations for AI-generated and
   manipulated media (Article 50, applicable since August 2026) require the same
-  labelling; the engine applies it everywhere rather than geo-targeting the label.
-* **Claims are measured claims.** "2 seconds" is the A10G pipeline budget (§7), not the
-  wall-clock the viewer will experience; scripts say "seconds", show the real elapsed
-  time in the recording, and never quote a number the engine has not observed.
+  labelling; apply it everywhere rather than geo-targeting the label.
+* **Claims are measured claims.** "2 seconds" is the A10G pipeline budget (contract §7),
+  not the wall-clock a viewer experiences (`ARCHITECTURE.md` §5 puts the perceived total
+  at 5–14 s); scripts say "seconds", show the real elapsed time in the recording, and
+  never quote a number nobody observed.
 
 ## 7. Measurement and attribution
 
-* Every post gets a unique UTM set (`utm_source` = platform, `utm_medium` = ugc,
-  `utm_campaign` = batch id, `utm_content` = post id). The landing page records the
-  UTM in the sign-up so `report_metrics` can join platform insights to `profiles`,
-  `jobs` and `purchases` (through the API, never with a database credential).
-* The metric that decides what the next batch makes is **sign-ups per 1,000 views by
-  hook style and source clip**, followed by activation rate; views alone are not
-  optimised.
-* Metrics are pulled from the official insight endpoints of each platform; nothing is
-  scraped.
+What `report_metrics` does today, and what it does not, are different things.
+
+* **Implemented.** `report_metrics(since_iso)` walks the content items published since
+  that timestamp, calls each platform's official insight endpoint through its adapter,
+  and stores `views`, `likes`, `comments`, `shares`, `impressions` and a `ctr` on the
+  item (`ctr_kind` says whether it is click-through or engagement, because the platforms
+  do not report the same things). Nothing is scraped.
+* **Not implemented — the funnel half.** There is no UTM tagging in the engine: no
+  `utm_*` parameters are generated, and nothing joins platform insights to `profiles`,
+  `jobs` or `purchases`. The caption's link is whatever the operator writes. Closing the
+  loop from a post to a sign-up needs a UTM convention on the landing page and a join
+  through the API — design it before the first paid batch, or the numbers in §4 are
+  unmeasurable.
+* The metric that *should* decide what the next batch makes is **sign-ups per 1,000
+  views by angle and source clip**, followed by activation rate; views alone are not
+  worth optimising. Until the previous bullet exists, only the view-side half of that
+  ratio is available.
 
 ## 8. Operating limits
 
 * The engine's API key belongs to a dedicated account whose balance is topped up
-  deliberately; `run_daily_batch` stops at its `credit_budget` and at a balance floor,
-  and the key can be revoked with `DELETE /v1/api-keys/{id}` (§11).
+  deliberately — that top-up *is* the spend limit, because the engine has no
+  `credit_budget` or balance floor of its own (§3). The key can be revoked with
+  `DELETE /v1/api-keys/{id}` (§11).
 * It is subject to the same rate limits as any user (§5): 10 submissions / minute,
   60 reads / minute. A batch of 20 clips takes minutes, not seconds, by design.
 * The key is read from the environment only; it appears in no log, config file or
   rendered video metadata.
-* CI runs the engine against mocked platform APIs and the backend's `fake` pipeline.
-  Real publishing needs the accounts, app reviews and audits in §5.
+* CI runs the engine against platform APIs mocked with respx; no test reaches the
+  network. Real publishing needs the accounts, app reviews and audits in §5, none of
+  which can be exercised from this repository.

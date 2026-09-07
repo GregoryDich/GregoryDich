@@ -20,6 +20,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.config import Settings, get_settings
 from app.errors import install_exception_handlers
+from app.middleware.body_limit import BodyLimitMiddleware
 from app.middleware.rate_limit import RateLimits
 from app.routers import api_keys, auth, credits, health, jobs, me, plans, webhooks
 from app.services.factory import build_services
@@ -135,6 +136,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.rate_limits = RateLimits(settings)
     app.dependency_overrides[get_settings] = lambda: settings
 
+    # Innermost first: the body cap runs before the multipart parser, and its answers
+    # still pass back out through the request-id and CORS layers.
+    app.add_middleware(BodyLimitMiddleware, max_upload_bytes=settings.max_upload_bytes)
     app.add_middleware(RequestContextMiddleware)
     app.add_middleware(
         CORSMiddleware,
