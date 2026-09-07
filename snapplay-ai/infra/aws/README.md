@@ -95,7 +95,10 @@ Run from `snapplay-ai/infra/aws` with administrator credentials.
    terraform apply -var-file=production.tfvars
    ```
 5. **Populate the secrets** — the placeholders are `CHANGE_ME` and Terraform never
-   overwrites them again (`ignore_changes`):
+   overwrites them again (`ignore_changes`). All four are mandatory: with `ENV=production`
+   the API refuses to start unless `SUPABASE_JWT_SECRET` (or a JWKS URL) **and both**
+   webhook secrets are real, so a task that keeps crash-looping after the first deploy is
+   usually a `CHANGE_ME` left in place:
    ```bash
    for s in SUPABASE_SERVICE_ROLE_KEY SUPABASE_JWT_SECRET LEMONSQUEEZY_WEBHOOK_SECRET PADDLE_WEBHOOK_SECRET; do
      aws secretsmanager put-secret-value --secret-id "snapplay-prod/$s" --secret-string "$(read -rsp "$s: " v; echo "$v")"

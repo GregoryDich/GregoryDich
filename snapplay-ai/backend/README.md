@@ -91,8 +91,15 @@ errors — so the routes behave identically on either backend.
 
 * A purchase webhook is claimed in `webhook_events` before anything else; a replay answers
   `200 {"status": "duplicate"}` and changes nothing.
+* Exactly one event per sale reaches `record_purchase` (`purchase_grants_credits`): a
+  pack is paid for by `order_created`, a LemonSqueezy subscription period by
+  `subscription_payment_success`, a Paddle period by `transaction.completed`. Every other
+  event only moves subscription and plan state.
 * `record_purchase` writes the purchase, the credit grant and the affiliate commission
   under the webhook's idempotency key, so commissions recur per payment but never double-pay.
+* A delivery that fails while being applied is marked processed *with an error*, which
+  leaves the key claimable so the provider's retry re-runs it. A process killed outright
+  between claim and completion is the known gap (`docs/SECURITY.md` §9).
 * Subscription credits are granted with `expires_at` = the end of the billing period
   (`expire_credits()` reclaims the remainder); credit-pack credits never expire. A
   cancelled subscription keeps its plan until `current_period_end`.
@@ -128,8 +135,11 @@ All keys are listed with placeholders in `.env.example`. The important groups:
 | Limits | `MAX_UPLOAD_BYTES`, `MAX_INPUT_SECONDS`, `FREE_SIGNUP_CREDITS`, `RATE_LIMIT_JOBS_PER_MIN`, `RATE_LIMIT_READS_PER_MIN`, `AFFILIATE_COMMISSION_RATE` |
 | Misc | `ENV=development\|test\|staging\|production`, `CORS_ALLOW_ORIGINS` |
 
-With `ENV=production` the settings refuse to start with the fake pipeline, in-memory
-storage, or without JWT verification configured.
+With `ENV=production` the settings refuse to start unless `SUPABASE_URL`, a JWT secret or
+JWKS URL, **and both webhook secrets** (`LEMONSQUEEZY_WEBHOOK_SECRET`,
+`PADDLE_WEBHOOK_SECRET`) are set, and they reject the `fake` pipeline and in-memory
+storage. The webhook secrets are mandatory because an empty one verifies every forged
+signature against `""`; refusing to boot is the intended behaviour.
 
 ## Pipeline backends
 

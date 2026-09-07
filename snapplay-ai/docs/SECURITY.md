@@ -47,7 +47,7 @@ Supabase Auth (GoTrue) issues the tokens; the backend only verifies them.
   Keychain or Windows DPAPI; moving it there is an open hardening item. Renewal is
   proactive rather than reactive: a 30 s timer refreshes the access token 120 s before it
   expires, so requests normally never see a `401`. `ApiClient` retries only 429 and
-  5xx/transport failures (`Cloud/RetryPolicy.h`) — a `401` is surfaced to the caller,
+  5xx/transport failures (`plugin/Source/Cloud/RetryPolicy.h`) — a `401` is surfaced to the caller,
   and `JobClient` ends the job rather than retrying it.
 * **WebSocket auth (§2).** `?token=` is the *only* accepted form on `WS
   /v1/jobs/{job_id}/ws`: there is no in-band authentication frame to smuggle a token
@@ -107,6 +107,20 @@ Rules applied to both:
   review, not `4xx` (which would just cause retries).
 * Amounts are taken from the event, never from the request path; the plan is matched
   by the provider's product / variant id, not by a name string.
+* **One event per sale grants credits.** `purchase_grants_credits` picks it: a credit
+  pack is paid for by LemonSqueezy's `order_created`, a subscription period by its
+  `subscription_payment_success`, and every Paddle period by its own
+  `transaction.completed`. The remaining events only move subscription and plan state, so
+  a provider that fires three events for one checkout cannot triple-grant even before the
+  idempotency key is considered.
+* **Both webhook secrets are mandatory in production.** `Settings` refuses to start under
+  `ENV=production` without `LEMONSQUEEZY_WEBHOOK_SECRET` and `PADDLE_WEBHOOK_SECRET`;
+  they used to default to `""`, which made the HMAC verify against an empty key and every
+  forged delivery valid. Failing to boot is the correct behaviour here.
+* **`ref` is validated before it reaches a URL.** `GET /v1/plans?ref=` accepts only
+  `^[A-Za-z0-9_-]{1,64}$` and answers `422` otherwise, because the value is interpolated
+  into `checkout_url` — an unvalidated code could add query parameters or redirect the
+  buyer somewhere else.
 * Several `h1` values may be present during Paddle key rotation; any matching one is
   accepted, none matching is rejected.
 
@@ -250,7 +264,9 @@ signature header or a request body (rule shared across all components).
 |-------|--------|------------|----------|
 | **Credit race** | two `POST /v1/jobs` in flight with `available = 1`, hoping both pass the check | `reserve_credits` runs under `SELECT … FOR UPDATE` on the account row; the second call sees `reserved = 1`, raises `P0402` → `402`. Reservation is idempotent per `(job_id, 'reserve')` so a retry of the *same* job never double-reserves. | §6 |
 | **Double submit / retry storm** | client retries after a timeout, hoping for a free duplicate | `idempotency_key` scoped to `(user_id, key)` returns the existing job with no second reservation | §2 |
-| **Replayed webhook** | re-send a captured `order_created` to mint credits again | HMAC over the raw body; unique idempotency key in `webhook_events`; Paddle `ts` window of 5 min; grant and commission share the key in one transaction | §4, §12 |
+| **Replayed webhook** | re-send a captured `order_created` to mint credits again | HMAC over the raw body; unique idempotency key claimed in `webhook_events`; Paddle `ts` window of 5 min; `record_purchase` writes the purchase, grant and commission under that same key in one transaction, so even a re-run applies once | §4, §12 |
+| **Webhook killed mid-apply** | crash the API between claim and completion | *Open.* The key stays claimed, so the provider's retry is answered `duplicate` and the sale is never applied. The window is small (the claim is released with an error on any handled exception) but a hard kill escapes it. Closing it needs an age-based stale-claim rule — a claim older than *n* minutes with no completion becomes claimable again. Until then, reconcile against the provider's dashboard and re-grant by hand with `grant_credits` using the provider's order id as the key | §4 |
+| **Referral code lost on a subscription** | — (a store misconfiguration, not an attack) | *Open.* The LemonSqueezy path reads the affiliate `ref` from the paying event's `custom_data`, which assumes the store forwards the checkout's custom data to `subscription_payment_success`. A store that does not would silently drop that sale's commission. Verify the forwarding on the first live subscription before recruiting affiliates | §12 |
 | **Forged webhook** | craft an event for a victim's `user_id` | signature required; secret only in Secrets Manager; the user id in `custom_data` is trusted only after the signature passes | §4 |
 | **Job enumeration** | walk `GET /v1/jobs/{id}` for other users' results | UUID v4 ids (122 random bits); every lookup is filtered by `user_id` and answers `404` rather than `403` so existence does not leak; 60 reads / min | §2, §5 |
 | **Signed-URL sharing / scraping** | pass a stem URL around, or guess others | one object, `GET`-only, 24 h, no list permission; the key path is UUIDs; the plugin uses each URL once | §2, §10 |

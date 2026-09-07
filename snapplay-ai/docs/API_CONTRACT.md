@@ -206,7 +206,7 @@ Cancels a queued job and releases its reservation. → `204` with an empty body;
   "next_cursor": null }
 ```
 
-### `GET /v1/plans`   (public, `user_id` attached when called with auth)
+### `GET /v1/plans?ref=<code>`   (public, `user_id` attached when called with auth)
 ```json
 { "plans": [
   { "id": "free",         "name": "Free",          "credits": 3,  "price_usd": 0,    "interval": null,    "checkout_url": null },
@@ -214,8 +214,14 @@ Cancels a queued job and releases its reservation. → `204` with an empty body;
   { "id": "sub_monthly",  "name": "Pro Monthly",   "credits": 60, "price_usd": 7.99, "interval": "month", "checkout_url": "https://…" } ] }
 ```
 `checkout_url` carries the caller's `user_id` as provider custom data so the webhook can
-attribute the purchase without an email lookup. When the request is unauthenticated the
-URL is returned without that parameter. New accounts are granted **3 credits** at signup.
+attribute the purchase without an email lookup, and the optional `ref` query parameter as
+`checkout[custom][ref]` (§12). `ref` must match `^[A-Za-z0-9_-]{1,64}$` — it is
+interpolated straight into the checkout URL, so anything else is `422 validation_error`.
+When the request is unauthenticated the URL is returned without the `user_id` parameter;
+empty parameters are dropped rather than sent blank. `checkout_url` is `null` for the free
+plan **and for any plan whose `plans.provider_variant_ids` has no id for a checkout
+provider** — see the deployment note in `db/README.md`. New accounts are granted
+**3 credits** at signup.
 
 ### In-plugin paywall
 When `balance.available` reaches 0 the plugin shows a prompt built from `/v1/plans`:
@@ -234,10 +240,21 @@ The growth engine (see §11) authenticates with an API key and never sees this p
   `LEMONSQUEEZY_WEBHOOK_SECRET`. Reject with `401` when invalid.
 * Events handled: `order_created` (credit pack), `subscription_created`,
   `subscription_payment_success`, `subscription_cancelled`, `subscription_expired`.
+* **Exactly one event per sale grants credits and writes the affiliate commission.**
+  LemonSqueezy splits a subscription checkout over several events with different
+  `data.id`s, so the plan decides which one pays: a one-off pack is paid for by its
+  `order_created`, a subscription period by its `subscription_payment_success` (the first
+  period included). Every other event only moves subscription and plan state. Paddle bills
+  each period as its own `transaction.completed`, so that event alone pays there.
 * The user is identified by `meta.custom_data.user_id` (set at checkout) or by
   customer email lookup.
 * Idempotency key = `lemonsqueezy:<event_name>:<data.id>`; duplicates → `200`
   with `{ "status": "duplicate" }`.
+
+Both secrets are **required in production**: `Settings` refuses to start with
+`ENV=production` unless `LEMONSQUEEZY_WEBHOOK_SECRET` and `PADDLE_WEBHOOK_SECRET` are
+both set (along with `SUPABASE_URL`, a JWT secret or JWKS URL, a real pipeline and real
+storage). An empty secret would otherwise verify every forged signature against `""`.
 
 ### `POST /v1/webhooks/paddle`
 * Header `Paddle-Signature`: `ts=…;h1=…`; verify HMAC-SHA256 over

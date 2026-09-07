@@ -154,7 +154,7 @@ the commands rather than trusting the numbers after the code moves.
 |-------|---------|--------|
 | Plugin core (JUCE-free) | `ctest --test-dir build` | **34 passed, 0 failed** — Scale-Snap and its tie-breaking, envelope/ADSR derivation, transient detection, zero-crossing trimming, the SMF writer, the `.fsc` writer, one combined export fixture |
 | Export round-trip | `SNAPPLAY_TEST_OUT=… ./snapplay_core_tests && python3 plugin/Tests/roundtrip.py …` | `.mid` re-read with **mido** (SMF type 1, PPQ 480, tempo + 4/4 meta, per-track channels, note ordering) and `.fsc` re-read byte for byte and cross-checked against **PyFLP 2.2.1**'s own event ids, `FileFormat.Score`, PPQ table and 24-byte note struct: **7 notes over 2 tracks, 7 note records** |
-| Backend | `cd backend && python3 -m pytest -q` | **245 passed, 2 skipped** (247 collected: 135 API/route, 46 pipeline, 50 AWS, 16 top-level). The two skips are `tests/pipeline/test_pipeline_real.py` (GPU extras) and `tests/pipeline/test_worker_serverless.py` (`modal` not installed) |
+| Backend | `cd backend && python3 -m pytest -q` | **245 passed, 2 skipped** (247 collected: 135 API/route, 46 pipeline, 50 AWS, 16 top-level). The two skips are `backend/tests/pipeline/test_pipeline_real.py` (GPU extras) and `backend/tests/pipeline/test_worker_serverless.py` (`modal` not installed) |
 | AWS paths | part of the above (`backend/tests/aws`) | **50 tests** against S3, SQS and the reaper mocked by **moto** |
 | Database | `bash db/tests/run_tests.sh` | **6 test groups pass** on a throwaway PostgreSQL 16 cluster — affiliates, api_keys, jobs, ledger, RLS, plus a real two-session race for the last credit (one winner, one `insufficient_credits`) |
 | Growth engine | `cd growth && python3 -m pytest -q` | **81 passed, 1 skipped** — every platform API mocked with respx; the skip is the Remotion smoke render when Node/Remotion is absent |
@@ -178,7 +178,9 @@ environment**, so neither was executed for this pass. The committed
   against a real project.
 * **Real payment webhooks.** LemonSqueezy and Paddle signatures, idempotency and affiliate
   attribution are tested against synthetic payloads we sign ourselves. No live checkout
-  has been completed and no provider has ever delivered to this code.
+  has been completed and no provider has ever delivered to this code — so which events a
+  real store actually sends, and what `custom_data` it forwards onto each of them, is
+  assumed rather than observed (see the residual risks below).
 * **Loading the plugin in a DAW.** No VST3 or AU has been opened in FL Studio, Ableton
   Live, Logic or any other host. CI builds the binaries; nothing hosts them. pluginval is
   documented in [`plugin/README.md`](plugin/README.md) but is not part of CI.
@@ -192,6 +194,21 @@ environment**, so neither was executed for this pass. The committed
   has ever been created, and the scale-on-queue-depth behaviour is unobserved.
 * **Real-network timings.** The upload/download figures in `docs/ARCHITECTURE.md` §5 are
   arithmetic on assumed bandwidths.
+
+### Known residual risks (recorded, not fixed)
+
+* **A webhook process killed mid-apply strands its event.** Delivery is claim → apply →
+  close. A handled failure releases the claim so the provider's retry re-runs it, but a
+  hard kill between the claim and the close leaves the key claimed: the retry is answered
+  `duplicate` and the sale is never applied. Closing this needs an age-based stale-claim
+  rule. Until then, reconcile against the provider's dashboard and re-grant by hand with
+  `grant_credits`, keyed on the provider's order id.
+* **The LemonSqueezy subscription path assumes the store forwards checkout custom data.**
+  The affiliate `ref` is read from the paying event (`subscription_payment_success`); a
+  store configured not to carry the checkout's `custom_data` onto that event would drop
+  the commission for that sale, silently. Verify it on the first live subscription.
+* **Refunds and affiliate payouts are manual.** No webhook path reverses credits or sets
+  a commission to `void`; `commission_status` has the states but nothing writes them.
 
 ### One deployment trap worth repeating
 

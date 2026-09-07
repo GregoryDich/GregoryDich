@@ -127,7 +127,7 @@ the mutating ones; `get_balance` is also granted to `authenticated` and refuses 
 | `adjust_credits(p_user_id, p_amount, p_source, p_idempotency_key, p_note)` | `credit_balance` | support corrections; negative bounded by available |
 | `refund_job(p_job_id, p_reason)` | `credit_balance` | reverses a capture once; P0404 if never captured |
 | `get_balance(p_user_id)` | `credit_balance` | read-only |
-| `expire_credits()` | `integer` | cron; grants processed |
+| `expire_credits()` | `integer` | cron; grants processed. Expires grants in `expires_at` order and attributes spend to the grant that actually consumed it, so a credit spent once is not charged against every earlier grant |
 | `create_job(p_user_id, p_options, p_input_meta, p_idempotency_key)` | `jobs` | reserve + insert atomically |
 | `start_job(p_job_id, p_worker_ref)` | `jobs` | queued → running |
 | `update_job_progress(p_job_id, p_stage, p_progress)` | `jobs` | ignored once finished |
@@ -141,13 +141,22 @@ the mutating ones; `get_balance` is also granted to `authenticated` and refuses 
 | `authenticate_api_key(p_key_hash)` | `uuid` | owner or null; stamps `last_used_at` |
 | `revoke_api_key(p_key_id, p_user_id)` | `boolean` | owner-scoped, idempotent |
 
+Internal helpers, called by the functions above and granted to nobody:
+`balance_of(p_account)`, `lock_credit_account(p_user_id)`, `append_ledger(...)` and
+`perishable_pool(p_user_id)` — the last replays a user's ledger in `seq` order to compute
+how many *expiring* credits are still unspent, which is what lets `expire_credits()`
+charge a spend to the grant it came off.
+
 Errors are raised with `SQLSTATE` / `MESSAGE` pairs the backend maps to HTTP:
 `P0402 insufficient_credits` (402), `P0404 not_found` (404), `P0409 conflict` (409),
 `22023 invalid_argument` (422), `42501 forbidden` (403). `DETAIL` carries specifics.
 
-Credit expiry treats expiring credits as spent first: the amount expired for a grant is
-`max(0, amount − credits captured or deducted since the grant)`, capped at the available
-balance, so reserved credits are never expired.
+Credit expiry treats expiring credits as spent first. For each grant, in `expires_at`
+order, the amount expired is the perishable pool (`perishable_pool`) minus the perishable
+grants still queued behind it, capped at the grant's own amount **and** at
+`balance - reserved`, so reserved credits are never expired. One `expire` row per grant,
+keyed `expire:<grant ledger id>`, so a grant is processed exactly once however often the
+cron runs.
 
 ## Running the tests
 
