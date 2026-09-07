@@ -1,7 +1,45 @@
 #include "Engine/SamplerEngine.h"
 
+#include <exception>
+
 namespace snapplay::engine
 {
+
+namespace
+{
+    constexpr int maxDrumChannels = 2;
+    /** Defensive bound on decoded length; contract inputs never exceed 60 s. */
+    constexpr double maxLoadSeconds = 120.0;
+    const char* const supersededMessage = "Superseded by a newer load";
+
+    /** Worker thread: decodes `file` into `audio` (at most `maxChannels` channels).
+        Returns an error message, or an empty string on success. */
+    juce::String readAudioFile (const juce::File& file, int maxChannels, juce::AudioBuffer<float>& audio, double& sampleRate)
+    {
+        juce::AudioFormatManager manager;
+        manager.registerBasicFormats();
+
+        std::unique_ptr<juce::AudioFormatReader> reader (manager.createReaderFor (file));
+
+        if (reader == nullptr)
+            return "Could not open " + file.getFileName();
+
+        if (reader->sampleRate <= 0.0 || reader->numChannels == 0 || reader->lengthInSamples <= 0)
+            return "No audio in " + file.getFileName();
+
+        const auto maxSamples = static_cast<juce::int64> (reader->sampleRate * maxLoadSeconds);
+        const auto length = static_cast<int> (juce::jmin (reader->lengthInSamples, maxSamples));
+        const int channels = juce::jlimit (1, juce::jmax (1, maxChannels), static_cast<int> (reader->numChannels));
+
+        audio.setSize (channels, length);
+
+        if (! reader->read (&audio, 0, length, 0, true, true))
+            return "Could not decode " + file.getFileName();
+
+        sampleRate = reader->sampleRate;
+        return {};
+    }
+} // namespace
 
 /** Worker-thread job wrapping one load; the result is handed to the message thread. */
 class SamplerEngine::LoadJob final : public juce::ThreadPoolJob
@@ -51,6 +89,7 @@ SamplerEngine::SamplerEngine()
 
 SamplerEngine::~SamplerEngine()
 {
+    masterReference.clear();
     loadGeneration.fetch_add (1, std::memory_order_acq_rel);
     loadPool.removeAllJobs (true, 10000);
 }
@@ -81,12 +120,89 @@ void SamplerEngine::process (juce::AudioBuffer<float>& output, const juce::MidiB
 void SamplerEngine::loadStem (const juce::File& wavFile, const cloud::StemInfo& info,
                               const StemSound::BuildOptions& options, LoadCallback onDone)
 {
-    juce::ignoreUnused (wavFile, info, options, onDone);
+    juce::WeakReference<SamplerEngine> weakSelf (this);
+
+    startLoad ([this, weakSelf, wavFile, info, options] (int generation) -> std::pair<bool, juce::String>
+    {
+        juce::AudioBuffer<float> audio;
+        double sampleRate = 0.0;
+
+        if (auto error = readAudioFile (wavFile, options.maxChannels, audio, sampleRate); error.isNotEmpty())
+            return { false, error };
+
+        if (isLoadSuperseded (generation))
+            return { false, supersededMessage };
+
+        std::shared_ptr<const StemSound> sound;
+
+        try
+        {
+            sound = StemSound::build (audio, sampleRate, info, options);
+        }
+        catch (const std::exception& e)
+        {
+            return { false, juce::String ("Stem preparation failed: ") + e.what() };
+        }
+
+        if (sound == nullptr)
+            return { false, "Stem " + info.name + " contains no audio after trimming" };
+
+        if (isLoadSuperseded (generation))
+            return { false, supersededMessage };
+
+        juce::MessageManager::callAsync ([weakSelf, sound, generation]
+        {
+            if (auto* self = weakSelf.get())
+                if (self->loadGeneration.load (std::memory_order_acquire) == generation)
+                    self->installStemInternal (sound);
+        });
+
+        return { true, {} };
+    }, std::move (onDone));
 }
 
 void SamplerEngine::loadDrumKit (const juce::File& wavFile, const cloud::StemInfo& info, LoadCallback onDone)
 {
-    juce::ignoreUnused (wavFile, info, onDone);
+    juce::WeakReference<SamplerEngine> weakSelf (this);
+
+    startLoad ([this, weakSelf, wavFile, info] (int generation) -> std::pair<bool, juce::String>
+    {
+        juce::AudioBuffer<float> audio;
+        double sampleRate = 0.0;
+
+        if (auto error = readAudioFile (wavFile, maxDrumChannels, audio, sampleRate); error.isNotEmpty())
+            return { false, error };
+
+        if (isLoadSuperseded (generation))
+            return { false, supersededMessage };
+
+        std::shared_ptr<const DrumKit> kit;
+
+        try
+        {
+            kit = info.slices.empty() ? DrumKit::buildFromTransients (audio, sampleRate, info.transientsSeconds)
+                                      : DrumKit::build (audio, sampleRate, info.slices);
+        }
+        catch (const std::exception& e)
+        {
+            return { false, juce::String ("Drum kit preparation failed: ") + e.what() };
+        }
+
+        if (kit == nullptr)
+            return { false, "No drum slices could be cut from " + info.name };
+
+        if (isLoadSuperseded (generation))
+            return { false, supersededMessage };
+
+        juce::MessageManager::callAsync ([weakSelf, kit, generation]
+        {
+            if (auto* self = weakSelf.get())
+                if (self->loadGeneration.load (std::memory_order_acquire) == generation)
+                    self->installDrumKitInternal (kit);
+        });
+
+        return { true, {} };
+    }, std::move (onDone));
 }
 
 void SamplerEngine::installStem (std::shared_ptr<const StemSound> sound)
@@ -148,6 +264,17 @@ void SamplerEngine::allNotesOff()
 }
 
 //==============================================================================
+bool SamplerEngine::isLoadSuperseded (int generation) const noexcept
+{
+    if (loadGeneration.load (std::memory_order_acquire) != generation)
+        return true;
+
+    if (auto* job = juce::ThreadPoolJob::getCurrentThreadPoolJob())
+        return job->shouldExit();
+
+    return false;
+}
+
 void SamplerEngine::startLoad (std::function<std::pair<bool, juce::String> (int)> work, LoadCallback onDone)
 {
     const int generation = loadGeneration.fetch_add (1, std::memory_order_acq_rel) + 1;

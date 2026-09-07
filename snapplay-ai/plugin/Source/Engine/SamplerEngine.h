@@ -78,6 +78,8 @@ private:
 
     /** Runs `work` on the worker thread tagged with the current load generation. */
     void startLoad (std::function<std::pair<bool, juce::String> (int generation)> work, LoadCallback onDone);
+    /** Worker thread: true when a newer load started or the pool is shutting down. */
+    bool isLoadSuperseded (int generation) const noexcept;
     /** Message thread: swaps a sound into ActiveSound and parks the previous one. */
     void installStemInternal (std::shared_ptr<const StemSound> sound);
     void installDrumKitInternal (std::shared_ptr<const DrumKit> kit);

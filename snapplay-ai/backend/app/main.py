@@ -1,4 +1,4 @@
-"""Application factory: ``uvicorn app.main:app``."""
+"""Application factory: ``uvicorn app.main:create_app --factory`` (or ``app.main:app``)."""
 
 from __future__ import annotations
 
@@ -6,6 +6,8 @@ import json
 import logging
 import re
 import time
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from datetime import UTC, datetime
 from typing import Any
@@ -18,7 +20,9 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.config import Settings, get_settings
 from app.errors import install_exception_handlers
+from app.middleware.rate_limit import RateLimits
 from app.routers import api_keys, auth, credits, health, jobs, me, plans, webhooks
+from app.services.factory import build_services
 
 API_PREFIX = "/v1"
 REQUEST_ID_HEADER = "x-request-id"
@@ -103,6 +107,14 @@ class RequestContextMiddleware:
             request_id_var.reset(token)
 
 
+@asynccontextmanager
+async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
+    try:
+        yield
+    finally:
+        await app.state.services.aclose()
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings if settings is not None else get_settings()
     configure_logging(settings)
@@ -112,8 +124,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         version="2",
         docs_url="/docs" if settings.env != "production" else None,
         redoc_url=None,
+        lifespan=_lifespan,
     )
     app.state.settings = settings
+    app.state.services = build_services(settings)
+    app.state.rate_limits = RateLimits(settings)
     app.dependency_overrides[get_settings] = lambda: settings
 
     app.add_middleware(RequestContextMiddleware)
