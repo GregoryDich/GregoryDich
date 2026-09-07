@@ -144,7 +144,9 @@ class VisibilityExtender:
     ) -> None:
         if visibility_seconds <= 0:
             raise ValueError("visibility_seconds must be positive")
-        self._interval = interval_seconds if interval_seconds is not None else visibility_seconds / 3
+        self._interval = (
+            interval_seconds if interval_seconds is not None else visibility_seconds / 3
+        )
         if self._interval <= 0:
             raise ValueError("interval_seconds must be positive")
         self._client = client

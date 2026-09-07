@@ -149,14 +149,12 @@ def _pem(key: Any) -> str:
 
 
 def _cloudfront(make_settings: MakeSettings, pem: str, **overrides: Any) -> S3StorageService:
-    return S3StorageService(
-        make_settings(
-            cloudfront_domain="cdn.example.test",
-            cloudfront_key_pair_id="K2JCJMDEHXQW5F",
-            cloudfront_private_key=pem,
-            **overrides,
-        )
-    )
+    config: dict[str, Any] = {
+        "cloudfront_domain": "cdn.example.test",
+        "cloudfront_key_pair_id": "K2JCJMDEHXQW5F",
+        "cloudfront_private_key": pem,
+    }
+    return S3StorageService(make_settings(**{**config, **overrides}))
 
 
 def _cloudfront_b64decode(value: str) -> bytes:
@@ -179,9 +177,9 @@ async def test_cloudfront_signed_url(
     expires = int(query["Expires"][0])
     # The canned policy CloudFront reconstructs from the URL's Expires parameter.
     resource = f"https://cdn.example.test/{key}"
+    condition = {"DateLessThan": {"AWS:EpochTime": expires}}
     policy = json.dumps(
-        {"Statement": [{"Resource": resource, "Condition": {"DateLessThan": {"AWS:EpochTime": expires}}}]},
-        separators=(",", ":"),
+        {"Statement": [{"Resource": resource, "Condition": condition}]}, separators=(",", ":")
     ).encode()
     rsa_key.public_key().verify(
         _cloudfront_b64decode(query["Signature"][0]), policy, padding.PKCS1v15(), hashes.SHA1()
