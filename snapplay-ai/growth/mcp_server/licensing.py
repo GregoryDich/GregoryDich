@@ -165,9 +165,9 @@ def read_folder_manifest(directory: Path) -> dict[str, dict[str, Any]]:
     return {}
 
 
-def manifest_entry(path: Path, folder_manifest: dict[str, dict[str, Any]] | None = None) -> (
-    tuple[dict[str, Any], str] | None
-):
+def manifest_entry(
+    path: Path, folder_manifest: dict[str, dict[str, Any]] | None = None
+) -> tuple[dict[str, Any], str] | None:
     """The manifest entry for a clip and where it was read from, or None when there is none."""
     sidecar = path.with_name(path.name + MANIFEST_SUFFIX)
     if sidecar.is_file():

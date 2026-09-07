@@ -11,7 +11,7 @@ anything that is not cleared.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal, Protocol
+from typing import Any, Literal, Protocol
 
 import httpx
 import soundfile as sf
@@ -88,7 +88,7 @@ def probe_duration(path: Path) -> float | None:
     return round(info.frames / info.samplerate, 3) if info.samplerate else None
 
 
-def _title_from_manifest(path: Path, manifest: dict[str, dict[str, object]]) -> str:
+def _title_from_manifest(path: Path, manifest: dict[str, dict[str, Any]]) -> str:
     found = manifest_entry(path, manifest)
     title = found[0].get("title") if found else None
     return str(title) if title else path.stem
