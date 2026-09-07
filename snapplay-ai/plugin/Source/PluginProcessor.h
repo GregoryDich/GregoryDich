@@ -7,7 +7,9 @@
  *
  * Threading: processBlock() touches only the engine, the scale processor and cached
  * atomic parameter pointers. Everything else runs on the message thread. Parameter
- * changes reach the engine through atomics, so host automation is realtime-safe.
+ * changes reach the engine through atomics, so host automation is realtime-safe; the
+ * few reactions that need the message thread (Scale-Snap model, stem reloads, cached-job
+ * restore) are flagged and delivered through an AsyncUpdater.
  */
 
 #include <JuceHeader.h>
@@ -46,7 +48,9 @@ namespace ParamIds
 class SnapPlayAudioProcessor final : public juce::AudioProcessor,
                                      private juce::AudioProcessorValueTreeState::Listener,
                                      private juce::ChangeListener,
-                                     private cloud::AuthManager::Listener
+                                     private cloud::AuthManager::Listener,
+                                     private juce::AsyncUpdater,
+                                     private juce::Timer
 {
 public:
     /** Index order of the `category` choice parameter. */
@@ -109,7 +113,8 @@ public:
 
     /** The result of the current/last job, if any (message thread). */
     const std::optional<cloud::JobResult>& getCurrentResult() const noexcept { return currentResult; }
-    juce::String getLastJobId() const { return lastJobId; }
+    /** Thread-safe: hosts may serialise state off the message thread. */
+    juce::String getLastJobId() const;
     std::optional<cloud::KeyInfo> getDetectedKey() const;
     std::optional<double> getDetectedBpm() const;
 
@@ -129,11 +134,29 @@ private:
     void changeListenerCallback (juce::ChangeBroadcaster* source) override;
     void authStateChanged (cloud::AuthManager&) override;
     void balanceChanged (cloud::AuthManager&, const cloud::CreditBalance& balance) override;
+    void handleAsyncUpdate() override;
+    void timerCallback() override;
 
     /** Called when the JobClient reaches Ready: stores the result, installs the detected
         scale and root, loads the selected stem. */
     void onJobReady (const cloud::JobResult& result);
     void applyScaleParametersToProcessor();
+
+    /** Pushes every parameter into the engine atomics (constructor / state restore). */
+    void syncEngineFromParameters();
+    /** Drum pads are used only while the Drums category is selected with drum mode on. */
+    void syncDrumModeToEngine();
+    /** Any thread: asks the message thread for a debounced loadSelectedStem(). */
+    void requestStemReload();
+    /** Message thread: reloads `jobId` from the JobClient cache when the directory exists. */
+    void restoreCachedJob (const juce::String& jobIdToRestore);
+    void setScaleRootParameter (int pitchClass);
+    void applyAdsr (const core::Adsr& adsr);
+    /** loadSelectedStem() with the Auto-ADSR step optional (skipped on state restore so the
+        saved envelope survives). */
+    void reloadStem (bool applyAutoAdsr);
+
+    static constexpr int stemReloadDebounceMs = 250;
 
     juce::AudioProcessorValueTreeState apvts;
 
@@ -160,6 +183,16 @@ private:
     std::optional<cloud::JobResult> currentResult;
     juce::String lastJobId;
 
+    std::atomic<bool> scaleParametersDirty { false };
+    std::atomic<bool> stemReloadPending { false };
+    bool restoringCachedJob = false;
+    int stemLoadSerial = 0;
+
+    /** Guards lastJobId / pendingRestoreJobId, which state calls may touch off the message thread. */
+    mutable juce::CriticalSection stateLock;
+    juce::String pendingRestoreJobId;
+
+    JUCE_DECLARE_WEAK_REFERENCEABLE (SnapPlayAudioProcessor)
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SnapPlayAudioProcessor)
 };
 
