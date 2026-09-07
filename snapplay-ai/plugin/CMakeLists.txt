@@ -63,6 +63,7 @@ target_sources(SnapPlayAI
         Source/PluginProcessor.cpp
         Source/PluginEditor.cpp
         Source/Cloud/ApiClient.cpp
+        Source/Cloud/Models.cpp
         Source/Cloud/AuthManager.cpp
         Source/Cloud/JobClient.cpp
         Source/Cloud/UploadEncoder.cpp
