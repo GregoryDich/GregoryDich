@@ -10,7 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Platform = Literal["instagram", "facebook", "tiktok", "youtube"]
@@ -27,6 +27,20 @@ class Settings(BaseSettings):
 
     growth_db_path: Path = Path("./growth.db")
     growth_work_dir: Path = Path("./work")
+
+    # Credit guard (§8): the batch stops rather than spending past the floor or the budget.
+    growth_credit_floor: int = Field(
+        default=0, ge=0, description="Credits run_daily_batch must leave on the account"
+    )
+    growth_credit_budget: int | None = Field(
+        default=None, ge=0, description="Default per-run credit budget for run_daily_batch"
+    )
+
+    # Campaign attribution for published links (§7).
+    growth_landing_url: str = "https://snapplay.ai"
+    growth_utm_campaign: str = "ugc_shorts"
+    growth_utm_medium: str = "social"
+    growth_referral_code: str | None = None
 
     licensed_clips_dir: Path = Path("./licensed_clips")
     fma_api_key: str | None = None
@@ -65,6 +79,12 @@ class Settings(BaseSettings):
     # Bounded waits for platform-side processing polls (seconds between attempts).
     publish_poll_interval_seconds: float = 5.0
     publish_poll_attempts: int = 60
+
+    @field_validator("growth_credit_budget", "growth_referral_code", mode="before")
+    @classmethod
+    def _blank_is_unset(cls, value: object) -> object:
+        """``VAR=`` in a .env or a shell export means "not set", not "invalid"."""
+        return None if isinstance(value, str) and not value.strip() else value
 
     def platform_configured(self, platform: Platform) -> bool:
         match platform:

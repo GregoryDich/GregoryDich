@@ -32,12 +32,20 @@ CREATE TABLE IF NOT EXISTS content_items (
     assets_json  TEXT NOT NULL DEFAULT '{}',
     publish_json TEXT NOT NULL DEFAULT '{}',
     metrics_json TEXT NOT NULL DEFAULT '{}',
+    rights_json  TEXT,
+    disclosure_json TEXT,
     created_at   TEXT NOT NULL,
     updated_at   TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS content_items_source_ref ON content_items (source, source_ref);
 CREATE INDEX IF NOT EXISTS content_items_job_id ON content_items (job_id);
 """
+# Columns added after the first release; a database written by an earlier version is migrated
+# in place on open.
+_ADDED_COLUMNS: tuple[tuple[str, str], ...] = (
+    ("rights_json", "TEXT"),
+    ("disclosure_json", "TEXT"),
+)
 
 
 def utc_now_iso() -> str:
@@ -60,6 +68,14 @@ class PublishRecord(BaseModel):
     caption: str | None = None
     hashtags: list[str] = Field(default_factory=list)
     checkpoint: dict[str, Any] = Field(default_factory=dict)
+    link: str | None = Field(
+        default=None, description="The UTM-tagged landing URL this post sends viewers to"
+    )
+    attribution_line: str | None = None
+    disclosure_line: str | None = None
+    ai_flag_set: bool = Field(
+        default=False, description="True when the platform API accepted an AI-content flag"
+    )
 
 
 class ContentItem(BaseModel):
@@ -73,6 +89,12 @@ class ContentItem(BaseModel):
     assets: dict[str, Any] = Field(default_factory=dict)
     publish: dict[str, PublishRecord] = Field(default_factory=dict)
     metrics: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    rights: dict[str, Any] | None = Field(
+        default=None, description="The RightsRecord process_clip cleared the source with"
+    )
+    disclosure: dict[str, Any] | None = Field(
+        default=None, description="The AI-disclosure state render_video recorded"
+    )
     created_at: str
     updated_at: str
 
@@ -95,6 +117,8 @@ def _row_to_item(row: sqlite3.Row) -> ContentItem:
         assets=json.loads(row["assets_json"]),
         publish={k: PublishRecord(**v) for k, v in json.loads(row["publish_json"]).items()},
         metrics=json.loads(row["metrics_json"]),
+        rights=json.loads(row["rights_json"]) if row["rights_json"] else None,
+        disclosure=json.loads(row["disclosure_json"]) if row["disclosure_json"] else None,
         created_at=row["created_at"],
         updated_at=row["updated_at"],
     )
@@ -109,6 +133,11 @@ class Store:
         conn = sqlite3.connect(self.path, timeout=30)
         try:
             conn.executescript(_SCHEMA)
+            existing = {r[1] for r in conn.execute("PRAGMA table_info(content_items)")}
+            for column, kind in _ADDED_COLUMNS:
+                if column not in existing:
+                    conn.execute(f"ALTER TABLE content_items ADD COLUMN {column} {kind}")
+            conn.commit()
         finally:
             conn.close()
 
@@ -183,6 +212,8 @@ class Store:
         stem_scores: list[dict[str, Any]] | None = None,
         script: dict[str, Any] | None = None,
         assets: dict[str, Any] | None = None,
+        rights: dict[str, Any] | None = None,
+        disclosure: dict[str, Any] | None = None,
     ) -> ContentItem:
         """Set the given columns; ``assets`` is merged into the stored asset map."""
         sets: list[str] = []
@@ -199,6 +230,12 @@ class Store:
         if script is not None:
             sets.append("script_json = ?")
             params.append(json.dumps(script))
+        if rights is not None:
+            sets.append("rights_json = ?")
+            params.append(json.dumps(rights))
+        if disclosure is not None:
+            sets.append("disclosure_json = ?")
+            params.append(json.dumps(disclosure))
         with self._connect() as conn:
             if assets is not None:
                 row = conn.execute(

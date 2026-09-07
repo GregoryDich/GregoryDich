@@ -151,11 +151,27 @@ def sse_body(events: list[tuple[str, dict[str, Any]]]) -> bytes:
     return "".join(chunks).encode()
 
 
+def me_body(available: int = 41, credits: int = 42, reserved: int = 1) -> dict[str, Any]:
+    """``GET /v1/me`` (contract §1) as the credit guard reads it."""
+    return {
+        "user": {"id": "11111111-2222-3333-4444-555555555555", "email": "growth@snapplay.test",
+                 "plan": "credits"},
+        "balance": {"credits": credits, "reserved": reserved, "available": available},
+    }
+
+
+def mock_me(router: respx.Router, available: int = 41) -> respx.Route:
+    return router.get(f"{SNAPPLAY_URL}/v1/me").mock(
+        return_value=httpx.Response(200, json=me_body(available))
+    )
+
+
 def mock_snapplay(
-    router: respx.Router, result: dict[str, Any], *, sse: bool = True
+    router: respx.Router, result: dict[str, Any], *, sse: bool = True, available: int = 41
 ) -> dict[str, respx.Route]:
-    """Mock the whole job lifecycle: submit, SSE (or 404 to force polling), poll, downloads."""
+    """Mock the whole job lifecycle: balance, submit, SSE (or polling), poll, downloads."""
     routes = {
+        "me": mock_me(router, available),
         "submit": router.post(f"{SNAPPLAY_URL}/v1/jobs").mock(
             return_value=httpx.Response(
                 202,
@@ -230,6 +246,11 @@ def env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[str, str]:
         "YOUTUBE_ACCESS_TOKEN": "yt-token",
         "PUBLISH_POLL_INTERVAL_SECONDS": "0",
         "PUBLISH_POLL_ATTEMPTS": "3",
+        "GROWTH_LANDING_URL": "https://snapplay.test/get",
+        "GROWTH_UTM_CAMPAIGN": "ugc_shorts",
+        "GROWTH_UTM_MEDIUM": "social",
+        "GROWTH_REFERRAL_CODE": "growth-bot",
+        "GROWTH_CREDIT_FLOOR": "0",
     }
     for key, value in values.items():
         monkeypatch.setenv(key, value)
@@ -250,6 +271,7 @@ def store(settings: Settings) -> Store:
 
 @pytest.fixture
 def clip_file(settings: Settings) -> Path:
+    """A licensed clip with the per-file manifest sidecar that establishes its rights."""
     path = settings.licensed_clips_dir / "loop.wav"
     path.write_bytes(make_wav_bytes())
     path.with_suffix(".json").write_text(

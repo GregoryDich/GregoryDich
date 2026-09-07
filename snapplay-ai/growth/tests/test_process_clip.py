@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import httpx
@@ -84,12 +85,18 @@ async def test_process_clip_from_url_uses_polling_fallback(
             "process_clip",
             {
                 "clip_path_or_url": "https://cdn.test/beat.wav",
-                "options": {"source": "free_music_archive"},
+                "options": {
+                    "source": "free_music_archive",
+                    "license": "Attribution",
+                    "attribution": "A — https://fma.test/a/open",
+                },
             },
         )
     ).structured_content
     assert data["source"] == "free_music_archive"
     assert data["source_ref"] == "https://cdn.test/beat.wav"
+    assert data["rights"]["status"] == "cleared"
+    assert data["rights"]["license"] == "Attribution"
     assert routes["poll"].call_count == 1
 
 
@@ -98,6 +105,7 @@ async def test_process_clip_rejects_oversized_upload(
 ) -> None:
     big = settings.licensed_clips_dir / "big.wav"
     big.write_bytes(b"\0" * (10 * 1024 * 1024 + 1))
+    big.with_suffix(".json").write_text(json.dumps({"license": "operator-licensed"}))
     with pytest.raises(ToolError, match="at most 10 MB"):
         await mcp_client.call_tool("process_clip", {"clip_path_or_url": str(big)})
 

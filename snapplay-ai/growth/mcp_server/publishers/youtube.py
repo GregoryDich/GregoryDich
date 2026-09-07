@@ -25,6 +25,8 @@ MUSIC_CATEGORY_ID = "10"
 
 class YouTubeShortsPublisher:
     platform = "youtube"
+    # videos.insert takes the altered-or-synthetic-content disclosure in status.
+    ai_flag_supported = True
 
     def __init__(self, settings: Settings, http: httpx.AsyncClient) -> None:
         if not settings.youtube_access_token:
@@ -55,11 +57,14 @@ class YouTubeShortsPublisher:
             post_id=cp["video_id"],
             url=f"https://youtube.com/shorts/{cp['video_id']}",
             checkpoint=cp,
+            ai_flag_set=request.is_synthetic,
         )
 
     async def _start_session(self, request: PublishRequest, size: int, scheduled: bool) -> str:
         title = request.title if "#shorts" in request.title.lower() else f"{request.title} #Shorts"
         status: dict[str, Any] = {"selfDeclaredMadeForKids": False}
+        if request.is_synthetic:
+            status["containsSyntheticMedia"] = True
         if scheduled:
             status["privacyStatus"] = "private"
             status["publishAt"] = request.schedule_at

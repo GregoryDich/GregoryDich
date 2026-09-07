@@ -40,10 +40,22 @@ class PublishRequest(BaseModel):
     hashtags: list[str] = Field(default_factory=list)
     title: str = "SnapPlay AI"
     schedule_at: str | None = None
+    attribution: str | None = Field(
+        default=None, description="Credit line the source licence requires (§2)"
+    )
+    disclosure: str | None = Field(
+        default=None, description="AI disclosure line, appended on every platform (§6)"
+    )
+    is_synthetic: bool = Field(
+        default=False, description="Drives the platform AI-content flag where the API has one"
+    )
+    link: str | None = Field(default=None, description="UTM-tagged landing URL (§7)")
 
     def full_caption(self) -> str:
+        """Caption, then the credit line, the AI disclosure and the tagged link, then tags."""
         tags = " ".join(_normalize_tag(t) for t in self.hashtags if t.strip())
-        return f"{self.caption.strip()}\n\n{tags}".strip() if tags else self.caption.strip()
+        parts = [self.caption.strip(), self.attribution, self.disclosure, self.link, tags]
+        return "\n\n".join(p.strip() for p in parts if p and p.strip())
 
 
 class PublishOutcome(BaseModel):
@@ -53,6 +65,9 @@ class PublishOutcome(BaseModel):
     url: str | None = None
     note: str | None = None
     checkpoint: dict[str, Any] = Field(default_factory=dict)
+    ai_flag_set: bool = Field(
+        default=False, description="True when the publishing API took an AI-content flag"
+    )
 
 
 class PostMetrics(BaseModel):
@@ -74,6 +89,9 @@ class PostMetrics(BaseModel):
 
 class Publisher(Protocol):
     platform: Platform
+    # True when this platform's publishing endpoint carries an AI-content field. Where it is
+    # False the disclosure still ships, in the caption (see ``PublishRequest.full_caption``).
+    ai_flag_supported: bool
 
     async def publish(
         self, request: PublishRequest, checkpoint: dict[str, Any]

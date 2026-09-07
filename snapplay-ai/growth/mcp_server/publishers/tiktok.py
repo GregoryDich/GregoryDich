@@ -37,6 +37,8 @@ UNAUDITED_NOTE = (
 
 class TikTokPublisher:
     platform = "tiktok"
+    # TikTok's Content Posting API carries the AI-generated-content label in post_info.
+    ai_flag_supported = True
 
     def __init__(self, settings: Settings, http: httpx.AsyncClient) -> None:
         if not settings.tiktok_access_token:
@@ -102,6 +104,7 @@ class TikTokPublisher:
             post_id=post_id,
             note=UNAUDITED_NOTE if restricted else None,
             checkpoint=cp,
+            ai_flag_set=request.is_synthetic,
         )
 
     async def _privacy_level(self) -> tuple[str, bool]:
@@ -128,6 +131,11 @@ class TikTokPublisher:
                     "disable_comment": False,
                     "disable_stitch": False,
                     "video_cover_timestamp_ms": 1000,
+                    # Own-brand promotion is disclosed on every post (§6); brand_content is for
+                    # third-party paid partnerships and never applies to first-party creatives.
+                    "brand_organic_toggle": True,
+                    "brand_content_toggle": False,
+                    "is_aigc": request.is_synthetic,
                 },
                 "source_info": {
                     "source": "FILE_UPLOAD",

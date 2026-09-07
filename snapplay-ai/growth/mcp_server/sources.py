@@ -1,15 +1,15 @@
 """Pluggable clip providers.
 
 Only rights-cleared audio may be turned into advertising. Commercial recordings must never be
-used here: the licensed-folder provider lists clips the operator holds a licence for, the Free
-Music Archive provider keeps only licences that allow commercial *and* derivative use, and the
-URL provider records that the caller asserted the rights.
+used here, and no provider invents a licence: the licensed-folder provider reads the manifest
+the operator wrote next to each clip (``licensing.py``), the Free Music Archive provider keeps
+only licences that allow commercial *and* derivative use, and the URL provider reports
+``unknown`` unless the caller attests to the rights explicitly. ``process_clip`` refuses
+anything that is not cleared.
 """
 
 from __future__ import annotations
 
-import json
-import re
 from pathlib import Path
 from typing import Literal, Protocol
 
@@ -17,12 +17,39 @@ import httpx
 import soundfile as sf
 from pydantic import BaseModel, Field
 
+from .licensing import (
+    LicenseAttestation,
+    RightsRecord,
+    license_allows_ads,
+    manifest_entry,
+    read_folder_manifest,
+    rights_from_attestation,
+    rights_from_fma,
+    rights_from_manifest,
+    unknown_rights,
+)
+
 SourceKind = Literal["licensed_folder", "free_music_archive", "urls"]
 AUDIO_SUFFIXES: frozenset[str] = frozenset({".wav", ".flac", ".mp3", ".ogg", ".aiff", ".aif"})
 RIGHTS_NOTICE = (
     "Use only audio you hold advertising rights for. Commercial recordings (label releases, "
-    "streaming catalogue, sample packs without a sync licence) must not be used in ads."
+    "streaming catalogue, sample packs without a sync licence) must not be used in ads. Clips "
+    "whose rights are not established are listed with rights.status='unknown' and process_clip "
+    "refuses them."
 )
+
+__all__ = [
+    "AUDIO_SUFFIXES",
+    "RIGHTS_NOTICE",
+    "ClipProvider",
+    "FreeMusicArchiveProvider",
+    "LicensedFolderProvider",
+    "SourceClip",
+    "SourceKind",
+    "UrlListProvider",
+    "license_allows_ads",
+    "probe_duration",
+]
 
 
 class SourceClip(BaseModel):
@@ -32,21 +59,25 @@ class SourceClip(BaseModel):
     license: str | None = None
     attribution: str | None = None
     duration_seconds: float | None = None
+    rights: RightsRecord = Field(description="Where the licence came from and whether it clears")
 
 
 class ClipProvider(Protocol):
     async def list_clips(self, limit: int) -> list[SourceClip]: ...
 
 
-def _read_sidecar(path: Path) -> dict[str, str]:
-    sidecar = path.with_suffix(".json")
-    if not sidecar.is_file():
-        return {}
-    try:
-        data = json.loads(sidecar.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
-    return {k: str(v) for k, v in data.items() if isinstance(v, str | int | float)}
+def _clip(
+    ref: str, title: str, source: SourceKind, rights: RightsRecord, duration: float | None = None
+) -> SourceClip:
+    return SourceClip(
+        ref=ref,
+        title=title,
+        source=source,
+        license=rights.license,
+        attribution=rights.attribution,
+        duration_seconds=duration,
+        rights=rights,
+    )
 
 
 def probe_duration(path: Path) -> float | None:
@@ -57,8 +88,18 @@ def probe_duration(path: Path) -> float | None:
     return round(info.frames / info.samplerate, 3) if info.samplerate else None
 
 
+def _title_from_manifest(path: Path, manifest: dict[str, dict[str, object]]) -> str:
+    found = manifest_entry(path, manifest)
+    title = found[0].get("title") if found else None
+    return str(title) if title else path.stem
+
+
 class LicensedFolderProvider:
-    """Audio files under ``LICENSED_CLIPS_DIR``; ``<name>.json`` sidecars add licence metadata."""
+    """Audio under ``LICENSED_CLIPS_DIR``, with the licence its manifest entry records.
+
+    A clip with no manifest entry is listed with ``rights.status == "unknown"`` so the operator
+    can see what is missing; nothing downstream will process it until an entry exists.
+    """
 
     def __init__(self, directory: Path) -> None:
         self.directory = directory
@@ -71,33 +112,17 @@ class LicensedFolderProvider:
             for p in self.directory.iterdir()
             if p.is_file() and p.suffix.lower() in AUDIO_SUFFIXES
         )
-        clips: list[SourceClip] = []
-        for path in files[:limit]:
-            meta = _read_sidecar(path)
-            clips.append(
-                SourceClip(
-                    ref=str(path.resolve()),
-                    title=meta.get("title", path.stem),
-                    source="licensed_folder",
-                    license=meta.get("license", "operator-licensed"),
-                    attribution=meta.get("attribution"),
-                    duration_seconds=probe_duration(path),
-                )
+        manifest = read_folder_manifest(self.directory)
+        return [
+            _clip(
+                ref=str(path.resolve()),
+                title=_title_from_manifest(path, manifest),
+                source="licensed_folder",
+                rights=rights_from_manifest(path, manifest),
+                duration=probe_duration(path),
             )
-        return clips
-
-
-_NON_COMMERCIAL = re.compile(r"non[- ]?commercial|\bNC\b|no[- ]?derivatives?|\bND\b", re.I)
-_COMMERCIAL_OK = re.compile(r"CC0|public domain|attribution|\bBY\b", re.I)
-
-
-def license_allows_ads(license_title: str | None) -> bool:
-    """True for CC0 / public domain / CC BY / CC BY-SA; NC and ND variants are rejected."""
-    if not license_title:
-        return False
-    if _NON_COMMERCIAL.search(license_title):
-        return False
-    return bool(_COMMERCIAL_OK.search(license_title))
+            for path in files[:limit]
+        ]
 
 
 class FreeMusicArchiveProvider:
@@ -123,16 +148,15 @@ class FreeMusicArchiveProvider:
             file_url = row.get("track_file_url") or row.get("track_file")
             if not file_url:
                 continue
-            duration = _parse_duration(row.get("track_duration"))
             artist = row.get("artist_name") or "Unknown artist"
+            attribution = f"{artist} — {row.get('track_url') or 'freemusicarchive.org'}"
             clips.append(
-                SourceClip(
+                _clip(
                     ref=file_url,
                     title=row.get("track_title") or f"track {row.get('track_id')}",
                     source="free_music_archive",
-                    license=license_title,
-                    attribution=f"{artist} — {row.get('track_url') or 'freemusicarchive.org'}",
-                    duration_seconds=duration,
+                    rights=rights_from_fma(license_title, attribution),
+                    duration=_parse_duration(row.get("track_duration")),
                 )
             )
             if len(clips) >= limit:
@@ -158,16 +182,31 @@ def _parse_duration(value: object) -> float | None:
 
 
 class UrlListProvider:
-    def __init__(self, urls: list[str]) -> None:
+    """Caller-supplied URLs. A URL is not evidence of a licence: without an attestation the
+    rights stay ``unknown`` and ``process_clip`` refuses the clip."""
+
+    def __init__(self, urls: list[str], attestation: LicenseAttestation | None = None) -> None:
         self.urls = urls
+        self.attestation = attestation
 
     async def list_clips(self, limit: int) -> list[SourceClip]:
+        rights = (
+            rights_from_attestation(self.attestation)
+            if self.attestation is not None
+            else unknown_rights(
+                evidence="none",
+                reason=(
+                    "a caller-supplied URL carries no licence the engine can verify; pass "
+                    "license_attestation to record the rights you hold"
+                ),
+            )
+        )
         return [
-            SourceClip(
+            _clip(
                 ref=url,
                 title=Path(httpx.URL(url).path).stem or url,
                 source="urls",
-                license="asserted by caller",
+                rights=rights,
             )
             for url in self.urls[:limit]
         ]

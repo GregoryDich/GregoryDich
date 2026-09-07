@@ -62,6 +62,19 @@ class Balance(_Model):
     available: int
 
 
+class UserInfo(_Model):
+    id: str | None = None
+    email: str | None = None
+    plan: str | None = None
+
+
+class Me(_Model):
+    """``GET /v1/me`` (contract §1): the key owner and their credit balance."""
+
+    user: UserInfo | None = None
+    balance: Balance
+
+
 class JobAccepted(_Model):
     job_id: str
     status: JobState
@@ -272,6 +285,14 @@ class SnapPlayClient:
             data={"options": json.dumps(opts.model_dump(exclude_none=True))},
         )
         return JobAccepted.model_validate(response.json())
+
+    async def get_me(self) -> Me:
+        """The key owner's account, including ``balance.available`` (§1, §11)."""
+        response = await self._request("GET", f"{self.base_url}/v1/me")
+        return Me.model_validate(response.json())
+
+    async def get_balance(self) -> Balance:
+        return (await self.get_me()).balance
 
     async def get_job(self, job_id: str) -> JobStatus:
         response = await self._request("GET", f"{self.base_url}/v1/jobs/{job_id}")

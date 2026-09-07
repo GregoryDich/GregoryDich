@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -18,8 +19,22 @@ from tests.test_voiceover import mock_elevenlabs
 
 @pytest.fixture
 def two_clips(clip_file: Path) -> list[Path]:
+    """The first clip carries a per-file sidecar, the second a folder-manifest entry."""
     second = clip_file.with_name("loop2.wav")
     second.write_bytes(make_wav_bytes(1.5, freq=220.0))
+    (clip_file.parent / "licences.json").write_text(
+        json.dumps(
+            {
+                "clips": {
+                    "loop2.wav": {
+                        "title": "Second Loop",
+                        "license": "CC BY 4.0",
+                        "attribution": "B — https://fma.test/b",
+                    }
+                }
+            }
+        )
+    )
     return [clip_file, second]
 
 

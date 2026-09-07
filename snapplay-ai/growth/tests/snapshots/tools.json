@@ -39,6 +39,19 @@
   "list_source_clips": {
     "additionalProperties": false,
     "properties": {
+      "license_attestation": {
+        "anyOf": [
+          {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Your own declaration of the rights you hold for the listed URLs \u2014\n``{\"license\": ..., \"permits_advertising\": true, \"authority\": ..., \"attribution\":\n...}``. Only supply it when you actually hold those rights."
+      },
       "limit": {
         "default": 10,
         "description": "Maximum number of clips to return.",
@@ -79,6 +92,19 @@
         "description": "Local audio path or http(s) URL of a rights-cleared clip.",
         "type": "string"
       },
+      "license_attestation": {
+        "anyOf": [
+          {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "An explicit declaration that you hold advertising rights the\nengine cannot see \u2014 ``{\"license\": ..., \"permits_advertising\": true, \"authority\":\n..., \"attribution\": ...}``. It overrides the manifest check, so pass it only as a\ndeliberate act for material you really are licensed to use."
+      },
       "options": {
         "anyOf": [
           {
@@ -90,7 +116,7 @@
           }
         ],
         "default": null,
-        "description": "Job options per API contract \u00a72 (``stems``, ``transcribe``, ``drum_slices``,\n``target_root_midi``, ``client_sample_rate``) plus ``source`` (provider name to\nrecord, e.g. \"free_music_archive\") and ``force`` (true reprocesses a known clip)."
+        "description": "Job options per API contract \u00a72 (``stems``, ``transcribe``, ``drum_slices``,\n``target_root_midi``, ``client_sample_rate``) plus ``source`` (provider name to\nrecord, e.g. \"free_music_archive\"), ``license`` / ``attribution`` (as reported by\nlist_source_clips) and ``force`` (true reprocesses a known clip)."
       }
     },
     "required": [
@@ -228,6 +254,18 @@
         "default": 3,
         "description": "Number of new clips to process.",
         "type": "integer"
+      },
+      "credit_budget": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Maximum credits this run may spend; defaults to GROWTH_CREDIT_BUDGET,\nand without either the run is bounded by ``count`` and the balance floor."
       },
       "dry_run": {
         "default": true,

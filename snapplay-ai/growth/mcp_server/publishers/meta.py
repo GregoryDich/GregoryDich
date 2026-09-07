@@ -24,6 +24,11 @@ from .base import (
     to_unix,
 )
 
+META_AI_NOTE = (
+    "Meta's content publishing endpoints carry no AI-content field at this API version, so the "
+    "AI disclosure ships in the caption; Meta's own AI info label is applied in the app."
+)
+
 
 def _metric_value(entry: dict[str, Any]) -> int | None:
     values = entry.get("values")
@@ -38,6 +43,9 @@ def _metric_value(entry: dict[str, Any]) -> int | None:
 
 class InstagramReelsPublisher:
     platform = "instagram"
+    # No AI-content field exists on the Instagram content publishing endpoints; the disclosure
+    # is carried in the caption instead (see META_AI_NOTE).
+    ai_flag_supported = False
 
     def __init__(self, settings: Settings, http: httpx.AsyncClient) -> None:
         if not (settings.meta_ig_user_id and settings.meta_ig_access_token):
@@ -109,7 +117,12 @@ class InstagramReelsPublisher:
             cp["media_id"] = body["id"]
         url = await self._permalink(cp["media_id"])
         return PublishOutcome(
-            platform="instagram", status="published", post_id=cp["media_id"], url=url, checkpoint=cp
+            platform="instagram",
+            status="published",
+            post_id=cp["media_id"],
+            url=url,
+            note=META_AI_NOTE if request.is_synthetic else None,
+            checkpoint=cp,
         )
 
     async def _wait_container(self, container_id: str) -> None:
@@ -161,6 +174,7 @@ class InstagramReelsPublisher:
 
 class FacebookReelsPublisher:
     platform = "facebook"
+    ai_flag_supported = False
 
     def __init__(self, settings: Settings, http: httpx.AsyncClient) -> None:
         if not (settings.meta_page_id and settings.meta_page_access_token):
@@ -235,6 +249,7 @@ class FacebookReelsPublisher:
             status=status,
             post_id=cp["post_id"],
             url=f"https://www.facebook.com/reel/{cp['video_id']}",
+            note=META_AI_NOTE if request.is_synthetic else None,
             checkpoint=cp,
         )
 

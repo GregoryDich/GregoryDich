@@ -11,7 +11,17 @@ from typing import Any
 import httpx
 from pydantic import BaseModel, Field
 
+from .attribution import build_landing_url
 from .config import PLATFORMS, Platform, Settings
+from .disclosure import Disclosure, disclosure_for, stored_disclosure
+from .licensing import (
+    LicenseAttestation,
+    RightsRecord,
+    attribution_line,
+    parse_attestation,
+    require_cleared,
+    resolve_rights,
+)
 from .publishers import PublisherError, PublisherNotConfigured, PublishRequest, build_publisher
 from .render import Presenter, RenderResult, Scene, render_item
 from .scoring import StemScore, choose_stem, score_stems
@@ -35,6 +45,7 @@ class ProcessedClip(BaseModel):
     stem_scores: list[StemScore]
     midi_notes: list[MidiNote]
     analysis: Analysis
+    rights: RightsRecord = Field(description="The licence this clip was cleared for advertising on")
     reused: bool = Field(description="True when an earlier run of the same clip was returned")
 
 
@@ -46,11 +57,16 @@ class PlatformPublishResult(BaseModel):
     note: str | None = None
     error: str | None = None
     already_posted: bool = False
+    link: str | None = Field(default=None, description="UTM-tagged landing URL in the caption")
+    disclosure_line: str | None = None
+    ai_flag_set: bool = False
 
 
 class PublishReport(BaseModel):
     content_item_id: str
     results: list[PlatformPublishResult]
+    attribution_line: str | None = None
+    disclosure_line: str | None = None
 
 
 def _is_url(ref: str) -> bool:
@@ -77,7 +93,11 @@ def _reusable(item: ContentItem | None) -> bool:
     return bool(stem and notes and Path(stem).is_file() and Path(notes).is_file())
 
 
-def _processed_from_item(item: ContentItem, reused: bool) -> ProcessedClip:
+def item_rights(item: ContentItem) -> RightsRecord | None:
+    return RightsRecord.model_validate(item.rights) if item.rights else None
+
+
+def _processed_from_item(item: ContentItem, rights: RightsRecord, reused: bool) -> ProcessedClip:
     result = json.loads(Path(item.assets["job_result_path"]).read_text())
     notes = json.loads(Path(item.assets["midi_notes_path"]).read_text())
     return ProcessedClip(
@@ -91,6 +111,7 @@ def _processed_from_item(item: ContentItem, reused: bool) -> ProcessedClip:
         stem_scores=[StemScore.model_validate(s) for s in item.stem_scores],
         midi_notes=[MidiNote.model_validate(n) for n in notes],
         analysis=Analysis.model_validate(result["analysis"]),
+        rights=rights,
         reused=reused,
     )
 
@@ -118,18 +139,36 @@ async def process_clip(
     http: httpx.AsyncClient,
     clip_path_or_url: str,
     options: dict[str, Any] | None = None,
+    license_attestation: dict[str, Any] | LicenseAttestation | None = None,
 ) -> ProcessedClip:
     opts = dict(options or {})
     source = _source_for(clip_path_or_url, settings, opts.pop("source", None))
     force = bool(opts.pop("force", False))
+    declared_license = opts.pop("license", None)
+    declared_attribution = opts.pop("attribution", None)
+    # The rights gate runs before anything is submitted, so a clip nobody licensed never
+    # costs a credit and never reaches a render.
+    rights = require_cleared(
+        clip_path_or_url,
+        source,
+        resolve_rights(
+            clip_path_or_url,
+            source,
+            declared_license=declared_license,
+            declared_attribution=declared_attribution,
+            attestation=parse_attestation(license_attestation),
+        ),
+    )
     existing = store.find_by_source_ref(source, clip_path_or_url)
     if not force and _reusable(existing):
         assert existing is not None
-        return _processed_from_item(existing, reused=True)
+        existing = store.update(existing.id, rights=rights.model_dump())
+        return _processed_from_item(existing, rights, reused=True)
     if not settings.snapplay_api_key:
         raise RuntimeError("SNAPPLAY_API_KEY is not set")
 
     item = store.create_item(source, clip_path_or_url)
+    store.update(item.id, rights=rights.model_dump())
     work = settings.growth_work_dir / item.id
     clip_path = await _fetch_clip(clip_path_or_url, http, work)
     audio = clip_path.read_bytes()
@@ -181,15 +220,17 @@ async def process_clip(
             "duration_seconds": probe_duration(clip_path) or result.input.duration_seconds,
         },
     )
-    return _processed_from_item(item, reused=False)
+    return _processed_from_item(item, rights, reused=False)
 
 
 def clip_metadata(item: ContentItem) -> dict[str, Any]:
     """The metadata dict ``write_script`` expects, assembled from a processed item."""
+    rights = item_rights(item)
     meta: dict[str, Any] = {
         "title": Path(item.source_ref).stem if not _is_url(item.source_ref) else item.source_ref,
         "chosen_stem": item.chosen_stem,
         "source": item.source,
+        "attribution": rights.attribution if rights else None,
     }
     result_path = item.assets.get("job_result_path")
     if result_path and Path(result_path).is_file():
@@ -261,6 +302,9 @@ async def render_video(
         avatar_clip=avatar_clip,
         frames=frames,
     )
+    disclosure = disclosure_for(
+        has_voiceover=bool(item.assets.get("voiceover_path")), presenter=presenter
+    )
     store.update(
         item.id,
         assets={
@@ -268,8 +312,39 @@ async def render_video(
             "props_path": result.props_path,
             "renderer": result.renderer,
         },
+        disclosure=disclosure.model_dump(),
     )
     return result
+
+
+def build_request(
+    settings: Settings,
+    item: ContentItem,
+    platform: Platform,
+    *,
+    caption: str,
+    hashtags: list[str],
+    schedule_at: str | None,
+    disclosure: Disclosure | None = None,
+) -> PublishRequest:
+    """Compose one platform's post: caption, credit line, AI disclosure and the tagged link.
+
+    The attribution and disclosure come from what was recorded on the content item (the licence
+    ``process_clip`` cleared, the disclosure ``render_video`` wrote), never from the caller, so
+    every publish of the same item says the same thing.
+    """
+    disclosed = disclosure or stored_disclosure(item)
+    return PublishRequest(
+        content_item_id=item.id,
+        video_path=Path(item.assets["video_path"]),
+        caption=caption,
+        hashtags=hashtags,
+        schedule_at=schedule_at,
+        attribution=attribution_line(item_rights(item)),
+        disclosure=disclosed.line,
+        is_synthetic=disclosed.is_synthetic,
+        link=build_landing_url(settings, platform=platform, content_item_id=item.id),
+    )
 
 
 async def publish_video(
@@ -288,6 +363,7 @@ async def publish_video(
         raise RuntimeError("content item has no rendered video; run render_video first")
     if schedule_at:
         parse_iso(schedule_at)
+    disclosure = stored_disclosure(item)
     results: list[PlatformPublishResult] = []
     for platform in dict.fromkeys(platforms):
         if platform not in PLATFORMS:
@@ -302,20 +378,30 @@ async def publish_video(
                     url=record.url,
                     note=record.note,
                     already_posted=True,
+                    link=record.link,
+                    disclosure_line=record.disclosure_line,
+                    ai_flag_set=record.ai_flag_set,
                 )
             )
             continue
-        request = PublishRequest(
-            content_item_id=item.id,
-            video_path=Path(video_path),
+        request = build_request(
+            settings,
+            item,
+            platform,
             caption=caption,
             hashtags=hashtags,
             schedule_at=schedule_at,
+            disclosure=disclosure,
         )
         results.append(
             await _publish_one(settings, store, http, item.id, platform, request, record)
         )
-    return PublishReport(content_item_id=item.id, results=results)
+    return PublishReport(
+        content_item_id=item.id,
+        results=results,
+        attribution_line=attribution_line(item_rights(item)),
+        disclosure_line=disclosure.line,
+    )
 
 
 async def _publish_one(
@@ -332,6 +418,9 @@ async def _publish_one(
             "caption": request.caption,
             "hashtags": request.hashtags,
             "schedule_at": request.schedule_at,
+            "link": request.link,
+            "attribution_line": request.attribution,
+            "disclosure_line": request.disclosure,
         }
     )
     try:
@@ -350,7 +439,9 @@ async def _publish_one(
                 update={"status": "failed", "error": str(exc), "checkpoint": checkpoint}
             ),
         )
-        return PlatformPublishResult(platform=platform, status="failed", error=str(exc))
+        return PlatformPublishResult(
+            platform=platform, status="failed", error=str(exc), link=request.link
+        )
     published_at = utc_now_iso() if outcome.status in ("published", "restricted") else None
     store.set_publish_record(
         item_id,
@@ -364,6 +455,7 @@ async def _publish_one(
                 "error": None,
                 "published_at": published_at,
                 "checkpoint": outcome.checkpoint,
+                "ai_flag_set": outcome.ai_flag_set,
             }
         ),
     )
@@ -373,6 +465,9 @@ async def _publish_one(
         post_id=outcome.post_id,
         url=outcome.url,
         note=outcome.note,
+        link=request.link,
+        disclosure_line=request.disclosure,
+        ai_flag_set=outcome.ai_flag_set,
     )
 
 
@@ -391,9 +486,10 @@ async def publish_due(
         video_path = item.assets.get("video_path")
         if not video_path:
             continue
-        request = PublishRequest(
-            content_item_id=item.id,
-            video_path=Path(video_path),
+        request = build_request(
+            settings,
+            item,
+            platform,  # type: ignore[arg-type]
             caption=record.caption or "",
             hashtags=record.hashtags,
             schedule_at=None,

@@ -9,6 +9,7 @@ import pytest
 import respx
 from fastmcp import Client
 
+from mcp_server.licensing import LicenseAttestation
 from mcp_server.sources import (
     FreeMusicArchiveProvider,
     LicensedFolderProvider,
@@ -86,10 +87,25 @@ async def test_fma_provider_keeps_only_ad_safe_licences(router: respx.Router) ->
     assert route.calls.last.request.url.params["api_key"] == "k"
 
 
-async def test_url_provider() -> None:
+async def test_url_provider_rights_stay_unknown_without_an_attestation() -> None:
     clips = await UrlListProvider(["https://x.test/a/beat.wav"]).list_clips(5)
     assert clips[0].title == "beat"
-    assert clips[0].license == "asserted by caller"
+    assert clips[0].license == "unknown"
+    assert clips[0].rights.status == "unknown"
+    assert "license_attestation" in (clips[0].rights.reason or "")
+
+
+async def test_url_provider_records_an_attestation() -> None:
+    attestation = LicenseAttestation(
+        license="buy-out contract 2026-03",
+        permits_advertising=True,
+        authority="Producer A, invoice 118",
+        attribution="Producer A",
+    )
+    clips = await UrlListProvider(["https://x.test/a/beat.wav"], attestation).list_clips(5)
+    assert clips[0].rights.status == "cleared"
+    assert clips[0].rights.evidence == "operator attestation (Producer A, invoice 118)"
+    assert clips[0].attribution == "Producer A"
 
 
 async def test_list_source_clips_tool(mcp_client: Client, clip_file: Path) -> None:

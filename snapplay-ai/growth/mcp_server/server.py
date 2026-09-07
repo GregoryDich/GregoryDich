@@ -15,6 +15,7 @@ from pydantic import BaseModel
 
 from . import batch, pipeline
 from .config import Platform, get_settings
+from .licensing import parse_attestation
 from .metrics import MetricsReport, collect_metrics
 from .render import Presenter, RenderResult, Scene
 from .script import ScriptBrief, write_brief
@@ -32,7 +33,9 @@ from .voiceover import VoiceoverResult
 INSTRUCTIONS = (
     "SnapPlay growth engine. Turns rights-cleared audio clips into 15-second vertical shorts "
     "(SnapPlay stem/MIDI processing → brief → voiceover → Remotion render) and publishes them. "
-    f"{RIGHTS_NOTICE} TikTok posts from unaudited apps stay private (status 'restricted')."
+    f"{RIGHTS_NOTICE} Every post carries its licence attribution, an AI disclosure when the "
+    "render is synthetic, and a UTM-tagged landing link. TikTok posts from unaudited apps stay "
+    "private (status 'restricted')."
 )
 
 mcp = FastMCP("snapplay-growth", instructions=INSTRUCTIONS)
@@ -53,22 +56,30 @@ async def list_source_clips(
     source: Literal["licensed_folder", "free_music_archive", "urls"] = "licensed_folder",
     limit: int = 10,
     urls: list[str] | None = None,
+    license_attestation: dict[str, Any] | None = None,
 ) -> SourceListing:
-    """List candidate source clips from a rights-cleared provider.
+    """List candidate source clips with the licence each one actually carries.
 
     Only audio you hold advertising rights for may be used: commercial recordings (label
     releases, streaming catalogue, sample packs without a sync licence) must NOT be used for
-    advertising. ``licensed_folder`` (default) lists files under LICENSED_CLIPS_DIR;
-    ``free_music_archive`` queries the FMA API (FMA_API_KEY) and keeps only CC0 / public
-    domain / CC BY / CC BY-SA tracks (NonCommercial and NoDerivatives licences are dropped);
-    ``urls`` wraps caller-supplied URLs and records that the caller asserted the rights.
+    advertising. No provider invents a licence. ``licensed_folder`` (default) lists files under
+    LICENSED_CLIPS_DIR and reads each clip's manifest entry (``<clip>.license.json`` beside it,
+    or an entry in the folder's ``licences.json``); ``free_music_archive`` queries the FMA API
+    (FMA_API_KEY) and keeps only CC0 / public domain / CC BY / CC BY-SA tracks (NonCommercial
+    and NoDerivatives licences are dropped); ``urls`` wraps caller-supplied URLs, whose rights
+    stay "unknown" unless ``license_attestation`` is given. Each clip carries a ``rights``
+    record; ``process_clip`` refuses anything whose status is not "cleared".
 
     Args:
         source: Which provider to query.
         limit: Maximum number of clips to return.
         urls: Explicit clip URLs (required when source="urls").
+        license_attestation: Your own declaration of the rights you hold for the listed URLs —
+            ``{"license": ..., "permits_advertising": true, "authority": ..., "attribution":
+            ...}``. Only supply it when you actually hold those rights.
     """
     settings = get_settings()
+    attestation = parse_attestation(license_attestation)
     if source == "licensed_folder":
         clips = await LicensedFolderProvider(settings.licensed_clips_dir).list_clips(limit)
     elif source == "free_music_archive":
@@ -80,32 +91,49 @@ async def list_source_clips(
     else:
         if not urls:
             raise ValueError("source='urls' requires at least one URL")
-        clips = await UrlListProvider(urls).list_clips(limit)
+        clips = await UrlListProvider(urls, attestation).list_clips(limit)
     return SourceListing(source=source, notice=RIGHTS_NOTICE, clips=clips)
 
 
 @mcp.tool
 async def process_clip(
-    clip_path_or_url: str, options: dict[str, Any] | None = None
+    clip_path_or_url: str,
+    options: dict[str, Any] | None = None,
+    license_attestation: dict[str, Any] | None = None,
 ) -> pipeline.ProcessedClip:
-    """Submit a clip to the SnapPlay API and pick the most usable stem.
+    """Submit a rights-cleared clip to the SnapPlay API and pick the most usable stem.
+
+    Refuses, before spending a credit, any clip whose advertising rights are not established:
+    a local file needs a manifest entry (``<clip>.license.json`` beside it or an entry in the
+    folder's ``licences.json``) naming its licence, a Free Music Archive track needs the
+    licence the listing carries (pass it as ``options.license``), and anything else needs
+    ``license_attestation``. The refusal names what is missing and how to supply it.
 
     Uploads the clip (≤ 10 MB, first 60 s used) as multipart ``POST /v1/jobs`` with the
     X-API-Key from SNAPPLAY_API_KEY, follows ``GET /v1/jobs/{id}/events`` (SSE) to the result
     and falls back to polling ``GET /v1/jobs/{id}``, downloads every stem plus the MIDI file,
     and scores stems on note density, pitch range and RMS (see ``scoring.py``). Re-running on
-    the same clip returns the existing content item instead of spending another credit.
+    the same clip returns the existing content item instead of spending another credit. The
+    licence and attribution are stored on the content item, and publish_video puts the credit
+    line in the caption.
 
     Args:
         clip_path_or_url: Local audio path or http(s) URL of a rights-cleared clip.
         options: Job options per API contract §2 (``stems``, ``transcribe``, ``drum_slices``,
             ``target_root_midi``, ``client_sample_rate``) plus ``source`` (provider name to
-            record, e.g. "free_music_archive") and ``force`` (true reprocesses a known clip).
+            record, e.g. "free_music_archive"), ``license`` / ``attribution`` (as reported by
+            list_source_clips) and ``force`` (true reprocesses a known clip).
+        license_attestation: An explicit declaration that you hold advertising rights the
+            engine cannot see — ``{"license": ..., "permits_advertising": true, "authority":
+            ..., "attribution": ...}``. It overrides the manifest check, so pass it only as a
+            deliberate act for material you really are licensed to use.
     """
     settings = get_settings()
     store = Store(settings.growth_db_path)
     async with _http() as http:
-        return await pipeline.process_clip(settings, store, http, clip_path_or_url, options)
+        return await pipeline.process_clip(
+            settings, store, http, clip_path_or_url, options, license_attestation
+        )
 
 
 @mcp.tool
@@ -215,6 +243,13 @@ async def publish_video(
     Facebook and YouTube schedule natively; Instagram and TikTok store the schedule locally
     and run_daily_batch publishes them when due.
 
+    Every post is composed from what the content item records, not from the caller: the source
+    licence's attribution line, the AI disclosure line when the render used a generated voice
+    or presenter (plus the platform's AI-content flag on TikTok and YouTube — Meta's endpoints
+    have no such field, so there the caption carries it), and a landing link tagged with
+    utm_source (the platform), utm_medium, utm_campaign, utm_content (the content item id) and
+    the referral code when GROWTH_REFERRAL_CODE is set. The final link is stored on the item.
+
     Args:
         content_item_id: Id returned by process_clip (must have been rendered).
         platforms: Target platforms.
@@ -251,26 +286,43 @@ async def report_metrics(since_iso: str) -> MetricsReport:
 
 @mcp.tool
 async def run_daily_batch(
-    count: int = 3, accounts: list[str] | None = None, dry_run: bool = True
+    count: int = 3,
+    accounts: list[str] | None = None,
+    dry_run: bool = True,
+    credit_budget: int | None = None,
 ) -> batch.BatchReport:
     """Run the whole chain for ``count`` unprocessed clips from the licensed folder.
 
     For each clip: process_clip → write_script (angles rotate) → generate_voiceover (when
     ELEVENLABS_API_KEY is set) → render_video → publish_video, honouring per-platform daily
     caps (GROWTH_MAX_POSTS_PER_DAY_*) and first publishing locally scheduled posts that are
-    due. ``dry_run`` performs everything except publishing.
+    due. ``dry_run`` performs everything except publishing. Clips with no established licence
+    are never processed and are listed in the report's notes.
+
+    Spending is bounded: before every clip the account balance is read from ``GET /v1/me`` and
+    the run stops rather than taking the balance below GROWTH_CREDIT_FLOOR or spending more
+    than the run's credit budget. Skipped clips appear in ``items`` with status "skipped" and
+    the reason, and ``credits`` reports the floor, budget, balances and what was spent.
 
     Args:
         count: Number of new clips to process.
         accounts: Platforms to publish to (instagram, facebook, tiktok, youtube); defaults to
             every platform with credentials configured.
         dry_run: When true (default) nothing is published.
+        credit_budget: Maximum credits this run may spend; defaults to GROWTH_CREDIT_BUDGET,
+            and without either the run is bounded by ``count`` and the balance floor.
     """
     settings = get_settings()
     store = Store(settings.growth_db_path)
     async with _http() as http:
         return await batch.run_daily_batch(
-            settings, store, http, count=count, accounts=accounts, dry_run=dry_run
+            settings,
+            store,
+            http,
+            count=count,
+            accounts=accounts,
+            dry_run=dry_run,
+            credit_budget=credit_budget,
         )
 
 
