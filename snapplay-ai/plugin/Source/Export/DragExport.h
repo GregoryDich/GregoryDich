@@ -8,7 +8,9 @@
 
 #include <JuceHeader.h>
 
+#include <cstdint>
 #include <functional>
+#include <vector>
 
 namespace snapplay::exporting
 {
@@ -19,6 +21,13 @@ public:
     /** `<temp>/SnapPlayAI/exports`, created on first use. Exported files live here so the
         DAW can copy them during the drop. */
     static juce::File exportDirectory();
+
+    /** `<exportDirectory()>/<legal file name of baseName><extension>`; an empty base name
+        falls back to "snapplay". */
+    static juce::File exportFileFor (const juce::String& baseName, const juce::String& extension);
+
+    /** Atomically replaces `destination` with `bytes`; false for empty input or I/O failure. */
+    static bool writeBytes (const std::vector<std::uint8_t>& bytes, const juce::File& destination);
 
     /** Starts a non-modal external drag of `file` (copy semantics). Must be called from a
         mouse-drag callback on the message thread. `onFinished` fires when the drag ends,

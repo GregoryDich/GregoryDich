@@ -7,6 +7,8 @@
  * Tests/ target can compile it without a JUCE include path.
  */
 
+#include <cmath>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -89,6 +91,23 @@ inline const char* scaleModeToString (ScaleMode mode) noexcept
     }
 
     return "off";
+}
+
+/**
+ * Contract timing rule shared by the exporters: `ticks = round (seconds * bpm / 60 * ppq)`.
+ * Non-finite or negative seconds yield 0; the result saturates at INT_MAX.
+ */
+inline int secondsToTicks (double seconds, double bpm, int ppq) noexcept
+{
+    if (! std::isfinite (seconds) || seconds <= 0.0)
+        return 0;
+
+    const double ticks = std::round (seconds * bpm / 60.0 * static_cast<double> (ppq));
+
+    if (! (ticks < static_cast<double> (std::numeric_limits<int>::max())))
+        return std::numeric_limits<int>::max();
+
+    return ticks > 0.0 ? static_cast<int> (ticks) : 0;
 }
 
 } // namespace snapplay::core

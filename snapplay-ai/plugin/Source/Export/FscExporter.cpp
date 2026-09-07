@@ -14,14 +14,17 @@ juce::MemoryBlock FscExporter::toMemoryBlock (const std::vector<core::Track>& tr
 
 bool FscExporter::writeToFile (const std::vector<core::Track>& tracks, double bpm, const juce::File& destination)
 {
-    juce::ignoreUnused (tracks, bpm, destination);
-    return false;
+    return DragExport::writeBytes (core::writeFsc (tracks, bpm, ppq), destination);
 }
 
 juce::File FscExporter::writeExportFile (const cloud::JobResult& result, const juce::String& baseName)
 {
-    juce::ignoreUnused (result, baseName);
-    return {};
+    const auto destination = DragExport::exportFileFor (baseName, extension);
+
+    if (! writeToFile (result.midi.tracks, result.analysis.bpm, destination))
+        return {};
+
+    return destination;
 }
 
 } // namespace snapplay::exporting
