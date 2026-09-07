@@ -69,7 +69,9 @@ def is_available() -> bool:
 def require_extras() -> None:
     """Raise :class:`ImportError` with an install hint when the extras are missing."""
     if not is_available():
-        raise ImportError(f"Basic Pitch transcription needs basic-pitch and onnxruntime; {INSTALL_HINT}")
+        raise ImportError(
+            f"Basic Pitch transcription needs basic-pitch and onnxruntime; {INSTALL_HINT}"
+        )
 
 
 def _import_extras() -> tuple[Any, Any, Any]:
@@ -111,9 +113,8 @@ def load_model() -> LoadedTranscriber:
             providers = ("basic-pitch",)
         else:
             model = model_cls(path)
-            if path.endswith(".onnx") and type(getattr(model, "model", None)).__name__ == (
-                "InferenceSession"
-            ):
+            session = getattr(model, "model", None)
+            if path.endswith(".onnx") and isinstance(session, ort.InferenceSession):
                 # Basic Pitch builds a CPU-only session; swap in one with GPU providers
                 # so its own predict() runs the same graph on the accelerator.
                 model.model = _session(ort, path)

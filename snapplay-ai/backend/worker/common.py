@@ -137,12 +137,14 @@ class ProgressReporter:
         jobs: JobsService,
         job_id: UUID,
         min_step: float = PROGRESS_MIN_STEP,
+        initial: tuple[str, float] | None = None,
     ) -> None:
         self._loop = loop
         self._jobs = jobs
         self._job_id = job_id
         self._min_step = min_step
-        self._last: tuple[str, float] | None = None
+        # The (stage, fraction) already persisted by the caller; not sent a second time.
+        self._last = initial
         self._pending: set[Future[None]] = set()
         self._guard = threading.Lock()
         self._order = asyncio.Lock()
@@ -214,7 +216,9 @@ async def load_audio(
         return await download_url(url)
     if spec.input_key:
         return await storage.download_bytes(spec.input_key)
-    raise ValueError("job payload carries no audio (audio_bytes, audio_base64, audio_url, input_key)")
+    raise ValueError(
+        "job payload carries no audio (audio_bytes, audio_base64, audio_url, input_key)"
+    )
 
 
 async def download_url(url: str) -> bytes:
@@ -288,8 +292,9 @@ async def execute_job(
         if not spec.input_key:
             raise ValueError("job has neither input bytes nor an input_key")
         audio_bytes = await storage.download_bytes(spec.input_key)
-    reporter = ProgressReporter(asyncio.get_running_loop(), jobs, spec.job_id)
-    reporter._last = (STAGE_SEPARATE, 0.0)
+    reporter = ProgressReporter(
+        asyncio.get_running_loop(), jobs, spec.job_id, initial=(STAGE_SEPARATE, 0.0)
+    )
     result = await asyncio.to_thread(run, audio_bytes, spec.options, reporter)
     await reporter.drain()
     job_result = await publish_result(storage, settings, spec, result)

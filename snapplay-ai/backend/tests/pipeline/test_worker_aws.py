@@ -201,4 +201,9 @@ async def test_progress_reporter_coalesces_and_orders() -> None:
         )]
     )
     await reporter.drain()
-    assert jobs.progress == [("separate", 0.0), ("separate", 0.2), ("transcribe", 0.21), ("done", 1.0)]
+    assert jobs.progress == [
+        ("separate", 0.0),
+        ("separate", 0.2),
+        ("transcribe", 0.21),
+        ("done", 1.0),
+    ]

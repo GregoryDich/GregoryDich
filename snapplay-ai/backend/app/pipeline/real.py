@@ -34,7 +34,14 @@ from app.pipeline.analysis import (
     stft_magnitude,
     suggest_adsr,
 )
-from app.pipeline.audio_io import decode_audio, match_channels, peak_db, rms_db, to_stereo, wav_bytes
+from app.pipeline.audio_io import (
+    decode_audio,
+    match_channels,
+    peak_db,
+    rms_db,
+    to_stereo,
+    wav_bytes,
+)
 from app.pipeline.base import (
     STAGE_ANALYZE,
     STAGE_DONE,
