@@ -1059,6 +1059,7 @@ class MemoryPurchasesService:
         cancelled_at: datetime | None,
         raw: dict[str, Any],
     ) -> SubscriptionRecord:
+        del raw  # the memory backend keeps no provider payloads
         return self._store.upsert_subscription(
             user_id,
             provider,

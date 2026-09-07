@@ -335,6 +335,7 @@ async def _apply(services: Services, event: WebhookEvent) -> None:
             cancelled_at=(
                 datetime.now(UTC) if event.subscription_status == "cancelled" else None
             ),
+            raw=event.payload,
         )
         await services.users.set_plan(
             user_id,
