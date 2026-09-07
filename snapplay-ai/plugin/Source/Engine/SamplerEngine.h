@@ -20,6 +20,7 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <vector>
 
 namespace snapplay::engine
 {
@@ -91,10 +92,16 @@ private:
     std::atomic<int> loadGeneration { 0 };
     std::atomic<int> loadsInFlight { 0 };
 
-    /** Previously installed sounds, kept until the next install so their last reference is
-        released on the message thread, never on the audio thread. */
-    std::shared_ptr<const StemSound> retiredStem;
-    std::shared_ptr<const DrumKit> retiredKit;
+    /** Message thread: parks `sound` in `retired` and drops every entry that no voice still
+        references, so the last reference to a retired sound is always released here and
+        never on the audio thread. */
+    template <typename T>
+    static void retire (std::vector<std::shared_ptr<const T>>& retired, std::shared_ptr<const T> sound);
+
+    /** Previously installed sounds, kept alive until no voice references them any more.
+        Bounded by the voice count: a sound is dropped as soon as this is its only owner. */
+    std::vector<std::shared_ptr<const StemSound>> retiredStems;
+    std::vector<std::shared_ptr<const DrumKit>> retiredKits;
 
     double currentSampleRate = 44100.0;
     int currentBlockSize = 512;

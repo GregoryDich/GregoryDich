@@ -8,10 +8,8 @@ ScaleLockProcessor::ScaleLockProcessor()
     reset();
 }
 
-void ScaleLockProcessor::prepare (int maximumEvents)
+void ScaleLockProcessor::prepare()
 {
-    // 4-byte position + 2-byte size + up to 3 data bytes per channel message, plus slack.
-    scratch.ensureSize (static_cast<size_t> (juce::jmax (1, maximumEvents)) * 12u);
     reset();
 }
 
@@ -34,51 +32,42 @@ void ScaleLockProcessor::process (juce::MidiBuffer& midi)
 
     const auto mask = activeMask.load (std::memory_order_acquire);
 
-    // Events are rebuilt into the scratch buffer and swapped back, so no event is copied and
-    // neither buffer allocates once both have grown to a block's worth of storage. clear()
-    // keeps the underlying capacity.
-    scratch.clear();
-
+    // Snapping only rewrites the note-number byte of an existing message, so the events are
+    // edited where they lie: no second buffer, no copying, no allocation, and every event
+    // keeps its order and timestamp (including negative sample positions).
     for (const auto metadata : midi)
     {
+        if (metadata.numBytes != 3)
+            continue;
+
         const auto* data = metadata.data;
+        const int status = data[0] & 0xF0;
+        const auto channel = static_cast<size_t> (data[0] & 0x0F);
+        const auto note = static_cast<size_t> (data[1] & 0x7F);
+        const int value = data[2] & 0x7F;
+        const bool noteOn = status == 0x90 && value > 0;
+        const bool noteOff = status == 0x80 || (status == 0x90 && value == 0);
+        const bool aftertouch = status == 0xA0;
 
-        if (metadata.numBytes == 3)
-        {
-            const int status = data[0] & 0xF0;
-            const auto channel = static_cast<size_t> (data[0] & 0x0F);
-            const auto note = static_cast<size_t> (data[1] & 0x7F);
-            const int value = data[2] & 0x7F;
-            const bool noteOn = status == 0x90 && value > 0;
-            const bool noteOff = status == 0x80 || (status == 0x90 && value == 0);
-            const bool aftertouch = status == 0xA0;
+        if (! (noteOn || noteOff || aftertouch))
+            continue;
 
-            if (noteOn || noteOff || aftertouch)
-            {
-                auto& held = heldPitch[channel][note];
+        auto& held = heldPitch[channel][note];
 
-                // A held note keeps its pitch for retriggers, note-off and aftertouch even if
-                // the scale changed meanwhile; anything else follows the current mask.
-                const int pitch = held != notHeld ? static_cast<int> (held)
-                                                  : core::snapToMask (static_cast<int> (note), mask);
+        // A held note keeps its pitch for retriggers, note-off and aftertouch even if the
+        // scale changed meanwhile; anything else follows the current mask.
+        const int pitch = held != notHeld ? static_cast<int> (held)
+                                          : core::snapToMask (static_cast<int> (note), mask);
 
-                if (noteOn)
-                    held = static_cast<std::int8_t> (pitch);
-                else if (noteOff)
-                    held = notHeld;
+        if (noteOn)
+            held = static_cast<std::int8_t> (pitch);
+        else if (noteOff)
+            held = notHeld;
 
-                const juce::uint8 message[3] = { data[0], static_cast<juce::uint8> (pitch), data[2] };
-                scratch.addEvent (message, 3, metadata.samplePosition);
-                continue;
-            }
-        }
-
-        scratch.addEvent (data, metadata.numBytes, metadata.samplePosition);
+        // The buffer itself is non-const; the iterator is the only thing that adds the
+        // qualifier. Writing back one byte of an equally sized message never moves storage.
+        const_cast<juce::uint8*> (data)[1] = static_cast<juce::uint8> (pitch);
     }
-
-    // Swapping preserves every event, its order and its timestamp exactly - including any at a
-    // negative sample position, which addEvents (from sample 0) would discard.
-    midi.swapWith (scratch);
 }
 
 void ScaleLockProcessor::reset() noexcept

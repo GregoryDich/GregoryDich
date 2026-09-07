@@ -80,6 +80,9 @@ public:
     void releaseResources() override;
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     void processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) override;
+    /** Keeps the inherited double-precision overload visible; the plugin only ever runs in
+        single precision (supportsDoublePrecisionProcessing() is false). */
+    using juce::AudioProcessor::processBlock;
 
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; }

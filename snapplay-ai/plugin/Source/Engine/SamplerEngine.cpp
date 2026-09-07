@@ -1,5 +1,6 @@
 #include "Engine/SamplerEngine.h"
 
+#include <algorithm>
 #include <exception>
 
 namespace snapplay::engine
@@ -282,16 +283,35 @@ void SamplerEngine::startLoad (std::function<std::pair<bool, juce::String> (int)
     loadPool.addJob (new LoadJob (*this, generation, std::move (work), std::move (onDone)), true);
 }
 
+template <typename T>
+void SamplerEngine::retire (std::vector<std::shared_ptr<const T>>& retired, std::shared_ptr<const T> sound)
+{
+    if (sound != nullptr)
+        retired.push_back (std::move (sound));
+
+    // A retired sound is never handed out again, so the audio thread can only drop
+    // references to it. use_count() == 1 therefore means this vector is the last owner and
+    // the deallocation happens here, on the message thread.
+    const auto unreferenced = [] (const std::shared_ptr<const T>& parked)
+    {
+        return parked.use_count() == 1;
+    };
+
+    retired.erase (std::remove_if (retired.begin(), retired.end(), unreferenced), retired.end());
+}
+
 void SamplerEngine::installStemInternal (std::shared_ptr<const StemSound> sound)
 {
-    retiredStem = activeSound->getStem();
+    auto previous = activeSound->getStem();
     activeSound->setStem (std::move (sound));
+    retire (retiredStems, std::move (previous));
 }
 
 void SamplerEngine::installDrumKitInternal (std::shared_ptr<const DrumKit> kit)
 {
-    retiredKit = activeSound->getDrumKit();
+    auto previous = activeSound->getDrumKit();
     activeSound->setDrumKit (std::move (kit));
+    retire (retiredKits, std::move (previous));
 }
 
 } // namespace snapplay::engine

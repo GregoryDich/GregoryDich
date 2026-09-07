@@ -28,10 +28,13 @@ namespace detail
 /** True when `index` starts a new half-cycle: the sample is zero or its sign differs from the previous one. */
 inline bool isZeroCrossing (const float* samples, int index) noexcept
 {
-    if (samples[index] == 0.0f)
+    const float current = samples[index];
+
+    // Exact zero, written as two ordered comparisons so -Wfloat-equal stays quiet.
+    if (! (current < 0.0f) && ! (current > 0.0f))
         return true;
 
-    return index > 0 && ((samples[index - 1] < 0.0f) != (samples[index] < 0.0f));
+    return index > 0 && ((samples[index - 1] < 0.0f) != (current < 0.0f));
 }
 
 /** Nearest crossing at or before `from` within `maxSearch` samples, or -1. */

@@ -5,9 +5,9 @@
  *
  * The message thread selects the mode/root/detected scale; the active pitch-class set is
  * published to the audio thread as one atomic 12-bit mask. process() rewrites note-ons to
- * the snapped pitch and remembers the mapping per channel so the matching note-off uses
- * the same pitch even if the mode changed while the note was held. Allocation-free after
- * prepare().
+ * the snapped pitch in place and remembers the mapping per channel so the matching
+ * note-off uses the same pitch even if the mode changed while the note was held. It never
+ * allocates: only the note-number byte of an existing message changes.
  */
 
 #include <JuceHeader.h>
@@ -28,8 +28,9 @@ class ScaleLockProcessor
 public:
     ScaleLockProcessor();
 
-    /** Reserves the scratch buffer for `maximumEvents` per block and clears held notes. */
-    void prepare (int maximumEvents = 1024);
+    /** Clears the held-note map; call from prepareToPlay. process() needs no per-block
+        storage, so there is nothing else to prepare. */
+    void prepare();
 
     //==============================================================================
     /** Message thread: installs `analysis.key.scale_pitch_classes`. */
@@ -57,7 +58,6 @@ private:
     core::ScaleLock model;                                     ///< message thread only
     std::atomic<std::uint16_t> activeMask { 0 };
     std::array<std::array<std::int8_t, 128>, 16> heldPitch;   ///< [channel-1][originalNote] = snapped pitch or notHeld
-    juce::MidiBuffer scratch;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ScaleLockProcessor)
 };

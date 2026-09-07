@@ -7,8 +7,9 @@
  * Handoff design: the synthesiser's sound list never changes after construction. Loading
  * publishes a new StemSound / DrumKit into ActiveSound with an atomic shared_ptr store;
  * voices take a shared_ptr copy at note-on (atomic load, no allocation) and drop it at
- * note-off. SamplerEngine keeps the previously installed sound alive until the next
- * install so the final reference is never released on the audio thread.
+ * note-off. SamplerEngine parks every superseded sound in its retirement list and only
+ * drops it once no voice references it any more, so the final reference — and the
+ * deallocation that comes with it — is always released on the message thread.
  */
 
 #include <JuceHeader.h>
@@ -82,6 +83,9 @@ public:
     void pitchWheelMoved (int newPitchWheelValue) override;
     void controllerMoved (int controllerNumber, int newControllerValue) override;
     void renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples) override;
+    /** Keeps the inherited double-precision overload visible (unused: the synthesiser only
+        ever renders single precision here). */
+    using juce::SynthesiserVoice::renderNextBlock;
     void setCurrentPlaybackSampleRate (double newRate) override;
 
     /** Pitch-bend range applied to the wheel, in semitones (default 2). */
