@@ -178,28 +178,34 @@ def check_fsc(path: Path, fixture: dict[str, Any]) -> tuple[int, str]:
     parser = "raw reader"
     try:
         import pyflp
-        from pyflp.pattern import PatternID
-        from pyflp.project import FileFormat
+        from pyflp._version import version as pyflp_version
+        from pyflp.pattern import NotesEvent, PatternID
+        from pyflp.project import VALID_PPQS, FileFormat, ProjectID
     except ImportError:
         return len(raw_records), parser
 
+    # Cross-check the ids, the format marker and the PPQ against pyflp's own constants.
+    check(int(ProjectID.FLVersion) == FL_VERSION_EVENT, "pyflp FLVersion id changed")
+    check(int(PatternID.Notes) == PATTERN_NOTES_EVENT, "pyflp Notes id changed")
+    check(fmt == int(FileFormat.Score), f"format {fmt:#x} is not pyflp's FileFormat.Score")
+    check(ppq in VALID_PPQS, f"ppq {ppq} is not one of pyflp's VALID_PPQS")
+    check(NOTE_RECORD.size == NotesEvent.STRUCT.subcon.sizeof(),
+          f"note record size {NOTE_RECORD.size} != pyflp's {NotesEvent.STRUCT.subcon.sizeof()}")
+
+    # pyflp.parse() builds every event through EventEnum(id), which raises on a memberless enum
+    # under Python 3.11, so decode the note payload with pyflp's own construct STRUCT instead.
     try:
-        project = pyflp.parse(path)
-    except Exception as exc:  # noqa: BLE001 - a rejected bare score falls back to the raw reader
-        print(f"  pyflp rejected the score ({type(exc).__name__}: {exc}); raw reader result stands")
-        return len(raw_records), parser
+        pyflp.parse(path)
+        parser = f"pyflp {pyflp_version} (full parse)"
+    except Exception as exc:  # noqa: BLE001
+        parser = f"pyflp {pyflp_version} NotesEvent.STRUCT"
+        print(f"  note: pyflp.parse() is unusable here ({type(exc).__name__}: {exc});"
+              f" decoding the PatternNotes payload with pyflp's own STRUCT")
 
-    parser = f"pyflp {getattr(pyflp, '__version__', '?')}"
-    check(project.format == FileFormat.Score, f"pyflp format {project.format!r}")
-    check(project.ppq == fixture["fsc_ppq"], f"pyflp ppq {project.ppq}")
-    check(project.channel_count == len(fixture["tracks"]), f"pyflp channel_count {project.channel_count}")
-    version = tuple(project.version)
-    check(version == tuple(int(p) for p in fixture["fl_version"].split(".")), f"pyflp version {version}")
-
-    note_events = [ie.e for ie in project.events.lst if ie.e.id == PatternID.Notes]
-    check(len(note_events) == 1, f"pyflp found {len(note_events)} PatternNotes events")
+    decoded = NotesEvent.STRUCT.parse(payload)
+    check(len(decoded) == len(expected), f"pyflp decoded {len(decoded)} records, expected {len(expected)}")
     pyflp_records = [{field: int(item[field if field != "u1" else "_u1"]) for field in NOTE_FIELDS}
-                     for item in note_events[0]]
+                     for item in decoded]
     check(pyflp_records == expected, f"pyflp note records differ\n  got      {pyflp_records}\n  expected {expected}")
     return len(raw_records), parser
 

@@ -227,6 +227,8 @@ void StemVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int sta
         position = static_cast<double> (readPosition + used);
 
         const bool smoothing = cutoffSmoothed.isSmoothing() || resonanceSmoothed.isSmoothing();
+        float* const channelData[2] = { scratch.getWritePointer (0),
+                                        sourceChannels > 1 ? scratch.getWritePointer (1) : nullptr };
 
         for (int i = 0; i < chunk; ++i)
         {
@@ -240,7 +242,7 @@ void StemVoice::renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int sta
 
             for (int channel = 0; channel < sourceChannels; ++channel)
             {
-                auto* samples = scratch.getWritePointer (channel);
+                auto* samples = channelData[channel];
                 samples[i] = filter.processSample (channel, samples[i] * envelopeGain);
             }
         }
