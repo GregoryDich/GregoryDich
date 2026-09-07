@@ -248,6 +248,14 @@ begin
   assert v_count >= 1, 'service_role cannot read webhook_events';
   assert public.get_balance(v_a) = row(53, 1, 52)::public.credit_balance, 'service_role get_balance';
   perform public.expire_credits();
+  -- the cron entry point is the one-argument signature 0003_rls.sql grants; the two-argument
+  -- form behind it stays internal, so the queued grace comes from the wrapper
+  perform public.reap_stale_jobs(180);
+  begin
+    perform public.reap_stale_jobs(180, 1800);
+    raise exception 'the two-argument reaper is executable by service_role';
+  exception when insufficient_privilege then null;
+  end;
   perform public.grant_credits(v_a, 1, 'service', 'service:1');
   assert public.get_balance(v_a) = row(54, 1, 53)::public.credit_balance, 'service_role grant';
   begin

@@ -5,8 +5,8 @@ playable instrument. Drop a loop, a vocal take or a sampled record into the plug
 a GPU backend separates it into **bass / drums / synth / vocals** stems, transcribes
 them to MIDI, and detects key, tempo and downbeats. The plugin then maps the stems onto
 the keyboard — pitched stems become chromatic, scale-snapped instruments; drums become
-a sliced kit — and lets you drag the MIDI, an FL Studio `.fsc` score, or the stems
-themselves straight back into your DAW.
+a sliced kit — and lets you drag the MIDI or an FL Studio `.fsc` score straight back
+into your DAW.
 
 The product is a hybrid: everything that must feel instant (playing, scale snapping,
 envelopes, drag-out, export) runs locally in the plugin; everything that needs a GPU
@@ -22,8 +22,9 @@ credits. The binding interface between the two halves is
    job and only charged when the job succeeds.
 2. **Play.** Within a couple of seconds of server time (plus your upload and download),
    the stems land on the keyboard: the detected key sets Scale-Snap, the analysed
-   envelope sets ADSR, drum transients become slices from C1 upward. Play it, then drag
-   `.mid`, `.fsc` or the stem files out of the plugin into the DAW timeline.
+   envelope sets ADSR, drum transients become slices from note 36 upward. Play it, then
+   drag `.mid` or `.fsc` out of the plugin into the DAW timeline (the stem WAVs are kept
+   in a local cache, not offered as a drag).
 
 Pricing is credit-based: 3 free credits at signup, then a 50-credit pack for $9 or a
 60-credit monthly subscription for $7.99 (see [`docs/ECONOMICS.md`](docs/ECONOMICS.md)).

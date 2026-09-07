@@ -6,8 +6,8 @@ event's idempotency key in ``webhook_events`` (an already-processed event answer
 which grants the plan's credits and writes the affiliate commission under that same key,
 so a replay can neither double-grant nor double-pay (§12, §13). One sale reaches
 ``record_purchase`` through exactly one event (``purchase_grants_credits``); the others
-only move subscription and plan state. An application that fails leaves the claim
-releasable, so the provider's retry runs it again instead of being answered "duplicate".
+only move subscription and plan state. An event whose application fails stays claimable,
+so the provider's retry runs it again instead of being answered "duplicate".
 
 Subscription renewals grant perishable credits: the grant is issued here with
 ``expires_at`` = the end of the billing period, under the webhook's idempotency key, so
@@ -87,12 +87,11 @@ def _digests_match(expected: str, provided: str) -> bool:
     )
 
 
-def _require_secret(secret: str) -> str:
+def _require_secret(secret: str) -> None:
     """An unset provider secret must never be used as an HMAC key: with ``""`` anyone can
     sign their own events, so the endpoint rejects the delivery instead (§4)."""
     if not secret:
         raise ApiException(INVALID_SIGNATURE)
-    return secret
 
 
 def verify_lemonsqueezy(raw: bytes, header: str | None, secret: str) -> None:
@@ -319,7 +318,7 @@ async def resolve_plan(services: Services, event: WebhookEvent) -> PlanRecord:
 async def process_event(services: Services, event: WebhookEvent) -> WebhookAck:
     """Claim the event, apply it, then close the claim.
 
-    ``mark_processed`` with an error keeps the row but leaves it claimable again, so the
+    ``mark_processed`` with an error keeps the row and leaves it claimable, so the
     provider's retry of a delivery that failed halfway re-runs it — a paid event is never
     answered "duplicate" without having been applied. Only an event that was applied
     without error is a duplicate.

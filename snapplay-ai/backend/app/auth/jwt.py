@@ -5,9 +5,9 @@ The accepted algorithm set is fixed by configuration — ``HS256`` with
 ``alg`` header is only ever compared against it, never used to pick a key. JWKS keys are
 cached in-process for an hour; an unknown ``kid`` triggers at most one refetch per minute.
 
-The JWKS fetch is blocking urllib under a lock, so :meth:`JwtVerifier.verify_async` --
-the entry point of the async auth path -- runs it in a worker thread with a short
-timeout: a slow or hanging JWKS endpoint may cost one thread, never the event loop.
+The JWKS fetch is blocking urllib under a lock, so :meth:`JwtVerifier.verify_async` —
+the single entry point — runs it in a worker thread with a short timeout: a slow or
+hanging JWKS endpoint may cost one thread, never the event loop.
 """
 
 from __future__ import annotations
@@ -61,18 +61,12 @@ class JwtVerifier:
     def configured(self) -> bool:
         return bool(self._algorithms)
 
-    def verify(self, token: str) -> dict[str, Any]:
+    async def verify_async(self, token: str) -> dict[str, Any]:
         """Return the claims of a valid token or raise ``unauthorized`` / ``token_expired``.
 
-        Blocking: on a JWKS deployment an unknown ``kid`` fetches the key set inline.
-        Async callers use :meth:`verify_async`.
+        On a JWKS deployment an unknown ``kid`` has to fetch the key set, which PyJWT
+        does with blocking urllib, so that step runs in a worker thread.
         """
-        kid = self._checked_kid(token)
-        key = self._secret if self._secret is not None else self._signing_key(kid)
-        return self._decode(token, key)
-
-    async def verify_async(self, token: str) -> dict[str, Any]:
-        """:meth:`verify` with the JWKS fetch handed to a worker thread."""
         kid = self._checked_kid(token)
         if self._secret is not None:
             return self._decode(token, self._secret)

@@ -134,7 +134,8 @@ the mutating ones; `get_balance` is also granted to `authenticated` and refuses 
 | `complete_job(p_job_id, p_result)` | `jobs` | captures; adds `job_id`, `credits_charged`, `balance_after`, `expires_at` to the result |
 | `fail_job(p_job_id, p_error)` | `jobs` | releases |
 | `cancel_job(p_job_id, p_user_id)` | `jobs` | queued only, else P0409 |
-| `reap_stale_jobs(p_timeout_seconds)` | `integer` | fails running jobs past the timeout with `worker_timeout` |
+| `reap_stale_jobs(p_timeout_seconds)` | `integer` | cron entry point (the only signature `service_role` may execute); delegates to the two-argument form with `p_queued_timeout_seconds = p_timeout_seconds * 10` |
+| `reap_stale_jobs(p_timeout_seconds, p_queued_timeout_seconds)` | `integer` | fails `running` jobs past the first timeout **and** `queued` jobs never picked up past the second, each with `worker_timeout`, releasing their reservations; rows are taken `for update skip locked` so two reapers cannot fight |
 | `record_purchase(p_user_id, p_provider, p_provider_order_id, p_plan_id, p_amount_cents, p_net_cents, p_referral_code, p_raw, p_idempotency_key)` | `purchases` | purchase + grant + commission, replay-safe |
 | `create_api_key(p_user_id, p_name)` | `(id, prefix, plaintext)` | plaintext returned once |
 | `authenticate_api_key(p_key_hash)` | `uuid` | owner or null; stamps `last_used_at` |

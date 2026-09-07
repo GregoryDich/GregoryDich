@@ -157,7 +157,9 @@ Two consequences of the settled policy in contract §13:
   `record_purchase` and §13, not just a spreadsheet.
 * **Voids.** A refund or chargeback must set the commission to `void` before payout;
   a payout hold longer than the card-network chargeback window (typically 30 days or
-  more) avoids clawbacks. The `commission_status` enum is `pending | paid | void`.
+  more) avoids clawbacks. The `commission_status` enum is `pending | paid | void`, but
+  **nothing writes `paid` or `void` automatically** — no refund webhook is handled, and
+  payouts are manual. Budget for that operational work before recruiting affiliates.
 
 ## 7. Fixed floor: always-on GPU vs scale-to-zero
 

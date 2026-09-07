@@ -227,6 +227,9 @@ under a `SnapPlay` folder in the OS's application-data location.
 immutable `StemSound` built off the audio thread and published through a single
 `std::atomic<std::shared_ptr<StemSound>>` per slot; the audio thread `load`s it once per
 block, and retired pointers are drained on the message thread so the last reference never
-drops in the audio callback. Parameters are `std::atomic` values read once per block, and
-progress/errors reach the UI through a `juce::AbstractFifo` of small POD events.
+drops in the audio callback. Parameters are `std::atomic` values read once per block. Nothing calls into the UI from
+a worker thread either: `ApiClient` delivers every completion through
+`juce::MessageManager::callAsync`, `JobClient` publishes state changes as a
+`juce::ChangeBroadcaster`, the processor coalesces stem reloads with a
+`juce::AsyncUpdater`, and the editor refreshes on a `juce::Timer`.
 [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) §7 is the long version.

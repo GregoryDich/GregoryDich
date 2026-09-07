@@ -214,9 +214,9 @@ class SupabaseJobsService:
             raise ValueError("create_job reserves exactly one credit per job")
         # create_job inserts the job and reserves the credit in one transaction, so a
         # replay without a key would charge twice and strand the first job in `queued`
-        # forever. Every call therefore carries a key -- the client's when it sent one,
-        # otherwise a fresh one -- which makes the RPC replayable (a repeat returns the
-        # job the first attempt created).
+        # forever. Every call therefore carries a key — the client's when it sent one,
+        # otherwise a fresh one — which makes the RPC replayable: a repeat returns the
+        # job the first attempt created.
         idempotency_key = options.idempotency_key or f"{SERVER_IDEMPOTENCY_PREFIX}{uuid4()}"
         row = await self._client.rpc(
             "create_job",

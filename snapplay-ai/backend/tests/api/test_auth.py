@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import hashlib
 import hmac
 import json
 import time
 from collections.abc import Callable
+from typing import Any
 from uuid import uuid4
 
 import httpx
@@ -15,11 +17,13 @@ import jwt
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.auth.jwt import JwtVerifier
+from app.auth.jwt import JWKS_TIMEOUT_SECONDS, JwtVerifier
 from app.config import Settings
 from app.errors import ApiException
+from app.middleware.rate_limit import AUTH_ATTEMPTS_PER_MIN, auth_bucket_key
 from app.services.factory import Services
 from tests.conftest import TEST_JWT_SECRET
 
@@ -61,11 +65,11 @@ def test_wrong_secret_is_rejected(client: TestClient, mint_jwt: Callable[..., st
     assert client.get("/v1/me", headers={"Authorization": f"Bearer {token}"}).status_code == 401
 
 
-def test_alg_none_is_rejected(settings: Settings) -> None:
+async def test_alg_none_is_rejected(settings: Settings) -> None:
     verifier = JwtVerifier(settings)
     unsigned = jwt.encode({"sub": str(uuid4()), "aud": "authenticated"}, key="", algorithm="none")
     with pytest.raises(ApiException) as info:
-        verifier.verify(unsigned)
+        await verifier.verify_async(unsigned)
     assert info.value.status == 401 and info.value.code == "unauthorized"
 
 
@@ -94,7 +98,7 @@ def _jwks_settings(settings: Settings) -> Settings:
     )
 
 
-def test_rs256_token_is_rejected_by_an_hs256_deployment(settings: Settings) -> None:
+async def test_rs256_token_is_rejected_by_an_hs256_deployment(settings: Settings) -> None:
     """Algorithm confusion: an RS256 token must not be verified with the HMAC secret."""
     verifier = JwtVerifier(settings)
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -109,11 +113,11 @@ def test_rs256_token_is_rejected_by_an_hs256_deployment(settings: Settings) -> N
         algorithm="RS256",
     )
     with pytest.raises(ApiException) as info:
-        verifier.verify(token)
+        await verifier.verify_async(token)
     assert info.value.code == "unauthorized"
 
 
-def test_hs256_token_forged_with_the_public_key_is_rejected(settings: Settings) -> None:
+async def test_hs256_token_forged_with_the_public_key_is_rejected(settings: Settings) -> None:
     """The classic HS/RS confusion attack against a JWKS deployment."""
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     public_pem = key.public_key().public_bytes(
@@ -125,7 +129,7 @@ def test_hs256_token_forged_with_the_public_key_is_rejected(settings: Settings) 
         {"sub": str(uuid4()), "aud": "authenticated", "exp": int(time.time()) + 60}, public_pem
     )
     with pytest.raises(ApiException) as info:
-        verifier.verify(forged)
+        await verifier.verify_async(forged)
     assert info.value.code == "unauthorized"
 
 
@@ -154,7 +158,7 @@ async def test_jwks_deployment_pins_algorithms(settings: Settings) -> None:
     verifier = JwtVerifier(_jwks_settings(settings))
     token = jwt.encode({"sub": str(uuid4()), "aud": "authenticated"}, TEST_JWT_SECRET, "HS256")
     with pytest.raises(ApiException):
-        verifier.verify(token)
+        await verifier.verify_async(token)
 
 
 async def test_auth_token_proxies_gotrue(
@@ -195,3 +199,137 @@ async def test_auth_refresh_maps_provider_401(
     response = client.post("/v1/auth/refresh", json={"refresh_token": "stale"})
     assert response.status_code == 401
     assert response.json()["error"]["code"] == "unauthorized"
+
+
+def test_a_token_without_an_issuer_is_rejected(client: TestClient) -> None:
+    """L4: ``iss`` was only checked when present, so a token minted by another Supabase
+    project — or by anyone who learned this project's secret name — passed by omitting it."""
+    token = jwt.encode(
+        {
+            "sub": str(uuid4()),
+            "aud": "authenticated",
+            "exp": int(time.time()) + 60,
+            "email": "player@example.test",
+        },
+        TEST_JWT_SECRET,
+        algorithm="HS256",
+    )
+    response = client.get("/v1/me", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "unauthorized"
+
+
+def test_a_token_from_another_issuer_is_rejected(
+    client: TestClient, mint_jwt: Callable[..., str]
+) -> None:
+    token = mint_jwt(iss="https://evil.test/auth/v1")
+    assert client.get("/v1/me", headers={"Authorization": f"Bearer {token}"}).status_code == 401
+
+
+async def test_jwks_fetch_does_not_block_the_event_loop(settings: Settings) -> None:
+    """L4: ``get_jwk_set`` is synchronous urllib under a lock, so calling it from the
+    async auth path froze the whole worker for as long as the JWKS endpoint took."""
+    verifier = JwtVerifier(_jwks_settings(settings))
+    assert verifier._jwks is not None and verifier._jwks.timeout == JWKS_TIMEOUT_SECONDS
+
+    def slow_signing_key(_: object) -> object:
+        time.sleep(0.3)
+        raise ApiException("unauthorized", message="Signing keys are unavailable.")
+
+    verifier._signing_key = slow_signing_key  # type: ignore[method-assign, assignment]
+    ticks = 0
+
+    async def tick() -> None:
+        nonlocal ticks
+        while True:
+            await asyncio.sleep(0.01)
+            ticks += 1
+
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    pem = key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
+    ).decode()
+    token = jwt.encode(
+        {"sub": str(uuid4()), "aud": "authenticated", "exp": int(time.time()) + 60},
+        pem,
+        algorithm="RS256",
+        headers={"kid": "unknown"},
+    )
+
+    ticker = asyncio.create_task(tick())
+    with pytest.raises(ApiException):
+        await verifier.verify_async(token)
+    ticker.cancel()
+    assert ticks >= 5, "the event loop must keep running while the JWKS fetch blocks"
+
+
+@pytest.fixture
+def reject_credentials(services: Services, monkeypatch: pytest.MonkeyPatch) -> list[dict[str, Any]]:
+    """Count what actually reaches GoTrue, and always answer ``401``."""
+    seen: list[dict[str, Any]] = []
+    assert services.supabase is not None
+
+    async def deny(grant_type: str, payload: dict[str, Any]) -> dict[str, Any]:
+        seen.append({"grant_type": grant_type, **payload})
+        raise ApiException("unauthorized", message="Invalid credentials.")
+
+    monkeypatch.setattr(services.supabase, "auth_grant", deny)
+    return seen
+
+
+def test_password_guessing_is_rate_limited_per_email(
+    client: TestClient, reject_credentials: list[dict[str, Any]]
+) -> None:
+    """M6: neither auth route had any limit, and because the API proxies GoTrue every
+    attempt reached it from this server's address — one shared bucket for every user."""
+    body = {"email": "victim@example.test", "password": "guess"}
+    for _ in range(AUTH_ATTEMPTS_PER_MIN):
+        assert client.post("/v1/auth/token", json=body).status_code == 401
+    limited = client.post("/v1/auth/token", json=body)
+    assert limited.status_code == 429
+    assert limited.json()["error"]["code"] == "rate_limited"
+    assert int(limited.headers["Retry-After"]) >= 1
+    assert len(reject_credentials) == AUTH_ATTEMPTS_PER_MIN, "GoTrue is shielded"
+
+
+def test_one_hammered_account_does_not_lock_the_others_out(
+    client: TestClient, reject_credentials: list[dict[str, Any]]
+) -> None:
+    for _ in range(AUTH_ATTEMPTS_PER_MIN + 5):
+        client.post("/v1/auth/token", json={"email": "victim@example.test", "password": "x"})
+    other = client.post("/v1/auth/token", json={"email": "player@example.test", "password": "x"})
+    assert other.status_code == 401, "the budget is per credential, not one global bucket"
+
+
+def test_the_email_bucket_ignores_case_and_padding(
+    client: TestClient, reject_credentials: list[dict[str, Any]]
+) -> None:
+    for index in range(AUTH_ATTEMPTS_PER_MIN):
+        spelling = " Victim@Example.test " if index % 2 else "victim@example.test"
+        assert client.post("/v1/auth/token", json={"email": spelling, "password": "x"}).status_code
+    assert client.post(
+        "/v1/auth/token", json={"email": "VICTIM@EXAMPLE.TEST", "password": "x"}
+    ).status_code == 429
+
+
+def test_refresh_is_rate_limited_per_token(
+    client: TestClient, reject_credentials: list[dict[str, Any]]
+) -> None:
+    body = {"refresh_token": "stolen-token"}
+    for _ in range(AUTH_ATTEMPTS_PER_MIN):
+        assert client.post("/v1/auth/refresh", json=body).status_code == 401
+    assert client.post("/v1/auth/refresh", json=body).status_code == 429
+    assert client.post(
+        "/v1/auth/refresh", json={"refresh_token": "another"}
+    ).status_code == 401
+
+
+def test_auth_buckets_never_hold_the_submitted_credential(app: FastAPI) -> None:
+    limiter = app.state.rate_limits.auth
+    limiter.acquire(auth_bucket_key("email", "victim@example.test"))
+    limiter.acquire(auth_bucket_key("refresh_token", "s3cret-refresh-token"))
+    keys = list(limiter._buckets)
+    assert all(len(key.split(":", 1)[1]) == 32 for key in keys)
+    assert not any("victim" in key or "s3cret" in key for key in keys)

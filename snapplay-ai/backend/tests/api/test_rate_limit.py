@@ -11,7 +11,13 @@ from fastapi.testclient import TestClient
 from app.auth import Principal
 from app.config import Settings
 from app.errors import ApiException
-from app.middleware.rate_limit import RateLimits, TokenBucketLimiter, enforce
+from app.middleware.rate_limit import (
+    _PRUNE_EVERY,
+    ConcurrencyLimiter,
+    RateLimits,
+    TokenBucketLimiter,
+    enforce,
+)
 from app.services.memory import MemoryStore
 
 
@@ -73,3 +79,53 @@ def test_enforce_raises_the_contract_error(settings: Settings) -> None:
         assert exc.headers["X-RateLimit-Remaining"] == "0"
     else:  # pragma: no cover - the second call must be rejected
         raise AssertionError("expected a rate_limited error")
+
+
+def test_the_bucket_store_is_bounded_by_max_buckets() -> None:
+    """M6: the pre-authentication budgets are keyed on values the caller chooses, so an
+    attacker must not be able to grow the limiter itself."""
+    now = [0.0]
+    limiter = TokenBucketLimiter(1, max_buckets=64, clock=lambda: now[0])
+    for index in range(5_000):
+        limiter.acquire(f"email:{index}")
+        assert len(limiter._buckets) <= 64
+    assert len(limiter._buckets) <= 64
+
+
+def test_pruning_keeps_the_buckets_that_are_still_spending() -> None:
+    now = [0.0]
+    limiter = TokenBucketLimiter(2, max_buckets=4, clock=lambda: now[0])
+    assert limiter.acquire("victim").allowed
+    assert limiter.acquire("victim").allowed
+    assert not limiter.acquire("victim").allowed
+    for index in range(100):
+        limiter.acquire(f"spray:{index}")
+    assert not limiter.acquire("victim").allowed, "an exhausted bucket must survive a flood"
+
+
+def test_a_refilled_bucket_is_forgotten() -> None:
+    now = [0.0]
+    limiter = TokenBucketLimiter(60, clock=lambda: now[0])
+    for index in range(_PRUNE_EVERY):
+        limiter.acquire(f"user:{index}")
+    assert len(limiter._buckets) == _PRUNE_EVERY
+    now[0] += 60.0  # every one of them is back at capacity
+    for _ in range(_PRUNE_EVERY):
+        limiter.acquire("busy")
+    assert list(limiter._buckets) == ["busy"]
+
+
+def test_concurrency_limiter_hands_slots_back() -> None:
+    limiter = ConcurrencyLimiter(max_per_key=2)
+    first = limiter.acquire("user")
+    second = limiter.acquire("user")
+    assert first is not None and second is not None
+    assert limiter.acquire("user") is None
+    assert limiter.acquire("other") is not None, "the cap is per key"
+
+    first.release()
+    first.release()  # idempotent: the stream's finally and its background task both call it
+    assert limiter.held("user") == 1
+    second.release()
+    assert limiter.held("user") == 0
+    assert limiter._held == {"other": 1}, "keys are dropped once nothing is held"

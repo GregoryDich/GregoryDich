@@ -11,7 +11,7 @@ request costs more than one token:
 
 * ``auth`` bounds ``/v1/auth/token`` and ``/v1/auth/refresh`` per submitted credential
   (see :func:`auth_bucket_key`). Its keys come from the request, so the store is capped
-  and evicts least-recently-used buckets rather than growing without limit.
+  rather than allowed to grow without limit.
 * ``streams`` caps how many SSE / WebSocket event streams one principal may hold open
   at once; a stream costs a read token to open but then lives for minutes.
 """
@@ -19,9 +19,9 @@ request costs more than one token:
 from __future__ import annotations
 
 import hashlib
+import heapq
 import math
 import time
-from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Literal
@@ -38,7 +38,7 @@ AuthCredential = Literal["email", "refresh_token"]
 REMAINING_HEADER = "X-RateLimit-Remaining"
 _PRUNE_EVERY = 1024
 MAX_BUCKETS = 100_000
-"""Bucket ceiling per limiter; the least recently used bucket is dropped beyond it."""
+"""Bucket ceiling per limiter; see :meth:`TokenBucketLimiter._prune` for what goes."""
 AUTH_ATTEMPTS_PER_MIN = 10
 """Pre-authentication attempts per credential per minute (docs/SECURITY.md §6)."""
 AUTH_MAX_BUCKETS = 10_000
@@ -46,6 +46,7 @@ AUTH_MAX_BUCKETS = 10_000
 MAX_CONCURRENT_STREAMS = 5
 """Event streams one principal may hold open at once (§2 SSE and WebSocket)."""
 STREAM_RETRY_AFTER_SECONDS = 5
+"""``Retry-After`` on a refused stream: long enough for one to have ended."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,10 +60,12 @@ class TokenBucketLimiter:
     """``per_minute`` tokens of capacity refilled continuously at ``per_minute / 60`` per
     second; one token per request.
 
-    ``max_buckets`` bounds the store: refilled buckets are dropped first (they are
-    indistinguishable from a new one), and if the ceiling still holds, the least
-    recently used bucket goes. Memory therefore cannot be grown without limit by a
-    caller who controls the key, which is the case for the pre-authentication budgets.
+    ``max_buckets`` bounds the store, so a caller who controls the key — as everyone
+    does on the pre-authentication budgets — cannot grow it without limit. Buckets that
+    have refilled are dropped first, since they are indistinguishable from a new one;
+    if the ceiling still holds, the fullest buckets go. Eviction therefore falls on the
+    keys with the most budget left, never on the exhausted bucket of the account an
+    attacker is hammering, which is what they would want to flush.
     """
 
     def __init__(
@@ -80,7 +83,7 @@ class TokenBucketLimiter:
         self.rate = per_minute / 60.0
         self.max_buckets = max_buckets
         self._clock = clock
-        self._buckets: OrderedDict[str, tuple[float, float]] = OrderedDict()
+        self._buckets: dict[str, tuple[float, float]] = {}
         self._calls = 0
 
     def acquire(self, key: str) -> Decision:
@@ -93,22 +96,26 @@ class TokenBucketLimiter:
         else:
             decision = Decision(False, 0, max(1, math.ceil((1.0 - tokens) / self.rate)))
         self._buckets[key] = (tokens, now)
-        self._buckets.move_to_end(key)
         self._calls += 1
         if self._calls % _PRUNE_EVERY == 0 or len(self._buckets) > self.max_buckets:
             self._prune(now)
         return decision
 
     def _prune(self, now: float) -> None:
-        full = [
-            key
+        level = {
+            key: min(self.capacity, tokens + max(now - updated, 0.0) * self.rate)
             for key, (tokens, updated) in self._buckets.items()
-            if tokens + (now - updated) * self.rate >= self.capacity
-        ]
-        for key in full:
+        }
+        for key, tokens in level.items():
+            if tokens >= self.capacity:
+                del self._buckets[key]
+        excess = len(self._buckets) - self.max_buckets
+        if excess <= 0:
+            return
+        # Evict in batches so the cost per request stays amortised, fullest first.
+        batch = excess + max(1, self.max_buckets // 10)
+        for key in heapq.nlargest(batch, self._buckets, key=level.__getitem__):
             del self._buckets[key]
-        while len(self._buckets) > self.max_buckets:
-            self._buckets.popitem(last=False)
 
 
 class StreamSlot:

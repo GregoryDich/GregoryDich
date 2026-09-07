@@ -155,6 +155,74 @@ def test_reap_stale_jobs_releases_the_reservation(store: MemoryStore) -> None:
     assert store.reap_stale_jobs(180) == []
 
 
+def test_reap_stale_jobs_releases_a_job_that_was_never_started(store: MemoryStore) -> None:
+    """§10: a job whose message was lost before ``start_job`` stays queued with its credit
+    reserved forever, permanently lowering the owner's usable balance."""
+    user = uuid4()
+    store.ensure_user(user, "a@b.c")
+    job = store.create_job(user, {}, {}, None)
+    store.jobs[job.id].created_at = datetime.now(UTC) - timedelta(seconds=900)
+    assert store.get_balance(user).model_dump() == {"credits": 3, "reserved": 1, "available": 2}
+
+    # The queued grace is longer than the running timeout, so the running one leaves it.
+    assert store.reap_stale_jobs(180) == []
+    assert store.reap_stale_jobs(180, 600) == [job.id]
+    assert store.jobs[job.id].status == "failed"
+    assert store.jobs[job.id].error == {
+        "code": "worker_timeout",
+        "message": "no completion within 600 seconds",
+    }
+    assert store.get_balance(user).model_dump() == {"credits": 3, "reserved": 0, "available": 3}
+    assert store.reap_stale_jobs(180, 600) == []
+    with pytest.raises(ApiException) as info:
+        store.reap_stale_jobs(180, 0)
+    assert info.value.status == 422
+
+
+def test_expiry_charges_a_spend_only_to_the_grant_that_paid_for_it(
+    store: MemoryStore,
+) -> None:
+    """Two subscription periods, one credit spent in each: counting every later capture
+    against every earlier grant leaves credits behind that were never granted."""
+    user = uuid4()
+    store.ensure_user(user, "a@b.c")
+    store.adjust_credits(user, -3, "test", "drain")  # the signup grant, out of the way
+    period_1 = datetime.now(UTC) - timedelta(days=30)
+    period_2 = datetime.now(UTC) - timedelta(seconds=1)
+
+    store.grant_credits(user, 60, "sub", "sub:1", "Pro Monthly", period_1)
+    first = store.create_job(user, {}, {}, None)
+    store.complete_job(first.id, {})
+    store.grant_credits(user, 60, "sub", "sub:2", "Pro Monthly", period_2)
+    second = store.create_job(user, {}, {}, None)
+    store.complete_job(second.id, {})
+    assert store.get_balance(user).credits == 118
+
+    assert store.expire_credits() == 2
+    assert store.get_balance(user).model_dump() == {"credits": 0, "reserved": 0, "available": 0}
+    expired = sorted(-row.amount for row in store.ledger if row.entry_type == "expire")
+    assert sum(expired) == 118
+
+
+def test_expiry_leaves_a_credit_pack_bought_during_the_period(store: MemoryStore) -> None:
+    """§13: perishable credits are spent first, so heavy spend empties the subscription
+    grant and the pack keeps the rest."""
+    user = uuid4()
+    store.ensure_user(user, "a@b.c")
+    store.adjust_credits(user, -3, "test", "drain")
+    store.grant_credits(
+        user, 10, "sub", "sub:1", "Pro Monthly", datetime.now(UTC) - timedelta(seconds=1)
+    )
+    store.grant_credits(user, 5, "lemonsqueezy:order:1", "pack:1", "50 Credits")
+    for _ in range(12):
+        job = store.create_job(user, {}, {}, None)
+        store.complete_job(job.id, {})
+    assert store.get_balance(user).credits == 3
+
+    assert store.expire_credits() == 1
+    assert store.get_balance(user).credits == 3
+
+
 def test_api_key_hashing_and_revocation(store: MemoryStore) -> None:
     from app.auth.api_keys import hash_api_key
 
@@ -172,6 +240,11 @@ def test_api_key_hashing_and_revocation(store: MemoryStore) -> None:
 
 def test_webhook_event_claim_is_single_use(store: MemoryStore) -> None:
     assert store.claim_webhook_event("k", "paddle", "transaction.completed", {}) is True
+    assert store.claim_webhook_event("k", "paddle", "transaction.completed", {}) is False
+    # A delivery that failed to apply stays claimable, or the paid event is lost.
+    store.mark_webhook_processed("k", "internal_error")
+    assert store.claim_webhook_event("k", "paddle", "transaction.completed", {}) is True
+    store.mark_webhook_processed("k", None)
     assert store.claim_webhook_event("k", "paddle", "transaction.completed", {}) is False
     store.mark_webhook_processed("k", None)
     assert store.webhook_events["k"].processed_at is not None

@@ -210,6 +210,24 @@ begin
   end;
   assert public.get_balance(v_user) = row(3, 2, 1)::public.credit_balance, 'late completion charged';
 
+  -- a job the worker never picked up holds its credit forever unless the reaper releases
+  -- it too; queued jobs wait the longer p_queued_timeout_seconds grace first
+  update public.jobs set created_at = now() - interval '2 hours' where id = v_queued.id;
+  assert public.reap_stale_jobs(3600) = 0, 'queued job reaped before its own grace';
+  assert public.reap_stale_jobs(3600, 600) = 1, 'queued job was not reaped';
+  select * into v_job from public.jobs where id = v_queued.id;
+  assert v_job.status = 'failed' and v_job.error ->> 'code' = 'worker_timeout'
+     and v_job.error ->> 'message' = 'no completion within 600 seconds'
+     and v_job.finished_at is not null, 'reaped queued job state';
+  assert public.get_balance(v_user) = row(3, 1, 2)::public.credit_balance,
+    'reaping the queued job did not release its credit';
+  assert public.reap_stale_jobs(3600, 600) = 0, 'queued reaper is not idempotent';
+  begin
+    perform public.reap_stale_jobs(3600, 0);
+    raise exception 'zero queued timeout accepted';
+  exception when sqlstate '22023' then null;
+  end;
+
   begin
     perform public.reap_stale_jobs(0);
     raise exception 'zero timeout accepted';

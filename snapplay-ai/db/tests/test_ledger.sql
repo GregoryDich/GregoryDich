@@ -205,6 +205,8 @@ begin
   assert public.expire_credits() = 1, 'only the due grant expires';
   v_bal := public.get_balance(v_user);
   assert v_bal = row(57, 0, 57)::public.credit_balance, format('after partial expiry %s', v_bal);
+  -- the spend belonged to that grant alone: the pack bought before it keeps its credits
+  assert public.perishable_pool(v_user) = 7, 'perishable pool after partial expiry';
 
   -- reserved credits are never expired
   perform public.grant_credits(v_user, 5, 'promo', 'grant:k5', null, now() - interval '1 second');
@@ -219,6 +221,69 @@ begin
 
   -- get_balance for an account that does not exist is empty, not an error
   assert public.get_balance(gen_random_uuid()) = row(0, 0, 0)::public.credit_balance, 'missing account balance';
+
+  -- an API caller without a subject reads nothing but its own account: auth.uid() is null
+  -- there, and null must not pass the check as "no caller at all"
+  begin
+    execute 'set local role authenticated';
+    perform set_config('request.jwt.claim.sub', '', true);
+    begin
+      perform public.get_balance(v_user);
+      execute 'reset role';
+      raise exception 'get_balance without a JWT subject read another account';
+    exception when sqlstate '42501' then
+      assert sqlerrm = 'forbidden', sqlerrm;
+    end;
+    execute 'reset role';
+  end;
+
+  perform pg_temp.assert_ledger_invariants(v_user);
+end;
+$$;
+
+-- Two subscription periods in a row: a capture belongs to the grant it consumed, and the
+-- next period's grant must not be charged for it a second time. Counting every capture
+-- after a grant's seq leaves credits behind that were never granted, every month.
+do $$
+declare
+  v_user uuid := '00000000-0000-4000-8000-00000000c003';
+  v_job uuid;
+  v_bal public.credit_balance;
+  v_expired integer;
+begin
+  insert into auth.users (id, email) values (v_user, 'periods@test.local');
+  perform public.adjust_credits(v_user, -3, 'test', 'periods:drain');  -- the signup grant
+
+  perform public.grant_credits(v_user, 60, 'sub', 'periods:1', 'Pro Monthly', now() - interval '30 days');
+  insert into public.jobs (user_id) values (v_user) returning id into v_job;
+  perform public.reserve_credits(v_user, v_job, 10);
+  perform public.settle_reservation(v_job, true);
+
+  perform public.grant_credits(v_user, 60, 'sub', 'periods:2', 'Pro Monthly', now() - interval '1 second');
+  insert into public.jobs (user_id) values (v_user) returning id into v_job;
+  perform public.reserve_credits(v_user, v_job, 10);
+  perform public.settle_reservation(v_job, true);
+
+  v_bal := public.get_balance(v_user);
+  assert v_bal = row(100, 0, 100)::public.credit_balance, format('before expiry %s', v_bal);
+
+  assert public.expire_credits() = 2, 'both periods are due';
+  v_bal := public.get_balance(v_user);
+  assert v_bal = row(0, 0, 0)::public.credit_balance, format('after both periods expired %s', v_bal);
+  select coalesce(-sum(amount), 0) into v_expired from public.credit_ledger
+   where user_id = v_user and entry_type = 'expire';
+  assert v_expired = 100, format('expired %s of the 100 credits left', v_expired);
+  assert public.perishable_pool(v_user) = 0, 'perishable pool after both periods expired';
+
+  -- a pack bought during the period survives: perishable credits are spent first (§13)
+  perform public.grant_credits(v_user, 10, 'sub', 'periods:3', 'Pro Monthly', now() - interval '1 second');
+  perform public.grant_credits(v_user, 5, 'lemonsqueezy:order:9', 'periods:pack', '50 Credits');
+  insert into public.jobs (user_id) values (v_user) returning id into v_job;
+  perform public.reserve_credits(v_user, v_job, 12);
+  perform public.settle_reservation(v_job, true);
+  assert public.expire_credits() = 1, 'the third period is due';
+  v_bal := public.get_balance(v_user);
+  assert v_bal = row(3, 0, 3)::public.credit_balance, format('pack credits expired too %s', v_bal);
 
   perform pg_temp.assert_ledger_invariants(v_user);
 end;

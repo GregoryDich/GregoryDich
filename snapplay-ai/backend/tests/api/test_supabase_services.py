@@ -235,22 +235,20 @@ async def test_webhook_claim_ignores_duplicates_but_retakes_a_failed_event(
             httpx.Response(201, json=[]),
         ]
     )
-    # The conditional update only matches a row that failed to apply, so a genuine
-    # duplicate stays a no-op while a retry of a failed delivery is re-claimed.
-    retake = respx.patch(f"{BASE}/rest/v1/webhook_events").mock(
+    # An existing row is a duplicate only when its last attempt applied cleanly; one that
+    # carries an error is claimed again, so the provider's retry runs it.
+    existing = respx.get(f"{BASE}/rest/v1/webhook_events").mock(
         side_effect=[
-            httpx.Response(200, json=[]),
-            httpx.Response(200, json=[{"id": str(uuid4())}]),
+            httpx.Response(200, json=[{"error": None}]),
+            httpx.Response(200, json=[{"error": "internal_error"}]),
         ]
     )
     assert await events.claim("k", "paddle", "transaction.completed", {}) is True
-    assert await events.claim("k", "paddle", "transaction.completed", {}) is False
     assert route.calls.last.request.url.params["on_conflict"] == "idempotency_key"
     assert "ignore-duplicates" in route.calls.last.request.headers["prefer"]
+    assert await events.claim("k", "paddle", "transaction.completed", {}) is False
     assert await events.claim("k", "paddle", "transaction.completed", {}) is True
-    params = retake.calls.last.request.url.params
-    assert params["idempotency_key"] == "eq.k" and params["error"] == "not.is.null"
-    assert json.loads(retake.calls.last.request.content)["error"] is None
+    assert existing.calls.last.request.url.params["idempotency_key"] == "eq.k"
     await supabase.aclose()
 
 

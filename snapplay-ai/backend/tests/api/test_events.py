@@ -8,9 +8,16 @@ from typing import Any
 from uuid import UUID
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from starlette.requests import Request
+from starlette.websockets import WebSocketDisconnect
 
+from app.auth import Principal
+from app.middleware.rate_limit import MAX_CONCURRENT_STREAMS, ConcurrencyLimiter
+from app.routers.jobs import WS_RATE_LIMITED, job_events
 from app.schemas import JobResult
+from app.services.factory import Services
 from app.services.memory import MemoryStore
 
 pytestmark = pytest.mark.usefixtures("no_rate_limits")
@@ -125,3 +132,90 @@ def test_websocket_rejects_a_bad_token(client: TestClient, queued_job: str) -> N
     with pytest.raises(Exception):  # noqa: B017 — starlette raises on the close frame
         with client.websocket_connect(f"/v1/jobs/{queued_job}/ws?token=nope") as socket:
             socket.receive_text()
+
+
+def _terminate(store: MemoryStore, job_id: str) -> None:
+    """Put the job in a terminal state so its stream yields one event and closes."""
+    store.start_job(UUID(job_id))
+    store.fail_job(UUID(job_id), {"code": "worker_timeout", "message": "no completion"})
+
+
+def test_concurrent_streams_are_capped_per_principal(
+    client: TestClient,
+    app: FastAPI,
+    auth: dict[str, str],
+    store: MemoryStore,
+    queued_job: str,
+    registered_user: UUID,
+) -> None:
+    """L5: a stream cost one read token to open and then held a connection — and one
+    PostgREST query per second in poll mode — for as long as the client liked."""
+    streams: ConcurrencyLimiter = app.state.rate_limits.streams
+    key = str(registered_user)
+    held = [streams.acquire(key) for _ in range(MAX_CONCURRENT_STREAMS)]
+    assert all(slot is not None for slot in held)
+    _terminate(store, queued_job)
+
+    limited = client.get(f"/v1/jobs/{queued_job}/events", headers=auth)
+    assert limited.status_code == 429
+    assert limited.json()["error"]["code"] == "rate_limited"
+    assert int(limited.headers["Retry-After"]) >= 1
+
+    other = client.get(
+        f"/v1/jobs/{queued_job}/events", headers={"Authorization": "Bearer not-a-token"}
+    )
+    assert other.status_code == 401, "the cap belongs to the principal, not the route"
+
+    held[0].release()  # type: ignore[union-attr]
+    accepted = client.get(f"/v1/jobs/{queued_job}/events", headers=auth)
+    assert accepted.status_code == 200
+    assert streams.held(key) == MAX_CONCURRENT_STREAMS - 1, "a finished stream gives its slot back"
+
+
+def test_the_websocket_stream_is_capped_too(
+    client: TestClient,
+    app: FastAPI,
+    access_token: str,
+    store: MemoryStore,
+    queued_job: str,
+    registered_user: UUID,
+) -> None:
+    streams: ConcurrencyLimiter = app.state.rate_limits.streams
+    key = str(registered_user)
+    for _ in range(MAX_CONCURRENT_STREAMS):
+        assert streams.acquire(key) is not None
+    with pytest.raises(WebSocketDisconnect) as info:
+        with client.websocket_connect(f"/v1/jobs/{queued_job}/ws?token={access_token}") as socket:
+            socket.receive_text()
+    assert info.value.code == WS_RATE_LIMITED
+
+
+async def test_an_aborted_stream_releases_its_slot(
+    app: FastAPI, services: Services, queued_job: str, registered_user: UUID
+) -> None:
+    """The job never finishes, so only the client going away ends the stream."""
+    streams: ConcurrencyLimiter = app.state.rate_limits.streams
+    key = str(registered_user)
+    principal = Principal(user_id=registered_user, email=None, via="jwt")
+
+    async def receive() -> dict[str, Any]:  # pragma: no cover - is_disconnected cancels it
+        return {"type": "http.request", "body": b"", "more_body": False}
+
+    request = Request(
+        {
+            "type": "http",
+            "method": "GET",
+            "path": f"/v1/jobs/{queued_job}/events",
+            "headers": [],
+            "query_string": b"",
+            "app": app,
+        },
+        receive,
+    )
+    response = await job_events(request, UUID(queued_job), principal, services)
+    assert streams.held(key) == 1
+
+    stream = response.body_iterator
+    assert (await stream.__anext__()).event == "progress"  # type: ignore[union-attr]
+    await stream.aclose()  # type: ignore[union-attr]
+    assert streams.held(key) == 0

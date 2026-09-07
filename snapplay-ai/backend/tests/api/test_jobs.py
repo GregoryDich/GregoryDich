@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from starlette.formparsers import MultiPartParser
+from starlette.requests import ClientDisconnect
+from starlette.types import Message, Receive, Scope, Send
 
+from app.middleware.body_limit import MULTIPART_OVERHEAD_BYTES, BodyLimitMiddleware
 from app.schemas import JobResult
 from app.services.factory import Services
 from app.services.memory import MemoryStore
@@ -199,3 +204,128 @@ def test_dispatch_failure_releases_the_reservation(
         "available": 3,
         "subscription_renews_at": None,
     }
+
+
+def _spy_on_multipart(monkeypatch: pytest.MonkeyPatch) -> list[bool]:
+    """Record whether starlette's multipart parser ever ran — i.e. whether the request
+    body was consumed (and parts over 1 MB spooled to disk) before the rejection."""
+    parsed: list[bool] = []
+    original = MultiPartParser.parse
+
+    async def spy(self: MultiPartParser) -> Any:
+        parsed.append(True)
+        return await original(self)
+
+    monkeypatch.setattr(MultiPartParser, "parse", spy)
+    return parsed
+
+
+def _over_the_wire_cap(services: Services) -> bytes:
+    return b"RIFF" + b"\x00" * 4 + b"WAVE" + b"\x00" * (
+        services.settings.max_upload_bytes + MULTIPART_OVERHEAD_BYTES
+    )
+
+
+def test_unauthenticated_upload_is_rejected_before_the_body_is_read(
+    client: TestClient, services: Services, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """M5: the 401 used to arrive only after every byte had been parsed and spooled."""
+    parsed = _spy_on_multipart(monkeypatch)
+    response = client.post(
+        "/v1/jobs",
+        files={"audio": ("clip.wav", _over_the_wire_cap(services), "audio/wav")},
+    )
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "unauthorized"
+    assert parsed == [], "the body must not be parsed for a request without credentials"
+
+
+def test_oversized_upload_is_rejected_before_the_body_is_read(
+    submit: Callable[..., Any],
+    services: Services,
+    registered_user: UUID,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    parsed = _spy_on_multipart(monkeypatch)
+    response = submit(audio=_over_the_wire_cap(services))
+    assert response.status_code == 413
+    body = response.json()["error"]
+    assert body["code"] == "payload_too_large"
+    assert body["details"]["max_bytes"] == services.settings.max_upload_bytes
+    assert parsed == [], "Content-Length above the cap must be refused before parsing"
+
+
+async def test_a_body_without_content_length_is_cut_off_at_the_cap() -> None:
+    """A chunked body (or a lying Content-Length) is counted as it streams: the app is
+    unwound and the answer is 413 long before the whole payload has been received."""
+    reached_app = False
+
+    async def app(scope: Scope, receive: Receive, send: Send) -> None:
+        nonlocal reached_app
+        reached_app = True
+        while True:
+            message = await receive()
+            if message["type"] == "http.disconnect":
+                raise ClientDisconnect
+            if not message.get("more_body"):
+                break
+        await send({"type": "http.response.start", "status": 202, "headers": []})
+        await send({"type": "http.response.body", "body": b""})
+
+    limited = BodyLimitMiddleware(app, max_upload_bytes=64 * 1024)
+    chunk = b"\x00" * 16 * 1024
+    offered = 0
+
+    async def receive() -> Message:
+        nonlocal offered
+        offered += len(chunk)
+        return {"type": "http.request", "body": chunk, "more_body": True}
+
+    messages: list[Message] = []
+
+    async def send(message: Message) -> None:
+        messages.append(message)
+
+    scope: Scope = {
+        "type": "http",
+        "method": "POST",
+        "path": "/v1/jobs",
+        "headers": [(b"authorization", b"Bearer token")],  # no content-length at all
+    }
+    await limited(scope, receive, send)
+
+    assert reached_app is True
+    assert messages[0]["status"] == 413
+    assert json.loads(messages[1]["body"])["error"]["code"] == "payload_too_large"
+    assert offered <= 64 * 1024 + MULTIPART_OVERHEAD_BYTES + len(chunk)
+
+
+async def test_the_cap_lets_a_legal_upload_through() -> None:
+    async def app(scope: Scope, receive: Receive, send: Send) -> None:
+        while (await receive()).get("more_body"):
+            pass
+        await send({"type": "http.response.start", "status": 202, "headers": []})
+        await send({"type": "http.response.body", "body": b"{}"})
+
+    limited = BodyLimitMiddleware(app, max_upload_bytes=64 * 1024)
+    body = b"\x00" * 60 * 1024
+    scope: Scope = {
+        "type": "http",
+        "method": "POST",
+        "path": "/v1/jobs",
+        "headers": [
+            (b"authorization", b"Bearer token"),
+            (b"content-length", str(len(body)).encode()),
+        ],
+    }
+
+    async def receive() -> Message:
+        return {"type": "http.request", "body": body, "more_body": False}
+
+    messages: list[Message] = []
+
+    async def send(message: Message) -> None:
+        messages.append(message)
+
+    await limited(scope, receive, send)
+    assert messages[0]["status"] == 202

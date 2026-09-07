@@ -10,6 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.services.memory import MemoryStore
+from app.services.plans import build_checkout_url
 
 pytestmark = pytest.mark.usefixtures("no_rate_limits")
 
@@ -74,6 +75,32 @@ def test_plans_attach_the_caller_and_referral_code(
     assert f"checkout[custom][user_id]={registered_user}" in pack["checkout_url"]
     assert "checkout[custom][ref]=friend" in pack["checkout_url"]
     assert "var-pack_50" in pack["checkout_url"]
+
+
+def test_a_referral_code_cannot_inject_checkout_parameters(
+    client: TestClient, auth: dict[str, str], store: MemoryStore, registered_user: UUID
+) -> None:
+    """§3: ``ref`` is interpolated into the checkout URL. A value carrying ``&`` would add
+    a second ``checkout[custom][user_id]``, and last-value-wins parsing would credit the
+    attacker for someone else's payment."""
+    for plan in store.plans.values():
+        plan.provider_variant_ids = {"lemonsqueezy": f"var-{plan.id}"}
+    attacker = uuid4()
+    rejected = client.get(
+        "/v1/plans",
+        params={"ref": f"x&checkout[custom][user_id]={attacker}"},
+        headers=auth,
+    )
+    assert rejected.status_code == 422
+    assert rejected.json()["error"]["code"] == "validation_error"
+
+    # And nothing that does reach the builder can add a parameter of its own either.
+    pack = store.plans["pack_50"]
+    url = build_checkout_url(pack, registered_user, f"x&checkout[custom][user_id]={attacker}")
+    assert url is not None
+    assert str(attacker) not in url
+    assert url.count("checkout[custom][user_id]") == 1
+    assert f"checkout[custom][user_id]={registered_user}" in url
 
 
 def test_plan_without_a_configured_variant_has_no_checkout_url(

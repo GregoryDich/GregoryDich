@@ -56,8 +56,8 @@ def _has_credentials(headers: Headers) -> bool:
     return bool(bearer_token(headers.get("authorization")) or headers.get(API_KEY_HEADER))
 
 
-async def _respond(send: Send, exc: ApiException) -> None:
-    await exc.response()({"type": "http"}, _no_receive, send)
+async def _respond(scope: Scope, send: Send, exc: ApiException) -> None:
+    await exc.response()(scope, _no_receive, send)
 
 
 async def _no_receive() -> Message:  # pragma: no cover - a JSONResponse never receives
@@ -98,11 +98,11 @@ class BodyLimitMiddleware:
         wire_limit, reported_limit, is_upload = self._route_limits(scope)
         headers = Headers(scope=scope)
         if is_upload and not _has_credentials(headers):
-            await _respond(send, ApiException(UNAUTHORIZED))
+            await _respond(scope, send, ApiException(UNAUTHORIZED))
             return
         declared = _content_length(headers)
         if declared is not None and declared > wire_limit:
-            await _respond(send, payload_too_large(reported_limit))
+            await _respond(scope, send, payload_too_large(reported_limit))
             return
 
         total = 0
@@ -119,7 +119,7 @@ class BodyLimitMiddleware:
                 return message
             rejected = True
             if not started:
-                await _respond(send, payload_too_large(reported_limit))
+                await _respond(scope, send, payload_too_large(reported_limit))
             # Unwind the handler: starlette turns this into a ClientDisconnect.
             return {"type": "http.disconnect"}
 

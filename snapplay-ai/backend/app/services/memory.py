@@ -858,13 +858,13 @@ class MemoryStore:
     def claim_webhook_event(
         self, idempotency_key: str, provider: str, event_name: str, payload: dict[str, Any]
     ) -> bool:
-        """An event is claimed once; a row that failed to apply (``error`` set) is
-        re-claimable so the provider's retry runs it instead of getting ``duplicate``."""
+        """An event is claimed once; a row that failed to apply (``error`` set) stays
+        claimable so the provider's retry runs it instead of getting ``duplicate``."""
         existing = self.webhook_events.get(idempotency_key)
-        if existing is not None and existing.error is None:
-            return False
+        if existing is not None:
+            return existing.error is not None
         self.webhook_events[idempotency_key] = WebhookEventRow(
-            id=existing.id if existing is not None else uuid4(),
+            id=uuid4(),
             provider=provider,
             event_name=event_name,
             idempotency_key=idempotency_key,

@@ -20,7 +20,7 @@ So the split is drawn along latency and hardware, not along "features":
 | FLAC encoding of the drop (§2), upload, SSE consumption, download and decode | Basic Pitch transcription → MIDI (§2 `midi`) |
 | Root transposition, `.mid` / `.fsc` export and drag-out (§9) | Tempo, beat, downbeat and key analysis (§2 `analysis`) |
 | Paywall UI driven by `/v1/plans` (§3), token storage and refresh (§1) | Credits, ledger, payments, affiliates (§3, §4, §6, §12) |
-| Persisting stems and results in plugin state so a session survives the 24 h retention window | Storage of inputs and outputs for 24 h behind signed URLs (§2, §10) |
+| Caching stems and results on disk (`SnapPlay/jobs/<job_id>/`) and the job id in plugin state, so a session survives the 24 h retention window | Storage of inputs and outputs for 24 h behind signed URLs (§2, §10) |
 
 Consequences:
 
@@ -149,9 +149,9 @@ flowchart TD
     I --> J["download stems + MIDI in parallel\n(signed URLs, 24 h)"]
     J --> K["decode WAV → StemSound\ntranspose = target_root_midi − root_midi\nADSR from suggested_adsr, slices for drums"]
     K --> L["atomic swap into SamplerEngine\n→ keys playable"]
-    I --> M["Scale-Snap set from analysis.key\n(scale_mode = detected)"]
-    L --> N["drag-out: .mid / .fsc / stems\nto DAW timeline"]
-    K --> O["stems + result persisted\nin plugin state"]
+    L --> M["Scale-Snap set from analysis.key\n(scale_mode = detected)"]
+    L --> N["drag-out: .mid or .fsc\nto DAW timeline"]
+    K --> O["stems + result.json cached under\n~/…/SnapPlay/jobs/<job_id>/;\nonly lastJobId goes into plugin state"]
 ```
 
 Points worth noting:
@@ -159,8 +159,9 @@ Points worth noting:
 * The credit is **reserved** before enqueue and **captured** only on success. Failure,
   cancellation (`DELETE /v1/jobs/{id}`, §2) or a dead worker all end in `release`.
 * Progress reaches the plugin as SSE `progress` events; the `result` or `error` event
-  closes the stream. If the stream drops (token expiry, network), the plugin refreshes
-  and falls back to `GET /v1/jobs/{id}` (§2), which returns the same `JobStatus`.
+  closes the stream. If the stream drops for a transport reason, `JobClient` falls back
+  to polling `GET /v1/jobs/{id}` (§2) once a second, which returns the same `JobStatus`;
+  a `401` or `404` on the stream fails the job instead.
 * The plugin keeps a local copy of everything it downloaded; the signed URLs are only
   used once.
 
@@ -180,7 +181,7 @@ sequenceDiagram
     A->>G: password grant
     G-->>A: access_token (JWT), refresh_token, expires_in
     A-->>P: 200 tokens + user
-    Note over P: store access_token in memory,<br/>refresh_token in OS keychain
+    Note over P: AuthManager persists both tokens in<br/>SnapPlayAI.settings (juce::PropertiesFile),<br/>never in the DAW project
 
     P->>A: GET /v1/me  Authorization: Bearer <jwt>
     A->>A: verify signature (HS256 secret or cached JWKS),<br/>aud == authenticated, exp, sub
@@ -189,14 +190,12 @@ sequenceDiagram
     A-->>P: 200 {user.plan, balance}
     Note over P: UI shows balance.available
 
-    P->>A: GET /v1/me (later, token expired)
-    A-->>P: 401 token_expired
+    Note over P: AuthManager timer (30 s):<br/>token expires in < 120 s?
     P->>A: POST /v1/auth/refresh {refresh_token}
     A->>G: refresh grant
     G-->>A: new token pair
     A-->>P: 200 tokens
-    P->>A: GET /v1/me (retry once)
-    A-->>P: 200
+    Note over P: refresh is proactive, so requests<br/>normally never see 401 token_expired.<br/>A 401 that does arrive ends the request
 ```
 
 ### 4.2 Job submission, SSE progress, download
@@ -274,21 +273,19 @@ sequenceDiagram
     alt bad signature
         A-->>LS: 401 invalid_signature
     else valid
-        A->>DB: BEGIN
-        A->>DB: insert webhook_events(idempotency_key = lemonsqueezy:order_created:<data.id>)
-        alt already seen
-            DB-->>A: unique violation
-            A->>DB: ROLLBACK
+        A->>DB: claim webhook_events(idempotency_key = lemonsqueezy:order_created:<data.id>)
+        alt already applied
+            DB-->>A: claim refused
             A-->>LS: 200 {status: duplicate}
-        else new
+        else claimed
             A->>DB: resolve user (custom_data.user_id, else email)
-            A->>DB: insert purchases row
-            A->>DB: grant_credits(user, 50, "lemonsqueezy:order:<id>", same idempotency_key)
-            A->>DB: resolve ref → affiliate, insert affiliate_commissions<br/>amount_cents = 0.30 × net after fees, status pending
-            A->>DB: COMMIT
+            A->>DB: resolve plan by provider variant id
+            A->>DB: record_purchase(...) — one transaction:<br/>purchases row + grant_credits + affiliate_commissions<br/>amount_cents = 0.30 x net after fees, status pending
+            A->>DB: mark_processed(idempotency_key)
             A-->>LS: 200 {status: ok}
         end
     end
+    Note over A,DB: a half-failed delivery is marked processed with an error,<br/>which leaves the key claimable so the provider's retry re-runs it
 
     loop every 5 s while paywall open
         P->>A: GET /v1/me
@@ -379,18 +376,28 @@ The server resamples to 44.1 kHz anyway.
 
 How the plugin hides the rest:
 
-1. **Encode and upload immediately on drop**, before any confirmation dialog; the
-   `idempotency_key` means a repeated drop of the same clip costs nothing.
+1. **Encode and upload immediately on drop**, before any confirmation dialog. The
+   `idempotency_key` the plugin sends is a fresh UUID per submission, so it protects a
+   *retried request* for that submission (`ApiClient` retries 429/5xx with the same body)
+   — it does **not** deduplicate a clip dropped twice, which is a second job and a second
+   credit. A client that wants free re-drops must derive the key from the clip, as the
+   growth engine does.
 2. **Stage-level progress** from SSE rather than a spinner: `separate` → `transcribe`
    → `analyze` → `package` reads as motion, and the heartbeat keeps the UI honest.
-3. **Show analysis first.** Key, BPM and Scale-Snap are in the `result` event and are
-   applied before a single stem byte has downloaded.
-4. **Per-stem readiness.** Each stem is decoded and swapped into the engine as its
-   download completes; the keyboard lights up stem by stem instead of all-or-nothing.
-5. **Parallel downloads** (one connection per stem plus one for MIDI).
-6. **Local drum slicing** from `transients_seconds` if the server sent no `slices`,
+3. **The `result` event ends the wait, not the download.** Key, BPM, ADSR and Scale-Snap
+   all come from that event, but the plugin applies them in `onJobReady`, which
+   `JobClient` reaches only after the stems and MIDI are cached — so the analysis and the
+   playable keyboard arrive together. Applying the analysis at the `result` event instead
+   would shave the download off the perceived wait; it is not what the code does today.
+4. **Parallel downloads with visible progress.** All five assets (four stems plus
+   `score.mid`) are requested at once on the `ApiClient` thread pool, and the progress bar
+   advances as each lands. `JobClient` reaches `Ready` only when the last one is in the
+   cache — the engine plays one stem at a time (the selected category), so there is no
+   partial state worth exposing; switching category afterwards reloads from the local
+   cache with no network at all.
+5. **Local drum slicing** from `transients_seconds` if the server sent no `slices`,
    so drum mode does not wait on anything but the drum WAV.
-7. **Balance is pre-fetched** at session start (`GET /v1/me`) so the paywall decision
+6. **Balance is pre-fetched** at session start (`GET /v1/me`) so the paywall decision
    never adds a round trip to the drop.
 
 ## 6. AWS topology (§10)
@@ -424,8 +431,9 @@ flowchart LR
   streaming only works through function URLs, which would put a second host, a second
   auth path and a second TLS name in front of the plugin. A long-lived FastAPI process
   behind an ALB handles SSE and WebSockets (§2) natively; the ALB idle timeout is set
-  above the heartbeat interval. Fargate also keeps the JWKS cache and rate-limit state
-  warm instead of re-fetching on every cold start.
+  above the heartbeat interval. A long-lived process also keeps the JWKS cache and the
+  rate-limit buckets warm instead of rebuilding them on every cold start — with the
+  caveat that both are per task (`SECURITY.md` §6).
 * **Queue: SQS standard + DLQ.** `POST /v1/jobs` enqueues after `create_job` has
   reserved the credit. Workers long-poll, extend visibility while running, and call
   `complete_job` / `fail_job` idempotently. `maxReceiveCount = 3` routes poison
@@ -468,21 +476,26 @@ Config keys (§10): `AWS_REGION`, `S3_BUCKET`, `S3_ENDPOINT_URL`, `CLOUDFRONT_DO
 
 Handoff rules:
 
-* A loaded stem is an **immutable** `StemSound` (sample buffer, root, ADSR, slices).
-  It is built entirely off the audio thread.
-* Publication is a single `std::atomic<std::shared_ptr<StemSound>>` per stem slot.
-  The decode thread `store`s (release); the audio thread `load`s (acquire) once per
-  block and renders from that pointer for the whole block. Voices already playing keep
-  their own copy of the pointer until they finish, so a swap never cuts a note.
-* The pointer the audio thread replaces is not freed there: the decode thread keeps
-  the previous `shared_ptr` alive in a retire list that the message thread drains after
-  a grace period, so the last reference never drops on the audio thread.
+* A loaded stem is an **immutable** `StemSound` (sample buffer, root, ADSR, slices), and
+  a drum kit an immutable `DrumKit`. Both are built entirely off the audio thread, on
+  `SamplerEngine`'s private worker thread.
+* The synthesiser's sound list never changes after construction: it holds one
+  `ActiveSound`, which publishes the current `StemSound` and `DrumKit` through an atomic
+  `shared_ptr` store. A voice takes a `shared_ptr` copy at note-on (an atomic load, no
+  allocation) and drops it at note-off, so a swap never cuts a note already sounding.
+* The superseded pointer is never freed on the audio thread: `SamplerEngine` parks it in
+  a retirement list and releases it only once no voice still references it, on the
+  message thread — so the deallocation happens there too.
 * Parameters (`scale_mode`, `scale_root`, `target_root_midi`, ADSR overrides) are
   `std::atomic` values read once per block; MIDI note-offs use the pitch their note-on
   was snapped to, even if the mode changed while held (§8).
-* Progress and errors from the network thread reach the UI through a
-  `juce::AbstractFifo` of small POD events drained on a message-thread timer, never
-  through callbacks into UI code from the network thread.
+* Nothing in `Cloud` calls into UI code from a worker thread. `ApiClient` runs requests
+  on an internal `juce::ThreadPool` and delivers every completion through
+  `juce::MessageManager::callAsync`, so callbacks land on the message thread; `JobClient`
+  is a `juce::ChangeBroadcaster` that publishes each state change there; the processor
+  coalesces stem reloads through a `juce::AsyncUpdater`, and the editor refreshes its
+  labels from a `juce::Timer`. Progress and errors therefore reach the UI as ordinary
+  message-thread notifications, never as a cross-thread call.
 
 ## 8. Storage layout and retention
 
@@ -524,7 +537,7 @@ keeps its own copy under
 | `g4dn.xlarge` (T4) instead of `g5.xlarge` | ≈ 48 % cheaper per hour | ~5 s target instead of 2.0 s |
 | R2 or CloudFront in front of S3 | egress ≈ 0 | one more component; R2 needs `S3_ENDPOINT_URL` |
 | Batch several jobs per Demucs call | higher GPU utilisation at volume | adds queue wait; only worth it above thousands of jobs/day |
-| More Fargate tasks | more concurrent SSE streams | rate-limit and JWKS state must be shared, not per-task |
+| More Fargate tasks | more concurrent SSE streams | the rate-limit buckets are per process today, so *N* tasks means *N* × the configured budget; a shared bucket store is a prerequisite for scaling this out (`SECURITY.md` §6). A per-task JWKS cache only costs one extra fetch per task |
 
 ## 10. Failure modes and recovery
 
@@ -535,12 +548,12 @@ keeps its own copy under
 | Worker crashes or is pre-empted mid-job | progress stalls, then `queued` again | SQS redelivers (up to 3); `complete_job` is idempotent so a late duplicate is harmless; after the third failure the message is in the DLQ and the reaper releases the credit |
 | Job exceeds `JOB_TIMEOUT_SECONDS` | `error.code = worker_timeout` | reaper settles as failed, credit released; plugin offers a retry (new job, new reservation) |
 | GPU capacity unavailable | jobs stay `queued`, SSE keeps pinging | ASG scales on queue depth; if the wait crosses the timeout, jobs fail and credits release |
-| SSE connection drops | progress freezes | plugin reconnects; if `401 token_expired`, it refreshes first; `GET /v1/jobs/{id}` catches up the state |
-| Access token expires mid-session | transparent | refresh token → new pair (§1); one retry per request |
+| SSE connection drops | progress keeps advancing, a little coarser | `JobClient` falls back to polling `GET /v1/jobs/{id}` once a second (up to `maxPollAttempts`, then `Lost contact with the job`). A `401` or `404` on the stream is not retried — the job fails and the user re-runs |
+| Access token expires mid-session | transparent | `AuthManager`'s 30 s timer refreshes 120 s before expiry (§1), so an in-flight request rarely meets a `401`; one that does is surfaced, not retried |
 | Signed URL expired (> 24 h) | download 403 | plugin uses its local copy; if none, the user re-runs (a new credit, since the server has deleted the result) |
 | Webhook delivered twice | nothing | idempotency key in `webhook_events`; `grant_credits` and the commission share it (§4, §12) |
 | Webhook never arrives | paywall keeps polling `/v1/me` | provider retries; support can call `grant_credits` with the provider's order id as the idempotency key |
 | Postgres unavailable | 500 / 503 | the API is stateless; Fargate tasks keep serving once the database returns; no partial credit state because every mutation is one function under row lock |
-| Double submit (double click, retry after timeout) | one job | `idempotency_key` returns the existing job, no second reservation (§2) |
+| Retry of one submission (transport error, 429/5xx backoff) | one job | the request carries the same `idempotency_key`, so the server returns the existing job and reserves nothing more (§2). A clip *dropped* twice is a new key and therefore a new job and a new credit — the drop zone is disabled while a job runs, which is what stops the double click |
 | Rate limit hit | 429 with `Retry-After` | plugin backs off; `X-RateLimit-Remaining` drives the UI |
-| Payment refund / chargeback | credits reversed | `refund_job` / ledger `adjust`; the affiliate commission for that purchase is set to `void` |
+| Payment refund / chargeback | credits reversed by hand | no webhook path handles a refund today: an operator calls `adjust_credits` with a negative amount (`refund_job` is for a failed *job*, not a purchase) and sets the `affiliate_commissions` row to `void` before payout. Automating it is an open item (`SECURITY.md` §9) |

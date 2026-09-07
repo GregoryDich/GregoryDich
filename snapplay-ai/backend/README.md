@@ -15,7 +15,9 @@ app/
   errors.py        ApiException + §5 error envelope handlers and code constants
   dependencies.py  get_services() (the wired container) and get_principal() (JWT or API key)
   auth/            jwt.py (Supabase token verification), api_keys.py (sp_live_ format + sha256)
-  middleware/      rate_limit.py (per-principal token buckets)
+  middleware/      body_limit.py (request-body caps applied before the multipart parser),
+                   rate_limit.py (per-principal token buckets, per-credential auth buckets,
+                   stream-slot limiter)
   routers/         health, auth, me, jobs, credits, plans, api_keys, webhooks
   services/        Protocols (__init__.py) + one module per domain, both backends:
                    supabase.py (PostgREST/Storage/GoTrue over httpx), memory.py (tests/dev),

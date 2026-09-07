@@ -81,9 +81,11 @@ class SupabaseWebhookEventsService:
     failed halfway can be retried.
 
     ``claim`` inserts the row; a row that already exists is a duplicate *unless* it carries
-    an error, in which case the conditional update below re-takes it (one statement, so two
-    concurrent retries cannot both win). Without that, a provider retry of a failed
-    delivery would be answered ``duplicate`` and the paid event would be lost (§4).
+    an error, in which case this delivery is the retry that has to run it. Without that, a
+    provider retry of a failed delivery would be answered ``duplicate`` and the paid event
+    would be lost (§4). Two retries of the same failed event may therefore run at once;
+    what makes that safe is that every mutation underneath is keyed by the same
+    idempotency key, so the second one grants and pays nothing.
     """
 
     def __init__(self, client: SupabaseClient) -> None:
@@ -105,19 +107,13 @@ class SupabaseWebhookEventsService:
         )
         if rows:
             return True
-        retaken = await self._client.update(
+        existing = await self._client.select(
             "webhook_events",
-            {
-                "provider": provider,
-                "event_name": event_type,
-                "payload": payload,
-                "received_at": datetime.now(UTC).isoformat(),
-                "processed_at": None,
-                "error": None,
-            },
-            filters=[("idempotency_key", "eq", idempotency_key), ("error", "not.is", None)],
+            filters=[("idempotency_key", "eq", idempotency_key)],
+            columns="error",
+            limit=1,
         )
-        return bool(retaken)
+        return bool(existing) and existing[0].get("error") is not None
 
     async def mark_processed(self, idempotency_key: str, error: str | None = None) -> None:
         await self._client.update(

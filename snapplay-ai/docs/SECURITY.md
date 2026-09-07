@@ -9,7 +9,7 @@ withstand.
 
 | principal | holds | may call | must never see |
 |-----------|-------|----------|----------------|
-| Plugin (`plugin/Source/Cloud`) | a user's access JWT (memory) and refresh token (OS keychain) | `/v1/*` as that user | service-role key, webhook secrets, other users' jobs |
+| Plugin (`plugin/Source/Cloud`) | the user's access and refresh tokens in `AuthManager`'s `juce::PropertiesFile` (see §2.1), never in the DAW project | `/v1/*` as that user | service-role key, webhook secrets, other users' jobs |
 | Growth engine (`growth/mcp_server`) | one `sp_live_…` API key (§11) | `/v1/*` as the key's owner | user JWTs, anything not reachable with a key |
 | Backend (`backend/app`) on Fargate | Supabase service-role key, JWT secret / JWKS URL, webhook secrets, S3 presign role, CloudFront key pair | Postgres RPC, S3, SQS, GoTrue | plaintext API keys after creation, card data (never handled: checkout is hosted by the provider) |
 | GPU worker (ECS) | S3 read/write on `jobs/*`, SQS receive/delete, a backend credential for `complete_job` / `fail_job` | S3, SQS, the backend | Postgres directly, payment secrets |
@@ -31,17 +31,24 @@ Supabase Auth (GoTrue) issues the tokens; the backend only verifies them.
   closes the classic HS/RS confusion.
 * **Required claims.** `sub` (the user id, a UUID), `exp`, and `aud == "authenticated"`
   (§1). Missing or wrong → `401 unauthorized`; expired → `401 token_expired` so the
-  plugin knows to refresh rather than re-login. Clock leeway is a few seconds, not
-  minutes. `iss` is checked against the project's GoTrue URL when configured.
-* **JWKS caching.** Keys are fetched once and cached in-process with a TTL of about an
-  hour, keyed by `kid`. An unknown `kid` triggers at most one refetch per minute
-  across the process; anything else with an unknown `kid` is rejected. This keeps a
+  plugin knows to refresh rather than re-login. Clock leeway is `LEEWAY_SECONDS` = 30 s.
+  `iss` is checked against the project's GoTrue URL when configured.
+* **JWKS caching.** Keys are fetched once and cached in-process for
+  `JWKS_CACHE_SECONDS` = 3600 s, keyed by `kid`. An unknown `kid` triggers at most one refetch per minute
+  across the process (`JWKS_REFETCH_INTERVAL_SECONDS` = 60, under a lock); anything else
+  with an unknown `kid` is rejected. This keeps a
   flood of forged tokens from turning the JWKS endpoint into a DoS amplifier and keeps
   verification off the network path.
-* **Token handling in the plugin.** The access token lives in memory; the refresh
-  token is stored in the OS keychain (macOS Keychain, Windows DPAPI), never in the DAW
-  project file or plugin state. The password is never stored (§1). One refresh-and-
-  retry per request; a second `401` surfaces to the UI.
+* **Token handling in the plugin.** The password is never stored (§1), and no token ever
+  reaches the DAW project file or the plugin's `getStateInformation` — only the last job
+  id does. `AuthManager` persists the token pair through a `juce::PropertiesFile`
+  (`SnapPlayAI.settings` under a `SnapPlay` folder in the OS application-data location),
+  which is a plain XML file with the platform's file permissions, **not** the macOS
+  Keychain or Windows DPAPI; moving it there is an open hardening item. Renewal is
+  proactive rather than reactive: a 30 s timer refreshes the access token 120 s before it
+  expires, so requests normally never see a `401`. `ApiClient` retries only 429 and
+  5xx/transport failures (`Cloud/RetryPolicy.h`) — a `401` is surfaced to the caller,
+  and `JobClient` ends the job rather than retrying it.
 * **WebSocket auth (§2).** `?token=` is the *only* accepted form on `WS
   /v1/jobs/{job_id}/ws`: there is no in-band authentication frame to smuggle a token
   through, and no header path on that route. It exists for web clients; the plugin uses
@@ -81,12 +88,20 @@ Rules applied to both:
 * The HMAC is computed over the **raw request bytes** read before any JSON parsing, and
   compared with `hmac.compare_digest`. A bad or missing signature is `401
   invalid_signature` and nothing is written.
-* The idempotency key is inserted into `webhook_events` (unique) **inside the same
-  transaction** as the credit grant, the `purchases` row and — when `checkout[custom]
-  [ref]` resolves — the `affiliate_commissions` row. A duplicate delivery hits the
-  unique constraint, rolls back, and answers `200 {"status": "duplicate"}` so the
-  provider stops retrying. `grant_credits` is itself idempotent on the same key (§6),
-  so even a partial retry cannot double-grant.
+* Delivery is **claim → apply → close**, not one transaction across the whole handler.
+  The idempotency key is claimed in `webhook_events` (unique) first; a delivery that
+  cannot claim it — because a previous one already applied it — answers
+  `200 {"status": "duplicate"}` so the provider stops retrying. What *is* one
+  transaction is the effect: `record_purchase` writes the `purchases` row, grants the
+  plan's credits and — when `checkout[custom][ref]` resolves — the
+  `affiliate_commissions` row, all under the same key, so a replay returns the existing
+  purchase and changes nothing. `grant_credits` is separately idempotent on that key
+  (§6).
+* A delivery that fails halfway is marked processed **with an error**, which leaves the
+  key claimable again, so the provider's retry re-runs it. A paid event is therefore
+  never answered "duplicate" without having been applied — the failure mode is a repeated
+  attempt, which the per-key idempotency inside the functions absorbs, rather than a lost
+  payment.
 * The user is resolved from `meta.custom_data.user_id` first and only then by customer
   email; an event that resolves to no user is stored and answered `200` for manual
   review, not `4xx` (which would just cause retries).
@@ -97,12 +112,19 @@ Rules applied to both:
 
 ## 4. Database posture: RLS and service-role isolation (§6)
 
-* Every table in `public` has RLS enabled. Authenticated users have `SELECT` on their
-  own rows (`profiles`, `credit_accounts`, `credit_ledger`, `jobs`, `job_assets`,
-  `purchases`, `subscriptions`, and `api_keys` minus the hash column). There are **no**
-  `INSERT` / `UPDATE` / `DELETE` policies for `authenticated` or `anon` on any of
-  these; `webhook_events`, `affiliates`, `referral_codes` and `affiliate_commissions`
-  have no user-facing policy at all.
+* `0003_rls.sql` starts by revoking everything in `public` from `public`, `anon` and
+  `authenticated`, then grants back only `SELECT`, and enables RLS on every table.
+  Authenticated users see their own rows in `profiles`, `credit_accounts`,
+  `credit_ledger`, `jobs`, `job_assets`, `api_keys`, `purchases` and `subscriptions`,
+  their own affiliate rows in `affiliates` / `referral_codes` /
+  `affiliate_commissions` (the last two through an `EXISTS` on `affiliates`), and active
+  rows in `plans` (also for `anon`). `webhook_events` has RLS on, no policy and no grant:
+  `service_role` only.
+* There is **no** `INSERT` / `UPDATE` / `DELETE` policy for `authenticated` or `anon`
+  anywhere, so the read grants are the whole user-facing surface.
+* The `api_keys` grant is table-wide rather than column-level, so a user can read the
+  `key_hash` of their **own** keys. That is a SHA-256 of a secret they already hold, so it
+  leaks nothing; narrowing the grant to the displayed columns would still be tidier.
 * All mutations go through the `SECURITY DEFINER` functions — `reserve_credits`,
   `settle_reservation`, `grant_credits`, `refund_job`, `expire_credits`, plus job
   creation / completion. `EXECUTE` is revoked from `public`, `anon` and
@@ -129,10 +151,14 @@ Rules applied to both:
 * The bucket blocks all public access. Objects live under
   `jobs/<user_id>/<job_id>/`; both path components are UUIDs produced by the server,
   never by the client, so no user input reaches an object key.
-* Presigned URLs are `GET`-only, for one object key, and expire at `expires_at` (24 h,
-  matching the lifecycle rule). The presigning identity is an IAM role limited to
-  `s3:GetObject` on `jobs/*`; it cannot list, so a URL cannot be widened into a
-  directory.
+* Presigned URLs are `GET`-only, for one object key, and expire at `expires_at`
+  (`SIGNED_URL_TTL_SECONDS`, 24 h, matching the lifecycle rule). A presigned URL never
+  carries more than the signing identity has, and the URL itself names one key and one
+  method, so it cannot be widened into a directory listing. The signing identity is the
+  API task role, which holds `s3:GetObject`/`PutObject`/`DeleteObject` on
+  `<bucket>/jobs/*` and `s3:ListBucket` only under the `jobs/` prefix — enough to write
+  the input and sign reads, and nothing outside that prefix. The worker role is scoped
+  identically.
 * With CloudFront, the origin is reachable only through OAC and the signed URLs use a
   key pair stored in Secrets Manager (`CLOUDFRONT_KEY_PAIR_ID` names it; the private
   key is never in config). The client sees an opaque URL either way.
@@ -141,36 +167,63 @@ Rules applied to both:
 
 ## 6. Rate limiting (§5)
 
-* 10 job submissions / minute / user and 60 reads / minute / user, keyed by the
-  authenticated identity (JWT `sub` or API-key owner), not by IP, so a shared NAT does
-  not throttle a studio and a key cannot escape its owner's budget.
+* 10 job submissions / minute / user and 60 reads / minute / user
+  (`RATE_LIMIT_JOBS_PER_MIN`, `RATE_LIMIT_READS_PER_MIN`), keyed by the authenticated
+  identity (JWT `sub` or API-key owner), not by IP, so a shared NAT does not throttle a
+  studio and a key cannot escape its owner's budget. `/v1/plans` is public but consumes
+  a read token when the caller happens to be authenticated.
 * Responses carry `Retry-After` and `X-RateLimit-Remaining`; the code is `429
   rate_limited`.
-* Token buckets live in a store shared across Fargate tasks; a per-process limiter
-  would multiply the budget by the task count.
-* Unauthenticated routes get stricter, IP-keyed budgets: `/v1/auth/token` and
-  `/v1/auth/refresh` (credential stuffing), `/v1/webhooks/*` (signature-check CPU),
-  `/v1/plans`. The ALB / WAF layer handles volumetric abuse above that.
+* `/v1/auth/token` and `/v1/auth/refresh` have no principal yet, so they are bucketed at
+  **10 attempts / minute per submitted credential** — the key is `sha256` of the
+  normalised email or of the refresh token, so a token never sits in memory as a
+  dictionary key — with a cap of `AUTH_MAX_BUCKETS` = 10,000. Eviction drops refilled
+  buckets first and then the *fullest* remaining ones, so flooding the store never
+  flushes the exhausted bucket of the account under attack, which is exactly what an
+  attacker would want. That bounds guessing against *one* account; spraying many accounts from one IP
+  is bounded by GoTrue's own lockout and by the ALB / WAF layer, not here.
+* A principal may hold at most **5 concurrent SSE / WebSocket streams**
+  (`MAX_CONCURRENT_STREAMS`), because a stream costs one read token to open and then
+  lives for minutes.
+* `/v1/webhooks/*` is **not** rate limited in the application: the signature check is the
+  gate, and throttling a provider's retries would cost deliveries. Volumetric abuse there
+  is an ALB / WAF concern.
+* **The buckets are per process** (`app.state.rate_limits`, in memory). With *N* Fargate
+  tasks behind the ALB the effective ceiling is *N* × the configured rate, and a task
+  restart resets every bucket. That is acceptable at one or two tasks and stops being so
+  as the service scales out: moving the buckets to a shared store (Redis or equivalent) is
+  a known prerequisite for raising `api_desired_count`, not something already done.
 
 ## 7. Input validation (§2, §5)
 
-* **Size.** 10 MB is enforced twice: at the ALB / ingress on `Content-Length`, and in
-  the handler by counting bytes as the multipart stream is read, aborting with `413`
-  the moment the count passes the cap. `Content-Length` is a hint, not a limit.
+* **Size.** `BodyLimitMiddleware` runs before the multipart parser, because starlette's
+  parser enforces no total size and spools parts above 1 MB to disk — otherwise an
+  unauthenticated client could make the process spool an arbitrary body on `POST /v1/jobs`
+  and collect its `401` afterwards. Three gates fire before the first byte reaches the
+  parser: an upload without credentials is `401`; a `Content-Length` over the route's cap
+  is `413`; and the body is counted as it streams, so a missing or lying `Content-Length`
+  (chunked transfer) is cut off at the same cap. `/v1/jobs` gets `MAX_UPLOAD_BYTES` plus
+  8 KB of multipart head-room, every other route 1 MB. The handler then counts the audio
+  part itself as defence in depth. The ingress is configured to reject oversized requests
+  too, but nothing depends on it being there.
 * **Type.** The container is identified by **magic bytes** — `fLaC`, `RIFF…WAVE`,
   `FORM…AIFF`, `OggS`, an ID3 tag or an MPEG frame sync — and never by the filename
   or the client's `Content-Type`. Anything else is `415`.
-* **Duration.** Input longer than 60 s is truncated server-side to the first 60 s and
-  reported as `truncated: true`. The header-declared sample count × channels ×
-  sample size is checked against a hard ceiling before decoding so a small file that
-  declares hours of audio (a decompression bomb) is rejected instead of decoded.
+* **Duration.** Input longer than `MAX_INPUT_SECONDS` (60 s) is truncated to the first
+  60 s **after** decoding and reported as `truncated: true`. There is no header-declared
+  sample-count check before decoding, so a decompression bomb is bounded by the other
+  limits rather than pre-empted: at most 10 MB reaches the decoder, decoding happens only
+  in the worker, ffmpeg is capped at `FFMPEG_TIMEOUT_SECONDS` (30 s) and at
+  `MAX_CHANNELS` (2), and the whole job dies at `JOB_TIMEOUT_SECONDS`. A header ceiling
+  before decode would still be the cheaper gate and is an open item.
 * **Decoding location.** Full decoding happens in the worker, in a process that has
   no secrets and can be killed by the `JOB_TIMEOUT_SECONDS` reaper; the API only sniffs
   and bounds.
 * **`options`.** Parsed with a pydantic model that forbids unknown fields, restricts
-  `stems` / `transcribe` to the four names, bounds `target_root_midi` to 0–127 and
-  `client_sample_rate` to sane values, and requires `idempotency_key` to be a UUID.
-  Violations are `422 validation_error` with field paths, before any credit is touched.
+  `stems` / `transcribe` to the four contract names, bounds `target_root_midi` and
+  `client_sample_rate`, and caps `idempotency_key` at 128 characters (it is an opaque
+  string scoped to `(user_id, key)`, not a validated UUID). Violations are
+  `422 validation_error` with field paths, before any credit is touched.
 * **Order.** Auth → validation → `reserve_credits` → persist → enqueue (§2). A
   rejected upload therefore never creates a reservation.
 
@@ -201,15 +254,15 @@ signature header or a request body (rule shared across all components).
 | **Forged webhook** | craft an event for a victim's `user_id` | signature required; secret only in Secrets Manager; the user id in `custom_data` is trusted only after the signature passes | §4 |
 | **Job enumeration** | walk `GET /v1/jobs/{id}` for other users' results | UUID v4 ids (122 random bits); every lookup is filtered by `user_id` and answers `404` rather than `403` so existence does not leak; 60 reads / min | §2, §5 |
 | **Signed-URL sharing / scraping** | pass a stem URL around, or guess others | one object, `GET`-only, 24 h, no list permission; the key path is UUIDs; the plugin uses each URL once | §2, §10 |
-| **Affiliate self-referral** | buy with one's own `ref` code, or with a second account, to claw back 30 % | commission is refused when the resolved affiliate's `user_id` equals the buyer's, or the affiliate's payout identity matches the buyer's email; commissions start `pending` and pay out only after the chargeback window; a refund sets `void`; velocity checks on new referral codes | §12 |
+| **Affiliate self-referral** | buy with one's own `ref` code, or with a second account, to claw back 30 % | `record_purchase` resolves the code only through an active `referral_codes` row joined to an active `affiliates` row `where a.user_id <> p_user_id`, so a self-referral simply writes no commission. Commissions are written `pending` and are meant to be paid only after the chargeback window, with a refund setting `void` — but the payout hold, the void-on-refund step and any velocity check on new codes are **operational procedures, not code**; nothing in this repository pays out or voids automatically. A second account with a different `user_id` is not caught at all | §12 |
 | **Commission double-pay** | replay the webhook to get two commission rows | commission row keyed by the same idempotency key as the grant, in the same transaction | §12 |
-| **Free-credit farming** | mass signups for 3 credits each | email verification before the grant; signup rate limit per IP and per email domain; the grant is idempotent per user; 3 credits ≈ $0.0075 of cost so the loss is bounded, but the GPU queue is protected by the submission limit | §3, §5 |
+| **Free-credit farming** | mass signups for 3 credits each | the grant is idempotent per user (`signup:<user id>`), and 3 credits ≈ $0.0075 of cost, so the loss per account is bounded and the GPU queue is protected by the 10/min submission limit. But the `on_auth_user_created` trigger fires on the `auth.users` insert, **before** any e-mail confirmation, and signup itself happens in GoTrue rather than in this API — so requiring confirmation before the grant, and rate-limiting signups per IP and e-mail domain, are Supabase Auth settings an operator must turn on, not something this repository enforces | §3, §5 |
 | **Credential stuffing** | password guessing through `/v1/auth/token` | strict IP-keyed limit on the auth proxy, GoTrue's own lockout, no distinguishable error between wrong email and wrong password | §1 |
 | **Algorithm confusion** | sign a token with the public key as an HMAC secret | single pinned algorithm per deployment; `alg` from the token is never consulted for key selection | §1 |
 | **JWKS DoS** | flood with tokens carrying random `kid`s | cached keys; one refetch per minute; unknown `kid` rejected | §1 |
 | **API-key theft** | leaked `sp_live_…` from CI or the growth engine | `DELETE /v1/api-keys/{id}` revokes instantly; damage capped by the owner's balance and rate limits; keys never appear in logs; the growth engine loads it from the environment only | §11 |
-| **Decompression bomb / malformed audio** | tiny file declaring hours of audio, or a crafted container | header sample-count ceiling before decode; magic-byte sniff; full decode only in the worker under the job timeout | §2, §5, §10 |
-| **Oversized upload** | send > 10 MB with a lying `Content-Length` | ALB limit plus streaming byte count in the handler → `413` | §2 |
+| **Decompression bomb / malformed audio** | tiny file declaring hours of audio, or a crafted container | magic-byte sniff and the 10 MB cap at the edge; full decode only in the worker, under a 30 s ffmpeg timeout, 2 channels and the job timeout; no pre-decode header ceiling yet (§7) | §2, §5, §10 |
+| **Oversized upload** | send > 10 MB with a lying `Content-Length`, or spool a huge body and take the `401` | `BodyLimitMiddleware` runs before the multipart parser: no credentials → `401`, oversized `Content-Length` → `413`, and a streaming byte count catches a chunked body; the handler counts the audio part again | §2 |
 | **Worker-death credit leak** | a crashed worker leaves a job `running` and a credit reserved forever | reaper settles jobs past `JOB_TIMEOUT_SECONDS` as failed → `release`; SQS redelivery and DLQ handle the message side; `settle_reservation` is idempotent | §6, §10 |
 | **Balance tampering** | write to `credit_ledger` / `credit_accounts` through PostgREST | RLS: no write policies; functions callable by `service_role` only | §6 |
 | **Token in logs** | `?token=` on the WebSocket route | query strings stripped from access logs; the socket is rejected before the upgrade (4401 close / 403 handshake) so no session exists to log; SSE (header auth) is the plugin path | §2 |
