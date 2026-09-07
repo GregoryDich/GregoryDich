@@ -1,0 +1,71 @@
+name: infra
+
+# Terraform correctness checks that need no AWS credentials, so they run on every
+# pull request. deploy.yml only runs `terraform plan`, which needs a live account
+# and therefore never guards a PR.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "snapplay-ai/infra/**"
+      - ".github/workflows/infra.yml"
+  pull_request:
+    paths:
+      - "snapplay-ai/infra/**"
+      - ".github/workflows/infra.yml"
+
+permissions:
+  contents: read
+
+env:
+  TERRAFORM_VERSION: "1.9.8"
+  TF_IN_AUTOMATION: "1"
+  TF_INPUT: "0"
+
+jobs:
+  terraform:
+    name: Validate Terraform
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: snapplay-ai/infra/aws
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive
+
+      # -backend=false skips the S3 state backend, so no credentials are needed.
+      # Validating the root module type-checks every child module it calls.
+      - name: terraform init
+        run: terraform init -backend=false
+
+      - name: terraform validate
+        run: terraform validate
+
+  compose:
+    name: Validate compose and Dockerfiles
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: docker compose config
+        working-directory: snapplay-ai/infra
+        run: |
+          docker compose -f docker-compose.yml config --quiet
+          docker compose -f docker-compose.yml --profile gpu config --quiet
+
+      - name: Lint Dockerfiles
+        working-directory: snapplay-ai/infra
+        run: |
+          docker run --rm -i hadolint/hadolint:latest-alpine \
+            hadolint --failure-threshold error - < Dockerfile.api
+          docker run --rm -i hadolint/hadolint:latest-alpine \
+            hadolint --failure-threshold error - < Dockerfile.worker
