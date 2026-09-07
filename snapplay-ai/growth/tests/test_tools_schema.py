@@ -27,10 +27,10 @@ async def test_tool_names(mcp_client: Client) -> None:
 
 
 async def test_rights_and_llm_statements_in_docstrings(mcp_client: Client) -> None:
-    tools = {t.name: t for t in await mcp_client.list_tools()}
-    assert "must NOT be used for advertising" in (tools["list_source_clips"].description or "")
-    assert "no LLM is called" in (tools["write_script"].description or "")
-    assert "restricted" in (tools["publish_video"].description or "")
+    tools = {t.name: " ".join((t.description or "").split()) for t in await mcp_client.list_tools()}
+    assert "must NOT be used for advertising" in tools["list_source_clips"]
+    assert "no LLM is called" in tools["write_script"]
+    assert "restricted" in tools["publish_video"]
 
 
 async def test_input_schema_snapshot(mcp_client: Client) -> None:

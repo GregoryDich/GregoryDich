@@ -1,0 +1,265 @@
+{
+  "generate_voiceover": {
+    "additionalProperties": false,
+    "properties": {
+      "content_item_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "When given, the audio and timings are attached to that content item\nso render_video mixes the narration in and shows word-timed captions."
+      },
+      "text": {
+        "description": "The narration to voice (typically the beats of a write_script brief).",
+        "type": "string"
+      },
+      "voice_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "ElevenLabs voice id; defaults to ELEVENLABS_VOICE_ID."
+      }
+    },
+    "required": [
+      "text"
+    ],
+    "type": "object"
+  },
+  "list_source_clips": {
+    "additionalProperties": false,
+    "properties": {
+      "limit": {
+        "default": 10,
+        "description": "Maximum number of clips to return.",
+        "type": "integer"
+      },
+      "source": {
+        "default": "licensed_folder",
+        "description": "Which provider to query.",
+        "enum": [
+          "licensed_folder",
+          "free_music_archive",
+          "urls"
+        ],
+        "type": "string"
+      },
+      "urls": {
+        "anyOf": [
+          {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Explicit clip URLs (required when source=\"urls\")."
+      }
+    },
+    "type": "object"
+  },
+  "process_clip": {
+    "additionalProperties": false,
+    "properties": {
+      "clip_path_or_url": {
+        "description": "Local audio path or http(s) URL of a rights-cleared clip.",
+        "type": "string"
+      },
+      "options": {
+        "anyOf": [
+          {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Job options per API contract \u00a72 (``stems``, ``transcribe``, ``drum_slices``,\n``target_root_midi``, ``client_sample_rate``) plus ``source`` (provider name to\nrecord, e.g. \"free_music_archive\") and ``force`` (true reprocesses a known clip)."
+      }
+    },
+    "required": [
+      "clip_path_or_url"
+    ],
+    "type": "object"
+  },
+  "publish_video": {
+    "additionalProperties": false,
+    "properties": {
+      "caption": {
+        "description": "Post caption / description.",
+        "type": "string"
+      },
+      "content_item_id": {
+        "description": "Id returned by process_clip (must have been rendered).",
+        "type": "string"
+      },
+      "hashtags": {
+        "description": "Hashtags appended to the caption (with or without '#').",
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "platforms": {
+        "description": "Target platforms.",
+        "items": {
+          "enum": [
+            "instagram",
+            "facebook",
+            "tiktok",
+            "youtube"
+          ],
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "schedule_at": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Optional RFC 3339 UTC time to publish at instead of now."
+      }
+    },
+    "required": [
+      "content_item_id",
+      "platforms",
+      "caption",
+      "hashtags"
+    ],
+    "type": "object"
+  },
+  "render_video": {
+    "additionalProperties": false,
+    "properties": {
+      "avatar_clip": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Path or URL of the presenter video (required for presenter=\"avatar_clip\")."
+      },
+      "content_item_id": {
+        "description": "Id returned by process_clip.",
+        "type": "string"
+      },
+      "presenter": {
+        "default": "waveform",
+        "description": "Bottom half: an audio-reactive waveform or a supplied avatar clip.",
+        "enum": [
+          "waveform",
+          "avatar_clip"
+        ],
+        "type": "string"
+      },
+      "scene": {
+        "default": "plugin_ui",
+        "description": "Top half: a stylised SnapPlay plugin UI or a DAW arrangement view.",
+        "enum": [
+          "daw",
+          "plugin_ui"
+        ],
+        "type": "string"
+      }
+    },
+    "required": [
+      "content_item_id"
+    ],
+    "type": "object"
+  },
+  "report_metrics": {
+    "additionalProperties": false,
+    "properties": {
+      "since_iso": {
+        "description": "RFC 3339 timestamp; posts published before it are skipped.",
+        "type": "string"
+      }
+    },
+    "required": [
+      "since_iso"
+    ],
+    "type": "object"
+  },
+  "run_daily_batch": {
+    "additionalProperties": false,
+    "properties": {
+      "accounts": {
+        "anyOf": [
+          {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Platforms to publish to (instagram, facebook, tiktok, youtube); defaults to\nevery platform with credentials configured."
+      },
+      "count": {
+        "default": 3,
+        "description": "Number of new clips to process.",
+        "type": "integer"
+      },
+      "dry_run": {
+        "default": true,
+        "description": "When true (default) nothing is published.",
+        "type": "boolean"
+      }
+    },
+    "type": "object"
+  },
+  "write_script": {
+    "additionalProperties": false,
+    "properties": {
+      "angle": {
+        "description": "The creative angle: speed, bass, sample_flip or tutorial.",
+        "enum": [
+          "speed",
+          "bass",
+          "sample_flip",
+          "tutorial"
+        ],
+        "type": "string"
+      },
+      "clip_metadata": {
+        "additionalProperties": true,
+        "description": "Fields such as ``title``, ``chosen_stem``, ``bpm``, ``key`` (string or\n``{\"root\",\"mode\"}``), ``note_count``, ``analysis`` (a JobResult analysis block),\nand optionally ``content_item_id``.",
+        "type": "object"
+      }
+    },
+    "required": [
+      "clip_metadata",
+      "angle"
+    ],
+    "type": "object"
+  }
+}

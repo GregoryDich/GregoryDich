@@ -11,7 +11,7 @@ from fastmcp import Client
 from fastmcp.exceptions import ToolError
 
 from mcp_server.state import Store
-from tests.conftest import JOB_ID, make_job_result, make_wav_bytes, mock_snapplay
+from tests.conftest import JOB_ID, SNAPPLAY_URL, make_job_result, make_wav_bytes, mock_snapplay
 
 
 async def test_process_clip_end_to_end(
@@ -113,7 +113,7 @@ async def test_process_clip_requires_api_key(
 async def test_process_clip_surfaces_contract_errors(
     mcp_client: Client, router: respx.Router, clip_file: Path
 ) -> None:
-    router.post(f"{router.bases or ''}https://api.snapplay.test/v1/jobs").mock(
+    router.post(f"{SNAPPLAY_URL}/v1/jobs").mock(
         return_value=httpx.Response(
             402, json={"error": {"code": "insufficient_credits", "message": "You have 0 credits."}}
         )
