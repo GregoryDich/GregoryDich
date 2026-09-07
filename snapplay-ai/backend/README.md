@@ -100,13 +100,13 @@ errors — so the routes behave identically on either backend.
 ## Test
 
 ```bash
-python3 -m pytest -q       # 209 collected: 99 tests/api, 46 tests/pipeline, 50 tests/aws, 14 top-level
+python3 -m pytest -q       # 247 collected: 135 tests/api, 46 tests/pipeline, 50 tests/aws, 16 top-level
 ruff check app tests
 ```
 
 The two skips are `tests/pipeline/test_pipeline_real.py` (GPU extras: torch, demucs,
 basic-pitch) and `tests/pipeline/test_worker_serverless.py` (modal not installed); with
-neither installed the suite reports **207 passed, 2 skipped**.
+neither installed the suite reports **245 passed, 2 skipped**.
 
 Tests are fully offline: `STORAGE_BACKEND=memory`, `SNAPPLAY_PIPELINE=fake`, HS256 test
 JWTs minted in `tests/conftest.py`, AWS via moto, HTTP via respx. `tests/api` covers the

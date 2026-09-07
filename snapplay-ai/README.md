@@ -145,7 +145,8 @@ the engine at any audio source.
 
 Every component is implemented. What follows separates what is actually *tested here*
 from what needs hardware, an account or a DAW and is therefore **unverified**. The counts
-are the numbers the suites print on this repository, not estimates.
+are what the suites printed on this tree at the time of writing, not estimates — re-run
+the commands rather than trusting the numbers after the code moves.
 
 ### Verified offline — no hardware, no accounts
 
@@ -153,7 +154,7 @@ are the numbers the suites print on this repository, not estimates.
 |-------|---------|--------|
 | Plugin core (JUCE-free) | `ctest --test-dir build` | **34 passed, 0 failed** — Scale-Snap and its tie-breaking, envelope/ADSR derivation, transient detection, zero-crossing trimming, the SMF writer, the `.fsc` writer, one combined export fixture |
 | Export round-trip | `SNAPPLAY_TEST_OUT=… ./snapplay_core_tests && python3 plugin/Tests/roundtrip.py …` | `.mid` re-read with **mido** (SMF type 1, PPQ 480, tempo + 4/4 meta, per-track channels, note ordering) and `.fsc` re-read byte for byte and cross-checked against **PyFLP 2.2.1**'s own event ids, `FileFormat.Score`, PPQ table and 24-byte note struct: **7 notes over 2 tracks, 7 note records** |
-| Backend | `cd backend && python3 -m pytest -q` | **207 passed, 2 skipped** (209 collected: 99 API/route, 46 pipeline, 50 AWS, 14 top-level). Skips are the GPU extras and `modal`, neither installed |
+| Backend | `cd backend && python3 -m pytest -q` | **245 passed, 2 skipped** (247 collected: 135 API/route, 46 pipeline, 50 AWS, 16 top-level). The two skips are `tests/pipeline/test_pipeline_real.py` (GPU extras) and `tests/pipeline/test_worker_serverless.py` (`modal` not installed) |
 | AWS paths | part of the above (`backend/tests/aws`) | **50 tests** against S3, SQS and the reaper mocked by **moto** |
 | Database | `bash db/tests/run_tests.sh` | **6 test groups pass** on a throwaway PostgreSQL 16 cluster — affiliates, api_keys, jobs, ledger, RLS, plus a real two-session race for the last credit (one winner, one `insufficient_credits`) |
 | Growth engine | `cd growth && python3 -m pytest -q` | **81 passed, 1 skipped** — every platform API mocked with respx; the skip is the Remotion smoke render when Node/Remotion is absent |
