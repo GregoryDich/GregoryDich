@@ -136,7 +136,9 @@ def build_services(settings: Settings) -> Services:
         jobs = SupabaseJobsService(client, bus, events_mode=mode)
         users = SupabaseUsersService(client, settings)
         api_keys = SupabaseApiKeysService(client)
-        webhook_events = SupabaseWebhookEventsService(client)
+        webhook_events = SupabaseWebhookEventsService(
+            client, settings.webhook_claim_lease_seconds
+        )
         purchases = SupabasePurchasesService(client)
         plans = SupabasePlansService(client)
     storage = build_storage(settings, client)

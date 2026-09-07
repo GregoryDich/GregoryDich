@@ -220,7 +220,10 @@ interpolated straight into the checkout URL, so anything else is `422 validation
 When the request is unauthenticated the URL is returned without the `user_id` parameter;
 empty parameters are dropped rather than sent blank. `checkout_url` is `null` for the free
 plan **and for any plan whose `plans.provider_variant_ids` has no id for a checkout
-provider** — see the deployment note in `db/README.md`. New accounts are granted
+provider** — see the deployment note in `db/README.md`. That configuration gap is
+announced rather than silent: the API logs every such plan id at startup (error level
+under `ENV=production`), and `python -m app.checks` prints the same list and exits
+non-zero, so a deployment can gate on it before a user meets a paywall with no buttons. New accounts are granted
 **3 credits** at signup.
 
 ### In-plugin paywall
@@ -250,6 +253,16 @@ The growth engine (see §11) authenticates with an API key and never sees this p
   customer email lookup.
 * Idempotency key = `lemonsqueezy:<event_name>:<data.id>`; duplicates → `200`
   with `{ "status": "duplicate" }`.
+* **A claim never strands a paid event.** The key is claimed before the event is applied
+  and released with an error if applying fails, so the provider's retry re-runs it. A
+  claim left behind by a process that died mid-apply expires after
+  `WEBHOOK_CLAIM_LEASE_SECONDS` (default 300) and the next retry takes it over; the
+  reclaim is decided under a row lock, so two retries cannot both apply it.
+* **The affiliate `ref` survives a store that drops it.** It is read from the paying
+  event's `custom_data`, and failing that from the code the checkout event stored on the
+  subscription, so a store that does not forward `custom_data` onto
+  `subscription_payment_success` does not silently lose the commission (§12). A payment
+  that can be attributed neither way is logged at warning level with its subscription id.
 
 Both secrets are **required in production**: `Settings` refuses to start with
 `ENV=production` unless `LEMONSQUEEZY_WEBHOOK_SECRET` and `PADDLE_WEBHOOK_SECRET` are
@@ -326,7 +339,8 @@ service-role key only; RLS blocks direct ledger writes):
 The same migration defines the job, billing and API-key functions the rest of this
 contract refers to, under the same rules (`SECURITY DEFINER`, `service_role` only):
 `create_job`, `start_job`, `update_job_progress`, `complete_job`, `fail_job`,
-`cancel_job`, `reap_stale_jobs` (§10), `record_purchase` (§4, §12, §13),
+`cancel_job`, `reap_stale_jobs` (§10), `record_purchase` and `claim_webhook_event`
+(§4, §12, §13),
 `adjust_credits`, and `create_api_key` / `authenticate_api_key` / `revoke_api_key`
 (§11). `db/README.md` lists their exact signatures.
 
@@ -454,7 +468,9 @@ Tables `affiliates` (user, code, commission rate, payout details), `referral_cod
 `amount_cents` = 30 % of net revenue after provider fees, status `pending|paid|void`).
 A checkout carries `checkout[custom][ref]`; the webhook resolves it to an affiliate and
 writes a commission row in the same transaction as the credit grant, keyed by the same
-idempotency key so a replayed webhook cannot double-pay.
+idempotency key so a replayed webhook cannot double-pay. The code is also kept on
+`subscriptions.referral_code`, so a renewal whose `custom_data` no longer carries it is
+still attributed to the affiliate who brought the subscriber in.
 
 ## 13. Policies left open by earlier drafts
 

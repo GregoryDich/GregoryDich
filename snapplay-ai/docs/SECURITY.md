@@ -102,6 +102,22 @@ Rules applied to both:
   never answered "duplicate" without having been applied — the failure mode is a repeated
   attempt, which the per-key idempotency inside the functions absorbs, rather than a lost
   payment.
+* **A claim has a lease.** A process killed between claiming an event and closing it
+  (OOM, SIGKILL, container eviction) cannot mark the row either way, so the rule above
+  does not reach it. A claim with no `processed_at` and no `error` that is older than
+  `WEBHOOK_CLAIM_LEASE_SECONDS` (default 300 s) is therefore reclaimable, and the
+  provider's next retry applies the event instead of being answered "duplicate" forever.
+  The decision is taken inside `claim_webhook_event` on the row held `FOR UPDATE`, and
+  the reclaim re-stamps `received_at` before releasing the lock: of two workers racing to
+  reclaim the same stranded event exactly one wins, and the loser sees a claim inside its
+  lease. `app/services/memory.py` mirrors the rule, deciding and re-stamping without
+  awaiting, which is the same guarantee in a single-threaded event loop.
+* **The affiliate `ref` of a subscription payment has a fallback.** It is read from the
+  paying event's `custom_data`, then from `subscriptions.referral_code` — the code the
+  checkout event stored when the subscription was created. A store that does not forward
+  `custom_data` onto `subscription_payment_success` therefore costs no commission. A
+  payment that resolves neither way is logged at warning level with its provider and
+  subscription id, so the sale can be reconciled by hand instead of disappearing.
 * The user is resolved from `meta.custom_data.user_id` first and only then by customer
   email; an event that resolves to no user is stored and answered `200` for manual
   review, not `4xx` (which would just cause retries).
@@ -265,8 +281,9 @@ signature header or a request body (rule shared across all components).
 | **Credit race** | two `POST /v1/jobs` in flight with `available = 1`, hoping both pass the check | `reserve_credits` runs under `SELECT … FOR UPDATE` on the account row; the second call sees `reserved = 1`, raises `P0402` → `402`. Reservation is idempotent per `(job_id, 'reserve')` so a retry of the *same* job never double-reserves. | §6 |
 | **Double submit / retry storm** | client retries after a timeout, hoping for a free duplicate | `idempotency_key` scoped to `(user_id, key)` returns the existing job with no second reservation | §2 |
 | **Replayed webhook** | re-send a captured `order_created` to mint credits again | HMAC over the raw body; unique idempotency key claimed in `webhook_events`; Paddle `ts` window of 5 min; `record_purchase` writes the purchase, grant and commission under that same key in one transaction, so even a re-run applies once | §4, §12 |
-| **Webhook killed mid-apply** | crash the API between claim and completion | *Open.* The key stays claimed, so the provider's retry is answered `duplicate` and the sale is never applied. The window is small (the claim is released with an error on any handled exception) but a hard kill escapes it. Closing it needs an age-based stale-claim rule — a claim older than *n* minutes with no completion becomes claimable again. Until then, reconcile against the provider's dashboard and re-grant by hand with `grant_credits` using the provider's order id as the key | §4 |
-| **Referral code lost on a subscription** | — (a store misconfiguration, not an attack) | *Open.* The LemonSqueezy path reads the affiliate `ref` from the paying event's `custom_data`, which assumes the store forwards the checkout's custom data to `subscription_payment_success`. A store that does not would silently drop that sale's commission. Verify the forwarding on the first live subscription before recruiting affiliates | §12 |
+| **Webhook killed mid-apply** | crash the API between claim and completion | Claims have a lease: a row with no `processed_at` and no `error` older than `WEBHOOK_CLAIM_LEASE_SECONDS` (default 300 s) is reclaimed by the provider's next retry, so a killed process delays the sale by at most one lease instead of losing it. `claim_webhook_event` decides under `FOR UPDATE` and re-stamps `received_at`, so only one of two racing retries reclaims it; every mutation underneath is still keyed by the idempotency key | §4 |
+| **Referral code lost on a subscription** | — (a store misconfiguration, not an attack) | The code is kept on `subscriptions.referral_code` by whichever checkout event carried it, and a paying event without `custom_data` is attributed from there. Unattributable payments are logged at warning level with the subscription id for manual reconciliation — the failure is visible instead of silent | §12 |
+| **Paywall shipped with no checkout URLs** | — (missing operator configuration) | `plans.provider_variant_ids` is empty until an operator fills it in, and a paid plan without it serves `checkout_url: null`. The API logs every such plan id at startup — error level under `ENV=production` — and `python -m app.checks` reports the same list and exits non-zero, so a deployment can gate on it | §3 |
 | **Forged webhook** | craft an event for a victim's `user_id` | signature required; secret only in Secrets Manager; the user id in `custom_data` is trusted only after the signature passes | §4 |
 | **Job enumeration** | walk `GET /v1/jobs/{id}` for other users' results | UUID v4 ids (122 random bits); every lookup is filtered by `user_id` and answers `404` rather than `403` so existence does not leak; 60 reads / min | §2, §5 |
 | **Signed-URL sharing / scraping** | pass a stem URL around, or guess others | one object, `GET`-only, 24 h, no list permission; the key path is UUIDs; the plugin uses each URL once | §2, §10 |

@@ -636,6 +636,70 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
+-- Webhook delivery claim (contract §4)
+-- ---------------------------------------------------------------------------
+-- Claims one provider delivery: true means this caller owns applying the event, false
+-- means it is a duplicate to be acknowledged without side effects.
+--
+-- A row that already exists is still claimable in two cases:
+--   * it carries an `error` — the previous delivery failed halfway, so this delivery is
+--     the retry that has to run it;
+--   * it was claimed more than p_lease_seconds ago and was never closed at all
+--     (`processed_at` and `error` both null) — the process holding the claim was killed
+--     between claim and completion (OOM, SIGKILL, container eviction). Without this rule
+--     the claim is held forever, every provider retry is answered "duplicate", and a
+--     customer who paid is never credited.
+--
+-- The row is taken `for update`, and reclaiming a stale row stamps `received_at = now()`
+-- before the lock is released. Two workers reclaiming the same stale event therefore
+-- serialise: the loser re-reads the row after the winner commits, sees a claim inside its
+-- lease, and stands down. Exactly one of them applies the event.
+create function public.claim_webhook_event(
+  p_idempotency_key text,
+  p_provider public.purchase_provider,
+  p_event_name text,
+  p_payload jsonb,
+  p_lease_seconds integer
+) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare
+  v_event public.webhook_events;
+begin
+  if p_idempotency_key is null or p_idempotency_key = '' then
+    raise exception 'invalid_argument' using errcode = '22023',
+      detail = 'p_idempotency_key is required';
+  end if;
+  if p_lease_seconds is null or p_lease_seconds <= 0 then
+    raise exception 'invalid_argument' using errcode = '22023',
+      detail = 'p_lease_seconds must be positive';
+  end if;
+
+  insert into public.webhook_events (provider, event_name, idempotency_key, payload)
+  values (p_provider, p_event_name, p_idempotency_key, coalesce(p_payload, '{}'::jsonb))
+  on conflict (idempotency_key) do nothing;
+  if found then
+    return true;
+  end if;
+
+  select * into v_event from public.webhook_events
+   where idempotency_key = p_idempotency_key
+     for update;
+  if not found then
+    return false;
+  end if;
+  if v_event.error is not null then
+    return true;
+  end if;
+  if v_event.processed_at is not null
+     or v_event.received_at > now() - make_interval(secs => p_lease_seconds) then
+    return false;
+  end if;
+  update public.webhook_events set received_at = now() where id = v_event.id;
+  return true;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- API keys (contract §11). The plaintext is returned exactly once, by create_api_key.
 -- Hashing uses core sha256() so no extension schema is needed on the search_path.
 -- ---------------------------------------------------------------------------

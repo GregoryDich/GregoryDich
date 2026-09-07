@@ -13,6 +13,7 @@ app/
   config.py        Settings (pydantic-settings), get_settings(), override_settings()
   schemas.py       contract payloads (§1–§3, §5, §7, §11)
   errors.py        ApiException + §5 error envelope handlers and code constants
+  checks.py        deployment self-checks (python -m app.checks), also run at startup
   dependencies.py  get_services() (the wired container) and get_principal() (JWT or API key)
   auth/            jwt.py (Supabase token verification), api_keys.py (sp_live_ format + sha256)
   middleware/      body_limit.py (request-body caps applied before the multipart parser),
@@ -99,7 +100,14 @@ errors — so the routes behave identically on either backend.
   under the webhook's idempotency key, so commissions recur per payment but never double-pay.
 * A delivery that fails while being applied is marked processed *with an error*, which
   leaves the key claimable so the provider's retry re-runs it. A process killed outright
-  between claim and completion is the known gap (`docs/SECURITY.md` §9).
+  between claim and completion leaves a claim with neither mark; it expires after
+  `WEBHOOK_CLAIM_LEASE_SECONDS` (default 300) and the provider's next retry takes it over.
+  `claim_webhook_event` decides that under the row's `FOR UPDATE` lock and re-stamps
+  `received_at`, so two workers cannot both reclaim the same stranded event.
+* A subscription payment whose `custom_data` carries no `ref` is attributed from
+  `subscriptions.referral_code`, kept by the checkout event that created the subscription;
+  a payment that cannot be attributed either way is logged at warning level with its
+  subscription id.
 * Subscription credits are granted with `expires_at` = the end of the billing period
   (`expire_credits()` reclaims the remainder); credit-pack credits never expire. A
   cancelled subscription keeps its plan until `current_period_end`.
@@ -107,13 +115,13 @@ errors — so the routes behave identically on either backend.
 ## Test
 
 ```bash
-python3 -m pytest -q       # 247 collected: 135 tests/api, 46 tests/pipeline, 50 tests/aws, 16 top-level
-ruff check app tests
+python3 -m pytest -q       # 258 collected: 140 tests/api, 46 tests/pipeline, 50 tests/aws, 22 top-level
+ruff check app tests worker
 ```
 
 The two skips are `tests/pipeline/test_pipeline_real.py` (GPU extras: torch, demucs,
 basic-pitch) and `tests/pipeline/test_worker_serverless.py` (modal not installed); with
-neither installed the suite reports **245 passed, 2 skipped**.
+neither installed the suite reports **256 passed, 2 skipped**.
 
 Tests are fully offline: `STORAGE_BACKEND=memory`, `SNAPPLAY_PIPELINE=fake`, HS256 test
 JWTs minted in `tests/conftest.py`, AWS via moto, HTTP via respx. `tests/api` covers the
@@ -130,7 +138,7 @@ All keys are listed with placeholders in `.env.example`. The important groups:
 | Supabase | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, `SUPABASE_JWT_SECRET` (HS256) or `SUPABASE_JWKS_URL` (RS256/ES256) |
 | Storage | `STORAGE_BACKEND=supabase\|s3\|memory`, `STORAGE_BUCKET`, `SIGNED_URL_TTL_SECONDS` |
 | AWS | `AWS_REGION`, `S3_BUCKET`, `S3_ENDPOINT_URL` (R2), `CLOUDFRONT_DOMAIN`, `CLOUDFRONT_KEY_PAIR_ID`, `CLOUDFRONT_PRIVATE_KEY`, `SQS_JOB_QUEUE_URL`, `SQS_DLQ_URL`, `JOB_TIMEOUT_SECONDS` |
-| Payments | `LEMONSQUEEZY_WEBHOOK_SECRET`, `PADDLE_WEBHOOK_SECRET` |
+| Payments | `LEMONSQUEEZY_WEBHOOK_SECRET`, `PADDLE_WEBHOOK_SECRET`, `WEBHOOK_CLAIM_LEASE_SECONDS` |
 | Pipeline | `SNAPPLAY_PIPELINE=fake\|local\|modal\|runpod\|aws`, `MODAL_APP_NAME`, `RUNPOD_ENDPOINT_ID`, `RUNPOD_API_KEY` |
 | Limits | `MAX_UPLOAD_BYTES`, `MAX_INPUT_SECONDS`, `FREE_SIGNUP_CREDITS`, `RATE_LIMIT_JOBS_PER_MIN`, `RATE_LIMIT_READS_PER_MIN`, `AFFILIATE_COMMISSION_RATE` |
 | Misc | `ENV=development\|test\|staging\|production`, `CORS_ALLOW_ORIGINS` |
@@ -140,6 +148,18 @@ JWKS URL, **and both webhook secrets** (`LEMONSQUEEZY_WEBHOOK_SECRET`,
 `PADDLE_WEBHOOK_SECRET`) are set, and they reject the `fake` pipeline and in-memory
 storage. The webhook secrets are mandatory because an empty one verifies every forged
 signature against `""`; refusing to boot is the intended behaviour.
+
+Configuration that lives in the database cannot be checked that way, so `app/checks.py`
+covers it. A paid plan whose `plans.provider_variant_ids` holds no id for a checkout
+provider has no `checkout_url`, and the plugin's paywall opens with no buttons — the API
+is healthy and nobody can pay. Startup logs those plan ids (error level under
+`ENV=production`, warning elsewhere, so a fresh checkout still boots), and
+
+```bash
+python3 -m app.checks   # {"check": "checkout_configured", "ok": false, "unsellable_plan_ids": [...]}
+```
+
+prints the same list and exits non-zero, which is what a deployment should gate on.
 
 ## Pipeline backends
 

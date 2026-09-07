@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
@@ -534,3 +535,163 @@ def test_a_non_ascii_signature_header_is_401(
     assert stamped.status_code == 401
     assert stamped.json()["error"]["code"] == "invalid_signature"
     assert store.purchases == {}
+
+
+def test_a_claim_stranded_by_a_hard_kill_is_reclaimed_after_the_lease(
+    client: TestClient,
+    auth: dict[str, str],
+    store: MemoryStore,
+    registered_user: UUID,
+    sign_lemonsqueezy: Callable[[bytes, str], dict[str, str]],
+    settings: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """§4: a process killed between claiming an event and closing the claim (OOM, SIGKILL,
+    eviction) leaves a row with neither ``processed_at`` nor ``error``. Answering the
+    provider's retry ``duplicate`` for such a row loses a sale that was paid for and never
+    applied, so a claim older than the lease is reclaimable — but not one inside it."""
+    body = ls_order(registered_user)
+    headers = sign_lemonsqueezy(body, settings.lemonsqueezy_webhook_secret.get_secret_value())
+    key = "lemonsqueezy:order_created:ls-order-1"
+
+    def killed(*args: Any, **kwargs: Any) -> Any:
+        raise RuntimeError("process killed mid-apply")
+
+    # The kill is simulated by its effect on the row: the apply never finishes and the
+    # claim is never closed either way.
+    monkeypatch.setattr(store, "mark_webhook_processed", lambda *a, **k: None)
+    monkeypatch.setattr(store, "record_purchase", killed)
+    killed_delivery = client.post("/v1/webhooks/lemonsqueezy", content=body, headers=headers)
+    assert killed_delivery.status_code == 500
+    monkeypatch.undo()
+    claim = store.webhook_events[key]
+    assert claim.processed_at is None and claim.error is None
+    assert store.purchases == {}
+
+    # Inside the lease the claim stands: a delivery still being applied is not stranded.
+    assert client.post("/v1/webhooks/lemonsqueezy", content=body, headers=headers).json() == {
+        "status": "duplicate"
+    }
+    assert store.purchases == {}
+    assert client.get("/v1/me", headers=auth).json()["balance"]["credits"] == 3
+
+    claim.received_at -= timedelta(seconds=settings.webhook_claim_lease_seconds + 1)
+    assert client.post("/v1/webhooks/lemonsqueezy", content=body, headers=headers).json() == {
+        "status": "ok"
+    }
+    assert len(store.purchases) == 1
+    assert client.get("/v1/me", headers=auth).json()["balance"]["credits"] == 53
+
+    # And exactly once: the reclaim closed the claim, so the next retry is a duplicate.
+    assert client.post("/v1/webhooks/lemonsqueezy", content=body, headers=headers).json() == {
+        "status": "duplicate"
+    }
+    assert len(store.purchases) == 1
+    assert client.get("/v1/me", headers=auth).json()["balance"]["credits"] == 53
+
+
+def test_two_workers_cannot_both_reclaim_the_same_stale_event(
+    client: TestClient,
+    store: MemoryStore,
+    registered_user: UUID,
+    sign_lemonsqueezy: Callable[[bytes, str], dict[str, str]],
+    settings: Any,
+) -> None:
+    """The reclaim re-stamps the claim, so the second caller finds it inside the lease.
+    In SQL that decision is taken under ``for update``; here nothing awaits in between."""
+    body = ls_order(registered_user)
+    headers = sign_lemonsqueezy(body, settings.lemonsqueezy_webhook_secret.get_secret_value())
+    client.post("/v1/webhooks/lemonsqueezy", content=body, headers=headers)
+    claim = store.webhook_events["lemonsqueezy:order_created:ls-order-1"]
+    claim.processed_at = None
+    claim.received_at -= timedelta(seconds=settings.webhook_claim_lease_seconds + 1)
+
+    def reclaim() -> bool:
+        return store.claim_webhook_event(
+            claim.idempotency_key, "lemonsqueezy", "order_created", {"meta": {}, "data": {}}
+        )
+
+    assert (reclaim(), reclaim()) == (True, False)
+
+
+def test_a_subscription_payment_without_custom_data_keeps_the_commission(
+    client: TestClient,
+    store: MemoryStore,
+    registered_user: UUID,
+    sign_lemonsqueezy: Callable[[bytes, str], dict[str, str]],
+    settings: Any,
+) -> None:
+    """§12: a store that does not forward the checkout's ``custom_data`` onto
+    ``subscription_payment_success`` sends the paying event without a ``ref``. The code
+    the checkout stored on the subscription pays the affiliate instead of being dropped."""
+    affiliate_user = uuid4()
+    store.ensure_user(affiliate_user, "affiliate@example.test")
+    store.add_affiliate(affiliate_user, "FRIEND")
+    secret = settings.lemonsqueezy_webhook_secret.get_secret_value()
+    period_end = (datetime.now(UTC) + timedelta(days=30)).isoformat()
+
+    created = ls_order(
+        registered_user,
+        event_id="ls-sub-nc",
+        variant_id=SUB_VARIANT,
+        event_name="subscription_created",
+        ref="friend",
+        renews_at=period_end,
+        subscription_id="ls-sub-nc",
+    )
+    assert client.post(
+        "/v1/webhooks/lemonsqueezy", content=created, headers=sign_lemonsqueezy(created, secret)
+    ).json() == {"status": "ok"}
+    assert store.find_subscription("lemonsqueezy", "ls-sub-nc").referral_code == "friend"
+
+    invoice = ls_order(
+        registered_user,
+        event_id="ls-invoice-nc",
+        variant_id=SUB_VARIANT,
+        event_name="subscription_payment_success",
+        total=900,
+        tax=100,
+        renews_at=period_end,
+        subscription_id="ls-sub-nc",
+    )
+    assert client.post(
+        "/v1/webhooks/lemonsqueezy", content=invoice, headers=sign_lemonsqueezy(invoice, secret)
+    ).json() == {"status": "ok"}
+
+    assert next(iter(store.purchases.values())).referral_code == "friend"
+    commissions = list(store.commissions.values())
+    assert len(commissions) == 1 and commissions[0].amount_cents == 240
+    assert store.referral_codes["friend"].uses == 1
+
+
+def test_an_unattributable_subscription_payment_is_logged_with_its_subscription_id(
+    client: TestClient,
+    store: MemoryStore,
+    registered_user: UUID,
+    sign_lemonsqueezy: Callable[[bytes, str], dict[str, str]],
+    settings: Any,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """When neither the event nor a stored subscription carries the code, the sale is
+    attributed to nobody — and that is said out loud, with the subscription id, so an
+    operator can reconcile it against the provider (§12)."""
+    secret = settings.lemonsqueezy_webhook_secret.get_secret_value()
+    invoice = ls_order(
+        registered_user,
+        event_id="ls-invoice-orphan",
+        variant_id=SUB_VARIANT,
+        event_name="subscription_payment_success",
+        total=900,
+        tax=100,
+        renews_at=(datetime.now(UTC) + timedelta(days=30)).isoformat(),
+        subscription_id="ls-sub-orphan",
+    )
+    with caplog.at_level(logging.WARNING, logger="snapplay.webhooks"):
+        assert client.post(
+            "/v1/webhooks/lemonsqueezy", content=invoice, headers=sign_lemonsqueezy(invoice, secret)
+        ).json() == {"status": "ok"}
+
+    warning = next(r for r in caplog.records if r.levelno == logging.WARNING)
+    assert warning.subscription_id == "ls-sub-orphan"
+    assert warning.provider == "lemonsqueezy"
+    assert len(store.purchases) == 1 and store.commissions == {}

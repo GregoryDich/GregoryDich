@@ -190,6 +190,10 @@ create table public.subscriptions (
   status text not null check (status in ('trialing', 'active', 'past_due', 'paused', 'cancelled', 'expired')),
   current_period_end timestamptz,
   cancelled_at timestamptz,
+  -- The affiliate code the subscription was bought with, kept from whichever checkout
+  -- event carried it. A renewal invoice whose custom_data lost the code is attributed
+  -- from here instead of losing the commission (§12).
+  referral_code text,
   raw jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

@@ -56,6 +56,13 @@ class Settings(BaseSettings):
     # Payment webhooks
     lemonsqueezy_webhook_secret: SecretStr = SecretStr("")
     paddle_webhook_secret: SecretStr = SecretStr("")
+    webhook_claim_lease_seconds: int = Field(default=300, gt=0)
+    """How long a claimed but unfinished webhook delivery blocks its retries (§4).
+
+    A process killed between claiming an event and marking it done leaves the claim
+    behind; past this lease the provider's retry may take it over. Keep it above the
+    longest a delivery can legitimately take to apply, and below the provider's retry
+    window, so a stranded paid event is recovered rather than lost."""
 
     # Pipeline
     snapplay_pipeline: PipelineBackend = "fake"

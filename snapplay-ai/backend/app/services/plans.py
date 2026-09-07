@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from typing import Any, Protocol
 from urllib.parse import quote
 from uuid import UUID
@@ -101,6 +102,21 @@ def build_checkout_url(plan: PlanRecord, user_id: UUID | None, ref: str | None) 
     return f"{base}?{'&'.join(kept)}" if kept else base
 
 
+def unsellable_plan_ids(plans: Iterable[PlanRecord]) -> list[str]:
+    """The ids of paid plans nobody can buy: no checkout template, or a template needing
+    a ``{variant_id}`` that ``provider_variant_ids`` does not hold (§3).
+
+    ``provider_variant_ids`` is operator configuration no migration can seed, so a freshly
+    migrated database serves ``checkout_url: null`` for every plan and the plugin's paywall
+    opens with no buttons — a failure whose only symptom is that nobody pays. This is what
+    ``app.checks`` and the startup check report on."""
+    return [
+        plan.id
+        for plan in plans
+        if plan.active and plan.price_cents > 0 and build_checkout_url(plan, None, None) is None
+    ]
+
+
 class SupabasePlansService:
     def __init__(self, client: SupabaseClient) -> None:
         self._client = client
@@ -130,4 +146,5 @@ __all__ = [
     "SupabasePlansService",
     "build_checkout_url",
     "is_referral_code",
+    "unsellable_plan_ids",
 ]

@@ -72,6 +72,11 @@ _LIST_RESERVED = ',.:()"\\ '
 #   create_api_key  every call mints a new key.
 #   cancel_job      accepts `queued` only, so a replay answers 409 for a cancellation
 #                   that in fact succeeded.
+#   claim_webhook_event
+#                   a replay of a claim that in fact committed is answered "not claimed",
+#                   which would acknowledge a paid event nothing applied. Letting the
+#                   delivery fail instead leaves the claim to expire with its lease, and
+#                   the provider's next retry applies it (§4).
 IDEMPOTENT_RPCS: frozenset[str] = frozenset(
     {
         "authenticate_api_key",

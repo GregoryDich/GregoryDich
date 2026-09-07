@@ -132,6 +132,7 @@ grant execute on function
   public.cancel_job(uuid, uuid),
   public.reap_stale_jobs(integer),
   public.record_purchase(uuid, public.purchase_provider, text, text, integer, integer, text, jsonb, text),
+  public.claim_webhook_event(text, public.purchase_provider, text, jsonb, integer),
   public.create_api_key(uuid, text),
   public.authenticate_api_key(text),
   public.revoke_api_key(uuid, uuid)

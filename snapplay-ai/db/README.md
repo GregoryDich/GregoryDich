@@ -16,9 +16,12 @@ affiliates described in `docs/API_CONTRACT.md` (§3, §6, §10, §11, §12).
 > **no buttons**, showing only "You've used your 3 free credits. Visit snapplay.ai to add
 > more."
 >
-> **Nothing fails loudly.** The migration succeeds, RLS is correct, the API is healthy,
-> every test passes, and the plugin does exactly what it was written to do. The only
-> symptom is that nobody can pay.
+> The migration succeeds, RLS is correct, the API is healthy and the plugin does exactly
+> what it was written to do — the only symptom is that nobody can pay. The backend says so
+> rather than leaving it silent: it logs every unsellable plan id at startup (error level
+> under `ENV=production`), and `python3 -m app.checks` in `backend/` prints
+> `{"check": "checkout_configured", "ok": false, "unsellable_plan_ids": [...]}` and exits
+> non-zero, which is what a deployment should gate on.
 >
 > Fix it immediately after applying the migrations:
 >
@@ -37,8 +40,10 @@ affiliates described in `docs/API_CONTRACT.md` (§3, §6, §10, §11, §12).
 > curl -s "$API/v1/plans" | jq -r '.plans[] | select(.price_usd > 0) | "\(.id) \(.checkout_url // "MISSING")"'
 > ```
 >
-> Any line ending in `MISSING` is a plan nobody can buy. Put that check in the deployment
-> checklist; it is the only alarm there is. The webhook side depends on the same column:
+> Any line ending in `MISSING` is a plan nobody can buy — the same answer `app.checks`
+> gives from inside, without needing the API to be reachable first.
+>
+> The webhook side depends on the same column:
 > before calling `record_purchase` the handler resolves the event's variant to a plan with
 > `find_by_variant(provider, variant_id)`, falling back to a `plan_id` passed in the
 > checkout's custom data. With `provider_variant_ids` empty and no `plan_id` in the custom
@@ -106,6 +111,9 @@ the migration need a one-off backfill of `profiles` and `credit_accounts`; the
   `reserve`/`capture` < 0, `expire` <= 0, `adjust` <> 0.
 * Every ledger row snapshots `balance_after` and `reserved_after`; `seq` is a monotonic
   cursor for `GET /v1/credits/ledger`.
+* `subscriptions.referral_code` keeps the affiliate code of the checkout that started the
+  subscription. A renewal event that no longer carries `custom_data` is attributed from
+  it, and an event without a code never clears it (§12).
 * One row per `(job_id, entry_type)`, one row per `idempotency_key`. Both are unique
   indexes, and every function checks them under the account lock, so replays and retries
   never double-charge or double-grant.
@@ -137,6 +145,7 @@ the mutating ones; `get_balance` is also granted to `authenticated` and refuses 
 | `reap_stale_jobs(p_timeout_seconds)` | `integer` | cron entry point (the only signature `service_role` may execute); delegates to the two-argument form with `p_queued_timeout_seconds = p_timeout_seconds * 10` |
 | `reap_stale_jobs(p_timeout_seconds, p_queued_timeout_seconds)` | `integer` | fails `running` jobs past the first timeout **and** `queued` jobs never picked up past the second, each with `worker_timeout`, releasing their reservations; rows are taken `for update skip locked` so two reapers cannot fight |
 | `record_purchase(p_user_id, p_provider, p_provider_order_id, p_plan_id, p_amount_cents, p_net_cents, p_referral_code, p_raw, p_idempotency_key)` | `purchases` | purchase + grant + commission, replay-safe |
+| `claim_webhook_event(p_idempotency_key, p_provider, p_event_name, p_payload, p_lease_seconds)` | `boolean` | true when this caller owns applying the event. Insert wins outright; otherwise the row is taken `for update` and reclaimed only if it carries an `error` (the previous delivery failed) or its claim is older than `p_lease_seconds` with nothing recorded either way (the holder was killed mid-apply). A reclaim re-stamps `received_at` under the lock, so two workers cannot both take the same stranded event |
 | `create_api_key(p_user_id, p_name)` | `(id, prefix, plaintext)` | plaintext returned once |
 | `authenticate_api_key(p_key_hash)` | `uuid` | owner or null; stamps `last_used_at` |
 | `revoke_api_key(p_key_id, p_user_id)` | `boolean` | owner-scoped, idempotent |
@@ -169,10 +178,12 @@ The script needs the PostgreSQL 16 binaries (`PGBIN`, default
 (`SNAPPLAY_TEST_PGUSER`, default `pguser`; `SNAPPLAY_TEST_PGDATA`, default
 `/home/user/pgdata/snapplay-test`). It creates a socket-only cluster on port
 `SNAPPLAY_TEST_PGPORT` (54329), applies the shim and the migrations, runs every
-`tests/test_*.sql`, runs a two-session race for the last credit, and always stops and
-removes the cluster on exit. Any failed assertion, SQL error or unexpected race outcome
+`tests/test_*.sql`, runs the two-session races (the last credit, and the reclaim of a
+stranded webhook claim), and always stops and removes the cluster on exit. Any failed assertion, SQL error or unexpected race outcome
 exits non-zero.
 
-A passing run ends with `ALL TESTS PASSED (6 test groups)`: the five
-`tests/test_*.sql` files (affiliates, api_keys, jobs, ledger, rls) plus the concurrency
-race, which must end with exactly one winner and one `insufficient_credits`.
+A passing run ends with `ALL TESTS PASSED (8 test groups)`: the six `tests/test_*.sql`
+files (affiliates, api_keys, jobs, ledger, rls, webhooks) plus two concurrency races — the
+last credit, which must end with exactly one winner and one `insufficient_credits`, and a
+stranded webhook claim past its lease, which exactly one of two simultaneous workers may
+reclaim.

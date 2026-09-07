@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.datastructures import Headers, MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from app.checks import log_checkout_configuration
 from app.config import Settings, get_settings
 from app.errors import install_exception_handlers
 from app.middleware.body_limit import BodyLimitMiddleware
@@ -114,6 +115,9 @@ class RequestContextMiddleware:
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
+    # A paid plan with no checkout URL ships a paywall with no buttons and fails silently
+    # (§3); this is the one place every deployment passes through. See app/checks.py.
+    await log_checkout_configuration(app.state.services.plans, app.state.settings)
     try:
         yield
     finally:

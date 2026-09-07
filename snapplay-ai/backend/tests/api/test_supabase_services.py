@@ -224,31 +224,65 @@ async def test_record_purchase_rpc(supabase: SupabaseClient) -> None:
 
 
 @respx.mock
-async def test_webhook_claim_ignores_duplicates_but_retakes_a_failed_event(
+async def test_webhook_claim_is_one_locking_rpc_carrying_the_lease(
+    supabase: SupabaseClient, settings: Settings
+) -> None:
+    """The claim is ``claim_webhook_event`` and nothing else: the decision (duplicate,
+    failed-and-retryable, or a stale claim past its lease) is taken in SQL under the row
+    lock, so two workers cannot both reclaim the same stranded event (§4)."""
+    events = SupabaseWebhookEventsService(supabase, settings.webhook_claim_lease_seconds)
+    route = respx.post(f"{BASE}/rest/v1/rpc/claim_webhook_event").mock(
+        side_effect=[httpx.Response(200, json=True), httpx.Response(200, json=False)]
+    )
+    assert await events.claim("k", "paddle", "transaction.completed", {"event_id": "e"}) is True
+    assert sent(route) == {
+        "p_idempotency_key": "k",
+        "p_provider": "paddle",
+        "p_event_name": "transaction.completed",
+        "p_payload": {"event_id": "e"},
+        "p_lease_seconds": settings.webhook_claim_lease_seconds,
+    }
+    assert await events.claim("k", "paddle", "transaction.completed", {"event_id": "e"}) is False
+    await supabase.aclose()
+
+
+@respx.mock
+async def test_subscription_upsert_never_clears_a_stored_referral_code(
     supabase: SupabaseClient,
 ) -> None:
-    events = SupabaseWebhookEventsService(supabase)
-    route = respx.post(f"{BASE}/rest/v1/webhook_events").mock(
-        side_effect=[
-            httpx.Response(201, json=[{"id": str(uuid4())}]),
-            httpx.Response(201, json=[]),
-            httpx.Response(201, json=[]),
-        ]
+    """An event without a ``ref`` must leave the code the checkout stored alone: PostgREST
+    builds the upsert's column list from the payload keys, so the column is omitted (§12)."""
+    purchases = SupabasePurchasesService(supabase)
+    user = uuid4()
+    row = {
+        "id": str(uuid4()),
+        "user_id": str(user),
+        "provider": "lemonsqueezy",
+        "provider_subscription_id": "ls-sub-1",
+        "plan_id": "sub_monthly",
+        "status": "active",
+        "referral_code": "friend",
+    }
+    route = respx.post(f"{BASE}/rest/v1/subscriptions").mock(
+        return_value=httpx.Response(201, json=[row])
     )
-    # An existing row is a duplicate only when its last attempt applied cleanly; one that
-    # carries an error is claimed again, so the provider's retry runs it.
-    existing = respx.get(f"{BASE}/rest/v1/webhook_events").mock(
-        side_effect=[
-            httpx.Response(200, json=[{"error": None}]),
-            httpx.Response(200, json=[{"error": "internal_error"}]),
-        ]
-    )
-    assert await events.claim("k", "paddle", "transaction.completed", {}) is True
-    assert route.calls.last.request.url.params["on_conflict"] == "idempotency_key"
-    assert "ignore-duplicates" in route.calls.last.request.headers["prefer"]
-    assert await events.claim("k", "paddle", "transaction.completed", {}) is False
-    assert await events.claim("k", "paddle", "transaction.completed", {}) is True
-    assert existing.calls.last.request.url.params["idempotency_key"] == "eq.k"
+    kwargs: dict[str, Any] = {
+        "user_id": user,
+        "provider": "lemonsqueezy",
+        "provider_subscription_id": "ls-sub-1",
+        "plan_id": "sub_monthly",
+        "status": "active",
+        "current_period_end": None,
+        "cancelled_at": None,
+        "raw": {},
+    }
+    subscription = await purchases.upsert_subscription(referral_code="friend", **kwargs)
+    assert subscription.referral_code == "friend"
+    assert sent(route)["referral_code"] == "friend"
+
+    await purchases.upsert_subscription(referral_code=None, **kwargs)
+    assert "referral_code" not in sent(route)
+    assert route.calls.last.request.url.params["on_conflict"] == "provider_subscription_id"
     await supabase.aclose()
 
 

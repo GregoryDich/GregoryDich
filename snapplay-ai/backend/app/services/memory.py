@@ -791,6 +791,7 @@ class MemoryStore:
         status: SubscriptionStatus,
         current_period_end: datetime | None,
         cancelled_at: datetime | None,
+        referral_code: str | None = None,
     ) -> SubscriptionRecord:
         existing = self.find_subscription(provider, provider_subscription_id)
         if existing is None:
@@ -808,6 +809,9 @@ class MemoryStore:
         existing.status = status
         existing.current_period_end = current_period_end
         existing.cancelled_at = cancelled_at
+        # As in the PostgREST upsert: an event without a code leaves the stored one alone.
+        if referral_code is not None:
+            existing.referral_code = referral_code
         return existing
 
     def find_subscription(
@@ -858,11 +862,28 @@ class MemoryStore:
     def claim_webhook_event(
         self, idempotency_key: str, provider: str, event_name: str, payload: dict[str, Any]
     ) -> bool:
-        """An event is claimed once; a row that failed to apply (``error`` set) stays
-        claimable so the provider's retry runs it instead of getting ``duplicate``."""
+        """``claim_webhook_event`` of 0002_functions.sql, rule for rule.
+
+        An event is claimed once; a row that failed to apply (``error`` set) stays
+        claimable so the provider's retry runs it instead of getting ``duplicate``, and a
+        claim older than ``WEBHOOK_CLAIM_LEASE_SECONDS`` that was never closed at all is
+        taken over — its holder was killed mid-apply, and without this the paid event is
+        answered ``duplicate`` forever.
+
+        Where the SQL takes the row ``for update`` before deciding, this method decides
+        and re-stamps ``received_at`` without awaiting: no other task can observe or
+        change the row in between, so two reclaims of the same stale event cannot both
+        win here either.
+        """
         existing = self.webhook_events.get(idempotency_key)
         if existing is not None:
-            return existing.error is not None
+            if existing.error is not None:
+                return True
+            lease = timedelta(seconds=self.settings.webhook_claim_lease_seconds)
+            if existing.processed_at is not None or existing.received_at > self.now() - lease:
+                return False
+            existing.received_at = self.now()
+            return True
         self.webhook_events[idempotency_key] = WebhookEventRow(
             id=uuid4(),
             provider=provider,
@@ -1109,6 +1130,7 @@ class MemoryPurchasesService:
         status: SubscriptionStatus,
         current_period_end: datetime | None,
         cancelled_at: datetime | None,
+        referral_code: str | None,
         raw: dict[str, Any],
     ) -> SubscriptionRecord:
         del raw  # the memory backend keeps no provider payloads
@@ -1120,6 +1142,7 @@ class MemoryPurchasesService:
             status,
             current_period_end,
             cancelled_at,
+            referral_code,
         )
 
     async def find_subscription(

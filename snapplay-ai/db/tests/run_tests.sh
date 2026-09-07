@@ -132,4 +132,41 @@ fi
 echo "PASS     two-session concurrency (one winner, one insufficient_credits)"
 passed=$((passed + 1))
 
+# --- two-session concurrency: only one worker may reclaim a stranded webhook claim --
+# A webhook_events row is left exactly as a hard kill leaves it — claimed, never closed —
+# and aged past the lease. Two psql sessions call claim_webhook_event on it at the same
+# time. The first takes the row lock and re-stamps received_at; the second blocks on that
+# lock and then sees a claim inside its lease. Exactly one may apply the paid event.
+claim_key='lemonsqueezy:order_created:race'
+sql_value "$DBNAME" "insert into public.webhook_events (provider, event_name, idempotency_key, payload, received_at) values ('lemonsqueezy', 'order_created', '$claim_key', '{}'::jsonb, now() - interval '1 hour') returning 1" >/dev/null
+for side in a b; do
+  cat > "$PGDATA_DIR/claim_$side.sql" <<SQL
+begin;
+select pg_sleep(0.5);
+select public.claim_webhook_event('$claim_key', 'lemonsqueezy', 'order_created', '{}'::jsonb, 60);
+select pg_sleep(1.5);
+commit;
+SQL
+done
+rc_a=0; rc_b=0
+as_owner "$PSQL -d $DBNAME -At -f '$PGDATA_DIR/claim_a.sql'" > "$PGDATA_DIR/claim_a.out" 2>&1 &
+pid_a=$!
+as_owner "$PSQL -d $DBNAME -At -f '$PGDATA_DIR/claim_b.sql'" > "$PGDATA_DIR/claim_b.out" 2>&1 &
+pid_b=$!
+wait "$pid_a" || rc_a=$?
+wait "$pid_b" || rc_b=$?
+if [ "$rc_a" -ne 0 ] || [ "$rc_b" -ne 0 ]; then
+  echo "webhook claim race: a session failed" >&2
+  cat "$PGDATA_DIR/claim_a.out" "$PGDATA_DIR/claim_b.out" >&2
+  exit 1
+fi
+claim_winners=$(cat "$PGDATA_DIR/claim_a.out" "$PGDATA_DIR/claim_b.out" | grep -c '^t$' || true)
+if [ "$claim_winners" -ne 1 ]; then
+  echo "webhook claim race: expected exactly one winner, got $claim_winners" >&2
+  cat "$PGDATA_DIR/claim_a.out" "$PGDATA_DIR/claim_b.out" >&2
+  exit 1
+fi
+echo "PASS     two-session concurrency (one webhook claim winner, one duplicate)"
+passed=$((passed + 1))
+
 echo "ALL TESTS PASSED ($passed test groups)"

@@ -7,7 +7,13 @@ which grants the plan's credits and writes the affiliate commission under that s
 so a replay can neither double-grant nor double-pay (§12, §13). One sale reaches
 ``record_purchase`` through exactly one event (``purchase_grants_credits``); the others
 only move subscription and plan state. An event whose application fails stays claimable,
-so the provider's retry runs it again instead of being answered "duplicate".
+so the provider's retry runs it again instead of being answered "duplicate", and a claim
+whose holder was killed mid-apply expires after ``WEBHOOK_CLAIM_LEASE_SECONDS``.
+
+The affiliate ``ref`` of a subscription payment is taken from the event, then from the
+code the checkout stored on the subscription: a store that does not forward
+``custom_data`` onto ``subscription_payment_success`` must not cost the affiliate the
+commission (§12).
 
 Subscription renewals grant perishable credits: the grant is issued here with
 ``expires_at`` = the end of the billing period, under the webhook's idempotency key, so
@@ -303,6 +309,48 @@ async def resolve_user(services: Services, event: WebhookEvent) -> UUID:
     raise ApiException(NOT_FOUND, message="No account matches this purchase.")
 
 
+async def resolve_referral_code(services: Services, event: WebhookEvent) -> str | None:
+    """The affiliate code this sale pays a commission on (§12).
+
+    A subscription period is billed by its own event, and a store that does not forward
+    the checkout's ``custom_data`` onto ``subscription_payment_success`` sends that event
+    without a ``ref``. Taking the event at its word would silently drop the commission of
+    every renewal — and of the first payment too — for a sale an affiliate did bring in,
+    so the code kept on the subscription by the checkout event that started it is used
+    instead.
+
+    When the subscription itself is unknown here, the code cannot be established either
+    way; that is logged with the subscription id so an operator can reconcile the sale
+    against the provider. A known subscription that carries no code is simply a sale
+    without an affiliate and is silent.
+    """
+    if event.referral_code is not None or event.subscription_id is None:
+        return event.referral_code
+    subscription = await services.purchases.find_subscription(
+        event.provider, event.subscription_id
+    )
+    if subscription is None:
+        log.warning(
+            "subscription payment has no referral code and no stored subscription",
+            extra={
+                "provider": event.provider,
+                "event_type": event.event_type,
+                "subscription_id": event.subscription_id,
+            },
+        )
+        return None
+    if subscription.referral_code is not None:
+        log.info(
+            "referral code recovered from the stored subscription",
+            extra={
+                "provider": event.provider,
+                "event_type": event.event_type,
+                "subscription_id": event.subscription_id,
+            },
+        )
+    return subscription.referral_code
+
+
 async def resolve_plan(services: Services, event: WebhookEvent) -> PlanRecord:
     if event.variant_id:
         plan = await services.plans.find_by_variant(event.provider, event.variant_id)
@@ -320,8 +368,10 @@ async def process_event(services: Services, event: WebhookEvent) -> WebhookAck:
 
     ``mark_processed`` with an error keeps the row and leaves it claimable, so the
     provider's retry of a delivery that failed halfway re-runs it — a paid event is never
-    answered "duplicate" without having been applied. Only an event that was applied
-    without error is a duplicate.
+    answered "duplicate" without having been applied. A claim that was never closed at
+    all, because the process died between claim and completion, expires after
+    ``WEBHOOK_CLAIM_LEASE_SECONDS`` and is taken over by the next retry. Only an event
+    that was applied without error is a duplicate.
     """
     if not await services.webhook_events.claim(
         event.idempotency_key, event.provider, event.event_type, event.payload
@@ -364,7 +414,7 @@ async def _apply(services: Services, event: WebhookEvent) -> None:
             plan_id=plan.id,
             amount_cents=event.amount_cents,
             net_cents=event.net_cents,
-            referral_code=event.referral_code,
+            referral_code=await resolve_referral_code(services, event),
             raw=event.payload,
             idempotency_key=event.idempotency_key,
         )
@@ -380,6 +430,9 @@ async def _apply(services: Services, event: WebhookEvent) -> None:
             cancelled_at=(
                 datetime.now(UTC) if event.subscription_status == "cancelled" else None
             ),
+            # Kept from whichever event of the checkout carries it; an event without one
+            # never clears what is stored, so a later renewal can still be attributed.
+            referral_code=event.referral_code,
             raw=event.payload,
         )
         await services.users.set_plan(
