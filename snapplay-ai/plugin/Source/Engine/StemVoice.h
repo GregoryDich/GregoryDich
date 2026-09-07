@@ -90,6 +90,8 @@ public:
 private:
     void updateEnvelopeParameters();
     void updateFilterParameters();
+    /** Drops the source and shared_ptr copies, silences the envelope and clears the note. */
+    void stopPlayback() noexcept;
 
     const VoiceParameters& params;
 
@@ -105,10 +107,13 @@ private:
     double position = 0.0;           ///< read head in source samples
     float noteGain = 1.0f;           ///< velocity
     float pitchBendRange = 2.0f;
+    bool oneShot = false;            ///< drum pad: plays to the end, key release ignored
 
     juce::LagrangeInterpolator interpolators[2];
     juce::ADSR envelope;
     juce::dsp::StateVariableTPTFilter<float> filter;
+    juce::SmoothedValue<float> cutoffSmoothed;
+    juce::SmoothedValue<float> resonanceSmoothed;
     juce::AudioBuffer<float> scratch;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StemVoice)

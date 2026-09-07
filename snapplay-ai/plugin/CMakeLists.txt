@@ -75,7 +75,8 @@ target_sources(SnapPlayAI
         Source/Engine/ScaleLockProcessor.cpp
         Source/Export/MidiExporter.cpp
         Source/Export/FscExporter.cpp
-        Source/Export/DragExport.cpp)
+        Source/Export/DragExport.cpp
+        Source/UI/SnapPlayLookAndFeel.cpp)
 
 target_include_directories(SnapPlayAI
     PRIVATE

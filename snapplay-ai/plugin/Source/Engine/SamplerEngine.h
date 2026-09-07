@@ -97,6 +97,7 @@ private:
     double currentSampleRate = 44100.0;
     int currentBlockSize = 512;
 
+    JUCE_DECLARE_WEAK_REFERENCEABLE (SamplerEngine)
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SamplerEngine)
 };
 

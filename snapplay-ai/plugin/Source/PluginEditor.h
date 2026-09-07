@@ -19,6 +19,7 @@
 #include "Cloud/AuthManager.h"
 #include "Cloud/Models.h"
 #include "PluginProcessor.h"
+#include "UI/SnapPlayLookAndFeel.h"
 
 #include <array>
 #include <functional>
@@ -52,6 +53,9 @@ public:
 
 private:
     void rebuildMessage();
+    /** First purchasable plan of the requested kind (subscription or credit pack), or nullptr. */
+    const cloud::PlanInfo* findPlan (bool subscription) const;
+    juce::Rectangle<int> getPanelBounds() const;
 
     juce::Label titleLabel;
     juce::Label messageLabel;
@@ -83,6 +87,7 @@ public:
 
 private:
     void submit();
+    juce::Rectangle<int> getPanelBounds() const;
 
     juce::Label titleLabel;
     juce::Label emailLabel;
@@ -132,6 +137,7 @@ public:
 
     std::function<juce::File()> fileProvider;
 
+    void mouseDown (const juce::MouseEvent& event) override;
     void mouseDrag (const juce::MouseEvent& event) override;
     void mouseUp (const juce::MouseEvent& event) override;
 
@@ -188,6 +194,16 @@ private:
     void openFileChooser();
     void setupKnob (juce::Slider& slider, juce::Label& label, const juce::String& text);
 
+    /** Submits through the processor, or shows the paywall when the known balance is 0. */
+    void submitAudioFile (const juce::File& file);
+    bool hasExportableResult() const;
+    /** Writes the current result to the export directory (`.mid` or `.fsc`). */
+    juce::File writeExport (bool midi);
+    void openExportSaveDialog (bool midi);
+
+    // Declared first so it outlives every component that uses it.
+    ui::SnapPlayLookAndFeel lookAndFeel;
+
     SnapPlayAudioProcessor& processor;
 
     // Header
@@ -236,6 +252,8 @@ private:
     LoginOverlay loginOverlay;
     PaywallPrompt paywallPrompt;
     cloud::ApiClient::RequestId plansRequest = cloud::ApiClient::invalidRequest;
+    /** Set by "Not now": the prompt stays hidden until credits change or a job is refused. */
+    bool paywallDismissed = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SnapPlayAudioProcessorEditor)
 };

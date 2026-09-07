@@ -3,16 +3,33 @@
 #include "Engine/AutoAdsr.h"
 #include "PluginEditor.h"
 
+#include <array>
+#include <utility>
+
 namespace snapplay
 {
 
 namespace
 {
+    constexpr std::array<const char*, 12> allParameterIds {
+        ParamIds::attack, ParamIds::decay, ParamIds::sustain, ParamIds::release,
+        ParamIds::cutoff, ParamIds::resonance, ParamIds::gain, ParamIds::category,
+        ParamIds::rootTarget, ParamIds::drumMode, ParamIds::scaleMode, ParamIds::scaleRoot
+    };
+
+    /** The gain parameter's floor is silence, not a tiny signal. */
+    constexpr float silenceDb = -60.0f;
+
     juce::NormalisableRange<float> skewedRange (float start, float end, float centre)
     {
         juce::NormalisableRange<float> range (start, end);
         range.setSkewForCentre (centre);
         return range;
+    }
+
+    core::ScaleMode scaleModeFromIndex (int index)
+    {
+        return static_cast<core::ScaleMode> (juce::jlimit (0, core::numScaleModes - 1, index));
     }
 } // namespace
 
@@ -37,9 +54,10 @@ SnapPlayAudioProcessor::SnapPlayAudioProcessor()
     scaleModeParam  = apvts.getRawParameterValue (ParamIds::scaleMode);
     scaleRootParam  = apvts.getRawParameterValue (ParamIds::scaleRoot);
 
-    for (const auto* id : { ParamIds::attack, ParamIds::decay, ParamIds::sustain, ParamIds::release,
-                            ParamIds::cutoff, ParamIds::resonance, ParamIds::gain, ParamIds::category,
-                            ParamIds::rootTarget, ParamIds::drumMode, ParamIds::scaleMode, ParamIds::scaleRoot })
+    syncEngineFromParameters();
+    applyScaleParametersToProcessor();
+
+    for (const auto* id : allParameterIds)
         apvts.addParameterListener (id, this);
 
     jobClient.addChangeListener (this);
@@ -48,8 +66,14 @@ SnapPlayAudioProcessor::SnapPlayAudioProcessor()
 
 SnapPlayAudioProcessor::~SnapPlayAudioProcessor()
 {
+    cancelPendingUpdate();
+    stopTimer();
+
     authManager.removeListener (this);
     jobClient.removeChangeListener (this);
+
+    for (const auto* id : allParameterIds)
+        apvts.removeParameterListener (id, this);
 }
 
 //==============================================================================
@@ -147,15 +171,44 @@ double SnapPlayAudioProcessor::getTailLengthSeconds() const
 //==============================================================================
 void SnapPlayAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    juce::ignoreUnused (destData);
+    auto state = apvts.copyState();
+    state.setProperty (lastJobIdProperty, getLastJobId(), nullptr);
+
+    if (const auto xml = state.createXml())
+        copyXmlToBinary (*xml, destData);
 }
 
 void SnapPlayAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    juce::ignoreUnused (data, sizeInBytes);
+    const auto xml = getXmlFromBinary (data, sizeInBytes);
+
+    if (xml == nullptr || ! xml->hasTagName (stateTreeType))
+        return;
+
+    const auto restored = juce::ValueTree::fromXml (*xml);
+    const auto restoredJobId = restored.getProperty (lastJobIdProperty).toString().trim();
+
+    apvts.replaceState (restored);
+
+    {
+        const juce::ScopedLock lock (stateLock);
+        lastJobId = restoredJobId;
+        pendingRestoreJobId = restoredJobId;
+    }
+
+    // replaceState() notified parameterChanged() for every changed parameter, so the engine
+    // atomics are current; the message-thread reactions are delivered by the async update.
+    scaleParametersDirty.store (true, std::memory_order_release);
+    triggerAsyncUpdate();
 }
 
 //==============================================================================
+juce::String SnapPlayAudioProcessor::getLastJobId() const
+{
+    const juce::ScopedLock lock (stateLock);
+    return lastJobId;
+}
+
 std::optional<cloud::KeyInfo> SnapPlayAudioProcessor::getDetectedKey() const
 {
     if (currentResult.has_value())
@@ -198,21 +251,99 @@ bool SnapPlayAudioProcessor::isDrumMode() const
 
 void SnapPlayAudioProcessor::loadSelectedStem()
 {
+    reloadStem (true);
 }
 
 //==============================================================================
 void SnapPlayAudioProcessor::parameterChanged (const juce::String& parameterID, float newValue)
 {
-    juce::ignoreUnused (parameterID, newValue);
+    auto& voice = engine.getVoiceParameters();
+
+    if (parameterID == ParamIds::attack)
+    {
+        voice.attackMs.store (newValue, std::memory_order_relaxed);
+    }
+    else if (parameterID == ParamIds::decay)
+    {
+        voice.decayMs.store (newValue, std::memory_order_relaxed);
+    }
+    else if (parameterID == ParamIds::sustain)
+    {
+        voice.sustain.store (newValue, std::memory_order_relaxed);
+    }
+    else if (parameterID == ParamIds::release)
+    {
+        voice.releaseMs.store (newValue, std::memory_order_relaxed);
+    }
+    else if (parameterID == ParamIds::cutoff)
+    {
+        engine.setFilter (newValue, resonanceParam->load());
+    }
+    else if (parameterID == ParamIds::resonance)
+    {
+        engine.setFilter (cutoffParam->load(), newValue);
+    }
+    else if (parameterID == ParamIds::gain)
+    {
+        engine.setGain (juce::Decibels::decibelsToGain (newValue, silenceDb));
+    }
+    else if (parameterID == ParamIds::drumMode)
+    {
+        syncDrumModeToEngine();
+
+        if (getSelectedCategory() == static_cast<int> (Category::Drums))
+            requestStemReload();
+    }
+    else if (parameterID == ParamIds::category)
+    {
+        syncDrumModeToEngine();
+        requestStemReload();
+    }
+    else if (parameterID == ParamIds::rootTarget)
+    {
+        requestStemReload();
+    }
+    else if (parameterID == ParamIds::scaleMode || parameterID == ParamIds::scaleRoot)
+    {
+        scaleParametersDirty.store (true, std::memory_order_release);
+        triggerAsyncUpdate();
+    }
 }
 
 void SnapPlayAudioProcessor::changeListenerCallback (juce::ChangeBroadcaster* source)
 {
-    juce::ignoreUnused (source);
+    if (source != &jobClient)
+        return;
+
+    using State = cloud::JobClient::State;
+
+    switch (jobClient.getState())
+    {
+        case State::Ready:
+            if (const auto& result = jobClient.getResult(); result.has_value())
+                onJobReady (*result);
+            break;
+
+        case State::Failed:
+        case State::Cancelled:
+            restoringCachedJob = false;
+            break;
+
+        case State::Idle:
+        case State::Encoding:
+        case State::Submitting:
+        case State::Queued:
+        case State::Running:
+        case State::Downloading:
+            break;
+    }
 }
 
-void SnapPlayAudioProcessor::authStateChanged (cloud::AuthManager&)
+void SnapPlayAudioProcessor::authStateChanged (cloud::AuthManager& auth)
 {
+    // A session that ended mid-job can no longer stream or download: stop following it.
+    if (! auth.isLoggedIn() && auth.getState() != cloud::AuthManager::State::LoggingIn && jobClient.isRunning())
+        jobClient.cancel();
 }
 
 void SnapPlayAudioProcessor::balanceChanged (cloud::AuthManager&, const cloud::CreditBalance& balance)
@@ -220,13 +351,162 @@ void SnapPlayAudioProcessor::balanceChanged (cloud::AuthManager&, const cloud::C
     juce::ignoreUnused (balance);
 }
 
+void SnapPlayAudioProcessor::handleAsyncUpdate()
+{
+    if (scaleParametersDirty.exchange (false, std::memory_order_acq_rel))
+        applyScaleParametersToProcessor();
+
+    juce::String jobIdToRestore;
+    {
+        const juce::ScopedLock lock (stateLock);
+        jobIdToRestore.swapWith (pendingRestoreJobId);
+    }
+
+    if (jobIdToRestore.isNotEmpty())
+        restoreCachedJob (jobIdToRestore);
+
+    if (stemReloadPending.exchange (false, std::memory_order_acq_rel))
+        startTimer (stemReloadDebounceMs);
+}
+
+void SnapPlayAudioProcessor::timerCallback()
+{
+    stopTimer();
+    loadSelectedStem();
+}
+
+//==============================================================================
 void SnapPlayAudioProcessor::onJobReady (const cloud::JobResult& result)
 {
-    juce::ignoreUnused (result);
+    // A job restored from the host's saved state keeps the saved root and envelope; a
+    // freshly processed job takes the analysis defaults.
+    const bool restored = std::exchange (restoringCachedJob, false) && result.jobId == getLastJobId();
+
+    currentResult = result;
+
+    {
+        const juce::ScopedLock lock (stateLock);
+        lastJobId = result.jobId;
+    }
+
+    scaleLock.setDetectedScale (result.analysis.key.scalePitchClasses);
+
+    if (! restored)
+        setScaleRootParameter (core::toPitchClass (result.analysis.key.rootMidi));
+
+    applyScaleParametersToProcessor();
+    reloadStem (! restored);
 }
 
 void SnapPlayAudioProcessor::applyScaleParametersToProcessor()
 {
+    const int modeIndex = scaleModeParam != nullptr ? static_cast<int> (scaleModeParam->load()) : 0;
+    const int root = scaleRootParam != nullptr ? static_cast<int> (scaleRootParam->load()) : 0;
+    scaleLock.setMode (scaleModeFromIndex (modeIndex), root);
+}
+
+void SnapPlayAudioProcessor::syncEngineFromParameters()
+{
+    engine.setAdsr ({ attackParam->load(), decayParam->load(), sustainParam->load(), releaseParam->load() });
+    engine.setFilter (cutoffParam->load(), resonanceParam->load());
+    engine.setGain (juce::Decibels::decibelsToGain (gainParam->load(), silenceDb));
+    syncDrumModeToEngine();
+}
+
+void SnapPlayAudioProcessor::syncDrumModeToEngine()
+{
+    engine.setDrumMode (isDrumMode() && getSelectedCategory() == static_cast<int> (Category::Drums));
+}
+
+void SnapPlayAudioProcessor::requestStemReload()
+{
+    stemReloadPending.store (true, std::memory_order_release);
+    triggerAsyncUpdate();
+}
+
+void SnapPlayAudioProcessor::restoreCachedJob (const juce::String& jobIdToRestore)
+{
+    if (currentResult.has_value() && currentResult->jobId == jobIdToRestore)
+        return;
+
+    if (jobClient.isRunning())
+        return;
+
+    if (! cloud::JobClient::jobDirectoryFor (jobClient.getCacheRoot(), jobIdToRestore).isDirectory())
+        return;
+
+    restoringCachedJob = true;
+    jobClient.loadCachedJob (jobIdToRestore);
+}
+
+void SnapPlayAudioProcessor::setScaleRootParameter (int pitchClass)
+{
+    if (auto* parameter = apvts.getParameter (ParamIds::scaleRoot))
+    {
+        parameter->beginChangeGesture();
+        parameter->setValueNotifyingHost (parameter->convertTo0to1 (static_cast<float> (pitchClass)));
+        parameter->endChangeGesture();
+    }
+}
+
+void SnapPlayAudioProcessor::applyAdsr (const core::Adsr& adsr)
+{
+    auto* attack  = apvts.getParameter (ParamIds::attack);
+    auto* decay   = apvts.getParameter (ParamIds::decay);
+    auto* sustain = apvts.getParameter (ParamIds::sustain);
+    auto* release = apvts.getParameter (ParamIds::release);
+
+    if (attack != nullptr && decay != nullptr && sustain != nullptr && release != nullptr)
+        engine::applyAdsrToParameters (*attack, *decay, *sustain, *release, adsr);
+}
+
+void SnapPlayAudioProcessor::reloadStem (bool applyAutoAdsr)
+{
+    if (! currentResult.has_value())
+        return;
+
+    const auto stemName = stemNameForCategory (getSelectedCategory());
+    const auto* info = currentResult->findStem (stemName);
+
+    if (info == nullptr)
+        return;
+
+    const auto wavFile = cloud::JobClient::jobDirectoryFor (jobClient.getCacheRoot(), currentResult->jobId)
+                             .getChildFile (stemName + ".wav");
+
+    if (! wavFile.existsAsFile())
+        return;
+
+    const bool wantsDrumKit = isDrumMode() && getSelectedCategory() == static_cast<int> (Category::Drums);
+
+    if (applyAutoAdsr && info->suggestedAdsr.has_value())
+        applyAdsr (*info->suggestedAdsr);
+
+    // Without a server suggestion the envelope is derived while the sound is built, so it
+    // can only be applied once the load has finished (drum kits carry no envelope).
+    const bool applyDerivedAdsr = applyAutoAdsr && ! info->suggestedAdsr.has_value() && ! wantsDrumKit;
+    const int serial = ++stemLoadSerial;
+
+    auto onLoaded = [weakThis = juce::WeakReference<SnapPlayAudioProcessor> (this), serial, applyDerivedAdsr]
+                    (bool ok, const juce::String&)
+    {
+        if (weakThis == nullptr || ! ok || serial != weakThis->stemLoadSerial)
+            return;
+
+        if (applyDerivedAdsr)
+            if (const auto stem = weakThis->engine.getCurrentStem())
+                weakThis->applyAdsr (stem->getAdsr());
+    };
+
+    if (wantsDrumKit)
+    {
+        engine.loadDrumKit (wavFile, *info, std::move (onLoaded));
+        return;
+    }
+
+    engine::StemSound::BuildOptions options;
+    options.targetRootMidi = rootTargetParam != nullptr ? static_cast<int> (rootTargetParam->load()) : 48;
+    engine.loadStem (wavFile, *info, options, std::move (onLoaded));
 }
 
 } // namespace snapplay
