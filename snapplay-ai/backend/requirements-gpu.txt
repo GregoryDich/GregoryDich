@@ -1,0 +1,6 @@
+# GPU worker extras (SNAPPLAY_PIPELINE=local and the worker images). Install on top of requirements.txt.
+torch>=2.2
+demucs>=4.0.1
+basic-pitch>=0.4
+onnxruntime-gpu>=1.17
+aubio>=0.4.9
