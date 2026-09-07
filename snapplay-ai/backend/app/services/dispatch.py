@@ -59,7 +59,9 @@ class LocalDispatch:
         self._jobs = jobs
         self._storage = storage
         self._credits = credits
-        self._run: RunPipeline = run_pipeline if run_pipeline is not None else get_pipeline(settings)
+        self._run: RunPipeline = (
+            run_pipeline if run_pipeline is not None else get_pipeline(settings)
+        )
         self._tasks: set[asyncio.Task[None]] = set()
         self._cancelled: set[UUID] = set()
         self._active: set[UUID] = set()

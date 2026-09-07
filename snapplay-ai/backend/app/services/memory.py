@@ -502,7 +502,9 @@ class MemoryStore:
         job.worker_ref = worker_ref or job.worker_ref
         return job
 
-    def update_job_progress(self, job_id: UUID, stage: str | None, progress: float | None) -> JobRow:
+    def update_job_progress(
+        self, job_id: UUID, stage: str | None, progress: float | None
+    ) -> JobRow:
         job = self._job(job_id)
         if job.status in ("queued", "running"):
             job.stage = stage or job.stage

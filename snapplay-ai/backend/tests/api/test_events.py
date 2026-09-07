@@ -63,7 +63,14 @@ def test_sse_stream_yields_progress_then_result_and_ends(
     assert set(names[:-1]) == {"progress"}
     for _, payload in events[:-1]:
         assert payload is not None
-        assert payload["stage"] in ("upload", "separate", "transcribe", "analyze", "package", "done")
+        assert payload["stage"] in {
+            "upload",
+            "separate",
+            "transcribe",
+            "analyze",
+            "package",
+            "done",
+        }
         assert 0.0 <= payload["progress"] <= 1.0
     result_payload = events[-1][1]
     assert result_payload is not None and result_payload["status"] == "succeeded"

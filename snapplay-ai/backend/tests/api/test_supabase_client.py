@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import httpx
@@ -106,9 +107,7 @@ async def test_storage_upload_and_signed_url(supabase: SupabaseClient) -> None:
 
     url = await supabase.storage_signed_url("jobs", path, 3600)
     assert url == f"{BASE}/storage/v1/object/sign/jobs/{path}?token=abc"
-    assert sign.calls.last.request.read() == b'{"expiresIn":3600}'.replace(b'":', b'": ').replace(
-        b'"expiresIn"', b'"expiresIn"'
-    ) or True
+    assert json.loads(sign.calls.last.request.content) == {"expiresIn": 3600}
     await supabase.aclose()
 
 

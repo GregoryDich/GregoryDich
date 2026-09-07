@@ -21,6 +21,7 @@ from starlette.websockets import WebSocketDisconnect
 from app.auth import Principal
 from app.dependencies import authenticate, get_principal, get_services
 from app.errors import (
+    NOT_FOUND,
     PAYLOAD_TOO_LARGE,
     UNSUPPORTED_MEDIA_TYPE,
     VALIDATION_ERROR,
@@ -29,8 +30,8 @@ from app.errors import (
 from app.middleware.rate_limit import enforce, rate_limit
 from app.schemas import JobOptions, JobStatus, JobSubmitResponse, PipelineOptions
 from app.services.events import TERMINAL_EVENTS
-from app.services.jobs import JOB_CREDITS, input_storage_key
 from app.services.factory import Services
+from app.services.jobs import JOB_CREDITS, input_storage_key
 
 log = logging.getLogger("snapplay.jobs")
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -112,6 +113,14 @@ def parse_options(raw: str | None) -> JobOptions:
         ) from exc
 
 
+def _too_large(max_bytes: int) -> ApiException:
+    return ApiException(
+        PAYLOAD_TOO_LARGE,
+        message=f"The upload exceeds {max_bytes} bytes.",
+        details={"max_bytes": max_bytes},
+    )
+
+
 async def read_upload(upload: UploadFile, max_bytes: int) -> bytes:
     """Read the upload in chunks, aborting with 413 the moment the cap is passed."""
     chunks: list[bytes] = []
@@ -119,11 +128,7 @@ async def read_upload(upload: UploadFile, max_bytes: int) -> bytes:
     while chunk := await upload.read(CHUNK_BYTES):
         total += len(chunk)
         if total > max_bytes:
-            raise ApiException(
-                PAYLOAD_TOO_LARGE,
-                message=f"The upload exceeds {max_bytes} bytes.",
-                details={"max_bytes": max_bytes},
-            )
+            raise _too_large(max_bytes)
         chunks.append(chunk)
     return b"".join(chunks)
 
@@ -165,17 +170,22 @@ async def submit_job(
         principal.user_id, job_options, f"input.{extension}", JOB_CREDITS
     )
     input_key = input_storage_key(principal.user_id, job.job_id, f"input.{extension}")
-    await services.storage.upload_bytes(input_key, data, AUDIO_CONTENT_TYPES[extension])
     pipeline_options = PipelineOptions.from_job_options(
         job_options, services.settings.max_input_seconds
     )
     try:
+        await services.storage.upload_bytes(input_key, data, AUDIO_CONTENT_TYPES[extension])
         await services.dispatch.dispatch(
             job.job_id, principal.user_id, input_key, pipeline_options
         )
-    except ApiException:
+    except ApiException as exc:
+        # The reservation must not outlive a failed hand-off.
+        await services.jobs.fail(job.job_id, exc.code, exc.message)
+        raise
+    except Exception:
+        log.exception("job hand-off failed", extra={"job_id": str(job.job_id)})
         await services.jobs.fail(
-            job.job_id, "worker_unavailable", "No worker is available; retry later."
+            job.job_id, "internal_error", "The job could not be handed to a worker."
         )
         raise
     balance = await services.credits.get_balance(principal.user_id)
@@ -189,7 +199,7 @@ async def submit_job(
 async def _job_or_404(services: Services, job_id: UUID, user_id: UUID) -> JobStatus:
     job = await services.jobs.get(job_id, user_id)
     if job is None:
-        raise ApiException("not_found", message="Job not found.")
+        raise ApiException(NOT_FOUND, message="Job not found.")
     return job
 
 
@@ -221,7 +231,9 @@ async def job_events(
                 return
 
     return EventSourceResponse(
-        publish(), ping=SSE_PING_SECONDS, ping_message_factory=lambda: ServerSentEvent(comment="ping")
+        publish(),
+        ping=SSE_PING_SECONDS,
+        ping_message_factory=lambda: ServerSentEvent(comment="ping"),
     )
 
 
@@ -236,7 +248,7 @@ async def job_ws(
         enforce(websocket.app.state.rate_limits.reads, principal)
         job = await services.jobs.get(job_id, principal.user_id)
         if job is None:
-            raise ApiException("not_found", message="Job not found.")
+            raise ApiException(NOT_FOUND, message="Job not found.")
     except ApiException as exc:
         await websocket.close(code=WS_UNAUTHORIZED, reason=exc.code)
         return

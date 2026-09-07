@@ -79,7 +79,8 @@ def test_plans_attach_the_caller_and_referral_code(
 def test_plan_without_a_configured_variant_has_no_checkout_url(
     client: TestClient, auth: dict[str, str], registered_user: UUID
 ) -> None:
-    pack = next(p for p in client.get("/v1/plans", headers=auth).json()["plans"] if p["id"] == "pack_50")
+    plans = client.get("/v1/plans", headers=auth).json()["plans"]
+    pack = next(p for p in plans if p["id"] == "pack_50")
     assert pack["checkout_url"] is None
 
 

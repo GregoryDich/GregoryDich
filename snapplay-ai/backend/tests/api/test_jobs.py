@@ -173,3 +173,29 @@ def test_cancel_running_and_finished_jobs_conflict(
     finished = submit().json()["job_id"]
     poll_job(finished)
     assert client.delete(f"/v1/jobs/{finished}", headers=auth).status_code == 409
+
+
+def test_dispatch_failure_releases_the_reservation(
+    client: TestClient,
+    auth: dict[str, str],
+    submit: Callable[..., Any],
+    services: Services,
+    monkeypatch: pytest.MonkeyPatch,
+    registered_user: UUID,
+) -> None:
+    from app.errors import WORKER_UNAVAILABLE, ApiException
+
+    async def unavailable(*_: object, **__: object) -> None:
+        raise ApiException(WORKER_UNAVAILABLE)
+
+    monkeypatch.setattr(services.dispatch, "dispatch", unavailable)
+    response = submit()
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "worker_unavailable"
+    balance = client.get("/v1/me", headers=auth).json()["balance"]
+    assert balance == {
+        "credits": 3,
+        "reserved": 0,
+        "available": 3,
+        "subscription_renews_at": None,
+    }

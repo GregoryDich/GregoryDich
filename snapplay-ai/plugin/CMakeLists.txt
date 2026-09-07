@@ -104,6 +104,21 @@ target_link_libraries(SnapPlayAI
         juce::juce_recommended_warning_flags)
 
 # ---------------------------------------------------------------------------
+# libcurl: JUCE_USE_CURL=1 makes juce_core call libcurl directly on Linux, but the
+# JUCE module system does not add the library itself.
+# ---------------------------------------------------------------------------
+if(UNIX AND NOT APPLE)
+    find_package(CURL QUIET)
+    if(CURL_FOUND)
+        target_link_libraries(SnapPlayAI PRIVATE CURL::libcurl)
+    else()
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(LIBCURL REQUIRED IMPORTED_TARGET libcurl)
+        target_link_libraries(SnapPlayAI PRIVATE PkgConfig::LIBCURL)
+    endif()
+endif()
+
+# ---------------------------------------------------------------------------
 # Optional Rubber Band (offline high-quality pitch shifting)
 # ---------------------------------------------------------------------------
 if(SNAPPLAY_USE_RUBBERBAND)

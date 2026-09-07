@@ -114,7 +114,9 @@ def test_lemonsqueezy_order_grants_credits(
 ) -> None:
     body = ls_order(registered_user)
     secret = settings.lemonsqueezy_webhook_secret.get_secret_value()
-    response = client.post("/v1/webhooks/lemonsqueezy", content=body, headers=sign_lemonsqueezy(body, secret))
+    response = client.post(
+        "/v1/webhooks/lemonsqueezy", content=body, headers=sign_lemonsqueezy(body, secret)
+    )
     assert response.status_code == 200 and response.json() == {"status": "ok"}
 
     me = client.get("/v1/me", headers=auth).json()
@@ -190,12 +192,8 @@ def test_paddle_rejects_a_wrong_digest_and_malformed_header(
 ) -> None:
     body = paddle_event(registered_user)
     ts = int(time.time())
-    assert (
-        client.post(
-            "/v1/webhooks/paddle", content=body, headers={"Paddle-Signature": f"ts={ts};h1={'0' * 64}"}
-        ).status_code
-        == 401
-    )
+    wrong_digest = {"Paddle-Signature": f"ts={ts};h1={'0' * 64}"}
+    assert client.post("/v1/webhooks/paddle", content=body, headers=wrong_digest).status_code == 401
     assert (
         client.post(
             "/v1/webhooks/paddle", content=body, headers={"Paddle-Signature": "garbage"}
@@ -341,7 +339,10 @@ def test_unknown_user_is_404_and_unhandled_events_are_acknowledged(
     orphan = json.dumps(
         {
             "meta": {"event_name": "order_created", "custom_data": {"user_id": str(uuid4())}},
-            "data": {"id": "ls-orphan", "attributes": {"first_order_item": {"variant_id": PACK_VARIANT}}},
+            "data": {
+                "id": "ls-orphan",
+                "attributes": {"first_order_item": {"variant_id": PACK_VARIANT}},
+            },
         }
     ).encode()
     response = client.post(

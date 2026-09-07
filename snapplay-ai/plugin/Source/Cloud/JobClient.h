@@ -20,6 +20,8 @@
 #include "Cloud/Models.h"
 #include "Cloud/UploadEncoder.h"
 
+#include <atomic>
+#include <memory>
 #include <optional>
 
 namespace snapplay::cloud
@@ -85,6 +87,9 @@ public:
 private:
     void setState (State newState);
     void fail (const ApiError& apiError);
+    /** Clears the previous job and checks the known credit balance; false when the
+        submission was refused (the client is then already in Failed). */
+    bool beginSubmission();
     void startEncoding (std::function<UploadEncoder::Result()> encode, JobOptions options);
     void onEncoded (const UploadEncoder::Result& encoded, const JobOptions& options);
     void submit (const juce::MemoryBlock& flacData, const JobOptions& options);
@@ -113,6 +118,11 @@ private:
     ApiClient::RequestId activeRequest = ApiClient::invalidRequest;
     std::vector<ApiClient::RequestId> downloadRequests;
     int pendingDownloads = 0;
+
+    /** Cleared by the destructor and shared with every asynchronous continuation, so an
+        encode or a poll that is already queued for the message thread cannot touch a
+        destroyed client. */
+    std::shared_ptr<std::atomic<bool>> lifetime { std::make_shared<std::atomic<bool>> (true) };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JobClient)
 };
