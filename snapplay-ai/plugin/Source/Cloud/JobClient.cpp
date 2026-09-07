@@ -165,10 +165,10 @@ void JobClient::loadCachedJob (const juce::String& jobIdToLoad)
 
         if (! response.ok())
         {
-            const auto error = response.error.value_or (ApiError::transport ("Could not load that job"));
+            const auto loadError = response.error.value_or (ApiError::transport ("Could not load that job"));
 
-            if (! isCancellation (error))
-                fail (error);
+            if (! isCancellation (loadError))
+                fail (loadError);
 
             return;
         }
@@ -379,10 +379,10 @@ void JobClient::submit (const juce::MemoryBlock& flacData, const JobOptions& opt
 
                                        if (! response.ok())
                                        {
-                                           const auto error = response.error.value_or (ApiError::transport ("Could not start the job"));
+                                           const auto submitError = response.error.value_or (ApiError::transport ("Could not start the job"));
 
-                                           if (! isCancellation (error))
-                                               fail (error);
+                                           if (! isCancellation (submitError))
+                                               fail (submitError);
 
                                            return;
                                        }

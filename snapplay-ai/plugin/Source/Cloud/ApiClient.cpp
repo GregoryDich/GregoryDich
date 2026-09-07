@@ -496,7 +496,7 @@ ApiClient::RequestId ApiClient::streamJobEvents (const juce::String& jobId,
 
         const auto url = makeUrl (route);
         const auto headers = buildHeaders (true, "Accept: text/event-stream\r\nCache-Control: no-cache\r\n");
-        const auto& config = getConfig();
+        const auto& clientConfig = getConfig();
 
         std::optional<JobStatus> finalStatus;
         std::optional<ApiError> streamError;
@@ -533,7 +533,7 @@ ApiClient::RequestId ApiClient::streamJobEvents (const juce::String& jobId,
                 return ! event->endsStream();
             };
 
-            http = performWithRetries (url, "GET", headers, config, false, context.cancelled, nullptr,
+            http = performWithRetries (url, "GET", headers, clientConfig, false, context.cancelled, nullptr,
                                        [&] (const char* data, int numBytes, juce::int64, juce::int64)
                                        {
                                            for (const auto& raw : parser.feed (data, static_cast<size_t> (numBytes)))
@@ -552,10 +552,10 @@ ApiClient::RequestId ApiClient::streamJobEvents (const juce::String& jobId,
             if (finalStatus.has_value() || streamError.has_value() || http.cancelled || receivedAnyEvent)
                 break;
 
-            if (! shouldRetry (http, attempt, config.maxRetries))
+            if (! shouldRetry (http, attempt, clientConfig.maxRetries))
                 break;
 
-            const auto delay = retry::backoffDelayMs (attempt, config.initialBackoffMs,
+            const auto delay = retry::backoffDelayMs (attempt, clientConfig.initialBackoffMs,
                                                       juce::Random::getSystemRandom().nextDouble(),
                                                       retryAfterMsFrom (http.responseHeaders));
 
@@ -608,7 +608,7 @@ ApiClient::RequestId ApiClient::downloadFile (const juce::URL& url, const juce::
                     [this, url, destination, onDone = std::move (onDone), progress = std::move (progress)] (RequestContext& context)
     {
         auto deliverFn = [this, id = context.id] (std::function<void()> fn) { deliver (id, std::move (fn)); };
-        const auto& config = getConfig();
+        const auto& clientConfig = getConfig();
         // Signed URLs (contract §2) carry their own credentials; sending ours would break them.
         const auto headers = buildHeaders (false);
 
@@ -632,7 +632,7 @@ ApiClient::RequestId ApiClient::downloadFile (const juce::URL& url, const juce::
                     break;
                 }
 
-                http = performOnce (url, "GET", headers, config.connectionTimeoutMs, false, context.cancelled, nullptr,
+                http = performOnce (url, "GET", headers, clientConfig.connectionTimeoutMs, false, context.cancelled, nullptr,
                                     [&] (const char* data, int numBytes, juce::int64 soFar, juce::int64 total)
                                     {
                                         if (! out->write (data, static_cast<size_t> (numBytes)))
@@ -659,10 +659,10 @@ ApiClient::RequestId ApiClient::downloadFile (const juce::URL& url, const juce::
             }
 
             // The TemporaryFile destructor removes the partial download.
-            if (! shouldRetry (http, attempt, config.maxRetries))
+            if (! shouldRetry (http, attempt, clientConfig.maxRetries))
                 break;
 
-            const auto delay = retry::backoffDelayMs (attempt, config.initialBackoffMs,
+            const auto delay = retry::backoffDelayMs (attempt, clientConfig.initialBackoffMs,
                                                       juce::Random::getSystemRandom().nextDouble(),
                                                       retryAfterMsFrom (http.responseHeaders));
 
