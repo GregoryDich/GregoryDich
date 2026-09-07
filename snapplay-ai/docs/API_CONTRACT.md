@@ -375,3 +375,17 @@ Tables `affiliates` (user, code, commission rate, payout details), `referral_cod
 A checkout carries `checkout[custom][ref]`; the webhook resolves it to an affiliate and
 writes a commission row in the same transaction as the credit grant, keyed by the same
 idempotency key so a replayed webhook cannot double-pay.
+
+## 13. Policies left open by earlier drafts
+
+* **Affiliate commissions recur.** Every purchase event that reaches `record_purchase`
+  (a credit pack, a subscription's first payment, and each renewal payment) writes one
+  `affiliate_commissions` row at the affiliate's rate on `net_cents`, keyed by the
+  webhook's idempotency key. A replayed webhook never pays twice.
+* **Subscription credits do not roll over.** Each renewal grants the plan's credits with
+  `expires_at` = the end of that billing period; `expire_credits()` (cron) removes what
+  is left. Expiring credits are spent before non-expiring ones, so a subscriber with a
+  spare credit pack always uses the perishable balance first.
+* **Credit-pack credits never expire.**
+* **Cancelled subscriptions** keep their remaining credits until `current_period_end`,
+  then lose them like any other period.
