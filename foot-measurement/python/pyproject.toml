@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "footmeasure"
+version = "0.1.0"
+description = "MVP: foot length / max width in mm from iPhone RGB video + LiDAR depth, RF-DETR foot mask"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "opencv-python-headless>=4.8",
+    "rfdetr>=1.10",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+train = ["roboflow>=1.1"]
+
+[project.scripts]
+footmeasure = "footmeasure.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["footmeasure*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

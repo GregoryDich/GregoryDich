@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+
+# Recorded sessions, outputs, model weights
+sessions/
+out/
+weights/*.pth
+weights/*.pt
+weights/*.onnx
+*.ply
+*.zip
+
+# Xcode / XcodeGen
+ios/*.xcodeproj
+ios/*.xcworkspace
+ios/DerivedData/
+xcuserdata/
+*.xcuserstate
