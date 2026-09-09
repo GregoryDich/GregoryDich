@@ -11,12 +11,14 @@ from footmeasure.multiframe import aggregate, fuse_clouds, process_session
 from footmeasure.session import Session
 from synth import Scene, write_session
 
-L, W = 262.0, 98.0
+# Dimensions of the synthetic foot that tests/synth.py renders into the session.
+# The pipeline never sees them — it must recover them from video + depth + metadata.
+TRUE_L, TRUE_W = 262.0, 98.0
 
 
 @pytest.fixture(scope="module")
 def session_dir(tmp_path_factory):
-    scene = Scene(L=L, W=W, H=24, yaw_deg=-30)
+    scene = Scene(L=TRUE_L, W=TRUE_W, H=24, yaw_deg=-30)
     frames = []
     for i in range(10):
         T = scene.camera(height_m=0.48 + 0.01 * i, tilt_deg=2 * i, azimuth_deg=20 * i)
@@ -44,8 +46,8 @@ def test_process_session_median_and_gating(session_dir):
     sm = res.summary
     assert sm["frames_processed"] == 10
     assert sm["valid_frames"] == 9 and sm["frames_used"] == 5
-    assert sm["length_mm"] == pytest.approx(L, abs=3.0)
-    assert sm["width_mm"] == pytest.approx(W, abs=3.0)
+    assert sm["length_mm"] == pytest.approx(TRUE_L, abs=3.0)
+    assert sm["width_mm"] == pytest.approx(TRUE_W, abs=3.0)
     assert sm["length_iqr_mm"] < 3.0
     rejected = [p for p in sm["per_frame"] if p["rejected_reason"]]
     assert len(rejected) == 1 and rejected[0]["index"] == 4 and "no detection" in rejected[0]["rejected_reason"]
@@ -83,7 +85,7 @@ def test_cli_process_writes_result_and_debug_image(session_dir, tmp_path):
     rc = cli.main(["process", str(session_dir), "--mock-detector", "--step", "2", "--out", str(out), "--rotate"])
     assert rc == 0
     res = json.loads((out / "result.json").read_text())
-    assert res["length_mm"] == pytest.approx(L, abs=3.0) and res["width_mm"] == pytest.approx(W, abs=3.0)
+    assert res["length_mm"] == pytest.approx(TRUE_L, abs=3.0) and res["width_mm"] == pytest.approx(TRUE_W, abs=3.0)
     img = cv2.imread(str(out / "debug.png"))
     assert img is not None and img.shape[0] == 1920 and img.shape[1] > 1440   # rotated upright + top-down panel
 
