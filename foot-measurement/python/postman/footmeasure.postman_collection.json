@@ -1,0 +1,148 @@
+{
+  "info": {
+    "name": "footmeasure MVP",
+    "description": "HTTP API of the foot-measurement Python service. Set the `baseUrl` variable (default http://127.0.0.1:8000). Start the server with: uvicorn footmeasure.server:app --host 0.0.0.0 --port 8000",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8000" },
+    { "key": "sessionId", "value": "" },
+    { "key": "detectId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "health",
+      "request": { "method": "GET", "url": "{{baseUrl}}/health" }
+    },
+    {
+      "name": "detect: video only (RF-DETR stage, no LiDAR)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/detect",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "video", "type": "file", "src": "", "description": "any .mov / .mp4" },
+            { "key": "step", "value": "15", "type": "text", "description": "every k-th frame" },
+            { "key": "max_frames", "value": "20", "type": "text" },
+            { "key": "orientation", "value": "", "type": "text", "description": "portrait for FootCapture sessions; empty for ordinary videos" },
+            { "key": "class_name", "value": "", "type": "text", "description": "e.g. person when running COCO weights" },
+            { "key": "mock", "value": "false", "type": "text", "description": "true only for synthetic sessions" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) { pm.collectionVariables.set('detectId', pm.response.json().detect_id); }",
+              "pm.test('status 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "detect: result.json",
+      "request": { "method": "GET", "url": "{{baseUrl}}/detect/{{detectId}}/result.json" }
+    },
+    {
+      "name": "detect: preview frame_00000.png",
+      "request": { "method": "GET", "url": "{{baseUrl}}/detect/{{detectId}}/frame_00000.png" }
+    },
+    {
+      "name": "session: upload zip (form-data)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/sessions/upload",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "zip", "type": "file", "src": "", "description": "zipped session directory" },
+            { "key": "step", "value": "5", "type": "text" },
+            { "key": "method", "value": "contour", "type": "text", "description": "contour | depth" },
+            { "key": "mock", "value": "false", "type": "text" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) { pm.collectionVariables.set('sessionId', pm.response.json().session_id); }",
+              "pm.test('status 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "session: upload 4 files (form-data)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/sessions/upload",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "video", "type": "file", "src": "", "description": "video.mov" },
+            { "key": "depth", "type": "file", "src": "", "description": "depth.bin" },
+            { "key": "confidence", "type": "file", "src": "", "description": "confidence.bin" },
+            { "key": "metadata", "type": "file", "src": "", "description": "metadata.json" },
+            { "key": "step", "value": "5", "type": "text" },
+            { "key": "method", "value": "contour", "type": "text" },
+            { "key": "mock", "value": "false", "type": "text" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) { pm.collectionVariables.set('sessionId', pm.response.json().session_id); }",
+              "pm.test('status 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "session: upload zip (raw body, like the iPhone)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/sessions?step=5&method=contour&mock=false",
+        "header": [ { "key": "Content-Type", "value": "application/zip" } ],
+        "body": { "mode": "file", "file": { "src": "" } }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) { pm.collectionVariables.set('sessionId', pm.response.json().session_id); }",
+              "pm.test('status 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "sessions: list",
+      "request": { "method": "GET", "url": "{{baseUrl}}/sessions" }
+    },
+    {
+      "name": "session: result.json",
+      "request": { "method": "GET", "url": "{{baseUrl}}/sessions/{{sessionId}}/result.json" }
+    },
+    {
+      "name": "session: debug.png",
+      "request": { "method": "GET", "url": "{{baseUrl}}/sessions/{{sessionId}}/debug.png" }
+    }
+  ]
+}

@@ -191,6 +191,39 @@ Debug-картинка: `http://<ip>:8000/sessions/<id>/debug.png`.
 кросс-проверка — он систематически занижает на несколько мм (эрозия маски + порог высоты
 + размытие depth на границе).
 
+## HTTP API — проверка через Postman / curl
+
+```bash
+cd foot-measurement/python && source .venv/bin/activate
+export FOOTMEASURE_WEIGHTS=weights/checkpoint_best_total.pth   # без весов: COCO, class_name=person
+uvicorn footmeasure.server:app --host 0.0.0.0 --port 8000       # Swagger: http://127.0.0.1:8000/docs
+```
+
+Postman: **Import** → файл `python/postman/footmeasure.postman_collection.json` → в переменных
+коллекции задать `baseUrl` (по умолчанию `http://127.0.0.1:8000`). Запросы с загрузкой файлов —
+body → form-data, поле типа *File* → выбрать файл. После успешного ответа `sessionId` /
+`detectId` подставляются в остальные запросы автоматически.
+
+| Метод и путь | Тело | Что делает |
+|---|---|---|
+| `POST /detect` | form-data: `video` (.mov/.mp4), `step`=15, `max_frames`=20, `orientation` (`portrait` для записей FootCapture, пусто для обычного видео), `class_name`, `mock` | **Только RF-DETR**, без LiDAR: по кадрам `confidence`, bbox, площадь маски, ссылки на превью `frame_*.png` с маской. Для проверки нейросети на любом видео |
+| `POST /sessions/upload` | form-data: `zip` (архив сессии) **или** 4 файла `video`, `depth`, `confidence`, `metadata`; текстовые `step`, `method` (`contour`/`depth`), `mock` | Полное измерение → `length_mm`, `width_mm`, `valid_frames`, IQR, ссылки на `result.json` и `debug.png` |
+| `POST /sessions` | raw body = zip (`Content-Type: application/zip`); `?step=&method=&mock=` | То же, формат iPhone-приложения (Postman: body → binary) |
+| `GET /sessions` | — | Список обработанных сессий с результатами |
+| `GET /sessions/{id}/result.json`, `…/debug.png` | — | Полный результат (по-кадровые значения), debug-картинка |
+| `GET /detect/{id}/result.json`, `…/frame_00015.png` | — | Результат детекции, превью кадра с маской |
+
+Пример curl (то же, что делает Postman):
+
+```bash
+curl -F video=@sessions/<s>/video.mov -F step=15 -F orientation=portrait http://127.0.0.1:8000/detect
+curl -F zip=@session.zip -F step=5 http://127.0.0.1:8000/sessions/upload
+curl -F video=@video.mov -F depth=@depth.bin -F confidence=@confidence.bin -F metadata=@metadata.json \
+     http://127.0.0.1:8000/sessions/upload
+```
+
+Для синтетической сессии из раздела A добавьте поле `mock=true`.
+
 ## Формат сессии
 
 ```
