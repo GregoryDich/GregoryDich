@@ -1,0 +1,24 @@
+Copyright © [[EFFECTIVE_YEAR]] [[COMPANY_LEGAL_NAME]]. All rights reserved.
+
+This repository contains the source code of [[PRODUCT_NAME]]: the plugin
+(plugin/), the cloud backend (backend/), the database schema (db/), the
+infrastructure definitions (infra/), the growth tooling (growth/) and the
+documentation (docs/, legal/).
+
+The source code is proprietary. It is NOT licensed for reuse, copying,
+modification, redistribution or the creation of derivative works, in whole
+or in part, by anyone other than [[COMPANY_LEGAL_NAME]] and people
+[[COMPANY_LEGAL_NAME]] has authorised in writing. Its publication in a
+repository, if any, is not a licence.
+
+The compiled plugin binaries and installers distributed to end users are
+licensed under the End-User Licence Agreement in legal/eula.md (published
+at [[WEBSITE_URL]]/legal/eula). Use of the cloud service is governed by
+legal/terms-of-service.md (published at [[WEBSITE_URL]]/legal/terms).
+
+Third-party components included in the binaries, the server images and the
+tooling remain under their own licences. They are listed, with the notices
+that must accompany them, in THIRD_PARTY_LICENSES.md. Nothing in this notice
+restricts the rights those licences grant in the respective components.
+
+Contact: [[LEGAL_EMAIL]] · [[COMPANY_ADDRESS]]
