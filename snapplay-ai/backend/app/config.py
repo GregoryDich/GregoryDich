@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     supabase_anon_key: str = ""
     supabase_jwt_secret: SecretStr = SecretStr("")
     supabase_jwks_url: str = ""
+    auth_site_url: str = "http://localhost:3000"
+    """Website that GoTrue's confirmation and recovery links land on (§1).
+
+    Sent as ``redirect_to`` on sign-up, resend and recovery, with ``/auth/confirm`` or
+    ``/auth/reset-password`` appended; both must be in the Supabase Auth redirect
+    allow-list or GoTrue falls back to its configured site URL."""
 
     # Storage
     storage_backend: StorageBackend = "memory"

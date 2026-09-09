@@ -9,16 +9,29 @@ mutating method is synchronous, which makes each one atomic with respect to the 
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+import hashlib
+import hmac
+import secrets
+from collections.abc import AsyncIterator, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
+import jwt
+
 from app.auth.api_keys import generate_api_key, hash_api_key, hashes_match, is_well_formed
+from app.auth.jwt import AUDIENCE, HS_ALGORITHMS
 from app.config import Settings
-from app.errors import CONFLICT, INSUFFICIENT_CREDITS, NOT_FOUND, VALIDATION_ERROR, ApiException
+from app.errors import (
+    CONFLICT,
+    INSUFFICIENT_CREDITS,
+    NOT_FOUND,
+    UNAUTHORIZED,
+    VALIDATION_ERROR,
+    ApiException,
+)
 from app.schemas import (
     ApiKeyCreateResponse,
     Balance,
@@ -42,6 +55,11 @@ from app.services.jobs import (
     stream_job_events,
 )
 from app.services.plans import PlanRecord
+from app.services.supabase import (
+    ACCOUNT_EXISTS_MESSAGE,
+    EMAIL_NOT_CONFIRMED_MESSAGE,
+    INVALID_CREDENTIALS_MESSAGE,
+)
 from app.services.users import (
     SIGNUP_NOTE,
     SIGNUP_SOURCE,
@@ -64,6 +82,10 @@ _POSITIVE = frozenset({"grant", "refund", "release"})
 _NEGATIVE = frozenset({"reserve", "capture"})
 QUEUED_TIMEOUT_FACTOR = 10
 """Default queued grace as a multiple of the running timeout (``reap_stale_jobs``)."""
+GOTRUE_MIN_PASSWORD_LENGTH = 6
+"""GoTrue's default password policy, with its wording (``GOTRUE_PASSWORD_MIN_LENGTH``)."""
+GOTRUE_ACCESS_TOKEN_SECONDS = 3600
+_PBKDF2_ROUNDS = 20_000
 
 
 def seed_plans() -> list[PlanRecord]:
@@ -232,12 +254,209 @@ class CommissionRow:
     status: str = "pending"
 
 
+@dataclass
+class GoTrueUserRow:
+    """An ``auth.users`` row as the in-memory GoTrue keeps it."""
+
+    id: UUID
+    email: str
+    password_hash: str
+    created_at: datetime
+    confirmed_at: datetime | None = None
+    confirmation_sent_at: datetime | None = None
+    recovery_sent_at: datetime | None = None
+
+    def as_record(self) -> dict[str, Any]:
+        """The user object GoTrue returns: the fields the auth router reads."""
+        return {
+            "id": str(self.id),
+            "aud": AUDIENCE,
+            "role": "authenticated",
+            "email": self.email,
+            "email_confirmed_at": self.confirmed_at.isoformat() if self.confirmed_at else None,
+            "confirmation_sent_at": (
+                self.confirmation_sent_at.isoformat() if self.confirmation_sent_at else None
+            ),
+            "identities": [{"provider": "email", "user_id": str(self.id)}],
+            "created_at": self.created_at.isoformat(),
+        }
+
+
+@dataclass(frozen=True)
+class SentMail:
+    """One email GoTrue would have sent; ``kind`` is ``signup`` or ``recovery``."""
+
+    kind: str
+    email: str
+    redirect_to: str
+
+
+def hash_password(password: str) -> str:
+    salt = secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, _PBKDF2_ROUNDS)
+    return f"{salt.hex()}${digest.hex()}"
+
+
+def password_matches(stored: str, password: str) -> bool:
+    salt_hex, _, digest_hex = stored.partition("$")
+    salt = bytes.fromhex(salt_hex)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, _PBKDF2_ROUNDS)
+    return hmac.compare_digest(digest.hex(), digest_hex)
+
+
+@dataclass
+class MemoryGoTrue:
+    """Stand-in for Supabase Auth so the sign-up → confirm → sign-in flow runs without a
+    network. Tests and local development only: passwords are PBKDF2 in a dict, tokens are
+    HS256 under ``SUPABASE_JWT_SECRET`` (the app's own verifier accepts them), and "sent"
+    emails land in :attr:`outbox`. Method results mirror GoTrue's JSON and the errors
+    :class:`SupabaseClient` maps them to, so the router behaves identically on either.
+    ``autoconfirm`` is ``GOTRUE_MAILER_AUTOCONFIRM``: a session at sign-up instead of a
+    confirmation email.
+    """
+
+    settings: Settings
+    autoconfirm: bool = False
+    users: dict[UUID, GoTrueUserRow] = field(default_factory=dict)
+    refresh_tokens: dict[str, UUID] = field(default_factory=dict)
+    outbox: list[SentMail] = field(default_factory=list)
+
+    @staticmethod
+    def now() -> datetime:
+        return datetime.now(UTC)
+
+    def find_by_email(self, email: str) -> GoTrueUserRow | None:
+        wanted = normalise_email(email)
+        return next((u for u in self.users.values() if u.email == wanted), None)
+
+    def signup(self, email: str, password: str, *, redirect_to: str) -> dict[str, Any]:
+        """GoTrue's three answers: a session (auto-confirm), the new user with a
+        confirmation email on its way, or — for an address that already has a confirmed
+        account and no auto-confirm — an obfuscated user with no identities and no email,
+        which is how GoTrue itself avoids disclosing the account."""
+        if len(password) < GOTRUE_MIN_PASSWORD_LENGTH:
+            raise ApiException(
+                VALIDATION_ERROR,
+                message=f"Password should be at least {GOTRUE_MIN_PASSWORD_LENGTH} characters.",
+            )
+        address = normalise_email(email)
+        existing = self.find_by_email(address)
+        if existing is not None and existing.confirmed_at is not None:
+            if self.autoconfirm:
+                raise ApiException(CONFLICT, message=ACCOUNT_EXISTS_MESSAGE)
+            return {
+                "id": str(uuid4()),
+                "aud": AUDIENCE,
+                "role": "",
+                "email": address,
+                "confirmation_sent_at": self.now().isoformat(),
+                "identities": [],
+            }
+        if existing is not None:
+            self._send(existing, "signup", redirect_to)
+            return existing.as_record()
+        user = GoTrueUserRow(
+            id=uuid4(), email=address, password_hash=hash_password(password), created_at=self.now()
+        )
+        self.users[user.id] = user
+        if self.autoconfirm:
+            user.confirmed_at = user.created_at
+            return self._session(user)
+        self._send(user, "signup", redirect_to)
+        return user.as_record()
+
+    def confirm(self, email: str) -> GoTrueUserRow:
+        """What clicking the confirmation link does."""
+        user = self.find_by_email(email)
+        if user is None:
+            raise _not_found(f"auth user {normalise_email(email)}")
+        user.confirmed_at = user.confirmed_at or self.now()
+        return user
+
+    def password_grant(self, email: str, password: str) -> dict[str, Any]:
+        user = self.find_by_email(email)
+        if user is None or not password_matches(user.password_hash, password):
+            raise ApiException(UNAUTHORIZED, message=INVALID_CREDENTIALS_MESSAGE)
+        if user.confirmed_at is None:
+            raise ApiException(UNAUTHORIZED, message=EMAIL_NOT_CONFIRMED_MESSAGE)
+        return self._session(user)
+
+    def refresh_grant(self, refresh_token: str) -> dict[str, Any]:
+        """Rotates: the presented token is spent whether or not a new one is issued."""
+        user_id = self.refresh_tokens.pop(refresh_token, None)
+        user = self.users.get(user_id) if user_id is not None else None
+        if user is None:
+            raise ApiException(UNAUTHORIZED, message=INVALID_CREDENTIALS_MESSAGE)
+        return self._session(user)
+
+    def recover(self, email: str, *, redirect_to: str) -> None:
+        user = self.find_by_email(email)
+        if user is not None:
+            self._send(user, "recovery", redirect_to)
+
+    def resend(self, email: str, kind: str, *, redirect_to: str) -> None:
+        user = self.find_by_email(email)
+        if kind == "signup" and user is not None and user.confirmed_at is None:
+            self._send(user, "signup", redirect_to)
+
+    def logout(self, access_token: str) -> None:
+        """Revokes every refresh token of the token's user; an unverifiable token is a
+        session GoTrue no longer knows, which is already the wanted state."""
+        try:
+            claims = jwt.decode(
+                access_token, self._secret(), algorithms=list(HS_ALGORITHMS), audience=AUDIENCE
+            )
+        except jwt.PyJWTError:
+            return
+        user_id = str(claims.get("sub"))
+        for token in [t for t, owner in self.refresh_tokens.items() if str(owner) == user_id]:
+            del self.refresh_tokens[token]
+
+    def _send(self, user: GoTrueUserRow, kind: str, redirect_to: str) -> None:
+        if kind == "signup":
+            user.confirmation_sent_at = self.now()
+        else:
+            user.recovery_sent_at = self.now()
+        self.outbox.append(SentMail(kind=kind, email=user.email, redirect_to=redirect_to))
+
+    def _secret(self) -> str:
+        secret = self.settings.supabase_jwt_secret.get_secret_value()
+        if not secret:
+            raise ApiException(UNAUTHORIZED, message="Authentication is not configured.")
+        return secret
+
+    def _session(self, user: GoTrueUserRow) -> dict[str, Any]:
+        secret = self._secret()
+        now = self.now()
+        claims: dict[str, Any] = {
+            "sub": str(user.id),
+            "aud": AUDIENCE,
+            "email": user.email,
+            "role": "authenticated",
+            "iat": int(now.timestamp()),
+            "exp": int((now + timedelta(seconds=GOTRUE_ACCESS_TOKEN_SECONDS)).timestamp()),
+        }
+        base = self.settings.supabase_url.rstrip("/")
+        if base:
+            claims["iss"] = f"{base}/auth/v1"
+        refresh_token = secrets.token_urlsafe(32)
+        self.refresh_tokens[refresh_token] = user.id
+        return {
+            "access_token": jwt.encode(claims, secret, algorithm=HS_ALGORITHMS[0]),
+            "token_type": "bearer",
+            "expires_in": GOTRUE_ACCESS_TOKEN_SECONDS,
+            "refresh_token": refresh_token,
+            "user": user.as_record(),
+        }
+
+
 # --- store ------------------------------------------------------------------------------------
 
 
 @dataclass
 class MemoryStore:
     settings: Settings
+    gotrue: MemoryGoTrue = field(init=False)
     profiles: dict[UUID, ProfileRow] = field(default_factory=dict)
     accounts: dict[UUID, AccountRow] = field(default_factory=dict)
     ledger: list[LedgerRow] = field(default_factory=list)
@@ -256,6 +475,7 @@ class MemoryStore:
     _keys_by_hash: dict[str, ApiKeyRow] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        self.gotrue = MemoryGoTrue(self.settings)
         if not self.plans:
             self.plans = {plan.id: plan for plan in seed_plans()}
 
@@ -904,6 +1124,34 @@ class MemoryStore:
 # --- Protocol implementations -----------------------------------------------------------
 
 
+class MemoryAuthService:
+    """The ``auth_*`` calls of :class:`SupabaseClient` over :class:`MemoryGoTrue`."""
+
+    def __init__(self, gotrue: MemoryGoTrue) -> None:
+        self._gotrue = gotrue
+
+    async def auth_grant(self, grant_type: str, payload: Mapping[str, Any]) -> dict[str, Any]:
+        if grant_type == "password":
+            return self._gotrue.password_grant(
+                str(payload.get("email") or ""), str(payload.get("password") or "")
+            )
+        if grant_type == "refresh_token":
+            return self._gotrue.refresh_grant(str(payload.get("refresh_token") or ""))
+        raise ApiException(UNAUTHORIZED, message=INVALID_CREDENTIALS_MESSAGE)
+
+    async def auth_signup(self, email: str, password: str, *, redirect_to: str) -> dict[str, Any]:
+        return self._gotrue.signup(email, password, redirect_to=redirect_to)
+
+    async def auth_recover(self, email: str, *, redirect_to: str) -> None:
+        self._gotrue.recover(email, redirect_to=redirect_to)
+
+    async def auth_resend(self, email: str, kind: str, *, redirect_to: str) -> None:
+        self._gotrue.resend(email, kind, redirect_to=redirect_to)
+
+    async def auth_logout(self, access_token: str) -> None:
+        self._gotrue.logout(access_token)
+
+
 class MemoryCreditsService:
     def __init__(self, store: MemoryStore) -> None:
         self._store = store
@@ -1174,10 +1422,13 @@ __all__ = [
     "AffiliateRow",
     "ApiKeyRow",
     "CommissionRow",
+    "GoTrueUserRow",
     "JobRow",
     "LedgerRow",
     "MemoryApiKeysService",
+    "MemoryAuthService",
     "MemoryCreditsService",
+    "MemoryGoTrue",
     "MemoryJobsService",
     "MemoryPlansService",
     "MemoryPurchasesService",
@@ -1187,6 +1438,7 @@ __all__ = [
     "MemoryWebhookEventsService",
     "ProfileRow",
     "ReferralCodeRow",
+    "SentMail",
     "WebhookEventRow",
     "seed_plans",
 ]

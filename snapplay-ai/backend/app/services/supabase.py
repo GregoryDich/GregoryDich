@@ -31,6 +31,7 @@ from app.errors import (
     UNAUTHORIZED,
     VALIDATION_ERROR,
     ApiException,
+    rate_limited,
 )
 
 log = logging.getLogger("snapplay.supabase")
@@ -133,6 +134,20 @@ def encode_filters(filters: Iterable[Filter]) -> dict[str, str]:
             params[column] = f"{operator}.{_encode_value(value)}"
     return params
 
+
+ACCOUNT_EXISTS_MESSAGE = "An account with this email already exists."
+EMAIL_NOT_CONFIRMED_MESSAGE = "Confirm your email address before signing in."
+INVALID_CREDENTIALS_MESSAGE = "Invalid credentials."
+AUTH_UNAVAILABLE_MESSAGE = "Authentication service unavailable."
+SIGNUP_REFUSED_MESSAGE = "Sign-up was refused."
+SIGNUP_DISABLED_MESSAGE = "Sign-ups are disabled."
+GOTRUE_RETRY_AFTER_SECONDS = 60
+"""``Retry-After`` for a GoTrue 429; GoTrue sends none of its own."""
+# GoTrue ``error_code`` values (older releases send only ``msg``; see gotrue_error_code).
+ACCOUNT_EXISTS_CODES = frozenset({"user_already_exists", "email_exists"})
+FORWARDED_SIGNUP_CODES = frozenset({"weak_password", "validation_failed"})
+"""Refusals whose ``msg`` is GoTrue's own wording about the submitted values (password
+policy, address format) and so is safe and useful to forward."""
 
 CREDIT_COUNTERS = ("available", "requested")
 """The only DETAIL fields ever forwarded to a client (§5 ``insufficient_credits``)."""
@@ -418,37 +433,162 @@ class SupabaseClient:
         raise ApiException(INTERNAL_ERROR, message="Storage request failed.")
 
     # --- GoTrue -----------------------------------------------------------------------------
+    #
+    # Every call goes out with the anon key and is never replayed: a repeat spends the
+    # caller's budget against GoTrue's own per-IP lockout twice, may burn a rotated
+    # refresh token, and for sign-up would send a second confirmation email.
+
+    async def _auth_request(
+        self,
+        path: str,
+        *,
+        params: Mapping[str, str] | None = None,
+        json: Any = None,
+        headers: Mapping[str, str] | None = None,
+    ) -> httpx.Response:
+        return await self._send(
+            "POST",
+            path,
+            retry=False,
+            headers={**self._anon_headers, **(headers or {}), "Content-Type": "application/json"},
+            params=params,
+            json=json,
+        )
 
     async def auth_grant(self, grant_type: str, payload: Mapping[str, Any]) -> dict[str, Any]:
-        """``POST /auth/v1/token?grant_type=<grant_type>`` with the anon key. Every 4xx
-        becomes ``401 unauthorized`` so wrong email and wrong password are indistinguishable."""
-        response = await self._send(
-            "POST",
-            "/auth/v1/token",
-            # Never replayed: a repeat spends the caller's budget against GoTrue's own
-            # per-IP lockout twice and, for refresh_token, may burn a rotated token.
-            retry=False,
-            headers={**self._anon_headers, "Content-Type": "application/json"},
-            params={"grant_type": grant_type},
-            json=dict(payload),
+        """``POST /auth/v1/token?grant_type=<grant_type>``. Every 4xx becomes
+        ``401 unauthorized`` so wrong email and wrong password are indistinguishable;
+        only ``email_not_confirmed`` keeps its own message, since GoTrue answers it after
+        the password check and so it reaches nobody who could not already sign in."""
+        response = await self._auth_request(
+            "/auth/v1/token", params={"grant_type": grant_type}, json=dict(payload)
         )
         body = self._payload(response)
         if response.is_success and isinstance(body, dict):
             return body
         if 400 <= response.status_code < 500:
-            raise ApiException(UNAUTHORIZED, message="Invalid credentials.")
+            if gotrue_error_code(body) == "email_not_confirmed":
+                raise ApiException(UNAUTHORIZED, message=EMAIL_NOT_CONFIRMED_MESSAGE)
+            raise ApiException(UNAUTHORIZED, message=INVALID_CREDENTIALS_MESSAGE)
         log.error("gotrue error", extra={"status": response.status_code})
-        raise ApiException(INTERNAL_ERROR, message="Authentication service unavailable.")
+        raise ApiException(INTERNAL_ERROR, message=AUTH_UNAVAILABLE_MESSAGE)
+
+    async def auth_signup(self, email: str, password: str, *, redirect_to: str) -> dict[str, Any]:
+        """``POST /auth/v1/signup?redirect_to=<redirect_to>``; returns GoTrue's body — a
+        session when the project auto-confirms, else the bare user. Refusals are mapped by
+        :func:`signup_error`."""
+        response = await self._auth_request(
+            "/auth/v1/signup",
+            params={"redirect_to": redirect_to},
+            json={"email": email, "password": password},
+        )
+        body = self._payload(response)
+        if response.is_success and isinstance(body, dict):
+            return body
+        if 400 <= response.status_code < 500:
+            raise signup_error(response.status_code, body)
+        log.error("gotrue signup error", extra={"status": response.status_code})
+        raise ApiException(INTERNAL_ERROR, message=AUTH_UNAVAILABLE_MESSAGE)
+
+    async def auth_recover(self, email: str, *, redirect_to: str) -> None:
+        """``POST /auth/v1/recover?redirect_to=<redirect_to>``; see :meth:`_mail_outcome`."""
+        response = await self._auth_request(
+            "/auth/v1/recover", params={"redirect_to": redirect_to}, json={"email": email}
+        )
+        self._mail_outcome(response, "recover")
+
+    async def auth_resend(self, email: str, kind: str, *, redirect_to: str) -> None:
+        """``POST /auth/v1/resend?redirect_to=<redirect_to>``; see :meth:`_mail_outcome`."""
+        response = await self._auth_request(
+            "/auth/v1/resend",
+            params={"redirect_to": redirect_to},
+            json={"email": email, "type": kind},
+        )
+        self._mail_outcome(response, "resend")
+
+    def _mail_outcome(self, response: httpx.Response, call: str) -> None:
+        """Enumeration guard for the email-sending calls: GoTrue answers an unknown address
+        with ``200`` but a known one may get ``429 over_email_send_rate_limit``, so every
+        4xx is logged and swallowed and the caller answers ``ok`` either way. Only a 5xx —
+        the service itself failing — is reported."""
+        if response.is_success:
+            return
+        if 400 <= response.status_code < 500:
+            log.info(
+                "gotrue refused mail",
+                extra={
+                    "call": call,
+                    "status": response.status_code,
+                    "error_code": gotrue_error_code(self._payload(response)),
+                },
+            )
+            return
+        log.error("gotrue mail error", extra={"call": call, "status": response.status_code})
+        raise ApiException(INTERNAL_ERROR, message=AUTH_UNAVAILABLE_MESSAGE)
+
+    async def auth_logout(self, access_token: str) -> None:
+        """``POST /auth/v1/logout?scope=local`` as the user: revokes the session's refresh
+        token. A 4xx means GoTrue no longer knows the session, which is the wanted end
+        state; only a 5xx is an error."""
+        response = await self._auth_request(
+            "/auth/v1/logout",
+            params={"scope": "local"},
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        if response.status_code < 500:
+            return
+        log.error("gotrue logout error", extra={"status": response.status_code})
+        raise ApiException(INTERNAL_ERROR, message=AUTH_UNAVAILABLE_MESSAGE)
+
+
+def gotrue_error_code(payload: Any) -> str:
+    """GoTrue's ``error_code``, or for releases that predate it a code derived from the
+    message (``"User already registered"``, ``"Email not confirmed"``)."""
+    body: Mapping[str, Any] = payload if isinstance(payload, Mapping) else {}
+    code = str(body.get("error_code") or "")
+    if code:
+        return code
+    message = str(body.get("msg") or body.get("error_description") or "").lower()
+    if "already registered" in message:
+        return "user_already_exists"
+    if "not confirmed" in message:
+        return "email_not_confirmed"
+    return ""
+
+
+def signup_error(status: int, payload: Any) -> ApiException:
+    """Map a GoTrue sign-up refusal to §5. Existence is disclosed here on purpose — a
+    user who forgot they have an account would otherwise wait for a confirmation email
+    that never comes — and the per-address rate limit on the route bounds probing."""
+    body: Mapping[str, Any] = payload if isinstance(payload, Mapping) else {}
+    code = gotrue_error_code(body)
+    if status == 429:
+        return rate_limited(GOTRUE_RETRY_AFTER_SECONDS)
+    if code in ACCOUNT_EXISTS_CODES:
+        return ApiException(CONFLICT, message=ACCOUNT_EXISTS_MESSAGE)
+    if code == "signup_disabled":
+        return ApiException(VALIDATION_ERROR, message=SIGNUP_DISABLED_MESSAGE)
+    if code in FORWARDED_SIGNUP_CODES:
+        message = str(body.get("msg") or "") or SIGNUP_REFUSED_MESSAGE
+        return ApiException(VALIDATION_ERROR, message=message)
+    log.info("gotrue signup refused", extra={"status": status, "error_code": code or None})
+    return ApiException(VALIDATION_ERROR, message=SIGNUP_REFUSED_MESSAGE)
 
 
 __all__ = [
+    "ACCOUNT_EXISTS_MESSAGE",
+    "AUTH_UNAVAILABLE_MESSAGE",
+    "EMAIL_NOT_CONFIRMED_MESSAGE",
     "IDEMPOTENT_RPCS",
+    "INVALID_CREDENTIALS_MESSAGE",
     "RETRY_STATUSES",
     "SQLSTATE_ERRORS",
     "Filter",
     "SupabaseClient",
     "credit_counters",
     "encode_filters",
+    "gotrue_error_code",
     "postgrest_error",
     "rpc_is_retryable",
+    "signup_error",
 ]

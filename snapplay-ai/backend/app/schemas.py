@@ -53,6 +53,65 @@ class TokenResponse(ContractModel):
     user: AuthUser
 
 
+class AuthSession(ContractModel):
+    """The tokens of ``TokenResponse`` without the user, for responses that carry the
+    user separately."""
+
+    access_token: str
+    refresh_token: str
+    expires_in: int
+    token_type: Literal["bearer"] = "bearer"
+
+
+MAX_EMAIL_LENGTH = 254
+"""RFC 5321 path limit; longer strings are not addresses and never reach GoTrue."""
+
+
+def email_address(value: str) -> str:
+    """Strip and shape-check an address (``local@domain``); GoTrue normalises the rest."""
+    cleaned = value.strip()
+    local, at, domain = cleaned.partition("@")
+    if not at or not local or not domain or len(cleaned) > MAX_EMAIL_LENGTH:
+        raise ValueError("must be an email address")
+    return cleaned
+
+
+class SignupRequest(ContractModel):
+    email: str
+    password: str = Field(min_length=1, max_length=256)
+
+    _email = field_validator("email")(email_address)
+
+
+class RecoverRequest(ContractModel):
+    email: str
+
+    _email = field_validator("email")(email_address)
+
+
+class ResendRequest(ContractModel):
+    email: str
+    type: Literal["signup"] = "signup"
+
+    _email = field_validator("email")(email_address)
+
+
+SignupStatus = Literal["confirmation_pending", "session"]
+
+
+class SignupResponse(ContractModel):
+    """``session`` is set only when GoTrue issued one, i.e. email confirmation is disabled
+    for the project; otherwise the account waits for the confirmation link."""
+
+    status: SignupStatus
+    user: AuthUser
+    session: AuthSession | None = None
+
+
+class AuthAck(ContractModel):
+    status: Literal["ok"] = "ok"
+
+
 class MeUser(ContractModel):
     id: UUID
     email: str
