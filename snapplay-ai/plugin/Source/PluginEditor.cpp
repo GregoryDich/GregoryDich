@@ -29,6 +29,12 @@ namespace
     juce::String emDash()   { return juce::String::charToString (0x2014); }
     juce::String ellipsis() { return juce::String::charToString (0x2026); }
 
+    /** The website the account pages live on: the COMPANY_WEBSITE the plugin is built with. */
+    juce::String siteUrl()
+    {
+        return juce::String (JucePlugin_ManufacturerWebsite).trimCharactersAtEnd ("/");
+    }
+
     juce::String defaultDropMessage()
     {
         return "Drop a WAV, AIFF, FLAC, MP3 or OGG file here (first 60 s are used) " + emDash() + " or click to browse";
@@ -264,9 +270,10 @@ juce::Rectangle<int> PaywallPrompt::getPanelBounds() const
 
 //==============================================================================
 LoginOverlay::LoginOverlay()
-    : signupLink ("Create an account at snapplay.ai", juce::URL ("https://snapplay.ai/signup"))
+    : signupLink ("Create account", juce::URL (siteUrl() + "/signup")),
+      forgotPasswordLink ("Forgot password?", juce::URL (siteUrl() + "/reset-password"))
 {
-    titleLabel.setText ("Sign in to SnapPlay AI", juce::dontSendNotification);
+    titleLabel.setText ("Sign in to " + juce::String (JucePlugin_Name), juce::dontSendNotification);
     titleLabel.setJustificationType (juce::Justification::centred);
     titleLabel.setFont (SnapPlayLookAndFeel::font (22.0f, true));
 
@@ -291,6 +298,8 @@ LoginOverlay::LoginOverlay()
 
     signupLink.setJustificationType (juce::Justification::centred);
     signupLink.setFont (SnapPlayLookAndFeel::font (13.0f), false);
+    forgotPasswordLink.setJustificationType (juce::Justification::centred);
+    forgotPasswordLink.setFont (SnapPlayLookAndFeel::font (13.0f), false);
 
     addAndMakeVisible (titleLabel);
     addAndMakeVisible (emailLabel);
@@ -300,6 +309,7 @@ LoginOverlay::LoginOverlay()
     addAndMakeVisible (loginButton);
     addAndMakeVisible (statusLabel);
     addAndMakeVisible (signupLink);
+    addAndMakeVisible (forgotPasswordLink);
 }
 
 void LoginOverlay::setBusy (bool busy)
@@ -351,7 +361,10 @@ void LoginOverlay::resized()
     loginButton.setBounds (area.removeFromTop (34));
     area.removeFromTop (8);
     statusLabel.setBounds (area.removeFromTop (36));
-    signupLink.setBounds (area.removeFromTop (22));
+
+    auto links = area.removeFromTop (22);
+    signupLink.setBounds (links.removeFromLeft (links.getWidth() / 2));
+    forgotPasswordLink.setBounds (links);
 }
 
 void LoginOverlay::submit()

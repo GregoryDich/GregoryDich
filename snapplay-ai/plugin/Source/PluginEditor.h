@@ -69,7 +69,9 @@ private:
 };
 
 //==============================================================================
-/** Email + password sign-in covering the editor while logged out (contract §1). */
+/** Email + password sign-in covering the editor while logged out (contract §1). Account
+    creation and password recovery need a browser (email confirmation), so the overlay only
+    links to the website's `/signup` and `/reset-password` pages. */
 class LoginOverlay final : public juce::Component
 {
 public:
@@ -97,6 +99,7 @@ private:
     juce::TextButton loginButton;
     juce::Label statusLabel;
     juce::HyperlinkButton signupLink;
+    juce::HyperlinkButton forgotPasswordLink;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LoginOverlay)
 };

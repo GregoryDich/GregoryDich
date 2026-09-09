@@ -291,13 +291,13 @@ class SentMail:
     redirect_to: str
 
 
-def hash_password(password: str) -> str:
+def _hash_password(password: str) -> str:
     salt = secrets.token_bytes(16)
     digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, _PBKDF2_ROUNDS)
     return f"{salt.hex()}${digest.hex()}"
 
 
-def password_matches(stored: str, password: str) -> bool:
+def _password_matches(stored: str, password: str) -> bool:
     salt_hex, _, digest_hex = stored.partition("$")
     salt = bytes.fromhex(salt_hex)
     digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, _PBKDF2_ROUNDS)
@@ -356,7 +356,7 @@ class MemoryGoTrue:
             self._send(existing, "signup", redirect_to)
             return existing.as_record()
         user = GoTrueUserRow(
-            id=uuid4(), email=address, password_hash=hash_password(password), created_at=self.now()
+            id=uuid4(), email=address, password_hash=_hash_password(password), created_at=self.now()
         )
         self.users[user.id] = user
         if self.autoconfirm:
@@ -375,7 +375,7 @@ class MemoryGoTrue:
 
     def password_grant(self, email: str, password: str) -> dict[str, Any]:
         user = self.find_by_email(email)
-        if user is None or not password_matches(user.password_hash, password):
+        if user is None or not _password_matches(user.password_hash, password):
             raise ApiException(UNAUTHORIZED, message=INVALID_CREDENTIALS_MESSAGE)
         if user.confirmed_at is None:
             raise ApiException(UNAUTHORIZED, message=EMAIL_NOT_CONFIRMED_MESSAGE)

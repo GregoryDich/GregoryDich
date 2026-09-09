@@ -65,6 +65,26 @@ the API container's `HEALTHCHECK`, `infra/aws/README.md`) points at `/v1/health`
   `authenticate_api_key`; keys act as their owner but cannot manage keys or use `/v1/auth/*`.
 * Rate limits are keyed by the authenticated identity: 10 job submissions and 60 reads per
   minute, answering `429` with `Retry-After` and `X-RateLimit-Remaining`.
+* The account lifecycle lives under `/v1/auth/*` and proxies GoTrue with the anon key so
+  the plugin talks to one host: `token`, `refresh`, `signup`, `recover`, `resend` and
+  `logout` (session token only). `AUTH_SITE_URL` is where the emailed links land —
+  `/auth/confirm` for sign-up and resend, `/auth/reset-password` for recovery — and both
+  paths must be in the Supabase Auth redirect allow-list.
+* Disclosure is asymmetric on purpose: `signup` answers `409 conflict` for an address that
+  already has a confirmed account (GoTrue's obfuscated identity-less user included, since a
+  user who forgot they have an account would otherwise wait for an email that never
+  comes), while `token`, `recover` and `resend` never distinguish a known address from an
+  unknown one. `recover` and `resend` answer `200 {"status": "ok"}` whatever GoTrue said
+  short of a 5xx, because GoTrue's own send-frequency `429` only happens for known
+  addresses. Every route that takes an address draws on the same per-address budget as
+  password guessing (10 per minute, `app/middleware/rate_limit.py`), so the disclosure on
+  `signup` costs an enumerator ten probes per address per minute and none of the routes
+  is a mail relay.
+* Under the in-memory data backend (`ENV=test`, or no `SUPABASE_URL`) `MemoryGoTrue` in
+  `app/services/memory.py` stands in for Supabase Auth: PBKDF2 passwords in a dict, HS256
+  tokens under `SUPABASE_JWT_SECRET` that the app's own verifier accepts, confirmation
+  state (`store.gotrue.confirm(email)` is the emailed link) and an `outbox` of the emails
+  GoTrue would have sent. Tests and local development only.
 
 ## Backends
 

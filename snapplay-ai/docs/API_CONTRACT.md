@@ -63,6 +63,96 @@ Proxy to GoTrue password grant so the plugin talks to one host only.
 ```
 → same shape as `/v1/auth/token`.
 
+A password grant for an account that has not confirmed its email answers
+`401 unauthorized` with the message `Confirm your email address before signing in.`;
+GoTrue checks the password before the confirmation state, so this reaches nobody who could
+not already sign in. Every other refusal is `401 unauthorized` / `Invalid credentials.`,
+so a wrong password and an unknown address are indistinguishable.
+
+### `POST /v1/auth/signup`
+Proxy to GoTrue `POST /auth/v1/signup` (anon key, `redirect_to` =
+`<AUTH_SITE_URL>/auth/confirm`).
+```json
+{ "email": "a@b.c", "password": "•••" }
+```
+→ `201` when the project requires email confirmation (the default): the account exists
+but cannot sign in until the link in the confirmation email is followed.
+```json
+{ "status": "confirmation_pending", "user": { "id": "<uuid>", "email": "a@b.c" },
+  "session": null }
+```
+→ `201` when confirmation is disabled (GoTrue auto-confirm): a session is issued at once.
+```json
+{ "status": "session", "user": { "id": "<uuid>", "email": "a@b.c" },
+  "session": { "access_token": "<jwt>", "refresh_token": "<opaque>", "expires_in": 3600,
+               "token_type": "bearer" } }
+```
+Errors: `409 conflict` when the address already has a confirmed account (GoTrue's
+`user_already_exists` and its obfuscated identity-less user answer alike);
+`422 validation_error` carrying GoTrue's own message for a rejected password
+(`weak_password`) or address (`validation_failed`), and for `signup_disabled`;
+`429 rate_limited` from GoTrue's own email limits. A second sign-up for an address whose
+account is still unconfirmed answers `201 confirmation_pending` again and re-sends the
+confirmation email. Malformed addresses (no `local@domain`, over 254 characters) are
+refused `422` before anything reaches GoTrue.
+
+Disclosure on this route is deliberate — a user who forgot they have an account would
+otherwise wait for an email that never comes — and bounded: the per-address budget below
+applies, and `/token`, `/recover` and `/resend` never confirm that an address exists.
+
+### `POST /v1/auth/recover`
+Proxy to GoTrue `POST /auth/v1/recover` (`redirect_to` = `<AUTH_SITE_URL>/auth/reset-password`).
+```json
+{ "email": "a@b.c" }
+```
+→ `200 {"status": "ok"}` **always**, known address or not. Every GoTrue 4xx is swallowed
+— including its send-frequency `429`, which only a known address can trigger — and only a
+GoTrue 5xx becomes `500 internal_error`.
+
+### `POST /v1/auth/resend`
+Proxy to GoTrue `POST /auth/v1/resend` (`redirect_to` = `<AUTH_SITE_URL>/auth/confirm`).
+```json
+{ "email": "a@b.c", "type": "signup" }
+```
+→ `200 {"status": "ok"}` always, exactly as `/recover`. `type` accepts only `signup`
+(the default). An email is only actually sent for an account that is still unconfirmed.
+
+### `POST /v1/auth/logout`   (auth — session token only, never an API key)
+No body. Proxies GoTrue `POST /auth/v1/logout?scope=local` as the caller, revoking the
+session's refresh token → `200 {"status": "ok"}`. The access token is a signed JWT that
+nothing consults GoTrue about, so it stays valid until `exp`; the client discards both
+tokens (the plugin does). A GoTrue 4xx — the session is already gone — is still `ok`;
+only a 5xx is `500 internal_error`. Counts against the reads budget (§5).
+
+### Pre-authentication rate limit
+`token`, `signup`, `recover` and `resend` share one budget of 10 attempts per minute per
+submitted email address (case- and whitespace-insensitive); `refresh` has the same budget
+per refresh token. Over budget answers `429 rate_limited` with `Retry-After` before
+anything reaches GoTrue. The budget is keyed on the credential rather than the client
+address because the API proxies GoTrue from a single address (`docs/SECURITY.md` §6).
+
+### Email confirmation and password recovery
+1. The website (or the plugin's "Create account" link, which opens `<website>/signup`)
+   posts to `/v1/auth/signup`. The `auth.users` row is inserted at once and the
+   `handle_new_user` trigger (§6) grants the 3 welcome credits, which stay unreachable
+   until the account can sign in.
+2. GoTrue emails a link that verifies the token and redirects to
+   `<AUTH_SITE_URL>/auth/confirm`; a browser session arrives in the URL fragment, which
+   the page may ignore and simply say "confirmed — open the plugin and sign in".
+   `/v1/auth/resend` re-sends that email.
+3. `/v1/auth/token` before confirmation answers the `Confirm your email address` `401`
+   above; afterwards it issues the session and `GET /v1/me` shows the 3 credits.
+4. Recovery: "Forgot password?" in the plugin opens `<website>/reset-password`, which
+   posts to `/v1/auth/recover`. The emailed link lands on
+   `<AUTH_SITE_URL>/auth/reset-password` with a recovery session in the fragment, and the
+   page sets the new password against GoTrue directly (`PUT /auth/v1/user`, e.g.
+   supabase-js `updateUser`); the API proxies no step of that, since the browser already
+   talks to Supabase.
+
+`AUTH_SITE_URL` (backend setting, default `http://localhost:3000`) is the base of both
+landing routes; both must be registered in the Supabase Auth redirect allow-list, or
+GoTrue silently redirects to its own site URL instead.
+
 ### `GET /v1/me`   (auth)
 → `200`
 ```json
