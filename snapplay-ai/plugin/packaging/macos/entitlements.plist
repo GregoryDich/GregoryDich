@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Hardened-runtime entitlements for the VST3 and AU bundles (codesign - -options runtime).
+
+  A plugin runs inside the host's process, so the host's entitlements govern microphone,
+  file and network access; the plugin binary itself needs no exceptions to the hardened
+  runtime. Every key below is therefore deliberately ABSENT:
+
+    com.apple.security.cs.allow-unsigned-executable-memory  no JIT or self-modifying code
+    com.apple.security.cs.allow-jit                          same
+    com.apple.security.cs.disable-library-validation         the bundle loads no third-party
+                                                             code (Rubber Band is linked statically)
+    com.apple.security.cs.allow-dyld-environment-variables   not needed; weakens the runtime
+    com.apple.security.device.audio-input                    only meaningful for an app that
+                                                             opens the microphone itself
+    com.apple.security.network.client                        App Sandbox only; plugins are not
+                                                             sandboxed and HTTPS needs nothing here
+    com.apple.security.app-sandbox                           plugins are not sandboxed
+
+  The Standalone app (BUILD_STANDALONE=1) opens audio devices itself and is signed with
+  entitlements-standalone.plist instead.
+-->
+<plist version="1.0">
+<dict/>
+</plist>

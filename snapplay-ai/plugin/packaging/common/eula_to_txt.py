@@ -56,7 +56,7 @@ class UnresolvedPlaceholderError(ValueError):
     """Raised when a [[TOKEN]] has no value."""
 
     def __init__(self, names: Sequence[str]) -> None:
-        self.names = tuple(dict.fromkeys(names))
+        self.names = tuple(sorted(set(names)))
         super().__init__("unresolved placeholders: " + ", ".join(self.names))
 
 

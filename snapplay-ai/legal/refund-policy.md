@@ -24,6 +24,7 @@ When your payment is confirmed, the credits are added to your account and can be
 <!-- LAWYER-REVIEW: Confirm whether prepaid credits are "digital content not supplied on a tangible medium" (withdrawal right lost on express consent + acknowledgement, CRD Art. 16(m) / UK CCR reg. 37) or a "digital service" (withdrawal right survives but the consumer pays a proportionate amount for credits used, CRD Art. 14(3)); the checkout wording and the text of 3.2 depend on the answer. -->
 
 3.3 **Subscriptions.** For your **first** subscription payment, you may withdraw within 14 days of that payment. Because you asked us to start the subscription immediately, if you withdraw we may deduct an amount proportionate to the credits you used before withdrawing, calculated at the subscription's price per credit, and refund the rest. Renewal payments are not new contracts and do not restart the 14-day period; cancel before the renewal date if you do not want to be charged.
+<!-- LAWYER-REVIEW: Confirm the basis for the proportionate deduction on first-month subscription withdrawal (credits used × subscription price per credit) matches CRD Art. 14(3) / UK CCR reg. 36 (proportion of the total price for the period), and that it is disclosed at checkout as required. -->
 
 3.4 **How to withdraw.** Send a clear statement to [[SUPPORT_EMAIL]] (you may use the model form below), or use the withdrawal or cancellation function in the customer portal of [[MERCHANT_OF_RECORD]]. Sending your statement before the 14 days expire is enough.
 

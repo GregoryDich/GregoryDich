@@ -58,6 +58,7 @@ Notices under the EU Digital Services Act should contain the equivalent informat
 6.1 We review the notice promptly and, if it is complete, **remove or disable access** to the material identified (if it still exists) and record the notice against the account.
 
 6.2 We **notify the user** whose content was identified, give them a copy of the notice (with your contact details, as the law requires), and tell them how to file a counter-notice.
+<!-- LAWYER-REVIEW: Forwarding the complainant's name and contact details to the user is standard DMCA practice but is a disclosure of personal data under the GDPR/UK GDPR and the Israeli PPL; confirm the legal basis (legitimate interests / legal claims) and whether the Privacy Policy should mention it expressly. -->
 
 6.3 We may suspend the account while we assess the notice if the reported use appears to be part of a pattern.
 

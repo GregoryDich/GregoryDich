@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- productbuild distribution template; @TOKENS@ are filled in by package.sh -->
+<installer-gui-script minSpecVersion="2">
+    <title>@PRODUCT_NAME@ @VERSION@</title>
+    <organization>@BUNDLE_ID_BASE@</organization>
+    <welcome file="welcome.txt" mime-type="text/plain"/>
+    <license file="license.txt" mime-type="text/plain"/>
+    <options customize="always" require-scripts="false" hostArchitectures="arm64,x86_64" rootVolumeOnly="true"/>
+    <domains enable_localSystem="true"/>
+    <allowed-os-versions>
+        <os-version min="@MIN_MACOS@"/>
+    </allowed-os-versions>
+    <choices-outline>
+        <line choice="vst3"/>
+        <line choice="au"/>
+    </choices-outline>
+    <choice id="vst3" title="VST3" description="Installs @PRODUCT_NAME@.vst3 into /Library/Audio/Plug-Ins/VST3." start_selected="true">
+        <pkg-ref id="@BUNDLE_ID_BASE@.vst3"/>
+    </choice>
+    <choice id="au" title="Audio Unit" description="Installs @PRODUCT_NAME@.component into /Library/Audio/Plug-Ins/Components (Logic Pro, GarageBand, MainStage)." start_selected="true">
+        <pkg-ref id="@BUNDLE_ID_BASE@.au"/>
+    </choice>
+    <pkg-ref id="@BUNDLE_ID_BASE@.vst3" version="@VERSION_NUMERIC@" onConclusion="none">@VST3_PKG@</pkg-ref>
+    <pkg-ref id="@BUNDLE_ID_BASE@.au" version="@VERSION_NUMERIC@" onConclusion="none">@AU_PKG@</pkg-ref>
+</installer-gui-script>

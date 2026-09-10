@@ -1,0 +1,11 @@
+This installs @PRODUCT_NAME@ @VERSION@ for macOS @MIN_MACOS@ or later (Apple silicon and Intel).
+
+Choose the plug-in formats on the next pages:
+
+  VST3        /Library/Audio/Plug-Ins/VST3/@PRODUCT_NAME@.vst3
+  Audio Unit  /Library/Audio/Plug-Ins/Components/@PRODUCT_NAME@.component
+
+Quit your DAW before continuing. If a host does not list the Audio Unit after installing,
+open a Terminal and run:  killall -9 AudioComponentRegistrar
+
+@VENDOR_URL@

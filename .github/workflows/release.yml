@@ -1,0 +1,366 @@
+name: release
+
+# Signed, notarized installers for every `v*` tag, published as a DRAFT GitHub release that a
+# human reviews and publishes. `workflow_dispatch` runs the same pipeline as a dry run: when
+# the signing secrets are absent it still builds and packages, labelling the assets
+# "-unsigned", and uploads them as a workflow artifact instead of creating a release.
+#
+# Product identity comes from snapplay-ai/plugin/packaging/product.env; nothing here names
+# the product. One-time setup (certificates, secrets, variables) is documented in
+# snapplay-ai/plugin/README.md under "Packaging and releases".
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version for a dry run (X.Y.Z or vX.Y.Z). Signing is skipped when the secrets are absent and the assets are labelled -unsigned."
+        required: true
+        default: "0.0.0-dry"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: snapplay-ai/plugin
+
+env:
+  # Substituted into legal/eula.md by packaging/common/eula_to_txt.py. Repository *variables*,
+  # not secrets: they are printed inside the licence text. A tag build fails when one is
+  # missing; a dry run falls back to a placeholder licence and warns.
+  COMPANY_LEGAL_NAME: ${{ vars.COMPANY_LEGAL_NAME }}
+  COMPANY_ADDRESS: ${{ vars.COMPANY_ADDRESS }}
+  COMPANY_REG_ID: ${{ vars.COMPANY_REG_ID }}
+  WEBSITE_URL: ${{ vars.WEBSITE_URL }}
+  SUPPORT_EMAIL: ${{ vars.SUPPORT_EMAIL }}
+  PRIVACY_EMAIL: ${{ vars.PRIVACY_EMAIL }}
+  LEGAL_EMAIL: ${{ vars.LEGAL_EMAIL }}
+  MERCHANT_OF_RECORD: ${{ vars.MERCHANT_OF_RECORD }}
+  EFFECTIVE_DATE: ${{ vars.EFFECTIVE_DATE }}
+  EFFECTIVE_YEAR: ${{ vars.EFFECTIVE_YEAR }}
+
+jobs:
+  meta:
+    name: Resolve version and product
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      slug: ${{ steps.meta.outputs.slug }}
+      product_name: ${{ steps.meta.outputs.product_name }}
+      dry_run: ${{ steps.meta.outputs.dry_run }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: meta
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+          IS_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          source packaging/common/lib.sh
+          load_product_env
+          resolve_version "${REQUESTED_VERSION:-}"
+          {
+            echo "version=${VERSION}"
+            echo "slug=${PRODUCT_SLUG}"
+            echo "product_name=${PRODUCT_NAME}"
+            echo "dry_run=${IS_DRY_RUN}"
+          } >> "$GITHUB_OUTPUT"
+          echo "${PRODUCT_NAME} ${VERSION} (dry run: ${IS_DRY_RUN})"
+
+  macos:
+    name: macOS universal (VST3 + AU)
+    needs: meta
+    runs-on: macos-14
+    timeout-minutes: 120
+    env:
+      VERSION: ${{ needs.meta.outputs.version }}
+      DIST_DIR: ${{ github.workspace }}/snapplay-ai/plugin/dist
+      JOBS: "3"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: brew install pkgconf
+
+      - name: Cache JUCE sources
+        uses: actions/cache@v4
+        with:
+          path: snapplay-ai/plugin/build/_deps
+          key: juce-8.0.8-${{ runner.os }}-${{ hashFiles('snapplay-ai/plugin/CMakeLists.txt') }}
+
+      - name: Decide whether this build can be signed
+        id: gate
+        env:
+          HAS_CERT: ${{ secrets.MACOS_CERT_P12_BASE64 != '' && secrets.MACOS_CERT_PASSWORD != '' }}
+          HAS_NOTARY: ${{ (secrets.NOTARY_KEY_ID != '' && secrets.NOTARY_ISSUER_ID != '' && secrets.NOTARY_KEY_P8 != '') || (secrets.NOTARY_APPLE_ID != '' && secrets.NOTARY_PASSWORD != '' && secrets.NOTARY_TEAM_ID != '') }}
+          IS_DRY_RUN: ${{ needs.meta.outputs.dry_run }}
+        run: |
+          if [ "$HAS_CERT" = "true" ] && [ "$HAS_NOTARY" = "true" ]; then
+            echo "sign=true" >> "$GITHUB_OUTPUT"
+          elif [ "$IS_DRY_RUN" = "true" ]; then
+            echo "::warning::macOS signing/notarization secrets are absent; producing an UNSIGNED dry-run package"
+            echo "sign=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::A tag build must be signed and notarized: set MACOS_CERT_P12_BASE64, MACOS_CERT_PASSWORD and the NOTARY_* secrets"
+            exit 1
+          fi
+
+      - name: Import Developer ID certificates into a temporary keychain
+        if: steps.gate.outputs.sign == 'true'
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.MACOS_CERT_P12_BASE64 }}
+          p12-password: ${{ secrets.MACOS_CERT_PASSWORD }}
+
+      - name: Build (Release, arm64 + x86_64)
+        run: packaging/macos/build.sh
+
+      - name: Sign the bundles
+        if: steps.gate.outputs.sign == 'true'
+        run: packaging/macos/sign.sh
+
+      - name: Validate the Audio Unit (auval)
+        run: packaging/macos/auval.sh
+
+      - name: Build the installer package
+        env:
+          ALLOW_UNSIGNED: ${{ steps.gate.outputs.sign == 'true' && '0' || '1' }}
+          ALLOW_LICENSE_PLACEHOLDER: ${{ needs.meta.outputs.dry_run == 'true' && '1' || '0' }}
+        run: packaging/macos/package.sh
+
+      - name: Notarize, staple and verify with Gatekeeper
+        if: steps.gate.outputs.sign == 'true'
+        env:
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+          NOTARY_KEY_P8: ${{ secrets.NOTARY_KEY_P8 }}
+          NOTARY_APPLE_ID: ${{ secrets.NOTARY_APPLE_ID }}
+          NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
+          NOTARY_TEAM_ID: ${{ secrets.NOTARY_TEAM_ID }}
+        run: |
+          for pkg in "$DIST_DIR"/*.pkg; do
+            packaging/macos/notarize.sh "$pkg"
+          done
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.meta.outputs.slug }}-macOS
+          path: snapplay-ai/plugin/dist/*.pkg
+          if-no-files-found: error
+
+  windows:
+    name: Windows x64 (VST3)
+    needs: meta
+    runs-on: windows-latest
+    timeout-minutes: 120
+    env:
+      VERSION: ${{ needs.meta.outputs.version }}
+      DIST_DIR: ${{ github.workspace }}\snapplay-ai\plugin\dist
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache JUCE sources
+        uses: actions/cache@v4
+        with:
+          path: snapplay-ai/plugin/build/_deps
+          key: juce-8.0.8-${{ runner.os }}-${{ hashFiles('snapplay-ai/plugin/CMakeLists.txt') }}
+
+      # cl.exe/lib.exe for the Rubber Band static library, pkg-config so CMake can find it.
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install pkg-config
+        run: choco install pkgconfiglite --no-progress -y
+
+      - name: Decide how this build is signed
+        id: gate
+        env:
+          HAS_AZURE: ${{ secrets.AZURE_TENANT_ID != '' && secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_CLIENT_SECRET != '' && secrets.AZURE_ENDPOINT != '' && secrets.AZURE_CODE_SIGNING_ACCOUNT != '' && secrets.AZURE_CERT_PROFILE != '' }}
+          HAS_PFX: ${{ secrets.WINDOWS_PFX_BASE64 != '' && secrets.WINDOWS_PFX_PASSWORD != '' }}
+          IS_DRY_RUN: ${{ needs.meta.outputs.dry_run }}
+        run: |
+          if ($env:HAS_AZURE -eq 'true') {
+            $mode = 'azure'
+          } elseif ($env:HAS_PFX -eq 'true') {
+            $mode = 'pfx'
+          } elseif ($env:IS_DRY_RUN -eq 'true') {
+            Write-Host '::warning::Windows signing secrets are absent; producing an UNSIGNED dry-run installer'
+            $mode = 'none'
+          } else {
+            Write-Host '::error::A tag build must be signed: set the AZURE_* secrets (Azure Artifact Signing) or WINDOWS_PFX_BASE64 + WINDOWS_PFX_PASSWORD'
+            exit 1
+          }
+          "mode=$mode" >> $env:GITHUB_OUTPUT
+          Write-Host "signing mode: $mode"
+
+      - name: Build (Release x64)
+        id: build
+        run: packaging/windows/build.ps1
+
+      - name: Sign the VST3 (Azure Artifact Signing)
+        if: steps.gate.outputs.mode == 'azure'
+        uses: azure/trusted-signing-action@v0.5.1
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.AZURE_CODE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE }}
+          files-folder: ${{ steps.build.outputs.vst3_binary_dir }}
+          files-folder-filter: vst3
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Sign the VST3 (PFX certificate)
+        if: steps.gate.outputs.mode == 'pfx'
+        env:
+          WINDOWS_PFX_BASE64: ${{ secrets.WINDOWS_PFX_BASE64 }}
+          WINDOWS_PFX_PASSWORD: ${{ secrets.WINDOWS_PFX_PASSWORD }}
+        run: packaging/windows/sign.ps1 -Mode pfx -Path "${{ steps.build.outputs.vst3_bundle }}"
+
+      - name: Verify the VST3 signature
+        if: steps.gate.outputs.mode != 'none'
+        run: packaging/windows/sign.ps1 -Mode verify -Path "${{ steps.build.outputs.vst3_bundle }}"
+
+      - name: Build the installer (Inno Setup)
+        id: installer
+        env:
+          UNSIGNED: ${{ steps.gate.outputs.mode == 'none' && '1' || '0' }}
+          ALLOW_LICENSE_PLACEHOLDER: ${{ needs.meta.outputs.dry_run == 'true' && '1' || '0' }}
+        run: packaging/windows/package.ps1
+
+      - name: Sign the installer (Azure Artifact Signing)
+        if: steps.gate.outputs.mode == 'azure'
+        uses: azure/trusted-signing-action@v0.5.1
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.AZURE_CODE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE }}
+          files-folder: ${{ env.DIST_DIR }}
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Sign the installer (PFX certificate)
+        if: steps.gate.outputs.mode == 'pfx'
+        env:
+          WINDOWS_PFX_BASE64: ${{ secrets.WINDOWS_PFX_BASE64 }}
+          WINDOWS_PFX_PASSWORD: ${{ secrets.WINDOWS_PFX_PASSWORD }}
+        run: packaging/windows/sign.ps1 -Mode pfx -Path "${{ steps.installer.outputs.installer }}"
+
+      - name: Verify the installer signature
+        if: steps.gate.outputs.mode != 'none'
+        run: packaging/windows/sign.ps1 -Mode verify -Path "${{ steps.installer.outputs.installer }}"
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.meta.outputs.slug }}-Windows
+          path: snapplay-ai/plugin/dist/*.exe
+          if-no-files-found: error
+
+  release:
+    name: Draft the GitHub release
+    needs: [meta, macos, windows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.meta.outputs.version }}
+      PRODUCT_NAME: ${{ needs.meta.outputs.product_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ needs.meta.outputs.slug }}-*
+          path: snapplay-ai/plugin/dist
+          merge-multiple: true
+
+      - name: Write SHA256SUMS
+        run: packaging/checksums.sh dist/SHA256SUMS dist/*.pkg dist/*.exe
+
+      - name: Write RELEASE_NOTES.md from the tag message
+        env:
+          IS_DRY_RUN: ${{ needs.meta.outputs.dry_run }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          notes=dist/RELEASE_NOTES.md
+          body=""
+          if [ "$IS_DRY_RUN" != "true" ]; then
+            git fetch --force --no-tags origin "refs/tags/${TAG}:refs/tags/${TAG}"
+            body="$(git tag -l --format='%(contents)' "$TAG")"
+          fi
+          {
+            echo "# ${PRODUCT_NAME} ${VERSION}"
+            echo
+            if [ "$IS_DRY_RUN" = "true" ]; then
+              echo "> Dry run from workflow_dispatch - not a release."
+              echo
+            fi
+            if [ -f ../legal/eula.md ]; then
+              :
+            else
+              echo "> **DO NOT PUBLISH.** \`legal/eula.md\` did not exist when these installers were built;"
+              echo "> they embed a placeholder licence. Add the EULA and rebuild the tag."
+              echo
+            fi
+            if ls dist | grep -q -- '-unsigned'; then
+              echo "> **DO NOT PUBLISH.** These assets are unsigned (signing secrets were absent)."
+              echo
+            fi
+            if [ -n "$body" ]; then
+              printf '%s\n\n' "$body"
+            else
+              echo "_Release notes: replace this line before publishing (the tag ${TAG} has no message)._"
+              echo
+            fi
+            echo "## Files"
+            echo
+            echo '```'
+            cat dist/SHA256SUMS
+            echo '```'
+            echo
+            echo "Verify a download with \`sha256sum -c SHA256SUMS\` (macOS: \`shasum -a 256 -c SHA256SUMS\`)."
+          } > "$notes"
+          cat "$notes"
+          ls -la dist
+
+      - name: Create the draft release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          tag_name: ${{ github.ref_name }}
+          name: ${{ needs.meta.outputs.product_name }} ${{ needs.meta.outputs.version }}
+          body_path: snapplay-ai/plugin/dist/RELEASE_NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            snapplay-ai/plugin/dist/*.pkg
+            snapplay-ai/plugin/dist/*.exe
+            snapplay-ai/plugin/dist/SHA256SUMS
+            snapplay-ai/plugin/dist/RELEASE_NOTES.md
+
+      - name: Upload the dry-run bundle
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.meta.outputs.slug }}-${{ needs.meta.outputs.version }}-dry-run
+          path: snapplay-ai/plugin/dist/
+          if-no-files-found: error

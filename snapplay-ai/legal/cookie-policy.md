@@ -30,6 +30,7 @@ Required for the website to work and to honour your choices. They are set withou
 Remember choices that improve your experience but are not essential.
 
 - **Referral attribution.** If you arrive through a referral link (`?ref=…`) or a campaign link, a first-party cookie `ref` stores the code so that the person who referred you gets credit when you sign up. Without it the referral is lost, so we treat it as functional; it contains no personal data.
+<!-- LAWYER-REVIEW: Confirm whether the `ref` referral cookie can be treated as consent-exempt (it serves the visitor's own interest in the referral reward but is not strictly necessary to deliver a service they requested) or must sit behind the functional consent toggle under ePrivacy Art. 5(3) and the CNIL/ICO guidance. -->
 
 We may also keep display preferences (for example a dark/light theme) in your browser's local storage. This data is never sent to our servers.
 
