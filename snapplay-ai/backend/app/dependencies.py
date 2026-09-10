@@ -13,6 +13,7 @@ from app.errors import UNAUTHORIZED, ApiException
 from app.services.factory import Services
 
 API_KEY_HEADER = "x-api-key"
+ACCOUNT_DELETED_MESSAGE = "This account has been deleted."
 
 
 def get_services(conn: HTTPConnection) -> Services:
@@ -37,12 +38,16 @@ async def authenticate(
     services: Services, *, bearer: str | None = None, api_key: str | None = None
 ) -> Principal:
     """Resolve a JWT (preferred) or an API key to a :class:`Principal`, else ``401``.
-    A JWT caller's profile is created on first sight (signup credits, §3)."""
+    A JWT caller's profile is created on first sight (signup credits, §3). A token of a
+    deleted account stays a valid signature until ``exp``, so the profile tombstone is
+    what refuses it (§1 account deletion)."""
     if bearer:
         claims = await services.jwt.verify_async(bearer)
         user_id = UUID(str(claims["sub"]))
         email = str(claims.get("email") or "")
-        await services.users.ensure(user_id, email)
+        profile = await services.users.ensure(user_id, email)
+        if profile.deleted_at is not None:
+            raise ApiException(UNAUTHORIZED, message=ACCOUNT_DELETED_MESSAGE)
         return Principal(user_id=user_id, email=email or None, via="jwt")
     if api_key:
         owner = await authenticate_api_key(api_key, services.api_keys)
@@ -77,6 +82,7 @@ async def get_session_principal(principal: Principal = Depends(get_principal)) -
 
 
 __all__ = [
+    "ACCOUNT_DELETED_MESSAGE",
     "API_KEY_HEADER",
     "authenticate",
     "bearer_token",

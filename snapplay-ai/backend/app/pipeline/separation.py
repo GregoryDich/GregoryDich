@@ -1,7 +1,15 @@
-"""Demucs v4 ``htdemucs`` source separation (contract §7, 900 ms budget on an A10G).
+"""Source separation (contract §7, 900 ms budget on an A10G).
 
-The model is loaded once per process (lazily, under a lock) and kept on the GPU. On
-CUDA the forward pass runs under fp16 autocast; ``SNAPPLAY_TRT=1`` additionally tries
+The model named by ``SEPARATION_MODEL`` is loaded once per process (lazily, under a
+lock) and kept on the GPU. Every model this module knows is listed in
+:data:`SEPARATION_MODELS` together with the licence of its *weights*, which is what
+matters commercially: the Demucs code is MIT, but Meta publishes the ``htdemucs*``
+checkpoints for research use only, so a production worker refuses to load them unless
+``ALLOW_UNLICENSED_SEPARATION_MODEL=1`` is set for internal testing
+(:func:`check_model_licence`, called from :func:`load_model` and by the workers before
+they poll).
+
+On CUDA the forward pass runs under fp16 autocast; ``SNAPPLAY_TRT=1`` additionally tries
 ``torch.compile`` with the TensorRT backend (``torch_tensorrt``) and then the default
 backend, keeping the eager model whenever compilation or the warm-up run fails.
 
@@ -23,6 +31,8 @@ from typing import Any
 
 import numpy as np
 
+from app.config import Settings, get_settings
+
 log = logging.getLogger("snapplay.pipeline.separation")
 
 DEFAULT_MODEL = "htdemucs"
@@ -32,10 +42,62 @@ SHIFTS = 0
 OVERLAP = 0.25
 DEFAULT_MAX_SEGMENT_SECONDS = 7.8  # htdemucs training segment; longer is rejected by demucs
 INSTALL_HINT = "install the GPU extras: pip install -r requirements-gpu.txt (torch, demucs)"
+ALLOW_UNLICENSED_ENV = "ALLOW_UNLICENSED_SEPARATION_MODEL"
+
+FAMILY_DEMUCS = "demucs"
+FAMILY_ROFORMER = "roformer"
+FAMILY_API = "api"
+
+DEMUCS_WEIGHTS_LICENCE = (
+    "research use only: Meta's htdemucs checkpoints are not covered by the MIT code "
+    "licence (facebookresearch/demucs#327) and were trained on the non-commercial MUSDB18-HQ"
+)
+
+SEPARATION_MODELS: dict[str, dict[str, Any]] = {
+    "htdemucs": {
+        "family": FAMILY_DEMUCS,
+        "weights_licence": DEMUCS_WEIGHTS_LICENCE,
+        "commercial_use": False,
+    },
+    "htdemucs_ft": {
+        "family": FAMILY_DEMUCS,
+        "weights_licence": DEMUCS_WEIGHTS_LICENCE,
+        "commercial_use": False,
+    },
+    "htdemucs_6s": {
+        "family": FAMILY_DEMUCS,
+        "weights_licence": DEMUCS_WEIGHTS_LICENCE,
+        "commercial_use": False,
+    },
+}
+"""Model name → ``{"family", "weights_licence", "commercial_use"}``.
+
+``commercial_use`` is ``True`` only once the licence of the exact checkpoint shipped has
+been read and archived; ``False`` for weights known to be research-only; ``None`` for a
+name this table does not list (any other Demucs bag name can be tried outside
+production). Extending the table is the intended path off the Demucs blocker:
+
+* **RoFormer checkpoint** (e.g. a Mel-Band RoFormer vocal model whose author relicensed
+  the weights to MIT): add a row with ``"family": FAMILY_ROFORMER``, the checkpoint
+  location under ``"checkpoint"`` and ``"commercial_use": True`` *after* verifying the
+  licence on that checkpoint's model card, then give :func:`_load_family` a
+  ``FAMILY_ROFORMER`` branch returning a model whose ``sources`` and ``segment``
+  :class:`LoadedSeparator` can describe. Stems this pipeline needs are the four Demucs
+  sources, so a vocals-only model has to be paired with a second stage for the rest.
+* **Hosted API** (AudioShake, Music.ai, LALAL.AI and the like): add a row with
+  ``"family": FAMILY_API`` and the vendor terms under ``"weights_licence"``, then let
+  :func:`separate` route ``FAMILY_API`` models to an HTTP client instead of
+  :func:`_separate`; the per-call price becomes a line item in ``docs/ECONOMICS.md``.
+"""
+
+
+class SeparationModelLicenceError(RuntimeError):
+    """``SEPARATION_MODEL`` cannot be used in this environment (see :func:`check_model_licence`)."""
 
 
 @dataclass(frozen=True)
 class LoadedSeparator:
+    name: str
     model: Any
     device: str
     fp16: bool
@@ -56,6 +118,60 @@ def require_extras() -> None:
     """Raise :class:`ImportError` with an install hint when torch or demucs is missing."""
     if not is_available():
         raise ImportError(f"Demucs separation needs torch and demucs; {INSTALL_HINT}")
+
+
+def model_info(name: str) -> dict[str, Any]:
+    """The :data:`SEPARATION_MODELS` row for ``name``; an unlisted name is treated as a
+    Demucs bag whose weights licence is unknown."""
+    return dict(
+        SEPARATION_MODELS.get(name)
+        or {"family": FAMILY_DEMUCS, "weights_licence": "unknown", "commercial_use": None}
+    )
+
+
+def unlicensed_allowed() -> bool:
+    """``ALLOW_UNLICENSED_SEPARATION_MODEL=1`` (also ``true`` / ``yes``) in the environment."""
+    return os.environ.get(ALLOW_UNLICENSED_ENV, "").strip().lower() in {"1", "true", "yes"}
+
+
+def check_model_licence(
+    name: str, env: str, *, allow_unlicensed: bool = False
+) -> dict[str, Any]:
+    """Return ``model_info(name)`` or raise :class:`SeparationModelLicenceError`.
+
+    Outside ``production`` every model is allowed. In production a model is allowed
+    only when its weights are recorded as licensed for commercial use, or when the
+    operator explicitly accepts the risk for internal testing with ``allow_unlicensed``
+    (``ALLOW_UNLICENSED_SEPARATION_MODEL=1``), which is logged as a warning.
+    """
+    info = model_info(name)
+    if env != "production" or info["commercial_use"] is True:
+        return info
+    if allow_unlicensed:
+        log.warning(
+            "SEPARATION_MODEL %r weights are not licensed for commercial use; running because "
+            "%s is set (internal testing only)",
+            name,
+            ALLOW_UNLICENSED_ENV,
+        )
+        return info
+    reason = (
+        "are not licensed for commercial use"
+        if info["commercial_use"] is False
+        else "have no recorded licence"
+    )
+    raise SeparationModelLicenceError(
+        f"SEPARATION_MODEL {name!r} weights {reason}; set SEPARATION_MODEL to a licensed "
+        f"model or {ALLOW_UNLICENSED_ENV}=1 for internal testing"
+    )
+
+
+def ensure_licensed(settings: Settings | None = None) -> dict[str, Any]:
+    """:func:`check_model_licence` for the configured model and environment."""
+    settings = settings if settings is not None else get_settings()
+    return check_model_licence(
+        settings.separation_model, settings.env, allow_unlicensed=unlicensed_allowed()
+    )
 
 
 def _import_torch() -> Any:
@@ -96,28 +212,43 @@ def _segment_seconds(model: Any) -> float:
     return limit
 
 
+def _load_family(name: str, info: dict[str, Any]) -> Any:
+    """Construct the eager model for ``name``; one branch per model family."""
+    family = info["family"]
+    if family == FAMILY_DEMUCS:
+        try:
+            from demucs.pretrained import get_model
+        except ImportError as exc:
+            raise ImportError(f"Demucs separation needs demucs; {INSTALL_HINT}") from exc
+        return get_model(name)
+    raise NotImplementedError(
+        f"SEPARATION_MODEL {name!r} belongs to family {family!r}, which has no loader yet; "
+        "see SEPARATION_MODELS in app/pipeline/separation.py"
+    )
+
+
 def load_model() -> LoadedSeparator:
-    """Load (once) and return the eager model on the selected device."""
+    """Load (once) and return the eager model on the selected device, after the licence
+    check for the current environment."""
     global _loaded
     if _loaded is not None:
         return _loaded
     with _lock:
         if _loaded is not None:
             return _loaded
+        settings = get_settings()
+        name = settings.separation_model
+        info = ensure_licensed(settings)
         torch = _import_torch()
-        try:
-            from demucs.pretrained import get_model
-        except ImportError as exc:
-            raise ImportError(f"Demucs separation needs demucs; {INSTALL_HINT}") from exc
-        name = os.environ.get("SNAPPLAY_DEMUCS_MODEL", "").strip() or DEFAULT_MODEL
         started = perf_counter()
-        model = get_model(name)
+        model = _load_family(name, info)
         model.eval()
         device = _device(torch)
         model.to(device)
         fp16 = device.startswith("cuda") and os.environ.get("SNAPPLAY_FP16", "1") != "0"
         sources = tuple(str(s) for s in getattr(model, "sources", SOURCES))
         _loaded = LoadedSeparator(
+            name=name,
             model=model,
             device=device,
             fp16=fp16,
@@ -126,7 +257,8 @@ def load_model() -> LoadedSeparator:
             backend="eager",
         )
         log.info(
-            "demucs %s loaded on %s in %.2fs (fp16=%s, segment=%.2fs, sources=%s)",
+            "%s %s loaded on %s in %.2fs (fp16=%s, segment=%.2fs, sources=%s)",
+            info["family"],
             name,
             device,
             perf_counter() - started,
@@ -183,17 +315,17 @@ def warm_up(seconds: float = 2.0) -> LoadedSeparator:
                 started = perf_counter()
                 _separate(candidate, _dummy_mix(seconds))
             except Exception as exc:
-                log.warning("compiled Demucs (%s) failed at run time: %s", backend, exc)
+                log.warning("compiled %s (%s) failed at run time: %s", loaded.name, backend, exc)
                 restore()
                 continue
             with _lock:
                 _loaded = candidate
-            log.info("demucs compiled with %s in %.1fs", backend, perf_counter() - started)
+            log.info("%s compiled with %s in %.1fs", loaded.name, backend, perf_counter() - started)
             return candidate
         log.warning("SNAPPLAY_TRT=1 but no compile backend worked; using the eager model")
     started = perf_counter()
     _separate(loaded, _dummy_mix(seconds))
-    log.info("demucs warm-up separation took %.2fs", perf_counter() - started)
+    log.info("%s warm-up separation took %.2fs", loaded.name, perf_counter() - started)
     return loaded
 
 
@@ -233,16 +365,26 @@ def separate(mix: np.ndarray) -> dict[str, np.ndarray]:
 
 
 __all__ = [
+    "ALLOW_UNLICENSED_ENV",
     "DEFAULT_MODEL",
+    "FAMILY_API",
+    "FAMILY_DEMUCS",
+    "FAMILY_ROFORMER",
     "INSTALL_HINT",
     "OVERLAP",
     "SAMPLE_RATE",
+    "SEPARATION_MODELS",
     "SHIFTS",
     "SOURCES",
     "LoadedSeparator",
+    "SeparationModelLicenceError",
+    "check_model_licence",
+    "ensure_licensed",
     "is_available",
     "load_model",
+    "model_info",
     "require_extras",
     "separate",
+    "unlicensed_allowed",
     "warm_up",
 ]

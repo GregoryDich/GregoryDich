@@ -31,7 +31,7 @@ from pydantic import ValidationError
 
 from app.config import Settings, get_settings
 from app.errors import INTERNAL_ERROR
-from app.pipeline import PipelineError, get_pipeline
+from app.pipeline import PipelineError, get_pipeline, separation
 from app.pipeline.base import STAGE_SEPARATE, RunPipeline
 from app.schemas import JobResult, JobStatus, PipelineOptions, PipelineResult, StemResult
 from app.services import JobsService, StorageService
@@ -102,8 +102,12 @@ def build_services(settings: Settings) -> WorkerServices:
 
 
 def load_pipeline(settings: Settings) -> RunPipeline:
-    """``run_pipeline`` for ``SNAPPLAY_PIPELINE``, warning when a GPU worker runs the
-    fake backend."""
+    """``run_pipeline`` for ``SNAPPLAY_PIPELINE``. The in-process GPU pipeline is refused
+    outright when ``SEPARATION_MODEL`` is not licensed for this environment
+    (:func:`app.pipeline.separation.check_model_licence`), so a worker fails at start-up
+    rather than on its first job; a GPU worker running the fake backend is warned about."""
+    if settings.snapplay_pipeline == "local":
+        separation.ensure_licensed(settings)
     run = get_pipeline(settings)
     if settings.snapplay_pipeline == "fake":
         log.warning("SNAPPLAY_PIPELINE=fake: this worker runs the deterministic CPU stub")

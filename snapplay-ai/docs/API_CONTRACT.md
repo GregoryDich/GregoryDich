@@ -156,11 +156,93 @@ GoTrue silently redirects to its own site URL instead.
 ### `GET /v1/me`   (auth)
 → `200`
 ```json
-{ "user": { "id": "<uuid>", "email": "a@b.c", "plan": "free|credits|subscription" },
+{ "user": { "id": "<uuid>", "email": "a@b.c", "plan": "free|credits|subscription",
+            "marketing_opt_in": false, "referral_code": "GREG30" },
   "balance": { "credits": 42, "reserved": 1, "available": 41,
                "subscription_renews_at": "2026-10-01T00:00:00Z" } }
 ```
 `available = credits - reserved`. The plugin displays `available`.
+
+`marketing_opt_in` and `referral_code` come from the sign-up: the website signs up
+through supabase-js with `options.data`, which GoTrue stores as
+`auth.users.raw_user_meta_data`, and the `handle_new_user` trigger (§6,
+`0004_account_deletion.sql`) copies `referral_code`, `utm_source`, `utm_medium`,
+`utm_campaign`, `utm_content`, `utm_term` (text, trimmed, at most 100 characters each),
+`marketing_opt_in` (boolean, default `false`) and `terms_accepted_at` (timestamp, `null`
+when absent or unparsable) into `profiles`. `referral_code` is kept only when it names an
+**active** `referral_codes` row at sign-up time, spelled as that row spells it, and is
+`null` otherwise — an unknown code never fails a sign-up. The welcome grant is unchanged.
+The UTM fields and `terms_accepted_at` are not in this response; the export below carries
+them. Accounts created any other way (an API-first JWT, a sign-up without metadata) have
+`marketing_opt_in: false` and `referral_code: null`.
+
+### `GET /v1/me/export`   (auth — session token only, never an API key)
+Everything the service holds about the caller, as one JSON document (GDPR Art. 15 / 20).
+→ `200` with `Content-Disposition: attachment; filename="account-export.json"`:
+```json
+{ "exported_at": "...",
+  "user": { "id": "<uuid>", "email": "a@b.c", "plan": "free|credits|subscription",
+            "marketing_opt_in": false, "referral_code": "GREG30", "created_at": "...",
+            "utm_source": "tiktok", "utm_medium": null, "utm_campaign": null,
+            "utm_content": null, "utm_term": null, "terms_accepted_at": "..." },
+  "balance": { "credits": 42, "reserved": 0, "available": 42, "subscription_renews_at": null },
+  "ledger": [ <LedgerEntry, §3>… ],
+  "jobs": [ <JobStatus, §2>… ],
+  "purchases": [ { "id", "provider", "provider_order_id", "plan_id", "credits", "amount_cents",
+                   "net_cents", "currency", "referral_code", "created_at" }… ],
+  "subscriptions": [ { "id", "provider", "provider_subscription_id", "plan_id", "status",
+                       "current_period_end", "cancelled_at", "referral_code", "created_at" }… ],
+  "api_keys": [ { "id", "name", "prefix", "created_at", "last_used_at", "revoked_at" }… ],
+  "affiliate": { "code", "commission_rate", "active", "payout_details", "created_at",
+                 "referral_codes": [ { "code", "uses", "active", "created_at" }… ],
+                 "commissions": [ { "id", "purchase_id", "rate", "amount_cents", "status",
+                                    "paid_at", "created_at" }… ] } | null }
+```
+`ledger` is complete and oldest first; `jobs` is complete and newest first, and every
+`result` keeps its analysis but has `stems[].url` and `midi.url` set to `null` — object
+URLs are access tokens, not data, and the objects themselves are gone after 24 h. Raw
+provider payloads and key hashes are never part of it. Budgets: the reads budget plus
+**1 export per minute per user** (`429 rate_limited` with `Retry-After`, §5).
+
+### `DELETE /v1/me`   (auth — session token only, never an API key)
+```json
+{ "confirm": "a@b.c" }
+```
+`confirm` must equal the session's email address (case- and whitespace-insensitive),
+otherwise `422 validation_error` with `loc: ["body", "confirm"]` and nothing changes.
+→ `200 {"status": "deleted"}`. Errors: `409 conflict` (`Wait for your queued and running
+jobs to finish, then retry.`) while any job of the caller is `queued` or `running` —
+cancel it or let it finish, then retry; `401` for an API key. Counts against the reads
+budget. The three steps run in this order: the caller's storage objects under
+`jobs/<user_id>/` are deleted, then `delete_user_account` (§6) tombstones the data in
+one transaction, then the login is deleted at GoTrue (`DELETE /auth/v1/admin/users/{id}`
+with the service-role key). Should the last step fail, the response is `500
+internal_error`: the data is already gone, every later request with that account's
+tokens answers `401`, and the failure is logged with the user id so the operator finishes
+the login deletion from the Supabase dashboard (which ends in the same state, see §6).
+
+Afterwards the access token is still a valid signature until `exp`, and an API key of
+the account no longer exists: **every** request carrying either answers
+`401 unauthorized` with the message `This account has been deleted.` — the profile
+tombstone, not GoTrue, is what refuses it. The address may sign up again and starts a
+new, unrelated account.
+
+### Account deletion and export
+Deletion removes the person and keeps the books (`docs/SECURITY.md`, "Data-subject
+rights"): the profile stays as a tombstone (`email = deleted+<user_id>@invalid`,
+`display_name`, the UTM fields and `marketing_opt_in` cleared, `deleted_at` set;
+`referral_code` and `terms_accepted_at` kept as attribution and legal record), API keys and `job_assets` rows are deleted,
+job rows keep only their lifecycle (`status`, `stage`, timestamps, `error`) and lose
+`options`, `input_meta`, `result`, `worker_ref` and `idempotency_key`, purchases and
+subscriptions keep their amounts and ids but lose the provider payload (`raw`), referral
+codes are revoked and the affiliate's payout details cleared while commissions owed stay,
+the unused credits are written off with one `adjust` ledger entry (`source =
+"account_deletion"`) so the account closes at zero, and a row is written to
+`account_deletions(user_id, requested_at, ledger_rows_kept)`. The ledger, purchases and
+commissions therefore keep pointing at the tombstone. A subscription at the payment
+provider is **not** cancelled by this call; the user cancels it in the provider's
+customer portal. Export first, delete second: the export is the last chance to read the
+data.
 
 ## 2. Jobs (audio → stems + MIDI)
 
@@ -196,6 +278,22 @@ Behaviour:
 { "job_id": "<uuid>", "status": "queued", "credits_reserved": 1,
   "balance": { "credits": 42, "reserved": 1, "available": 41 } }
 ```
+
+With `MAINTENANCE_MODE=true` (backend setting, default `false`) this route answers
+`503 service_unavailable` with `Retry-After: 300`, the message `New jobs are paused for
+maintenance; retry in a few minutes.` and `details.retry_after_seconds = 300`, before the
+jobs budget is touched. Every other route keeps working — results, events, balances and
+cancellations stay reachable during maintenance.
+
+### `GET /v1/jobs?limit=20&cursor=…`   (auth)
+The caller's jobs, newest first (`created_at desc, id desc`), `limit` 1–100 (default 20).
+→ `200`
+```json
+{ "jobs": [ <JobStatus>… ], "next_cursor": "2026-09-01T12:00:00.123456Z_<uuid>" }
+```
+`next_cursor` is `null` on the last page; otherwise pass it back verbatim as `cursor` —
+it is opaque to clients (a UTC timestamp and the last job id, URL-safe as is). A cursor
+not produced by this route is `422 validation_error`. Counts against the reads budget.
 
 ### `GET /v1/jobs/{job_id}`   (auth)
 → `200` JobStatus:
@@ -295,6 +393,9 @@ Cancels a queued job and releases its reservation. → `204` with an empty body;
                  "source": "lemonsqueezy:order:123", "note": "Credit pack 50" } ],
   "next_cursor": null }
 ```
+`source` names what moved the credits: `signup`, `job:<job_id>`, `<provider>:order:<id>`,
+`support` for manual adjustments, and `account_deletion` for the single `adjust` entry
+that writes the unused balance off when the account is deleted (§1).
 
 ### `GET /v1/plans?ref=<code>`   (public, `user_id` attached when called with auth)
 ```json
@@ -354,10 +455,15 @@ The growth engine (see §11) authenticates with an API key and never sees this p
   `subscription_payment_success` does not silently lose the commission (§12). A payment
   that can be attributed neither way is logged at warning level with its subscription id.
 
-Both secrets are **required in production**: `Settings` refuses to start with
-`ENV=production` unless `LEMONSQUEEZY_WEBHOOK_SECRET` and `PADDLE_WEBHOOK_SECRET` are
-both set (along with `SUPABASE_URL`, a JWT secret or JWKS URL, a real pipeline and real
-storage). An empty secret would otherwise verify every forged signature against `""`.
+**At least one** webhook secret is required in production: `Settings` refuses to start
+with `ENV=production` unless `LEMONSQUEEZY_WEBHOOK_SECRET` or `PADDLE_WEBHOOK_SECRET` is
+set (along with `SUPABASE_URL`, a JWT secret or JWKS URL, an https non-localhost
+`AUTH_SITE_URL`, a real pipeline and real storage). A provider whose secret is empty is
+one this deployment does not sell through: its route answers `404 not_found` (`This
+payment provider is not configured.`) before reading the body, so an empty secret is
+never used as an HMAC key. The GPU worker builds the same settings with
+`SERVICE_ROLE=worker`, which skips the webhook-secret and `AUTH_SITE_URL` checks it has
+no use for; the API runs with the default `SERVICE_ROLE=api`.
 
 ### `POST /v1/webhooks/paddle`
 * Header `Paddle-Signature`: `ts=…;h1=…`; verify HMAC-SHA256 over
@@ -384,7 +490,7 @@ storage). An empty secret would otherwise verify every forged signature against 
 | 422 | `validation_error` |
 | 429 | `rate_limited` (headers `Retry-After`, `X-RateLimit-Remaining`) |
 | 500 | `internal_error` |
-| 503 | `worker_unavailable` |
+| 503 | `worker_unavailable`, `service_unavailable` (`MAINTENANCE_MODE`, §2; header `Retry-After: 300`) |
 
 `403` is not a route-level authorisation answer: user-scoped lookups answer `404` so
 existence never leaks (§2). It appears only when PostgreSQL refuses the backend's own
@@ -400,7 +506,12 @@ Other SQLSTATEs the same mapper translates: `P0402` → `402 insufficient_credit
 `P0404` → `404 not_found`, `P0409` / `23505` → `409 conflict`, `22023` →
 `422 validation_error`. Anything else is logged and answered `500 internal_error`.
 
-Rate limits: 10 job submissions / minute / user, 60 reads / minute / user.
+Rate limits: 10 job submissions / minute / user, 60 reads / minute / user, and 1 account
+export / minute / user on top of the reads budget (§1).
+
+`401 unauthorized` with the message `This account has been deleted.` is the answer to any
+credential of a deleted account (§1): the JWT verifies until `exp`, the profile tombstone
+refuses it.
 
 ## 6. Database (Supabase / PostgreSQL) — public API surface
 
@@ -432,7 +543,13 @@ contract refers to, under the same rules (`SECURITY DEFINER`, `service_role` onl
 `cancel_job`, `reap_stale_jobs` (§10), `record_purchase` and `claim_webhook_event`
 (§4, §12, §13),
 `adjust_credits`, and `create_api_key` / `authenticate_api_key` / `revoke_api_key`
-(§11). `db/README.md` lists their exact signatures.
+(§11). `db/README.md` lists their exact signatures. `0004_account_deletion.sql` adds
+`delete_user_account(p_user_id uuid) → account_deletions` (§1: raises `P0409` while a job
+is `queued`/`running`, `P0404` for an unknown profile, idempotent for a tombstoned one),
+the `account_deletions` table (`service_role` only) and `profiles.deleted_at`; `profiles`
+no longer cascades from `auth.users` — an `after delete` trigger on `auth.users` runs the
+same function instead, so a login deleted from the Supabase dashboard leaves the same
+tombstone and the same accounting rows.
 
 Job lifecycle in `jobs.status`: `queued → running → succeeded | failed | cancelled`.
 
@@ -462,7 +579,7 @@ Stages and the **2.0 s** budget on an A10G (`g5.xlarge`) for a 30 s stereo clip:
 | decode + resample to 44.1 kHz | soundfile / torchaudio | 50 ms |
 | separate | Demucs v4 `htdemucs` (fp16, CUDA, optional TensorRT) | 900 ms |
 | transcribe | Basic Pitch ONNX (TensorRT EP), per stem in one batch | 400 ms |
-| analyze | aubio tempo + onset, key via chroma template matching | 150 ms |
+| analyze | librosa tempo + onset (numpy fallback), key via chroma template matching | 150 ms |
 | package | WAV encode, MIDI write, upload to storage | 300 ms |
 | **total** | | **≈1.8 s** (+ network) |
 
@@ -545,8 +662,19 @@ Keys carry the owning user's credit balance and are subject to the same rate lim
   "created_at": "..." }
 ```
 
+`GET /v1/api-keys` (auth, JWT only) lists the caller's keys, newest first, revoked ones
+included so a revocation stays visible; exactly what the row stores besides the hash:
+
+```json
+{ "keys": [ { "id": "<uuid>", "name": "ci", "prefix": "sp_live_ab12", "created_at": "...",
+              "last_used_at": "...|null", "revoked_at": "...|null" } ] }
+```
+
+Neither the plaintext nor its hash is ever returned again. Counts against the reads budget.
+
 `DELETE /v1/api-keys/{id}` (auth, JWT only) revokes it and answers `204`; an unknown or
-foreign id is `404`. An API key cannot manage keys or call `/v1/auth/*`.
+foreign id is `404`. An API key cannot manage keys, call `/v1/auth/*`, export or delete
+the account.
 
 The UGC automation engine (`growth/`) uses such a key to submit jobs and never touches
 user JWTs.

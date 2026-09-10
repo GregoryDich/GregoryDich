@@ -493,24 +493,25 @@ def test_an_unset_webhook_secret_rejects_every_delivery(
     settings: Any,
 ) -> None:
     """An empty secret must not be used as an HMAC key: anyone could sign their own
-    events and grant themselves credits (§4)."""
+    events and grant themselves credits. A provider without a secret is one this
+    deployment does not sell through, so its route is ``404`` and reads nothing (§4)."""
     settings.lemonsqueezy_webhook_secret = SecretStr("")
     settings.paddle_webhook_secret = SecretStr("")
     body = ls_order(registered_user)
     forged = client.post(
         "/v1/webhooks/lemonsqueezy", content=body, headers=sign_lemonsqueezy(body, "")
     )
-    assert forged.status_code == 401
-    assert forged.json()["error"]["code"] == "invalid_signature"
+    assert forged.status_code == 404
+    assert forged.json()["error"]["code"] == "not_found"
 
     paddle_body = paddle_event(registered_user)
     assert (
         client.post(
             "/v1/webhooks/paddle", content=paddle_body, headers=sign_paddle(paddle_body, "")
         ).status_code
-        == 401
+        == 404
     )
-    assert store.purchases == {}
+    assert store.purchases == {} and store.webhook_events == {}
 
 
 def test_a_non_ascii_signature_header_is_401(
@@ -695,3 +696,29 @@ def test_an_unattributable_subscription_payment_is_logged_with_its_subscription_
     assert warning.subscription_id == "ls-sub-orphan"
     assert warning.provider == "lemonsqueezy"
     assert len(store.purchases) == 1 and store.commissions == {}
+
+
+def test_a_provider_without_a_secret_is_404_while_the_other_keeps_selling(
+    client: TestClient,
+    store: MemoryStore,
+    registered_user: UUID,
+    sign_lemonsqueezy: Callable[[bytes, str], dict[str, str]],
+    sign_paddle: Callable[..., dict[str, str]],
+    settings: Any,
+) -> None:
+    """One configured provider is enough to sell through (§4): the other's route is a
+    closed door, not one that verifies against an empty key."""
+    settings.paddle_webhook_secret = SecretStr("")
+    paddle_body = paddle_event(registered_user)
+    closed = client.post(
+        "/v1/webhooks/paddle", content=paddle_body, headers=sign_paddle(paddle_body, "")
+    )
+    assert closed.status_code == 404 and closed.json()["error"]["code"] == "not_found"
+
+    body = ls_order(registered_user)
+    secret = settings.lemonsqueezy_webhook_secret.get_secret_value()
+    accepted = client.post(
+        "/v1/webhooks/lemonsqueezy", content=body, headers=sign_lemonsqueezy(body, secret)
+    )
+    assert accepted.status_code == 200 and accepted.json() == {"status": "ok"}
+    assert len(store.purchases) == 1

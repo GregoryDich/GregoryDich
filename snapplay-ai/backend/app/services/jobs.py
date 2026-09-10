@@ -15,11 +15,12 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 from uuid import UUID, uuid4
 
-from app.errors import CONFLICT, INTERNAL_ERROR, NOT_FOUND, ApiException
+from app.errors import CONFLICT, INTERNAL_ERROR, NOT_FOUND, VALIDATION_ERROR, ApiException
 from app.schemas import (
     JobError,
     JobOptions,
     JobResult,
+    JobsPage,
     JobStatus,
     PipelineResult,
     ProgressEvent,
@@ -33,7 +34,7 @@ from app.services.events import (
     JobEvent,
     JobEventBus,
 )
-from app.services.supabase import SupabaseClient
+from app.services.supabase import Filter, SupabaseClient, all_of, any_of
 
 JOB_CREDITS = 1
 """Credits reserved per job; ``create_job`` reserves exactly this many (§2, §6)."""
@@ -43,6 +44,14 @@ MIDI_FILE = "score.mid"
 CANCELLED_ERROR = JobError(code="cancelled", message="The job was cancelled.")
 EventsMode = Literal["bus", "poll"]
 DEFAULT_POLL_INTERVAL_SECONDS = 1.0
+JOB_CURSOR_SEPARATOR = "_"
+"""Joins the RFC 3339 timestamp and the job id of a cursor; absent from both."""
+_CURSOR_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
+
+
+def user_prefix(user_id: UUID) -> str:
+    """Storage prefix holding every object of one user (account deletion, §1)."""
+    return f"jobs/{user_id}/"
 
 
 def job_prefix(user_id: UUID, job_id: UUID) -> str:
@@ -82,6 +91,71 @@ def job_status_from_record(record: Mapping[str, Any]) -> JobStatus:
         ),
         result=JobResult.model_validate(result) if isinstance(result, Mapping) else None,
     )
+
+
+def encode_job_cursor(status: JobStatus) -> str:
+    """The ``GET /v1/jobs`` cursor naming the last job of a page. The timestamp is
+    rendered in UTC with ``Z`` so the cursor survives a query string unencoded (a ``+``
+    would be read back as a space) and keeps its microseconds for the ``eq`` half of
+    the keyset condition."""
+    stamp = status.created_at.astimezone(UTC).strftime(_CURSOR_TIMESTAMP_FORMAT)
+    return f"{stamp}{JOB_CURSOR_SEPARATOR}{status.job_id}"
+
+
+def parse_job_cursor(cursor: str | None) -> tuple[datetime, UUID] | None:
+    """``(created_at, job_id)`` of the last job seen, or ``None`` for the first page;
+    anything not produced by :func:`encode_job_cursor` is ``422``."""
+    if cursor is None or cursor == "":
+        return None
+    stamp, separator, raw_id = cursor.partition(JOB_CURSOR_SEPARATOR)
+    try:
+        if not separator:
+            raise ValueError(cursor)
+        created_at = datetime.strptime(stamp, _CURSOR_TIMESTAMP_FORMAT).replace(tzinfo=UTC)
+        return created_at, UUID(raw_id)
+    except ValueError as exc:
+        raise ApiException(
+            VALIDATION_ERROR,
+            details={
+                "errors": [
+                    {
+                        "loc": ["query", "cursor"],
+                        "msg": "cursor must be a value returned as next_cursor",
+                        "type": "value_error",
+                    }
+                ]
+            },
+        ) from exc
+
+
+def jobs_before(created_at: datetime, job_id: UUID) -> Filter:
+    """PostgREST keyset condition for the rows after a cursor in ``created_at desc, id
+    desc`` order."""
+    return any_of(
+        ("created_at", "lt", created_at),
+        all_of(("created_at", "eq", created_at), ("id", "lt", str(job_id))),
+    )
+
+
+def jobs_page(rows: list[Mapping[str, Any]], limit: int) -> JobsPage:
+    """``rows`` are newest-first and were fetched with ``limit + 1`` to detect a next page."""
+    page = [job_status_from_record(row) for row in rows[:limit]]
+    next_cursor = encode_job_cursor(page[-1]) if len(rows) > limit and page else None
+    return JobsPage(jobs=page, next_cursor=next_cursor)
+
+
+def without_signed_urls(status: JobStatus) -> JobStatus:
+    """The status with every stem and MIDI URL blanked: the account export (§1) carries
+    the analysis a job produced but never an object URL."""
+    if status.result is None:
+        return status
+    result = status.result.model_copy(
+        update={
+            "stems": [stem.model_copy(update={"url": None}) for stem in status.result.stems],
+            "midi": status.result.midi.model_copy(update={"url": None}),
+        }
+    )
+    return status.model_copy(update={"result": result})
 
 
 def progress_event(stage: str, progress: float) -> JobEvent:
@@ -243,6 +317,16 @@ class SupabaseJobsService:
         )
         return job_status_from_record(rows[0]) if rows else None
 
+    async def list(self, user_id: UUID, limit: int = 20, cursor: str | None = None) -> JobsPage:
+        position = parse_job_cursor(cursor)
+        filters: list[Filter] = [("user_id", "eq", str(user_id))]
+        if position is not None:
+            filters.append(jobs_before(*position))
+        rows = await self._client.select(
+            "jobs", filters=filters, order="created_at.desc,id.desc", limit=limit + 1
+        )
+        return jobs_page(rows, limit)
+
     async def _fetch(self, job_id: UUID) -> JobStatus | None:
         rows = await self._client.select("jobs", filters=[("id", "eq", str(job_id))], limit=1)
         return job_status_from_record(rows[0]) if rows else None
@@ -303,16 +387,23 @@ __all__ = [
     "CANCELLED_ERROR",
     "DEFAULT_POLL_INTERVAL_SECONDS",
     "JOB_CREDITS",
+    "JOB_CURSOR_SEPARATOR",
     "MIDI_FILE",
     "SERVER_IDEMPOTENCY_PREFIX",
     "EventsMode",
     "SupabaseJobsService",
+    "encode_job_cursor",
     "input_name_of",
     "input_storage_key",
     "job_prefix",
     "job_status_from_record",
+    "jobs_before",
+    "jobs_page",
     "package_result",
+    "parse_job_cursor",
     "progress_event",
     "status_event",
     "stream_job_events",
+    "user_prefix",
+    "without_signed_urls",
 ]

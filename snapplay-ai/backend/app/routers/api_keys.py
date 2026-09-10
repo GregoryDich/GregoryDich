@@ -10,7 +10,7 @@ from app.auth import Principal
 from app.dependencies import get_services, get_session_principal
 from app.errors import NOT_FOUND, ApiException
 from app.middleware.rate_limit import rate_limit
-from app.schemas import ApiKeyCreateRequest, ApiKeyCreateResponse
+from app.schemas import ApiKeyCreateRequest, ApiKeyCreateResponse, ApiKeysResponse
 from app.services.factory import Services
 
 router = APIRouter(prefix="/api-keys", tags=["api-keys"])
@@ -29,6 +29,15 @@ async def create_api_key(
 ) -> ApiKeyCreateResponse:
     request = body or ApiKeyCreateRequest()
     return await services.api_keys.create(principal.user_id, request.name)
+
+
+@router.get("", response_model=ApiKeysResponse, dependencies=[Depends(rate_limit("reads"))])
+async def list_api_keys(
+    principal: Principal = Depends(get_session_principal),
+    services: Services = Depends(get_services),
+) -> ApiKeysResponse:
+    """Metadata of every key the caller created, revoked ones included; never a secret."""
+    return ApiKeysResponse(keys=await services.api_keys.list(principal.user_id))
 
 
 @router.delete(

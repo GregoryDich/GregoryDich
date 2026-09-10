@@ -60,7 +60,8 @@ db/
 ├── migrations/
 │   ├── 0001_schema.sql      extensions, enums, tables, indexes, triggers, plan seed
 │   ├── 0002_functions.sql   credit_balance type and every SECURITY DEFINER function
-│   └── 0003_rls.sql         roles, privileges, row-level security, function grants
+│   ├── 0003_rls.sql         roles, privileges, row-level security, function grants
+│   └── 0004_account_deletion.sql  sign-up metadata on profiles, tombstone deletion, auth.users delete trigger
 └── tests/
     ├── 00_local_auth_shim.sql   minimal auth.users / auth.uid() for local clusters only
     ├── run_tests.sh             throwaway PostgreSQL 16 cluster + all tests
@@ -149,6 +150,8 @@ the mutating ones; `get_balance` is also granted to `authenticated` and refuses 
 | `create_api_key(p_user_id, p_name)` | `(id, prefix, plaintext)` | plaintext returned once |
 | `authenticate_api_key(p_key_hash)` | `uuid` | owner or null; stamps `last_used_at` |
 | `revoke_api_key(p_key_id, p_user_id)` | `boolean` | owner-scoped, idempotent |
+| `delete_user_account(p_user_id)` | `account_deletions` | GDPR erasure (`service_role` only, also fired by `on_auth_user_deleted`): `P0404` unknown profile, `P0409` while a job is `queued`/`running`, idempotent on a tombstone; writes off unused credits with one `adjust` row, deletes API keys and job assets, scrubs job/purchase payloads, revokes referral codes, replaces the e-mail with `deleted+<uuid>@invalid` and stamps `deleted_at`; ledger, purchases and commissions stay for accounting |
+| `handle_new_user()` (trigger) | — | on `auth.users` insert: creates the profile, copies `referral_code` (active codes only), `utm_*`, `marketing_opt_in` and `terms_accepted_at` from `raw_user_meta_data`, grants the sign-up credits |
 
 Internal helpers, called by the functions above and granted to nobody:
 `balance_of(p_account)`, `lock_credit_account(p_user_id)`, `append_ledger(...)` and

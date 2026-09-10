@@ -10,20 +10,23 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from datetime import datetime
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 from uuid import UUID
 
 from app.schemas import (
+    AccountExport,
     ApiKeyCreateResponse,
+    ApiKeyInfo,
     Balance,
     CreditBalance,
     JobOptions,
     JobResult,
+    JobsPage,
     JobStatus,
     LedgerPage,
-    MeUser,
     PipelineOptions,
     PlanKind,
+    Profile,
 )
 
 
@@ -86,6 +89,10 @@ class JobsService(Protocol):
         """The job, or ``None`` when it does not exist or belongs to another user (→ 404)."""
         ...
 
+    async def list(self, user_id: UUID, limit: int = 20, cursor: str | None = None) -> JobsPage:
+        """Newest-first page of the user's jobs, keyed by ``(created_at, id)`` (§2)."""
+        ...
+
     async def set_progress(self, job_id: UUID, stage: str, progress: float) -> None:
         """Move to ``running`` (setting ``started_at`` once) and record stage/progress."""
         ...
@@ -129,21 +136,42 @@ class StorageService(Protocol):
         ...
 
 
+@runtime_checkable
+class PurgeableStorageService(Protocol):
+    """Optional storage capability used by account deletion (§1): a backend that can
+    remove a user's objects at once. Backends without it rely on the 24 h lifecycle rule."""
+
+    async def delete_prefix(self, prefix: str) -> int:
+        """Delete every object whose path starts with ``prefix``; returns how many."""
+        ...
+
+
 class UsersService(Protocol):
     """``profiles`` rows keyed by the Supabase auth user id."""
 
-    async def get(self, user_id: UUID) -> MeUser | None: ...
+    async def get(self, user_id: UUID) -> Profile | None: ...
 
-    async def find_by_email(self, email: str) -> MeUser | None:
+    async def find_by_email(self, email: str) -> Profile | None:
         """Webhook fallback when the provider payload carries no ``user_id``."""
         ...
 
-    async def ensure(self, user_id: UUID, email: str) -> MeUser:
+    async def ensure(self, user_id: UUID, email: str) -> Profile:
         """Create the profile on first sight and grant ``FREE_SIGNUP_CREDITS`` (idempotent)."""
         ...
 
-    async def set_plan(self, user_id: UUID, plan: PlanKind, renews_at: datetime | None) -> MeUser:
+    async def set_plan(self, user_id: UUID, plan: PlanKind, renews_at: datetime | None) -> Profile:
         """Update the plan after a purchase or subscription event."""
+        ...
+
+    async def export(self, user_id: UUID) -> AccountExport:
+        """Everything held about the user (§1 ``GET /v1/me/export``), or
+        ``ApiException(NOT_FOUND)`` when there is no profile."""
+        ...
+
+    async def delete_account(self, user_id: UUID) -> None:
+        """``delete_user_account`` then the identity-provider deletion (§1 ``DELETE /v1/me``).
+        Raises ``ApiException(CONFLICT)`` (409) while a job is queued or running; the data
+        step is idempotent, so a repeat after an identity-provider failure completes it."""
         ...
 
 
@@ -151,6 +179,10 @@ class ApiKeysService(Protocol):
     """``api_keys`` rows (§11); plaintext is returned once and only its SHA-256 is stored."""
 
     async def create(self, user_id: UUID, name: str) -> ApiKeyCreateResponse: ...
+
+    async def list(self, user_id: UUID) -> list[ApiKeyInfo]:
+        """The user's keys, revoked ones included, newest first; never the hash."""
+        ...
 
     async def revoke(self, user_id: UUID, key_id: UUID) -> bool:
         """Revoke the caller's key; ``False`` when it does not exist or is not theirs."""
@@ -204,6 +236,7 @@ __all__ = [
     "CreditsService",
     "DispatchService",
     "JobsService",
+    "PurgeableStorageService",
     "StorageService",
     "UsersService",
     "WebhookEventsService",

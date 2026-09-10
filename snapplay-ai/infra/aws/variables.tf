@@ -150,7 +150,13 @@ variable "cloudfront_public_key_pem" {
 }
 
 variable "alarm_email" {
-  description = "Optional e-mail address subscribed to the alarm/budget SNS topic."
+  description = "E-mail address subscribed to the alarm/budget SNS topic. Optional for non-production environments; a prod/production environment refuses to plan without it (precondition in modules/observability), because alarms that reach nobody are silent failures."
   type        = string
   default     = ""
+}
+
+variable "maintenance_mode" {
+  description = "MAINTENANCE_MODE for the API tasks (kill switch): when true the API stops accepting new job submissions. The CI passes the MAINTENANCE_MODE repository variable through TF_VAR_maintenance_mode."
+  type        = bool
+  default     = false
 }

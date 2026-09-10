@@ -24,6 +24,7 @@ CLASS_NAME = "SnapPlayWorker"
 DEFAULT_GPU = "A10G"
 TIMEOUT_SECONDS = 60
 CUDA_IMAGE = "nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04"
+BASIC_PITCH_PIN = "basic-pitch==0.4.0"
 MODEL_CACHE_VOLUME = "snapplay-model-cache"
 MODEL_CACHE_DIR = "/root/.cache"
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -49,26 +50,39 @@ def run_job_payload(payload: dict[str, Any]) -> dict[str, Any]:
     return run_job_sync(payload, worker_ref=f"modal:{os.environ.get('MODAL_TASK_ID', '')}")
 
 
-def build_app() -> tuple[Any, type]:
-    """Create the Modal app and worker class; requires ``modal`` to be installed."""
+def build_image() -> Any:
+    """The worker container image; shared with ``scripts/benchmark_modal.py`` so the
+    benchmark measures exactly what production runs."""
     import modal
 
-    if str(BACKEND_DIR) not in sys.path:
-        sys.path.insert(0, str(BACKEND_DIR))
-    image = (
+    return (
         modal.Image.from_registry(CUDA_IMAGE, add_python="3.11")
         .apt_install("ffmpeg", "libsndfile1")
         .pip_install_from_requirements(str(BACKEND_DIR / "requirements.txt"))
         .pip_install_from_requirements(str(BACKEND_DIR / "requirements-gpu.txt"))
+        # basic-pitch's own dependency list installs TensorFlow on Linux; its runtime
+        # dependencies are in requirements-gpu.txt and the ONNX model runs on
+        # onnxruntime-gpu (see infra/Dockerfile.worker).
+        .pip_install(BASIC_PITCH_PIN, extra_options="--no-deps")
         .env(
             {
                 "SNAPPLAY_PIPELINE": "local",
+                "SERVICE_ROLE": "worker",
                 "TORCH_HOME": f"{MODEL_CACHE_DIR}/torch",
                 "PYTHONUNBUFFERED": "1",
             }
         )
         .add_local_python_source("app", "worker")
     )
+
+
+def build_app() -> tuple[Any, type]:
+    """Create the Modal app and worker class; requires ``modal`` to be installed."""
+    import modal
+
+    if str(BACKEND_DIR) not in sys.path:
+        sys.path.insert(0, str(BACKEND_DIR))
+    image = build_image()
     app = modal.App(APP_NAME)
     volume = modal.Volume.from_name(MODEL_CACHE_VOLUME, create_if_missing=True)
 
@@ -132,5 +146,6 @@ __all__ = [
     "SnapPlayWorker",
     "app",
     "build_app",
+    "build_image",
     "run_job_payload",
 ]

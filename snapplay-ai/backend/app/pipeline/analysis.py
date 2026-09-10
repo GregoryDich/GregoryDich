@@ -1,7 +1,7 @@
 """Musical analysis shared by every pipeline backend (contract §2 ``analysis`` / §7).
 
-Everything here is numpy; ``aubio`` and ``librosa`` are used for tempo when installed
-and fall back to an onset-autocorrelation estimate otherwise. Key finding is
+Everything here is numpy; ``librosa`` (ISC) is used for tempo when installed, with an
+onset-autocorrelation estimate as the fallback. No GPL component is involved. Key finding is
 Krumhansl–Schmuckler template matching over a chroma from a plain STFT, stem roots come
 from duration-weighted note statistics (melodic stems) or an energy-weighted pitch
 track (bass), and ``suggest_adsr`` mirrors the plugin's ``Envelope.h`` (§8) per note.
@@ -188,25 +188,6 @@ def tempo_confidence(flux: np.ndarray, bpm: float, frame_rate: float = FRAME_RAT
     return round(float(np.clip(acf[lag] / max(float(acf[0]), EPS), 0.0, 1.0)), 3)
 
 
-def _tempo_aubio(mono: np.ndarray, sample_rate: int) -> Tempo | None:
-    try:
-        import aubio
-    except ImportError:
-        return None
-    win, hop = 1024, 512
-    tracker = aubio.tempo("default", win, hop, sample_rate)
-    x = np.ascontiguousarray(mono, dtype=np.float32)
-    beats: list[float] = []
-    for start in range(0, x.shape[0] - hop + 1, hop):
-        if tracker(x[start : start + hop])[0] > 0:
-            beats.append(float(tracker.get_last_s()))
-    bpm = float(tracker.get_bpm())
-    if not math.isfinite(bpm) or bpm <= 0:
-        return None
-    confidence = float(np.clip(tracker.get_confidence(), 0.0, 1.0))
-    return Tempo(bpm=bpm, confidence=round(confidence, 3), beats_seconds=beats, method="aubio")
-
-
 def _tempo_librosa(mono: np.ndarray, sample_rate: int) -> Tempo | None:
     try:
         import librosa
@@ -230,9 +211,9 @@ def estimate_tempo(
     flux: np.ndarray,
     frame_rate: float = FRAME_RATE,
 ) -> Tempo:
-    """aubio → librosa → numpy. ``flux`` is the mix onset envelope used for the fallback
-    and for confidence when the detector reports none."""
-    for detector in (_tempo_aubio, _tempo_librosa):
+    """librosa → numpy. ``flux`` is the mix onset envelope used for the fallback and for
+    confidence when the detector reports none."""
+    for detector in (_tempo_librosa,):
         try:
             tempo = detector(mono, sample_rate)
         except Exception as exc:  # a broken optional extra must not fail the job

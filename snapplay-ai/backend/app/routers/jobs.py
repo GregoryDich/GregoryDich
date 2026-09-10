@@ -20,6 +20,7 @@ from starlette.background import BackgroundTask
 from starlette.websockets import WebSocketDisconnect
 
 from app.auth import Principal
+from app.config import Settings, get_settings
 from app.dependencies import authenticate, get_principal, get_services
 from app.errors import (
     NOT_FOUND,
@@ -36,7 +37,7 @@ from app.middleware.rate_limit import (
     enforce,
     rate_limit,
 )
-from app.schemas import JobOptions, JobStatus, JobSubmitResponse, PipelineOptions
+from app.schemas import JobOptions, JobsPage, JobStatus, JobSubmitResponse, PipelineOptions
 from app.services.events import TERMINAL_EVENTS
 from app.services.factory import Services
 from app.services.jobs import JOB_CREDITS, input_storage_key
@@ -50,6 +51,10 @@ WS_UNAUTHORIZED = 4401
 """WebSocket close code for a rejected token (application range, mirrors HTTP 401)."""
 WS_RATE_LIMITED = 4429
 """WebSocket close code for an exhausted budget (mirrors HTTP 429)."""
+SERVICE_UNAVAILABLE = "service_unavailable"
+"""§5 code for ``MAINTENANCE_MODE``: the service is up, submissions are paused."""
+MAINTENANCE_RETRY_AFTER_SECONDS = 300
+MAINTENANCE_MESSAGE = "New jobs are paused for maintenance; retry in a few minutes."
 
 AUDIO_CONTENT_TYPES: dict[str, str] = {
     "flac": "audio/flac",
@@ -139,11 +144,24 @@ async def read_upload(upload: UploadFile, max_bytes: int) -> bytes:
     return b"".join(chunks)
 
 
+async def refuse_in_maintenance(settings: Settings = Depends(get_settings)) -> None:
+    """``503 service_unavailable`` with ``Retry-After`` while ``MAINTENANCE_MODE`` is set;
+    runs before the jobs budget so the refusal costs the caller nothing."""
+    if settings.maintenance_mode:
+        raise ApiException(
+            SERVICE_UNAVAILABLE,
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            MAINTENANCE_MESSAGE,
+            details={"retry_after_seconds": MAINTENANCE_RETRY_AFTER_SECONDS},
+            headers={"Retry-After": str(MAINTENANCE_RETRY_AFTER_SECONDS)},
+        )
+
+
 @router.post(
     "",
     status_code=status.HTTP_202_ACCEPTED,
     response_model=JobSubmitResponse,
-    dependencies=[Depends(rate_limit("jobs"))],
+    dependencies=[Depends(refuse_in_maintenance), Depends(rate_limit("jobs"))],
 )
 async def submit_job(
     audio: UploadFile = File(...),
@@ -200,6 +218,17 @@ async def submit_job(
         credits_reserved=JOB_CREDITS,
         balance=balance.model_dump(include={"credits", "reserved", "available"}),
     )
+
+
+@router.get("", response_model=JobsPage, dependencies=[Depends(rate_limit("reads"))])
+async def list_jobs(
+    limit: int = Query(default=20, ge=1, le=100),
+    cursor: str | None = Query(default=None),
+    principal: Principal = Depends(get_principal),
+    services: Services = Depends(get_services),
+) -> JobsPage:
+    """The caller's jobs, newest first; ``next_cursor`` is opaque (§2)."""
+    return await services.jobs.list(principal.user_id, limit=limit, cursor=cursor)
 
 
 async def _job_or_404(services: Services, job_id: UUID, user_id: UUID) -> JobStatus:

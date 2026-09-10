@@ -113,9 +113,14 @@ class AuthAck(ContractModel):
 
 
 class MeUser(ContractModel):
+    """``referral_code`` is the code the account signed up with (an active
+    ``referral_codes`` row at the time), ``marketing_opt_in`` the consent given then."""
+
     id: UUID
     email: str
     plan: PlanKind
+    marketing_opt_in: bool = False
+    referral_code: str | None = None
 
 
 class CreditBalance(ContractModel):
@@ -133,6 +138,24 @@ class Balance(CreditBalance):
 class MeResponse(ContractModel):
     user: MeUser
     balance: Balance
+
+
+class Profile(MeUser):
+    """A ``profiles`` row as the services return it: the §1 user plus the deletion
+    tombstone (`deleted_at`), which no response carries — a tombstoned profile is
+    refused at authentication (§1 account deletion)."""
+
+    deleted_at: datetime | None = None
+
+
+class DeleteAccountRequest(ContractModel):
+    """``confirm`` must equal the session's email address (case-insensitive)."""
+
+    confirm: str = Field(min_length=1, max_length=MAX_EMAIL_LENGTH)
+
+
+class DeleteAccountResponse(ContractModel):
+    status: Literal["deleted"] = "deleted"
 
 
 # --- §2 Jobs ---------------------------------------------------------------------------
@@ -286,6 +309,13 @@ class JobStatus(ContractModel):
     result: JobResult | None = None
 
 
+class JobsPage(ContractModel):
+    """``GET /v1/jobs``: newest first; ``next_cursor`` is opaque (``jobs.encode_job_cursor``)."""
+
+    jobs: list[JobStatus]
+    next_cursor: str | None = None
+
+
 # --- §3 Credits and plans ---------------------------------------------------------------
 
 
@@ -384,6 +414,101 @@ class ApiKeyCreateResponse(ContractModel):
     prefix: str
     key: str
     created_at: datetime
+
+
+class ApiKeyInfo(ContractModel):
+    """What ``api_keys`` stores besides the hash: never the secret or its digest."""
+
+    id: UUID
+    name: str | None = None
+    prefix: str
+    created_at: datetime
+    last_used_at: datetime | None = None
+    revoked_at: datetime | None = None
+
+
+class ApiKeysResponse(ContractModel):
+    keys: list[ApiKeyInfo]
+
+
+# --- §1 Account export (GDPR Art. 15 / Art. 20) ---------------------------------------------
+
+
+class PurchaseExport(ContractModel):
+    id: UUID
+    provider: str
+    provider_order_id: str
+    plan_id: str | None = None
+    credits: int
+    amount_cents: int
+    net_cents: int
+    currency: str
+    referral_code: str | None = None
+    created_at: datetime
+
+
+class SubscriptionExport(ContractModel):
+    id: UUID
+    provider: str
+    provider_subscription_id: str
+    plan_id: str | None = None
+    status: str
+    current_period_end: datetime | None = None
+    cancelled_at: datetime | None = None
+    referral_code: str | None = None
+    created_at: datetime | None = None
+
+
+class ReferralCodeExport(ContractModel):
+    code: str
+    uses: int
+    active: bool
+    created_at: datetime
+
+
+class CommissionExport(ContractModel):
+    id: UUID
+    purchase_id: UUID
+    rate: float
+    amount_cents: int
+    status: str
+    paid_at: datetime | None = None
+    created_at: datetime
+
+
+class AffiliateExport(ContractModel):
+    code: str
+    commission_rate: float
+    active: bool
+    payout_details: dict[str, Any]
+    created_at: datetime
+    referral_codes: list[ReferralCodeExport]
+    commissions: list[CommissionExport]
+
+
+class ExportedUser(MeUser):
+    created_at: datetime
+    utm_source: str | None = None
+    utm_medium: str | None = None
+    utm_campaign: str | None = None
+    utm_content: str | None = None
+    utm_term: str | None = None
+    terms_accepted_at: datetime | None = None
+
+
+class AccountExport(ContractModel):
+    """Everything the service holds about one user. Job results keep their analysis but
+    carry no signed URLs; audio itself is never retained beyond 24 h (docs/SECURITY.md)."""
+
+    exported_at: datetime
+    user: ExportedUser
+    balance: Balance
+    ledger: list[LedgerEntry]
+    jobs: list[JobStatus]
+    purchases: list[PurchaseExport]
+    subscriptions: list[SubscriptionExport]
+    api_keys: list[ApiKeyInfo]
+    affiliate: AffiliateExport | None = None
 
 
 # --- Health --------------------------------------------------------------------------------

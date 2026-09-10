@@ -12,7 +12,7 @@ withstand.
 | Plugin (`plugin/Source/Cloud`) | the user's access and refresh tokens in `AuthManager`'s `juce::PropertiesFile` (see §2.1), never in the DAW project | `/v1/*` as that user | service-role key, webhook secrets, other users' jobs |
 | Growth engine (`growth/mcp_server`) | one `sp_live_…` API key (§11) | `/v1/*` as the key's owner | user JWTs, anything not reachable with a key |
 | Backend (`backend/app`) on Fargate | Supabase service-role key, JWT secret / JWKS URL, webhook secrets, S3 presign role, CloudFront key pair | Postgres RPC, S3, SQS, GoTrue | plaintext API keys after creation, card data (never handled: checkout is hosted by the provider) |
-| GPU worker (ECS) | S3 read/write on `jobs/*`, SQS receive/delete, a backend credential for `complete_job` / `fail_job` | S3, SQS, the backend | Postgres directly, payment secrets |
+| GPU worker (ECS) | S3 read/write on `jobs/*`, SQS receive/delete, the Supabase service-role key (used only for `set_job_progress` / `complete_job` / `fail_job` through PostgREST — see §4) | S3, SQS, PostgREST | payment secrets, the JWT secret |
 | Payment providers | webhook secret (shared) | `/v1/webhooks/*` | anything else |
 
 Everything the plugin can do, it does as one user; everything privileged happens in
@@ -172,9 +172,20 @@ Rules applied to both:
   `403 unauthorized` (contract §5) rather than a generic `500`. A `403` in production is
   therefore a deployment alarm — the migrations or the key do not match
   `db/migrations/0003_rls.sql` — never a statement about the end user's rights.
-* The GPU worker has no database credential. It reports through the backend's
-  `complete_job` / `fail_job`, which are authenticated with a worker credential
-  distinct from user auth.
+* The GPU worker **does** hold a database credential: `SUPABASE_SERVICE_ROLE_KEY` is in
+  its task secrets (`infra/aws/main.tf`, `worker_secrets`) and `worker/common.py` builds
+  the same service bundle as the API, so `complete_job` / `fail_job` / `set_job_progress`
+  are PostgREST calls made by the worker itself. There is no separate worker credential.
+  That puts the widest key in the system on the host that runs third-party ML code over
+  user uploads. Mitigations as deployed: the worker runs in a private subnet with no
+  inbound path (outbound through NAT only, security group egress-only), the key is
+  injected from Secrets Manager as a task secret and appears in no image, task
+  definition or log, the worker code only ever calls the three job RPCs and storage
+  under `jobs/*`, and the decode step is sandboxed (§7). The least-privilege fix is
+  future work: a dedicated Postgres role (or PostgREST JWT) that can execute only
+  `set_job_progress`, `complete_job` and `fail_job`, or routing completion through an
+  authenticated backend endpoint. Until one of those exists, a compromised worker can
+  read and write every user's rows.
 
 ## 5. Object storage and signed URLs (§2, §10)
 
@@ -265,7 +276,7 @@ Rules applied to both:
 | Supabase service-role key | Secrets Manager | backend task |
 | `LEMONSQUEEZY_WEBHOOK_SECRET`, `PADDLE_WEBHOOK_SECRET` | Secrets Manager | backend task |
 | CloudFront private key (`CLOUDFRONT_KEY_PAIR_ID` is the public handle) | Secrets Manager | backend task |
-| worker → backend credential | Secrets Manager | worker task |
+| worker → Supabase service-role key (§4: same key as the API; least-privilege role is future work) | Secrets Manager | worker task |
 | Terraform state | remote backend with encryption and locking; contains ARNs, not values | operators |
 | local development | `.env` from `.env.example` (placeholders only), git-ignored | developer machine |
 
@@ -283,14 +294,14 @@ signature header or a request body (rule shared across all components).
 | **Replayed webhook** | re-send a captured `order_created` to mint credits again | HMAC over the raw body; unique idempotency key claimed in `webhook_events`; Paddle `ts` window of 5 min; `record_purchase` writes the purchase, grant and commission under that same key in one transaction, so even a re-run applies once | §4, §12 |
 | **Webhook killed mid-apply** | crash the API between claim and completion | Claims have a lease: a row with no `processed_at` and no `error` older than `WEBHOOK_CLAIM_LEASE_SECONDS` (default 300 s) is reclaimed by the provider's next retry, so a killed process delays the sale by at most one lease instead of losing it. `claim_webhook_event` decides under `FOR UPDATE` and re-stamps `received_at`, so only one of two racing retries reclaims it; every mutation underneath is still keyed by the idempotency key | §4 |
 | **Referral code lost on a subscription** | — (a store misconfiguration, not an attack) | The code is kept on `subscriptions.referral_code` by whichever checkout event carried it, and a paying event without `custom_data` is attributed from there. Unattributable payments are logged at warning level with the subscription id for manual reconciliation — the failure is visible instead of silent | §12 |
-| **Paywall shipped with no checkout URLs** | — (missing operator configuration) | `plans.provider_variant_ids` is empty until an operator fills it in, and a paid plan without it serves `checkout_url: null`. The API logs every such plan id at startup — error level under `ENV=production` — and `python -m app.checks` reports the same list and exits non-zero, so a deployment can gate on it | §3 |
+| **Paywall shipped with no checkout URLs** | — (missing operator configuration) | `plans.provider_variant_ids` is empty until an operator fills it in, and a paid plan without it serves `checkout_url: null`. The API logs every such plan id at startup — error level under `ENV=production` — and `python -m app.checks` reports the same list and exits non-zero. `.github/workflows/deploy.yml` runs it after every `terraform apply` as a one-off Fargate task on the production task definition (so it sees the real Secrets Manager values) and fails the workflow on a non-zero exit | §3 |
 | **Forged webhook** | craft an event for a victim's `user_id` | signature required; secret only in Secrets Manager; the user id in `custom_data` is trusted only after the signature passes | §4 |
 | **Job enumeration** | walk `GET /v1/jobs/{id}` for other users' results | UUID v4 ids (122 random bits); every lookup is filtered by `user_id` and answers `404` rather than `403` so existence does not leak; 60 reads / min | §2, §5 |
 | **Signed-URL sharing / scraping** | pass a stem URL around, or guess others | one object, `GET`-only, 24 h, no list permission; the key path is UUIDs; the plugin uses each URL once | §2, §10 |
 | **Affiliate self-referral** | buy with one's own `ref` code, or with a second account, to claw back 30 % | `record_purchase` resolves the code only through an active `referral_codes` row joined to an active `affiliates` row `where a.user_id <> p_user_id`, so a self-referral simply writes no commission. Commissions are written `pending` and are meant to be paid only after the chargeback window, with a refund setting `void` — but the payout hold, the void-on-refund step and any velocity check on new codes are **operational procedures, not code**; nothing in this repository pays out or voids automatically. A second account with a different `user_id` is not caught at all | §12 |
 | **Commission double-pay** | replay the webhook to get two commission rows | commission row keyed by the same idempotency key as the grant, in the same transaction | §12 |
 | **Free-credit farming** | mass signups for 3 credits each | the grant is idempotent per user (`signup:<user id>`), and 3 credits ≈ $0.0075 of cost, so the loss per account is bounded and the GPU queue is protected by the 10/min submission limit. But the `on_auth_user_created` trigger fires on the `auth.users` insert, **before** any e-mail confirmation, and signup itself happens in GoTrue rather than in this API — so requiring confirmation before the grant, and rate-limiting signups per IP and e-mail domain, are Supabase Auth settings an operator must turn on, not something this repository enforces | §3, §5 |
-| **Credential stuffing** | password guessing through `/v1/auth/token` | strict IP-keyed limit on the auth proxy, GoTrue's own lockout, no distinguishable error between wrong email and wrong password | §1 |
+| **Credential stuffing** | password guessing through `/v1/auth/token` | a credential-keyed limit on the auth proxy — 10 attempts per minute per e-mail address regardless of source IP (§6; `backend/app/routers/auth.py` explains why IP keying was rejected), GoTrue's own lockout, no distinguishable error between wrong email and wrong password | §1 |
 | **Algorithm confusion** | sign a token with the public key as an HMAC secret | single pinned algorithm per deployment; `alg` from the token is never consulted for key selection | §1 |
 | **JWKS DoS** | flood with tokens carrying random `kid`s | cached keys; one refetch per minute; unknown `kid` rejected | §1 |
 | **API-key theft** | leaked `sp_live_…` from CI or the growth engine | `DELETE /v1/api-keys/{id}` revokes instantly; damage capped by the owner's balance and rate limits; keys never appear in logs; the growth engine loads it from the environment only | §11 |
@@ -309,3 +320,50 @@ signature header or a request body (rule shared across all components).
   job metadata (durations, BPM, key, error codes) are retained for accounting.
 * Emails live in `profiles` and the payment provider; the plugin never sees another
   user's email, and API-key rows expose only the prefix.
+
+### Data-subject rights (GDPR Art. 15, 17, 20)
+
+Both rights are self-service on the API (contract §1) and need a user session, never an
+API key: a leaked key must not be able to dump or destroy the account.
+
+* **Access and portability — `GET /v1/me/export`.** One JSON document
+  (`account-export.json`) with everything the service holds about the user: the profile
+  (email, plan, sign-up attribution and consent flags), the balance, the complete credit
+  ledger, every job with its analysis result, purchases and subscriptions (amounts, plan,
+  provider ids, referral code), API-key metadata and, for an affiliate, the codes and
+  commissions. Not in it: object URLs (`stems[].url` / `midi.url` are `null` — they are
+  short-lived access tokens, not data), the audio itself (gone after 24 h, see §5), raw
+  provider payloads, key hashes and other users' data. The export walks every table the
+  user has rows in, so it is limited to one per minute per user on top of the reads
+  budget.
+* **Erasure — `DELETE /v1/me`.** Confirmed with the account's email address; refused
+  with `409` while a job is still queued or running, so no reservation is orphaned and no
+  worker writes into a deleted account. What goes: the user's storage objects
+  (`jobs/<user_id>/…`, deleted at once where the backend can list a prefix, and by the
+  24 h lifecycle rule regardless), every API key, `job_assets`, the content of job rows
+  (`options`, `input_meta`, `result`, `worker_ref`, `idempotency_key`), the raw provider
+  payloads on purchases and subscriptions, the affiliate's payout details, the UTM
+  attribution and the marketing consent (reset to `false`), the display name and the
+  email — replaced by `deleted+<user_id>@invalid` — and finally the login itself at
+  GoTrue (`DELETE /auth/v1/admin/users/{id}`, service-role key). What stays, and why:
+  the profile row as a **tombstone** (`deleted_at` set) so that the accounting rows keep
+  a valid owner, the complete credit ledger with one closing `adjust` entry that writes
+  the unused credits off, purchases, subscriptions and affiliate commissions (amounts,
+  ids, dates), the referral code the account signed up with and `terms_accepted_at` —
+  the records a business must keep for bookkeeping, tax and dispute handling, which
+  Art. 17(3)(b) exempts from erasure — plus one `account_deletions` row recording when
+  it happened and how many ledger rows were kept. Referral codes owned by the user are
+  revoked so nobody earns on them afterwards. The `auth.users` cascade was removed in
+  `0004_account_deletion.sql` precisely so the login can be deleted while the tombstone
+  survives; a login deleted from the Supabase dashboard runs the same function through
+  an `after delete` trigger and leaves exactly the same state.
+* **After deletion.** The access token is still a valid signature until `exp`, so the
+  API refuses every request whose profile is a tombstone with `401` — the tombstone, not
+  GoTrue, is the gate. The address is free to sign up again; the new account shares
+  nothing with the tombstone. Webhook payloads in `webhook_events` are the payment
+  providers' delivery log and are not linked to a user id; they are kept for dispute
+  handling under the same retention as the purchases they belong to.
+* **Not covered by the endpoint.** A subscription is cancelled at the payment provider,
+  not here; the provider holds the billing identity under its own privacy terms. Data at
+  the providers (LemonSqueezy, Paddle) and at Supabase Auth logs is subject to their
+  retention, not this schema's.

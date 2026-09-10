@@ -24,7 +24,7 @@ plugin ──HTTPS──> ALB ──> ECS Fargate (api)  ──SQS──> ECS EC
 | `modules/secrets` | Secrets Manager placeholders (`SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `LEMONSQUEEZY_WEBHOOK_SECRET`, `PADDLE_WEBHOOK_SECRET`, plus `CLOUDFRONT_PRIVATE_KEY` when CloudFront is on) |
 | `modules/ecs-api` | ACM certificate, ALB (HTTP→HTTPS, health check `/v1/health`), Fargate service with target-tracking CPU autoscaling, reaper scheduled task (`var.reaper_schedule_expression`, default `rate(5 minutes)`) |
 | `modules/ecs-gpu-worker` | GPU launch template + ASG + capacity provider, worker task (GPU=1), step scaling on queue depth with scale-to-zero |
-| `modules/observability` | SNS topic, alarms (DLQ depth, ALB 5xx rate, queue age), monthly budget |
+| `modules/observability` | SNS topic (production refuses to plan without `alarm_email`), alarms (DLQ depth, ALB 5xx rate, queue age), monthly budget with a kill-switch action at 100 % |
 | `production.tfvars` | non-secret sizing for production |
 | `backend.hcl.example` | template for the S3 backend configuration |
 
@@ -116,9 +116,12 @@ Run from `snapplay-ai/infra/aws` with administrator credentials.
 Later deployments are done by `.github/workflows/deploy.yml` (the workflows live at the
 **repository root**, one level above `snapplay-ai/`): on every push to `main` it builds
 and pushes both images tagged with the commit SHA, runs
-`terraform plan -var image_tag=<sha>`, and applies after approval of the
-`production` GitHub environment. Note that no workflow runs `terraform validate` or
-`terraform fmt -check`; run them yourself before pushing infrastructure changes.
+`terraform plan -var image_tag=<sha>`, applies after approval of the `production`
+GitHub environment, and then runs `python -m app.checks` as a one-off Fargate task on
+the new API task definition (same network and secrets as the service; the task's log
+lines are echoed into the job) — a paid plan without a checkout URL fails the workflow.
+Note that no workflow runs `terraform validate` or `terraform fmt -check`; run them
+yourself before pushing infrastructure changes.
 
 ## TLS and DNS
 
@@ -150,7 +153,8 @@ Setting neither fails the plan with an explicit precondition message.
 | `github_repository` | `GregoryDich/GregoryDich` | OIDC trust: `main` branch and the `production` environment |
 | `create_github_oidc_provider` | `true` | `false` if the account already has the GitHub provider |
 | `enable_cloudfront` / `cloudfront_public_key_pem` | `false` / `""` | signed CloudFront URLs; also creates the `CLOUDFRONT_PRIVATE_KEY` secret |
-| `alarm_email` | `""` | e-mail subscription on the alarm topic |
+| `alarm_email` | `""` | e-mail subscription on the alarm topic; **required when `environment` is `prod`/`production`** (a precondition fails the plan otherwise) |
+| `maintenance_mode` | `false` | `MAINTENANCE_MODE` on the API tasks: `true` stops new job submissions (kill switch) |
 
 ## GitHub Actions configuration
 
@@ -163,7 +167,8 @@ Repository **variables** (Settings → Secrets and variables → Actions → Var
 | `TF_STATE_BUCKET` / `TF_LOCK_TABLE` | from the bootstrap step |
 | `SUPABASE_URL` | Supabase project URL |
 | `ROUTE53_ZONE_ID` or `ACM_CERTIFICATE_ARN` | see "TLS and DNS" (leave the other empty) |
-| `ALARM_EMAIL` | optional |
+| `ALARM_EMAIL` | **required** for the production environment (`terraform plan` fails when empty) |
+| `MAINTENANCE_MODE` | optional; `true` redeploys the API with new job submissions disabled (kill switch), unset/`false` otherwise |
 
 Create a GitHub **environment** named `production` with required reviewers; the
 `apply` job waits for that approval. No long-lived AWS keys are stored: the deploy
@@ -231,7 +236,18 @@ inside the database for non-AWS deployments.
 * Logs: `aws logs tail /ecs/snapplay-prod/api --follow`, same for `worker`.
 * Redrive the DLQ after a fix: `aws sqs start-message-move-task --source-arn <dlq-arn>`.
 * Alarms and budget notifications go to the `snapplay-prod-alarms` SNS topic; set
-  `alarm_email` or subscribe another endpoint.
+  `alarm_email` (mandatory in production) or subscribe another endpoint.
+* **Budget kill switch.** At 100 % of `monthly_budget_usd` (actual spend) the budget
+  action attaches `snapplay-prod-budget-deny-job-intake` (Deny `sqs:SendMessage` on the
+  job queue) to the API task role: `POST /v1/jobs` answers `503 worker_unavailable` and
+  releases the credit, nothing new is enqueued, in-flight jobs finish and the scale-in
+  alarm returns the worker service to `worker_min_capacity` after ten minutes. Budgets
+  actions cannot change ECS/ASG counts, so a non-zero `worker_min_capacity` still has to
+  be scaled down by hand. The policy stays attached until you reset the action:
+  `aws budgets execute-budget-action --account-id <id> --budget-name snapplay-prod-monthly --action-id $(terraform output -raw budget_action_id) --execution-type RESET_BUDGET_ACTION`.
+* **Maintenance mode.** Set the `MAINTENANCE_MODE` repository variable to `true` and
+  re-run `deploy.yml` (or `terraform apply -var maintenance_mode=true`) to stop accepting
+  jobs without touching the budget.
 * Force a redeploy of the current image tag:
   `aws ecs update-service --cluster snapplay-prod --service snapplay-prod-api --force-new-deployment`.
 * Tear down: `terraform destroy -var-file=production.tfvars` (empty the job bucket

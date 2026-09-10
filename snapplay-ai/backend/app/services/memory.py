@@ -12,7 +12,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import secrets
-from collections.abc import AsyncIterator, Mapping
+from collections.abc import AsyncIterator, Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
@@ -33,26 +33,42 @@ from app.errors import (
     ApiException,
 )
 from app.schemas import (
+    AccountExport,
+    AffiliateExport,
     ApiKeyCreateResponse,
+    ApiKeyInfo,
     Balance,
+    CommissionExport,
     CreditBalance,
     JobOptions,
     JobResult,
+    JobsPage,
     JobStatus,
     LedgerPage,
-    MeUser,
     PlanKind,
+    Profile,
+    PurchaseExport,
+    ReferralCodeExport,
+    SubscriptionExport,
 )
-from app.services.credits import ACTIVE_SUBSCRIPTION_STATUSES, ledger_page, parse_ledger_cursor
+from app.services.credits import (
+    ACTIVE_SUBSCRIPTION_STATUSES,
+    ledger_entry_from_record,
+    ledger_page,
+    parse_ledger_cursor,
+)
 from app.services.events import EVENT_PROGRESS, TERMINAL_EVENTS, JobEvent, JobEventBus
 from app.services.jobs import (
     DEFAULT_POLL_INTERVAL_SECONDS,
     JOB_CREDITS,
     EventsMode,
     job_status_from_record,
+    jobs_page,
+    parse_job_cursor,
     progress_event,
     status_event,
     stream_job_events,
+    without_signed_urls,
 )
 from app.services.plans import PlanRecord
 from app.services.supabase import (
@@ -63,8 +79,10 @@ from app.services.supabase import (
 from app.services.users import (
     SIGNUP_NOTE,
     SIGNUP_SOURCE,
-    me_user_from_record,
+    UNFINISHED_JOBS_MESSAGE,
+    exported_user_from_record,
     normalise_email,
+    profile_from_record,
     signup_idempotency_key,
 )
 from app.services.webhooks import (
@@ -86,6 +104,20 @@ GOTRUE_MIN_PASSWORD_LENGTH = 6
 """GoTrue's default password policy, with its wording (``GOTRUE_PASSWORD_MIN_LENGTH``)."""
 GOTRUE_ACCESS_TOKEN_SECONDS = 3600
 _PBKDF2_ROUNDS = 20_000
+DELETION_SOURCE = "account_deletion"
+DELETION_NOTE = "Account deleted; remaining credits forfeited"
+ACTIVE_JOB_STATUSES = frozenset({"queued", "running"})
+UTM_KEYS = ("utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term")
+SIGNUP_META_TEXT_LIMIT = 100
+
+
+def tombstone_email(user_id: UUID) -> str:
+    """What ``delete_user_account`` leaves in ``profiles.email`` (§1)."""
+    return f"deleted+{user_id}@invalid"
+
+
+def deletion_idempotency_key(user_id: UUID) -> str:
+    return f"deletion:{user_id}"
 
 
 def seed_plans() -> list[PlanRecord]:
@@ -141,9 +173,43 @@ class ProfileRow:
     email: str | None
     created_at: datetime
     plan: PlanKind = "free"
+    deleted_at: datetime | None = None
+    referral_code: str | None = None
+    utm_source: str | None = None
+    utm_medium: str | None = None
+    utm_campaign: str | None = None
+    utm_content: str | None = None
+    utm_term: str | None = None
+    marketing_opt_in: bool = False
+    terms_accepted_at: datetime | None = None
 
     def as_record(self) -> dict[str, Any]:
-        return {"id": self.id, "email": self.email, "plan": self.plan}
+        return dict(self.__dict__)
+
+
+def signup_meta_text(meta: Mapping[str, Any], key: str) -> str | None:
+    """``signup_meta_text`` of 0004: trimmed, empty → null, capped at 100 characters."""
+    value = meta.get(key)
+    text = str(value).strip() if value is not None else ""
+    return text[:SIGNUP_META_TEXT_LIMIT] or None
+
+
+def signup_meta_bool(meta: Mapping[str, Any], key: str) -> bool:
+    value = meta.get(key)
+    if isinstance(value, bool):
+        return value
+    return isinstance(value, str) and value.strip().lower() == "true"
+
+
+def signup_meta_timestamp(meta: Mapping[str, Any], key: str) -> datetime | None:
+    value = meta.get(key)
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
 
 
 @dataclass
@@ -230,7 +296,9 @@ class AffiliateRow:
     user_id: UUID
     code: str
     commission_rate: Decimal
+    created_at: datetime
     active: bool = True
+    payout_details: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -238,6 +306,7 @@ class ReferralCodeRow:
     id: UUID
     code: str
     affiliate_id: UUID
+    created_at: datetime
     uses: int = 0
     active: bool = True
 
@@ -252,6 +321,14 @@ class CommissionRow:
     amount_cents: int
     created_at: datetime
     status: str = "pending"
+    paid_at: datetime | None = None
+
+
+@dataclass
+class AccountDeletionRow:
+    user_id: UUID
+    requested_at: datetime
+    ledger_rows_kept: int
 
 
 @dataclass
@@ -317,6 +394,9 @@ class MemoryGoTrue:
 
     settings: Settings
     autoconfirm: bool = False
+    on_user_created: Callable[[UUID, str, Mapping[str, Any]], object] | None = None
+    """The ``on_auth_user_created`` trigger: called with the new row's id, email and
+    ``raw_user_meta_data`` before the sign-up answer is returned."""
     users: dict[UUID, GoTrueUserRow] = field(default_factory=dict)
     refresh_tokens: dict[str, UUID] = field(default_factory=dict)
     outbox: list[SentMail] = field(default_factory=list)
@@ -329,11 +409,19 @@ class MemoryGoTrue:
         wanted = normalise_email(email)
         return next((u for u in self.users.values() if u.email == wanted), None)
 
-    def signup(self, email: str, password: str, *, redirect_to: str) -> dict[str, Any]:
+    def signup(
+        self,
+        email: str,
+        password: str,
+        *,
+        redirect_to: str,
+        data: Mapping[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """GoTrue's three answers: a session (auto-confirm), the new user with a
         confirmation email on its way, or — for an address that already has a confirmed
         account and no auto-confirm — an obfuscated user with no identities and no email,
-        which is how GoTrue itself avoids disclosing the account."""
+        which is how GoTrue itself avoids disclosing the account. ``data`` is the
+        supabase-js ``options.data`` that lands in ``raw_user_meta_data``."""
         if len(password) < GOTRUE_MIN_PASSWORD_LENGTH:
             raise ApiException(
                 VALIDATION_ERROR,
@@ -359,6 +447,8 @@ class MemoryGoTrue:
             id=uuid4(), email=address, password_hash=_hash_password(password), created_at=self.now()
         )
         self.users[user.id] = user
+        if self.on_user_created is not None:
+            self.on_user_created(user.id, user.email, dict(data or {}))
         if self.autoconfirm:
             user.confirmed_at = user.created_at
             return self._session(user)
@@ -408,8 +498,16 @@ class MemoryGoTrue:
             )
         except jwt.PyJWTError:
             return
-        user_id = str(claims.get("sub"))
-        for token in [t for t, owner in self.refresh_tokens.items() if str(owner) == user_id]:
+        self._revoke_sessions(UUID(str(claims.get("sub"))))
+
+    def admin_delete_user(self, user_id: UUID) -> None:
+        """``DELETE /auth/v1/admin/users/{id}``: the login and its sessions go; an unknown
+        id is already the wanted state."""
+        self.users.pop(user_id, None)
+        self._revoke_sessions(user_id)
+
+    def _revoke_sessions(self, user_id: UUID) -> None:
+        for token in [t for t, owner in self.refresh_tokens.items() if owner == user_id]:
             del self.refresh_tokens[token]
 
     def _send(self, user: GoTrueUserRow, kind: str, redirect_to: str) -> None:
@@ -469,13 +567,14 @@ class MemoryStore:
     affiliates: dict[UUID, AffiliateRow] = field(default_factory=dict)
     referral_codes: dict[str, ReferralCodeRow] = field(default_factory=dict)
     commissions: dict[UUID, CommissionRow] = field(default_factory=dict)
+    account_deletions: dict[UUID, AccountDeletionRow] = field(default_factory=dict)
     _seq: int = 0
     _ledger_keys: dict[str, LedgerRow] = field(default_factory=dict)
     _job_entries: dict[tuple[UUID, str], LedgerRow] = field(default_factory=dict)
     _keys_by_hash: dict[str, ApiKeyRow] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        self.gotrue = MemoryGoTrue(self.settings)
+        self.gotrue = MemoryGoTrue(self.settings, on_user_created=self.handle_new_user)
         if not self.plans:
             self.plans = {plan.id: plan for plan in seed_plans()}
 
@@ -729,6 +828,21 @@ class MemoryStore:
                 return job
         return None
 
+    def user_jobs(self, user_id: UUID) -> list[JobRow]:
+        """The user's jobs newest first, ties broken by id as the SQL keyset does."""
+        rows = [job for job in self.jobs.values() if job.user_id == user_id]
+        return sorted(rows, key=lambda job: (job.created_at, job.id), reverse=True)
+
+    def jobs_page(
+        self, user_id: UUID, limit: int, cursor: tuple[datetime, UUID] | None
+    ) -> JobsPage:
+        rows = [
+            job.as_record()
+            for job in self.user_jobs(user_id)
+            if cursor is None or (job.created_at, job.id) < cursor
+        ]
+        return jobs_page(rows[: limit + 1], limit)
+
     def _job(self, job_id: UUID) -> JobRow:
         job = self.jobs.get(job_id)
         if job is None:
@@ -871,9 +985,146 @@ class MemoryStore:
             profile.email = normalise_email(email)
         return profile
 
+    def handle_new_user(
+        self, user_id: UUID, email: str, raw_user_meta_data: Mapping[str, Any]
+    ) -> ProfileRow:
+        """``handle_new_user`` of 0004: the profile, the account and the welcome grant of
+        :meth:`ensure_user`, plus the sign-up metadata — the referral code only when it
+        names an active code, spelled as that code is."""
+        if user_id in self.profiles:
+            return self.profiles[user_id]
+        profile = self.ensure_user(user_id, email)
+        wanted = signup_meta_text(raw_user_meta_data, "referral_code")
+        code = self.referral_codes.get(wanted.lower()) if wanted else None
+        profile.referral_code = code.code if code is not None and code.active else None
+        for key in UTM_KEYS:
+            setattr(profile, key, signup_meta_text(raw_user_meta_data, key))
+        profile.marketing_opt_in = signup_meta_bool(raw_user_meta_data, "marketing_opt_in")
+        profile.terms_accepted_at = signup_meta_timestamp(raw_user_meta_data, "terms_accepted_at")
+        return profile
+
     def find_profile_by_email(self, email: str) -> ProfileRow | None:
         wanted = normalise_email(email)
         return next((p for p in self.profiles.values() if p.email == wanted), None)
+
+    def delete_user_account(self, user_id: UUID) -> AccountDeletionRow:
+        """``delete_user_account`` of 0004_account_deletion.sql: refuses while a job is
+        queued or running, forfeits the remaining credits through the ledger, deletes the
+        API keys, scrubs the jobs, keeps ledger, purchases and commissions, revokes the
+        referral codes and tombstones the profile. A repeat returns the recorded row."""
+        profile = self.profiles.get(user_id)
+        if profile is None:
+            raise _not_found(f"profile {user_id}")
+        if profile.deleted_at is not None:
+            return self.account_deletions[user_id]
+        active = sum(
+            1
+            for job in self.jobs.values()
+            if job.user_id == user_id and job.status in ACTIVE_JOB_STATUSES
+        )
+        if active:
+            raise _conflict(f"{active} unfinished jobs")
+        account = self.accounts.get(user_id)
+        if account is not None and account.balance - account.reserved > 0:
+            self.adjust_credits(
+                user_id,
+                -(account.balance - account.reserved),
+                DELETION_SOURCE,
+                deletion_idempotency_key(user_id),
+                DELETION_NOTE,
+            )
+        for key_id in [k.id for k in self.api_keys.values() if k.user_id == user_id]:
+            row = self.api_keys.pop(key_id)
+            self._keys_by_hash.pop(row.key_hash, None)
+        for job in self.jobs.values():
+            if job.user_id == user_id:
+                job.options = {}
+                job.input_meta = {}
+                job.result = None
+                job.worker_ref = None
+                job.idempotency_key = None
+        for affiliate in self.affiliates.values():
+            if affiliate.user_id == user_id:
+                affiliate.active = False
+                affiliate.payout_details = {}
+                for code in self.referral_codes.values():
+                    if code.affiliate_id == affiliate.id:
+                        code.active = False
+        profile.email = tombstone_email(user_id)
+        for key in UTM_KEYS:
+            setattr(profile, key, None)
+        profile.marketing_opt_in = False
+        profile.deleted_at = self.now()
+        deletion = AccountDeletionRow(
+            user_id=user_id,
+            requested_at=profile.deleted_at,
+            ledger_rows_kept=sum(1 for row in self.ledger if row.user_id == user_id),
+        )
+        self.account_deletions[user_id] = deletion
+        return deletion
+
+    def export_account(self, user_id: UUID) -> AccountExport:
+        profile = self.profiles.get(user_id)
+        if profile is None:
+            raise _not_found(f"profile {user_id}")
+        affiliate: AffiliateExport | None = None
+        row = next((a for a in self.affiliates.values() if a.user_id == user_id), None)
+        if row is not None:
+            affiliate = AffiliateExport(
+                code=row.code,
+                commission_rate=float(row.commission_rate),
+                active=row.active,
+                payout_details=dict(row.payout_details),
+                created_at=row.created_at,
+                referral_codes=[
+                    ReferralCodeExport(
+                        code=c.code, uses=c.uses, active=c.active, created_at=c.created_at
+                    )
+                    for c in self.referral_codes.values()
+                    if c.affiliate_id == row.id
+                ],
+                commissions=[
+                    CommissionExport(
+                        id=c.id,
+                        purchase_id=c.purchase_id,
+                        rate=float(c.rate),
+                        amount_cents=c.amount_cents,
+                        status=c.status,
+                        paid_at=c.paid_at,
+                        created_at=c.created_at,
+                    )
+                    for c in self.commissions.values()
+                    if c.affiliate_id == row.id
+                ],
+            )
+        balance = self.get_balance(user_id)
+        return AccountExport(
+            exported_at=self.now(),
+            user=exported_user_from_record(profile.as_record()),
+            balance=Balance(
+                **balance.model_dump(), subscription_renews_at=self.subscription_renews_at(user_id)
+            ),
+            ledger=[
+                ledger_entry_from_record(r.as_record()) for r in self.ledger if r.user_id == user_id
+            ],
+            jobs=[
+                without_signed_urls(job_status_from_record(job.as_record()))
+                for job in self.user_jobs(user_id)
+            ],
+            purchases=[
+                PurchaseExport.model_validate(p.model_dump(exclude={"user_id", "idempotency_key"}))
+                for p in sorted(self.purchases.values(), key=lambda p: p.created_at)
+                if p.user_id == user_id
+            ],
+            # SubscriptionRecord carries no created_at; the memory backend exports none.
+            subscriptions=[
+                SubscriptionExport.model_validate(sub.model_dump(exclude={"user_id"}))
+                for sub in self.subscriptions.values()
+                if sub.user_id == user_id
+            ],
+            api_keys=self.api_key_infos(user_id),
+            affiliate=affiliate,
+        )
 
     def set_plan(self, user_id: UUID, plan: PlanKind, renews_at: datetime | None) -> ProfileRow:
         profile = self.profiles.get(user_id)
@@ -994,11 +1245,15 @@ class MemoryStore:
         if code.lower() in self.referral_codes:
             raise _conflict(f"referral code {code} exists")
         affiliate = AffiliateRow(
-            id=uuid4(), user_id=user_id, code=code, commission_rate=Decimal(str(commission_rate))
+            id=uuid4(),
+            user_id=user_id,
+            code=code,
+            commission_rate=Decimal(str(commission_rate)),
+            created_at=self.now(),
         )
         self.affiliates[affiliate.id] = affiliate
         self.referral_codes[code.lower()] = ReferralCodeRow(
-            id=uuid4(), code=code, affiliate_id=affiliate.id
+            id=uuid4(), code=code, affiliate_id=affiliate.id, created_at=self.now()
         )
         return affiliate
 
@@ -1062,6 +1317,24 @@ class MemoryStore:
         self.api_keys[row.id] = row
         self._keys_by_hash[key_hash] = row
         return row, plaintext
+
+    def api_key_infos(self, user_id: UUID) -> list[ApiKeyInfo]:
+        rows = sorted(
+            (k for k in self.api_keys.values() if k.user_id == user_id),
+            key=lambda k: (k.created_at, k.id),
+            reverse=True,
+        )
+        return [
+            ApiKeyInfo(
+                id=k.id,
+                name=k.name,
+                prefix=k.prefix,
+                created_at=k.created_at,
+                last_used_at=k.last_used_at,
+                revoked_at=k.revoked_at,
+            )
+            for k in rows
+        ]
 
     def authenticate_api_key(self, key_hash: str) -> UUID | None:
         row = self._keys_by_hash.get(key_hash)
@@ -1224,6 +1497,9 @@ class MemoryJobsService:
             return None
         return job_status_from_record(row.as_record())
 
+    async def list(self, user_id: UUID, limit: int = 20, cursor: str | None = None) -> JobsPage:
+        return self._store.jobs_page(user_id, limit, parse_job_cursor(cursor))
+
     async def _fetch(self, job_id: UUID) -> JobStatus | None:
         row = self._store.jobs.get(job_id)
         return job_status_from_record(row.as_record()) if row else None
@@ -1287,24 +1563,42 @@ class MemoryStorageService:
         expires = int((datetime.now(UTC) + timedelta(seconds=ttl_seconds)).timestamp())
         return f"memory://{path}?exp={expires}"
 
+    async def delete_prefix(self, prefix: str) -> int:
+        doomed = [path for path in self.objects if path.startswith(prefix)]
+        for path in doomed:
+            del self.objects[path]
+        return len(doomed)
+
 
 class MemoryUsersService:
     def __init__(self, store: MemoryStore) -> None:
         self._store = store
 
-    async def get(self, user_id: UUID) -> MeUser | None:
+    async def get(self, user_id: UUID) -> Profile | None:
         row = self._store.profiles.get(user_id)
-        return me_user_from_record(row.as_record()) if row else None
+        return profile_from_record(row.as_record()) if row else None
 
-    async def find_by_email(self, email: str) -> MeUser | None:
+    async def find_by_email(self, email: str) -> Profile | None:
         row = self._store.find_profile_by_email(email)
-        return me_user_from_record(row.as_record()) if row else None
+        return profile_from_record(row.as_record()) if row else None
 
-    async def ensure(self, user_id: UUID, email: str) -> MeUser:
-        return me_user_from_record(self._store.ensure_user(user_id, email).as_record())
+    async def ensure(self, user_id: UUID, email: str) -> Profile:
+        return profile_from_record(self._store.ensure_user(user_id, email).as_record())
 
-    async def set_plan(self, user_id: UUID, plan: PlanKind, renews_at: datetime | None) -> MeUser:
-        return me_user_from_record(self._store.set_plan(user_id, plan, renews_at).as_record())
+    async def set_plan(self, user_id: UUID, plan: PlanKind, renews_at: datetime | None) -> Profile:
+        return profile_from_record(self._store.set_plan(user_id, plan, renews_at).as_record())
+
+    async def export(self, user_id: UUID) -> AccountExport:
+        return self._store.export_account(user_id)
+
+    async def delete_account(self, user_id: UUID) -> None:
+        try:
+            self._store.delete_user_account(user_id)
+        except ApiException as exc:
+            if exc.code == CONFLICT:
+                raise ApiException(CONFLICT, message=UNFINISHED_JOBS_MESSAGE) from exc
+            raise
+        self._store.gotrue.admin_delete_user(user_id)
 
 
 class MemoryApiKeysService:
@@ -1316,6 +1610,9 @@ class MemoryApiKeysService:
         return ApiKeyCreateResponse(
             id=row.id, name=name, prefix=row.prefix, key=plaintext, created_at=row.created_at
         )
+
+    async def list(self, user_id: UUID) -> list[ApiKeyInfo]:
+        return self._store.api_key_infos(user_id)
 
     async def revoke(self, user_id: UUID, key_id: UUID) -> bool:
         return self._store.revoke_api_key(key_id, user_id)
@@ -1418,7 +1715,11 @@ class MemoryPlansService:
 
 
 __all__ = [
+    "ACTIVE_JOB_STATUSES",
+    "DELETION_NOTE",
+    "DELETION_SOURCE",
     "LEMONSQUEEZY_TEMPLATE",
+    "AccountDeletionRow",
     "AffiliateRow",
     "ApiKeyRow",
     "CommissionRow",
@@ -1440,5 +1741,10 @@ __all__ = [
     "ReferralCodeRow",
     "SentMail",
     "WebhookEventRow",
+    "deletion_idempotency_key",
     "seed_plans",
+    "signup_meta_bool",
+    "signup_meta_text",
+    "signup_meta_timestamp",
+    "tombstone_email",
 ]

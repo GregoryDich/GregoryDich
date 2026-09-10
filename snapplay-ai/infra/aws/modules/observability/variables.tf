@@ -40,3 +40,29 @@ variable "alb_5xx_rate_threshold_percent" {
   type        = number
   default     = 5
 }
+
+variable "require_alarm_email" {
+  description = "Fail the plan when alarm_email is empty (true for production environments)."
+  type        = bool
+  default     = false
+}
+
+variable "account_id" {
+  description = "AWS account id (trust condition of the budget action role)."
+  type        = string
+}
+
+variable "job_queue_arn" {
+  description = "SQS job queue ARN; the budget kill switch denies sqs:SendMessage on it."
+  type        = string
+}
+
+variable "api_task_role_name" {
+  description = "Name of the API task role the budget kill-switch policy is attached to."
+  type        = string
+}
+
+variable "api_task_role_arn" {
+  description = "ARN of the API task role (scope of the budget action's IAM permission)."
+  type        = string
+}

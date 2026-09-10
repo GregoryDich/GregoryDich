@@ -123,6 +123,49 @@ Directory responsibilities:
 * `infra/aws` — Terraform for §10.
 * `growth/mcp_server` — MCP tools that drive the public API with an API key (§11).
 
+### Separation model and licence
+
+The worker loads the model named by `SEPARATION_MODEL` (default `htdemucs`) through
+`app/pipeline/separation.py`, whose `SEPARATION_MODELS` table records, per model, the
+`family` (`demucs`, `roformer`, `api`), the licence of the **weights** and whether they
+may be used commercially. The distinction matters: the Demucs *code* is MIT, but the
+`htdemucs`, `htdemucs_ft` and `htdemucs_6s` checkpoints are downloaded at run time from
+Meta and are published for research use only (facebookresearch/demucs issue #327;
+trained on the non-commercial MUSDB18-HQ set), so all three carry
+`commercial_use: False`. Converting them to ONNX or TensorRT does not change that.
+
+The gate: `separation.check_model_licence(name, env)` runs before the worker polls
+(`worker/common.py::load_pipeline`) and again inside `load_model()`. With
+`ENV=production` a model whose weights are not recorded as commercially licensed makes
+the process exit with
+
+```
+SEPARATION_MODEL 'htdemucs' weights are not licensed for commercial use; set
+SEPARATION_MODEL to a licensed model or ALLOW_UNLICENSED_SEPARATION_MODEL=1 for internal testing
+```
+
+`ALLOW_UNLICENSED_SEPARATION_MODEL=1` is the documented escape hatch for internal test
+deployments and is logged as a warning on every start. Outside production every model
+is allowed, so development and CI are unaffected.
+
+This is an **open launch blocker**: the default model cannot ship in a paid product as
+things stand. The three ways out, each of which is a row added to `SEPARATION_MODELS`
+(plus a loader branch in `_load_family` for a new family):
+
+1. **A licence grant from Meta** for the htdemucs weights — flip `commercial_use` to
+   `True` on the exact checkpoints covered and archive the grant next to the licence
+   files.
+2. **A commercially licensed RoFormer checkpoint** (e.g. a Mel-Band RoFormer vocal model
+   relicensed to MIT by its author): `family: roformer`, the checkpoint pinned by hash,
+   the model card archived on the day it ships. A vocals-only model needs a second
+   stage for `bass / drums / other`, so the pipeline's four-stem contract (§7) is the
+   constraint to design against.
+3. **A commercial separation API** (`family: api`): removes the GPU line from the cost
+   model and replaces it with a per-call price (`ECONOMICS.md` §3.4); `separate()` then
+   routes to an HTTP client and the worker becomes CPU-only for that stage.
+
+Basic Pitch is unaffected: its model ships inside the Apache-2.0 package.
+
 ## 3. End-to-end data flow
 
 ```mermaid
@@ -138,9 +181,9 @@ flowchart TD
     G --> H["plugin opens GET /v1/jobs/{id}/events\n(SSE, : ping every 5 s)"]
     F --> W1["worker long-polls SQS\nmarks job running"]
     W1 --> W2["decode + resample 44.1 kHz"]
-    W2 --> W3["Demucs v4 htdemucs fp16\n→ bass / drums / other / vocals"]
+    W2 --> W3["separation model (SEPARATION_MODEL,\ndefault htdemucs fp16)\n→ bass / drums / other / vocals"]
     W3 --> W4["Basic Pitch ONNX\nper requested stem, one batch"]
-    W4 --> W5["aubio tempo + onsets,\nchroma key template, per-stem root"]
+    W4 --> W5["librosa tempo + onsets,\nchroma key template, per-stem root"]
     W5 --> W6["package: WAV per stem, score.mid,\nPUT to S3, extend SQS visibility throughout"]
     W6 --> W7["complete_job → settle_reservation(job, true)\njobs.status = succeeded, result JSON stored"]
     W1 -. "progress(stage, 0..1)" .-> H
@@ -346,7 +389,7 @@ clip:
 | decode + resample to 44.1 kHz | soundfile / torchaudio | 50 ms |
 | separate | Demucs v4 `htdemucs`, fp16, CUDA (optional TensorRT) | 900 ms |
 | transcribe | Basic Pitch ONNX, per stem in one batch | 400 ms |
-| analyze | aubio tempo + onset, chroma template key | 150 ms |
+| analyze | librosa tempo + onset (numpy fallback), chroma template key | 150 ms |
 | package | WAV encode, MIDI write, upload to storage | 300 ms |
 | **total** | | **≈ 1.8 s** of the 2.0 s target |
 
@@ -415,7 +458,7 @@ flowchart LR
     ASG --> W2["worker task"]
     CW["CloudWatch alarms\nApproximateNumberOfMessagesVisible"] -. "step scaling" .-> ASG
     W1 & W2 -- "GET input, PUT results" --> S3[("S3 bucket\nlifecycle: expire 24 h")]
-    W1 & W2 -- "complete_job / fail_job" --> ALB
+    W1 & W2 -- "set_job_progress / complete_job / fail_job\n(service-role key, PostgREST)" --> PG
     API1 & API2 -- "presign" --> S3
     S3 --> CF["CloudFront (optional)\nOAC + signed URLs"]
     CF --> Plugin
@@ -463,7 +506,17 @@ flowchart LR
 
 Config keys (§10): `AWS_REGION`, `S3_BUCKET`, `S3_ENDPOINT_URL`, `CLOUDFRONT_DOMAIN`,
 `CLOUDFRONT_KEY_PAIR_ID`, `SQS_JOB_QUEUE_URL`, `SQS_DLQ_URL`, `JOB_TIMEOUT_SECONDS`,
-`GPU_INSTANCE_TYPE`.
+`GPU_INSTANCE_TYPE`; the API task additionally gets `MAINTENANCE_MODE` (kill switch,
+`var.maintenance_mode`) and the worker `SEPARATION_MODEL` (§2, "Separation model and
+licence"). Both tasks carry `SERVICE_ROLE` (`api` / `worker`).
+
+* **Budget kill switch.** `aws_budgets_budget_action` in `modules/observability`
+  attaches a `Deny sqs:SendMessage` policy to the API task role at 100 % of the monthly
+  budget: `POST /v1/jobs` answers `503 worker_unavailable` and releases the credit,
+  nothing new is enqueued, in-flight jobs finish and the scale-in alarm returns the GPU
+  service to `worker_min_capacity`. Budgets actions cannot touch ECS or ASG counts
+  directly, so this is the closest native equivalent; it stays in force until an
+  operator resets the action (`infra/aws/README.md`, "Operations").
 
 ## 7. Plugin threading model and the lock-free stem handoff
 

@@ -1,8 +1,12 @@
 """SQS consumer for the ECS GPU service (contract §10): ``python -m worker.aws_worker``.
 
-Long-polls ``SQS_JOB_QUEUE_URL`` (``WaitTimeSeconds=20``), keeps each message invisible
-on a timer thread while its job runs, and finishes with ``complete_job`` or
-``fail_job`` (both idempotent) followed by ``DeleteMessage``. Input the pipeline
+Models are warmed up (``warm_up_pipeline``) before the first poll, so a cold worker
+never holds a message while it downloads weights. Each received message is then made
+invisible for the full ``SQS_VISIBILITY_SECONDS`` before any work starts — the queue's
+own timeout may be shorter and the timer thread's first reset is one interval away —
+and kept invisible by that thread while the job runs. Long-polls ``SQS_JOB_QUEUE_URL``
+(``WaitTimeSeconds=20``) and finishes with ``complete_job`` or ``fail_job`` (both
+idempotent) followed by ``DeleteMessage``. Input the pipeline
 rejects fails the job and deletes the message; any other failure leaves the message
 in the queue so SQS redelivers it and moves it to the DLQ after
 ``SQS_MAX_RECEIVE_COUNT`` (3) receives — the job is marked failed on the last attempt,
@@ -93,6 +97,15 @@ def _receive_count(message: dict[str, Any]) -> int:
         return 1
 
 
+def _claim(sqs: Any, config: WorkerConfig, receipt: str) -> None:
+    """Hide the message for the full window now, before the job (and on a cold worker
+    with ``--no-warm-up``, the model load) starts; the extender takes over from there."""
+    try:
+        extend_visibility(sqs, config.queue_url, receipt, config.visibility_seconds)
+    except Exception as exc:
+        log.warning("could not claim message visibility up front", exc_info=exc)
+
+
 def _release(sqs: Any, config: WorkerConfig, receipt: str) -> None:
     """Make the message visible again immediately so the retry (or the DLQ move) does
     not wait for the visibility timeout."""
@@ -125,6 +138,7 @@ async def process_message(
     )
     log_extra = {"job_id": str(spec.job_id), "attempt": attempt}
     outcome = OUTCOME_RETRY
+    _claim(sqs, config, receipt)
     extender = VisibilityExtender(
         sqs,
         config.queue_url,
@@ -239,6 +253,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s"
     )
+    os.environ.setdefault("SERVICE_ROLE", "worker")
     settings = get_settings()
     try:
         config = WorkerConfig.from_env(settings)

@@ -57,3 +57,28 @@ output "alarm_topic_arn" {
   description = "SNS topic receiving CloudWatch alarms and budget notifications."
   value       = module.observability.sns_topic_arn
 }
+
+output "api_task_definition_arn" {
+  description = "Latest API task definition; deploy.yml runs `python -m app.checks` on it as a one-off Fargate task after apply."
+  value       = module.ecs_api.task_definition_arn
+}
+
+output "api_security_group_id" {
+  description = "Security group of the API tasks (for one-off tasks such as the deployment checks)."
+  value       = module.ecs_api.security_group_id
+}
+
+output "api_log_group_name" {
+  description = "CloudWatch log group of the API, reaper and deployment-check tasks."
+  value       = module.ecs_api.log_group_name
+}
+
+output "private_subnet_ids" {
+  description = "Private subnets that ECS tasks run in."
+  value       = module.vpc.private_subnet_ids
+}
+
+output "budget_action_id" {
+  description = "AWS Budgets action that denies job intake at 100 % of the monthly budget; reset it after the incident (see modules/observability)."
+  value       = module.observability.budget_action_id
+}

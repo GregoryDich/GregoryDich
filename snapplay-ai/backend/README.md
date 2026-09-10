@@ -159,7 +159,7 @@ All keys are listed with placeholders in `.env.example`. The important groups:
 | Storage | `STORAGE_BACKEND=supabase\|s3\|memory`, `STORAGE_BUCKET`, `SIGNED_URL_TTL_SECONDS` |
 | AWS | `AWS_REGION`, `S3_BUCKET`, `S3_ENDPOINT_URL` (R2), `CLOUDFRONT_DOMAIN`, `CLOUDFRONT_KEY_PAIR_ID`, `CLOUDFRONT_PRIVATE_KEY`, `SQS_JOB_QUEUE_URL`, `SQS_DLQ_URL`, `JOB_TIMEOUT_SECONDS` |
 | Payments | `LEMONSQUEEZY_WEBHOOK_SECRET`, `PADDLE_WEBHOOK_SECRET`, `WEBHOOK_CLAIM_LEASE_SECONDS` |
-| Pipeline | `SNAPPLAY_PIPELINE=fake\|local\|modal\|runpod\|aws`, `MODAL_APP_NAME`, `RUNPOD_ENDPOINT_ID`, `RUNPOD_API_KEY` |
+| Pipeline | `SNAPPLAY_PIPELINE=fake\|local\|modal\|runpod\|aws`, `MODAL_APP_NAME`, `RUNPOD_ENDPOINT_ID`, `RUNPOD_API_KEY`, `SEPARATION_MODEL` (worker; default `htdemucs`), `ALLOW_UNLICENSED_SEPARATION_MODEL` (worker, internal testing only) |
 | Limits | `MAX_UPLOAD_BYTES`, `MAX_INPUT_SECONDS`, `FREE_SIGNUP_CREDITS`, `RATE_LIMIT_JOBS_PER_MIN`, `RATE_LIMIT_READS_PER_MIN`, `AFFILIATE_COMMISSION_RATE` |
 | Misc | `ENV=development\|test\|staging\|production`, `CORS_ALLOW_ORIGINS` |
 
@@ -187,4 +187,18 @@ prints the same list and exits non-zero, which is what a deployment should gate 
 `run_pipeline(audio_bytes, options, progress)`. `fake` is deterministic, CPU-only and
 processes 30 s of stereo audio in well under two seconds, producing real WAV stems and a
 real Standard MIDI File so the whole job flow can be exercised without a GPU. The GPU
-backends need `requirements-gpu.txt`.
+backends need `requirements-gpu.txt` (pinned for CUDA 12.4 / cuDNN 9) **plus**
+`pip install --no-deps basic-pitch==0.4.0` — basic-pitch's own dependency list would
+install TensorFlow, while the pipeline runs its bundled ONNX model on `onnxruntime-gpu`
+(`app/pipeline/transcription.py` selects the `.onnx` checkpoint explicitly). The serverless
+SDKs (`runpod`, `modal`) are in `requirements-workers.txt`; `infra/worker-entrypoint.sh`
+refuses a `WORKER_MODE` whose SDK is missing.
+
+**Separation model and licence.** `SEPARATION_MODEL` names the model
+`app/pipeline/separation.py` loads; its `SEPARATION_MODELS` table records the licence of
+each model's *weights*. The Demucs `htdemucs*` checkpoints are research-only, so with
+`ENV=production` a worker refuses to start (`SeparationModelLicenceError`, checked in
+`worker/common.py::load_pipeline` before torch is imported and again in `load_model()`)
+unless `ALLOW_UNLICENSED_SEPARATION_MODEL=1` is set for an internal test deployment.
+Adding a commercially licensed model is a row in that table (and a loader branch for a
+new family); see `docs/ARCHITECTURE.md`, "Separation model and licence".

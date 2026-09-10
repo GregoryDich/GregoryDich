@@ -9,7 +9,8 @@ provider "aws" {
 data "aws_caller_identity" "current" {}
 
 locals {
-  name = "${var.project_name}-${var.environment}"
+  name          = "${var.project_name}-${var.environment}"
+  is_production = contains(["prod", "production"], var.environment)
 
   tags = {
     Project     = var.project_name
@@ -173,8 +174,12 @@ module "ecs_api" {
   task_role_arn       = module.iam.api_task_role_arn
   desired_count       = var.api_desired_count
   max_count           = max(var.api_desired_count * 2, 4)
-  environment         = merge(local.common_environment, { SNAPPLAY_PIPELINE = "aws" })
-  secrets             = local.api_secrets
+  environment = merge(local.common_environment, {
+    SNAPPLAY_PIPELINE = "aws"
+    SERVICE_ROLE      = "api"
+    MAINTENANCE_MODE  = tostring(var.maintenance_mode)
+  })
+  secrets = local.api_secrets
 }
 
 module "ecs_gpu_worker" {
@@ -194,17 +199,26 @@ module "ecs_gpu_worker" {
   execution_role_arn    = module.iam.worker_execution_role_arn
   task_role_arn         = module.iam.worker_task_role_arn
   instance_profile_name = module.iam.ecs_instance_profile_name
-  environment           = merge(local.common_environment, { WORKER_MODE = "aws", SNAPPLAY_PIPELINE = "local" })
-  secrets               = local.worker_secrets
+  environment = merge(local.common_environment, {
+    WORKER_MODE       = "aws"
+    SERVICE_ROLE      = "worker"
+    SNAPPLAY_PIPELINE = "local"
+  })
+  secrets = local.worker_secrets
 }
 
 module "observability" {
   source = "./modules/observability"
 
-  name               = local.name
-  job_queue_name     = module.queue.job_queue_name
-  dlq_name           = module.queue.dlq_name
-  alb_arn_suffix     = module.ecs_api.alb_arn_suffix
-  monthly_budget_usd = var.monthly_budget_usd
-  alarm_email        = var.alarm_email
+  name                = local.name
+  job_queue_name      = module.queue.job_queue_name
+  dlq_name            = module.queue.dlq_name
+  alb_arn_suffix      = module.ecs_api.alb_arn_suffix
+  monthly_budget_usd  = var.monthly_budget_usd
+  alarm_email         = var.alarm_email
+  require_alarm_email = local.is_production
+  account_id          = data.aws_caller_identity.current.account_id
+  job_queue_arn       = module.queue.job_queue_arn
+  api_task_role_name  = module.iam.api_task_role_name
+  api_task_role_arn   = module.iam.api_task_role_arn
 }

@@ -53,7 +53,7 @@ jobs:
           fi
 
       - name: Lint
-        run: ruff check app tests
+        run: ruff check app tests worker
 
       - name: Test
         run: python -m pytest -q

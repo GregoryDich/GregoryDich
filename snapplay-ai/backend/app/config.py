@@ -11,6 +11,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import lru_cache
 from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -18,6 +19,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 StorageBackend = Literal["supabase", "s3", "memory"]
 PipelineBackend = Literal["fake", "local", "modal", "runpod", "aws"]
 Environment = Literal["development", "test", "staging", "production"]
+ServiceRole = Literal["api", "worker"]
+LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1", "0.0.0.0"})
+"""Hosts ``AUTH_SITE_URL`` may not point at in production: emailed links must reach users."""
 
 
 class Settings(BaseSettings):
@@ -29,6 +33,9 @@ class Settings(BaseSettings):
     )
 
     env: Environment = "development"
+    service_role: ServiceRole = "api"
+    """Which process reads these settings. The GPU worker (``worker``) never serves
+    webhooks or emailed links, so the production checks for those apply to ``api`` only."""
 
     # Supabase (auth + Postgres)
     supabase_url: str = ""
@@ -75,6 +82,20 @@ class Settings(BaseSettings):
     modal_app_name: str = "snapplay-worker"
     runpod_endpoint_id: str = ""
     runpod_api_key: SecretStr = SecretStr("")
+    separation_model: str = "htdemucs"
+    """Source-separation model the GPU worker loads (§7). The licence of every model's
+    weights is recorded in ``app.pipeline.separation.SEPARATION_MODELS``; a production
+    worker refuses one that is not licensed for commercial use."""
+
+    @field_validator("separation_model")
+    @classmethod
+    def _check_separation_model(cls, value: str) -> str:
+        value = value.strip()
+        if not value or not value[0].isalnum() or not all(c.isalnum() or c in "._-" for c in value):
+            raise ValueError(
+                "SEPARATION_MODEL must be a model name of letters, digits, '.', '_' or '-'"
+            )
+        return value
 
     # Limits and product rules
     max_upload_bytes: int = Field(default=10 * 1024 * 1024, gt=0)
@@ -83,6 +104,9 @@ class Settings(BaseSettings):
     rate_limit_jobs_per_min: int = Field(default=10, gt=0)
     rate_limit_reads_per_min: int = Field(default=60, gt=0)
     affiliate_commission_rate: float = Field(default=0.30, ge=0, le=1)
+    maintenance_mode: bool = False
+    """When set, ``POST /v1/jobs`` answers ``503 service_unavailable`` (§2, §5); every
+    other route keeps working, so results and balances stay readable."""
 
     # Browser origins allowed by CORS; "*" allows any origin.
     cors_allow_origins: list[str] = ["*"]
@@ -103,10 +127,21 @@ class Settings(BaseSettings):
             problems.append("SUPABASE_URL is required")
         if not (self.supabase_jwt_secret.get_secret_value() or self.supabase_jwks_url):
             problems.append("SUPABASE_JWT_SECRET or SUPABASE_JWKS_URL is required")
-        if not self.lemonsqueezy_webhook_secret.get_secret_value():
-            problems.append("LEMONSQUEEZY_WEBHOOK_SECRET is required")
-        if not self.paddle_webhook_secret.get_secret_value():
-            problems.append("PADDLE_WEBHOOK_SECRET is required")
+        if self.service_role == "api":
+            # A provider without a secret answers 404 (§4), so one configured provider is
+            # enough to sell; none at all means nothing can ever grant a paid credit.
+            if not (
+                self.lemonsqueezy_webhook_secret.get_secret_value()
+                or self.paddle_webhook_secret.get_secret_value()
+            ):
+                problems.append(
+                    "LEMONSQUEEZY_WEBHOOK_SECRET or PADDLE_WEBHOOK_SECRET is required"
+                )
+            site = urlsplit(self.auth_site_url)
+            host = (site.hostname or "").lower()
+            local = not host or host in LOCAL_HOSTS or host.endswith(".localhost")
+            if site.scheme != "https" or local:
+                problems.append("AUTH_SITE_URL must be an https URL that is not localhost")
         if self.snapplay_pipeline == "fake":
             problems.append("SNAPPLAY_PIPELINE=fake is not allowed")
         if self.storage_backend == "memory":

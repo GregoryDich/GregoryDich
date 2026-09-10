@@ -145,11 +145,15 @@ begin
     from public.affiliate_commissions where affiliate_id = v_affiliate_id;
   assert v_count = 2 and v_sum = 489, format('commissions %s / %s cents', v_count, v_sum);
 
-  -- deleting the affiliate user removes codes and commissions but not the purchases
+  -- deleting the affiliate user (0004) revokes the codes and drops the payout details but
+  -- keeps the commissions that are owed and every purchase, the affiliate's own included
   delete from auth.users where id = v_aff_user;
-  assert not exists (select 1 from public.affiliates where id = v_affiliate_id), 'affiliate survived';
-  assert not exists (select 1 from public.referral_codes where affiliate_id = v_affiliate_id), 'codes survived';
-  assert not exists (select 1 from public.affiliate_commissions where affiliate_id = v_affiliate_id), 'commissions survived';
+  assert (select active from public.affiliates where id = v_affiliate_id) = false, 'affiliate still active';
+  assert (select payout_details from public.affiliates where id = v_affiliate_id) = '{}'::jsonb, 'payout details survived';
+  assert not exists (select 1 from public.referral_codes where affiliate_id = v_affiliate_id and active), 'codes still active';
+  assert (select count(*) from public.affiliate_commissions where affiliate_id = v_affiliate_id) = 2, 'commissions lost';
   assert (select count(*) from public.purchases where user_id in (v_buyer, v_buyer2)) = 6, 'purchases lost';
+  assert (select count(*) from public.purchases where user_id = v_aff_user) = 1, 'own purchase lost';
+  assert (select deleted_at from public.profiles where id = v_aff_user) is not null, 'affiliate not tombstoned';
 end;
 $$;

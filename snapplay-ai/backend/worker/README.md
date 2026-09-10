@@ -13,15 +13,23 @@ URLs and call `complete_job` / `fail_job` (both idempotent) through the job serv
 |-----------|-------------|
 | CUDA | 12.x runtime with cuDNN (`nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04`, see `infra/Dockerfile.worker`) |
 | Python | 3.11 |
-| torch | 2.x with CUDA (`requirements-gpu.txt`) |
-| demucs | ≥ 4.0.1 (`htdemucs` weights are downloaded to `TORCH_HOME` on first use) |
-| basic-pitch | ≥ 0.4 with the bundled ONNX model |
-| onnxruntime-gpu | ≥ 1.17 (TensorRT and CUDA execution providers) |
-| aubio | ≥ 0.4.9 for tempo/beat tracking (librosa or a numpy estimator are the fallbacks) |
+| torch / torchaudio | 2.6.0+cu124 (`requirements-gpu.txt`, `download.pytorch.org/whl/cu124`) |
+| demucs | 4.0.1 (`SEPARATION_MODEL` weights are downloaded to `TORCH_HOME` on first use; licence gate below) |
+| basic-pitch | 0.4.0 installed with `--no-deps` (its Linux default backend is TensorFlow); the bundled ONNX model is selected explicitly |
+| onnxruntime-gpu | 1.20.2 (CUDA 12.x / cuDNN 9 build; CUDA execution provider, TensorRT when its runtime is present) |
+| librosa | 0.11.0 for tempo/beat tracking (a numpy estimator is the fallback; no GPL component) |
+| runpod / modal | `requirements-workers.txt`, installed when the image is built with `INSTALL_WORKER_SDKS=1` (default) |
 | system | `ffmpeg` (decode fallback), `libsndfile1`, 2 GiB `/dev/shm` (Basic Pitch scratch files) |
 
 Persist `TORCH_HOME` (`/home/worker/.cache/torch` in the ECS image) so cold starts
 do not re-download the Demucs weights.
+
+**Licence gate.** With `ENV=production` a worker whose `SEPARATION_MODEL` is not
+recorded as licensed for commercial use exits at start-up with
+`SEPARATION_MODEL 'htdemucs' weights are not licensed for commercial use; set
+SEPARATION_MODEL to a licensed model or ALLOW_UNLICENSED_SEPARATION_MODEL=1 for internal
+testing`. The check runs in `worker/common.py::load_pipeline` (before torch is imported)
+and again in `separation.load_model()`, so `--no-warm-up` does not bypass it.
 
 ## Environment
 
@@ -35,7 +43,9 @@ is logged as a warning). Pipeline tuning:
 | `SNAPPLAY_DEVICE` | `cuda` if available | torch device for Demucs |
 | `SNAPPLAY_FP16` | `1` | fp16 autocast on CUDA (`0` disables) |
 | `SNAPPLAY_TRT` | unset | `1` tries `torch.compile` with the TensorRT backend (`torch_tensorrt`), then the default backend, falling back to eager |
-| `SNAPPLAY_DEMUCS_MODEL` | `htdemucs` | Demucs model name |
+| `SEPARATION_MODEL` | `htdemucs` | separation model (`app/pipeline/separation.py` `SEPARATION_MODELS`) |
+| `ALLOW_UNLICENSED_SEPARATION_MODEL` | unset | `1` lets a production worker load research-only weights; internal testing only, logged as a warning |
+| `SERVICE_ROLE` | `worker` (set by the image, entrypoint and task definitions) | tells the shared `Settings` this process is a worker, not the API |
 | `SNAPPLAY_DEMUCS_SEGMENT` | model maximum (7.8 s) | shorter chunks to save GPU memory |
 | `SNAPPLAY_BASIC_PITCH_MODEL` | bundled ONNX model | alternative Basic Pitch model path |
 
@@ -45,9 +55,11 @@ is logged as a warning). Pipeline tuning:
 
 Consumes `SQS_JOB_QUEUE_URL` with `boto3` (`ReceiveMessage`, `WaitTimeSeconds=20`,
 one message at a time). Message body: `{"job_id", "user_id", "input_key", "options"}`
-where `options` is the §7 `PipelineOptions` JSON (`app.services.aws.queue`). While a
-job runs a timer thread resets the visibility timeout to `SQS_VISIBILITY_SECONDS`
-(300). Outcomes:
+where `options` is the §7 `PipelineOptions` JSON (`app.services.aws.queue`). Models are
+warmed up before the first poll; each received message is first hidden for the full
+`SQS_VISIBILITY_SECONDS` (300) — before the status check and the job, so a queue
+configured with a shorter timeout cannot redeliver it during a slow first job — and a
+timer thread keeps resetting the timeout while the job runs. Outcomes:
 
 * success → `complete_job`, `DeleteMessage`;
 * input the pipeline rejects (`PipelineError`) → `fail_job`, `DeleteMessage`;

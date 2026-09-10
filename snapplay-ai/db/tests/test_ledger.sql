@@ -377,15 +377,26 @@ begin
 end;
 $$;
 
--- Deleting the auth user cascades through every per-user table.
+-- Deleting the auth user tombstones the profile through delete_user_account (0004): the
+-- accounting rows stay, the unused credits are written off, and the invariants still hold.
 do $$
 declare
   v_user uuid := '00000000-0000-4000-8000-00000000c001';
+  v_rows integer;
 begin
+  -- the jobs above were inserted directly and never left 'queued'; an unfinished job
+  -- blocks the deletion, and every reservation of theirs is settled
+  update public.jobs set status = 'succeeded' where user_id = v_user and status = 'queued';
+  select count(*) into v_rows from public.credit_ledger where user_id = v_user;
   delete from auth.users where id = v_user;
-  assert not exists (select 1 from public.profiles where id = v_user), 'profile survived';
-  assert not exists (select 1 from public.credit_accounts where user_id = v_user), 'account survived';
-  assert not exists (select 1 from public.credit_ledger where user_id = v_user), 'ledger survived';
-  assert not exists (select 1 from public.jobs where user_id = v_user), 'jobs survived';
+  assert exists (select 1 from public.profiles where id = v_user and deleted_at is not null
+                    and email = 'deleted+' || v_user::text || '@invalid'), 'profile not tombstoned';
+  assert exists (select 1 from public.credit_accounts where user_id = v_user), 'account lost';
+  assert (select count(*) from public.credit_ledger where user_id = v_user) = v_rows + 1, 'ledger lost';
+  assert public.get_balance(v_user) = row(0, 0, 0)::public.credit_balance, 'credits not written off';
+  assert (select count(*) from public.jobs where user_id = v_user) = 4, 'jobs lost';
+  assert (select ledger_rows_kept from public.account_deletions where user_id = v_user) = v_rows + 1,
+    'deletion not recorded';
+  perform pg_temp.assert_ledger_invariants(v_user);
 end;
 $$;

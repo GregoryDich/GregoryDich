@@ -55,6 +55,7 @@ def main() -> int:
         return 64
     from app.config import get_settings
 
+    os.environ.setdefault("SERVICE_ROLE", "worker")
     settings = get_settings()
     warm_up_pipeline(settings)
     log.info("runpod worker ready (pipeline=%s)", settings.snapplay_pipeline)

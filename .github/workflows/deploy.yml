@@ -29,6 +29,8 @@ env:
   TF_VAR_route53_zone_id: ${{ vars.ROUTE53_ZONE_ID }}
   TF_VAR_acm_certificate_arn: ${{ vars.ACM_CERTIFICATE_ARN }}
   TF_VAR_alarm_email: ${{ vars.ALARM_EMAIL }}
+  # Kill switch: set the MAINTENANCE_MODE repository variable to true and re-run the workflow.
+  TF_VAR_maintenance_mode: ${{ vars.MAINTENANCE_MODE || 'false' }}
 
 jobs:
   images:
@@ -164,3 +166,32 @@ jobs:
 
       - name: Terraform apply
         run: terraform apply -input=false tfplan
+
+      # python -m app.checks needs the production Supabase credentials, which live in
+      # Secrets Manager and are injected into the API task definition only. Run it there:
+      # a one-off Fargate task on the freshly applied task definition, the same way the
+      # reaper runs. A non-zero exit (a paid plan with no checkout URL) fails the deploy.
+      - name: Deployment checks (python -m app.checks in production)
+        run: |
+          cluster=$(terraform output -raw ecs_cluster_name)
+          task_definition=$(terraform output -raw api_task_definition_arn)
+          security_group=$(terraform output -raw api_security_group_id)
+          log_group=$(terraform output -raw api_log_group_name)
+          subnets=$(terraform output -json private_subnet_ids | jq -r 'join(",")')
+          task_arn=$(aws ecs run-task \
+            --cluster "$cluster" \
+            --task-definition "$task_definition" \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[$subnets],securityGroups=[$security_group],assignPublicIp=DISABLED}" \
+            --overrides '{"containerOverrides":[{"name":"api","command":["python","-m","app.checks"]}]}' \
+            --started-by "deploy-${GITHUB_SHA:0:12}" \
+            --query 'tasks[0].taskArn' --output text)
+          echo "checks task: $task_arn"
+          aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
+          task_id=${task_arn##*/}
+          aws logs get-log-events --log-group-name "$log_group" --log-stream-name "api/api/$task_id" \
+            --start-from-head --query 'events[].message' --output text || true
+          exit_code=$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" \
+            --query 'tasks[0].containers[0].exitCode' --output text)
+          echo "python -m app.checks exited with: $exit_code"
+          test "$exit_code" = "0"

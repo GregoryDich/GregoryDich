@@ -114,7 +114,7 @@ def test_tempo_estimators_agree_on_clicks(synthetic_wav: bytes) -> None:
     bpm, confidence = estimate_tempo_from_flux(flux)
     assert abs(bpm - 120.0) <= 3.0 and confidence > 0.0
     tempo = estimate_tempo(mono, SR, flux)
-    assert tempo.method in {"aubio", "librosa", "numpy"}
+    assert tempo.method in {"librosa", "numpy"}
     assert abs(tempo.bpm - 120.0) <= 3.0
     downbeats, beats = analysis.beats_and_downbeats(tempo, flux, decoded.duration_seconds)
     assert len(beats) >= 6 and set(downbeats) <= set(beats)

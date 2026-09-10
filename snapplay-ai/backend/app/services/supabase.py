@@ -19,6 +19,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from typing import Any
 from urllib.parse import quote
+from uuid import UUID
 
 import httpx
 
@@ -37,7 +38,10 @@ from app.errors import (
 log = logging.getLogger("snapplay.supabase")
 
 Filter = tuple[str, str, Any]
-"""``(column, operator, value)``; ``operator`` is a PostgREST operator such as ``eq``."""
+"""``(column, operator, value)``; ``operator`` is a PostgREST operator such as ``eq``.
+A logical group is ``("or" | "and", <same>, [Filter, ...])`` — build it with
+:func:`any_of` / :func:`all_of`."""
+LOGICAL_OPERATORS = frozenset({"or", "and"})
 
 # SQLSTATE → (§5 error code, HTTP status). 42501 (forbidden) has no §5 code of its own.
 SQLSTATE_ERRORS: dict[str, tuple[str, int]] = {
@@ -66,6 +70,8 @@ _LIST_RESERVED = ',.:()"\\ '
 #   revoke_api_key                     `revoked_at = coalesce(revoked_at, now())`.
 #   reap_stale_jobs                    fails whatever is still stale; a second sweep
 #                                      finds nothing left to do.
+#   delete_user_account                a tombstoned profile answers with its existing
+#                                      account_deletions row and changes nothing.
 # Deliberately absent:
 #   create_job      inserts a job and reserves a credit, so a replay charges twice and
 #                   strands the first reservation in `queued` forever — unless the call
@@ -82,6 +88,7 @@ IDEMPOTENT_RPCS: frozenset[str] = frozenset(
     {
         "authenticate_api_key",
         "complete_job",
+        "delete_user_account",
         "fail_job",
         "get_balance",
         "grant_credits",
@@ -121,13 +128,39 @@ def _quote_list_item(value: Any) -> str:
     return text
 
 
+def any_of(*filters: Filter) -> Filter:
+    """A PostgREST ``or=(...)`` group of ``filters``."""
+    return ("or", "or", list(filters))
+
+
+def all_of(*filters: Filter) -> Filter:
+    """A PostgREST ``and(...)`` group, for nesting inside :func:`any_of`."""
+    return ("and", "and", list(filters))
+
+
+def _encode_condition(column: str, operator: str, value: Any) -> str:
+    """One condition inside a logical group, where every value is a list item and so
+    needs the same quoting as an ``in`` list."""
+    if operator in LOGICAL_OPERATORS:
+        inner = ",".join(_encode_condition(*item) for item in value)
+        return f"{operator}({inner})"
+    if operator == "in":
+        items = ",".join(_quote_list_item(item) for item in value)
+        return f"{column}.in.({items})"
+    return f"{column}.{operator}.{_quote_list_item(value)}"
+
+
 def encode_filters(filters: Iterable[Filter]) -> dict[str, str]:
     """PostgREST query parameters for ``filters``. Single-value operators take the
     remainder of the parameter verbatim, so values need no quoting there; ``in`` lists
-    quote items containing reserved characters."""
+    and the conditions inside a logical group quote items containing reserved
+    characters."""
     params: dict[str, str] = {}
     for column, operator, value in filters:
-        if operator == "in":
+        if operator in LOGICAL_OPERATORS:
+            inner = ",".join(_encode_condition(*item) for item in value)
+            params[operator] = f"({inner})"
+        elif operator == "in":
             items = ",".join(_quote_list_item(item) for item in value)
             params[column] = f"in.({items})"
         else:
@@ -540,6 +573,25 @@ class SupabaseClient:
         log.error("gotrue logout error", extra={"status": response.status_code})
         raise ApiException(INTERNAL_ERROR, message=AUTH_UNAVAILABLE_MESSAGE)
 
+    async def auth_admin_delete_user(self, user_id: UUID) -> None:
+        """``DELETE /auth/v1/admin/users/{id}`` with the service-role key (§1 account
+        deletion): removes the login, its identities and sessions. A 404 means it is
+        already gone, which is the wanted end state; the call is replayable, so a
+        transport failure or a 5xx is retried unlike the anon-key calls above."""
+        response = await self._send(
+            "DELETE",
+            f"/auth/v1/admin/users/{quote(str(user_id), safe='')}",
+            retry=True,
+            headers=self._service_headers,
+        )
+        if response.is_success or response.status_code == 404:
+            return
+        log.error(
+            "gotrue admin delete error",
+            extra={"status": response.status_code, "user_id": str(user_id)},
+        )
+        raise ApiException(INTERNAL_ERROR, message=AUTH_UNAVAILABLE_MESSAGE)
+
 
 def gotrue_error_code(payload: Any) -> str:
     """GoTrue's ``error_code``, or for releases that predate it a code derived from the
@@ -581,10 +633,13 @@ __all__ = [
     "EMAIL_NOT_CONFIRMED_MESSAGE",
     "IDEMPOTENT_RPCS",
     "INVALID_CREDENTIALS_MESSAGE",
+    "LOGICAL_OPERATORS",
     "RETRY_STATUSES",
     "SQLSTATE_ERRORS",
     "Filter",
     "SupabaseClient",
+    "all_of",
+    "any_of",
     "credit_counters",
     "encode_filters",
     "gotrue_error_code",

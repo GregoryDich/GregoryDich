@@ -14,6 +14,15 @@ data "aws_iam_policy_document" "sns_topic" {
 
 resource "aws_sns_topic" "alarms" {
   name = "${var.name}-alarms"
+
+  lifecycle {
+    # Terraform variable validation cannot look at another variable, so the
+    # "production needs a subscriber" rule lives here and fails the plan.
+    precondition {
+      condition     = !var.require_alarm_email || var.alarm_email != ""
+      error_message = "alarm_email is empty for a production environment: every alarm and budget notification would go to a topic with no subscriber. Set the ALARM_EMAIL repository variable (TF_VAR_alarm_email) or pass -var alarm_email=..."
+    }
+  }
 }
 
 resource "aws_sns_topic_policy" "alarms" {
@@ -167,4 +176,105 @@ resource "aws_budgets_budget" "monthly" {
   }
 
   depends_on = [aws_sns_topic_policy.alarms]
+}
+
+# ---------------------------------------------------------------------------
+# Kill switch at 100 % of the budget.
+#
+# AWS Budgets actions can only apply an IAM policy, an SCP or run the two SSM
+# stop-instance documents; none of them can set an ECS service or ASG desired
+# count. The closest native equivalent: attach a Deny on sqs:SendMessage for the
+# job queue to the API task role. POST /v1/jobs then answers 503
+# worker_unavailable and releases the credit in the same request (contract §2),
+# nothing new reaches the queue, the workers finish what is in flight and the
+# scale-in alarm (ecs-gpu-worker) brings the service back to worker_min_capacity
+# ten minutes later. With worker_min_capacity = 0 that is zero GPU spend. The
+# policy stays attached until an operator resets the action:
+#   aws budgets execute-budget-action --account-id <id> --budget-name <name> #     --action-id <budget_action_id output> --execution-type RESET_BUDGET_ACTION
+# (or detaches the policy by hand). Raise worker_min_capacity back only after that.
+# ---------------------------------------------------------------------------
+
+data "aws_iam_policy_document" "deny_job_intake" {
+  statement {
+    sid       = "BudgetExceededDenyJobIntake"
+    effect    = "Deny"
+    actions   = ["sqs:SendMessage"]
+    resources = [var.job_queue_arn]
+  }
+}
+
+resource "aws_iam_policy" "deny_job_intake" {
+  name        = "${var.name}-budget-deny-job-intake"
+  description = "Attached to the API task role by the budget action: no new jobs are enqueued once the monthly budget is spent."
+  policy      = data.aws_iam_policy_document.deny_job_intake.json
+}
+
+data "aws_iam_policy_document" "budget_action_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["budgets.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [var.account_id]
+    }
+  }
+}
+
+resource "aws_iam_role" "budget_action" {
+  name               = "${var.name}-budget-action"
+  assume_role_policy = data.aws_iam_policy_document.budget_action_assume.json
+}
+
+data "aws_iam_policy_document" "budget_action" {
+  statement {
+    sid       = "AttachDetachKillSwitchPolicy"
+    effect    = "Allow"
+    actions   = ["iam:AttachRolePolicy", "iam:DetachRolePolicy"]
+    resources = [var.api_task_role_arn]
+
+    condition {
+      test     = "ArnEquals"
+      variable = "iam:PolicyARN"
+      values   = [aws_iam_policy.deny_job_intake.arn]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "budget_action" {
+  name   = "apply-kill-switch"
+  role   = aws_iam_role.budget_action.id
+  policy = data.aws_iam_policy_document.budget_action.json
+}
+
+resource "aws_budgets_budget_action" "stop_job_intake" {
+  budget_name        = aws_budgets_budget.monthly.name
+  action_type        = "APPLY_IAM_POLICY"
+  approval_model     = "AUTOMATIC"
+  notification_type  = "ACTUAL"
+  execution_role_arn = aws_iam_role.budget_action.arn
+
+  action_threshold {
+    action_threshold_type  = "PERCENTAGE"
+    action_threshold_value = 100
+  }
+
+  definition {
+    iam_action_definition {
+      policy_arn = aws_iam_policy.deny_job_intake.arn
+      roles      = [var.api_task_role_name]
+    }
+  }
+
+  subscriber {
+    address           = aws_sns_topic.alarms.arn
+    subscription_type = "SNS"
+  }
+
+  depends_on = [aws_iam_role_policy.budget_action, aws_sns_topic_policy.alarms]
 }

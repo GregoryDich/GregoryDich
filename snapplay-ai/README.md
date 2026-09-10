@@ -161,10 +161,14 @@ the commands rather than trusting the numbers after the code moves.
 | Live API smoke test | uvicorn + a real HTTP/SSE/WebSocket client | **14/14 checks** — `/health` and `/v1/health`, anonymous `/v1/plans`, first-touch registration with the 3-credit grant, a full `POST /v1/jobs` → SSE `progress` events → `result` round trip returning four stems and a real MIDI file, credit reserve → capture in the ledger, `POST /v1/api-keys` and the key acting as its owner, and the WebSocket accepting `?token=` while rejecting its absence |
 | Docs | `@mermaid-js/mermaid-cli` over every fenced block | **9/9 mermaid diagrams render** |
 
-`terraform validate` on `infra/aws` is the documented check for the Terraform, and
-`deploy.yml` runs `terraform plan`, but **no Terraform binary is installed in this
-environment**, so neither was executed for this pass. The committed
-`.terraform.lock.hcl` records only the `linux_amd64` provider hash.
+`terraform fmt -check -recursive`, `terraform init -backend=false` and `terraform validate`
+were run on `infra/aws` with Terraform 1.9.8 and the pinned AWS provider 5.100.0 served
+from a local filesystem mirror (the registry is unreachable from this environment);
+`deploy.yml` runs `terraform plan`, applies, then runs `python -m app.checks` in the
+production environment. The committed `.terraform.lock.hcl` records only the
+`linux_amd64` provider hash. The GPU worker image (`infra/Dockerfile.worker`) could not
+be built here (no Docker daemon, no CUDA base image); its pins were checked against
+PyPI and hadolint, not built.
 
 ### Unverified — needs hardware, an account, or a DAW
 
@@ -188,12 +192,30 @@ environment**, so neither was executed for this pass. The committed
   engineered structures, which is not the same as FL Studio opening the file. `.mid`
   remains the guaranteed interchange path (contract §9).
 * **Social publishing.** Every TikTok / Meta / YouTube call is mocked. Real posting needs
-  app review and audits (see `docs/GROWTH.md` §5), and the AI-disclosure flags described
-  there are not implemented yet.
+  app review and audits (see `docs/GROWTH.md` §5). The AI-disclosure flags are set
+  (`growth/mcp_server/publishers/tiktok.py` `brand_organic_toggle` / `is_aigc`,
+  `youtube.py` `containsSyntheticMedia`) but no live platform has ever accepted them.
 * **The AWS deployment itself.** No account, so no ECS, ALB, SQS or GPU capacity provider
   has ever been created, and the scale-on-queue-depth behaviour is unobserved.
 * **Real-network timings.** The upload/download figures in `docs/ARCHITECTURE.md` §5 are
   arithmetic on assumed bandwidths.
+
+### Open launch blocker: the separation model is not licensed for commercial use
+
+The default separation model, Demucs `htdemucs` (also `htdemucs_ft`, `htdemucs_6s`),
+has MIT *code* but weights Meta publishes for research only, trained on a
+non-commercial dataset. A production worker therefore refuses to start with it
+(`SEPARATION_MODEL` gate in `backend/app/pipeline/separation.py`;
+`ALLOW_UNLICENSED_SEPARATION_MODEL=1` is for internal testing only). Three ways out,
+detailed in `docs/ARCHITECTURE.md` ("Separation model and licence"):
+
+1. a licence grant from Meta for the htdemucs weights;
+2. a commercially licensed RoFormer checkpoint (Mel-Band RoFormer, reportedly MIT —
+   verify the exact checkpoint and archive its model card);
+3. a commercial separation API, which turns the GPU line into a per-call price
+   (`docs/ECONOMICS.md` §3.4).
+
+None of the three is implemented; the table in `separation.py` is the extension point.
 
 ### Known residual risks (recorded, not fixed)
 

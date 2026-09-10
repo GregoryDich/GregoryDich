@@ -34,6 +34,7 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
+from pydantic import SecretStr
 
 from app.dependencies import get_services
 from app.errors import BAD_REQUEST, INVALID_SIGNATURE, NOT_FOUND, ApiException
@@ -469,16 +470,26 @@ def _json(raw: bytes) -> Mapping[str, Any]:
     return payload
 
 
+UNCONFIGURED_PROVIDER_MESSAGE = "This payment provider is not configured."
+
+
+def configured_secret(secret: SecretStr) -> str:
+    """The provider's webhook secret, or ``404 not_found`` when it is unset: a route with
+    no secret is not an open door but a provider this deployment does not sell through
+    (§4). Nothing is read from the body before this check."""
+    value = secret.get_secret_value()
+    if not value:
+        raise ApiException(NOT_FOUND, message=UNCONFIGURED_PROVIDER_MESSAGE)
+    return value
+
+
 @router.post("/lemonsqueezy", response_model=WebhookAck)
 async def lemonsqueezy(
     request: Request, services: Services = Depends(get_services)
 ) -> WebhookAck:
+    secret = configured_secret(services.settings.lemonsqueezy_webhook_secret)
     raw = await _raw_body(request)
-    verify_lemonsqueezy(
-        raw,
-        request.headers.get("x-signature"),
-        services.settings.lemonsqueezy_webhook_secret.get_secret_value(),
-    )
+    verify_lemonsqueezy(raw, request.headers.get("x-signature"), secret)
     event = parse_lemonsqueezy(_json(raw))
     if (
         event.event_type not in LEMONSQUEEZY_PURCHASE_EVENTS
@@ -490,12 +501,9 @@ async def lemonsqueezy(
 
 @router.post("/paddle", response_model=WebhookAck)
 async def paddle(request: Request, services: Services = Depends(get_services)) -> WebhookAck:
+    secret = configured_secret(services.settings.paddle_webhook_secret)
     raw = await _raw_body(request)
-    verify_paddle(
-        raw,
-        request.headers.get("paddle-signature"),
-        services.settings.paddle_webhook_secret.get_secret_value(),
-    )
+    verify_paddle(raw, request.headers.get("paddle-signature"), secret)
     event = parse_paddle(_json(raw))
     if event.event_type not in (
         "transaction.completed",

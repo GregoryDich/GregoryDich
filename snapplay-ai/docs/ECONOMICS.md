@@ -91,6 +91,24 @@ tier; above ≈ 1,500 jobs/day the CloudFront rate applies, and R2 is free at an
 
 The rest of this document uses **$0.0025 / job** as the variable cost.
 
+### 3.4 Licence cost line items (parameters, not yet priced)
+
+Three costs sit outside the per-job arithmetic above and are **unknown** until quotes
+are in hand; they are listed here so the model has a slot for each rather than an
+implicit zero. Sources and caveats: the launch research brief, §1 and §6.
+
+| # | item | type | value used here | what fixes it |
+|---|------|------|-----------------|---------------|
+| L1 | Rubber Band commercial licence (plugin pitch shifting) | one-time, perpetual, no royalties; two flavours (attribution / non-attribution) | **unknown** — no public price | quote from Breakfast Quay; or avoid the dependency by using JUCE's resampler for playback |
+| L2 | JUCE licence tier (plugin framework) | subscription or perpetual, tier by trailing-12-month gross revenue | Starter **$0** up to $20k/yr (no splash screen on JUCE 8+); Indie **$40–50 / month or $800–1,000 perpetual** (sources conflict) up to $500k; Pro **$130 / month or $2,600 perpetual** — all unconfirmed, verify on juce.com | crossing $20k/yr (≈ $55 / day) forces Indie; budget it from month one of revenue |
+| L3 | Separation model weights (`ARCHITECTURE.md`, "Separation model and licence") | one of: Meta grant (**unknown**, may be refused), licensed RoFormer checkpoint (**$0**, MIT — verify the exact checkpoint), commercial separation API (**unknown per-call price**) | not included in §3.3 | the choice decides whether §3.1 GPU seconds stay or become `separation_api_price_per_call`, added to the variable cost of every job |
+
+If L3 ends as a per-call API, re-run §3.3, §5 and §10 with
+`variable_cost = $0.0025 − GPU seconds + separation_api_price_per_call`; at $0.05 / call,
+for instance, the variable cost per job is 20 × today's figure and the pack margin in §5
+drops by 50 × $0.05 = $2.50 per pack. L1 and L2 are fixed costs and belong in §7's floor
+once known.
+
 ## 4. Payment fees
 
 LemonSqueezy is a merchant of record and charges 5 % + $0.50 per transaction (A12).

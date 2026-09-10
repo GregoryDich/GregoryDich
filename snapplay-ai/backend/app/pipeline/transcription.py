@@ -46,7 +46,8 @@ ONSET_THRESHOLD = 0.5
 FRAME_THRESHOLD = 0.3
 SHM_DIR = Path("/dev/shm")
 INSTALL_HINT = (
-    "install the GPU extras: pip install -r requirements-gpu.txt (basic-pitch, onnxruntime-gpu)"
+    "install the GPU extras: pip install -r requirements-gpu.txt && "
+    "pip install --no-deps basic-pitch==0.4.0 (basic-pitch, onnxruntime-gpu)"
 )
 
 
@@ -76,23 +77,41 @@ def require_extras() -> None:
 
 def _import_extras() -> tuple[Any, Any, Any]:
     try:
+        import basic_pitch
         import onnxruntime as ort
-        from basic_pitch import ICASSP_2022_MODEL_PATH, inference
+        from basic_pitch import inference
     except ImportError as exc:
         raise ImportError(
             f"Basic Pitch transcription needs basic-pitch and onnxruntime; {INSTALL_HINT}"
         ) from exc
-    return ort, ICASSP_2022_MODEL_PATH, inference
+    return ort, _onnx_model_path(basic_pitch), inference
+
+
+def _onnx_model_path(basic_pitch: Any) -> str:
+    """The bundled ONNX checkpoint. ``ICASSP_2022_MODEL_PATH`` points at whichever backend
+    basic-pitch found at import time (TensorFlow or TFLite when installed), so the ONNX
+    file is selected explicitly and the pipeline does not depend on what else the image
+    happens to contain."""
+    build = getattr(basic_pitch, "build_icassp_2022_model_path", None)
+    suffix = getattr(getattr(basic_pitch, "FilenameSuffix", None), "onnx", None)
+    if build is not None and suffix is not None:
+        return str(build(suffix))
+    return str(basic_pitch.ICASSP_2022_MODEL_PATH)
 
 
 def _session(ort: Any, path: str) -> Any:
+    """A session with the best available providers: the list is shortened from the front
+    until one loads, so a TensorRT runtime that is compiled in but not installed still
+    leaves CUDA in play instead of dropping straight to the CPU."""
     available = set(ort.get_available_providers())
     wanted = [p for p in PROVIDERS if p in available] or ["CPUExecutionProvider"]
-    try:
-        return ort.InferenceSession(path, providers=wanted)
-    except Exception as exc:
-        log.warning("onnxruntime providers %s failed (%s); falling back to CPU", wanted, exc)
-        return ort.InferenceSession(path, providers=["CPUExecutionProvider"])
+    while len(wanted) > 1:
+        try:
+            return ort.InferenceSession(path, providers=wanted)
+        except Exception as exc:
+            log.warning("onnxruntime provider %s failed (%s); trying without it", wanted[0], exc)
+            wanted = wanted[1:]
+    return ort.InferenceSession(path, providers=wanted)
 
 
 def load_model() -> LoadedTranscriber:

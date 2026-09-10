@@ -17,6 +17,8 @@ services:
     environment:
       SNAPPLAY_PIPELINE: ${SNAPPLAY_PIPELINE:-fake}
       AWS_REGION: ${AWS_REGION:-us-east-1}
+      # Kill switch: "true" makes the API refuse new job submissions.
+      MAINTENANCE_MODE: ${MAINTENANCE_MODE:-false}
     ports:
       - "8080:8080"
     volumes:
@@ -54,7 +56,9 @@ services:
         required: false
     environment:
       WORKER_MODE: ${WORKER_MODE:-aws}
+      SERVICE_ROLE: worker
       SNAPPLAY_PIPELINE: ${WORKER_PIPELINE:-local}
+      SEPARATION_MODEL: ${SEPARATION_MODEL:-htdemucs}
       AWS_REGION: ${AWS_REGION:-us-east-1}
     runtime: nvidia
     deploy:
