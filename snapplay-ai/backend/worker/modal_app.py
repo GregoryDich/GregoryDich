@@ -97,9 +97,10 @@ def build_app() -> tuple[Any, type]:
     class SnapPlayWorker:
         @modal.enter()
         def warm_up(self) -> None:
-            from app.pipeline.real import warm_up
+            from app.config import get_settings
+            from worker.common import warm_up_pipeline
 
-            warm_up()
+            warm_up_pipeline(get_settings())
 
         @modal.method()
         def run(

@@ -87,6 +87,14 @@ class Settings(BaseSettings):
     weights is recorded in ``app.pipeline.separation.SEPARATION_MODELS``; a production
     worker refuses one that is not licensed for commercial use."""
 
+    @field_validator("sentry_dsn")
+    @classmethod
+    def _sentry_dsn_is_https(cls, value: str) -> str:
+        value = value.strip()
+        if value and not value.startswith("https://"):
+            raise ValueError("SENTRY_DSN must be an https:// DSN")
+        return value
+
     @field_validator("separation_model")
     @classmethod
     def _check_separation_model(cls, value: str) -> str:
@@ -107,6 +115,8 @@ class Settings(BaseSettings):
     maintenance_mode: bool = False
     """When set, ``POST /v1/jobs`` answers ``503 service_unavailable`` (§2, §5); every
     other route keeps working, so results and balances stay readable."""
+    sentry_dsn: str = ""
+    """Sentry DSN; empty disables error reporting (see ``app/observability.py``)."""
 
     # Browser origins allowed by CORS; "*" allows any origin.
     cors_allow_origins: list[str] = ["*"]

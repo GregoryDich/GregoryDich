@@ -155,6 +155,13 @@ variable "alarm_email" {
   default     = ""
 }
 
+variable "sentry_dsn" {
+  description = "SENTRY_DSN for the API and worker tasks; empty disables error reporting. The CI passes the SENTRY_DSN repository secret through TF_VAR_sentry_dsn."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "maintenance_mode" {
   description = "MAINTENANCE_MODE for the API tasks (kill switch): when true the API stops accepting new job submissions. The CI passes the MAINTENANCE_MODE repository variable through TF_VAR_maintenance_mode."
   type        = bool

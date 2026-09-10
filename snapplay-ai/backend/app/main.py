@@ -23,6 +23,7 @@ from app.config import Settings, get_settings
 from app.errors import install_exception_handlers
 from app.middleware.body_limit import BodyLimitMiddleware
 from app.middleware.rate_limit import RateLimits
+from app.observability import init_sentry
 from app.routers import api_keys, auth, credits, health, jobs, me, plans, webhooks
 from app.services.factory import build_services
 
@@ -127,6 +128,7 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings if settings is not None else get_settings()
     configure_logging(settings)
+    init_sentry(settings, role="api")
 
     app = FastAPI(
         title="SnapPlay AI API",

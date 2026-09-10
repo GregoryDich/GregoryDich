@@ -673,9 +673,10 @@ EV-сертификат больше не даёт мгновенного обх
   1. sentry.io → Sign up → организация `<name>` → **Create Project** → platform **Python
      → FastAPI** → name `api` → Create.
   2. Скопируй **DSN** (`https://…@….ingest.sentry.io/…`).
-  3. 🔑 В backend `.env` под именем, которое я добавлю в `config.py` при шаге 6 плана
-     (планируемое имя `SENTRY_DSN`; пока в коде его **нет**). Второй проект `worker` —
-     тот же DSN или отдельный, положим в Modal-секрет.
+  3. 🔑 В backend `.env` как `SENTRY_DSN` (уже в `config.py`; пустое значение = выключено).
+     Для AWS — GitHub Secret `SENTRY_DSN` (deploy.yml передаёт его в Terraform как
+     `TF_VAR_sentry_dsn`), для Modal — та же переменная в секрете `snapplay-supabase`.
+     Воркеры и API помечаются тегом `role`, отдельный проект не нужен.
   4. ✅ После деплоя: `curl https://api.<domain>/v1/jobs/00000000-0000-0000-0000-000000000000`
      без токена → 401, а событий в Sentry нет (401 — не ошибка); тестовое исключение
      пришлю я через отладочный роут и удалю его.

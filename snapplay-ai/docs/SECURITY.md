@@ -320,6 +320,11 @@ signature header or a request body (rule shared across all components).
   job metadata (durations, BPM, key, error codes) are retained for accounting.
 * Emails live in `profiles` and the payment provider; the plugin never sees another
   user's email, and API-key rows expose only the prefix.
+* Error reports (Sentry, on only when `SENTRY_DSN` is set) follow the same rule:
+  `app/observability.py` strips request headers, cookies, bodies and query strings and
+  reduces the user block to its id before an event leaves the process; `send_default_pii`
+  is off, request bodies are never captured and performance tracing is disabled. The
+  API and the workers share one DSN and are told apart by the `role` tag.
 
 ### Data-subject rights (GDPR Art. 15, 17, 20)
 

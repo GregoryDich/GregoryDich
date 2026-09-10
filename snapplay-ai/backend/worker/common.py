@@ -31,6 +31,7 @@ from pydantic import ValidationError
 
 from app.config import Settings, get_settings
 from app.errors import INTERNAL_ERROR
+from app.observability import init_sentry
 from app.pipeline import PipelineError, get_pipeline, separation
 from app.pipeline.base import STAGE_SEPARATE, RunPipeline
 from app.schemas import JobResult, JobStatus, PipelineOptions, PipelineResult, StemResult
@@ -115,9 +116,11 @@ def load_pipeline(settings: Settings) -> RunPipeline:
 
 
 def warm_up_pipeline(settings: Settings) -> None:
-    """Call the backend's ``warm_up`` (model loading) when it defines one."""
+    """Start-up hook every worker calls once: error reporting, then the backend's
+    ``warm_up`` (model loading) when it defines one."""
     from importlib import import_module
 
+    init_sentry(settings, role="worker")
     module = import_module(f"app.pipeline.{settings.snapplay_pipeline}")
     warm = getattr(module, "warm_up", None)
     if callable(warm):

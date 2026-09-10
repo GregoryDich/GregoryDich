@@ -178,6 +178,7 @@ module "ecs_api" {
     SNAPPLAY_PIPELINE = "aws"
     SERVICE_ROLE      = "api"
     MAINTENANCE_MODE  = tostring(var.maintenance_mode)
+    SENTRY_DSN        = var.sentry_dsn
   })
   secrets = local.api_secrets
 }
@@ -203,6 +204,7 @@ module "ecs_gpu_worker" {
     WORKER_MODE       = "aws"
     SERVICE_ROLE      = "worker"
     SNAPPLAY_PIPELINE = "local"
+    SENTRY_DSN        = var.sentry_dsn
   })
   secrets = local.worker_secrets
 }

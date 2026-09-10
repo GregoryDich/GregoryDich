@@ -19,6 +19,7 @@ services:
       AWS_REGION: ${AWS_REGION:-us-east-1}
       # Kill switch: "true" makes the API refuse new job submissions.
       MAINTENANCE_MODE: ${MAINTENANCE_MODE:-false}
+      SENTRY_DSN: ${SENTRY_DSN:-}
     ports:
       - "8080:8080"
     volumes:
@@ -59,6 +60,7 @@ services:
       SERVICE_ROLE: worker
       SNAPPLAY_PIPELINE: ${WORKER_PIPELINE:-local}
       SEPARATION_MODEL: ${SEPARATION_MODEL:-htdemucs}
+      SENTRY_DSN: ${SENTRY_DSN:-}
       AWS_REGION: ${AWS_REGION:-us-east-1}
     runtime: nvidia
     deploy:
