@@ -521,7 +521,7 @@ EV-сертификат больше не даёт мгновенного обх
   cd snapplay-ai/backend
   SNAPPLAY_MODAL_GPU=A10G modal deploy -m worker.modal_app
   ```
-  ✅ Dashboard → **Apps → `snapplay-worker`** → класс `SnapPlayWorker`, статус Deployed.
+  ✅ Dashboard → **Apps → `snapplay-worker`** → класс воркера (`CLASS_NAME` из `backend/worker/modal_app.py`), статус Deployed.
   Затем `python3 scripts/benchmark_modal.py` (пишу я) печатает p50/p95 по стадиям; цель
   p95 < 2.0 с на A10G без учёта сети. Первая задача после простоя — холодный контейнер
   плюс загрузка модели, ожидай до 1–2 минут; это учитывается в бета-плане.
