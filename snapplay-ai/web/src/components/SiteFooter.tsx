@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { brand } from "@/lib/brand";
 import { LEGAL_DOCUMENTS, LEGAL_SLUGS } from "@/lib/legal";
+import { CookieSettingsButton } from "./CookieSettingsButton";
 import { LogoMark } from "./Logo";
 
 const PRODUCT_LINKS = [
@@ -45,7 +46,10 @@ export function SiteFooter() {
           <p>
             © {year} {brand.companyLegalName}. All rights reserved.
           </p>
-          <p>Purchases are processed by {brand.merchantOfRecord} as merchant of record.</p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <p>Purchases are processed by {brand.merchantOfRecord} as merchant of record.</p>
+            <CookieSettingsButton className="underline underline-offset-4 hover:text-ink" />
+          </div>
         </div>
       </div>
     </footer>

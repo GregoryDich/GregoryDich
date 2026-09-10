@@ -31,7 +31,7 @@ This file lists every third-party component that [[PRODUCT_NAME]] ships, runs or
 | 7 | **Remotion 4.0.521** (`growth/remotion/package.json`) | **ACTION REQUIRED** | Founder | The Remotion Licence grants free use (including commercial) to individuals and to for-profit organisations with **up to 3 employees**; larger for-profit companies need a paid Company Licence. A sole proprietor qualifies for the free tier today. **Re-check the moment the business incorporates or takes on a fourth person**, and note that Remotion 5 changes the licence text. |
 | 8 | **Plugin notice file / About box** | **ACTION REQUIRED** | Plugin | The BSD, Apache-2.0, MIT-style and IJG licences of components compiled into the plugin (section 3.1) require their copyright notices and disclaimers to be reproduced "in the documentation and/or other materials provided with the distribution". **Bundle this file with every installer and expose it from the plugin's About screen.** The texts are in the JUCE tree at the paths given in section 3.1; the ones with the strictest wording (FLAC, Ogg Vorbis) are reproduced in Appendix B. |
 | 9 | **Worker-image transitive dependencies** | **ACTION REQUIRED** | Backend | `torch`, `demucs`, `basic-pitch` and `onnxruntime-gpu` are not installed on the build machine (no GPU wheels), so their transitive dependencies could not be enumerated here. Demucs pulls in at least `openunmix` (MIT), `julius` (MIT), `einops` (MIT), `torchaudio` (BSD-2) and `lameenc` (reported LGPL — confirm); Basic Pitch's own NOTICE (Appendix A.5) lists librosa (ISC), mir_eval (MIT), pretty_midi (MIT), resampy (ISC), scipy (BSD-3) and tensorflow (Apache-2.0). **Run `pip-licenses --format=markdown` inside the built worker image and paste the result into section 3.3.** Also confirm the NVIDIA CUDA 12.4.1 / cuDNN base image terms (NVIDIA Deep Learning Container Licence) permit our hosted use — they do for running containers, but record it. |
-| 10 | **Website (`web/`)** | **ACTION REQUIRED** | Web | Not in the repository at the time of writing. When it lands, run `npx license-checker --production --markdown` and add a section 3.6 (expected: Next.js MIT, `@supabase/ssr` MIT, `@vercel/analytics` — check its licence, Klaviyo snippet — proprietary service terms). |
+| 10 | **Website (`web/`)** | OK (verified) | Web | Enumerated with `npx license-checker --production` on 2026-09-10 (140 packages): MIT 124, Apache-2.0 5, ISC 3, BSD-3-Clause 1, 0BSD 1, MPL-2.0 1 (`@vercel/analytics`, unmodified, file-level copyleft only), CC-BY-4.0 1 (`caniuse-lite`, browser-support data), LGPL-3.0-or-later 2 (`@img/sharp-libvips-*`, Next.js image optimisation, runs only on the Vercel server and is never distributed). Nothing in the site bundle is copyleft. Re-run the command after any dependency change; details in section 3.6. |
 | 11 | **Services used by the growth tool** (not software licences) | **ACTION REQUIRED** | Growth | ElevenLabs text-to-speech: commercial use of generated voice in advertising requires a paid plan under ElevenLabs' terms — confirm the plan. Free Music Archive tracks: per-track Creative Commons terms, enforced in code (`growth/mcp_server/licensing.py` drops NC/ND). TikTok, Meta and YouTube developer terms apply to the publishers. None of these are redistributed software; they are listed for completeness. |
 
 ### 2. Separation-model replacement candidates (for action 1)
@@ -147,7 +147,23 @@ Everything in 3.2 plus `backend/requirements-gpu.txt`. None of these packages co
 
 ### 3.6 Website (`web/`)
 
-Pending — see action 10.
+Hosted on Vercel; the browser receives compiled JavaScript, not the packages themselves.
+Direct dependencies (`web/package.json`) and the licence of the whole production tree as
+reported by `npx license-checker --production --csv` on 2026-09-10:
+
+| Component | Version | Licence | Where | Obligation |
+|---|---|---|---|---|
+| Next.js (`next`) | 15.5.x | MIT | server + browser bundle | Notice in this file. |
+| React / React DOM | 19.x | MIT | server + browser bundle | Notice in this file. |
+| `@supabase/supabase-js`, `@supabase/ssr` | 2.x / 0.12.x | MIT | server + browser bundle | Notice in this file. |
+| `react-markdown`, `remark-gfm` | 10.x / 4.x | MIT | build time (legal pages are pre-rendered) | Notice in this file. |
+| `@vercel/analytics` | 1.6.x | MPL-2.0 | browser bundle | File-level copyleft on the MPL files only; we ship them unmodified, so no source obligation beyond keeping the notice. |
+| `@img/sharp-libvips-linux-x64`, `-linuxmusl-x64` (via `sharp`, pulled in by Next.js image optimisation) | 1.3.x | LGPL-3.0-or-later | Vercel server only, never distributed | None while it stays server-side; do not bundle it into any downloadable artefact. |
+| `caniuse-lite` (via browserslist) | data package | CC-BY-4.0 | build time | Attribution: "Data from caniuse.com" is carried by the package itself. |
+| Everything else (transitive) | — | MIT / Apache-2.0 / ISC / BSD / 0BSD | build or server | Notices aggregated by the command above. |
+
+Paddle.js (`cdn.paddle.com`) and the optional Klaviyo snippet are loaded from their vendors
+at run time under those vendors' service terms; they are not part of the repository.
 
 ---
 

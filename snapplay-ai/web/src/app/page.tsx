@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AttributedLink } from "@/components/AttributedLink";
 import { DemoVideo } from "@/components/DemoVideo";
 import { staticPlans, planCopy } from "@/content/pricing";
 import { brand } from "@/lib/brand";
@@ -91,12 +92,12 @@ export default function HomePage() {
             your keyboard — in key, on tempo, inside your DAW.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link href="/signup" className="btn btn-primary btn-lg">
+            <AttributedLink href="/signup" className="btn btn-primary btn-lg">
               Start free — 3 credits, no card
-            </Link>
-            <Link href="/download" className="btn btn-secondary btn-lg">
+            </AttributedLink>
+            <AttributedLink href="/download" className="btn btn-secondary btn-lg">
               Download the plugin
-            </Link>
+            </AttributedLink>
           </div>
         </div>
         <div className="mt-14">
@@ -198,9 +199,9 @@ export default function HomePage() {
             <h2 className="text-2xl font-semibold tracking-tight">Three clips on us.</h2>
             <p className="mt-1 text-ink-muted">Create an account, install the plugin, sign in inside it. No card required.</p>
           </div>
-          <Link href="/signup" className="btn btn-primary btn-lg">
+          <AttributedLink href="/signup" className="btn btn-primary btn-lg">
             Create free account
-          </Link>
+          </AttributedLink>
         </div>
       </section>
     </>

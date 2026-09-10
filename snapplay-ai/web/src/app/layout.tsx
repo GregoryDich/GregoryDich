@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Analytics } from "@vercel/analytics/next";
 import { AttributionCapture } from "@/components/AttributionCapture";
 import { CookieConsent } from "@/components/CookieConsent";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -55,9 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <SiteFooter />
         <CookieConsent />
-        <AttributionCapture />
-        <Analytics />
-      </body>
+        <AttributionCapture />      </body>
     </html>
   );
 }

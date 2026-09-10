@@ -11,20 +11,21 @@ import { formatDate } from "./format";
  * Any placeholder that is not in the list below fails the build.
  */
 
-export const LEGAL_SLUGS = ["terms", "privacy", "refunds", "copyright", "cookies", "eula"] as const;
+export const LEGAL_SLUGS = ["terms", "privacy", "refunds", "copyright", "cookies", "eula", "third-party"] as const;
 export type LegalSlug = (typeof LEGAL_SLUGS)[number];
 
 export const LEGAL_DOCUMENTS: Record<LegalSlug, { file: string; title: string }> = {
-  terms: { file: "terms-of-service.md", title: "Terms of Service" },
-  privacy: { file: "privacy-policy.md", title: "Privacy Policy" },
-  refunds: { file: "refund-policy.md", title: "Refund Policy" },
-  copyright: { file: "copyright-policy.md", title: "Copyright Policy" },
-  cookies: { file: "cookie-policy.md", title: "Cookie Policy" },
-  eula: { file: "eula.md", title: "End-User Licence Agreement" },
+  terms: { file: "legal/terms-of-service.md", title: "Terms of Service" },
+  privacy: { file: "legal/privacy-policy.md", title: "Privacy Policy" },
+  refunds: { file: "legal/refund-policy.md", title: "Refund Policy" },
+  copyright: { file: "legal/copyright-policy.md", title: "Copyright Policy" },
+  cookies: { file: "legal/cookie-policy.md", title: "Cookie Policy" },
+  eula: { file: "legal/eula.md", title: "End-User Licence Agreement" },
+  "third-party": { file: "THIRD_PARTY_LICENSES.md", title: "Third-Party Licences" },
 };
 
-/** `<repo>/legal`, relative to this package (`<repo>/web`). */
-export const DEFAULT_LEGAL_DIR = path.resolve(process.cwd(), "..", "legal");
+/** The repository root, relative to this package (`<repo>/web`); document paths are relative to it. */
+export const DEFAULT_LEGAL_DIR = path.resolve(process.cwd(), "..");
 
 export const LEGAL_TOKEN_NAMES = [
   "PRODUCT_NAME",

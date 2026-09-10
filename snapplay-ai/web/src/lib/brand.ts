@@ -23,6 +23,8 @@ const raw = {
   billingPortalUrl: process.env.NEXT_PUBLIC_BILLING_PORTAL_URL,
   klaviyoCompanyId: process.env.NEXT_PUBLIC_KLAVIYO_COMPANY_ID,
   downloadBaseUrl: process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL,
+  paddleClientToken: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
+  paddleEnv: process.env.NEXT_PUBLIC_PADDLE_ENV,
 };
 
 function text(value: string | undefined, fallback: string): string {
@@ -62,6 +64,9 @@ export const brand = {
   companyAddress: text(raw.companyAddress, ""),
   companyRegId: text(raw.companyRegId, ""),
   merchantOfRecord: text(raw.merchantOfRecord, "Paddle"),
+  /** Paddle.js client-side token; null disables /checkout. */
+  paddleClientToken: optional(raw.paddleClientToken),
+  paddleEnvironment: (raw.paddleEnv?.trim() === "sandbox" ? "sandbox" : "production") as "sandbox" | "production",
   /** ISO date (YYYY-MM-DD) the legal documents took effect. */
   legalEffectiveDate: text(raw.legalEffectiveDate, "2026-09-09"),
   /** Backend base URL (contract base URL, no trailing slash). Null disables live data. */

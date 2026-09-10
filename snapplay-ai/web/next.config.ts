@@ -19,11 +19,13 @@ function origin(value: string | undefined): string | null {
 const supabaseOrigin = origin(process.env.NEXT_PUBLIC_SUPABASE_URL);
 const apiOrigin = origin(process.env.NEXT_PUBLIC_API_URL);
 const klaviyoEnabled = Boolean(process.env.NEXT_PUBLIC_KLAVIYO_COMPANY_ID?.trim());
+const paddleEnabled = Boolean(process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN?.trim());
 const isDev = process.env.NODE_ENV === "development";
 
 const scriptSrc = ["'self'", "'unsafe-inline'", "https://va.vercel-scripts.com"];
 const connectSrc = ["'self'", "https://vitals.vercel-insights.com"];
 const imgSrc = ["'self'", "data:", "blob:"];
+const frameSrc: string[] = [];
 if (isDev) scriptSrc.push("'unsafe-eval'");
 if (supabaseOrigin) {
   connectSrc.push(supabaseOrigin, supabaseOrigin.replace(/^http/, "ws"));
@@ -34,6 +36,13 @@ if (klaviyoEnabled) {
   connectSrc.push("https://a.klaviyo.com", "https://static.klaviyo.com", "https://static-tracking.klaviyo.com");
   imgSrc.push("https://static.klaviyo.com", "https://a.klaviyo.com");
 }
+if (paddleEnabled) {
+  // Paddle.js and the overlay checkout it opens in an iframe.
+  scriptSrc.push("https://cdn.paddle.com");
+  connectSrc.push("https://*.paddle.com");
+  imgSrc.push("https://*.paddle.com");
+  frameSrc.push("https://buy.paddle.com", "https://sandbox-buy.paddle.com", "https://cdn.paddle.com");
+}
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -43,6 +52,7 @@ const contentSecurityPolicy = [
   "font-src 'self'",
   `connect-src ${connectSrc.join(" ")}`,
   "media-src 'self'",
+  `frame-src ${frameSrc.length > 0 ? frameSrc.join(" ") : "'none'"}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
