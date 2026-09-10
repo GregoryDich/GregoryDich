@@ -7,6 +7,7 @@
 # SHA-1; auto-detected from the keychain when unset), BUILD_DIR, BUILD_STANDALONE=1 to
 # include the Standalone app, DRY_RUN=1.
 
+# shellcheck source=../common/lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/../common/lib.sh"
 
 load_product_env

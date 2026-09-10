@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Shared helpers for the bash packaging scripts. Source it, do not execute it:
 #
 #   source "$(dirname "${BASH_SOURCE[0]}")/../common/lib.sh"
@@ -115,11 +116,14 @@ au_bundle()         { printf '%s/AU/%s.component' "$(artefact_dir)" "${PRODUCT_N
 standalone_bundle() { printf '%s/Standalone/%s.app' "$(artefact_dir)" "${PRODUCT_NAME}"; }
 bundle_binary()     { printf '%s/Contents/MacOS/%s' "$1" "${PRODUCT_NAME}"; }
 
-# Writes the installer licence text: legal/eula.md rendered to plain text, or a placeholder
-# (with a warning) when the EULA does not exist yet. See common/eula_to_txt.py for the flags.
-write_license_text() {
-    local out="$1"
-    local -a flags=(--missing-ok)
+# Renders a Markdown legal document to the plain text the installers embed, or a placeholder
+# (with a warning) when the source does not exist yet. See common/eula_to_txt.py for the flags.
+write_legal_text() {
+    local src="$1" out="$2" title="$3"
+    local -a flags=(--missing-ok --placeholder-title "${title}")
     [[ "${ALLOW_LICENSE_PLACEHOLDER:-0}" == "1" ]] && flags+=(--unresolved-ok)
-    run "${PYTHON}" "${PACKAGING_DIR}/common/eula_to_txt.py" "${REPO_DIR}/legal/eula.md" "${out}" "${flags[@]}"
+    run "${PYTHON}" "${PACKAGING_DIR}/common/eula_to_txt.py" "${src}" "${out}" "${flags[@]}"
 }
+write_license_text() { write_legal_text "${REPO_DIR}/legal/eula.md" "$1" "End User Licence Agreement"; }
+write_notices_text() { write_legal_text "${REPO_DIR}/THIRD_PARTY_LICENSES.md" "$1" "Third-Party Notices"; }
+notices_file_name()  { printf '%s Third-Party Notices.txt' "${PRODUCT_NAME}"; }

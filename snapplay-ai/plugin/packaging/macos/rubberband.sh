@@ -11,6 +11,7 @@
 # Rubber Band is GPL-2.0-or-later OR commercial: a closed-source release needs the commercial
 # licence (see research/legal notes) - this script only builds it.
 
+# shellcheck source=../common/lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/../common/lib.sh"
 
 RUBBERBAND_GIT="${RUBBERBAND_GIT:-https://github.com/breakfastquay/rubberband.git}"

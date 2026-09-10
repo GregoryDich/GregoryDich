@@ -3,7 +3,9 @@
 
 Standard library only, so it runs on every CI runner as-is:
 
-    eula_to_txt.py INPUT.md OUTPUT.txt [--missing-ok] [--unresolved-ok]
+    eula_to_txt.py INPUT.md OUTPUT.txt [--missing-ok] [--unresolved-ok] [--placeholder-title T]
+
+Also used for THIRD_PARTY_LICENSES.md (same placeholder set and comment syntax).
 
 Conversion: HTML comments are removed, headings become upper-case lines, list items become
 "- item", tables become tab-separated rows, inline emphasis/code/links are flattened.
@@ -139,16 +141,16 @@ def convert(markdown: str, values: Mapping[str, str]) -> str:
     return markdown_to_text(substitute_placeholders(markdown, values))
 
 
-def placeholder_text(product_name: str, reason: str) -> str:
+def placeholder_text(product_name: str, reason: str, title: str, source: str) -> str:
     name = product_name or "this product"
     return (
-        "END USER LICENCE AGREEMENT - PLACEHOLDER\n"
+        f"{title.upper()} - PLACEHOLDER\n"
         "\n"
-        f"The licence text for {name} was not available when this installer was built\n"
+        f"The {title.lower()} text for {name} was not available when this installer was built\n"
         f"({reason}).\n"
         "\n"
         "THIS BUILD IS FOR INTERNAL TESTING ONLY AND MUST NOT BE DISTRIBUTED.\n"
-        "Add legal/eula.md (and the COMPANY_* / *_EMAIL / EFFECTIVE_* repository variables)\n"
+        f"Add {source} (and the COMPANY_* / *_EMAIL / EFFECTIVE_* repository variables)\n"
         "and rebuild the release before publishing it.\n"
     )
 
@@ -173,6 +175,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="write a placeholder licence and warn when INPUT does not exist",
     )
     parser.add_argument(
+        "--placeholder-title",
+        default="End User Licence Agreement",
+        help="heading of the placeholder text (e.g. 'Third-Party Notices')",
+    )
+    parser.add_argument(
         "--unresolved-ok",
         action="store_true",
         help="write a placeholder licence and warn when [[TOKENS]] have no value (dry runs only)",
@@ -189,7 +196,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"{args.input} does not exist; the installer licence is a PLACEHOLDER."
             " Do not publish this release."
         )
-        text = placeholder_text(product_name, "legal/eula.md is missing")
+        text = placeholder_text(product_name, f"{args.input.name} is missing", args.placeholder_title, args.input.name)
     else:
         try:
             text = convert(args.input.read_text(encoding="utf-8"), values)
@@ -202,7 +209,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
                 return 2
             _warn(f"{error}; the installer licence is a PLACEHOLDER. Do not publish this release.")
-            text = placeholder_text(product_name, str(error))
+            text = placeholder_text(product_name, str(error), args.placeholder_title, args.input.name)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(text, encoding="utf-8", newline="\n")

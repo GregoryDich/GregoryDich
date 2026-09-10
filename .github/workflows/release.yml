@@ -314,14 +314,14 @@ jobs:
               echo "> Dry run from workflow_dispatch - not a release."
               echo
             fi
-            if [ -f ../legal/eula.md ]; then
-              :
-            else
-              echo "> **DO NOT PUBLISH.** \`legal/eula.md\` did not exist when these installers were built;"
-              echo "> they embed a placeholder licence. Add the EULA and rebuild the tag."
-              echo
-            fi
-            if ls dist | grep -q -- '-unsigned'; then
+            for doc in ../legal/eula.md ../THIRD_PARTY_LICENSES.md; do
+              if [ ! -f "$doc" ]; then
+                echo "> **DO NOT PUBLISH.** \`${doc#../}\` did not exist when these installers were built;"
+                echo "> they embed a placeholder in its place. Add it and rebuild the tag."
+                echo
+              fi
+            done
+            if compgen -G "dist/*-unsigned*" > /dev/null; then
               echo "> **DO NOT PUBLISH.** These assets are unsigned (signing secrets were absent)."
               echo
             fi

@@ -233,3 +233,150 @@ a worker thread either: `ApiClient` delivers every completion through
 `juce::ChangeBroadcaster`, the processor coalesces stem reloads with a
 `juce::AsyncUpdater`, and the editor refreshes on a `juce::Timer`.
 [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) §7 is the long version.
+
+## Packaging and releases
+
+`packaging/` turns a git tag into a notarized macOS `.pkg` and a signed Windows installer,
+and `.github/workflows/release.yml` runs it on every `v*` tag. Everything reads the product
+identity (name, slug, bundle id, vendor, plugin codes, minimum macOS) from **one file,
+`packaging/product.env`** — when the product is renamed, change that file and
+`CMakeLists.txt` and nothing else. The version is the tag (`v1.2.3` → `1.2.3`; `v1.2.3-rc1`
+keeps the suffix in file names and uses `1.2.3` where installers need digits) and is passed to
+CMake as `-DSNAPPLAY_VERSION`, so the binaries report the tagged version.
+
+```
+packaging/
+  product.env                 the single source of product identity
+  common/lib.sh               shared bash helpers (version, paths, DRY_RUN)
+  common/eula_to_txt.py       legal/eula.md and THIRD_PARTY_LICENSES.md → installer text
+  macos/  build.sh  sign.sh  auval.sh  package.sh  notarize.sh  rubberband.sh
+          entitlements.plist  entitlements-standalone.plist  distribution.xml.in
+  windows/ build.ps1  sign.ps1  package.ps1  rubberband.ps1  installer.iss  Common.ps1
+  checksums.sh                SHA256SUMS for the release assets
+```
+
+Both builds compile Rubber Band 3.3.0 from source as a static library (`rubberband.sh` /
+`rubberband.ps1`, pinned to the tag's commit): a universal macOS binary cannot link
+Homebrew's single-architecture dylib, and a shipped plug-in must not depend on
+`/opt/homebrew/lib`. Rubber Band is GPL-or-commercial — a closed-source release needs the
+commercial licence.
+
+### One-time setup
+
+**Apple (macOS signing and notarization)** — needs an Apple Developer Program membership.
+
+1. Create the two certificates: Xcode → Settings → Accounts → *Manage Certificates…* → `+` →
+   **Developer ID Application** and **Developer ID Installer** (or on developer.apple.com →
+   Certificates with a CSR from Keychain Access).
+2. In Keychain Access select *both* certificates (with their private keys), *File → Export
+   Items…*, format `.p12`, choose a password. Then
+   `base64 -i certificates.p12 | pbcopy`.
+3. Notarization credentials — prefer an API key: App Store Connect → Users and Access →
+   *Integrations* → *App Store Connect API* → *Team Keys* → *Generate API Key*, role
+   **Developer**. Note the Key ID and Issuer ID and download the `.p8` (only offered once).
+   Fallback: an app-specific password from appleid.apple.com → *Sign-In and Security* →
+   *App-Specific Passwords*, plus your Team ID (developer.apple.com → Membership).
+4. Create these **repository secrets** (Settings → Secrets and variables → Actions):
+
+   | secret | value |
+   |--------|-------|
+   | `MACOS_CERT_P12_BASE64` | the base64 from step 2 |
+   | `MACOS_CERT_PASSWORD` | the `.p12` password |
+   | `NOTARY_KEY_ID`, `NOTARY_ISSUER_ID` | from step 3 |
+   | `NOTARY_KEY_P8` | the full contents of the `.p8` file |
+   | *or* `NOTARY_APPLE_ID`, `NOTARY_PASSWORD`, `NOTARY_TEAM_ID` | Apple ID, app-specific password, Team ID |
+
+**Windows (Authenticode)** — two options; the workflow picks Azure when its six secrets exist,
+the PFX otherwise.
+
+- *Azure Artifact Signing* (formerly Trusted Signing; open to individuals, Basic tier
+  $9.99/month): in the Azure portal create an **Artifact Signing account** (region e.g. West
+  Europe), complete **Identity validation → Individual** (government photo ID plus a selfie
+  through Entra Verified ID; it can take a few days), then create a **Certificate profile** of
+  type *Public Trust*. Create an **App registration** in Entra ID with a client secret and give
+  it the *Trusted Signing Certificate Profile Signer* role on the account. Secrets:
+  `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_ENDPOINT` (the account's
+  endpoint URL, e.g. `https://weu.codesigning.azure.net`), `AZURE_CODE_SIGNING_ACCOUNT` (account
+  name), `AZURE_CERT_PROFILE` (profile name).
+- *OV certificate from a CA*: since 2023 CAs deliver OV/EV keys on hardware tokens or cloud
+  HSMs, so only a certificate you can export as a software `.pfx` (or a CA cloud-signing PFX)
+  works in CI. Secrets: `WINDOWS_PFX_BASE64` (`base64 -w0 cert.pfx`) and
+  `WINDOWS_PFX_PASSWORD`. EV costs more and no longer buys any SmartScreen advantage.
+
+**Licence text** — the installers embed `legal/eula.md` (licence page) and
+`THIRD_PARTY_LICENSES.md` (shown in the installer and installed as
+`<Product> Third-Party Notices.txt` beside the plug-in). Their `[[PLACEHOLDERS]]` are filled
+from **repository variables** (not secrets — they are printed in the text):
+`COMPANY_LEGAL_NAME`, `COMPANY_ADDRESS`, `COMPANY_REG_ID`, `WEBSITE_URL`, `SUPPORT_EMAIL`,
+`PRIVACY_EMAIL`, `LEGAL_EMAIL`, `MERCHANT_OF_RECORD`, `EFFECTIVE_DATE`, `EFFECTIVE_YEAR`
+(`PRODUCT_NAME` comes from `product.env`). A tag build fails on an unresolved placeholder. If
+either Markdown file is missing the build still succeeds with a placeholder text, warns, and
+puts a **DO NOT PUBLISH** banner into the release notes — never publish such a draft.
+
+### Cutting a release
+
+```sh
+git tag -a v0.1.0 -m "First public build: ..."   # the message becomes RELEASE_NOTES.md
+git push origin v0.1.0
+```
+
+Tag a commit that is green on the `plugin` workflow (the release workflow does not rerun the
+unit tests). The `release` workflow then builds a universal (arm64 + x86_64) VST3 and AU on
+`macos-14`, signs them with the hardened runtime, runs `auval`, builds the `.pkg`, notarizes and
+staples it and checks `spctl`; builds the x64 VST3 on `windows-latest`, signs it, builds the Inno
+Setup installer and signs that too; then writes `SHA256SUMS` and `RELEASE_NOTES.md` and creates a
+**draft** GitHub release with `<Slug>-<version>-macOS.pkg`, `<Slug>-<version>-Windows-Setup.exe`,
+`SHA256SUMS` and `RELEASE_NOTES.md`. Review the notes and the banners, then publish it by hand.
+
+### Dry run
+
+Actions → *release* → *Run workflow*, enter a version (e.g. `0.1.0-dry`). The same pipeline
+runs; wherever secrets are absent it skips signing/notarization, labels the assets `-unsigned`
+and tolerates unresolved licence placeholders. Nothing is released — the assets land in the
+`<Slug>-<version>-dry-run` workflow artifact.
+
+### Running the scripts locally
+
+```sh
+# macOS
+export VERSION=0.1.0
+packaging/macos/build.sh && packaging/macos/sign.sh && packaging/macos/auval.sh
+packaging/macos/package.sh && packaging/macos/notarize.sh dist/*.pkg
+# Windows (Developer PowerShell so cl.exe is on PATH; choco install pkgconfiglite)
+packaging\windows\build.ps1 -Version 0.1.0
+packaging\windows\sign.ps1 -Mode pfx -Path "build\SnapPlayAI_artefacts\Release\VST3\SnapPlay AI.vst3"
+packaging\windows\package.ps1 -Version 0.1.0
+```
+
+Every script honours `DRY_RUN=1` (prints the commands it would run; works on Linux too), reads
+`BUILD_DIR`/`DIST_DIR`, and auto-detects the signing identities from the keychain when
+`DEVELOPER_ID_APPLICATION` / `DEVELOPER_ID_INSTALLER` are unset. `ALLOW_UNSIGNED=1` (macOS)
+and `UNSIGNED=1` (Windows) build unsigned packages for testing only.
+
+### Verifying a downloaded installer
+
+```sh
+# macOS — expect "accepted" and "source=Notarized Developer ID"
+spctl -a -vv -t install SnapPlayAI-0.1.0-macOS.pkg
+pkgutil --check-signature SnapPlayAI-0.1.0-macOS.pkg      # Developer ID Installer chain
+xcrun stapler validate SnapPlayAI-0.1.0-macOS.pkg          # the ticket is stapled
+shasum -a 256 -c SHA256SUMS
+```
+
+```powershell
+# Windows — "Successfully verified" and the publisher name
+signtool verify /pa /v SnapPlayAI-0.1.0-Windows-Setup.exe
+Get-AuthenticodeSignature SnapPlayAI-0.1.0-Windows-Setup.exe | Format-List Status, SignerCertificate
+```
+
+### Known limits
+
+- **SmartScreen reputation takes time.** A freshly signed certificate still triggers "Windows
+  protected your PC" until enough downloads accumulate; this is expected and is not fixed by EV.
+- **No auto-update.** The plug-in will show an update banner from a version endpoint that is
+  planned but not implemented; until then users download new installers from the releases page.
+- `auval` passing is necessary for Logic Pro / GarageBand but not sufficient — Logic runs its
+  own checks; test there before publishing.
+- The Windows build is x64 only (no ARM64 VST3); macOS installs system-wide only
+  (`/Library/Audio/Plug-Ins`), not per user.
+- `-unsigned` assets and placeholder licence banners are for dry runs; never publish them.

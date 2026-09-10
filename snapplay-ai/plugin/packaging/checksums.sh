@@ -3,6 +3,7 @@
 #
 #   packaging/checksums.sh OUTPUT FILE...
 
+# shellcheck source=common/lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/common/lib.sh"
 
 [[ $# -ge 2 ]] || die "usage: $0 OUTPUT FILE..."

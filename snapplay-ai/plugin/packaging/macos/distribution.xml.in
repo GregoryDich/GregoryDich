@@ -4,6 +4,7 @@
     <title>@PRODUCT_NAME@ @VERSION@</title>
     <organization>@BUNDLE_ID_BASE@</organization>
     <welcome file="welcome.txt" mime-type="text/plain"/>
+    <readme file="notices.txt" mime-type="text/plain"/>
     <license file="license.txt" mime-type="text/plain"/>
     <options customize="always" require-scripts="false" hostArchitectures="arm64,x86_64" rootVolumeOnly="true"/>
     <domains enable_localSystem="true"/>

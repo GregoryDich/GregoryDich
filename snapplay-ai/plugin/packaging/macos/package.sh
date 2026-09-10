@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Build the flat installer package: one component pkg per format (pkgbuild), combined by
+# Build the flat installer package: one component pkg per format (pkgbuild, each with the
+# third-party notices beside the bundle), combined by
 # productbuild with a "VST3" and an "Audio Unit" choice, signed with the Developer ID
 # Installer certificate. Output: DIST_DIR/<PRODUCT_SLUG>-<VERSION>-macOS.pkg
 # (…-macOS-unsigned.pkg when built without a certificate under ALLOW_UNSIGNED=1).
@@ -11,6 +12,7 @@
 # tokens), BUILD_DIR, DIST_DIR, DRY_RUN=1. Placeholder tokens in legal/eula.md are filled
 # from PRODUCT_NAME, COMPANY_LEGAL_NAME, ... in the environment (see common/eula_to_txt.py).
 
+# shellcheck source=../common/lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/../common/lib.sh"
 
 load_product_env
@@ -79,6 +81,12 @@ PLIST
         --identifier "${identifier}" --version "${VERSION_NUMERIC}" \
         "${work}/pkgs/${name}.pkg"
 }
+
+# Third-party notices: shown in the installer and installed beside whichever bundle the user
+# picks (BSD/MIT/Apache components require their notices to ship with the plugin).
+write_notices_text "${resources}/notices.txt"
+run cp "${resources}/notices.txt" "${work}/roots/vst3/$(notices_file_name)"
+run cp "${resources}/notices.txt" "${work}/roots/au/$(notices_file_name)"
 
 component_pkg vst3 "${vst3}" /Library/Audio/Plug-Ins/VST3       "${BUNDLE_ID_BASE}.vst3"
 component_pkg au   "${au}"   /Library/Audio/Plug-Ins/Components "${BUNDLE_ID_BASE}.au"

@@ -7,6 +7,7 @@
 # Passing auval is necessary for Logic Pro / GarageBand to list the plug-in, but Logic runs
 # extra checks of its own - test there before a public release.
 
+# shellcheck source=../common/lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/../common/lib.sh"
 
 load_product_env

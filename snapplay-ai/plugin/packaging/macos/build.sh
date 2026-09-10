@@ -8,6 +8,7 @@
 # MACOS_ARCHS (default "arm64;x86_64"), WITH_RUBBERBAND=1|0 (default 1, see rubberband.sh),
 # BUILD_STANDALONE=1|0 (default 0), JOBS (default 4), DRY_RUN=1 to print the commands only.
 
+# shellcheck source=../common/lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/../common/lib.sh"
 
 load_product_env
@@ -59,9 +60,9 @@ for bundle in "${bundles[@]}"; do
     [[ -d "${bundle}" ]] || die "expected bundle not found: ${bundle}"
     binary="$(bundle_binary "${bundle}")"
     [[ -f "${binary}" ]] || die "bundle has no Mach-O at ${binary}"
-    archs="$(lipo -archs "${binary}")"
+    have_archs="$(lipo -archs "${binary}")"
     for arch in "${wanted[@]}"; do
-        [[ " ${archs} " == *" ${arch} "* ]] || die "${binary} lacks ${arch} (has: ${archs})"
+        [[ " ${have_archs} " == *" ${arch} "* ]] || die "${binary} lacks ${arch} (has: ${have_archs})"
     done
-    log "built ${bundle} [${archs}]"
+    log "built ${bundle} [${have_archs}]"
 done

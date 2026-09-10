@@ -9,6 +9,7 @@
 #   NOTARY_APPLE_ID, NOTARY_PASSWORD, NOTARY_TEAM_ID Apple ID + app-specific password
 # NOTARY_TIMEOUT (default 30m), DRY_RUN=1.
 
+# shellcheck source=../common/lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/../common/lib.sh"
 
 [[ $# -eq 1 ]] || die "usage: $0 <package.pkg>"
