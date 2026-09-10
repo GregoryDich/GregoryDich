@@ -39,13 +39,21 @@ Pricing is credit-based: 3 free credits at signup, then a 50-credit pack for $9 
 | `db/` | Supabase / PostgreSQL 16 migrations: tables, RLS policies and the `SECURITY DEFINER` credit functions from contract §6 |
 | `infra/` | `aws/` Terraform for the production path in contract §10: ECS Fargate + ALB, SQS + DLQ, ECS GPU worker capacity, S3 (+ optional CloudFront), Secrets Manager |
 | `growth/` | UGC automation engine: `mcp_server/` exposes the pipeline (source → process → script → voiceover → render → publish → measure) as MCP tools, driven through an API key |
+| `web/` | Next.js 15 website and account portal: landing, pricing, download, sign-up / confirm / reset flows against Supabase Auth, `/account` (balance, checkout links, jobs, API keys, deletion), a Paddle.js checkout page and the `/legal/*` pages rendered from `legal/` |
+| `legal/` | Terms, Privacy, Refund, Copyright, Cookie policy and the plugin EULA as lawyer-ready drafts with `[[PLACEHOLDER]]` tokens and `LAWYER-REVIEW` markers; `LICENSE` and `THIRD_PARTY_LICENSES.md` sit next to it at the project root |
+| `plugin/packaging/` | Signed installers: macOS `.pkg` (codesign, auval, notarytool, stapler) and Windows Inno Setup, driven by `product.env` and `../.github/workflows/release.yml` |
+| `backend/scripts/` | `benchmark_modal.py`: runs the real GPU pipeline in the production worker image on Modal (or locally) and reports p50/p95 per stage against the 2.0 s budget |
 
 `snapplay-ai/` is one project inside this repository, so the CI workflows live at the
 **repository root**, one level up: `../.github/workflows/` holds `plugin.yml` (build +
 `ctest` on Linux, macOS and Windows), `backend.yml` (ruff + pytest against the fake
 pipeline and moto), `db.yml` (`db/tests/run_tests.sh` on PostgreSQL 16), `growth.yml`
-(pytest with every platform API mocked) and `deploy.yml` (image build/push, then
-`terraform plan` and a gated `terraform apply`).
+(pytest with every platform API mocked), `web.yml` (eslint, tsc, vitest, `next build`),
+`infra.yml` (`terraform validate`, compose config, hadolint), `release.yml` (tag-driven
+signed installers and a draft GitHub Release) and `deploy.yml` (image build/push,
+`terraform plan`, a gated `terraform apply`, then `python -m app.checks` as a one-off task).
+`docs/LAUNCH_CHECKLIST.md` is the founder's runbook for every account, secret and decision
+the launch needs; `docs/BETA_TEST_PLAN.md` the DAW acceptance table and beta protocol.
 
 ## Quickstart
 
@@ -154,11 +162,14 @@ the commands rather than trusting the numbers after the code moves.
 |-------|---------|--------|
 | Plugin core (JUCE-free) | `ctest --test-dir build` | **34 passed, 0 failed** — Scale-Snap and its tie-breaking, envelope/ADSR derivation, transient detection, zero-crossing trimming, the SMF writer, the `.fsc` writer, one combined export fixture |
 | Export round-trip | `SNAPPLAY_TEST_OUT=… ./snapplay_core_tests && python3 plugin/Tests/roundtrip.py …` | `.mid` re-read with **mido** (SMF type 1, PPQ 480, tempo + 4/4 meta, per-track channels, note ordering) and `.fsc` re-read byte for byte and cross-checked against **PyFLP 2.2.1**'s own event ids, `FileFormat.Score`, PPQ table and 24-byte note struct: **7 notes over 2 tracks, 7 note records** |
-| Backend | `cd backend && python3 -m pytest -q` | **256 passed, 2 skipped** (258 collected: 140 API/route, 46 pipeline, 50 AWS, 22 top-level). The two skips are `backend/tests/pipeline/test_pipeline_real.py` (GPU extras) and `backend/tests/pipeline/test_worker_serverless.py` (`modal` not installed) |
+| Backend | `cd backend && python3 -m pytest -q` | **341 passed, 2 skipped** — routes (including sign-up / recover / resend / logout against an in-memory GoTrue, job and key lists, account export and deletion, maintenance mode, unconfigured-provider webhooks), pipeline (with the separation-model licence gate), workers (visibility claim before model load, entrypoint), AWS paths, observability and the benchmark script. The two skips are `backend/tests/pipeline/test_pipeline_real.py` (GPU extras) and `backend/tests/pipeline/test_worker_serverless.py` (`modal` not installed) |
 | AWS paths | part of the above (`backend/tests/aws`) | **50 tests** against S3, SQS and the reaper mocked by **moto** |
-| Database | `bash db/tests/run_tests.sh` | **8 test groups pass** on a throwaway PostgreSQL 16 cluster — affiliates, api_keys, jobs, ledger, RLS, webhooks, plus two real two-session races: one for the last credit and one for a stale webhook claim (one winner each) |
+| Database | `bash db/tests/run_tests.sh` | **10 test groups pass** on a throwaway PostgreSQL 16 cluster — account deletion (tombstone keeps the ledger consistent), affiliates, api_keys, jobs, ledger, RLS, sign-up metadata, webhooks, plus two real two-session races: one for the last credit and one for a stale webhook claim (one winner each) |
 | Growth engine | `cd growth && python3 -m pytest -q` | **126 passed, 1 skipped** — every platform API mocked with respx; covers the licence gate, AI disclosure, campaign attribution and the credit guard; the skip is the Remotion smoke render when Node/Remotion is absent |
 | Live API smoke test | uvicorn + a real HTTP/SSE/WebSocket client | **14/14 checks** — `/health` and `/v1/health`, anonymous `/v1/plans`, first-touch registration with the 3-credit grant, a full `POST /v1/jobs` → SSE `progress` events → `result` round trip returning four stems and a real MIDI file, credit reserve → capture in the ledger, `POST /v1/api-keys` and the key acting as its owner, and the WebSocket accepting `?token=` while rejecting its absence |
+| Website | `cd web && npm run lint && npm run typecheck && npm test && npm run build` | **eslint clean, tsc clean, 15 vitest tests, production build of 27 routes** with every legal page pre-rendered and no placeholder left; the brand string lives in one file (checked by `web.yml`) |
+| Legal pack | the greps in `legal/README.md` | only the 11 allowed placeholder tokens, no product name, **37 lawyer-review markers** indexed in the README |
+| Packaging | `pytest plugin/packaging/common`, `shellcheck`, `actionlint`, `DRY_RUN=1` traces | **8 converter tests**, clean shellcheck and actionlint, every script prints its intended command line on Linux |
 | Docs | `@mermaid-js/mermaid-cli` over every fenced block | **9/9 mermaid diagrams render** |
 
 `terraform fmt -check -recursive`, `terraform init -backend=false` and `terraform validate`
@@ -173,7 +184,9 @@ PyPI and hadolint, not built.
 ### Unverified — needs hardware, an account, or a DAW
 
 * **The 2.0 s pipeline budget.** There is no GPU here. The budget in contract §7 is a
-  design target for an A10G (`g5.xlarge`); it has never been measured. On a T4
+  design target for an A10G (`g5.xlarge`); it has never been measured —
+  `backend/scripts/benchmark_modal.py` is written for exactly that and has only run
+  against the fake pipeline. On a T4
   (`g4dn.xlarge`) separation alone is 3–5 s, so that deployment must advertise ~5 s.
   The `fake` pipeline the tests use is a deterministic CPU stub — it proves the contract
   shapes and the job flow, and says nothing about latency.
@@ -185,6 +198,11 @@ PyPI and hadolint, not built.
   has been completed and no provider has ever delivered to this code — so which events a
   real store actually sends, and what `custom_data` it forwards onto each of them, is
   assumed rather than observed (see the residual risks below).
+* **Signing and notarization.** `plugin/packaging` and `release.yml` are verified up to
+  the point where `codesign`, `notarytool`, `signtool` and Inno Setup would run; the first
+  tag build on the macOS and Windows runners is the real test.
+* **Account deletion against real GoTrue.** `DELETE /v1/me` and the `auth.users` delete
+  trigger are proven on the local cluster and the in-memory backend only.
 * **Loading the plugin in a DAW.** No VST3 or AU has been opened in FL Studio, Ableton
   Live, Logic or any other host. CI builds the binaries; nothing hosts them. pluginval is
   documented in [`plugin/README.md`](plugin/README.md) but is not part of CI.
@@ -219,12 +237,11 @@ None of the three is implemented; the table in `separation.py` is the extension 
 
 ### Known residual risks (recorded, not fixed)
 
-* **A webhook process killed mid-apply strands its event.** Delivery is claim → apply →
-  close. A handled failure releases the claim so the provider's retry re-runs it, but a
-  hard kill between the claim and the close leaves the key claimed: the retry is answered
-  `duplicate` and the sale is never applied. Closing this needs an age-based stale-claim
-  rule. Until then, reconcile against the provider's dashboard and re-grant by hand with
-  `grant_credits`, keyed on the provider's order id.
+* **Storage purge on account deletion is immediate only on the memory backend.** The
+  Supabase and S3 storage services do not implement `delete_prefix` yet, so a deleted
+  user's audio objects wait for the 24 h lifecycle rule (contract §1, SECURITY.md §10).
+* **Rate limits are per process.** With several API tasks the effective ceiling is N× the
+  configured rate and a restart resets every bucket (SECURITY.md §6).
 * **The LemonSqueezy subscription path assumes the store forwards checkout custom data.**
   The affiliate `ref` is read from the paying event (`subscription_payment_success`); a
   store configured not to carry the checkout's `custom_data` onto that event would drop
@@ -236,5 +253,6 @@ None of the three is implemented; the table in `separation.py` is the extension 
 
 `plans.provider_variant_ids` is empty in the seed, so `checkout_url` comes back `null`
 and the in-plugin paywall ships with no working buttons until an operator fills those ids
-in. Nothing fails loudly. See the boxed note under [Database](#database-db) above and
-[`db/README.md`](db/README.md).
+in. Nothing fails loudly at request time; `python -m app.checks` does, and `deploy.yml`
+now runs it after every apply. See the boxed note under [Database](#database-db) above
+and [`db/README.md`](db/README.md).
