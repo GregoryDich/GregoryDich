@@ -119,6 +119,13 @@ jobs:
           p12-file-base64: ${{ secrets.MACOS_CERT_P12_BASE64 }}
           p12-password: ${{ secrets.MACOS_CERT_PASSWORD }}
 
+      # The bundled demo morph is generated at configure time (plugin/Resources/generate_demo.py).
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install demo generator dependencies
+        run: python -m pip install --disable-pip-version-check numpy soundfile
+
       - name: Build (Release, arm64 + x86_64)
         run: packaging/macos/build.sh
 
@@ -201,6 +208,13 @@ jobs:
           }
           "mode=$mode" >> $env:GITHUB_OUTPUT
           Write-Host "signing mode: $mode"
+
+      # The bundled demo morph is generated at configure time (plugin/Resources/generate_demo.py).
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install demo generator dependencies
+        run: python -m pip install --disable-pip-version-check numpy soundfile
 
       - name: Build (Release x64)
         id: build

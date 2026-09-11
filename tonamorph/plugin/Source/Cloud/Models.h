@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * Wire models for the Tonamorph API (docs/API_CONTRACT.md v2).
+ * Wire models for the API (docs/API_CONTRACT.md v2).
  *
  * Every model parses with `static std::optional<T> fromJson (const juce::var&)` (returns
  * nullopt when required fields are missing or mistyped) and serialises with
@@ -238,6 +238,7 @@ struct JobResult
     std::vector<StemInfo> stems;
     MidiInfo midi;
     juce::String expiresAt;   ///< RFC 3339; signed URLs die after this
+    bool demo = false;        ///< the bundled demo morph: no credit, no network, no feedback
 
     static std::optional<JobResult> fromJson (const juce::var& json);
     juce::var toVar() const;
@@ -297,6 +298,28 @@ struct ApiKeyInfo
     juce::String createdAt;
 
     static std::optional<ApiKeyInfo> fromJson (const juce::var& json);
+    juce::var toVar() const;
+};
+
+/** `POST /v1/jobs/{id}/feedback` 201 response. `balance` is absent on a 404 stand-in. */
+struct FeedbackResponse
+{
+    bool refunded = false;
+    std::optional<CreditBalance> balance;
+
+    static std::optional<FeedbackResponse> fromJson (const juce::var& json);
+    juce::var toVar() const;
+};
+
+/** `GET /v1/version` response. */
+struct VersionInfo
+{
+    juce::String latest;         ///< newest released plugin version, e.g. "0.2.0"
+    juce::String minSupported;   ///< oldest version the API still serves
+    juce::String downloadUrl;
+    juce::String notesUrl;
+
+    static std::optional<VersionInfo> fromJson (const juce::var& json);
     juce::var toVar() const;
 };
 

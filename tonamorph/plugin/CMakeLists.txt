@@ -65,6 +65,9 @@ target_sources(Tonamorph
     PRIVATE
         Source/PluginProcessor.cpp
         Source/PluginEditor.cpp
+        Source/App/CrashReporter.cpp
+        Source/App/DemoMorph.cpp
+        Source/App/PluginSettings.cpp
         Source/Cloud/ApiClient.cpp
         Source/Cloud/Models.cpp
         Source/Cloud/AuthManager.cpp
@@ -79,7 +82,11 @@ target_sources(Tonamorph
         Source/Export/MidiExporter.cpp
         Source/Export/FscExporter.cpp
         Source/Export/DragExport.cpp
-        Source/UI/TonamorphLookAndFeel.cpp)
+        Source/UI/FeedbackBar.cpp
+        Source/UI/MessageToast.cpp
+        Source/UI/ScaleKeyboard.cpp
+        Source/UI/TonamorphLookAndFeel.cpp
+        Source/UI/VersionBanner.cpp)
 
 target_include_directories(Tonamorph
     PRIVATE
@@ -94,8 +101,46 @@ target_compile_definitions(Tonamorph
         JUCE_MODAL_LOOPS_PERMITTED=0
         TONAMORPH_VERSION_STRING="${PROJECT_VERSION}")
 
+# ---------------------------------------------------------------------------
+# Bundled demo morph: generated deterministically at configure time by
+# Resources/generate_demo.py (numpy; soundfile optional) into the build tree and
+# embedded as DemoData::*. The plugin installs it into its job cache as job "demo".
+# ---------------------------------------------------------------------------
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(NOT Python3_Interpreter_FOUND)
+    message(FATAL_ERROR "Tonamorph: python3 with numpy is required to generate the bundled demo morph")
+endif()
+
+set(TONAMORPH_DEMO_DIR "${CMAKE_BINARY_DIR}/demo")
+set(TONAMORPH_DEMO_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/Resources/generate_demo.py")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${TONAMORPH_DEMO_SCRIPT}")
+
+execute_process(
+    COMMAND "${Python3_EXECUTABLE}" "${TONAMORPH_DEMO_SCRIPT}" "${TONAMORPH_DEMO_DIR}"
+    RESULT_VARIABLE tonamorph_demo_result
+    OUTPUT_VARIABLE tonamorph_demo_output
+    ERROR_VARIABLE tonamorph_demo_error)
+
+if(NOT tonamorph_demo_result EQUAL 0)
+    message(FATAL_ERROR "Tonamorph: demo morph generation failed (needs `pip install numpy`):\n${tonamorph_demo_output}${tonamorph_demo_error}")
+endif()
+string(STRIP "${tonamorph_demo_output}" tonamorph_demo_output)
+message(STATUS "Tonamorph: ${tonamorph_demo_output}")
+
+juce_add_binary_data(TonamorphDemoData
+    NAMESPACE DemoData
+    HEADER_NAME DemoData.h
+    SOURCES
+        "${TONAMORPH_DEMO_DIR}/bass.wav"
+        "${TONAMORPH_DEMO_DIR}/drums.wav"
+        "${TONAMORPH_DEMO_DIR}/other.wav"
+        "${TONAMORPH_DEMO_DIR}/vocals.wav"
+        "${TONAMORPH_DEMO_DIR}/score.mid"
+        "${TONAMORPH_DEMO_DIR}/result.json")
+
 target_link_libraries(Tonamorph
     PRIVATE
+        TonamorphDemoData
         juce::juce_audio_utils
         juce::juce_audio_processors
         juce::juce_audio_formats

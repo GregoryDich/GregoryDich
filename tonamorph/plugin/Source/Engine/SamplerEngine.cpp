@@ -1,5 +1,7 @@
 #include "Engine/SamplerEngine.h"
 
+#include "Core/Strings.h"
+
 #include <algorithm>
 #include <exception>
 
@@ -48,7 +50,7 @@ class SamplerEngine::LoadJob final : public juce::ThreadPoolJob
 public:
     LoadJob (SamplerEngine& ownerToUse, int generationToUse,
              std::function<std::pair<bool, juce::String> (int)> workToRun, LoadCallback onDoneToCall)
-        : juce::ThreadPoolJob ("Tonamorph Load"),
+        : juce::ThreadPoolJob (juce::String (strings::productName) + " Load"),
           owner (ownerToUse),
           generation (generationToUse),
           work (std::move (workToRun)),
@@ -80,7 +82,8 @@ private:
 //==============================================================================
 SamplerEngine::SamplerEngine()
     : activeSound (new ActiveSound()),
-      loadPool (juce::ThreadPoolOptions{}.withThreadName ("Tonamorph Sampler").withNumberOfThreads (1))
+      loadPool (juce::ThreadPoolOptions{}.withThreadName (juce::String (strings::productName) + " Sampler")
+                                         .withNumberOfThreads (1))
 {
     synth.addSound (activeSound);
 

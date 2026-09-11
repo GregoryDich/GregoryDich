@@ -1,8 +1,12 @@
 #include "PluginProcessor.h"
 
+#include "App/CrashReporter.h"
+#include "App/DemoMorph.h"
+#include "Core/FeedbackPayload.h"
 #include "Engine/AutoAdsr.h"
 #include "PluginEditor.h"
 
+#include <algorithm>
 #include <array>
 #include <utility>
 
@@ -38,9 +42,13 @@ TonamorphAudioProcessor::TonamorphAudioProcessor()
     : juce::AudioProcessor (BusesProperties().withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
       apvts (*this, nullptr, stateTreeType, createParameterLayout()),
       apiClient(),
-      authManager (apiClient),
+      settings(),
+      authManager (apiClient, settings.getFile()),
       jobClient (apiClient, authManager)
 {
+    if (settings.isCrashReportingEnabled())
+        CrashReporter::install (TONAMORPH_VERSION_STRING, apiClient.getConfig().hostName);
+
     attackParam     = apvts.getRawParameterValue (ParamIds::attack);
     decayParam      = apvts.getRawParameterValue (ParamIds::decay);
     sustainParam    = apvts.getRawParameterValue (ParamIds::sustain);
@@ -68,6 +76,9 @@ TonamorphAudioProcessor::~TonamorphAudioProcessor()
 {
     cancelPendingUpdate();
     stopTimer();
+
+    if (feedbackRequest != cloud::ApiClient::invalidRequest)
+        apiClient.cancel (feedbackRequest);
 
     authManager.removeListener (this);
     jobClient.removeChangeListener (this);
@@ -154,6 +165,18 @@ void TonamorphAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     juce::ScopedNoDenormals noDenormals;
 
     keyboardState.processNextMidiBuffer (midiMessages, 0, buffer.getNumSamples(), true);
+
+    // First-sound hint: count blocks with a note-on. Raw bytes, no MidiMessage
+    // construction, so nothing here can allocate.
+    for (const auto metadata : midiMessages)
+    {
+        if (metadata.numBytes >= 3 && (metadata.data[0] & 0xf0) == 0x90 && metadata.data[2] > 0)
+        {
+            noteOnBlocks.fetch_add (1, std::memory_order_relaxed);
+            break;
+        }
+    }
+
     scaleLock.process (midiMessages);
     engine.process (buffer, midiMessages);
 }
@@ -209,6 +232,11 @@ juce::String TonamorphAudioProcessor::getLastJobId() const
     return lastJobId;
 }
 
+bool TonamorphAudioProcessor::isCurrentResultPlayable() const noexcept
+{
+    return currentResult.has_value() && playableJobId.isNotEmpty() && playableJobId == currentResult->jobId;
+}
+
 std::optional<cloud::KeyInfo> TonamorphAudioProcessor::getDetectedKey() const
 {
     if (currentResult.has_value())
@@ -236,6 +264,8 @@ cloud::JobOptions TonamorphAudioProcessor::makeJobOptions() const
 
 void TonamorphAudioProcessor::submitAudioFile (const juce::File& audioFile)
 {
+    dropTimeMs = juce::Time::currentTimeMillis();
+    dropToReadyMs.reset();
     jobClient.submitFile (audioFile, makeJobOptions());
 }
 
@@ -252,6 +282,107 @@ bool TonamorphAudioProcessor::isDrumMode() const
 void TonamorphAudioProcessor::loadSelectedStem()
 {
     reloadStem (true);
+}
+
+//==============================================================================
+void TonamorphAudioProcessor::loadDemoIfIdle()
+{
+    if (demoLoadAttempted || currentResult.has_value() || jobClient.getState() != cloud::JobClient::State::Idle)
+        return;
+
+    {
+        const juce::ScopedLock lock (stateLock);
+
+        if (pendingRestoreJobId.isNotEmpty() || lastJobId.isNotEmpty())
+            return;
+    }
+
+    demoLoadAttempted = true;
+
+    if (! DemoMorph::install (jobClient.getCacheRoot()))
+        return;
+
+    restoringCachedJob = false;
+    jobClient.loadCachedJob (DemoMorph::jobId);
+}
+
+bool TonamorphAudioProcessor::canRateCurrentResult() const
+{
+    return currentResult.has_value() && ! currentResult->demo && currentResult->jobId.isNotEmpty()
+        && ! settings.wasJobRated (currentResult->jobId);
+}
+
+void TonamorphAudioProcessor::submitFeedback (bool thumbsUp, const juce::String& reason, const juce::String& note,
+                                              std::function<void (FeedbackOutcome)> onDone)
+{
+    if (! canRateCurrentResult() || feedbackRequest != cloud::ApiClient::invalidRequest)
+    {
+        if (onDone != nullptr)
+            onDone (FeedbackOutcome::Failed);
+
+        return;
+    }
+
+    const auto jobId = currentResult->jobId;
+    const auto body = juce::String (core::buildFeedbackJson (thumbsUp, reason.toStdString(), note.toStdString(),
+                                                             dropToReadyMs.has_value()
+                                                                 ? std::optional<std::int64_t> (*dropToReadyMs)
+                                                                 : std::nullopt));
+
+    feedbackRequest = apiClient.submitFeedback (jobId, body,
+        [weakThis = juce::WeakReference<TonamorphAudioProcessor> (this), jobId, onDone]
+        (cloud::ApiClient::Response<cloud::FeedbackResponse> response)
+        {
+            if (weakThis == nullptr)
+                return;
+
+            weakThis->feedbackRequest = cloud::ApiClient::invalidRequest;
+            auto outcome = FeedbackOutcome::Failed;
+
+            if (response.ok())
+            {
+                weakThis->settings.markJobRated (jobId);
+                outcome = response.value->refunded ? FeedbackOutcome::Refunded : FeedbackOutcome::Sent;
+
+                if (response.value->refunded)
+                {
+                    if (response.value->balance.has_value())
+                        weakThis->authManager.updateBalance (*response.value->balance);
+
+                    weakThis->authManager.refreshBalance();
+                }
+            }
+            else if (response.statusCode == 404)
+            {
+                // The route is not deployed yet: the rating cannot land anywhere, so do not
+                // keep asking for it.
+                weakThis->settings.markJobRated (jobId);
+                outcome = FeedbackOutcome::Sent;
+            }
+
+            weakThis->resultEvents.sendChangeMessage();
+
+            if (onDone != nullptr)
+                onDone (outcome);
+        });
+}
+
+void TonamorphAudioProcessor::setCrashReportingEnabled (bool enabled)
+{
+    settings.setCrashReportingEnabled (enabled);
+
+    if (enabled)
+        CrashReporter::install (TONAMORPH_VERSION_STRING, apiClient.getConfig().hostName);
+}
+
+void TonamorphAudioProcessor::flushCrashReports()
+{
+    static bool flushedThisProcess = false;
+
+    if (std::exchange (flushedThisProcess, true))
+        return;
+
+    CrashReporter::flushPendingReports (apiClient, settings.isCrashReportingEnabled());
 }
 
 //==============================================================================
@@ -319,14 +450,24 @@ void TonamorphAudioProcessor::changeListenerCallback (juce::ChangeBroadcaster* s
 
     switch (jobClient.getState())
     {
+        // The `result` event puts the JobClient into Downloading with the result already
+        // parsed: that is when the analysis goes live. Each later notification is a stem
+        // landing, and Ready is the last of them.
+        case State::Downloading:
         case State::Ready:
             if (const auto& result = jobClient.getResult(); result.has_value())
-                onJobReady (*result);
+            {
+                if (result->jobId != analysisAppliedJobId)
+                    onResultAvailable (*result);
+                else
+                    loadStemIfArrived();
+            }
             break;
 
         case State::Failed:
         case State::Cancelled:
             restoringCachedJob = false;
+            stemLoadPending = false;
             break;
 
         case State::Idle:
@@ -334,7 +475,6 @@ void TonamorphAudioProcessor::changeListenerCallback (juce::ChangeBroadcaster* s
         case State::Submitting:
         case State::Queued:
         case State::Running:
-        case State::Downloading:
             break;
     }
 }
@@ -376,14 +516,22 @@ void TonamorphAudioProcessor::timerCallback()
 }
 
 //==============================================================================
-void TonamorphAudioProcessor::onJobReady (const cloud::JobResult& result)
+void TonamorphAudioProcessor::onResultAvailable (const cloud::JobResult& result)
 {
     // A job restored from the host's saved state keeps the saved root and envelope; a
     // freshly processed job takes the analysis defaults.
     const bool restored = std::exchange (restoringCachedJob, false) && result.jobId == getLastJobId();
 
     currentResult = result;
+    currentResultRestored = restored;
+    analysisAppliedJobId = result.jobId;
+    playableJobId.clear();
+    stemLoadPending = false;
 
+    if (restored || result.demo)
+        dropToReadyMs.reset();
+
+    if (! result.demo)
     {
         const juce::ScopedLock lock (stateLock);
         lastJobId = result.jobId;
@@ -396,6 +544,13 @@ void TonamorphAudioProcessor::onJobReady (const cloud::JobResult& result)
 
     applyScaleParametersToProcessor();
     reloadStem (! restored);
+    resultEvents.sendChangeMessage();
+}
+
+void TonamorphAudioProcessor::loadStemIfArrived()
+{
+    if (stemLoadPending && currentResult.has_value())
+        reloadStem (pendingApplyAutoAdsr);
 }
 
 void TonamorphAudioProcessor::applyScaleParametersToProcessor()
@@ -432,9 +587,8 @@ void TonamorphAudioProcessor::restoreCachedJob (const juce::String& jobIdToResto
     if (jobClient.isRunning())
         return;
 
-    if (! cloud::JobClient::jobDirectoryFor (jobClient.getCacheRoot(), jobIdToRestore).isDirectory())
-        return;
-
+    // Cache first, then the server while signed in; otherwise the JobClient reports
+    // `cache_missing` and the UI says so.
     restoringCachedJob = true;
     jobClient.loadCachedJob (jobIdToRestore);
 }
@@ -475,7 +629,14 @@ void TonamorphAudioProcessor::reloadStem (bool applyAutoAdsr)
                              .getChildFile (stemName + ".wav");
 
     if (! wavFile.existsAsFile())
+    {
+        // Still downloading: loadStemIfArrived() retries on the next JobClient notification.
+        stemLoadPending = true;
+        pendingApplyAutoAdsr = applyAutoAdsr;
         return;
+    }
+
+    stemLoadPending = false;
 
     const bool wantsDrumKit = isDrumMode() && getSelectedCategory() == static_cast<int> (Category::Drums);
 
@@ -486,8 +647,9 @@ void TonamorphAudioProcessor::reloadStem (bool applyAutoAdsr)
     // can only be applied once the load has finished (drum kits carry no envelope).
     const bool applyDerivedAdsr = applyAutoAdsr && ! info->suggestedAdsr.has_value() && ! wantsDrumKit;
     const int serial = ++stemLoadSerial;
+    const auto jobId = currentResult->jobId;
 
-    auto onLoaded = [weakThis = juce::WeakReference<TonamorphAudioProcessor> (this), serial, applyDerivedAdsr]
+    auto onLoaded = [weakThis = juce::WeakReference<TonamorphAudioProcessor> (this), serial, applyDerivedAdsr, jobId]
                     (bool ok, const juce::String&)
     {
         if (weakThis == nullptr || ! ok || serial != weakThis->stemLoadSerial)
@@ -496,6 +658,19 @@ void TonamorphAudioProcessor::reloadStem (bool applyAutoAdsr)
         if (applyDerivedAdsr)
             if (const auto stem = weakThis->engine.getCurrentStem())
                 weakThis->applyAdsr (stem->getAdsr());
+
+        auto& self = *weakThis;
+
+        if (self.currentResult.has_value() && self.currentResult->jobId == jobId)
+        {
+            const bool firstStemOfJob = self.playableJobId != jobId;
+            self.playableJobId = jobId;
+
+            if (firstStemOfJob && ! self.currentResultRestored && ! self.currentResult->demo && self.dropTimeMs > 0)
+                self.dropToReadyMs = std::max<juce::int64> (0, juce::Time::currentTimeMillis() - self.dropTimeMs);
+
+            self.resultEvents.sendChangeMessage();
+        }
     };
 
     if (wantsDrumKit)

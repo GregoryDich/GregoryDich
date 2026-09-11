@@ -1,5 +1,7 @@
 #include "Cloud/JobClient.h"
 
+#include "Core/Strings.h"
+
 #include <memory>
 #include <utility>
 
@@ -25,6 +27,12 @@ void scheduleRepeating (int intervalMs, std::shared_ptr<std::function<bool()>> t
     });
 }
 
+/** The strings table is UTF-8 (ellipses, dashes); juce::String (const char*) is ASCII-only. */
+juce::String text (const char* utf8)
+{
+    return juce::String::fromUTF8 (utf8);
+}
+
 ApiError makeError (const juce::String& code, const juce::String& message, int httpStatus = 0)
 {
     ApiError error;
@@ -39,19 +47,20 @@ bool isCancellation (const ApiError& error) noexcept
     return error.code == "cancelled";
 }
 
+/** GTM Appendix B §3 per-stage progress strings. */
 juce::String describeStage (JobStage stage)
 {
     switch (stage)
     {
-        case JobStage::Upload:     return "Uploading";
-        case JobStage::Separate:   return "Separating stems";
-        case JobStage::Transcribe: return "Transcribing notes";
-        case JobStage::Analyze:    return "Analysing key and tempo";
-        case JobStage::Package:    return "Packaging results";
-        case JobStage::Done:       return "Finishing";
+        case JobStage::Upload:     return text (strings::stageUploading);
+        case JobStage::Separate:   return text (strings::stageSeparating);
+        case JobStage::Transcribe: return text (strings::stageTranscribing);
+        case JobStage::Analyze:    return text (strings::stageAnalyzing);
+        case JobStage::Package:    return text (strings::stagePackaging);
+        case JobStage::Done:       return text (strings::stagePackaging);
     }
 
-    return "Working";
+    return text (strings::stagePackaging);
 }
 
 } // namespace
@@ -61,7 +70,8 @@ JobClient::JobClient (ApiClient& client, AuthManager& authToUse, juce::File cach
     : api (client),
       auth (authToUse),
       cacheRoot (std::move (cacheRootToUse)),
-      encodePool (juce::ThreadPoolOptions{}.withThreadName ("Tonamorph Encoder").withNumberOfThreads (1))
+      encodePool (juce::ThreadPoolOptions{}.withThreadName (juce::String (text (strings::productName)) + " Encoder")
+                                           .withNumberOfThreads (1))
 {
 }
 
@@ -81,7 +91,7 @@ JobClient::~JobClient()
 juce::File JobClient::defaultCacheRoot()
 {
     return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
-               .getChildFile ("Tonamorph")
+               .getChildFile (text (strings::productName))
                .getChildFile ("jobs");
 }
 
@@ -139,7 +149,7 @@ void JobClient::loadCachedJob (const juce::String& jobIdToLoad)
 
     if (jobIdToLoad.isEmpty())
     {
-        fail (makeError ("not_found", "No job to load"));
+        fail (makeError ("cache_missing", text (strings::errorCacheMissing)));
         return;
     }
 
@@ -148,6 +158,14 @@ void JobClient::loadCachedJob (const juce::String& jobIdToLoad)
         stage = JobStage::Done;
         progress = 1.0;
         setState (State::Ready);
+        return;
+    }
+
+    // Without a session the server cannot be asked for the job again, so the cache was all
+    // there was.
+    if (! api.hasCredentials())
+    {
+        fail (makeError ("cache_missing", text (strings::errorCacheMissing)));
         return;
     }
 
@@ -165,9 +183,16 @@ void JobClient::loadCachedJob (const juce::String& jobIdToLoad)
 
         if (! response.ok())
         {
-            const auto loadError = response.error.value_or (ApiError::transport ("Could not load that job"));
+            const auto loadError = response.error.value_or (ApiError::transport (text (strings::errorCacheMissing)));
 
-            if (! isCancellation (loadError))
+            if (isCancellation (loadError))
+                return;
+
+            // A job the server no longer has (404) means the cache is all that was left of
+            // it; transport and auth failures keep their own codes so the UI can say so.
+            if (loadError.httpStatus == 404)
+                fail (makeError ("cache_missing", text (strings::errorCacheMissing), 404));
+            else
                 fail (loadError);
 
             return;
@@ -175,15 +200,9 @@ void JobClient::loadCachedJob (const juce::String& jobIdToLoad)
 
         const auto& status = *response.value;
 
-        if (status.status != JobState::Succeeded || ! status.result.has_value())
+        if (status.status != JobState::Succeeded || ! status.result.has_value() || status.result->isExpired())
         {
-            fail (makeError ("not_found", "That job has no result to load"));
-            return;
-        }
-
-        if (status.result->isExpired())
-        {
-            fail (makeError ("expired", "The download links for that job have expired"));
+            fail (makeError ("cache_missing", text (strings::errorCacheMissing)));
             return;
         }
 
@@ -223,6 +242,7 @@ void JobClient::reset()
     result.reset();
     error.reset();
     inputTruncated = false;
+    pollingFallback = false;
     progress = 0.0;
     stage = JobStage::Upload;
     setState (State::Idle);
@@ -239,20 +259,32 @@ juce::String JobClient::getStatusMessage() const
 {
     const auto percent = " " + juce::String (juce::roundToInt (juce::jlimit (0.0, 1.0, progress) * 100.0)) + " %";
 
+    if (pollingFallback && (state == State::Queued || state == State::Running))
+        return text (strings::errorLostContact);
+
     switch (state)
     {
-        case State::Idle:        return "Ready for audio";
-        case State::Encoding:    return "Preparing audio...";
-        case State::Submitting:  return "Uploading..." + percent;
-        case State::Queued:      return "Waiting in the queue...";
-        case State::Running:     return describeStage (stage) + "..." + percent;
-        case State::Downloading: return "Downloading stems..." + percent;
-        case State::Ready:       return "Ready to play";
-        case State::Cancelled:   return "Cancelled";
-        case State::Failed:      return error.has_value() ? error->message : juce::String ("Something went wrong");
+        case State::Idle:        return text (strings::dropZone);
+        case State::Encoding:    return text (strings::stageUploading);
+        case State::Submitting:  return text (strings::stageUploading) + percent;
+        case State::Queued:      return text (strings::stageQueued);
+        case State::Running:     return describeStage (stage) + percent;
+        case State::Downloading: return text (strings::stagePackaging) + percent;
+        case State::Ready:       return text (strings::ready);
+        case State::Cancelled:   return text (strings::cancelled);
+        case State::Failed:      return error.has_value() ? error->message : juce::String (text (strings::errorGeneric));
     }
 
     return toString (state);
+}
+
+bool JobClient::isStemAvailable (const juce::String& stemName) const
+{
+    if (! result.has_value() || (state != State::Downloading && state != State::Ready))
+        return false;
+
+    const auto* stem = result->findStem (stemName);
+    return stem != nullptr && getStemFile (stemName).existsAsFile();
 }
 
 //==============================================================================
@@ -314,6 +346,7 @@ bool JobClient::beginSubmission()
     result.reset();
     error.reset();
     inputTruncated = false;
+    pollingFallback = false;
     progress = 0.0;
     stage = JobStage::Upload;
 
@@ -509,6 +542,9 @@ void JobClient::onStreamFinished (const ApiClient::Response<JobStatus>& finalSta
     }
 
     // The stream is unavailable: fall back to polling GET /v1/jobs/{id} once a second.
+    pollingFallback = true;
+    sendChangeMessage();
+
     auto attempts = std::make_shared<int> (0);
     auto tick = std::make_shared<std::function<bool()>>();
 
@@ -525,7 +561,7 @@ void JobClient::onStreamFinished (const ApiClient::Response<JobStatus>& finalSta
 
         if (++(*attempts) > maxPollAttempts)
         {
-            fail (ApiError::transport ("Lost contact with the job"));
+            fail (makeError ("lost_contact", text (strings::errorLostContact)));
             return false;
         }
 

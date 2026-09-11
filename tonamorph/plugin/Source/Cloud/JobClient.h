@@ -47,7 +47,8 @@ public:
     void submitBuffer (const juce::AudioBuffer<float>& audio, double sampleRate, JobOptions options);
     /** Reloads a previous job without a credit charge: uses the cached `result.json` and
         assets when present, otherwise GET /v1/jobs/{id} and downloads if the URLs have
-        not expired. Ends in Ready or Failed. */
+        not expired. Ends in Ready, or Failed with code `cache_missing` when neither the
+        cache nor the server can still provide the stems. */
     void loadCachedJob (const juce::String& jobId);
     /** Cancels the current job (DELETE /v1/jobs/{id} while queued, otherwise stops
         streaming/downloads) and ends in Cancelled. */
@@ -62,14 +63,19 @@ public:
     JobStage getStage() const noexcept { return stage; }
     /** 0..1 within the current stage, as reported by the server. */
     double getProgress() const noexcept { return progress; }
-    /** Human-readable line for the UI, e.g. "Separating stems… 35 %". */
+    /** Human-readable line for the UI from the strings table, with the stage percentage. */
     juce::String getStatusMessage() const;
+    /** While Downloading (or Ready): true once `stemName`'s WAV is in the cache, so it can
+        be played before the remaining downloads finish. */
+    bool isStemAvailable (const juce::String& stemName) const;
 
     juce::String getJobId() const { return jobId; }
     const std::optional<JobResult>& getResult() const noexcept { return result; }
     std::optional<ApiError> getError() const { return error; }
     /** True when the encoder or the server truncated the input to 60 s. */
     bool wasInputTruncated() const noexcept { return inputTruncated; }
+    /** True while the event stream is gone and the job is followed by polling instead. */
+    bool isPollingFallback() const noexcept { return pollingFallback; }
 
     //==============================================================================
     juce::File getCacheRoot() const { return cacheRoot; }
@@ -114,6 +120,7 @@ private:
     std::optional<JobResult> result;
     std::optional<ApiError> error;
     bool inputTruncated = false;
+    bool pollingFallback = false;
 
     ApiClient::RequestId activeRequest = ApiClient::invalidRequest;
     std::vector<ApiClient::RequestId> downloadRequests;

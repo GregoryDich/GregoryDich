@@ -54,6 +54,13 @@ jobs:
           path: tonamorph/plugin/build/_deps
           key: juce-8.0.8-${{ runner.os }}-${{ hashFiles('tonamorph/plugin/CMakeLists.txt') }}
 
+      # The bundled demo morph is generated at configure time by plugin/Resources/generate_demo.py.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install demo generator dependencies
+        run: python -m pip install --disable-pip-version-check numpy soundfile
+
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 

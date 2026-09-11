@@ -37,9 +37,15 @@ AuthManager::AuthManager (ApiClient& client)
 }
 
 AuthManager::AuthManager (ApiClient& client, const juce::PropertiesFile::Options& storageOptions)
-    : api (client),
-      storage (std::make_unique<juce::PropertiesFile> (storageOptions))
+    : AuthManager (client, std::make_shared<juce::PropertiesFile> (storageOptions))
 {
+}
+
+AuthManager::AuthManager (ApiClient& client, std::shared_ptr<juce::PropertiesFile> sharedStorage)
+    : api (client),
+      storage (std::move (sharedStorage))
+{
+    jassert (storage != nullptr);
     loadFromStorage();
 }
 
@@ -54,9 +60,9 @@ AuthManager::~AuthManager()
 juce::PropertiesFile::Options AuthManager::defaultStorageOptions()
 {
     juce::PropertiesFile::Options options;
-    options.applicationName = "Tonamorph";
+    options.applicationName = strings::productName;
     options.filenameSuffix = "settings";
-    options.folderName = "Tonamorph";
+    options.folderName = strings::productName;
     options.osxLibrarySubFolder = "Application Support";
     options.storageFormat = juce::PropertiesFile::storeAsXML;
     return options;

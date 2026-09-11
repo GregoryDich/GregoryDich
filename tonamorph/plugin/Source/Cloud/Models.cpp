@@ -860,7 +860,8 @@ std::optional<JobResult> JobResult::fromJson (const juce::var& json)
         || ! readObject (json, "analysis", result.analysis, &Analysis::fromJson)
         || ! readObjectArray (json, "stems", result.stems, &StemInfo::fromJson)
         || ! readObject (json, "midi", result.midi, &MidiInfo::fromJson)
-        || ! readString (json, "expires_at", result.expiresAt))
+        || ! readString (json, "expires_at", result.expiresAt)
+        || ! readBool (json, "demo", result.demo, false))
         return std::nullopt;
 
     return result;
@@ -868,16 +869,20 @@ std::optional<JobResult> JobResult::fromJson (const juce::var& json)
 
 juce::var JobResult::toVar() const
 {
-    return ObjectBuilder()
-        .set ("job_id", jobId)
-        .set ("credits_charged", creditsCharged)
-        .set ("balance_after", balanceAfter)
-        .set ("input", input.toVar())
-        .set ("analysis", analysis.toVar())
-        .set ("stems", arrayToVar (stems, [] (const StemInfo& stem) { return stem.toVar(); }))
-        .set ("midi", midi.toVar())
-        .set ("expires_at", expiresAt)
-        .build();
+    ObjectBuilder builder;
+    builder.set ("job_id", jobId)
+           .set ("credits_charged", creditsCharged)
+           .set ("balance_after", balanceAfter)
+           .set ("input", input.toVar())
+           .set ("analysis", analysis.toVar())
+           .set ("stems", arrayToVar (stems, [] (const StemInfo& stem) { return stem.toVar(); }))
+           .set ("midi", midi.toVar())
+           .set ("expires_at", expiresAt);
+
+    if (demo)
+        builder.set ("demo", true);
+
+    return builder.build();
 }
 
 const StemInfo* JobResult::findStem (const juce::String& stemName) const noexcept
@@ -1014,6 +1019,48 @@ juce::var ApiKeyInfo::toVar() const
 
     builder.set ("created_at", createdAt);
     return builder.build();
+}
+
+std::optional<FeedbackResponse> FeedbackResponse::fromJson (const juce::var& json)
+{
+    FeedbackResponse response;
+
+    if (! readBool (json, "refunded", response.refunded, false)
+        || ! readOptionalObject (json, "balance", response.balance, &CreditBalance::fromJson))
+        return std::nullopt;
+
+    return response;
+}
+
+juce::var FeedbackResponse::toVar() const
+{
+    return ObjectBuilder()
+        .set ("refunded", refunded)
+        .set ("balance", balance.has_value() ? balance->toVar() : juce::var())
+        .build();
+}
+
+std::optional<VersionInfo> VersionInfo::fromJson (const juce::var& json)
+{
+    VersionInfo info;
+
+    if (! readString (json, "latest", info.latest)
+        || ! readString (json, "min_supported", info.minSupported, false)
+        || ! readString (json, "download_url", info.downloadUrl, false)
+        || ! readString (json, "notes_url", info.notesUrl, false))
+        return std::nullopt;
+
+    return info;
+}
+
+juce::var VersionInfo::toVar() const
+{
+    return ObjectBuilder()
+        .set ("latest", latest)
+        .set ("min_supported", nullableString (minSupported))
+        .set ("download_url", nullableString (downloadUrl))
+        .set ("notes_url", nullableString (notesUrl))
+        .build();
 }
 
 //==============================================================================

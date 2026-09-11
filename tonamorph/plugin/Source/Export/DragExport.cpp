@@ -1,12 +1,14 @@
 #include "Export/DragExport.h"
 
+#include "Core/Strings.h"
+
 namespace tonamorph::exporting
 {
 
 juce::File DragExport::exportDirectory()
 {
     auto directory = juce::File::getSpecialLocation (juce::File::tempDirectory)
-                         .getChildFile ("Tonamorph")
+                         .getChildFile (strings::productName)
                          .getChildFile ("exports");
     directory.createDirectory();
     return directory;

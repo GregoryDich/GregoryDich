@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * Asynchronous HTTPS client for the Tonamorph API (docs/API_CONTRACT.md v2).
+ * Asynchronous HTTPS client for the API (docs/API_CONTRACT.md v2).
  *
  * Every call returns immediately with a RequestId and runs on an internal
  * juce::ThreadPool. Completion callbacks are always delivered on the message thread
@@ -9,12 +9,14 @@
  * cancelAll() / destruction returned for that request, except with a `cancelled` error
  * when the request was already in flight. Requests that fail with 429 or 5xx (or a
  * transport error) are retried with exponential backoff up to Config::maxRetries,
- * honouring `Retry-After` when present.
+ * honouring `Retry-After` when present. Every request carries `User-Agent`,
+ * `X-Plugin-Version` and `X-Host` (the DAW, from juce::PluginHostType).
  */
 
 #include <JuceHeader.h>
 
 #include "Cloud/Models.h"
+#include "Core/Strings.h"
 
 #include <atomic>
 #include <cstdint>
@@ -37,7 +39,9 @@ public:
         int maxRetries = 3;                                   ///< retries on 429 / 5xx / transport errors
         int initialBackoffMs = 500;                           ///< doubled after each retry, capped at 8 s
         int numThreads = 3;                                   ///< thread-pool size (one stream + parallel downloads)
-        juce::String userAgent { "Tonamorph/" TONAMORPH_VERSION_STRING };
+        juce::String pluginVersion { TONAMORPH_VERSION_STRING };   ///< `X-Plugin-Version`
+        juce::String hostName;                                ///< `X-Host`; filled from juce::PluginHostType when empty
+        juce::String userAgent { juce::String (strings::productName) + "/" + TONAMORPH_VERSION_STRING };
     };
 
     /** Handle for cancelling a request; 0 is never issued. */
@@ -111,6 +115,14 @@ public:
                                Callback<JobStatus> onFinished);
     /** POST /v1/api-keys (contract §11). */
     RequestId createApiKey (const juce::String& name, Callback<ApiKeyInfo> onDone);
+    /** POST /v1/jobs/{jobId}/feedback with a body from core::buildFeedbackJson (GTM B §5).
+        A 404 (route not deployed yet) is reported as an error like any other status. */
+    RequestId submitFeedback (const juce::String& jobId, const juce::String& jsonBody, Callback<FeedbackResponse> onDone);
+    /** GET /v1/version (public, no credentials sent). */
+    RequestId getVersion (Callback<VersionInfo> onDone);
+    /** POST /v1/telemetry/crash with a body from core::buildCrashReportJson; anonymous, so
+        no credentials are sent. value = true on 2xx. */
+    RequestId postCrashReport (const juce::String& jsonBody, Callback<bool> onDone);
     /** Downloads a signed URL to `destination` (parent directory created, partial file
         removed on failure). No auth headers are sent. value = `destination` on success. */
     RequestId downloadFile (const juce::URL& url, const juce::File& destination,

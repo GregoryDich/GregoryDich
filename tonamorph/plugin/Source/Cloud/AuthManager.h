@@ -13,6 +13,7 @@
 
 #include "Cloud/ApiClient.h"
 #include "Cloud/Models.h"
+#include "Core/Strings.h"
 
 #include <functional>
 #include <memory>
@@ -42,6 +43,9 @@ public:
     /** Uses defaultStorageOptions() and immediately loads any persisted session. */
     explicit AuthManager (ApiClient& client);
     AuthManager (ApiClient& client, const juce::PropertiesFile::Options& storageOptions);
+    /** Shares one settings file with the rest of the plugin (PluginSettings), so two
+        writers never overwrite each other's keys. */
+    AuthManager (ApiClient& client, std::shared_ptr<juce::PropertiesFile> sharedStorage);
     ~AuthManager() override;
 
     /** applicationName "Tonamorph", filenameSuffix "settings", folderName "Tonamorph",
@@ -98,7 +102,7 @@ private:
     void scheduleNextTick();
 
     ApiClient& api;
-    std::unique_ptr<juce::PropertiesFile> storage;
+    std::shared_ptr<juce::PropertiesFile> storage;
     juce::ListenerList<Listener> listeners;
 
     State state = State::LoggedOut;

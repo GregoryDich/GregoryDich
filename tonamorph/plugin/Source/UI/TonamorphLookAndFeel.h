@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * Dark look-and-feel for the Tonamorph editor: one palette shared by every component,
+ * Dark look-and-feel for the editor: one palette shared by every component,
  * arc-style rotary knobs and flat rounded buttons.
  */
 

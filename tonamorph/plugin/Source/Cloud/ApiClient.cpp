@@ -2,6 +2,7 @@
 
 #include "Cloud/RetryPolicy.h"
 #include "Cloud/SseParser.h"
+#include "Core/Strings.h"
 
 #include <memory>
 #include <utility>
@@ -104,7 +105,7 @@ HttpResult performOnce (const juce::URL& url, const juce::String& method, const 
 
     if (! connected && result.statusCode == 0)
     {
-        result.transportMessage = "Could not reach the Tonamorph service";
+        result.transportMessage = juce::String::fromUTF8 (strings::serviceUnreachable);
         return result;
     }
 
@@ -269,6 +270,18 @@ void deliverResponse (ApiClient::Callback<T> onDone, ApiClient::Response<T> resp
         deliverFn (std::move (invoke));
 }
 
+/** Header values must be one line of printable ASCII; anything else is dropped. */
+juce::String sanitiseHeaderValue (const juce::String& value, int maxLength = 64)
+{
+    juce::String clean;
+
+    for (const auto c : value)
+        if (c >= 0x20 && c <= 0x7e)
+            clean << static_cast<juce::juce_wchar> (c);
+
+    return clean.trim().substring (0, maxLength);
+}
+
 juce::var makeJsonBody (const std::initializer_list<std::pair<const char*, juce::var>> fields)
 {
     juce::DynamicObject::Ptr object (new juce::DynamicObject());
@@ -318,9 +331,15 @@ ApiClient::ApiClient()
 
 ApiClient::ApiClient (Config configToUse)
     : config (std::move (configToUse)),
-      pool (juce::ThreadPoolOptions{}.withThreadName ("Tonamorph API")
+      pool (juce::ThreadPoolOptions{}.withThreadName (juce::String (strings::productName) + " API")
                                      .withNumberOfThreads (juce::jmax (1, config.numThreads)))
 {
+    config.pluginVersion = sanitiseHeaderValue (config.pluginVersion);
+
+    if (config.hostName.isEmpty())
+        config.hostName = juce::PluginHostType().getHostDescription();
+
+    config.hostName = sanitiseHeaderValue (config.hostName);
 }
 
 ApiClient::~ApiClient()
@@ -601,6 +620,49 @@ ApiClient::RequestId ApiClient::createApiKey (const juce::String& name, Callback
     });
 }
 
+ApiClient::RequestId ApiClient::submitFeedback (const juce::String& jobId, const juce::String& jsonBody,
+                                                Callback<FeedbackResponse> onDone)
+{
+    const auto route = "/v1/jobs/" + juce::URL::addEscapeChars (jobId, false) + "/feedback";
+
+    return enqueue ("POST " + route, [this, route, jsonBody, onDone = std::move (onDone)] (RequestContext& context)
+    {
+        const auto url = makeUrl (route).withPOSTData (jsonBody);
+        const auto headers = buildHeaders (true, "Content-Type: application/json\r\n");
+        const auto http = performWithRetries (url, "POST", headers, getConfig(), false, context.cancelled, nullptr, {});
+
+        deliverResponse (onDone, makeResponse<FeedbackResponse> (http, jsonExtractor<FeedbackResponse> (&FeedbackResponse::fromJson)),
+                         [this, id = context.id] (std::function<void()> fn) { deliver (id, std::move (fn)); });
+    });
+}
+
+ApiClient::RequestId ApiClient::getVersion (Callback<VersionInfo> onDone)
+{
+    return enqueue ("GET /v1/version", [this, onDone = std::move (onDone)] (RequestContext& context)
+    {
+        const auto http = performWithRetries (makeUrl ("/v1/version"), "GET", buildHeaders (false), getConfig(),
+                                              false, context.cancelled, nullptr, {});
+
+        deliverResponse (onDone, makeResponse<VersionInfo> (http, jsonExtractor<VersionInfo> (&VersionInfo::fromJson)),
+                         [this, id = context.id] (std::function<void()> fn) { deliver (id, std::move (fn)); });
+    });
+}
+
+ApiClient::RequestId ApiClient::postCrashReport (const juce::String& jsonBody, Callback<bool> onDone)
+{
+    return enqueue ("POST /v1/telemetry/crash", [this, jsonBody, onDone = std::move (onDone)] (RequestContext& context)
+    {
+        const auto url = makeUrl ("/v1/telemetry/crash").withPOSTData (jsonBody);
+        const auto headers = buildHeaders (false, "Content-Type: application/json\r\n");
+        const auto http = performWithRetries (url, "POST", headers, getConfig(), false, context.cancelled, nullptr, {});
+
+        auto response = makeResponse<bool> (http, [] (const HttpResult&) { return std::optional<bool> (true); });
+
+        deliverResponse (onDone, std::move (response),
+                         [this, id = context.id] (std::function<void()> fn) { deliver (id, std::move (fn)); });
+    });
+}
+
 ApiClient::RequestId ApiClient::downloadFile (const juce::URL& url, const juce::File& destination,
                                               Callback<juce::File> onDone, ProgressCallback progress)
 {
@@ -780,6 +842,12 @@ juce::String ApiClient::buildHeaders (bool includeAuth, const juce::String& extr
         }
 
         headers << "User-Agent: " << config.userAgent << "\r\n";
+
+        if (config.pluginVersion.isNotEmpty())
+            headers << "X-Plugin-Version: " << config.pluginVersion << "\r\n";
+
+        if (config.hostName.isNotEmpty())
+            headers << "X-Host: " << config.hostName << "\r\n";
     }
 
     if (! extra.containsIgnoreCase ("Accept:"))

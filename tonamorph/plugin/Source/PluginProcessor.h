@@ -1,19 +1,24 @@
 #pragma once
 
 /**
- * Tonamorph — the plugin. Owns the parameter tree, the cloud session (ApiClient,
+ * The plugin. Owns the parameter tree, the settings file, the cloud session (ApiClient,
  * AuthManager, JobClient), the sampler engine, the Scale-Snap MIDI processor, the
  * current JobResult and the on-screen keyboard state.
  *
- * Threading: processBlock() touches only the engine, the scale processor and cached
- * atomic parameter pointers. Everything else runs on the message thread. Parameter
- * changes reach the engine through atomics, so host automation is realtime-safe; the
- * few reactions that need the message thread (Scale-Snap model, stem reloads, cached-job
- * restore) are flagged and delivered through an AsyncUpdater.
+ * Threading: processBlock() touches only the engine, the scale processor, cached atomic
+ * parameter pointers and one atomic flag. Everything else runs on the message thread.
+ * Parameter changes reach the engine through atomics, so host automation is
+ * realtime-safe; the few reactions that need the message thread (Scale-Snap model, stem
+ * reloads, cached-job restore) are flagged and delivered through an AsyncUpdater.
+ *
+ * Result flow (ARCHITECTURE.md §5): the analysis — key, BPM, root, Scale-Snap — is applied
+ * the moment the `result` event arrives (JobClient reaches Downloading), and the selected
+ * stem is loaded as soon as its own download lands, before the other stems finish.
  */
 
 #include <JuceHeader.h>
 
+#include "App/PluginSettings.h"
 #include "Cloud/ApiClient.h"
 #include "Cloud/AuthManager.h"
 #include "Cloud/JobClient.h"
@@ -23,6 +28,8 @@
 #include "Engine/ScaleLockProcessor.h"
 
 #include <atomic>
+#include <cstdint>
+#include <functional>
 #include <optional>
 
 namespace tonamorph
@@ -57,11 +64,15 @@ public:
     enum class Category { Bass = 0, Drums, Synth, Vocals };
     static constexpr int numCategories = 4;
 
-    /** Identifier of the APVTS root tree and of the saved state XML element. */
-    static constexpr const char* stateTreeType = "Tonamorph";
+    /** Identifier of the APVTS root tree and of the saved state XML element. Pinned: saved
+        projects carry it, so it must not follow strings::productName. */
+    static constexpr const char* stateTreeType = "Tonamorph";   // not user-facing
     /** Property on the state tree holding the last job id, so a cached job reloads
         without spending a credit. */
     static constexpr const char* lastJobIdProperty = "lastJobId";
+
+    /** What happened to a rating sent with submitFeedback(). */
+    enum class FeedbackOutcome { Sent, Refunded, Failed };
 
     TonamorphAudioProcessor();
     ~TonamorphAudioProcessor() override;
@@ -99,7 +110,7 @@ public:
     const juce::String getProgramName (int index) override { juce::ignoreUnused (index); return {}; }
     void changeProgramName (int index, const juce::String& newName) override { juce::ignoreUnused (index, newName); }
 
-    /** Serialises the parameter tree plus `lastJobIdProperty`. */
+    /** Serialises the parameter tree plus `lastJobIdProperty` (never the demo). */
     void getStateInformation (juce::MemoryBlock& destData) override;
     /** Restores parameters and, when a last job id is present, reloads it from the cache
         (JobClient::loadCachedJob) without a credit charge. */
@@ -112,25 +123,59 @@ public:
     cloud::ApiClient& getApiClient() noexcept { return apiClient; }
     cloud::AuthManager& getAuthManager() noexcept { return authManager; }
     cloud::JobClient& getJobClient() noexcept { return jobClient; }
+    PluginSettings& getSettings() noexcept { return settings; }
     juce::MidiKeyboardState& getKeyboardState() noexcept { return keyboardState; }
+    /** Fires on the message thread whenever the result state changes in a way the editor
+        shows: analysis applied, a stem became playable, a rating was answered. */
+    juce::ChangeBroadcaster& getResultEvents() noexcept { return resultEvents; }
 
     /** The result of the current/last job, if any (message thread). */
     const std::optional<cloud::JobResult>& getCurrentResult() const noexcept { return currentResult; }
+    /** True once a stem of the current result is installed in the engine. */
+    bool isCurrentResultPlayable() const noexcept;
+    /** True when the current result came back from the host's saved state, not a fresh morph. */
+    bool wasCurrentResultRestored() const noexcept { return currentResultRestored; }
     /** Thread-safe: hosts may serialise state off the message thread. */
     juce::String getLastJobId() const;
     std::optional<cloud::KeyInfo> getDetectedKey() const;
     std::optional<double> getDetectedBpm() const;
+    /** Milliseconds from the drop to the first playable stem of the current job (GTM B §1
+        criterion 1); nullopt for restored jobs and the demo. */
+    std::optional<juce::int64> getDropToReadyMs() const noexcept { return dropToReadyMs; }
 
     /** Builds JobOptions from the current parameters (target root, drum slices on, all
         stems, transcribe bass/other/vocals) and a fresh idempotency key. */
     cloud::JobOptions makeJobOptions() const;
-    /** Submits an audio file through the JobClient (checks credits first). */
+    /** Submits an audio file through the JobClient (checks credits first) and starts the
+        drop-to-ready timer. */
     void submitAudioFile (const juce::File& audioFile);
     int getSelectedCategory() const;
     bool isDrumMode() const;
     /** (Re)loads the stem for the current category / root target / drum mode into the
-        engine from the job cache and applies Auto-ADSR. No-op without a ready result. */
+        engine from the job cache and applies Auto-ADSR. No-op without a result; while a
+        job is still downloading, a stem that has not landed yet is loaded when it does. */
     void loadSelectedStem();
+
+    //==============================================================================
+    /** Installs the bundled demo morph as the current result when nothing else is loaded
+        or pending (no credit, no network). Called by the editor when it opens. */
+    void loadDemoIfIdle();
+
+    /** True for a fresh, non-demo result that has not been rated yet. */
+    bool canRateCurrentResult() const;
+    /** POST /v1/jobs/{id}/feedback for the current result; `onDone` runs on the message
+        thread. A refund updates the balance at once. */
+    void submitFeedback (bool thumbsUp, const juce::String& reason, const juce::String& note,
+                         std::function<void (FeedbackOutcome)> onDone);
+
+    /** Crash-report opt-in (PluginSettings); turning it on installs the handler. */
+    void setCrashReportingEnabled (bool enabled);
+    /** Uploads or expires pending crash reports once per process; called on editor open. */
+    void flushCrashReports();
+
+    /** Number of audio blocks that carried a note-on (DAW or on-screen keys); the editor
+        compares snapshots to notice "a key was played since the hint appeared". */
+    std::uint32_t getNoteOnCount() const noexcept { return noteOnBlocks.load (std::memory_order_relaxed); }
 
 private:
     void parameterChanged (const juce::String& parameterID, float newValue) override;
@@ -140,9 +185,12 @@ private:
     void handleAsyncUpdate() override;
     void timerCallback() override;
 
-    /** Called when the JobClient reaches Ready: stores the result, installs the detected
-        scale and root, loads the selected stem. */
-    void onJobReady (const cloud::JobResult& result);
+    /** Called as soon as the JobClient holds a result (the `result` event, a cache load):
+        stores it, installs the detected scale and root, and loads the selected stem if
+        its file is already there. */
+    void onResultAvailable (const cloud::JobResult& result);
+    /** Loads the selected stem when an earlier attempt found its file still downloading. */
+    void loadStemIfArrived();
     void applyScaleParametersToProcessor();
 
     /** Pushes every parameter into the engine atomics (constructor / state restore). */
@@ -151,7 +199,7 @@ private:
     void syncDrumModeToEngine();
     /** Any thread: asks the message thread for a debounced loadSelectedStem(). */
     void requestStemReload();
-    /** Message thread: reloads `jobId` from the JobClient cache when the directory exists. */
+    /** Message thread: reloads `jobId` through the JobClient (cache first, then the server). */
     void restoreCachedJob (const juce::String& jobIdToRestore);
     void setScaleRootParameter (int pitchClass);
     void applyAdsr (const core::Adsr& adsr);
@@ -177,17 +225,33 @@ private:
     std::atomic<float>* scaleRootParam = nullptr;
 
     cloud::ApiClient apiClient;
+    PluginSettings settings;
     cloud::AuthManager authManager;
     cloud::JobClient jobClient;
     engine::SamplerEngine engine;
     engine::ScaleLockProcessor scaleLock;
     juce::MidiKeyboardState keyboardState;
+    juce::ChangeBroadcaster resultEvents;
 
     std::optional<cloud::JobResult> currentResult;
     juce::String lastJobId;
+    /** Job whose analysis is already applied; a Downloading/Ready notification for the same
+        job only checks whether the selected stem has landed. */
+    juce::String analysisAppliedJobId;
+    /** Job for which a stem is installed in the engine (isCurrentResultPlayable). */
+    juce::String playableJobId;
+    bool currentResultRestored = false;
+    /** Set when reloadStem() found the stem still downloading; cleared once it loads. */
+    bool stemLoadPending = false;
+    bool pendingApplyAutoAdsr = true;
+    bool demoLoadAttempted = false;
+    juce::int64 dropTimeMs = 0;
+    std::optional<juce::int64> dropToReadyMs;
+    cloud::ApiClient::RequestId feedbackRequest = cloud::ApiClient::invalidRequest;
 
     std::atomic<bool> scaleParametersDirty { false };
     std::atomic<bool> stemReloadPending { false };
+    std::atomic<std::uint32_t> noteOnBlocks { 0 };
     bool restoringCachedJob = false;
     int stemLoadSerial = 0;
 

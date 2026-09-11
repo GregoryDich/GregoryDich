@@ -8,14 +8,18 @@ playable, scale-snapped sampler you can drag `.mid` or `.fsc` out of.
 ```
 Source/
   Core/        JUCE-free C++20: ScaleLock, Envelope, TransientDetector, ZeroCrossing,
-               MidiFileWriter, FscWriter, Types — the code the unit tests exercise
+               MidiFileWriter, FscWriter, Types, Strings (every user-facing string),
+               SemanticVersion, FeedbackPayload, CrashReportText — the code the unit
+               tests exercise
   Cloud/       ApiClient, AuthManager, JobClient (SSE), UploadEncoder, Models, SseParser,
                RetryPolicy — everything that talks HTTP
   Engine/      SamplerEngine, StemSound/StemVoice, PitchShifter, DrumKit,
                ScaleLockProcessor, AutoAdsr — the realtime-safe instrument
   Export/      MidiExporter, FscExporter, DragExport
-  UI/          TonamorphLookAndFeel
+  App/         PluginSettings (the settings file), CrashReporter (opt-in), DemoMorph
+  UI/          TonamorphLookAndFeel, ScaleKeyboard, MessageToast, FeedbackBar, VersionBanner
   PluginProcessor.{h,cpp}, PluginEditor.{h,cpp}
+Resources/     generate_demo.py — builds the bundled demo morph at configure time
 Tests/         tonamorph_core_tests (no JUCE) + roundtrip.py
 CMakeLists.txt
 ```
@@ -26,8 +30,20 @@ the mechanism keeping the DSP and music-theory layer testable without a plugin h
 
 ## Building
 
-Requirements: **CMake ≥ 3.22**, a C++20 compiler (g++ 13 / clang 15 / MSVC 19.3x) and
-**JUCE 8.0.8**. Everything else is optional.
+Requirements: **CMake ≥ 3.22**, a C++20 compiler (g++ 13 / clang 15 / MSVC 19.3x),
+**JUCE 8.0.8** and a **python3 with numpy** on the PATH (`pip install numpy`; `soundfile`
+is used when present). Everything else is optional.
+
+### The bundled demo morph
+
+Configure runs `Resources/generate_demo.py`, which synthesises a deterministic 4-bar,
+120 BPM, A-minor clip already "morphed" into the plugin's own cache format — four mono
+16-bit 44.1 kHz stems (bass, drums, a pad as `other`, a formant-synthesised vocal; 2.5–4 s
+each), a `score.mid` and a `result.json` carrying `"demo": true` — into `<build>/demo/`
+and embeds it with `juce_add_binary_data` (about 1.2 MB, target `TonamorphDemoData`,
+namespace `DemoData`). Nothing is written into the source tree; the script rewrites a
+file only when its bytes change, so a reconfigure does not cause a rebuild. If numpy is
+missing, configure stops with a message saying so.
 
 ### JUCE: `JUCE_SOURCE_DIR` vs FetchContent
 
@@ -97,7 +113,7 @@ Other targets: `Tonamorph_Standalone` (a host-free app, handy for poking at the 
 
 ## Tests
 
-### `tonamorph_core_tests` — 34 JUCE-free unit tests
+### `tonamorph_core_tests` — 48 JUCE-free unit tests
 
 ```sh
 cmake --build build --target tonamorph_core_tests --parallel 4
@@ -105,10 +121,14 @@ ctest --test-dir build --output-on-failure          # add -C Release on Windows/
 ```
 
 The binary can also be run directly (`build/Tests/tonamorph_core_tests`); it prints one
-line per case and ends with `34 passed, 0 failed, 34 total`. Coverage: scale snapping and
+line per case and ends with `48 passed, 0 failed, 48 total`. Coverage: scale snapping and
 tie-breaking (`Source/Core/ScaleLock.h`), envelope/ADSR derivation, transient detection,
-zero-crossing trimming, the SMF writer, the `.fsc` writer, and one combined export
-fixture.
+zero-crossing trimming, the SMF writer, the `.fsc` writer, one combined export fixture,
+semantic version ordering (the update banner), the feedback JSON payload, the crash-report
+text format and its user-name scrubbing, the strings table (no entry over twelve words,
+and no product-name literal anywhere in `Source/` but `Core/Strings.h` — the test scans
+the tree; a line may opt out with a `not user-facing` comment) and the generated demo
+manifest (strict JSON syntax, required fields, bundle size under 1.5 MB).
 
 ### `Tests/roundtrip.py` — the export format check
 
@@ -181,9 +201,18 @@ is reserved on submission and captured only if the job succeeds (contract §2, �
 known balance is already 0 the paywall opens instead and nothing is spent.
 
 **2 — Play.** When the `result` event lands, the analysis is applied first — Scale-Snap
-takes the detected key, the BPM label updates — and each stem is decoded and swapped into
-the sampler as its download finishes, so the keyboard comes alive stem by stem. Then play
-it, and drag `.mid` or `.fsc` straight into the DAW timeline.
+takes the detected key, the BPM label updates — and the selected stem is decoded and
+swapped into the sampler the moment its own download finishes, before the others land
+(`JobClient` reaches `Downloading` with the result parsed; the processor applies the
+analysis there and loads the stem on the first notification whose WAV exists). Then play
+it, and drag `.mid` or `.fsc` straight into the DAW timeline. The time from the drop to the
+first playable stem is kept as `drop_to_ready_ms` and sent with a rating.
+
+**Before any of that: the demo.** A fresh instance with nothing to restore loads the
+bundled demo morph (job id `demo`, 0 credits, no network) so the keyboard plays before
+sign-in; the drop zone says "Play a key. That's a morphed clip. Now drop yours." Dropping a
+clip while signed out opens the sign-in with "Sign in to morph your own clips. 3 free." and
+morphs the clip once the session exists.
 
 Results are cached under `<user application data>/Tonamorph/jobs/<job_id>/`
 (`result.json`, the stem WAVs, `score.mid`). The processor stores the last job id in its
@@ -194,7 +223,8 @@ credit.
 
 | section | what it holds |
 |---------|---------------|
-| **Header** | Title, the credit balance (`balance.available` from `GET /v1/me`), and a log-out button. |
+| **Banner** | Only when `GET /v1/version` (asked at most once per 24 h, cached in the settings file) reports a `latest` newer than the build: "Tonamorph x.y.z is available." with Download and Dismiss (per version); when the build is below `min_supported`, a persistent "Update required" bar instead. Every API request carries `X-Plugin-Version` and `X-Host` (the DAW, from `juce::PluginHostType`). |
+| **Header** | Title, a Settings menu (the "Send anonymous crash reports" opt-in, default off), the credit balance (`balance.available` from `GET /v1/me`), and sign in / log out. |
 | **Drop zone** | The dashed drag target for the whole window; highlights during a drag, click to open a file chooser. |
 | **Progress** | A progress bar, the stage line (`upload → separate → transcribe → analyze → package`) fed by SSE, and a cancel button that drops the in-flight requests and, when the job is still
 `queued`, calls `DELETE /v1/jobs/{id}` so the reservation is released (a running job
@@ -202,16 +232,38 @@ would answer `409`). |
 | **Category** | Bass / Drums / Synth / Vocals — which stem the keyboard plays. "Synth" is the contract's `other` stem. |
 | **Scale-Snap** | Mode (Detected, Major, Minor, PentatonicMajor, PentatonicMinor, Off) and root selectors, with the detected key and BPM shown beside them. Snapping is entirely client-side (contract §8); a note-off always uses the pitch its note-on was snapped to, even if the mode changed while the key was held. |
 | **Sound** | Attack / Decay / Sustain / Release (seeded from the stem's `suggested_adsr`), filter cutoff and resonance, gain, the root-target knob (`semitones = target_root_midi − stem.root_midi`) and the drum-mode toggle that maps slices to notes from 36 upward. |
-| **Export** | "Drag .mid" and "Drag .fsc" — drag them into the DAW to start an external file drag, or click for a save dialog. Files are written under `<temp>/Tonamorph/exports` and cleaned up after 24 h. |
-| **Keyboard** | An on-screen `juce::MidiKeyboardComponent` spanning MIDI 24–108, so the instrument is playable without a controller. |
-| **Overlays** | `LoginOverlay` (email + password against `POST /v1/auth/token`) while signed out; `PaywallPrompt` when available credits reach 0, built from `GET /v1/plans` and polling `GET /v1/me` every 5 s while open. |
+| **Export + feedback** | "Drag .mid" and "Drag .fsc" — drag them into the DAW to start an external file drag, or click for a save dialog. Files are written under `<temp>/Tonamorph/exports` and cleaned up after 24 h. To the right, once a fresh morph is playable: "How was this morph?" with Good / Not good; Not good opens the reason list (bleed, wrong key, MIDI off, clicks, slow, other) and an optional 140-character note. The rating goes to `POST /v1/jobs/{id}/feedback` with `drop_to_ready_ms`; `refunded: true` shows "Morph returned." and refreshes the balance. One rating per job (remembered in the settings file); a 404 from a backend without the route is treated as sent. |
+| **Keyboard** | An on-screen keyboard (`ui::ScaleKeyboard`) spanning MIDI 24–108, so the instrument is playable without a controller. A toast above it carries the onboarding hints ("Ready. Play C3 — that's your bass, in key." with C3 highlighted; "Drag .mid into your piano roll.") and the three celebrations: the first own-clip morph (in-scale keys glow for 2 s, "Your first morph. F minor · 124 BPM." with the real key and tempo), the first `.mid` drag that lands outside the window ("MIDI's in your DAW."), and the first purchase the balance poll sees ("50 morphs loaded. Thanks for backing a one-person shop." with the real count). All visual, never audio; "seen" flags live in the settings file, not in the project. |
+| **Overlays** | `LoginOverlay` (email + password against `POST /v1/auth/token`), opened by the header button or by a drop while signed out, dismissible; `PaywallPrompt` when available credits reach 0, built from `GET /v1/plans` and polling `GET /v1/me` every 5 s while open. |
 
-> **Paywall caveat.** `PaywallPrompt` skips any plan whose `checkout_url` is null, and
-> `/v1/plans` returns null for every plan until an operator fills in
-> `plans.provider_variant_ids` in the database. Against a freshly seeded database the
-> prompt therefore appears with **no buttons** and the fallback text "Visit tonamorph.com to
-> add more." Nothing errors. See the deployment note in the root [`README.md`](../README.md)
-> and in [`db/README.md`](../db/README.md).
+Every string the window shows lives in `Source/Core/Strings.h` (US English, at most twelve
+words each, the exact copy of `docs/GTM_PLAN.md` Appendix B §3), including the error
+mapping: 413 → "That file's over 10 MB. Try a shorter or 16-bit clip.", 415 → "That's not
+an audio file we can read. WAV, MP3, FLAC work.", 429 → "Whoa, fast. Try again in a
+minute.", `service_unavailable` → "Morphing is paused for maintenance. Your morphs are
+safe.", `worker_unavailable` → "Engine's busy. Nothing was charged — try again shortly.",
+a failed job → "That morph didn't work. Morph returned. Try again?", no network → "You're
+offline. Loaded stems still play; morphing needs internet.", a lost event stream → "Lost
+contact with the morph. Checking…" while polling, 401 → "Please sign in again.", a bad
+password → "Wrong email or password.", an unconfirmed address → "Check your inbox to
+confirm, then sign in.", the auth budget → "Too many tries. Wait a minute, then sign in.",
+and a cached job whose stems are gone → "Cached stems are missing. Morph again to play."
+
+**Paywall.** "That was your last free morph. Nothing happens unless you buy." with three
+equally sized buttons — "50 morphs · $9 once" / "60 a month · $7.99/mo" / "Not now" — the
+lines "Pack morphs never expire." and "Renews monthly. 60 morphs expire at period end.
+Cancel anytime.", no countdowns and no scarcity. Counts and prices come from `/v1/plans`
+when it answers, otherwise from the strings table; a plan without a `checkout_url` (a
+freshly seeded database, see [`db/README.md`](../db/README.md)) opens the website instead,
+so the prompt never appears without buttons.
+
+**Crash reports.** With "Send anonymous crash reports" on, a `juce::SystemStats` crash
+handler writes plugin version, OS, host, timestamp and the stack backtrace (home directory
+and user name scrubbed; never audio, tokens or project paths) to
+`<user application data>/Tonamorph/crash/`. The next editor open posts each report to
+`POST /v1/telemetry/crash` and deletes it; with the option off, reports older than seven
+days are deleted instead. The handler is installed only after opting in, so a host's own
+crash handling is untouched otherwise. Nothing runs on the audio thread.
 
 ## Pointing the plugin at a backend
 
@@ -373,8 +425,8 @@ Get-AuthenticodeSignature Tonamorph-0.1.0-Windows-Setup.exe | Format-List Status
 
 - **SmartScreen reputation takes time.** A freshly signed certificate still triggers "Windows
   protected your PC" until enough downloads accumulate; this is expected and is not fixed by EV.
-- **No auto-update.** The plug-in will show an update banner from a version endpoint that is
-  planned but not implemented; until then users download new installers from the releases page.
+- **No auto-update.** The plug-in shows an update banner from `GET /v1/version` and links
+  the download; installing the new version is still a manual step.
 - `auval` passing is necessary for Logic Pro / GarageBand but not sufficient — Logic runs its
   own checks; test there before publishing.
 - The Windows build is x64 only (no ARM64 VST3); macOS installs system-wide only
