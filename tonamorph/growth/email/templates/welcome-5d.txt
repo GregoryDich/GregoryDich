@@ -1,0 +1,20 @@
+What people morph first
+
+Still 3 morphs on your account. Three ways producers spend the first one:
+
+1. An 808 from a guitar. Drop the loop, play the bass stem an octave down. Scale-snap keeps it in key.
+2. Vocals as a pad. Long attack on the vocal stem, hold a chord, let it swell.
+3. Drums on keys from C1. Every slice on its own key. No chopping, no re-pitching.
+
+One morph is one clip up to 60 s: stems, MIDI, key and BPM. Failed morphs are not charged.
+
+Morph a loop: https://tonamorph.com/download?utm_source=klaviyo&utm_medium=email&utm_campaign=welcome&utm_content=welcome-5d
+
+Reply with what you make. I only feature a loop with your permission.
+
+You're getting this because you created a Tonamorph account and haven't morphed a clip yet.
+
+--
+{{ organization.name }} · {{ organization.full_address }}
+https://tonamorph.com/?utm_source=klaviyo&utm_medium=email&utm_campaign=welcome&utm_content=welcome-5d
+Unsubscribe: {{ unsubscribe_link }}

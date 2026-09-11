@@ -1,0 +1,13 @@
+3 morphs down. Your MIDI stays.
+
+Everything you morphed stays yours: the stems in your project, the MIDI you dragged out. To keep going: 50 morphs for $9, once, never expire; or 60 a month for $7.99. The plugin updates your balance itself.
+
+Get 50 morphs: {% if event.checkout_url_pack_50 %}{{ event.checkout_url_pack_50 }}&utm_source=klaviyo&utm_medium=email&utm_campaign=zero-credits&utm_content=credits-at-zero{% else %}https://tonamorph.com/pricing?utm_source=klaviyo&utm_medium=email&utm_campaign=zero-credits&utm_content=credits-at-zero{% endif %}
+Subscribe: {% if event.checkout_url_sub_monthly %}{{ event.checkout_url_sub_monthly }}&utm_source=klaviyo&utm_medium=email&utm_campaign=zero-credits&utm_content=credits-at-zero{% else %}https://tonamorph.com/pricing?utm_source=klaviyo&utm_medium=email&utm_campaign=zero-credits&utm_content=credits-at-zero{% endif %}
+
+Nothing happens unless you buy. Pack morphs never expire. The subscription renews monthly; 60 morphs expire at period end. Cancel anytime. Both options: pricing (https://tonamorph.com/pricing?utm_source=klaviyo&utm_medium=email&utm_campaign=zero-credits&utm_content=credits-at-zero).
+
+--
+{{ organization.name }} · {{ organization.full_address }}
+https://tonamorph.com/?utm_source=klaviyo&utm_medium=email&utm_campaign=zero-credits&utm_content=credits-at-zero
+Unsubscribe: {{ unsubscribe_link }}

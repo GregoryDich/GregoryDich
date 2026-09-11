@@ -1,0 +1,10 @@
+That one didn't cost a morph
+
+The morph failed; the credit was released, you still have {{ person|lookup:'credits_available'|default:'3' }}. Usual causes: a file over 10 MB or the network dropping mid-upload (clips over 60 s are trimmed, not rejected). Try a WAV or MP3 under 60 s. Fails again? Reply with the file details.
+
+Error code: {{ event.error_code|default:'unknown' }} · stage: {{ event.stage|default:'unknown' }}. Quote it when you reply.
+
+--
+{{ organization.name }} · {{ organization.full_address }}
+A service message about your Tonamorph account.
+https://tonamorph.com/?utm_source=klaviyo&utm_medium=email&utm_campaign=failed-morph&utm_content=first-morph-failure

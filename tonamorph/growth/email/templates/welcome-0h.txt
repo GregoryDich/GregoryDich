@@ -1,0 +1,14 @@
+Your 3 morphs are ready
+
+3 free morphs are on your account. Open Tonamorph in FL Studio, Ableton or Logic, sign in with this email, drop a loop you hold the rights to. Stems come back on your keys, MIDI ready to drag.
+
+Download Tonamorph: https://tonamorph.com/download?utm_source=klaviyo&utm_medium=email&utm_campaign=welcome&utm_content=welcome-0h
+
+Not installed: download (https://tonamorph.com/download?utm_source=klaviyo&utm_medium=email&utm_campaign=welcome&utm_content=welcome-0h). Reply if anything sticks.
+
+You're getting this because you created a Tonamorph account with this address.
+
+--
+{{ organization.name }} · {{ organization.full_address }}
+https://tonamorph.com/?utm_source=klaviyo&utm_medium=email&utm_campaign=welcome&utm_content=welcome-0h
+Unsubscribe: {{ unsubscribe_link }}

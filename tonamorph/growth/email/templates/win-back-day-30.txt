@@ -1,0 +1,12 @@
+What changed in Tonamorph
+
+Since you tried it: the changelog (https://tonamorph.com/changelog?utm_source=klaviyo&utm_medium=email&utm_campaign=win-back&utm_content=win-back-day-30). I added 2 morphs to your account so you can hear the difference on your own loop. If it still isn't for you, one reply tells me why and I stop mailing.
+
+See what changed: https://tonamorph.com/changelog?utm_source=klaviyo&utm_medium=email&utm_campaign=win-back&utm_content=win-back-day-30
+
+You're getting this because your Tonamorph account has been quiet for a month. One reply, and I stop.
+
+--
+{{ organization.name }} · {{ organization.full_address }}
+https://tonamorph.com/?utm_source=klaviyo&utm_medium=email&utm_campaign=win-back&utm_content=win-back-day-30
+Unsubscribe: {{ unsubscribe_link }}

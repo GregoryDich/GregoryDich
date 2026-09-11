@@ -1,0 +1,12 @@
+It's on your keys
+
+{% if event.key %}Your first morph. {{ event.key }} · {{ event.bpm|floatformat:'0' }} BPM.{% endif %}
+
+Your first morph worked. Two things people miss: "Drag .mid" (.fsc in FL) drops the transcription into your piano roll; Drum mode maps slices from C1. Scale-snap follows the detected key; off plays free. {% if event.balance_after == 1 %}1 morph left.{% else %}{{ event.balance_after|default:'2' }} morphs left.{% endif %}
+
+You're getting this because a morph on your Tonamorph account just finished.
+
+--
+{{ organization.name }} · {{ organization.full_address }}
+https://tonamorph.com/?utm_source=klaviyo&utm_medium=email&utm_campaign=first-morph&utm_content=first-morph-success
+Unsubscribe: {{ unsubscribe_link }}

@@ -1,0 +1,16 @@
+{% if event.credits %}{{ event.credits }} morphs added{% else %}Morphs added{% endif %}
+
+Balance updated in the plugin.
+
+1. Morph short, clean loops (under 30 s) for tighter MIDI.
+2. Duplicate the track so each stem keeps its settings.
+3. Save the project: stems reload; after 24 h the plugin asks to reload them.
+
+Subscribers: morphs reset monthly. Receipt: your account (https://tonamorph.com/account?utm_source=klaviyo&utm_medium=email&utm_campaign=purchase&utm_content=purchase-thank-you).
+
+Thanks for backing a one-person shop.
+
+--
+{{ organization.name }} · {{ organization.full_address }}
+A service message about your Tonamorph account.
+https://tonamorph.com/?utm_source=klaviyo&utm_medium=email&utm_campaign=purchase&utm_content=purchase-thank-you

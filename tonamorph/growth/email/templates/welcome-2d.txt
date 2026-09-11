@@ -1,0 +1,16 @@
+Drop any track
+
+Your 3 morphs are still on your account. One loop is enough to hear it: open Tonamorph in your DAW, drop a clip up to 60 s that you hold the rights to, and play C3. That's your bass, in key.
+
+Drums sit on the keys from C1. "Drag .mid" (.fsc in FL) puts the transcription in your piano roll. Wrong notes can't happen: scale-snap follows the detected key.
+
+Download Tonamorph: https://tonamorph.com/download?utm_source=klaviyo&utm_medium=email&utm_campaign=welcome&utm_content=welcome-2d
+
+Not installed yet: download (https://tonamorph.com/download?utm_source=klaviyo&utm_medium=email&utm_campaign=welcome&utm_content=welcome-2d) for FL Studio 21.2+, Ableton Live 12 or Logic Pro 11. Want to see it first: the 60-second demo (https://tonamorph.com/?utm_source=klaviyo&utm_medium=email&utm_campaign=welcome&utm_content=welcome-2d). Reply if anything sticks.
+
+You're getting this because you created a Tonamorph account and haven't morphed a clip yet.
+
+--
+{{ organization.name }} · {{ organization.full_address }}
+https://tonamorph.com/?utm_source=klaviyo&utm_medium=email&utm_campaign=welcome&utm_content=welcome-2d
+Unsubscribe: {{ unsubscribe_link }}

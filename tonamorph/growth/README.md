@@ -153,6 +153,13 @@ state recorded at render time, and per-platform publish status / post ids / link
 checkpoints and metrics. Working files live under `GROWTH_WORK_DIR/<content_item_id>/`. A
 database written by an earlier version is migrated in place when it is opened.
 
+## Email (Klaviyo)
+
+`email/` holds the Klaviyo code templates for the seven lifecycle flows and the launch
+campaign, their manifest and the checker (`python3 email/build.py --check`);
+[`email/README.md`](email/README.md) covers the account, lists, metric seeding, template push
+and flow build.
+
 ## Tests
 
 ```bash
@@ -163,9 +170,10 @@ ruff check .
 
 Every external API (Tonamorph including the SSE stream and `GET /v1/me`, ElevenLabs, Meta,
 TikTok, YouTube) is mocked with respx; no test reaches the network. A full run reports
-**126 passed, 1 skipped** — the skip is the Remotion smoke render when Node or the Remotion
+**132 passed, 1 skipped** — the skip is the Remotion smoke render when Node or the Remotion
 install is missing. `test_licensing.py`, `test_disclosure.py`, `test_attribution.py` and
 `test_credit_guard.py` cover the four compliance guarantees above.
 `tests/test_tools_schema.py` pins every tool's JSON schema against
 `tests/snapshots/tools.json`, so a changed signature fails the suite instead of silently
-drifting from `docs/GROWTH.md` §3.
+drifting from `docs/GROWTH.md` §3. `tests/test_email_templates.py` runs the email checker
+and cross-checks its manifest against the backend's event properties.

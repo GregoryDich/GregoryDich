@@ -1,0 +1,12 @@
+Still have 3 free morphs
+
+Your 3 morphs are unused. If install was the wall: FL Studio 21.2+, Ableton Live 12, Logic Pro 11; rescan plugins after installing. Windows may show a SmartScreen warning (new certificate): More info → Run anyway. Something else? Reply.
+
+Download Tonamorph: https://tonamorph.com/download?utm_source=klaviyo&utm_medium=email&utm_campaign=day-7&utm_content=day-7-nudge
+
+You're getting this because you created a Tonamorph account a week ago and haven't morphed a clip yet.
+
+--
+{{ organization.name }} · {{ organization.full_address }}
+https://tonamorph.com/?utm_source=klaviyo&utm_medium=email&utm_campaign=day-7&utm_content=day-7-nudge
+Unsubscribe: {{ unsubscribe_link }}

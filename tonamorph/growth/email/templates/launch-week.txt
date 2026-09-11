@@ -1,0 +1,22 @@
+Any track. Now an instrument.
+
+Tonamorph is live. It turns any audio into a playable instrument inside FL Studio, Ableton and Logic: stems, MIDI and key in seconds. Drop a clip, play it on your keys, drag the MIDI out.
+
+1. Drop any clip up to 60 s.
+2. Bass, drums, synth and vocals arrive mapped across your keyboard, locked to the detected key.
+3. Drag the .mid or .fsc into your piano roll.
+
+3 free morphs. No card. Create an account, sign in inside the plugin, drop your own loop.
+
+Get 3 free morphs: https://tonamorph.com/signup?utm_source=klaviyo&utm_medium=email&utm_campaign=launch-week&utm_content=launch-week
+
+Want to see it first: the 60-second demo (https://tonamorph.com/?utm_source=klaviyo&utm_medium=email&utm_campaign=launch-week&utm_content=launch-week). After the free ones: 50 morphs for $9, once, or 60 a month for $7.99. Failed morphs are not charged.
+
+Solo developer, Tonamorph Audio. Reply to this email; I read every one.
+
+You're getting this because you joined the Tonamorph waitlist or newsletter.
+
+--
+{{ organization.name }} · {{ organization.full_address }}
+https://tonamorph.com/?utm_source=klaviyo&utm_medium=email&utm_campaign=launch-week&utm_content=launch-week
+Unsubscribe: {{ unsubscribe_link }}
