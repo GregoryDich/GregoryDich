@@ -4,11 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - "snapplay-ai/plugin/**"
+      - "tonamorph/plugin/**"
       - ".github/workflows/plugin.yml"
   pull_request:
     paths:
-      - "snapplay-ai/plugin/**"
+      - "tonamorph/plugin/**"
       - ".github/workflows/plugin.yml"
 
 concurrency:
@@ -29,7 +29,7 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     defaults:
       run:
-        working-directory: snapplay-ai/plugin
+        working-directory: tonamorph/plugin
     steps:
       - uses: actions/checkout@v4
 
@@ -51,27 +51,27 @@ jobs:
       - name: Cache JUCE sources
         uses: actions/cache@v4
         with:
-          path: snapplay-ai/plugin/build/_deps
-          key: juce-8.0.8-${{ runner.os }}-${{ hashFiles('snapplay-ai/plugin/CMakeLists.txt') }}
+          path: tonamorph/plugin/build/_deps
+          key: juce-8.0.8-${{ runner.os }}-${{ hashFiles('tonamorph/plugin/CMakeLists.txt') }}
 
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build and run core tests
         run: |
-          cmake --build build --config Release --target snapplay_core_tests --parallel 4
+          cmake --build build --config Release --target tonamorph_core_tests --parallel 4
           ctest --test-dir build -C Release --output-on-failure
 
       - name: Build VST3
-        run: cmake --build build --config Release --target SnapPlayAI_VST3 --parallel 4
+        run: cmake --build build --config Release --target Tonamorph_VST3 --parallel 4
 
       - name: Build AU
         if: runner.os == 'macOS'
-        run: cmake --build build --config Release --target SnapPlayAI_AU --parallel 4
+        run: cmake --build build --config Release --target Tonamorph_AU --parallel 4
 
       - name: Upload VST3
         uses: actions/upload-artifact@v4
         with:
-          name: SnapPlayAI-VST3-${{ runner.os }}
-          path: snapplay-ai/plugin/build/SnapPlayAI_artefacts/Release/VST3/
+          name: Tonamorph-VST3-${{ runner.os }}
+          path: tonamorph/plugin/build/Tonamorph_artefacts/Release/VST3/
           if-no-files-found: error

@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - "snapplay-ai/backend/**"
-      - "snapplay-ai/infra/**"
+      - "tonamorph/backend/**"
+      - "tonamorph/infra/**"
       - ".github/workflows/deploy.yml"
   workflow_dispatch:
 
@@ -20,7 +20,7 @@ permissions:
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   TERRAFORM_VERSION: "1.9.8"
-  PROJECT_NAME: snapplay
+  PROJECT_NAME: tonamorph
   ENVIRONMENT: prod
   TF_IN_AUTOMATION: "1"
   TF_INPUT: "0"
@@ -60,8 +60,8 @@ jobs:
       - name: Build and push API image
         uses: docker/build-push-action@v6
         with:
-          context: snapplay-ai
-          file: snapplay-ai/infra/Dockerfile.api
+          context: tonamorph
+          file: tonamorph/infra/Dockerfile.api
           push: true
           provenance: false
           tags: |
@@ -73,8 +73,8 @@ jobs:
       - name: Build and push worker image
         uses: docker/build-push-action@v6
         with:
-          context: snapplay-ai
-          file: snapplay-ai/infra/Dockerfile.worker
+          context: tonamorph
+          file: tonamorph/infra/Dockerfile.worker
           push: true
           provenance: false
           tags: |
@@ -90,7 +90,7 @@ jobs:
     timeout-minutes: 30
     defaults:
       run:
-        working-directory: snapplay-ai/infra/aws
+        working-directory: tonamorph/infra/aws
     steps:
       - uses: actions/checkout@v4
 
@@ -123,7 +123,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: tfplan-${{ github.sha }}
-          path: snapplay-ai/infra/aws/tfplan
+          path: tonamorph/infra/aws/tfplan
           retention-days: 1
           if-no-files-found: error
 
@@ -134,10 +134,10 @@ jobs:
     timeout-minutes: 45
     environment:
       name: production
-      url: https://api.snapplay.ai
+      url: https://api.tonamorph.com
     defaults:
       run:
-        working-directory: snapplay-ai/infra/aws
+        working-directory: tonamorph/infra/aws
     steps:
       - uses: actions/checkout@v4
 
@@ -163,7 +163,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: tfplan-${{ github.sha }}
-          path: snapplay-ai/infra/aws
+          path: tonamorph/infra/aws
 
       - name: Terraform apply
         run: terraform apply -input=false tfplan

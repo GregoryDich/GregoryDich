@@ -1,0 +1,82 @@
+# Local development stack. Run from tonamorph/infra:
+#   docker compose up api                 # API with the deterministic fake pipeline
+#   docker compose --profile gpu up       # also the GPU worker (needs the NVIDIA runtime)
+# Environment comes from backend/.env when present (copy backend/.env.example);
+# the fake pipeline needs none.
+name: tonamorph
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    image: tonamorph-api:dev
+    env_file:
+      - path: ../backend/.env
+        required: false
+    environment:
+      TONAMORPH_PIPELINE: ${TONAMORPH_PIPELINE:-fake}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      # Kill switch: "true" makes the API refuse new job submissions.
+      MAINTENANCE_MODE: ${MAINTENANCE_MODE:-false}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../backend:/app:ro
+    command:
+      - uvicorn
+      - app.main:create_app
+      - --factory
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8080"
+      - --reload
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/v1/health', timeout=3).status == 200 else 1)"
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    restart: unless-stopped
+
+  worker:
+    profiles:
+      - gpu
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.worker
+    image: tonamorph-worker:dev
+    env_file:
+      - path: ../backend/.env
+        required: false
+    environment:
+      WORKER_MODE: ${WORKER_MODE:-aws}
+      SERVICE_ROLE: worker
+      TONAMORPH_PIPELINE: ${WORKER_PIPELINE:-local}
+      SEPARATION_MODEL: ${SEPARATION_MODEL:-htdemucs}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
+    volumes:
+      - model-cache:/home/worker/.cache
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  model-cache:

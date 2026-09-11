@@ -1,0 +1,6 @@
+# Copy to backend.hcl (git-ignored) and pass with `terraform init -backend-config=backend.hcl`.
+bucket         = "tonamorph-terraform-state-<account-id>"
+key            = "tonamorph/prod/terraform.tfstate"
+region         = "us-east-1"
+dynamodb_table = "tonamorph-terraform-locks"
+encrypt        = true

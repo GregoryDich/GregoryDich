@@ -4,15 +4,15 @@ on:
   push:
     branches: [main]
     paths:
-      - "snapplay-ai/web/**"
-      - "snapplay-ai/legal/**"
-      - "snapplay-ai/THIRD_PARTY_LICENSES.md"
+      - "tonamorph/web/**"
+      - "tonamorph/legal/**"
+      - "tonamorph/THIRD_PARTY_LICENSES.md"
       - ".github/workflows/web.yml"
   pull_request:
     paths:
-      - "snapplay-ai/web/**"
-      - "snapplay-ai/legal/**"
-      - "snapplay-ai/THIRD_PARTY_LICENSES.md"
+      - "tonamorph/web/**"
+      - "tonamorph/legal/**"
+      - "tonamorph/THIRD_PARTY_LICENSES.md"
       - ".github/workflows/web.yml"
 
 permissions:
@@ -25,7 +25,7 @@ jobs:
     timeout-minutes: 15
     defaults:
       run:
-        working-directory: snapplay-ai/web
+        working-directory: tonamorph/web
     env:
       # Build-time placeholders only; the legal pages must render with every token substituted.
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
@@ -38,7 +38,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: snapplay-ai/web/package-lock.json
+          cache-dependency-path: tonamorph/web/package-lock.json
 
       - run: npm ci --no-audit --no-fund
       - run: npm run lint
@@ -49,5 +49,5 @@ jobs:
       # The product name may live in exactly one place so the rename stays a one-line change.
       - name: Brand indirection
         run: |
-          hits=$(grep -rn "SnapPlay" src public *.ts *.json *.md 2>/dev/null | grep -v "src/lib/brand.ts" || true)
+          hits=$(grep -rn "Tonamorph" src public *.ts *.json *.md 2>/dev/null | grep -v "src/lib/brand.ts" || true)
           if [ -n "$hits" ]; then echo "$hits"; exit 1; fi

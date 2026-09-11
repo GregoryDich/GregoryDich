@@ -1,0 +1,6 @@
+# Serverless worker SDKs, one per WORKER_MODE / TONAMORPH_PIPELINE backend. Optional:
+# the ECS worker (WORKER_MODE=aws) needs neither. infra/Dockerfile.worker installs this
+# file when built with INSTALL_WORKER_SDKS=1 (the default); infra/worker-entrypoint.sh
+# refuses to start a mode whose SDK is missing.
+runpod==1.12.0
+modal==1.5.5

@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tonamorph-growth"
+version = "0.1.0"
+description = "MCP-driven UGC automation engine for Tonamorph"
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp>=4,<5",
+    "httpx>=0.27",
+    "pydantic>=2",
+    "pydantic-settings>=2",
+    "numpy>=1.26",
+    "soundfile>=0.12",
+    "mido>=1.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "respx>=0.21",
+    "ruff>=0.5",
+]
+
+[project.scripts]
+tonamorph-growth = "mcp_server.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["mcp_server*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = ["error::RuntimeWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["remotion"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "ASYNC", "RUF"]
+# ASYNC109/ASYNC240: subprocess timeouts and small metadata writes are deliberate here.
+ignore = ["RUF012", "ASYNC109", "ASYNC240"]

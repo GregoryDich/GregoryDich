@@ -4,11 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - "snapplay-ai/growth/**"
+      - "tonamorph/growth/**"
       - ".github/workflows/growth.yml"
   pull_request:
     paths:
-      - "snapplay-ai/growth/**"
+      - "tonamorph/growth/**"
       - ".github/workflows/growth.yml"
 
 concurrency:
@@ -20,7 +20,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: snapplay-ai/growth
+    working-directory: tonamorph/growth
 
 jobs:
   test:
@@ -34,7 +34,7 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-          cache-dependency-path: snapplay-ai/growth/requirements*.txt
+          cache-dependency-path: tonamorph/growth/requirements*.txt
 
       - name: Install dependencies
         run: |

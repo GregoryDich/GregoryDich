@@ -1,0 +1,12 @@
+# Docker build context is tonamorph/; only backend/ (and infra/ for the entrypoint) belong in images.
+plugin/
+db/
+docs/
+growth/
+infra/aws/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+**/node_modules/
+**/.env
+**/*.pyc

@@ -1,1 +1,0 @@
-"""SnapPlay AI backend package."""
