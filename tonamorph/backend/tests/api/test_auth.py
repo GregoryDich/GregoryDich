@@ -732,6 +732,10 @@ def test_signup_route_proxies_gotrue_with_the_configured_site(settings: Settings
             200, json={"id": user_id, "email": "a@b.c", "identities": [{"provider": "email"}]}
         )
     )
+    # The sign-up is the first sight of the account (§14): one conditional stamp.
+    first_sight = respx.patch(f"{BASE}/rest/v1/profiles").mock(
+        return_value=httpx.Response(200, json=[{"id": user_id, "email": "a@b.c"}])
+    )
     with override_settings(live), TestClient(create_app(live)) as client:
         assert client.app.state.services.memory is None
         response = client.post("/v1/auth/signup", json={"email": "a@b.c", "password": "hunter22"})
@@ -748,3 +752,5 @@ def test_signup_route_proxies_gotrue_with_the_configured_site(settings: Settings
     }
     assert route.calls[0].request.url.params["redirect_to"] == "https://site.test/auth/confirm"
     assert taken.status_code == 409 and obfuscated.called
+    assert first_sight.call_count == 1
+    assert first_sight.calls[0].request.url.params["first_seen_at"] == "is.null"

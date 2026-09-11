@@ -20,6 +20,7 @@ services:
       # Kill switch: "true" makes the API refuse new job submissions.
       MAINTENANCE_MODE: ${MAINTENANCE_MODE:-false}
       SENTRY_DSN: ${SENTRY_DSN:-}
+      KLAVIYO_PRIVATE_API_KEY: ${KLAVIYO_PRIVATE_API_KEY:-}
     ports:
       - "8080:8080"
     volumes:
@@ -61,6 +62,7 @@ services:
       TONAMORPH_PIPELINE: ${WORKER_PIPELINE:-local}
       SEPARATION_MODEL: ${SEPARATION_MODEL:-htdemucs}
       SENTRY_DSN: ${SENTRY_DSN:-}
+      KLAVIYO_PRIVATE_API_KEY: ${KLAVIYO_PRIVATE_API_KEY:-}
       AWS_REGION: ${AWS_REGION:-us-east-1}
     runtime: nvidia
     deploy:

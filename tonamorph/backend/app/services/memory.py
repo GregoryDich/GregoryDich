@@ -33,6 +33,10 @@ from app.errors import (
     ApiException,
 )
 from app.schemas import (
+    FEEDBACK_NOTE_MAX_CHARS,
+    NPS_COMMENT_MAX_CHARS,
+    PLUGIN_IDENTITY_MAX_CHARS,
+    PLUGIN_VERSION_MAX_CHARS,
     AccountExport,
     AffiliateExport,
     ApiKeyCreateResponse,
@@ -40,6 +44,8 @@ from app.schemas import (
     Balance,
     CommissionExport,
     CreditBalance,
+    FeedbackReason,
+    JobFeedbackRequest,
     JobOptions,
     JobResult,
     JobsPage,
@@ -58,12 +64,15 @@ from app.services.credits import (
     parse_ledger_cursor,
 )
 from app.services.events import EVENT_PROGRESS, TERMINAL_EVENTS, JobEvent, JobEventBus
+from app.services.growth import GrowthHooks, SignupFacts
 from app.services.jobs import (
     DEFAULT_POLL_INTERVAL_SECONDS,
     JOB_CREDITS,
     EventsMode,
+    JobFinishedHook,
     job_status_from_record,
     jobs_page,
+    notify_finished,
     parse_job_cursor,
     progress_event,
     status_event,
@@ -71,6 +80,20 @@ from app.services.jobs import (
     without_signed_urls,
 )
 from app.services.plans import PlanRecord
+from app.services.quality import (
+    AUTO_REFUND_FREE_LIFETIME,
+    AUTO_REFUND_LOOKBACK_DAYS,
+    AUTO_REFUND_WINDOW_HOURS,
+    NPS_COOLDOWN_DAYS,
+    FeedbackRecord,
+    Last24hStats,
+    NpsRecord,
+    UserFacts,
+    auto_refund_allowance,
+    auto_refund_reason,
+    elapsed_ms,
+    percentile,
+)
 from app.services.supabase import (
     ACCOUNT_EXISTS_MESSAGE,
     EMAIL_NOT_CONFIRMED_MESSAGE,
@@ -182,6 +205,7 @@ class ProfileRow:
     utm_term: str | None = None
     marketing_opt_in: bool = False
     terms_accepted_at: datetime | None = None
+    first_seen_at: datetime | None = None
 
     def as_record(self) -> dict[str, Any]:
         return dict(self.__dict__)
@@ -329,6 +353,44 @@ class AccountDeletionRow:
     user_id: UUID
     requested_at: datetime
     ledger_rows_kept: int
+
+
+@dataclass
+class JobFeedbackRow:
+    job_id: UUID
+    user_id: UUID
+    rating: str
+    reason: str | None
+    note: str | None
+    drop_to_ready_ms: int | None
+    created_at: datetime
+    updated_at: datetime
+    refunded: bool = False
+
+    def as_record(self) -> dict[str, Any]:
+        return dict(self.__dict__)
+
+
+@dataclass
+class NpsRow:
+    id: UUID
+    user_id: UUID
+    score: int
+    comment: str | None
+    created_at: datetime
+
+    def as_record(self) -> dict[str, Any]:
+        return dict(self.__dict__)
+
+
+@dataclass
+class PluginInstallRow:
+    user_id: UUID
+    plugin_version: str
+    host: str
+    os: str | None
+    first_seen_at: datetime
+    last_seen_at: datetime
 
 
 @dataclass
@@ -568,6 +630,9 @@ class MemoryStore:
     referral_codes: dict[str, ReferralCodeRow] = field(default_factory=dict)
     commissions: dict[UUID, CommissionRow] = field(default_factory=dict)
     account_deletions: dict[UUID, AccountDeletionRow] = field(default_factory=dict)
+    job_feedback: dict[UUID, JobFeedbackRow] = field(default_factory=dict)
+    nps_responses: list[NpsRow] = field(default_factory=list)
+    plugin_installs: dict[tuple[UUID, str, str], PluginInstallRow] = field(default_factory=dict)
     _seq: int = 0
     _ledger_keys: dict[str, LedgerRow] = field(default_factory=dict)
     _job_entries: dict[tuple[UUID, str], LedgerRow] = field(default_factory=dict)
@@ -1007,6 +1072,15 @@ class MemoryStore:
         wanted = normalise_email(email)
         return next((p for p in self.profiles.values() if p.email == wanted), None)
 
+    def mark_first_seen(self, user_id: UUID) -> ProfileRow | None:
+        """The conditional ``update profiles set first_seen_at = now() where first_seen_at
+        is null`` of the PostgREST backend: the row for the one call that stamped it."""
+        profile = self.profiles.get(user_id)
+        if profile is None or profile.deleted_at is not None or profile.first_seen_at is not None:
+            return None
+        profile.first_seen_at = self.now()
+        return profile
+
     def delete_user_account(self, user_id: UUID) -> AccountDeletionRow:
         """``delete_user_account`` of 0004_account_deletion.sql: refuses while a job is
         queued or running, forfeits the remaining credits through the ledger, deletes the
@@ -1050,6 +1124,15 @@ class MemoryStore:
                 for code in self.referral_codes.values():
                     if code.affiliate_id == affiliate.id:
                         code.active = False
+        # Free text is the person; the ratings and scores are the books (0005).
+        for feedback in self.job_feedback.values():
+            if feedback.user_id == user_id:
+                feedback.note = None
+        for answer in self.nps_responses:
+            if answer.user_id == user_id:
+                answer.comment = None
+        for key in [k for k in self.plugin_installs if k[0] == user_id]:
+            del self.plugin_installs[key]
         profile.email = tombstone_email(user_id)
         for key in UTM_KEYS:
             setattr(profile, key, None)
@@ -1300,6 +1383,194 @@ class MemoryStore:
                 return subscription
         return None
 
+    def find_purchase(
+        self, provider: PurchaseProvider, provider_order_id: str
+    ) -> PurchaseRecord | None:
+        for purchase in self.purchases.values():
+            if purchase.provider == provider and purchase.provider_order_id == provider_order_id:
+                return purchase
+        return None
+
+    # --- quality loops (0005: feedback, auto-refund, NPS, plugin installs, status) --------------
+
+    def _auto_refunds(self, user_id: UUID, since: datetime | None) -> int:
+        return sum(
+            1
+            for row in self.ledger
+            if row.user_id == user_id
+            and row.entry_type == "refund"
+            and (row.note or "").startswith(auto_refund_reason(None)[: -len("unspecified")])
+            and (since is None or row.created_at >= since)
+        )
+
+    def refund_job_for_feedback(self, job_id: UUID, user_id: UUID, reason: str | None) -> bool:
+        """``refund_job_for_feedback`` of 0005: the GTM §2.6 rule and its abuse bounds,
+        decided under the account lock; ``True`` when the job's credit is (now) back."""
+        job = self.jobs.get(job_id)
+        if job is None or job.user_id != user_id:
+            raise _not_found(f"job {job_id}")
+        self._lock_account(user_id)
+        if (job_id, "refund") in self._job_entries:
+            return True
+        now = self.now()
+        if (
+            job.status != "succeeded"
+            or job.finished_at is None
+            or job.finished_at < now - timedelta(hours=AUTO_REFUND_WINDOW_HOURS)
+            or reason == "slow"
+        ):
+            return False
+        since = now - timedelta(days=AUTO_REFUND_LOOKBACK_DAYS)
+        captured = sum(
+            1
+            for row in self.ledger
+            if row.user_id == user_id and row.entry_type == "capture" and row.created_at >= since
+        )
+        if self._auto_refunds(user_id, since) >= auto_refund_allowance(captured):
+            return False
+        never_purchased = not any(p.user_id == user_id for p in self.purchases.values())
+        if never_purchased and self._auto_refunds(user_id, None) >= AUTO_REFUND_FREE_LIFETIME:
+            return False
+        self.refund_job(job_id, auto_refund_reason(reason))  # type: ignore[arg-type]
+        return True
+
+    def record_job_feedback(
+        self,
+        job_id: UUID,
+        user_id: UUID,
+        rating: str,
+        reason: str | None,
+        note: str | None,
+        drop_to_ready_ms: int | None,
+    ) -> JobFeedbackRow:
+        """``record_job_feedback`` of 0005: one row per job, refreshed on every call; a
+        thumbs-down runs :meth:`refund_job_for_feedback`."""
+        if rating not in ("up", "down"):
+            raise _invalid_argument("p_rating must be up or down")
+        if reason is not None and reason not in FeedbackReason.__args__:  # type: ignore[attr-defined]
+            raise _invalid_argument("p_reason is not a feedback reason")
+        if note is not None and len(note) > FEEDBACK_NOTE_MAX_CHARS:
+            raise _invalid_argument(f"p_note must be at most {FEEDBACK_NOTE_MAX_CHARS} characters")
+        if drop_to_ready_ms is not None and drop_to_ready_ms < 0:
+            raise _invalid_argument("p_drop_to_ready_ms must not be negative")
+        job = self.jobs.get(job_id)
+        if job is None or job.user_id != user_id:
+            raise _not_found(f"job {job_id}")
+        if job.status in ACTIVE_JOB_STATUSES:
+            raise _conflict(f"job is {job.status}")
+        now = self.now()
+        row = self.job_feedback.get(job_id)
+        if row is None:
+            row = JobFeedbackRow(
+                job_id=job_id,
+                user_id=user_id,
+                rating=rating,
+                reason=reason,
+                note=note,
+                drop_to_ready_ms=drop_to_ready_ms,
+                created_at=now,
+                updated_at=now,
+            )
+            self.job_feedback[job_id] = row
+        else:
+            row.rating = rating
+            row.reason = reason
+            row.note = note
+            if drop_to_ready_ms is not None:
+                row.drop_to_ready_ms = drop_to_ready_ms
+            row.updated_at = now
+        if rating == "down" and self.refund_job_for_feedback(job_id, user_id, reason):
+            row.refunded = True
+        return row
+
+    def submit_nps(self, user_id: UUID, score: int, comment: str | None) -> NpsRow:
+        """``submit_nps`` of 0005: one answer per user per 30 days."""
+        if not 0 <= score <= 10:
+            raise _invalid_argument("p_score must be between 0 and 10")
+        if comment is not None and len(comment) > NPS_COMMENT_MAX_CHARS:
+            raise _invalid_argument(f"p_comment must be at most {NPS_COMMENT_MAX_CHARS} characters")
+        if user_id not in self.profiles:
+            raise _not_found(f"profile {user_id}")
+        now = self.now()
+        cooldown = now - timedelta(days=NPS_COOLDOWN_DAYS)
+        if any(r.user_id == user_id and r.created_at >= cooldown for r in self.nps_responses):
+            raise _conflict("nps answered within 30 days")
+        row = NpsRow(id=uuid4(), user_id=user_id, score=score, comment=comment, created_at=now)
+        self.nps_responses.append(row)
+        return row
+
+    def touch_plugin_install(
+        self, user_id: UUID, plugin_version: str, host: str, os: str | None
+    ) -> bool:
+        """``touch_plugin_install`` of 0005: ``True`` for a new ``(version, host)`` pair."""
+        if not plugin_version or len(plugin_version) > PLUGIN_VERSION_MAX_CHARS:
+            raise _invalid_argument("p_plugin_version is required")
+        if not host or len(host) > PLUGIN_IDENTITY_MAX_CHARS:
+            raise _invalid_argument("p_host is required")
+        if os is not None and len(os) > PLUGIN_IDENTITY_MAX_CHARS:
+            raise _invalid_argument("p_os is too long")
+        if user_id not in self.profiles:
+            raise _not_found(f"profile {user_id}")
+        key = (user_id, plugin_version, host)
+        now = self.now()
+        existing = self.plugin_installs.get(key)
+        if existing is not None:
+            existing.last_seen_at = now
+            existing.os = os or existing.os
+            return False
+        self.plugin_installs[key] = PluginInstallRow(
+            user_id=user_id,
+            plugin_version=plugin_version,
+            host=host,
+            os=os,
+            first_seen_at=now,
+            last_seen_at=now,
+        )
+        return True
+
+    def user_facts(self, user_id: UUID) -> UserFacts | None:
+        """``user_facts`` of 0005."""
+        profile = self.profiles.get(user_id)
+        if profile is None:
+            return None
+        finished = sorted(
+            job.finished_at
+            for job in self.jobs.values()
+            if job.user_id == user_id and job.status == "succeeded" and job.finished_at is not None
+        )
+        return UserFacts(
+            email=profile.email,
+            plan=profile.plan,
+            morphs_total=len(finished),
+            first_morph_at=finished[0] if finished else None,
+            last_morph_at=finished[-1] if finished else None,
+            has_purchased=any(p.user_id == user_id for p in self.purchases.values()),
+        )
+
+    def status_last_24h(self) -> Last24hStats:
+        """``status_last_24h()`` of 0005 over the jobs that finished in the window."""
+        since = self.now() - timedelta(hours=24)
+        finished = [
+            job
+            for job in self.jobs.values()
+            if job.finished_at is not None
+            and job.finished_at >= since
+            and job.status in ("succeeded", "failed")
+        ]
+        latencies = [
+            float(elapsed_ms(job.started_at, job.created_at, job.finished_at))
+            for job in finished
+            if job.status == "succeeded" and job.finished_at is not None
+        ]
+        p50, p95 = percentile(latencies, 0.5), percentile(latencies, 0.95)
+        return Last24hStats(
+            morphs=len(finished),
+            succeeded=sum(1 for job in finished if job.status == "succeeded"),
+            failed=sum(1 for job in finished if job.status == "failed"),
+            p50_ms=int(round(p50)) if p50 is not None else None,
+            p95_ms=int(round(p95)) if p95 is not None else None,
+        )
+
     # --- API keys (§11) -------------------------------------------------------------------------
 
     def create_api_key(self, user_id: UUID, name: str | None) -> tuple[ApiKeyRow, str]:
@@ -1468,11 +1739,13 @@ class MemoryJobsService:
         *,
         events_mode: EventsMode = "bus",
         poll_interval: float = DEFAULT_POLL_INTERVAL_SECONDS,
+        on_finished: JobFinishedHook | None = None,
     ) -> None:
         self._store = store
         self._bus = bus
         self._events_mode: EventsMode = events_mode
         self._poll_interval = poll_interval
+        self._on_finished = on_finished
 
     async def create(
         self, user_id: UUID, options: JobOptions, input_key: str, credits_reserved: int
@@ -1529,6 +1802,7 @@ class MemoryJobsService:
         event = status_event(status)
         if event["event"] in TERMINAL_EVENTS:
             self._bus.publish(row.id, event["event"], event["data"])
+        notify_finished(self._on_finished, status, row.user_id)
         return status
 
     def events(self, job_id: UUID) -> AsyncIterator[JobEvent]:
@@ -1571,8 +1845,9 @@ class MemoryStorageService:
 
 
 class MemoryUsersService:
-    def __init__(self, store: MemoryStore) -> None:
+    def __init__(self, store: MemoryStore, *, growth: GrowthHooks | None = None) -> None:
         self._store = store
+        self._growth = growth
 
     async def get(self, user_id: UUID) -> Profile | None:
         row = self._store.profiles.get(user_id)
@@ -1583,7 +1858,19 @@ class MemoryUsersService:
         return profile_from_record(row.as_record()) if row else None
 
     async def ensure(self, user_id: UUID, email: str) -> Profile:
-        return profile_from_record(self._store.ensure_user(user_id, email).as_record())
+        created = user_id not in self._store.profiles
+        row = self._store.ensure_user(user_id, email)
+        if row.first_seen_at is None and row.deleted_at is None:
+            await self.first_sight(user_id, "plugin" if created else "web")
+        return profile_from_record(row.as_record())
+
+    async def first_sight(self, user_id: UUID, source: str) -> bool:
+        row = self._store.mark_first_seen(user_id)
+        if row is None:
+            return False
+        if self._growth is not None:
+            self._growth.signed_up(SignupFacts.from_record(row.as_record()), source)  # type: ignore[arg-type]
+        return True
 
     async def set_plan(self, user_id: UUID, plan: PlanKind, renews_at: datetime | None) -> Profile:
         return profile_from_record(self._store.set_plan(user_id, plan, renews_at).as_record())
@@ -1695,6 +1982,43 @@ class MemoryPurchasesService:
     ) -> SubscriptionRecord | None:
         return self._store.find_subscription(provider, provider_subscription_id)
 
+    async def find_purchase(
+        self, provider: PurchaseProvider, provider_order_id: str
+    ) -> PurchaseRecord | None:
+        return self._store.find_purchase(provider, provider_order_id)
+
+
+class MemoryQualityService:
+    def __init__(self, store: MemoryStore) -> None:
+        self._store = store
+
+    async def record_feedback(
+        self, job_id: UUID, user_id: UUID, feedback: JobFeedbackRequest
+    ) -> FeedbackRecord:
+        row = self._store.record_job_feedback(
+            job_id,
+            user_id,
+            feedback.rating,
+            feedback.reason,
+            feedback.note,
+            feedback.drop_to_ready_ms,
+        )
+        return FeedbackRecord.model_validate(row.as_record())
+
+    async def submit_nps(self, user_id: UUID, score: int, comment: str | None) -> NpsRecord:
+        return NpsRecord.model_validate(self._store.submit_nps(user_id, score, comment).as_record())
+
+    async def touch_plugin_install(
+        self, user_id: UUID, plugin_version: str, host: str, os: str | None
+    ) -> bool:
+        return self._store.touch_plugin_install(user_id, plugin_version, host, os)
+
+    async def user_facts(self, user_id: UUID) -> UserFacts | None:
+        return self._store.user_facts(user_id)
+
+    async def status_last_24h(self) -> Last24hStats:
+        return self._store.status_last_24h()
+
 
 class MemoryPlansService:
     def __init__(self, store: MemoryStore) -> None:
@@ -1724,6 +2048,7 @@ __all__ = [
     "ApiKeyRow",
     "CommissionRow",
     "GoTrueUserRow",
+    "JobFeedbackRow",
     "JobRow",
     "LedgerRow",
     "MemoryApiKeysService",
@@ -1733,10 +2058,13 @@ __all__ = [
     "MemoryJobsService",
     "MemoryPlansService",
     "MemoryPurchasesService",
+    "MemoryQualityService",
     "MemoryStorageService",
     "MemoryStore",
     "MemoryUsersService",
     "MemoryWebhookEventsService",
+    "NpsRow",
+    "PluginInstallRow",
     "ProfileRow",
     "ReferralCodeRow",
     "SentMail",

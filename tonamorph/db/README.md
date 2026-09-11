@@ -1,7 +1,8 @@
 # Tonamorph — database
 
-PostgreSQL 16 / Supabase schema for the credit ledger, jobs, billing, API keys and
-affiliates described in `docs/API_CONTRACT.md` (§3, §6, §10, §11, §12).
+PostgreSQL 16 / Supabase schema for the credit ledger, jobs, billing, API keys,
+affiliates and the quality loops (feedback, NPS, status) described in
+`docs/API_CONTRACT.md` (§2, §3, §6, §10, §11, §12, §14).
 
 > ## ⚠ The seed cannot sell anything until you fill in `provider_variant_ids`
 >
@@ -61,7 +62,9 @@ db/
 │   ├── 0001_schema.sql      extensions, enums, tables, indexes, triggers, plan seed
 │   ├── 0002_functions.sql   credit_balance type and every SECURITY DEFINER function
 │   ├── 0003_rls.sql         roles, privileges, row-level security, function grants
-│   └── 0004_account_deletion.sql  sign-up metadata on profiles, tombstone deletion, auth.users delete trigger
+│   ├── 0004_account_deletion.sql  sign-up metadata on profiles, tombstone deletion, auth.users delete trigger
+│   └── 0005_quality_loops.sql     job_feedback + bounded auto-refund, nps_responses, plugin_installs,
+│                                  user_facts / status_last_24h, growth_daily view, profiles.first_seen_at
 └── tests/
     ├── 00_local_auth_shim.sql   minimal auth.users / auth.uid() for local clusters only
     ├── run_tests.sh             throwaway PostgreSQL 16 cluster + all tests
@@ -152,6 +155,24 @@ the mutating ones; `get_balance` is also granted to `authenticated` and refuses 
 | `revoke_api_key(p_key_id, p_user_id)` | `boolean` | owner-scoped, idempotent |
 | `delete_user_account(p_user_id)` | `account_deletions` | GDPR erasure (`service_role` only, also fired by `on_auth_user_deleted`): `P0404` unknown profile, `P0409` while a job is `queued`/`running`, idempotent on a tombstone; writes off unused credits with one `adjust` row, deletes API keys and job assets, scrubs job/purchase payloads, revokes referral codes, replaces the e-mail with `deleted+<uuid>@invalid` and stamps `deleted_at`; ledger, purchases and commissions stay for accounting |
 | `handle_new_user()` (trigger) | — | on `auth.users` insert: creates the profile, copies `referral_code` (active codes only), `utm_*`, `marketing_opt_in` and `terms_accepted_at` from `raw_user_meta_data`, grants the sign-up credits |
+| `refund_job_for_feedback(p_job_id, p_user_id, p_reason)` | `boolean` | the GTM §2.6 rule under the job row and the account lock: the caller's `succeeded` job, `finished_at` within 24 h, `p_reason <> 'slow'`; automatic refunds (ledger `refund` rows whose note starts `user:unusable:`) at most `max(3, captured_last_30_days / 5)` per 30 days and at most 2 ever for an account with no `purchases` row. Calls `refund_job(p_job_id, 'user:unusable:<reason|unspecified>')`; returns whether the job's credit is back (true again for a job already refunded, false when ineligible or over a bound); `P0404` for another user's job |
+| `record_job_feedback(p_job_id, p_user_id, p_rating, p_reason, p_note, p_drop_to_ready_ms)` | `job_feedback` | one row per job (upsert; a null `p_drop_to_ready_ms` keeps the stored one); `22023` for a rating outside `up`/`down`, an unknown reason, a note over 140 characters or a negative timer; `P0404` for another user's job, `P0409` while it is `queued`/`running`; a `down` rating runs `refund_job_for_feedback` and sets `refunded` |
+| `submit_nps(p_user_id, p_score, p_comment)` | `nps_responses` | `22023` outside 0–10 or a comment over 500 characters, `P0404` unknown profile, `P0409` when the user answered within 30 days (decided under the profile row lock) |
+| `touch_plugin_install(p_user_id, p_plugin_version, p_host, p_os)` | `boolean` | true the first time the user is seen with this `(plugin_version, host)` pair (the `Plugin Installed` event); afterwards stamps `last_seen_at`, fills `os` when it was null, returns false. `22023` for an empty or over-long value, `P0404` unknown profile |
+| `user_facts(p_user_id)` | `(email, plan, morphs_total, first_morph_at, last_morph_at, has_purchased)` | read-only facts a growth event carries; no row for an unknown profile |
+| `status_last_24h()` | `(morphs, succeeded, failed, p50_ms, p95_ms)` | jobs that finished in the last 24 h (`succeeded`/`failed` only) and the latency percentiles of the successes, `finished_at - coalesce(started_at, created_at)`; nulls when nothing succeeded |
+
+Tables added by `0005_quality_loops.sql`: `job_feedback` (one row per job: `rating`,
+`reason`, `note`, `drop_to_ready_ms`, `refunded`; owner may `select`), `nps_responses`
+(`score`, `comment`; owner may `select`), `plugin_installs` (`service_role` only; primary
+key `(user_id, plugin_version, host)`, `os`, `first_seen_at`, `last_seen_at`) and the
+column `profiles.first_seen_at`, which the backend sets once with `update … where
+first_seen_at is null` when it first meets an account (the `Signed Up` event). The view
+`growth_daily` (`service_role` only) has one row per UTC day with something to report:
+`signups`, `morphs_started`, `morphs_succeeded`, `morphs_failed`, `p50_ms`, `p95_ms`,
+`credits_exhausted` (captures that left the balance at zero), `purchases`, `revenue_cents`.
+`delete_user_account` now also clears `job_feedback.note` and `nps_responses.comment` and
+deletes the user's `plugin_installs`; ratings and scores stay.
 
 Internal helpers, called by the functions above and granted to nobody:
 `balance_of(p_account)`, `lock_credit_account(p_user_id)`, `append_ledger(...)` and
@@ -185,8 +206,9 @@ The script needs the PostgreSQL 16 binaries (`PGBIN`, default
 stranded webhook claim), and always stops and removes the cluster on exit. Any failed assertion, SQL error or unexpected race outcome
 exits non-zero.
 
-A passing run ends with `ALL TESTS PASSED (8 test groups)`: the six `tests/test_*.sql`
-files (affiliates, api_keys, jobs, ledger, rls, webhooks) plus two concurrency races — the
-last credit, which must end with exactly one winner and one `insufficient_credits`, and a
+A passing run ends with `ALL TESTS PASSED (13 test groups)`: the eleven `tests/test_*.sql`
+files (account_deletion, affiliates, api_keys, growth_daily, jobs, ledger, nps,
+quality_loops, rls, signup_metadata, webhooks) plus two concurrency races — the last
+credit, which must end with exactly one winner and one `insufficient_credits`, and a
 stranded webhook claim past its lease, which exactly one of two simultaneous workers may
 reclaim.

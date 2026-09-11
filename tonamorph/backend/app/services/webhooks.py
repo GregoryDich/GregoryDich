@@ -79,6 +79,12 @@ class PurchasesService(Protocol):
         self, provider: PurchaseProvider, provider_subscription_id: str
     ) -> SubscriptionRecord | None: ...
 
+    async def find_purchase(
+        self, provider: PurchaseProvider, provider_order_id: str
+    ) -> PurchaseRecord | None:
+        """The sale a provider refund or chargeback names (§4 ``Refund Issued``)."""
+        ...
+
 
 class SupabaseWebhookEventsService:
     """The ``webhook_events`` claim: an event is applied at most once, but a delivery that
@@ -204,6 +210,19 @@ class SupabasePurchasesService:
             limit=1,
         )
         return SubscriptionRecord.model_validate(rows[0]) if rows else None
+
+    async def find_purchase(
+        self, provider: PurchaseProvider, provider_order_id: str
+    ) -> PurchaseRecord | None:
+        rows = await self._client.select(
+            "purchases",
+            filters=[
+                ("provider", "eq", provider),
+                ("provider_order_id", "eq", provider_order_id),
+            ],
+            limit=1,
+        )
+        return PurchaseRecord.model_validate(rows[0]) if rows else None
 
 
 __all__ = [

@@ -19,6 +19,11 @@ Subscription renewals grant perishable credits: the grant is issued here with
 ``expires_at`` = the end of the billing period, under the webhook's idempotency key, so
 ``record_purchase``'s own grant is a no-op and ``expire_credits()`` clears the remainder
 at the period boundary (§13). Credit-pack grants never expire.
+
+Three growth events leave from here (§14): ``Purchase Completed`` for the paying event,
+``Subscription Cancelled`` for a cancellation, and ``Refund Issued`` for a provider refund
+or chargeback — Paddle ``adjustment.*`` once approved, LemonSqueezy ``order_refunded`` —
+which is attributed through the purchase it names and changes no credits here.
 """
 
 from __future__ import annotations
@@ -63,7 +68,22 @@ LEMONSQUEEZY_SUBSCRIPTION_OBJECT_EVENTS = frozenset(
 LEMONSQUEEZY_SUBSCRIPTION_EVENTS = LEMONSQUEEZY_SUBSCRIPTION_OBJECT_EVENTS | {
     LEMONSQUEEZY_INVOICE_EVENT
 }
+LEMONSQUEEZY_REFUND_EVENT = "order_refunded"
+LEMONSQUEEZY_RENEWAL_REASON = "renewal"
 PADDLE_PURCHASE_EVENT = "transaction.completed"
+PADDLE_ADJUSTMENT_EVENTS = frozenset({"adjustment.created", "adjustment.updated"})
+PADDLE_REFUND_ACTIONS = frozenset({"refund", "chargeback"})
+PADDLE_APPROVED = "approved"
+PADDLE_RENEWAL_ORIGIN = "subscription_recurring"
+PADDLE_HANDLED_EVENTS = frozenset(
+    {
+        PADDLE_PURCHASE_EVENT,
+        "subscription.activated",
+        "subscription.updated",
+        "subscription.canceled",
+        *PADDLE_ADJUSTMENT_EVENTS,
+    }
+)
 LEMONSQUEEZY_STATUS: dict[str, SubscriptionStatus] = {
     "on_trial": "trialing",
     "active": "active",
@@ -137,6 +157,18 @@ def verify_paddle(raw: bytes, header: str | None, secret: str, *, now: float | N
 
 
 @dataclass(frozen=True, slots=True)
+class RefundInfo:
+    """A provider refund or chargeback that was approved: the sale it reverses (its
+    provider order id), the money, and the provider's reason. ``reference`` names the
+    adjustment itself, so the event created for it and the update to it count once."""
+
+    order_id: str | None
+    amount_cents: int
+    reason: str | None
+    reference: str
+
+
+@dataclass(frozen=True, slots=True)
 class WebhookEvent:
     """One provider event, normalised."""
 
@@ -155,6 +187,8 @@ class WebhookEvent:
     subscription_status: SubscriptionStatus | None
     period_end: datetime | None
     payload: dict[str, Any]
+    is_renewal: bool = False
+    refund: RefundInfo | None = None
 
     @property
     def idempotency_key(self) -> str:
@@ -212,6 +246,14 @@ def parse_lemonsqueezy(payload: Mapping[str, Any]) -> WebhookEvent:
     subscription_id = _str_or_none(attributes.get("subscription_id")) or (
         event_id if event_type in LEMONSQUEEZY_SUBSCRIPTION_OBJECT_EVENTS else None
     )
+    refund: RefundInfo | None = None
+    if event_type == LEMONSQUEEZY_REFUND_EVENT:
+        refund = RefundInfo(
+            order_id=event_id,
+            amount_cents=_int(attributes.get("refunded_amount")) or total,
+            reason=None,
+            reference=f"lemonsqueezy:order:{event_id}",
+        )
     return WebhookEvent(
         provider="lemonsqueezy",
         event_type=event_type,
@@ -229,6 +271,8 @@ def parse_lemonsqueezy(payload: Mapping[str, Any]) -> WebhookEvent:
         subscription_status=status,
         period_end=_timestamp(attributes.get("renews_at") or attributes.get("ends_at")),
         payload=dict(payload),
+        is_renewal=str(attributes.get("billing_reason") or "") == LEMONSQUEEZY_RENEWAL_REASON,
+        refund=refund,
     )
 
 
@@ -248,7 +292,26 @@ def parse_paddle(payload: Mapping[str, Any]) -> WebhookEvent:
     total = _int(totals.get("total"))
     earnings = _int(totals.get("earnings")) or max(total - _int(totals.get("fee")), 0)
     is_transaction = event_type.startswith("transaction.")
+    is_adjustment = event_type in PADDLE_ADJUSTMENT_EVENTS
     period = _mapping(data.get("current_billing_period"))
+    refund: RefundInfo | None = None
+    if (
+        is_adjustment
+        and str(data.get("status") or "") == PADDLE_APPROVED
+        and str(data.get("action") or "") in PADDLE_REFUND_ACTIONS
+    ):
+        refund = RefundInfo(
+            order_id=_str_or_none(data.get("transaction_id")),
+            amount_cents=_int(_mapping(data.get("totals")).get("total")),
+            reason=_str_or_none(data.get("reason")),
+            reference=f"paddle:adjustment:{_str_or_none(data.get('id')) or event_id}",
+        )
+    if is_adjustment:
+        subscription_id: str | None = None
+    elif is_transaction:
+        subscription_id = _str_or_none(data.get("subscription_id"))
+    else:
+        subscription_id = _str_or_none(data.get("id"))
     return WebhookEvent(
         provider="paddle",
         event_type=event_type,
@@ -261,12 +324,14 @@ def parse_paddle(payload: Mapping[str, Any]) -> WebhookEvent:
         referral_code=_str_or_none(custom.get("ref")),
         amount_cents=total,
         net_cents=earnings,
-        subscription_id=_str_or_none(
-            data.get("subscription_id") if is_transaction else data.get("id")
+        subscription_id=subscription_id,
+        subscription_status=(
+            None if is_adjustment else PADDLE_STATUS.get(str(data.get("status") or ""))
         ),
-        subscription_status=PADDLE_STATUS.get(str(data.get("status") or "")),
         period_end=_timestamp(period.get("ends_at") or data.get("next_billed_at")),
         payload=dict(payload),
+        is_renewal=str(data.get("origin") or "") == PADDLE_RENEWAL_ORIGIN,
+        refund=refund,
     )
 
 
@@ -307,6 +372,12 @@ async def resolve_user(services: Services, event: WebhookEvent) -> UUID:
         user = await services.users.find_by_email(event.email)
         if user is not None:
             return user.id
+    if event.refund is not None and event.refund.order_id is not None:
+        # A Paddle adjustment names neither the customer's email nor the checkout's
+        # custom data, only the transaction it reverses.
+        purchase = await services.purchases.find_purchase(event.provider, event.refund.order_id)
+        if purchase is not None:
+            return purchase.user_id
     raise ApiException(NOT_FOUND, message="No account matches this purchase.")
 
 
@@ -408,7 +479,7 @@ async def _apply(services: Services, event: WebhookEvent) -> None:
                 plan.name,
                 event.period_end,
             )
-        await services.purchases.record_purchase(
+        purchase = await services.purchases.record_purchase(
             user_id=user_id,
             provider=event.provider,
             provider_order_id=event.order_id,
@@ -418,6 +489,16 @@ async def _apply(services: Services, event: WebhookEvent) -> None:
             referral_code=await resolve_referral_code(services, event),
             raw=event.payload,
             idempotency_key=event.idempotency_key,
+        )
+        services.growth.purchase_completed(
+            user_id,
+            event.email,
+            plan=plan,
+            price_usd=event.amount_cents / 100,
+            credits=purchase.credits,
+            is_renewal=event.is_renewal,
+            referral_code=purchase.referral_code,
+            unique_id=f"purchase_completed:{event.idempotency_key}",
         )
 
     if event.subscription_id and event.subscription_status is not None:
@@ -440,6 +521,23 @@ async def _apply(services: Services, event: WebhookEvent) -> None:
             user_id,
             plan_kind_for(subscription.status, subscription.current_period_end),
             subscription.current_period_end,
+        )
+        if event.subscription_status == "cancelled":
+            services.growth.subscription_cancelled(
+                user_id,
+                event.email,
+                plan_id=subscription.plan_id,
+                period_end=subscription.current_period_end,
+                unique_id=f"subscription_cancelled:{event.idempotency_key}",
+            )
+
+    if event.refund is not None:
+        services.growth.refund_issued(
+            user_id,
+            event.email,
+            amount_usd=event.refund.amount_cents / 100,
+            reason=event.refund.reason,
+            unique_id=f"refund_issued:{event.refund.reference}",
         )
     log.info(
         "webhook processed",
@@ -494,6 +592,7 @@ async def lemonsqueezy(
     if (
         event.event_type not in LEMONSQUEEZY_PURCHASE_EVENTS
         and event.event_type not in LEMONSQUEEZY_SUBSCRIPTION_EVENTS
+        and event.event_type != LEMONSQUEEZY_REFUND_EVENT
     ):
         return WebhookAck(status="ok")
     return await process_event(services, event)
@@ -505,11 +604,9 @@ async def paddle(request: Request, services: Services = Depends(get_services)) -
     raw = await _raw_body(request)
     verify_paddle(raw, request.headers.get("paddle-signature"), secret)
     event = parse_paddle(_json(raw))
-    if event.event_type not in (
-        "transaction.completed",
-        "subscription.activated",
-        "subscription.updated",
-        "subscription.canceled",
-    ):
+    if event.event_type not in PADDLE_HANDLED_EVENTS:
+        return WebhookAck(status="ok")
+    if event.event_type in PADDLE_ADJUSTMENT_EVENTS and event.refund is None:
+        # Pending, rejected or reversed adjustments and credits move nothing here.
         return WebhookAck(status="ok")
     return await process_event(services, event)

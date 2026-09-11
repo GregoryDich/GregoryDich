@@ -26,11 +26,15 @@ class ServiceBundle(Protocol):
 
 
 async def reap_once(services: ServiceBundle, timeout_seconds: int) -> int:
-    """Reap once and return the number of jobs failed."""
+    """Reap once and return the number of jobs failed. Each reaped job is a ``Morph
+    Failed`` event (§14); they are flushed before this one-off task's loop ends."""
     if timeout_seconds <= 0:
         raise ValueError("timeout_seconds must be positive")
     reaped = await services.jobs.reap_stale(timeout_seconds)
     log.info("reaped %d stale job(s) running longer than %ds", reaped, timeout_seconds)
+    flush = getattr(getattr(services, "klaviyo", None), "flush", None)
+    if flush is not None:
+        await flush()
     return reaped
 
 

@@ -55,6 +55,15 @@ class WorkerServices(Protocol):
     storage: StorageService
 
 
+async def flush_events(services: object) -> None:
+    """Let the growth events a job outcome scheduled (§14) leave before the loop ends.
+    The production bundle carries a ``klaviyo`` emitter; test stubs need not."""
+    emitter = getattr(services, "klaviyo", None)
+    flush = getattr(emitter, "flush", None)
+    if flush is not None:
+        await flush()
+
+
 @dataclass(frozen=True)
 class JobSpec:
     """One job as the transports describe it (contract §10 message shape)."""
@@ -364,6 +373,10 @@ async def run_job(
         except Exception as fail_exc:
             log.error("fail_job failed", extra={"job_id": str(spec.job_id)}, exc_info=fail_exc)
         raise
+    finally:
+        # A serverless call ends its loop with this coroutine: give the outcome's
+        # events their chance to leave.
+        await flush_events(services)
     return {
         "job_id": str(spec.job_id),
         "status": "succeeded",
@@ -391,6 +404,7 @@ __all__ = [
     "error_for",
     "execute_job",
     "fail_job",
+    "flush_events",
     "is_terminal",
     "load_audio",
     "load_pipeline",

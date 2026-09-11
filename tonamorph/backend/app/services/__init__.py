@@ -156,7 +156,15 @@ class UsersService(Protocol):
         ...
 
     async def ensure(self, user_id: UUID, email: str) -> Profile:
-        """Create the profile on first sight and grant ``FREE_SIGNUP_CREDITS`` (idempotent)."""
+        """Create the profile on first sight and grant ``FREE_SIGNUP_CREDITS`` (idempotent).
+        The first call that meets a profile also runs :meth:`first_sight` for it."""
+        ...
+
+    async def first_sight(self, user_id: UUID, source: str) -> bool:
+        """Stamp ``profiles.first_seen_at`` once and emit ``Signed Up`` (§14) with the
+        profile's sign-up facts; ``True`` only for the call that stamped it. ``source``
+        is ``web`` for a profile the sign-up trigger created, ``plugin`` for one created
+        here on an API-first token."""
         ...
 
     async def set_plan(self, user_id: UUID, plan: PlanKind, renews_at: datetime | None) -> Profile:

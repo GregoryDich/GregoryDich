@@ -23,6 +23,7 @@ from app.auth import Principal
 from app.config import Settings, get_settings
 from app.dependencies import authenticate, get_principal, get_services
 from app.errors import (
+    INSUFFICIENT_CREDITS,
     NOT_FOUND,
     UNSUPPORTED_MEDIA_TYPE,
     VALIDATION_ERROR,
@@ -190,9 +191,14 @@ async def submit_job(
                 balance=balance.model_dump(include={"credits", "reserved", "available"}),
             )
 
-    job = await services.jobs.create(
-        principal.user_id, job_options, f"input.{extension}", JOB_CREDITS
-    )
+    try:
+        job = await services.jobs.create(
+            principal.user_id, job_options, f"input.{extension}", JOB_CREDITS
+        )
+    except ApiException as exc:
+        if exc.code == INSUFFICIENT_CREDITS:  # the paywall moment (§14 Credits Exhausted)
+            services.growth.credits_refused(principal.user_id, principal.email)
+        raise
     input_key = input_storage_key(principal.user_id, job.job_id, f"input.{extension}")
     pipeline_options = PipelineOptions.from_job_options(
         job_options, services.settings.max_input_seconds

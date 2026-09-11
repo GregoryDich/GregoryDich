@@ -70,16 +70,22 @@ class TokenBucketLimiter:
 
     def __init__(
         self,
-        per_minute: int,
+        per_minute: float,
         *,
+        capacity: int | None = None,
         max_buckets: int = MAX_BUCKETS,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
+        """``capacity`` defaults to ``per_minute``; pass it for a budget that refills slower
+        than it bursts (five anonymous crash reports per hour: ``per_minute=5 / 60``,
+        ``capacity=5``)."""
         if per_minute <= 0:
             raise ValueError("per_minute must be positive")
+        if capacity is not None and capacity <= 0:
+            raise ValueError("capacity must be positive")
         if max_buckets <= 0:
             raise ValueError("max_buckets must be positive")
-        self.capacity = float(per_minute)
+        self.capacity = float(capacity if capacity is not None else per_minute)
         self.rate = per_minute / 60.0
         self.max_buckets = max_buckets
         self._clock = clock

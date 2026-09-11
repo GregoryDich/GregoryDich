@@ -19,10 +19,13 @@ app/
   middleware/      body_limit.py (request-body caps applied before the multipart parser),
                    rate_limit.py (per-principal token buckets, per-credential auth buckets,
                    stream-slot limiter)
-  routers/         health, auth, me, jobs, credits, plans, api_keys, webhooks
+  routers/         health, auth, me, jobs, credits, plans, api_keys, webhooks,
+                   feedback (job feedback + NPS), status (/status, /version), telemetry (crash)
   services/        Protocols (__init__.py) + one module per domain, both backends:
                    supabase.py (PostgREST/Storage/GoTrue over httpx), memory.py (tests/dev),
                    credits, jobs, storage, users, api_keys, webhooks, plans, dispatch, events,
+                   quality (feedback, NPS, installs, status numbers), klaviyo (event transport,
+                   `python -m app.services.klaviyo seed`), growth (the hooks that emit §14 events),
                    factory.py (build_services), aws/ (S3 + SQS + reaper)
   pipeline/        base.py (run_pipeline Protocol, get_pipeline), fake.py (offline CPU stub)
 worker/            GPU worker entry points (aws_worker, modal_app, runpod_handler)

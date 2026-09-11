@@ -24,7 +24,19 @@ from app.errors import install_exception_handlers
 from app.middleware.body_limit import BodyLimitMiddleware
 from app.middleware.rate_limit import RateLimits
 from app.observability import init_sentry
-from app.routers import api_keys, auth, credits, health, jobs, me, plans, webhooks
+from app.routers import (
+    api_keys,
+    auth,
+    credits,
+    feedback,
+    health,
+    jobs,
+    me,
+    plans,
+    status,
+    telemetry,
+    webhooks,
+)
 from app.services.factory import build_services
 
 API_PREFIX = "/v1"
@@ -166,6 +178,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         plans.router,
         api_keys.router,
         webhooks.router,
+        feedback.router,
+        status.router,
+        telemetry.router,
     ):
         app.include_router(router, prefix=API_PREFIX)
     return app

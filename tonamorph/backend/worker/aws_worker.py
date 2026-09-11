@@ -48,6 +48,7 @@ from worker.common import (
     current_status,
     execute_job,
     fail_job,
+    flush_events,
     is_terminal,
     load_pipeline,
     warm_up_pipeline,
@@ -176,6 +177,7 @@ async def process_message(
         _release(sqs, config, receipt)
     else:
         delete_message(sqs, config.queue_url, receipt)
+    await flush_events(services)
     return outcome
 
 

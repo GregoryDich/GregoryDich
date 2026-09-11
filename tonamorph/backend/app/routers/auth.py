@@ -12,6 +12,7 @@ minute, and none of the mail-sending routes can be driven as a spam relay.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Mapping
 from typing import Any, Protocol
 
@@ -44,6 +45,7 @@ from app.services.factory import Services
 from app.services.memory import MemoryAuthService
 from app.services.supabase import ACCOUNT_EXISTS_MESSAGE, INVALID_CREDENTIALS_MESSAGE
 
+log = logging.getLogger("tonamorph.auth")
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 PASSWORD_GRANT = "password"
@@ -173,7 +175,18 @@ async def signup(
     payload = await auth_provider(services).auth_signup(
         body.email, body.password, redirect_to=site_link(services.settings, CONFIRM_PATH)
     )
-    return signup_response(payload)
+    response = signup_response(payload)
+    # The trigger has created the profile by now; this is the earliest the account can be
+    # met, so Signed Up (§14) fires here rather than at the first plugin sign-in. The
+    # account exists whatever happens to the stamp, so a failure is logged, not answered.
+    try:
+        await services.users.first_sight(response.user.id, "web")
+    except ApiException as exc:
+        log.warning(
+            "first sight could not be recorded at sign-up",
+            extra={"user_id": str(response.user.id), "code": exc.code},
+        )
+    return response
 
 
 @router.post("/recover", response_model=AuthAck)

@@ -173,6 +173,13 @@ variable "sentry_dsn" {
   sensitive   = true
 }
 
+variable "klaviyo_private_api_key" {
+  description = "KLAVIYO_PRIVATE_API_KEY for the API and worker tasks; empty disables growth events. The CI passes the KLAVIYO_PRIVATE_API_KEY repository secret through TF_VAR_klaviyo_private_api_key."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "maintenance_mode" {
   description = "MAINTENANCE_MODE for the API tasks (kill switch): when true the API stops accepting new job submissions. The CI passes the MAINTENANCE_MODE repository variable through TF_VAR_maintenance_mode."
   type        = bool

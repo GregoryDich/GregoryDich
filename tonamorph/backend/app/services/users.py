@@ -29,6 +29,7 @@ from app.services.credits import (
     SupabaseCreditsService,
     ledger_entry_from_record,
 )
+from app.services.growth import GrowthHooks, SignupFacts
 from app.services.jobs import job_status_from_record, user_prefix, without_signed_urls
 from app.services.supabase import Filter, SupabaseClient
 
@@ -57,11 +58,12 @@ def profile_from_record(record: Mapping[str, Any]) -> Profile:
         marketing_opt_in=bool(record.get("marketing_opt_in")),
         referral_code=record.get("referral_code"),
         deleted_at=record.get("deleted_at"),
+        first_seen_at=record.get("first_seen_at"),
     )
 
 
 def exported_user_from_record(record: Mapping[str, Any]) -> ExportedUser:
-    base = profile_from_record(record).model_dump(exclude={"deleted_at"})
+    base = profile_from_record(record).model_dump(exclude={"deleted_at", "first_seen_at"})
     extra = {k: record.get(k) for k in ExportedUser.model_fields if k not in base}
     return ExportedUser.model_validate({**base, **extra})
 
@@ -96,10 +98,13 @@ async def purge_user_objects(storage: StorageService, user_id: UUID) -> int | No
 
 
 class SupabaseUsersService:
-    def __init__(self, client: SupabaseClient, settings: Settings) -> None:
+    def __init__(
+        self, client: SupabaseClient, settings: Settings, *, growth: GrowthHooks | None = None
+    ) -> None:
         self._client = client
         self._credits = SupabaseCreditsService(client)
         self._signup_credits = settings.free_signup_credits
+        self._growth = growth
 
     async def get(self, user_id: UUID) -> Profile | None:
         rows = await self._client.select("profiles", filters=[("id", "eq", str(user_id))], limit=1)
@@ -116,6 +121,8 @@ class SupabaseUsersService:
         predate it. Every step is idempotent, so a concurrent first request is harmless."""
         existing = await self.get(user_id)
         if existing is not None:
+            if existing.first_seen_at is None and existing.deleted_at is None:
+                await self._first_sight_quietly(user_id, "web")
             return existing
         await self._client.insert(
             "profiles",
@@ -144,7 +151,37 @@ class SupabaseUsersService:
         created = await self.get(user_id)
         if created is None:
             raise ApiException(NOT_FOUND, message="Profile could not be created.")
+        await self._first_sight_quietly(user_id, "plugin")
         return created
+
+    async def _first_sight_quietly(self, user_id: UUID, source: str) -> None:
+        """The stamp is an event, not the account: a database hiccup here is logged and
+        the next request tries again, rather than refusing an authenticated caller."""
+        try:
+            await self.first_sight(user_id, source)
+        except ApiException as exc:
+            log.warning(
+                "first sight could not be recorded",
+                extra={"user_id": str(user_id), "code": exc.code},
+            )
+
+    async def first_sight(self, user_id: UUID, source: str) -> bool:
+        """One conditional ``PATCH``: only the request that turns ``first_seen_at`` from
+        null gets the row back, so two concurrent first requests emit one event."""
+        rows = await self._client.update(
+            "profiles",
+            {"first_seen_at": datetime.now(UTC).isoformat()},
+            filters=[
+                ("id", "eq", str(user_id)),
+                ("first_seen_at", "is", None),
+                ("deleted_at", "is", None),
+            ],
+        )
+        if not rows:
+            return False
+        if self._growth is not None:
+            self._growth.signed_up(SignupFacts.from_record(rows[0]), source)  # type: ignore[arg-type]
+        return True
 
     async def set_plan(self, user_id: UUID, plan: PlanKind, renews_at: datetime | None) -> Profile:
         rows = await self._client.update(

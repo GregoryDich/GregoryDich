@@ -14,6 +14,13 @@ Clarified against the shipped implementation (no behaviour changed): WebSocket a
 `GET /v1/health` (below); `403 unauthorized` is added to the §5 table for the
 `SQLSTATE 42501` RLS-misconfiguration case.
 
+Added for the quality loops of the go-to-market plan (`docs/GTM_PLAN.md` §2.6, §3.2,
+Appendix C §3–6): result feedback with the bounded automatic refund
+(`POST /v1/jobs/{job_id}/feedback`, §2), the optional plugin identity headers on
+`GET /v1/me` (§1), provider refund events (§4), and a new §14 — `POST /v1/nps`,
+`GET /v1/status`, `GET /v1/version`, `POST /v1/telemetry/crash` and the growth events the
+backend emits to Klaviyo. Migration `0005_quality_loops.sql` carries the tables (§6).
+
 Base URL: `https://api.tonamorph.com` (the plugin's default; overridable at runtime with
 `tonamorph::cloud::ApiClient::setBaseUrl()`, which sets `ApiClient::Config::baseUrl`).
 All routes are versioned under `/v1`. All request/response bodies are JSON
@@ -163,6 +170,20 @@ GoTrue silently redirects to its own site URL instead.
 ```
 `available = credits - reserved`. The plugin displays `available`.
 
+Optional request headers, sent by the plugin and ignored on every other route:
+
+| header | value |
+|--------|-------|
+| `X-Plugin-Version` | the plugin's release, e.g. `0.1.0` (≤ 32 characters, `[0-9A-Za-z.+_-]`) |
+| `X-Host` | the DAW as the host reports it, e.g. `Ableton Live 12` (≤ 64 printable ASCII characters) |
+| `X-Plugin-OS` | optional, e.g. `macOS 15.1` (≤ 64 printable ASCII characters) |
+
+`X-Plugin-Version` and `X-Host` together identify an installation: the first `GET /v1/me`
+that carries a pair the account has not sent before is recorded in `plugin_installs`
+(§6) and emits the `Plugin Installed` growth event (§14); every later request only stamps
+`last_seen_at`. A malformed or absent header is ignored — it never fails the route — and
+the response is the same either way.
+
 `marketing_opt_in` and `referral_code` come from the sign-up: the website signs up
 through supabase-js with `options.data`, which GoTrue stores as
 `auth.users.raw_user_meta_data`, and the `handle_new_user` trigger (§6,
@@ -236,6 +257,8 @@ job rows keep only their lifecycle (`status`, `stage`, timestamps, `error`) and 
 `options`, `input_meta`, `result`, `worker_ref` and `idempotency_key`, purchases and
 subscriptions keep their amounts and ids but lose the provider payload (`raw`), referral
 codes are revoked and the affiliate's payout details cleared while commissions owed stay,
+feedback rows keep their rating and reason but lose the `note`, NPS answers keep the
+score but lose the `comment`, the account's `plugin_installs` rows are deleted (§14),
 the unused credits are written off with one `adjust` ledger entry (`source =
 "account_deletion"`) so the account closes at zero, and a row is written to
 `account_deletions(user_id, requested_at, ledger_rows_kept)`. The ledger, purchases and
@@ -342,6 +365,38 @@ treat both a 4401 close and a 403 handshake rejection as "not authorised for thi
 Cancels a queued job and releases its reservation. → `204` with an empty body;
 `409 conflict` if the job is already running, `404` if it is not the caller's.
 
+### `POST /v1/jobs/{job_id}/feedback`   (auth)
+The thumbs on a result, and the automatic refund of an unusable morph
+(`docs/GTM_PLAN.md` §2.6).
+```json
+{ "rating": "up|down",
+  "reason": "bleed|wrong_key|midi_off|clicks|slow|other",
+  "note": "≤ 140 characters",
+  "drop_to_ready_ms": 4200 }
+```
+`reason`, `note` and `drop_to_ready_ms` (the plugin's own drop-to-playable timer, ≥ 0)
+are optional; blank text is stored as `null`. → `201`
+```json
+{ "refunded": true, "balance": { "credits": 3, "reserved": 0, "available": 3 } }
+```
+One row per job (`job_feedback`, §6): a second call for the same job replaces the rating,
+reason and note (an omitted `drop_to_ready_ms` keeps the measured one). `refunded`
+reports whether the job's credit is back — by this call or an earlier one.
+
+The refund rule, decided in one database transaction (`record_job_feedback` →
+`refund_job_for_feedback`, §6): a `down` rating on a job that is `succeeded`, finished
+within **24 hours**, with a reason other than `slow`, writes one ledger `refund` entry
+(`source = job:<id>`, note `user:unusable:<reason>` or `user:unusable:unspecified`), so
+the balance in the response — and in the next `GET /v1/me` — already carries the credit.
+Bounds against abuse: automatic refunds are limited to `max(3, 20 % of the account's
+captured jobs of the last 30 days)` per 30 days, and to **2 lifetime** for an account
+that never purchased; beyond a bound the feedback is stored, `refunded` is `false`, and
+support reviews it. A thumbs-up, a `slow` reason, a failed job (never charged) or a job
+older than 24 hours records the feedback without a refund. Errors: `404 not_found` for a
+job that is not the caller's, `409 conflict` (`Rate a finished job.`) while the job is
+`queued` or `running`, `422 validation_error` for anything outside the shape above.
+Counts against the reads budget (§5).
+
 ### JobResult
 ```json
 {
@@ -433,7 +488,8 @@ The growth engine (see §11) authenticates with an API key and never sees this p
 * Header `X-Signature`: hex HMAC-SHA256 of the raw body with
   `LEMONSQUEEZY_WEBHOOK_SECRET`. Reject with `401` when invalid.
 * Events handled: `order_created` (credit pack), `subscription_created`,
-  `subscription_payment_success`, `subscription_cancelled`, `subscription_expired`.
+  `subscription_payment_success`, `subscription_cancelled`, `subscription_expired`, and
+  `order_refunded` (a money refund: emits `Refund Issued`, §14, and moves no credits).
 * **Exactly one event per sale grants credits and writes the affiliate commission.**
   LemonSqueezy splits a subscription checkout over several events with different
   `data.id`s, so the plan decides which one pays: a one-off pack is paid for by its
@@ -469,8 +525,22 @@ no use for; the API runs with the default `SERVICE_ROLE=api`.
 * Header `Paddle-Signature`: `ts=…;h1=…`; verify HMAC-SHA256 over
   `"{ts}:{raw_body}"` with `PADDLE_WEBHOOK_SECRET`; reject if `|now - ts| > 5 min`.
 * Events: `transaction.completed`, `subscription.activated`,
-  `subscription.updated`, `subscription.canceled`.
+  `subscription.updated`, `subscription.canceled`, and `adjustment.created` /
+  `adjustment.updated` when `data.status = approved` and `data.action` is `refund` or
+  `chargeback` (any other adjustment is acknowledged `ok` and ignored).
 * Idempotency key = `paddle:<event_type>:<event_id>`.
+
+### Growth events from webhooks (§14)
+The paying event of a sale emits `Purchase Completed` (`is_renewal` is LemonSqueezy's
+`billing_reason = renewal` or Paddle's `origin = subscription_recurring`); a
+`subscription_cancelled` / `subscription.canceled` event emits `Subscription Cancelled`;
+a refund or chargeback emits `Refund Issued` with the money amount and the provider's
+reason. A Paddle adjustment names neither the customer nor the checkout's custom data,
+so it is attributed through the purchase whose `provider_order_id` is its
+`transaction_id`; an unknown one is `404 not_found` and retried by the provider like any
+other unattributable event. Refunds never move credits here (that reconciliation is
+manual, GTM plan §4 P1); every event is deduplicated at Klaviyo by the adjustment or order
+it names, so `adjustment.created` and `adjustment.updated` for one refund count once.
 
 ## 5. Errors
 ```json
@@ -506,8 +576,10 @@ Other SQLSTATEs the same mapper translates: `P0402` → `402 insufficient_credit
 `P0404` → `404 not_found`, `P0409` / `23505` → `409 conflict`, `22023` →
 `422 validation_error`. Anything else is logged and answered `500 internal_error`.
 
-Rate limits: 10 job submissions / minute / user, 60 reads / minute / user, and 1 account
-export / minute / user on top of the reads budget (§1).
+Rate limits: 10 job submissions / minute / user, 60 reads / minute / user, 1 account
+export / minute / user on top of the reads budget (§1), and 5 anonymous crash reports /
+hour / client address (§14). `409 conflict` is also the answer to feedback on an
+unfinished job (§2) and to a second NPS answer within 30 days (§14).
 
 `401 unauthorized` with the message `This account has been deleted.` is the answer to any
 credential of a deleted account (§1): the JWT verifies until `exp`, the profile tombstone
@@ -517,7 +589,8 @@ refuses it.
 
 Tables (schema `public`): `profiles`, `credit_accounts`, `credit_ledger`,
 `jobs`, `job_assets`, `api_keys`, `plans`, `purchases`, `subscriptions`,
-`webhook_events`. Full DDL in `db/migrations/`.
+`webhook_events`, and — since `0005_quality_loops.sql` — `job_feedback`, `nps_responses`,
+`plugin_installs` plus the reporting view `growth_daily`. Full DDL in `db/migrations/`.
 
 Balance invariant: `credit_accounts.balance` is a cached value that must equal
 the sum of `credit_ledger.amount` for the user; it is only mutated inside the
@@ -550,6 +623,25 @@ the `account_deletions` table (`service_role` only) and `profiles.deleted_at`; `
 no longer cascades from `auth.users` — an `after delete` trigger on `auth.users` runs the
 same function instead, so a login deleted from the Supabase dashboard leaves the same
 tombstone and the same accounting rows.
+
+`0005_quality_loops.sql` (§2 feedback, §14) adds `profiles.first_seen_at` — set once by
+the backend with a conditional update when it first meets an account, which is when the
+`Signed Up` event fires — and, all `SECURITY DEFINER`, `service_role` only:
+`refund_job_for_feedback(p_job_id uuid, p_user_id uuid, p_reason text) → boolean` (the
+§2 refund rule and bounds, decided under the job row and the account lock; `P0404` for
+another user's job), `record_job_feedback(p_job_id, p_user_id, p_rating, p_reason,
+p_note, p_drop_to_ready_ms) → job_feedback` (upsert; `P0409` while queued/running;
+runs the refund on `down`), `submit_nps(p_user_id, p_score, p_comment) → nps_responses`
+(`P0409` within 30 days of the last answer), `touch_plugin_install(p_user_id,
+p_plugin_version, p_host, p_os) → boolean` (true on first sight of the pair),
+`user_facts(p_user_id) → (email, plan, morphs_total, first_morph_at, last_morph_at,
+has_purchased)` and `status_last_24h() → (morphs, succeeded, failed, p50_ms, p95_ms)`.
+The view `growth_daily` has one row per UTC day: `signups`, `morphs_started`,
+`morphs_succeeded`, `morphs_failed`, `p50_ms`, `p95_ms`, `credits_exhausted` (captures
+that left the balance at zero), `purchases`, `revenue_cents`. `delete_user_account` now
+also clears feedback notes and NPS comments and deletes the plugin installs (§1).
+Authenticated users may `select` their own `job_feedback` and `nps_responses` rows;
+`plugin_installs` and `growth_daily` are `service_role` only.
 
 Job lifecycle in `jobs.status`: `queued → running → succeeded | failed | cancelled`.
 
@@ -703,3 +795,101 @@ still attributed to the affiliate who brought the subscriber in.
 * **Credit-pack credits never expire.**
 * **Cancelled subscriptions** keep their remaining credits until `current_period_end`,
   then lose them like any other period.
+
+## 14. Feedback, status, version, telemetry and growth events
+
+### `POST /v1/nps`   (auth)
+```json
+{ "score": 9, "comment": "≤ 500 characters" }
+```
+`score` is 0–10; `comment` is optional (blank is stored as `null`). → `201`
+```json
+{ "id": "<uuid>", "score": 9, "comment": "…", "created_at": "..." }
+```
+One answer per user per **30 days**: a second one is `409 conflict` (`You already
+answered within the last 30 days.`). Stored in `nps_responses` (§6); emits
+`NPS Submitted`. Counts against the reads budget.
+
+### `GET /v1/status`   (public)
+```json
+{ "components": { "api": "operational",
+                  "engine": "operational|degraded|paused",
+                  "payments": "operational|unconfigured",
+                  "website": "operational" },
+  "last_24h": { "morphs": 128, "success_rate": 0.992, "p50_ms": 1840, "p95_ms": 4210 } }
+```
+`last_24h` counts the jobs that finished (`succeeded` or `failed`; cancellations are not
+outcomes) in the last 24 hours, from `status_last_24h()` (§6); `success_rate` is
+`succeeded / morphs` and `null` until a job finished; `p50_ms` / `p95_ms` are
+`finished_at - coalesce(started_at, created_at)` over the successes and `null` until one
+succeeded. `engine` is `paused` under `MAINTENANCE_MODE` (§2), `degraded` once **20 or
+more** jobs finished in the window with a success rate below **0.9**, `operational`
+otherwise; `payments` is `unconfigured` when neither webhook secret is set (§4). The
+numbers are cached in-process for **60 seconds**; the component states are derived per
+request. Unauthenticated requests are free; with credentials the request counts against
+the reads budget (§5).
+
+### `GET /v1/version`   (public)
+```json
+{ "latest": "0.1.0", "min_supported": "0.1.0",
+  "download_url": "https://tonamorph.com/download",
+  "notes_url": "https://tonamorph.com/changelog" }
+```
+From the settings `PLUGIN_LATEST_VERSION` and `PLUGIN_MIN_SUPPORTED_VERSION` (semantic
+versions, default `0.1.0`) and `AUTH_SITE_URL` (§1) with `/download` and `/changelog`
+appended. The plugin compares its own version: below `min_supported` it must update
+before morphing, below `latest` it shows the update banner. Not rate limited.
+
+### `POST /v1/telemetry/crash`   (auth optional)
+```json
+{ "plugin_version": "0.1.0", "os": "macOS 15.1", "host": "Ableton Live 12",
+  "occurred_at": "2026-09-11T12:00:00Z",
+  "backtrace": "≤ 16 KB of text", "opted_in": true }
+```
+→ `202 {"status": "accepted"}`. Sent only after the user opted in: `opted_in` must be
+`true`, anything else is `422`. `plugin_version` ≤ 32 characters, `os` and `host` ≤ 64,
+`backtrace` 1 byte to 16 KB of UTF-8. Never carries audio, tokens or the user's email.
+
+With `SENTRY_DSN` set the report reaches Sentry as an error-level message tagged
+`role=plugin`, `plugin_version`, `host` and `os`, with the backtrace as the attachment
+`backtrace.txt`, the caller's user id when a session token was sent, and a fingerprint
+of platform, version and the backtrace's first line. Without Sentry the report is logged
+at warning level without the backtrace body. Budgets: a request with a session token
+spends the reads budget (§5); without one it is limited to **5 per hour per client
+address** (`429 rate_limited` with `Retry-After`) — behind the load balancer that address
+is shared, so a signed-in plugin should send its token. Invalid credentials are still
+`401`.
+
+### Growth events (Klaviyo)
+With `KLAVIYO_PRIVATE_API_KEY` set (empty disables everything; the key is never logged)
+the backend sends these metrics to Klaviyo's Create Event API (`revision 2024-10-15`)
+from a background task — never on a request's critical path, one retry, failures logged
+and never surfaced. The profile is identified by `external_id` = user id plus the email
+when known; the same call sets the profile properties listed. Every event carries a
+deterministic `unique_id` so a replay (an idempotent `complete_job`, a re-delivered
+webhook, a retried request) counts once. `KLAVIYO_TIMEOUT_SECONDS` (default 5) bounds
+each call. Both the API and the GPU worker need the key: `Morph Completed` /
+`Morph Failed` leave from whichever process finishes the job.
+
+| metric | fires when | properties | profile properties |
+|--------|-----------|------------|--------------------|
+| `Signed Up` | the API first meets an account: at `POST /v1/auth/signup`, or on the first authenticated request of a profile the trigger created (`source = web`) or that the API had to create itself (`source = plugin`); `profiles.first_seen_at` makes it exactly once | `user_id`, `source`, `referral_code`, `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`, `marketing_opt_in` | `signup_source`, `referral_code`, `utm_*`, `marketing_opt_in`, `plan`, `cohort_week` (`2026-W37`) |
+| `Plugin Installed` | the first `GET /v1/me` with a new `X-Plugin-Version` / `X-Host` pair (§1) | `os`, `daw`, `plugin_version` | `os`, `daw`, `plugin_version` |
+| `Morph Completed` | `complete_job` — the API-inline pipeline, a remote worker or a replay, all through `JobsService.complete` | `job_id`, `latency_ms`, `credits_charged`, `balance_after`, `morphs_total`, `bpm`, `key` (`F minor`) | `morphs_total`, `first_morph_at`, `last_morph_at`, `credits_available` |
+| `Morph Failed` | `fail_job`, including the reaper's `worker_timeout` | `job_id`, `error_code`, `stage`, `latency_ms` | — |
+| `Credits Exhausted` | a capture leaves the balance at zero, or `POST /v1/jobs` answers `402`; at most once per user per UTC day | `plan`, `checkout_url_pack_50`, `checkout_url_sub_monthly` (the caller's §3 URLs) | `plan`, `credits_available = 0` |
+| `Checkout Started` | the website (`/checkout`); the backend has no trigger of its own, only the metric name (`app.services.klaviyo`) | `plan_id`, `ref` | — |
+| `Purchase Completed` | the paying webhook event of a sale (§4) | `plan_id`, `price_usd`, `credits`, `is_renewal`, `referral_code` | `plan` |
+| `Subscription Cancelled` | a provider cancellation event (§4) | `plan_id`, `period_end` | — |
+| `Refund Issued` | an approved provider refund or chargeback (§4) | `amount_usd`, `reason` | — |
+| `NPS Submitted` | `POST /v1/nps` | `score`, `comment` | `nps_score` |
+
+Klaviyo lists a metric only after its first event, so before flows are built the
+operator runs `python -m app.services.klaviyo seed --email <address>` in `backend/`,
+which upserts one throwaway profile and sends one sample event per metric.
+
+### Uptime probe
+`.github/workflows/health-probe.yml` runs `curl -fsS "$API_URL/v1/health"` every five
+minutes with the repository variable `API_URL` (skipped, not failed, while it is unset),
+opens or updates one issue labelled `slo-breach` while the probe fails, and closes it on
+the next healthy probe.

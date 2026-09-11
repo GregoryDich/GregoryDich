@@ -1,4 +1,4 @@
-"""Application settings (docs/API_CONTRACT.md §1, §4, §7, §10, §11, §12).
+"""Application settings (docs/API_CONTRACT.md §1, §4, §7, §10, §11, §12, §14).
 
 Every value comes from the environment (or a ``.env`` file in the working directory).
 Secrets are ``SecretStr`` so they never appear in logs or reprs; call
@@ -22,6 +22,8 @@ Environment = Literal["development", "test", "staging", "production"]
 ServiceRole = Literal["api", "worker"]
 LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1", "0.0.0.0"})
 """Hosts ``AUTH_SITE_URL`` may not point at in production: emailed links must reach users."""
+PLUGIN_VERSION_PATTERN = r"^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$"
+"""Semantic version of a plugin release, as ``GET /v1/version`` publishes it (§14)."""
 
 
 class Settings(BaseSettings):
@@ -117,6 +119,15 @@ class Settings(BaseSettings):
     other route keeps working, so results and balances stay readable."""
     sentry_dsn: str = ""
     """Sentry DSN; empty disables error reporting (see ``app/observability.py``)."""
+
+    # Growth events (§14; GTM plan §3.2): Klaviyo receives the Title Case metrics server-side.
+    klaviyo_private_api_key: SecretStr = SecretStr("")
+    """Klaviyo private API key. Empty disables event emission entirely; never logged."""
+    klaviyo_timeout_seconds: float = Field(default=5.0, gt=0)
+
+    # Plugin release channel published by ``GET /v1/version`` (§14).
+    plugin_latest_version: str = Field(default="0.1.0", pattern=PLUGIN_VERSION_PATTERN)
+    plugin_min_supported_version: str = Field(default="0.1.0", pattern=PLUGIN_VERSION_PATTERN)
 
     # Browser origins allowed by CORS; "*" allows any origin.
     cors_allow_origins: list[str] = ["*"]

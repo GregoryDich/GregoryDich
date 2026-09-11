@@ -10,6 +10,7 @@ full key is derived with :func:`input_storage_key` once the row exists.
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
@@ -36,8 +37,21 @@ from app.services.events import (
 )
 from app.services.supabase import Filter, SupabaseClient, all_of, any_of
 
+log = logging.getLogger("tonamorph.jobs")
+
 JOB_CREDITS = 1
 """Credits reserved per job; ``create_job`` reserves exactly this many (§2, §6)."""
+JobFinishedHook = Callable[[JobStatus, UUID], None]
+"""Called once a job is ``succeeded`` or ``failed`` — the seam the growth events hang on
+(§14). Both backends call it from the one method every terminal transition passes
+through, so the API-inline pipeline, the remote workers and the reaper all report there.
+A replay of an idempotent ``complete_job`` / ``fail_job`` reaches it too; the events it
+feeds carry the job id as their deduplication key, so that is harmless."""
+NOTIFIED_STATES = frozenset({"succeeded", "failed"})
+WORKER_TIMEOUT_CODE = "worker_timeout"
+REAP_LOOKBACK_SECONDS = 60
+"""How far behind the reaper's own clock it looks for the rows the SQL function failed:
+``finished_at`` is stamped by the database, whose clock need not match this process."""
 SERVER_IDEMPOTENCY_PREFIX = "auto:"
 """Marks a key this service minted because the client sent none (see :meth:`create`)."""
 MIDI_FILE = "score.mid"
@@ -266,6 +280,16 @@ async def package_result(
     )
 
 
+def notify_finished(hook: JobFinishedHook | None, status: JobStatus, user_id: Any) -> None:
+    """Run the terminal hook for a morph outcome; a hook must never take a job down."""
+    if hook is None or status.status not in NOTIFIED_STATES:
+        return
+    try:
+        hook(status, UUID(str(user_id)))
+    except Exception:
+        log.exception("job finished hook failed", extra={"job_id": str(status.job_id)})
+
+
 class SupabaseJobsService:
     def __init__(
         self,
@@ -274,11 +298,13 @@ class SupabaseJobsService:
         *,
         events_mode: EventsMode = "bus",
         poll_interval: float = DEFAULT_POLL_INTERVAL_SECONDS,
+        on_finished: JobFinishedHook | None = None,
     ) -> None:
         self._client = client
         self._bus = bus
         self._events_mode: EventsMode = events_mode
         self._poll_interval = poll_interval
+        self._on_finished = on_finished
         self._started: set[UUID] = set()
 
     async def create(
@@ -371,6 +397,7 @@ class SupabaseJobsService:
         event = status_event(status)
         if event["event"] in TERMINAL_EVENTS:
             self._bus.publish(job_id, event["event"], event["data"])
+        notify_finished(self._on_finished, status, row.get("user_id"))
         return status
 
     def events(self, job_id: UUID) -> AsyncIterator[JobEvent]:
@@ -379,8 +406,25 @@ class SupabaseJobsService:
         )
 
     async def reap_stale(self, timeout_seconds: int) -> int:
-        count = await self._client.rpc("reap_stale_jobs", {"p_timeout_seconds": timeout_seconds})
-        return int(count or 0)
+        since = datetime.now(UTC) - timedelta(seconds=REAP_LOOKBACK_SECONDS)
+        count = int(
+            await self._client.rpc("reap_stale_jobs", {"p_timeout_seconds": timeout_seconds}) or 0
+        )
+        if count and self._on_finished is not None:
+            # The function only counts; the rows it failed are the recently timed-out ones.
+            rows = await self._client.select(
+                "jobs",
+                filters=[
+                    ("status", "eq", "failed"),
+                    ("error->>code", "eq", WORKER_TIMEOUT_CODE),
+                    ("finished_at", "gte", since),
+                ],
+                limit=count,
+                order="finished_at.desc",
+            )
+            for row in rows:
+                self._finish(UUID(str(row["id"])), row)
+        return count
 
 
 __all__ = [
@@ -389,8 +433,11 @@ __all__ = [
     "JOB_CREDITS",
     "JOB_CURSOR_SEPARATOR",
     "MIDI_FILE",
+    "NOTIFIED_STATES",
     "SERVER_IDEMPOTENCY_PREFIX",
+    "WORKER_TIMEOUT_CODE",
     "EventsMode",
+    "JobFinishedHook",
     "SupabaseJobsService",
     "encode_job_cursor",
     "input_name_of",
@@ -399,6 +446,7 @@ __all__ = [
     "job_status_from_record",
     "jobs_before",
     "jobs_page",
+    "notify_finished",
     "package_result",
     "parse_job_cursor",
     "progress_event",

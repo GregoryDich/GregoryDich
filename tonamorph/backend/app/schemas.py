@@ -1,4 +1,4 @@
-"""Pydantic models mirroring docs/API_CONTRACT.md payloads (§1–§3, §5, §7, §11).
+"""Pydantic models mirroring docs/API_CONTRACT.md payloads (§1–§3, §5, §7, §11, §14).
 
 Field names and JSON shapes are the contract; do not rename without updating the
 contract and every other component.
@@ -143,9 +143,11 @@ class MeResponse(ContractModel):
 class Profile(MeUser):
     """A ``profiles`` row as the services return it: the §1 user plus the deletion
     tombstone (`deleted_at`), which no response carries — a tombstoned profile is
-    refused at authentication (§1 account deletion)."""
+    refused at authentication (§1 account deletion) — and ``first_seen_at``, stamped
+    once when the API first meets the account (the ``Signed Up`` event, §14)."""
 
     deleted_at: datetime | None = None
+    first_seen_at: datetime | None = None
 
 
 class DeleteAccountRequest(ContractModel):
@@ -314,6 +316,40 @@ class JobsPage(ContractModel):
 
     jobs: list[JobStatus]
     next_cursor: str | None = None
+
+
+FeedbackRating = Literal["up", "down"]
+FeedbackReason = Literal["bleed", "wrong_key", "midi_off", "clicks", "slow", "other"]
+FEEDBACK_NOTE_MAX_CHARS = 140
+MAX_DROP_TO_READY_MS = 3_600_000
+"""An hour: anything longer is not a timing the plugin measured."""
+
+
+def optional_text(value: str | None) -> str | None:
+    """Trimmed free text; blank becomes ``null`` so an empty field never stores a row."""
+    if value is None:
+        return None
+    cleaned = value.strip()
+    return cleaned or None
+
+
+class JobFeedbackRequest(ContractModel):
+    """``POST /v1/jobs/{job_id}/feedback`` (§2): the thumbs on a result, the reason for a
+    thumbs-down and the client-side ``drop_to_ready_ms`` timer."""
+
+    rating: FeedbackRating
+    reason: FeedbackReason | None = None
+    note: str | None = Field(default=None, max_length=FEEDBACK_NOTE_MAX_CHARS)
+    drop_to_ready_ms: int | None = Field(default=None, ge=0, le=MAX_DROP_TO_READY_MS)
+
+    _note = field_validator("note")(optional_text)
+
+
+class JobFeedbackResponse(ContractModel):
+    """``refunded`` is whether the job's credit is back (this call or an earlier one)."""
+
+    refunded: bool
+    balance: CreditBalance
 
 
 # --- §3 Credits and plans ---------------------------------------------------------------
@@ -516,3 +552,85 @@ class AccountExport(ContractModel):
 
 class HealthResponse(ContractModel):
     status: Literal["ok"] = "ok"
+
+
+# --- §14 Feedback, status, version and telemetry -------------------------------------------
+
+
+NPS_COMMENT_MAX_CHARS = 500
+
+
+class NpsRequest(ContractModel):
+    score: int = Field(ge=0, le=10)
+    comment: str | None = Field(default=None, max_length=NPS_COMMENT_MAX_CHARS)
+
+    _comment = field_validator("comment")(optional_text)
+
+
+class NpsResponse(ContractModel):
+    id: UUID
+    score: int
+    comment: str | None = None
+    created_at: datetime
+
+
+EngineState = Literal["operational", "degraded", "paused"]
+PaymentsState = Literal["operational", "unconfigured"]
+
+
+class StatusComponents(ContractModel):
+    api: Literal["operational"] = "operational"
+    engine: EngineState
+    payments: PaymentsState
+    website: Literal["operational"] = "operational"
+
+
+class StatusLast24h(ContractModel):
+    """Jobs that finished in the last 24 hours. ``success_rate`` is ``null`` until one
+    finished; the latency percentiles are ``null`` until one succeeded."""
+
+    morphs: int = Field(ge=0)
+    success_rate: float | None = Field(default=None, ge=0.0, le=1.0)
+    p50_ms: int | None = Field(default=None, ge=0)
+    p95_ms: int | None = Field(default=None, ge=0)
+
+
+class StatusResponse(ContractModel):
+    components: StatusComponents
+    last_24h: StatusLast24h
+
+
+class VersionResponse(ContractModel):
+    latest: str
+    min_supported: str
+    download_url: str
+    notes_url: str
+
+
+MAX_BACKTRACE_BYTES = 16 * 1024
+PLUGIN_VERSION_MAX_CHARS = 32
+PLUGIN_IDENTITY_MAX_CHARS = 64
+"""Bound on ``os`` and ``host`` values, in the crash report and the ``X-Host`` header."""
+
+
+class CrashReport(ContractModel):
+    """``POST /v1/telemetry/crash`` (§14). ``opted_in`` must be ``true``: the plugin only
+    sends this after the user enabled crash reports. Never carries audio or tokens."""
+
+    plugin_version: str = Field(min_length=1, max_length=PLUGIN_VERSION_MAX_CHARS)
+    os: str = Field(min_length=1, max_length=PLUGIN_IDENTITY_MAX_CHARS)
+    host: str = Field(min_length=1, max_length=PLUGIN_IDENTITY_MAX_CHARS)
+    occurred_at: datetime
+    backtrace: str = Field(min_length=1)
+    opted_in: Literal[True]
+
+    @field_validator("backtrace")
+    @classmethod
+    def _bounded(cls, value: str) -> str:
+        if len(value.encode("utf-8")) > MAX_BACKTRACE_BYTES:
+            raise ValueError(f"must be at most {MAX_BACKTRACE_BYTES} bytes")
+        return value
+
+
+class TelemetryAck(ContractModel):
+    status: Literal["accepted"] = "accepted"

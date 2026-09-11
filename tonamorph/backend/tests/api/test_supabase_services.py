@@ -12,13 +12,14 @@ import pytest
 import respx
 
 from app.config import Settings
-from app.schemas import JobOptions
+from app.schemas import JobFeedbackRequest, JobOptions
 from app.services.api_keys import SupabaseApiKeysService
 from app.services.credits import SupabaseCreditsService
 from app.services.events import JobEventBus
 from app.services.jobs import SERVER_IDEMPOTENCY_PREFIX, SupabaseJobsService
 from app.services.plans import SupabasePlansService, build_checkout_url
-from app.services.supabase import SupabaseClient
+from app.services.quality import SupabaseQualityService
+from app.services.supabase import SupabaseClient, rpc_is_retryable
 from app.services.users import SupabaseUsersService
 from app.services.webhooks import SupabasePurchasesService, SupabaseWebhookEventsService
 
@@ -298,11 +299,20 @@ async def test_users_ensure_grants_signup_credits_once(
     )
     respx.post(f"{BASE}/rest/v1/profiles").mock(return_value=httpx.Response(201, json=[profile]))
     respx.post(f"{BASE}/rest/v1/credit_accounts").mock(return_value=httpx.Response(201, json=[]))
+    first_sight = respx.patch(f"{BASE}/rest/v1/profiles").mock(
+        return_value=httpx.Response(200, json=[profile])
+    )
     grant = rpc("grant_credits", BALANCE)
     created = await users.ensure(user, "A@B.c")
     assert created.email == "a@b.c" and created.plan == "free"
     assert sent(grant)["p_idempotency_key"] == f"signup:{user}"
     assert sent(grant)["p_amount"] == settings.free_signup_credits
+    # A profile this service created is met for the first time right here (§14).
+    assert first_sight.call_count == 1
+    stamp = first_sight.calls[0].request
+    assert stamp.url.params["first_seen_at"] == "is.null"
+    assert stamp.url.params["deleted_at"] == "is.null"
+    assert "first_seen_at" in json.loads(stamp.content)
     await supabase.aclose()
 
 
@@ -397,4 +407,177 @@ async def test_create_job_prefers_the_client_idempotency_key(supabase: SupabaseC
 
     await jobs.create(uuid4(), JobOptions(idempotency_key="client-key"), "input.wav", 1)
     assert sent(generated)["p_idempotency_key"] == "client-key"
+    await supabase.aclose()
+
+
+@respx.mock
+async def test_quality_rpc_names_and_parameters(supabase: SupabaseClient) -> None:
+    quality = SupabaseQualityService(supabase)
+    user, job = uuid4(), uuid4()
+    stamp = "2026-09-11T12:00:00Z"
+    feedback_row = {
+        "job_id": str(job),
+        "user_id": str(user),
+        "rating": "down",
+        "reason": "bleed",
+        "note": "muddy",
+        "drop_to_ready_ms": 4200,
+        "refunded": True,
+        "created_at": stamp,
+        "updated_at": stamp,
+    }
+    feedback = rpc("record_job_feedback", feedback_row)
+    record = await quality.record_feedback(
+        job,
+        user,
+        JobFeedbackRequest(rating="down", reason="bleed", note="muddy", drop_to_ready_ms=4200),
+    )
+    assert record.refunded is True and record.reason == "bleed"
+    assert sent(feedback) == {
+        "p_job_id": str(job),
+        "p_user_id": str(user),
+        "p_rating": "down",
+        "p_reason": "bleed",
+        "p_note": "muddy",
+        "p_drop_to_ready_ms": 4200,
+    }
+
+    nps_row = {
+        "id": str(uuid4()),
+        "user_id": str(user),
+        "score": 9,
+        "comment": None,
+        "created_at": stamp,
+    }
+    nps = rpc("submit_nps", nps_row)
+    assert (await quality.submit_nps(user, 9, None)).score == 9
+    assert sent(nps) == {"p_user_id": str(user), "p_score": 9, "p_comment": None}
+
+    touch = rpc("touch_plugin_install", True)
+    assert await quality.touch_plugin_install(user, "0.1.0", "Live", "macOS") is True
+    assert sent(touch) == {
+        "p_user_id": str(user),
+        "p_plugin_version": "0.1.0",
+        "p_host": "Live",
+        "p_os": "macOS",
+    }
+
+    facts = rpc(
+        "user_facts",
+        [
+            {
+                "email": "a@b.c",
+                "plan": "credits",
+                "morphs_total": 4,
+                "first_morph_at": stamp,
+                "last_morph_at": stamp,
+                "has_purchased": True,
+            }
+        ],
+    )
+    got = await quality.user_facts(user)
+    assert got is not None and got.morphs_total == 4 and got.plan == "credits"
+    assert sent(facts) == {"p_user_id": str(user)}
+    rpc("user_facts", [])
+    assert await quality.user_facts(user) is None
+
+    status = rpc(
+        "status_last_24h",
+        [{"morphs": 10, "succeeded": 9, "failed": 1, "p50_ms": 1800, "p95_ms": 4100}],
+    )
+    stats = await quality.status_last_24h()
+    assert stats.success_rate == 0.9 and stats.p95_ms == 4100
+    assert sent(status) == {}
+    for name in ("record_job_feedback", "touch_plugin_install", "user_facts", "status_last_24h"):
+        assert rpc_is_retryable(name, {})
+    assert not rpc_is_retryable("submit_nps", {})
+    await supabase.aclose()
+
+
+@respx.mock
+async def test_job_outcomes_reach_the_finished_hook_with_the_owner(
+    supabase: SupabaseClient,
+) -> None:
+    seen: list[tuple[str, UUID]] = []
+    jobs = SupabaseJobsService(
+        supabase, JobEventBus(), on_finished=lambda status, user: seen.append((status.status, user))
+    )
+    user, job = uuid4(), uuid4()
+    base = {
+        "id": str(job),
+        "user_id": str(user),
+        "stage": "done",
+        "progress": 1.0,
+        "created_at": "2026-09-11T12:00:00Z",
+        "started_at": "2026-09-11T12:00:01Z",
+        "finished_at": "2026-09-11T12:00:03Z",
+    }
+    rpc(
+        "fail_job",
+        {**base, "status": "failed", "error": {"code": "worker_timeout", "message": "x"}},
+    )
+    await jobs.fail(job, "worker_timeout", "x")
+    rpc("cancel_job", {**base, "status": "cancelled"})
+    await jobs.cancel(job, user)
+    assert seen == [("failed", user)]  # a cancellation is not a morph outcome
+
+    # The reaper only counts; the rows it failed are looked up so each becomes an event.
+    rpc("reap_stale_jobs", 2)
+    reaped = respx.get(f"{BASE}/rest/v1/jobs").mock(
+        return_value=httpx.Response(
+            200,
+            json=[
+                {
+                    **base,
+                    "id": str(uuid4()),
+                    "status": "failed",
+                    "error": {"code": "worker_timeout"},
+                },
+                {
+                    **base,
+                    "id": str(uuid4()),
+                    "status": "failed",
+                    "error": {"code": "worker_timeout"},
+                },
+            ],
+        )
+    )
+    assert await jobs.reap_stale(180) == 2
+    params = reaped.calls.last.request.url.params
+    assert params["status"] == "eq.failed" and params["error->>code"] == "eq.worker_timeout"
+    assert params["finished_at"].startswith("gte.") and params["limit"] == "2"
+    assert [state for state, _ in seen] == ["failed", "failed", "failed"]
+    rpc("reap_stale_jobs", 0)
+    assert await jobs.reap_stale(180) == 0 and reaped.call_count == 1
+    await supabase.aclose()
+
+
+@respx.mock
+async def test_find_purchase_selects_by_provider_order(supabase: SupabaseClient) -> None:
+    purchases = SupabasePurchasesService(supabase)
+    user = uuid4()
+    route = respx.get(f"{BASE}/rest/v1/purchases").mock(
+        return_value=httpx.Response(
+            200,
+            json=[
+                {
+                    "id": str(uuid4()),
+                    "user_id": str(user),
+                    "provider": "paddle",
+                    "provider_order_id": "txn_1",
+                    "plan_id": "pack_50",
+                    "credits": 50,
+                    "amount_cents": 900,
+                    "net_cents": 800,
+                    "currency": "USD",
+                    "idempotency_key": "k",
+                    "created_at": "2026-09-11T12:00:00Z",
+                }
+            ],
+        )
+    )
+    found = await purchases.find_purchase("paddle", "txn_1")
+    assert found is not None and found.user_id == user
+    params = route.calls.last.request.url.params
+    assert params["provider"] == "eq.paddle" and params["provider_order_id"] == "eq.txn_1"
     await supabase.aclose()

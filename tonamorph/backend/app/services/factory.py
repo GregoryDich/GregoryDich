@@ -26,19 +26,23 @@ from app.services.api_keys import SupabaseApiKeysService
 from app.services.credits import SupabaseCreditsService
 from app.services.dispatch import LocalDispatch, ModalDispatch, RunPodDispatch
 from app.services.events import JobEventBus
+from app.services.growth import GrowthHooks
 from app.services.jobs import EventsMode, SupabaseJobsService
+from app.services.klaviyo import KlaviyoClient, KlaviyoEvents
 from app.services.memory import (
     MemoryApiKeysService,
     MemoryCreditsService,
     MemoryJobsService,
     MemoryPlansService,
     MemoryPurchasesService,
+    MemoryQualityService,
     MemoryStorageService,
     MemoryStore,
     MemoryUsersService,
     MemoryWebhookEventsService,
 )
 from app.services.plans import PlansService, SupabasePlansService
+from app.services.quality import QualityService, SupabaseQualityService
 from app.services.storage import SupabaseStorageService
 from app.services.supabase import SupabaseClient
 from app.services.users import SupabaseUsersService
@@ -78,12 +82,16 @@ class Services:
     webhook_events: WebhookEventsService
     purchases: PurchasesService
     plans: PlansService
+    quality: QualityService
+    klaviyo: KlaviyoEvents
+    growth: GrowthHooks
     dispatch: DispatchService
 
     async def aclose(self) -> None:
         closer = getattr(self.dispatch, "aclose", None)
         if closer is not None:
             await closer()
+        await self.klaviyo.aclose()
         if self.supabase is not None:
             await self.supabase.aclose()
 
@@ -120,27 +128,36 @@ def build_services(settings: Settings) -> Services:
     bus = JobEventBus()
     client = SupabaseClient(settings) if settings.supabase_url else None
     mode = events_mode(settings)
+    klaviyo = KlaviyoEvents(KlaviyoClient(settings))
     store: MemoryStore | None = None
+    # The growth hooks read plans and per-user facts, the users and jobs services call
+    # the hooks: build in that order.
     if data_backend(settings) == "memory":
         store = MemoryStore(settings)
         credits: CreditsService = MemoryCreditsService(store)
-        jobs: JobsService = MemoryJobsService(store, bus, events_mode=mode)
-        users: UsersService = MemoryUsersService(store)
+        plans: PlansService = MemoryPlansService(store)
+        quality: QualityService = MemoryQualityService(store)
+        growth = GrowthHooks(klaviyo, plans=plans, quality=quality)
+        jobs: JobsService = MemoryJobsService(
+            store, bus, events_mode=mode, on_finished=growth.job_finished
+        )
+        users: UsersService = MemoryUsersService(store, growth=growth)
         api_keys: ApiKeysService = MemoryApiKeysService(store)
         webhook_events: WebhookEventsService = MemoryWebhookEventsService(store)
         purchases: PurchasesService = MemoryPurchasesService(store)
-        plans: PlansService = MemoryPlansService(store)
     else:
         assert client is not None
         credits = SupabaseCreditsService(client)
-        jobs = SupabaseJobsService(client, bus, events_mode=mode)
-        users = SupabaseUsersService(client, settings)
+        plans = SupabasePlansService(client)
+        quality = SupabaseQualityService(client)
+        growth = GrowthHooks(klaviyo, plans=plans, quality=quality)
+        jobs = SupabaseJobsService(client, bus, events_mode=mode, on_finished=growth.job_finished)
+        users = SupabaseUsersService(client, settings, growth=growth)
         api_keys = SupabaseApiKeysService(client)
         webhook_events = SupabaseWebhookEventsService(
             client, settings.webhook_claim_lease_seconds
         )
         purchases = SupabasePurchasesService(client)
-        plans = SupabasePlansService(client)
     storage = build_storage(settings, client)
     dispatch = build_dispatch(settings, jobs=jobs, storage=storage, credits=credits)
     return Services(
@@ -157,6 +174,9 @@ def build_services(settings: Settings) -> Services:
         webhook_events=webhook_events,
         purchases=purchases,
         plans=plans,
+        quality=quality,
+        klaviyo=klaviyo,
+        growth=growth,
         dispatch=dispatch,
     )
 

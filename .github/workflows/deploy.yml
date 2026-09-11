@@ -33,6 +33,7 @@ env:
   TF_VAR_maintenance_mode: ${{ vars.MAINTENANCE_MODE || 'false' }}
   TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
   TF_VAR_alarm_phone: ${{ vars.ALARM_PHONE }}
+  TF_VAR_klaviyo_private_api_key: ${{ secrets.KLAVIYO_PRIVATE_API_KEY }}
 
 jobs:
   images:

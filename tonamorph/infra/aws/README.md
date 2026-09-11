@@ -156,6 +156,8 @@ Setting neither fails the plan with an explicit precondition message.
 | `alarm_email` | `""` | e-mail subscription on the alarm topic; **required when `environment` is `prod`/`production`** (a precondition fails the plan otherwise) |
 | `alarm_phone` | `""` | E.164 number (`+14155550123`) subscribed to the alarm topic by SMS — the only channel that pages one person; see "Alarms" for the SNS sandbox step. Pass it as `TF_VAR_alarm_phone` or `-var alarm_phone=…` |
 | `maintenance_mode` | `false` | `MAINTENANCE_MODE` on the API tasks: `true` stops new job submissions (kill switch) |
+| `sentry_dsn` | `""` | `SENTRY_DSN` for API and worker; empty disables error reporting (sensitive; from the `SENTRY_DSN` repository secret) |
+| `klaviyo_private_api_key` | `""` | `KLAVIYO_PRIVATE_API_KEY` for API and worker; empty disables growth events (sensitive; from the `KLAVIYO_PRIVATE_API_KEY` repository secret) |
 
 ## GitHub Actions configuration
 
@@ -169,8 +171,10 @@ Repository **variables** (Settings → Secrets and variables → Actions → Var
 | `SUPABASE_URL` | Supabase project URL |
 | `ROUTE53_ZONE_ID` or `ACM_CERTIFICATE_ARN` | see "TLS and DNS" (leave the other empty) |
 | `ALARM_EMAIL` | **required** for the production environment (`terraform plan` fails when empty) |
-| `ALARM_PHONE` | optional; only takes effect once `deploy.yml` exports it as `TF_VAR_alarm_phone` (not wired yet — until then pass `-var alarm_phone=…` from a workstation) |
+| `ALARM_PHONE` | optional; `deploy.yml` passes it as `TF_VAR_alarm_phone` (E.164, see "Alarms" for the SNS sandbox step) |
 | `MAINTENANCE_MODE` | optional; `true` redeploys the API with new job submissions disabled (kill switch), unset/`false` otherwise |
+
+Repository **secrets** (optional, both may stay unset): `SENTRY_DSN` → `TF_VAR_sentry_dsn`, `KLAVIYO_PRIVATE_API_KEY` → `TF_VAR_klaviyo_private_api_key`; both reach the API and worker tasks as environment variables and an empty value disables the feature.
 
 Create a GitHub **environment** named `production` with required reviewers; the
 `apply` job waits for that approval. No long-lived AWS keys are stored: the deploy

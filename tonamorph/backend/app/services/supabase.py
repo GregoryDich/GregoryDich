@@ -72,7 +72,13 @@ _LIST_RESERVED = ',.:()"\\ '
 #                                      finds nothing left to do.
 #   delete_user_account                a tombstoned profile answers with its existing
 #                                      account_deletions row and changes nothing.
+#   record_job_feedback                one row per job (upsert); the refund it may run is
+#                                      keyed `refund:<job_id>` like any refund_job call.
+#   touch_plugin_install               a replay finds the row and only re-stamps last_seen_at.
+#   user_facts, status_last_24h        read-only.
 # Deliberately absent:
+#   submit_nps      a replay of an insert that committed answers P0409 (one answer per 30
+#                   days), which would report a recorded answer as refused.
 #   create_job      inserts a job and reserves a credit, so a replay charges twice and
 #                   strands the first reservation in `queued` forever — unless the call
 #                   carries an idempotency key, which `rpc_is_retryable` checks for.
@@ -93,13 +99,17 @@ IDEMPOTENT_RPCS: frozenset[str] = frozenset(
         "get_balance",
         "grant_credits",
         "reap_stale_jobs",
+        "record_job_feedback",
         "record_purchase",
         "refund_job",
         "reserve_credits",
         "revoke_api_key",
         "settle_reservation",
         "start_job",
+        "status_last_24h",
+        "touch_plugin_install",
         "update_job_progress",
+        "user_facts",
     }
 )
 
