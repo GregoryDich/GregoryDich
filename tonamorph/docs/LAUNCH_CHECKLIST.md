@@ -202,28 +202,25 @@ Keychain, Windows-машина). Каждый твой шаг ниже расс�
      «Session pooler») → подставь пароль → это `DATABASE_URL` для миграций (только для
      твоего терминала, в конфиг не идёт).
 
-- [ ] **Применить миграции** ⏱ 10 мин
-  Вариант A — `psql` (проще, ничего ставить кроме `brew install libpq`):
+- [ ] **Применить миграции** ⏱ 10 мин — нужен только `psql` (`brew install libpq`):
   ```sh
   cd tonamorph
   export DATABASE_URL='postgresql://postgres.<ref>:<пароль>@<host>:5432/postgres'
-  for f in db/migrations/*.sql; do psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"; done
+  bash db/apply.sh --dry-run   # план: какие файлы будут применены
+  bash db/apply.sh             # применяет по порядку, каждый файл в своей транзакции
   ```
-  Вариант B — Supabase CLI (`brew install supabase/tap/supabase`):
-  ```sh
-  cd tonamorph
-  supabase login
-  supabase link --project-ref <ref>
-  for f in db/migrations/*.sql; do
-    supabase migration new "$(basename "$f" .sql)"
-    cp "$f" "$(ls -t supabase/migrations/*.sql | head -n 1)"
-  done
-  supabase db push
-  ```
+  Скрипт ведёт таблицу `public.schema_migrations`, поэтому его можно запускать повторно
+  (применённые файлы пропускаются) и после каждой новой миграции в репозитории. Если часть
+  файлов ты уже применил вручную через `psql -f`, запусти `bash db/apply.sh --from <номер
+  первого неприменённого>` — более ранние будут записаны как применённые без выполнения.
+  `DATABASE_URL` никуда не печатается; в конце скрипт шлёт `NOTIFY pgrst`, чтобы PostgREST
+  увидел новые функции.
   **Не применяй** `db/tests/00_local_auth_shim.sql` — он только для локального кластера.
   ✅ В **SQL Editor**: `select id, credits, price_cents from public.plans order by sort_order;`
   → три строки `free/3/0`, `pack_50/50/900`, `sub_monthly/60/799`.
   ✅ `select tgname from pg_trigger where tgname = 'on_auth_user_created';` → одна строка.
+  ✅ `select filename from public.schema_migrations order by 1;` → по строке на каждый файл
+  из `db/migrations/`.
 
 - [ ] **pg_cron и очистка** ⏱ 3 мин
   1. **Database → Extensions** → найди `pg_cron` → **Enable**.
@@ -285,44 +282,41 @@ Keychain, Windows-машина). Каждый твой шаг ниже расс�
   6. ✅ Authentication → Users → **Invite user** на свой второй адрес → письмо пришло от
      `noreply@<domain>`, в Resend → Emails статус Delivered.
 
-- [ ] **Шаблоны писем** ⏱ 10 мин — **Authentication → Emails** (Email Templates), для
-  каждого шаблона замени Subject и Body целиком. Ссылки ведут на `/auth/confirm` сайта;
-  `type` в каждом шаблоне свой — это значения, которые GoTrue принимает в `verifyOtp`.
-  Страницу `/auth/confirm` делаю я; для `recovery` она перебрасывает на `/auth/reset-password`.
+- [ ] **Шаблоны писем** ⏱ 10 мин — **Authentication → Emails** (Email Templates). Готовые
+  файлы лежат в `infra/supabase/email-templates/` (по одному `.html` на шаблон, рядом `.txt`
+  с тем же текстом), инструкция — `infra/supabase/README.md`: какой файл в какую вкладку,
+  какой Subject, какие Site URL / Redirect URLs / SMTP / Rate Limits должны стоять. Для
+  каждой вкладки замени Subject и вставь содержимое `.html` в Body целиком (режим
+  «Source»). Ссылки ведут на `/auth/confirm` сайта; `type` в каждом файле свой — это
+  значения, которые GoTrue принимает в `verifyOtp`; для `recovery` страница перебрасывает
+  на `/auth/reset-password`. Литерал «Tonamorph» в шаблонах — единственное место в
+  репозитории, где имя написано текстом (у GoTrue нет переменной для него).
 
-  **Confirm signup** — Subject: `Confirm your <Имя> account`
-  ```html
-  <h2>Confirm your email</h2>
-  <p>Thanks for signing up for <Имя>. Confirm your address to activate your account and
-  your 3 free credits.</p>
-  <p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email">Confirm my email</a></p>
-  <p>If you did not create this account, ignore this email — nothing will happen.</p>
-  <p style="color:#888;font-size:12px">The link expires in 24 hours. Sent by <Имя>, {{ .SiteURL }}</p>
-  ```
+  | вкладка в дашборде | файл | Subject |
+  |---|---|---|
+  | Confirm sign up | `confirm-signup.html` | `Confirm your Tonamorph account` |
+  | Invite user | `invite.html` | `You're invited to Tonamorph` |
+  | Magic Link | `magic-link.html` | `Your Tonamorph sign-in link` |
+  | Change Email Address | `email-change.html` | `Confirm your new Tonamorph email` |
+  | Reset Password | `recovery.html` | `Reset your Tonamorph password` |
 
-  **Reset password** — Subject: `Reset your <Имя> password`
-  ```html
-  <h2>Reset your password</h2>
-  <p>Someone asked to reset the password for {{ .Email }}. If it was you, use the link
-  below; if not, ignore this email and your password stays unchanged.</p>
-  <p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery">Choose a new password</a></p>
-  <p style="color:#888;font-size:12px">The link expires in 1 hour. Sent by <Имя>, {{ .SiteURL }}</p>
-  ```
+  ✅ Регистрация на preview-сайте → письмо приходит с этим текстом, ссылка ведёт на `<domain>`.
 
-  **Magic link** (только сайт; плагин им не пользуется) — Subject: `Your <Имя> sign-in link`
-  ```html
-  <h2>Sign in to <Имя></h2>
-  <p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=magiclink">Sign in</a></p>
-  <p>If you did not request this link, ignore this email.</p>
+- [ ] **Проверка** ⏱ 5 мин — как только поднят API (2.8, день 3), прогони сквозной тест
+  против живого деплоя (подробности — `backend/scripts/README.md`):
+  ```sh
+  cd tonamorph/backend
+  export TONAMORPH_API_URL=https://api.<domain>
+  export SUPABASE_URL=https://<ref>.supabase.co
+  export SUPABASE_SERVICE_ROLE_KEY='<service_role>'   # только в этом терминале
+  python3 -m scripts.live_smoke
   ```
-
-  **Change email address** — Subject: `Confirm your new <Имя> email`
-  ```html
-  <h2>Confirm your new email</h2>
-  <p>Confirm that you want to change your <Имя> sign-in address to {{ .NewEmail }}.</p>
-  <p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email_change">Confirm the change</a></p>
-  ```
-  ✅ Регистрация на preview-сайте → письмо приходит с этими текстами, ссылка ведёт на `<domain>`.
+  Скрипт создаёт подтверждённого пользователя `smoke+<время>@<domain>` через admin API
+  GoTrue (письмо не отправляется), входит через `/v1/auth/token`, проверяет 3 кредита в
+  `/v1/me`, отправляет 5-секундный клип, ждёт результат по SSE, скачивает четыре стема и
+  `.mid`, сверяет леджер (ровно один `capture`), дёргает `/v1/status` и `/v1/version` и
+  удаляет пользователя через `DELETE /v1/me`. Ключи и токены не печатаются.
+  ✅ Все строки таблицы `PASS`, последняя строка `SMOKE PASS`, код выхода 0.
 
 ### 2.4 Paddle
 

@@ -1,0 +1,9 @@
+Confirm your new email address
+
+You asked to change the email address on your Tonamorph account. Confirm the change below.
+
+Confirm the change: {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email_change
+
+If you didn't ask for this, ignore this email. Your sign-in address stays the same. The link expires in 1 hour.
+
+Sent by Tonamorph - {{ .SiteURL }}

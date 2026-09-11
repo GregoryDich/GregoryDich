@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>Your Tonamorph sign-in link</title>
+<!--[if mso]>
+<noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+<style>table, td { font-family: Arial, sans-serif !important; }</style>
+<![endif]-->
+<style>
+  :root { color-scheme: light dark; supported-color-schemes: light dark; }
+  body { margin: 0; padding: 0; -webkit-text-size-adjust: 100%; }
+  @media (prefers-color-scheme: dark) {
+    .page { background-color: #18181b !important; }
+    .card { background-color: #27272a !important; }
+    .text { color: #e4e4e7 !important; }
+    .muted { color: #a1a1aa !important; }
+    .link { color: #93c5fd !important; }
+    .button-cell { background-color: #fafafa !important; }
+    .button { background-color: #fafafa !important; color: #18181b !important; }
+  }
+  [data-ogsc] .page { background-color: #18181b !important; }
+  [data-ogsc] .card { background-color: #27272a !important; }
+  [data-ogsc] .text { color: #e4e4e7 !important; }
+  [data-ogsc] .muted { color: #a1a1aa !important; }
+  [data-ogsc] .link { color: #93c5fd !important; }
+  [data-ogsc] .button-cell { background-color: #fafafa !important; }
+  [data-ogsc] .button { background-color: #fafafa !important; color: #18181b !important; }
+  @media only screen and (max-width: 520px) {
+    .card-pad { padding-left: 20px !important; padding-right: 20px !important; }
+  }
+</style>
+</head>
+<body class="page" style="margin:0;padding:0;background-color:#f4f4f5;">
+<div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#f4f4f5;">One-time sign-in link for {{ .Email }}.</div>
+<table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f4f4f5" style="background-color:#f4f4f5;">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+      <!--[if mso]><table role="presentation" width="480" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+      <table role="presentation" class="card" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="max-width:480px;background-color:#ffffff;border-radius:8px;">
+        <tr>
+          <td class="card-pad muted" style="padding:28px 32px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#71717a;">Tonamorph</td>
+        </tr>
+        <tr>
+          <td class="card-pad text" style="padding:12px 32px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:22px;line-height:28px;font-weight:700;color:#18181b;">Sign in to Tonamorph</td>
+        </tr>
+        <tr>
+          <td class="card-pad text" style="padding:12px 32px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:#3f3f46;">Use the button below to sign in as {{ .Email }}. The link works once.</td>
+        </tr>
+        <tr>
+          <td class="card-pad" style="padding:24px 32px 0;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td class="button-cell" align="center" bgcolor="#18181b" style="background-color:#18181b;border-radius:6px;">
+                  <a class="button" href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=magiclink" style="display:inline-block;padding:12px 22px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:20px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:6px;">Sign in</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td class="card-pad muted" style="padding:20px 32px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#71717a;">If the button doesn't work, copy this link into your browser:<br><a class="link" href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=magiclink" style="color:#2563eb;word-break:break-all;">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=magiclink</a></td>
+        </tr>
+        <tr>
+          <td class="card-pad muted" style="padding:20px 32px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#71717a;">If you didn't request this link, ignore this email. The link expires in 1 hour.</td>
+        </tr>
+      </table>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;">
+        <tr>
+          <td class="muted" style="padding:16px 8px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#a1a1aa;">Sent by Tonamorph &middot; <a class="link" href="{{ .SiteURL }}" style="color:#a1a1aa;text-decoration:underline;">{{ .SiteURL }}</a></td>
+        </tr>
+      </table>
+      <!--[if mso]></td></tr></table><![endif]-->
+    </td>
+  </tr>
+</table>
+</body>
+</html>

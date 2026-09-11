@@ -1,0 +1,9 @@
+Reset your password
+
+Someone asked to reset the password for {{ .Email }}. If that was you, choose a new password below.
+
+Choose a new password: {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery
+
+If it wasn't you, ignore this email. Your password stays as it is. The link expires in 1 hour.
+
+Sent by Tonamorph - {{ .SiteURL }}

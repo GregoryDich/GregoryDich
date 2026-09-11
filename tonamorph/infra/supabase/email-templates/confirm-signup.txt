@@ -1,0 +1,9 @@
+Confirm your email
+
+Thanks for signing up. Confirm this address to activate your account and your 3 free morphs.
+
+Confirm my email: {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup
+
+If you didn't create a Tonamorph account, ignore this email. Nothing happens unless you confirm. The link expires in 1 hour.
+
+Sent by Tonamorph - {{ .SiteURL }}

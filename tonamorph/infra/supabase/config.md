@@ -37,6 +37,11 @@ Authentication → Settings:
 | Refresh token rotation | enabled, reuse interval 10 s | the plugin refreshes via `POST /v1/auth/refresh` |
 | Site URL / redirect URLs | the website origin(s) | magic-link redirects |
 | Rate limits (token) | keep defaults | the API has its own 10 jobs/min limit |
+| Email templates | `email-templates/*.html` | links carry `token_hash` + `type` straight to the site's `/auth/confirm` |
+
+The templates, their subject lines, the exact Site URL / redirect allow-list values, the
+custom SMTP settings (Resend or Postmark) and the rate limits to change are in
+[`README.md`](README.md) in this directory.
 
 New accounts receive 3 credits via the database trigger shipped in
 `db/migrations/` (contract §3); no Auth hook is needed.

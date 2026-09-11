@@ -1,0 +1,9 @@
+Sign in to Tonamorph
+
+Use the button below to sign in as {{ .Email }}. The link works once.
+
+Sign in: {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=magiclink
+
+If you didn't request this link, ignore this email. The link expires in 1 hour.
+
+Sent by Tonamorph - {{ .SiteURL }}

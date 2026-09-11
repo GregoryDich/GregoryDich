@@ -1,0 +1,9 @@
+You're invited
+
+You've been invited to Tonamorph. Accept the invitation to create your account and get 3 free morphs.
+
+Accept the invitation: {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite
+
+If you weren't expecting this, ignore this email. The link expires in 1 hour.
+
+Sent by Tonamorph - {{ .SiteURL }}

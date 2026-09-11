@@ -78,6 +78,18 @@ Supabase `auth` schema exists (`auth.users`, `auth.uid()`) and the `anon`,
 `authenticated` and `service_role` roles are present (a `DO` block creates them on a
 plain cluster).
 
+Recommended: `db/apply.sh` — a transactional, tracked runner (one transaction per file,
+`public.schema_migrations` records what ran, re-runs are no-ops, `--dry-run` previews,
+`--from NNNN` baselines files you already applied by hand, and it ends with a PostgREST
+schema reload):
+
+```bash
+DATABASE_URL='postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres' bash db/apply.sh
+```
+
+Use either the script or the Supabase CLI below, not both: the CLI keeps its own,
+separate migration ledger.
+
 With the Supabase CLI (linked project):
 
 ```bash
