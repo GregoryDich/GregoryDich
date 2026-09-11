@@ -3,6 +3,7 @@
 #include "App/CrashReporter.h"
 #include "App/DemoMorph.h"
 #include "Core/FeedbackPayload.h"
+#include "Core/ParameterText.h"
 #include "Engine/AutoAdsr.h"
 #include "PluginEditor.h"
 
@@ -29,6 +30,54 @@ namespace
         juce::NormalisableRange<float> range (start, end);
         range.setSkewForCentre (centre);
         return range;
+    }
+
+    //==============================================================================
+    // Host-visible text for the parameters (and, through the slider attachments, the knob
+    // text boxes): units in the text itself, so no separate label. Unreadable input falls
+    // back to the parameter's default.
+
+    using FloatFormat = std::string (*) (double);
+    using FloatParse = std::optional<double> (*) (std::string_view);
+
+    juce::AudioParameterFloatAttributes textAttributes (FloatFormat format, FloatParse parse, float defaultValue)
+    {
+        return juce::AudioParameterFloatAttributes()
+            .withStringFromValueFunction ([format] (float value, int) { return juce::String (format (value)); })
+            .withValueFromStringFunction ([parse, defaultValue] (const juce::String& text)
+            {
+                return static_cast<float> (parse (text.toStdString()).value_or (defaultValue));
+            });
+    }
+
+    juce::AudioParameterFloatAttributes decibelAttributes (float defaultValue)
+    {
+        return juce::AudioParameterFloatAttributes()
+            .withStringFromValueFunction ([] (float value, int) { return juce::String (core::formatDecibels (value, silenceDb)); })
+            .withValueFromStringFunction ([defaultValue] (const juce::String& text)
+            {
+                return static_cast<float> (core::parseDecibels (text.toStdString(), silenceDb).value_or (defaultValue));
+            });
+    }
+
+    juce::AudioParameterIntAttributes noteNameAttributes (int defaultValue)
+    {
+        return juce::AudioParameterIntAttributes()
+            .withStringFromValueFunction ([] (int value, int) { return juce::String (core::formatNoteName (value)); })
+            .withValueFromStringFunction ([defaultValue] (const juce::String& text)
+            {
+                return core::parseNoteName (text.toStdString()).value_or (defaultValue);
+            });
+    }
+
+    juce::AudioParameterIntAttributes pitchClassAttributes (int defaultValue)
+    {
+        return juce::AudioParameterIntAttributes()
+            .withStringFromValueFunction ([] (int value, int) { return juce::String (core::formatPitchClassName (value)); })
+            .withValueFromStringFunction ([defaultValue] (const juce::String& text)
+            {
+                return core::parsePitchClassName (text.toStdString()).value_or (defaultValue);
+            });
     }
 
     core::ScaleMode scaleModeFromIndex (int index)
@@ -94,32 +143,34 @@ juce::AudioProcessorValueTreeState::ParameterLayout TonamorphAudioProcessor::cre
 
     layout.add (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParamIds::attack, 1 }, "Attack",
                                                              skewedRange (1.0f, 2000.0f, 100.0f), 2.0f,
-                                                             juce::AudioParameterFloatAttributes().withLabel ("ms")));
+                                                             textAttributes (core::formatMilliseconds, core::parseMilliseconds, 2.0f)));
     layout.add (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParamIds::decay, 1 }, "Decay",
                                                              skewedRange (1.0f, 4000.0f, 300.0f), 120.0f,
-                                                             juce::AudioParameterFloatAttributes().withLabel ("ms")));
+                                                             textAttributes (core::formatMilliseconds, core::parseMilliseconds, 120.0f)));
     layout.add (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParamIds::sustain, 1 }, "Sustain",
-                                                             juce::NormalisableRange<float> (0.0f, 1.0f), 0.8f));
+                                                             juce::NormalisableRange<float> (0.0f, 1.0f), 0.8f,
+                                                             textAttributes (core::formatPercent, core::parsePercent, 0.8f)));
     layout.add (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParamIds::release, 1 }, "Release",
                                                              skewedRange (5.0f, 5000.0f, 400.0f), 180.0f,
-                                                             juce::AudioParameterFloatAttributes().withLabel ("ms")));
+                                                             textAttributes (core::formatMilliseconds, core::parseMilliseconds, 180.0f)));
     layout.add (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParamIds::cutoff, 1 }, "Cutoff",
                                                              skewedRange (20.0f, 20000.0f, 1000.0f), 20000.0f,
-                                                             juce::AudioParameterFloatAttributes().withLabel ("Hz")));
+                                                             textAttributes (core::formatHertz, core::parseHertz, 20000.0f)));
     layout.add (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParamIds::resonance, 1 }, "Resonance",
-                                                             skewedRange (0.1f, 10.0f, 1.0f), 0.7071f));
+                                                             skewedRange (0.1f, 10.0f, 1.0f), 0.7071f,
+                                                             textAttributes (core::formatRatio, core::parseRatio, 0.7071f)));
     layout.add (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParamIds::gain, 1 }, "Gain",
                                                              juce::NormalisableRange<float> (-60.0f, 12.0f), 0.0f,
-                                                             juce::AudioParameterFloatAttributes().withLabel ("dB")));
+                                                             decibelAttributes (0.0f)));
     layout.add (std::make_unique<juce::AudioParameterChoice> (juce::ParameterID { ParamIds::category, 1 }, "Category",
                                                               getCategoryLabels(), 0));
     layout.add (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParamIds::rootTarget, 1 }, "Root Target",
-                                                           24, 84, 48));
+                                                           24, 84, 48, noteNameAttributes (48)));
     layout.add (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParamIds::drumMode, 1 }, "Drum Mode", false));
     layout.add (std::make_unique<juce::AudioParameterChoice> (juce::ParameterID { ParamIds::scaleMode, 1 }, "Scale Mode",
                                                               getScaleModeLabels(), 0));
     layout.add (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParamIds::scaleRoot, 1 }, "Scale Root",
-                                                           0, 11, 0));
+                                                           0, 11, 0, pitchClassAttributes (0)));
     return layout;
 }
 

@@ -37,7 +37,7 @@ AuthManager::AuthManager (ApiClient& client)
 }
 
 AuthManager::AuthManager (ApiClient& client, const juce::PropertiesFile::Options& storageOptions)
-    : AuthManager (client, std::make_shared<juce::PropertiesFile> (storageOptions))
+    : AuthManager (client, std::make_shared<juce::PropertiesFile> (storageFileFor (storageOptions), storageOptions))
 {
 }
 
@@ -66,6 +66,24 @@ juce::PropertiesFile::Options AuthManager::defaultStorageOptions()
     options.osxLibrarySubFolder = "Application Support";
     options.storageFormat = juce::PropertiesFile::storeAsXML;
     return options;
+}
+
+juce::File AuthManager::storageFileFor (const juce::PropertiesFile::Options& options)
+{
+   #if JUCE_LINUX || JUCE_BSD
+    const auto folder = options.folderName.isNotEmpty() ? options.folderName : options.applicationName;
+
+    return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+               .getChildFile (folder)
+               .getChildFile (options.applicationName + "." + options.filenameSuffix);
+   #else
+    return options.getDefaultFile();
+   #endif
+}
+
+juce::File AuthManager::defaultDataDirectory()
+{
+    return storageFileFor (defaultStorageOptions()).getParentDirectory();
 }
 
 //==============================================================================
@@ -122,6 +140,8 @@ void AuthManager::logout()
     tokenExpiry = juce::Time();
     user.reset();
     balance.reset();
+    referral.reset();
+    gifts.clear();
 
     storage->removeValue (keyAccessToken);
     storage->removeValue (keyRefreshToken);
@@ -160,6 +180,11 @@ std::optional<CreditBalance> AuthManager::getBalance() const
 int AuthManager::getAvailableCredits() const
 {
     return balance.has_value() ? balance->available : 0;
+}
+
+std::optional<ReferralInfo> AuthManager::getReferral() const
+{
+    return referral;
 }
 
 juce::String AuthManager::getAccessToken() const
@@ -277,6 +302,8 @@ void AuthManager::refreshBalance (std::function<void (std::optional<ApiError>)> 
         }
 
         user = response.value->user;
+        referral = response.value->referral;
+        gifts = response.value->gifts;
         saveToStorage();
         updateBalance (response.value->balance);
         listeners.call ([this] (Listener& l) { l.authStateChanged (*this); });

@@ -1,8 +1,10 @@
 #include "PluginEditor.h"
 
 #include "Cloud/UploadEncoder.h"
+#include "Core/Retention.h"
 #include "Core/SemanticVersion.h"
 #include "Core/Strings.h"
+#include "DemoData.h"
 #include "Export/DragExport.h"
 #include "Export/FscExporter.h"
 #include "Export/MidiExporter.h"
@@ -120,40 +122,6 @@ namespace
         return s (strings::errorMorphFailed);
     }
 
-    juce::String noteNameFor (int midiNote)
-    {
-        return juce::MidiMessage::getMidiNoteName (midiNote, true, true, middleCOctave);
-    }
-
-    /** Accepts "C3", "F#2", "Bb1" or a plain number. */
-    double noteNumberFromText (const juce::String& text)
-    {
-        const auto trimmed = text.trim().toUpperCase();
-
-        if (trimmed.isEmpty() || ! juce::CharacterFunctions::isLetter (trimmed[0]))
-            return trimmed.getDoubleValue();
-
-        int pitchClass = juce::String ("C D EF G A B").indexOfChar (trimmed[0]);
-
-        if (pitchClass < 0)
-            return 0.0;
-
-        int octaveStart = 1;
-
-        if (trimmed.length() > 1 && trimmed[1] == '#')
-        {
-            ++pitchClass;
-            ++octaveStart;
-        }
-        else if (trimmed.length() > 1 && trimmed[1] == 'B' && trimmed.length() > 2)
-        {
-            --pitchClass;
-            ++octaveStart;
-        }
-
-        const int octave = trimmed.substring (octaveStart).getIntValue();
-        return (octave - middleCOctave + 5) * 12 + pitchClass;
-    }
 } // namespace
 
 //==============================================================================
@@ -569,6 +537,11 @@ TonamorphAudioProcessorEditor::TonamorphAudioProcessorEditor (TonamorphAudioProc
     titleLabel.setFont (TonamorphLookAndFeel::font (22.0f, true));
     settingsButton.setButtonText (s (strings::settings));
     settingsButton.onClick = [this] { openSettingsMenu(); };
+    aboutButton.setButtonText (s (strings::about));
+    aboutButton.onClick = [this] { showAbout (true); };
+    referralButton.setButtonText (s (strings::referralShare));
+    referralButton.setColour (juce::TextButton::textColourOffId, colours::accent);
+    referralButton.onClick = [this] { showReferral (true); };
     creditsLabel.setJustificationType (juce::Justification::centredRight);
     creditsLabel.setFont (TonamorphLookAndFeel::font (14.0f));
     creditsLabel.setColour (juce::Label::textColourId, colours::accent);
@@ -582,6 +555,8 @@ TonamorphAudioProcessorEditor::TonamorphAudioProcessorEditor (TonamorphAudioProc
     logoutButton.onClick = [this] { processor.getAuthManager().logout(); };
     addAndMakeVisible (titleLabel);
     addAndMakeVisible (settingsButton);
+    addAndMakeVisible (aboutButton);
+    addChildComponent (referralButton);
     addAndMakeVisible (creditsLabel);
     addAndMakeVisible (signInButton);
     addAndMakeVisible (logoutButton);
@@ -665,9 +640,6 @@ TonamorphAudioProcessorEditor::TonamorphAudioProcessorEditor (TonamorphAudioProc
     resonanceAttachment  = std::make_unique<SliderAttachment> (apvts, ParamIds::resonance, resonanceKnob);
     gainAttachment       = std::make_unique<SliderAttachment> (apvts, ParamIds::gain, gainKnob);
     rootTargetAttachment = std::make_unique<SliderAttachment> (apvts, ParamIds::rootTarget, rootTargetKnob);
-    rootTargetKnob.textFromValueFunction = [] (double value) { return noteNameFor (juce::roundToInt (value)); };
-    rootTargetKnob.valueFromTextFunction = [] (const juce::String& text) { return noteNumberFromText (text); };
-    rootTargetKnob.updateText();
 
     drumModeButton.setButtonText (s (strings::drumMode));
     addAndMakeVisible (drumModeButton);
@@ -747,6 +719,21 @@ TonamorphAudioProcessorEditor::TonamorphAudioProcessorEditor (TonamorphAudioProc
     addChildComponent (paywallPrompt);
     addChildComponent (loginOverlay);
 
+    aboutOverlay.setNoticesText (juce::String::fromUTF8 (DemoData::third_party_notices_txt,
+                                                         DemoData::third_party_notices_txtSize));
+    aboutOverlay.onCrashReportingChanged = [this] (bool enabled) { processor.setCrashReportingEnabled (enabled); };
+    aboutOverlay.onClose = [this] { showAbout (false); };
+    referralPanel.onClose = [this] { showReferral (false); };
+    npsCard.onSubmit = [this] (int score, const juce::String& comment) { submitNps (score, comment); };
+    npsCard.onDismiss = [this]
+    {
+        processor.getSettings().incrementNpsDismissals();
+        npsCard.hideCard();
+    };
+    addChildComponent (aboutOverlay);
+    addChildComponent (referralPanel);
+    addChildComponent (npsCard);
+
     processor.getJobClient().addChangeListener (this);
     processor.getResultEvents().addChangeListener (this);
     auth.addListener (this);
@@ -756,16 +743,21 @@ TonamorphAudioProcessorEditor::TonamorphAudioProcessorEditor (TonamorphAudioProc
     processor.flushCrashReports();
     processor.loadDemoIfIdle();
     updateFromProcessor();
+    updateReferralButton();
     checkForUpdates();
 
     if (auth.isLoggedIn())
     {
         if (const auto balance = auth.getBalance(); balance.has_value())
+        {
             lastKnownAvailable = balance->available;
+            lastKnownCredits = balance->credits;
+        }
 
         auth.refreshBalance();
     }
 
+    maybeShowNpsCard();
     startTimer (uiTickMs);
 }
 
@@ -781,6 +773,9 @@ TonamorphAudioProcessorEditor::~TonamorphAudioProcessorEditor()
 
     if (versionRequest != cloud::ApiClient::invalidRequest)
         api.cancel (versionRequest);
+
+    if (npsRequest != cloud::ApiClient::invalidRequest)
+        api.cancel (npsRequest);
 
     if (paywallPrompt.isVisible())
         processor.getAuthManager().stopBalancePolling();
@@ -801,6 +796,8 @@ void TonamorphAudioProcessorEditor::resized()
 {
     loginOverlay.setBounds (getLocalBounds());
     paywallPrompt.setBounds (getLocalBounds());
+    aboutOverlay.setBounds (getLocalBounds());
+    referralPanel.setBounds (getLocalBounds());
 
     auto bounds = getLocalBounds().reduced (windowMargin, 12);
 
@@ -818,6 +815,15 @@ void TonamorphAudioProcessorEditor::resized()
     creditsLabel.setBounds (header.removeFromRight (140));
     header.removeFromRight (12);
     settingsButton.setBounds (header.removeFromRight (90).reduced (0, 8));
+    header.removeFromRight (8);
+    aboutButton.setBounds (header.removeFromRight (70).reduced (0, 8));
+
+    if (referralButton.isVisible())
+    {
+        header.removeFromRight (8);
+        referralButton.setBounds (header.removeFromRight (190).reduced (0, 8));
+    }
+
     titleLabel.setBounds (header);
 
     bounds.removeFromTop (8);
@@ -880,6 +886,7 @@ void TonamorphAudioProcessorEditor::resized()
     bounds.removeFromTop (10);
     keyboard.setKeyWidth (static_cast<float> (bounds.getWidth()) / static_cast<float> (numWhiteKeys));
     keyboard.setBounds (bounds);
+    npsCard.setBounds (bounds.removeFromBottom (juce::jmin (ui::NpsCard::preferredHeight, bounds.getHeight())));
     placeToast();
 }
 
@@ -961,6 +968,8 @@ void TonamorphAudioProcessorEditor::authStateChanged (cloud::AuthManager& auth)
     updateCreditsLabel();
     updateJobStatus();
 
+    updateReferralButton();
+
     if (loggedIn)
     {
         showLoginOverlay (false);
@@ -970,12 +979,16 @@ void TonamorphAudioProcessorEditor::authStateChanged (cloud::AuthManager& auth)
 
         if (const auto file = std::exchange (pendingDropFile, juce::File()); file.existsAsFile())
             submitAudioFile (file);
+
+        maybeShowNpsCard();
     }
     else
     {
         paywallDismissed = false;
         lastKnownAvailable.reset();
+        lastKnownCredits.reset();
         showPaywall (false);
+        npsCard.hideCard();   // an answer needs a session; not counted as a dismissal
     }
 }
 
@@ -986,17 +999,25 @@ void TonamorphAudioProcessorEditor::balanceChanged (cloud::AuthManager& auth, co
     if (! auth.isLoggedIn())
         return;
 
-    // First purchase (GTM §2.4): the balance poll sees 0 turn into a positive number.
     auto& settings = processor.getSettings();
 
-    if (lastKnownAvailable.has_value() && *lastKnownAvailable <= 0 && balance.available > 0
-        && ! settings.hasSeen (PluginSettings::flagFirstPurchase))
+    // Week-one gift (GTM §2.4) before the purchase check: +2 on an empty balance is the
+    // gift, not a purchase.
+    if (! settings.hasSeen (PluginSettings::flagWeekOneGift) && weekOneGiftArrived (balance))
+    {
+        settings.markSeen (PluginSettings::flagWeekOneGift);
+        toast.show (s (strings::giftWeekOne), celebrationToastMs + 1500);
+    }
+    // First purchase (GTM §2.4): the balance poll sees 0 turn into a positive number.
+    else if (lastKnownAvailable.has_value() && *lastKnownAvailable <= 0 && balance.available > 0
+             && ! settings.hasSeen (PluginSettings::flagFirstPurchase))
     {
         settings.markSeen (PluginSettings::flagFirstPurchase);
         toast.show (fill (strings::celebrateFirstPurchase, "count", juce::String (balance.available)), celebrationToastMs + 1500);
     }
 
     lastKnownAvailable = balance.available;
+    lastKnownCredits = balance.credits;
 
     if (balance.available <= 0)
     {
@@ -1198,6 +1219,10 @@ void TonamorphAudioProcessorEditor::onResultEvent()
 
     auto& settings = processor.getSettings();
 
+    // The day-14 NPS card and the week-one gift count from the first own-clip morph.
+    if (! processor.wasCurrentResultRestored())
+        settings.markFirstMorph (juce::Time::getCurrentTime());
+
     // Celebration 1: the first own-clip morph — in-scale keys glow, real key and BPM. The
     // first-sound hint follows once the toast has gone.
     if (! processor.wasCurrentResultRestored() && ! settings.hasSeen (PluginSettings::flagFirstMorph))
@@ -1347,6 +1372,132 @@ void TonamorphAudioProcessorEditor::openSettingsMenu()
         if (safeThis != nullptr && chosen == crashReportsItem)
             safeThis->processor.setCrashReportingEnabled (! safeThis->processor.getSettings().isCrashReportingEnabled());
     });
+}
+
+void TonamorphAudioProcessorEditor::showAbout (bool show)
+{
+    if (show)
+    {
+        showReferral (false);
+        aboutOverlay.setCrashReportingEnabled (processor.getSettings().isCrashReportingEnabled());
+        aboutOverlay.toFront (false);
+    }
+
+    aboutOverlay.setVisible (show);
+}
+
+void TonamorphAudioProcessorEditor::showReferral (bool show)
+{
+    if (show)
+    {
+        const auto referral = processor.getAuthManager().getReferral();
+
+        if (! referral.has_value())
+            return;
+
+        showAbout (false);
+        referralPanel.setReferral (*referral);
+        referralPanel.toFront (false);
+    }
+
+    referralPanel.setVisible (show);
+}
+
+void TonamorphAudioProcessorEditor::updateReferralButton()
+{
+    auto& auth = processor.getAuthManager();
+    const auto referral = auth.getReferral();
+    const bool available = auth.isLoggedIn() && referral.has_value();
+
+    if (referralButton.isVisible() != available)
+    {
+        referralButton.setVisible (available);
+        resized();
+    }
+
+    if (! available)
+        showReferral (false);
+    else if (referralPanel.isVisible())
+        referralPanel.setReferral (*referral);
+}
+
+void TonamorphAudioProcessorEditor::maybeShowNpsCard()
+{
+    if (npsOffered || npsCard.isVisible() || ! processor.getAuthManager().isLoggedIn())
+        return;
+
+    auto& settings = processor.getSettings();
+    core::NpsState state;
+
+    if (const auto firstMorphAt = settings.getFirstMorphAt(); firstMorphAt.has_value())
+        state.firstMorphAtMs = firstMorphAt->toMilliseconds();
+
+    state.answered = settings.wasNpsAnswered();
+    state.dismissals = settings.getNpsDismissals();
+
+    if (! core::shouldShowNpsCard (state, juce::Time::currentTimeMillis()))
+        return;
+
+    npsOffered = true;
+    npsCard.showCard();
+}
+
+void TonamorphAudioProcessorEditor::submitNps (int score, const juce::String& comment)
+{
+    if (npsRequest != cloud::ApiClient::invalidRequest)
+        return;
+
+    npsCard.setBusy (true);
+    const auto body = juce::String (core::buildNpsJson (score, comment.toStdString()));
+
+    juce::Component::SafePointer<TonamorphAudioProcessorEditor> safeThis (this);
+    npsRequest = processor.getApiClient().postNps (body, [safeThis] (cloud::ApiClient::Response<cloud::NpsResponse> response)
+    {
+        if (safeThis == nullptr)
+            return;
+
+        safeThis->npsRequest = cloud::ApiClient::invalidRequest;
+        auto& settings = safeThis->processor.getSettings();
+
+        if (response.ok())
+        {
+            settings.setNpsAnswered();
+            safeThis->npsCard.showOutcome (s (strings::feedbackThanks), false);
+        }
+        else if (response.statusCode == 409)
+        {
+            // Already answered within 30 days (contract §14): nothing more to ask.
+            settings.setNpsAnswered();
+            safeThis->npsCard.hideCard();
+        }
+        else if (response.statusCode == 404)
+        {
+            // The route is not deployed yet: try again on a later day, at most once more.
+            settings.incrementNpsDismissals();
+            safeThis->npsCard.hideCard();
+        }
+        else
+        {
+            safeThis->npsCard.showOutcome (s (strings::feedbackFailed), true);
+        }
+    });
+}
+
+bool TonamorphAudioProcessorEditor::weekOneGiftArrived (const cloud::CreditBalance& balance) const
+{
+    // The server's word when `/v1/me` lists gifts; the balance heuristic otherwise.
+    if (const auto& gifts = processor.getAuthManager().getGifts(); ! gifts.isEmpty())
+        return gifts.contains (core::weekOneGiftKey);
+
+    if (! lastKnownCredits.has_value())
+        return false;
+
+    std::optional<std::int64_t> firstMorphAtMs;
+
+    if (const auto firstMorphAt = processor.getSettings().getFirstMorphAt(); firstMorphAt.has_value())
+        firstMorphAtMs = firstMorphAt->toMilliseconds();
+
+    return core::isWeekOneGiftDelta (*lastKnownCredits, balance.credits, firstMorphAtMs, juce::Time::currentTimeMillis());
 }
 
 void TonamorphAudioProcessorEditor::setupKnob (juce::Slider& slider, juce::Label& label, const juce::String& text)

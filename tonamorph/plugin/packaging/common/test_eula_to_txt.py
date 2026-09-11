@@ -133,6 +133,30 @@ def test_cli_unresolved_ok_writes_placeholder(tmp_path: Path, monkeypatch: pytes
     assert "[[" not in text
 
 
+def test_cli_keep_unresolved_leaves_tokens_in_place(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    for name in mod.PLACEHOLDER_NAMES:
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("PRODUCT_NAME", "Example Plugin")
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    src = tmp_path / "notices.md"
+    out = tmp_path / "notices.txt"
+    src.write_text(FIXTURE, encoding="utf-8")
+    assert mod.main([str(src), str(out), "--keep-unresolved"]) == 0
+    text = out.read_text(encoding="utf-8")
+    assert "PLACEHOLDER" not in text                       # the real document, not the stub
+    assert "for Example Plugin." in text                   # resolved tokens are substituted
+    assert "between you and [[COMPANY_LEGAL_NAME]]" in text  # unresolved ones stay verbatim
+    assert "internal note" not in text
+    assert "COMPANY_LEGAL_NAME" in capsys.readouterr().err   # and are warned about
+
+
+def test_keep_unresolved_conflicts_with_unresolved_ok(tmp_path: Path) -> None:
+    with pytest.raises(SystemExit):
+        mod.main([str(tmp_path / "a.md"), str(tmp_path / "a.txt"), "--unresolved-ok", "--keep-unresolved"])
+
+
 def test_cli_missing_input(tmp_path: Path) -> None:
     out = tmp_path / "license.txt"
     assert mod.main([str(tmp_path / "absent.md"), str(out)]) == 3

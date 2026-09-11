@@ -18,42 +18,15 @@ This file lists every third-party component that [[PRODUCT_NAME]] ships, runs or
 
 ---
 
-## 1. Actions before launch
+> The pre-launch action list that used to open this file (licence blockers, owners, the
+> separation-model candidates) is internal and lives in `docs/LICENCE_ACTIONS.md`; this file
+> is the notice bundle that ships with the product.
 
-| # | Component | Status | Owner | What to do |
-|---|---|---|---|---|
-| 1 | **Demucs v4 pretrained weights** (`htdemucs`, `htdemucs_ft`, `htdemucs_6s`) | **BLOCKER** | Founder + counsel | The **code** is MIT; the **weights** are not. They are downloaded at run time from Meta's file server, are not in the repository, and the maintainer stated in facebookresearch/demucs issue #327 (2022-05-23) that "the model weights are not covered by the MIT license, and are provided only for scientific purposes". They were trained on MUSDB18-HQ ("educational purposes only … not … for any commercial purpose") plus an internal Meta set. Converting to ONNX/TensorRT does not change this. Third parties re-labelling the weights "MIT" on model hubs are not authoritative. The repository is archived and the author has left Meta, so a grant would have to come from Meta legal. **Either (a) obtain a written commercial licence from Meta for the exact checkpoints, or (b) replace the separation model before launch.** Read the issue thread yourself and archive a screenshot before deciding. Candidates are in section 2. |
-| 2 | **Rubber Band Library** (pitch shifting in the plugin) | **BLOCKER** as currently configured | Founder | `plugin/CMakeLists.txt` enables Rubber Band by default (`*_USE_RUBBERBAND` option, `ON`) and links it whenever `pkg-config` finds it. Rubber Band is **GPL-2.0-or-later** unless a commercial licence is bought; a closed-source plugin containing it may not be distributed, and Breakfast Quay states explicitly that App Store distribution requires the commercial licence. **Either buy a commercial licence (perpetual, one-time fee, "with attribution" or "non-attribution" variants; price on request — breakfastquay.com was unreachable from the research environment) before the first public build, or build releases with the option set to `OFF`** (the code falls back to resampling pitch shift). Record which one in this file. |
-| 3 | **VST3 SDK** as vendored in JUCE 8.0.8 (`VST 3.7.12`) | **ACTION REQUIRED** | Founder + counsel | Steinberg relicensed the VST3 SDK to **MIT** in late October 2025; the current upstream `LICENSE.txt` is the MIT text (© 2026, reproduced in Appendix A.1) and no Steinberg agreement or developer registration is needed. **But the copy actually compiled into the plugin is the one inside the pinned JUCE 8.0.8 checkout, and that copy's `LICENSE.txt` is still the pre-October-2025 dual licence ("Proprietary Steinberg VST3 License, or GPL v3"), which for a proprietary build requires a signed Steinberg agreement.** Resolve by moving to a JUCE release whose vendored `modules/juce_audio_processors/format_types/VST3_SDK/LICENSE.txt` is the MIT text, or by obtaining Steinberg's written confirmation that the MIT relicensing covers SDK 3.7.12. Using the "VST" word mark or logo additionally binds you to Steinberg's VST usage guidelines. |
-| 4 | **JUCE 8.0.8** | **ACTION REQUIRED** | Founder | JUCE is dual-licensed AGPLv3 / commercial JUCE 8 EULA. AGPL is unusable for a closed-source plugin, so the commercial tier applies. Tiers are by **trailing-12-month gross revenue from all sources**: Starter (free) under about US$ 20k/year, Indie under US$ 500k/year, Pro unlimited. JUCE 8 dropped the splash-screen requirement on Starter (the build sets `JUCE_DISPLAY_SPLASH_SCREEN=0`, which is only correct if that is confirmed). JUCE 9 (July 2026) kept the same pricing and EULA. Sources on Indie pricing conflict (US$ 40/month or US$ 800 perpetual vs US$ 50/month or US$ 1,000) and juce.com was unreachable from the research environment. **Confirm the tier terms on juce.com, record the tier in this file, and buy Indie the month revenue crosses the Starter limit** — the EULA requires you to upgrade or stop distributing. |
-| 5 | **aubio** | DONE (removed 2026-09-10) | Backend | Was GPL-3.0 and lived only in the worker image. Removed from `backend/app/pipeline/analysis.py`, `requirements-gpu.txt`, `pyproject.toml [gpu]` and `infra/Dockerfile.worker`; tempo detection now uses librosa (ISC) with the pure-numpy fallback. No GPL component remains anywhere in the pipeline. |
-| 6 | **pyflp** | OK (verified) | Plugin | GPL-3.0. Verified with `grep -rn pyflp` across the repository on 2026-09-09: it is imported **only** in `plugin/Tests/roundtrip.py` (an optional, developer-run cross-check of the `.fsc` exporter, wrapped in a `try/except ImportError`) and mentioned in `plugin/README.md`. It is **not** in any `requirements*.txt` or `pyproject.toml`, not imported by `backend/`, `backend/tests/`, `growth/` or `infra/`, and not part of any image or binary. Nothing to do except keep it out of the manifests. |
-| 7 | **Remotion 4.0.521** (`growth/remotion/package.json`) | **ACTION REQUIRED** | Founder | The Remotion Licence grants free use (including commercial) to individuals and to for-profit organisations with **up to 3 employees**; larger for-profit companies need a paid Company Licence. A sole proprietor qualifies for the free tier today. **Re-check the moment the business incorporates or takes on a fourth person**, and note that Remotion 5 changes the licence text. |
-| 8 | **Plugin notice file / About box** | **ACTION REQUIRED** | Plugin | The BSD, Apache-2.0, MIT-style and IJG licences of components compiled into the plugin (section 3.1) require their copyright notices and disclaimers to be reproduced "in the documentation and/or other materials provided with the distribution". **Bundle this file with every installer and expose it from the plugin's About screen.** The texts are in the JUCE tree at the paths given in section 3.1; the ones with the strictest wording (FLAC, Ogg Vorbis) are reproduced in Appendix B. |
-| 9 | **Worker-image transitive dependencies** | **ACTION REQUIRED** | Backend | `torch`, `demucs`, `basic-pitch` and `onnxruntime-gpu` are not installed on the build machine (no GPU wheels), so their transitive dependencies could not be enumerated here. Demucs pulls in at least `openunmix` (MIT), `julius` (MIT), `einops` (MIT), `torchaudio` (BSD-2) and `lameenc` (reported LGPL — confirm); Basic Pitch's own NOTICE (Appendix A.5) lists librosa (ISC), mir_eval (MIT), pretty_midi (MIT), resampy (ISC), scipy (BSD-3) and tensorflow (Apache-2.0). **Run `pip-licenses --format=markdown` inside the built worker image and paste the result into section 3.3.** Also confirm the NVIDIA CUDA 12.4.1 / cuDNN base image terms (NVIDIA Deep Learning Container Licence) permit our hosted use — they do for running containers, but record it. |
-| 10 | **Website (`web/`)** | OK (verified) | Web | Enumerated with `npx license-checker --production` on 2026-09-10 (140 packages): MIT 124, Apache-2.0 5, ISC 3, BSD-3-Clause 1, 0BSD 1, MPL-2.0 1 (`@vercel/analytics`, unmodified, file-level copyleft only), CC-BY-4.0 1 (`caniuse-lite`, browser-support data), LGPL-3.0-or-later 2 (`@img/sharp-libvips-*`, Next.js image optimisation, runs only on the Vercel server and is never distributed). Nothing in the site bundle is copyleft. Re-run the command after any dependency change; details in section 3.6. |
-| 11 | **Services used by the growth tool** (not software licences) | **ACTION REQUIRED** | Growth | ElevenLabs text-to-speech: commercial use of generated voice in advertising requires a paid plan under ElevenLabs' terms — confirm the plan. Free Music Archive tracks: per-track Creative Commons terms, enforced in code (`growth/mcp_server/licensing.py` drops NC/ND). TikTok, Meta and YouTube developer terms apply to the publishers. None of these are redistributed software; they are listed for completeness. |
-
-### 2. Separation-model replacement candidates (for action 1)
-
-From the launch research brief, in order of preference:
-
-| Candidate | Licence status | Notes |
-|---|---|---|
-| **Mel-Band RoFormer (Kim vocal models)** | Reported relicensed from GPL-3.0 to **MIT** by the original author on 2026-04-22, weights included (per the mlx-community model card; corroborated by an independent licence-research document) | Strongest candidate; reported to outperform htdemucs on vocals. The reports come from model-hub cards, not the author's own repository. **Verify the licence on the exact checkpoint you ship, confirm a 4-stem (bass/drums/other/vocals) variant exists under the same terms, and archive a copy of the model card and licence on the day you ship.** |
-| **Licensed commercial stem-separation API** (AudioShake, Music.ai/Moises, LALAL.AI) | Commercial B2B/API contract | Removes the weights question and the GPU-hosting line entirely; adds per-call cost and a vendor dependency. Re-run `docs/ECONOMICS.md` if chosen. |
-| **Spleeter (Deezer)** | Code MIT; README silent on weights; Deezer sells "Spleeter Pro" commercially | Same ambiguity as Demucs, lower quality. **Not recommended.** |
-| **Open-Unmix** | Code MIT; default `umxl` weights **CC BY-NC-SA 4.0**; `umxhq`/`umx` trained on MUSDB18 (non-commercial) | **Not recommended.** |
-
-The research brief also flags two questions that need a lawyer, not an engineer: whether model weights are a derivative of MIT-licensed code and/or of non-commercially-licensed training data, and whether a maintainer's forum comment is a binding licence term (or evidence of the absence of one).
-
----
-
-## 3. Component matrix
+## 1. Component matrix
 
 Columns: **Version pinned in repo** is what the manifests fix; "unpinned" means the manifest gives only a lower bound or nothing, and the version in brackets is what was installed on the build machine on the verification date. **Obligation** is what the licence requires of us in the bucket where the component is used.
 
-### 3.1 Plugin binary (distributed to end users)
+### 1.1 Plugin binary (distributed to end users)
 
 Built by `plugin/CMakeLists.txt`: formats VST3 and Standalone on every platform, plus AU on macOS. Linked JUCE modules: `juce_audio_utils`, `juce_audio_processors`, `juce_audio_formats`, `juce_dsp`, `juce_gui_extra`, and transitively `juce_audio_devices`, `juce_audio_basics`, `juce_gui_basics`, `juce_graphics`, `juce_events`, `juce_data_structures`, `juce_core`, `juce_audio_plugin_client`.
 
@@ -76,7 +49,7 @@ Built by `plugin/CMakeLists.txt`: formats VST3 and Standalone on every platform,
 
 Not present in the plugin, by verification: `aubio`, `libsndfile`/`soundfile`, `librosa`, `torch`, `onnxruntime`, any Python. Audio decoding in the plugin uses JUCE's own readers. JUCE modules that carry other third-party code (`juce_opengl` GLEW/Mesa, `juce_javascript` CHOC/QuickJS, `juce_box2d`, LV2 SDK, AAX SDK) are **not linked** and are not built.
 
-### 3.2 Backend API server (`infra/Dockerfile.api`; not distributed)
+### 1.2 Backend API server (`infra/Dockerfile.api`; not distributed)
 
 Manifest: `backend/requirements.txt` / `backend/pyproject.toml`. All constraints are lower bounds (`>=`), so every row is **unpinned**; bracketed versions are those installed on the build machine on 2026-09-09. Server-side use imposes no notice obligation; the "Obligation" column therefore states what would apply if the component were ever redistributed.
 
@@ -101,7 +74,7 @@ Manifest: `backend/requirements.txt` / `backend/pyproject.toml`. All constraints
 | Python 3.11 (`python:3.11-slim`; deadsnakes on the worker) | 3.11 | PSF-2.0 | Both images | None | OK |
 | typing_extensions, annotated-types, click, and other small transitive packages | unpinned | PSF-2.0 / MIT / BSD-3 | Both images | None server-side | OK |
 
-### 3.3 GPU worker image (`infra/Dockerfile.worker`; runs on AWS ECS, Modal Labs and RunPod; not distributed)
+### 1.3 GPU worker image (`infra/Dockerfile.worker`; runs on AWS ECS, Modal Labs and RunPod; not distributed)
 
 Everything in 3.2 plus `backend/requirements-gpu.txt`. None of these packages could be installed on the build machine (no GPU wheels); versions are the manifest floors only.
 
@@ -119,7 +92,7 @@ Everything in 3.2 plus `backend/requirements-gpu.txt`. None of these packages co
 | **NVIDIA CUDA 12.4.1 + cuDNN runtime** (`nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04`) | 12.4.1 | NVIDIA CUDA EULA, cuDNN SLA, NVIDIA Deep Learning Container Licence | Worker image base | Run-time use in our own hosted containers is permitted; no redistribution to users | OK — record confirmation (action 9) |
 | Ubuntu 22.04 packages (`python3.11` from the deadsnakes PPA, `ffmpeg`, `libsndfile1`) | unpinned | Various (PSF-2.0, GPL/LGPL, LGPL-2.1+) | Worker image | None server-side | OK |
 
-### 3.4 Growth tool (`growth/`; operator-run, not distributed)
+### 1.4 Growth tool (`growth/`; operator-run, not distributed)
 
 | Component | Version pinned in repo | Licence | Where used | Obligation | Status |
 |---|---|---|---|---|---|
@@ -132,7 +105,7 @@ Everything in 3.2 plus `backend/requirements-gpu.txt`. None of these packages co
 | Node.js 22 | unpinned (build machine) | MIT (with bundled components under their own licences) | Growth tool runtime | None | OK |
 | ffmpeg (fallback renderer, subprocess) | unpinned system package | LGPL/GPL (distro build) | Growth tool | None (subprocess, not distributed) | OK |
 
-### 3.5 Tests and developer tooling (never shipped)
+### 1.5 Tests and developer tooling (never shipped)
 
 | Component | Version pinned in repo | Licence | Where used | Obligation | Status |
 |---|---|---|---|---|---|
@@ -144,7 +117,7 @@ Everything in 3.2 plus `backend/requirements-gpu.txt`. None of these packages co
 | pluginval 1.0.4 | external tool at `/home/user/deps/pluginval` | GPL-3.0 | Plugin validation only | None | OK |
 | CMake, g++/clang, pkg-config, pip-licenses | build machine | Various OSS | Build/dev only | None | OK |
 
-### 3.6 Website (`web/`)
+### 1.6 Website (`web/`)
 
 Hosted on Vercel; the browser receives compiled JavaScript, not the packages themselves.
 Direct dependencies (`web/package.json`) and the licence of the whole production tree as
@@ -166,15 +139,15 @@ at run time under those vendors' service terms; they are not part of the reposit
 
 ---
 
-## 4. Trademarks
+## 2. Trademarks
 
 "VST" is a trademark of Steinberg Media Technologies GmbH; using the VST word mark or logo is optional and, if done, follows Steinberg's VST usage guidelines. "Audio Units" is a trademark of Apple Inc. "FL Studio" is a trademark of Image-Line Software; "Ableton Live" of Ableton AG; other DAW names belong to their owners. They are used only to state compatibility, never to imply endorsement, and their logos are not used as design elements. "JUCE" is a trademark of Raw Material Software Limited.
 
-## 5. How the plugin's notice bundle is produced
+## 3. How the plugin's notice bundle is produced
 
 Until a generator exists, the release checklist is manual: copy this file next to the installer, and populate the About screen from Appendix A and B plus the JUCE-tree texts listed in 3.1 (`Flac Licence.txt`, `Ogg Vorbis Licence.txt`, `pnglib/LICENSE`, `jpglib/README`, `harfbuzz/COPYING`, `sheenbidi/LICENSE`, `AudioUnitSDK/LICENSE.txt` on macOS, and the libcurl notice on Linux). If Rubber Band ships under a with-attribution commercial licence, add the credit line Breakfast Quay specifies.
 
-## 6. Verification commands
+## 4. Verification commands
 
 ```
 # Python side (run in each image / environment):
@@ -800,4 +773,4 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
-The remaining JUCE-embedded notices (zlib, libpng, jpeglib, HarfBuzz, SheenBidi, AudioUnitSDK) are reproduced from the paths listed in section 3.1 when the installer's notice bundle is assembled (action 8).
+The remaining JUCE-embedded notices (zlib, libpng, jpeglib, HarfBuzz, SheenBidi, AudioUnitSDK) are reproduced from the paths listed in section 1.1 when the installer's notice bundle is assembled (action 8).

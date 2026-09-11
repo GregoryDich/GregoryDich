@@ -42,9 +42,14 @@ if(APPLE)
     list(APPEND TONAMORPH_FORMATS AU)
 endif()
 
+# Product identity (keep in sync with packaging/product.env); also fills the [[PRODUCT_NAME]] /
+# [[WEBSITE_URL]] placeholders of the embedded third-party notices below.
+set(TONAMORPH_PRODUCT_NAME "Tonamorph")
+set(TONAMORPH_COMPANY_WEBSITE "https://tonamorph.com")
+
 juce_add_plugin(Tonamorph
     COMPANY_NAME "Tonamorph Audio"
-    COMPANY_WEBSITE "https://tonamorph.com"
+    COMPANY_WEBSITE "${TONAMORPH_COMPANY_WEBSITE}"
     BUNDLE_ID "com.tonamorph.plugin"
     PLUGIN_MANUFACTURER_CODE Tona
     PLUGIN_CODE Mrph
@@ -55,7 +60,7 @@ juce_add_plugin(Tonamorph
     IS_MIDI_EFFECT FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS TRUE
     COPY_PLUGIN_AFTER_BUILD FALSE
-    PRODUCT_NAME "Tonamorph"
+    PRODUCT_NAME "${TONAMORPH_PRODUCT_NAME}"
     VST3_CATEGORIES Instrument Sampler
     AU_MAIN_TYPE kAudioUnitType_MusicDevice)
 
@@ -82,8 +87,11 @@ target_sources(Tonamorph
         Source/Export/MidiExporter.cpp
         Source/Export/FscExporter.cpp
         Source/Export/DragExport.cpp
+        Source/UI/AboutOverlay.cpp
         Source/UI/FeedbackBar.cpp
         Source/UI/MessageToast.cpp
+        Source/UI/NpsCard.cpp
+        Source/UI/ReferralPanel.cpp
         Source/UI/ScaleKeyboard.cpp
         Source/UI/TonamorphLookAndFeel.cpp
         Source/UI/VersionBanner.cpp)
@@ -127,6 +135,49 @@ endif()
 string(STRIP "${tonamorph_demo_output}" tonamorph_demo_output)
 message(STATUS "Tonamorph: ${tonamorph_demo_output}")
 
+# ---------------------------------------------------------------------------
+# Third-party notices for the About screen (THIRD_PARTY_LICENSES.md, action 8): rendered
+# to plain text at configure time by packaging/common/eula_to_txt.py — the converter the
+# installers use — and embedded next to the demo morph as DemoData::third_party_notices_txt.
+# [[PRODUCT_NAME]] and [[WEBSITE_URL]] are filled from this file; the company placeholders
+# come from the environment when a release build sets them and stay in the text verbatim
+# otherwise (--keep-unresolved). The file is only rewritten when its bytes change.
+# ---------------------------------------------------------------------------
+set(TONAMORPH_NOTICES_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../THIRD_PARTY_LICENSES.md")
+set(TONAMORPH_NOTICES_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/packaging/common/eula_to_txt.py")
+set(TONAMORPH_NOTICES_FILE "${CMAKE_BINARY_DIR}/notices/third_party_notices.txt")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    "${TONAMORPH_NOTICES_SOURCE}" "${TONAMORPH_NOTICES_SCRIPT}")
+
+if(NOT DEFINED ENV{PRODUCT_NAME})
+    set(ENV{PRODUCT_NAME} "${TONAMORPH_PRODUCT_NAME}")
+endif()
+if(NOT DEFINED ENV{WEBSITE_URL})
+    set(ENV{WEBSITE_URL} "${TONAMORPH_COMPANY_WEBSITE}")
+endif()
+
+execute_process(
+    COMMAND "${Python3_EXECUTABLE}" "${TONAMORPH_NOTICES_SCRIPT}"
+            "${TONAMORPH_NOTICES_SOURCE}" "${TONAMORPH_NOTICES_FILE}.new"
+            --missing-ok --keep-unresolved --placeholder-title "Third-Party Notices"
+    RESULT_VARIABLE tonamorph_notices_result
+    OUTPUT_VARIABLE tonamorph_notices_output
+    ERROR_VARIABLE tonamorph_notices_error)
+
+if(NOT tonamorph_notices_result EQUAL 0)
+    message(FATAL_ERROR "Tonamorph: rendering the third-party notices failed:\n${tonamorph_notices_output}${tonamorph_notices_error}")
+endif()
+
+execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                        "${TONAMORPH_NOTICES_FILE}.new" "${TONAMORPH_NOTICES_FILE}")
+file(REMOVE "${TONAMORPH_NOTICES_FILE}.new")
+file(SIZE "${TONAMORPH_NOTICES_FILE}" tonamorph_notices_bytes)
+
+if(tonamorph_notices_bytes GREATER 204800)
+    message(FATAL_ERROR "Tonamorph: the third-party notices are ${tonamorph_notices_bytes} bytes; the embedded text must stay under 200 KB")
+endif()
+message(STATUS "Tonamorph: third-party notices ${tonamorph_notices_bytes} bytes")
+
 juce_add_binary_data(TonamorphDemoData
     NAMESPACE DemoData
     HEADER_NAME DemoData.h
@@ -136,7 +187,8 @@ juce_add_binary_data(TonamorphDemoData
         "${TONAMORPH_DEMO_DIR}/other.wav"
         "${TONAMORPH_DEMO_DIR}/vocals.wav"
         "${TONAMORPH_DEMO_DIR}/score.mid"
-        "${TONAMORPH_DEMO_DIR}/result.json")
+        "${TONAMORPH_DEMO_DIR}/result.json"
+        "${TONAMORPH_NOTICES_FILE}")
 
 target_link_libraries(Tonamorph
     PRIVATE

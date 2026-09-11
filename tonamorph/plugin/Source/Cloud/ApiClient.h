@@ -118,6 +118,9 @@ public:
     /** POST /v1/jobs/{jobId}/feedback with a body from core::buildFeedbackJson (GTM B §5).
         A 404 (route not deployed yet) is reported as an error like any other status. */
     RequestId submitFeedback (const juce::String& jobId, const juce::String& jsonBody, Callback<FeedbackResponse> onDone);
+    /** POST /v1/nps with a body from core::buildNpsJson (GTM B §5). A second answer within
+        30 days is a 409, reported as an error with that status. */
+    RequestId postNps (const juce::String& jsonBody, Callback<NpsResponse> onDone);
     /** GET /v1/version (public, no credentials sent). */
     RequestId getVersion (Callback<VersionInfo> onDone);
     /** POST /v1/telemetry/crash with a body from core::buildCrashReportJson; anonymous, so

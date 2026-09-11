@@ -38,9 +38,23 @@ public:
     static constexpr const char* flagFirstPurchase  = "seen.celebration.firstPurchase";
     static constexpr const char* flagFirstSoundHint = "seen.hint.firstSound";
     static constexpr const char* flagFirstDragHint  = "seen.hint.firstDrag";
+    static constexpr const char* flagWeekOneGift    = "seen.gift.week1";
 
     bool hasSeen (const juce::String& flag) const;
     void markSeen (const juce::String& flag);
+
+    //==============================================================================
+    /** When the first own-clip morph landed; the day-14 NPS card and the week-one gift
+        toast count from it (core::Retention). nullopt until then. */
+    std::optional<juce::Time> getFirstMorphAt() const;
+    /** Records `time` once; later calls are no-ops. */
+    void markFirstMorph (juce::Time time);
+
+    /** The NPS card: answered (sent, or refused with 409) and the number of "Not now"s. */
+    bool wasNpsAnswered() const;
+    void setNpsAnswered();
+    int getNpsDismissals() const;
+    void incrementNpsDismissals();
 
     //==============================================================================
     /** One rating per job: remembered so the control stays hidden across sessions. */

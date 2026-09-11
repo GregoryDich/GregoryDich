@@ -86,11 +86,28 @@ struct AuthTokens
     juce::var toVar() const;
 };
 
-/** `GET /v1/me` response. */
+/** The `referral` object of `GET /v1/me` (GTM §2.4 "send a morph to a friend"): the
+    account's share link plus what it earned so far. Optional on the wire. */
+struct ReferralInfo
+{
+    juce::String code;
+    juce::String url;          ///< e.g. https://tonamorph.com/m/<code>
+    int friendsJoined = 0;
+    int morphsEarned = 0;
+
+    /** nullopt without a non-empty `url`; the counters default to 0. */
+    static std::optional<ReferralInfo> fromJson (const juce::var& json);
+    juce::var toVar() const;
+};
+
+/** `GET /v1/me` response. `referral` and `gifts` are growth fields the server may add
+    later: absent or malformed, they are ignored rather than failing the parse. */
 struct MeResponse
 {
     UserInfo user;
     CreditBalance balance;
+    std::optional<ReferralInfo> referral;
+    juce::StringArray gifts;   ///< ledger keys the account received, e.g. "gift:week1"
 
     static std::optional<MeResponse> fromJson (const juce::var& json);
     juce::var toVar() const;
@@ -308,6 +325,18 @@ struct FeedbackResponse
     std::optional<CreditBalance> balance;
 
     static std::optional<FeedbackResponse> fromJson (const juce::var& json);
+    juce::var toVar() const;
+};
+
+/** `POST /v1/nps` 201 response (contract §14). */
+struct NpsResponse
+{
+    juce::String id;
+    int score = 0;
+    juce::String comment;     ///< empty when the server stored null
+    juce::String createdAt;
+
+    static std::optional<NpsResponse> fromJson (const juce::var& json);
     juce::var toVar() const;
 };
 

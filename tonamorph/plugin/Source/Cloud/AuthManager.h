@@ -51,6 +51,14 @@ public:
     /** applicationName "Tonamorph", filenameSuffix "settings", folderName "Tonamorph",
         osxLibrarySubFolder "Application Support". */
     static juce::PropertiesFile::Options defaultStorageOptions();
+    /** The settings file for `options`: Options::getDefaultFile() on macOS and Windows
+        (`~/Library/Application Support/<folder>`, `%APPDATA%\<folder>`). On Linux JUCE
+        resolves that to `~/<folder>`, so the XDG config directory
+        (juce::File::userApplicationDataDirectory, `~/.config/<folder>`) is used instead. */
+    static juce::File storageFileFor (const juce::PropertiesFile::Options& options);
+    /** The plugin's data directory — the folder of the default settings file; the job cache
+        and crash reports live under it. */
+    static juce::File defaultDataDirectory();
 
     //==============================================================================
     /** POST /v1/auth/token; on success persists the tokens, installs them on the
@@ -66,6 +74,10 @@ public:
     std::optional<CreditBalance> getBalance() const;
     /** Convenience: `balance.available`, or 0 when unknown. */
     int getAvailableCredits() const;
+    /** The account's referral share from the last `/v1/me`, when the server sent one. */
+    std::optional<ReferralInfo> getReferral() const;
+    /** Gift ledger keys the last `/v1/me` listed; empty while the server does not send them. */
+    const juce::StringArray& getGifts() const noexcept { return gifts; }
 
     juce::String getAccessToken() const;
     juce::Time getTokenExpiry() const;
@@ -111,6 +123,8 @@ private:
     juce::Time tokenExpiry;
     std::optional<UserInfo> user;
     std::optional<CreditBalance> balance;
+    std::optional<ReferralInfo> referral;
+    juce::StringArray gifts;
 
     ApiClient::RequestId activeRequest = ApiClient::invalidRequest;
     std::vector<std::function<void (bool)>> pendingRefreshCallbacks;

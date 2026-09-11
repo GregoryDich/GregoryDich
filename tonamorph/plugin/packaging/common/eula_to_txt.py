@@ -3,7 +3,8 @@
 
 Standard library only, so it runs on every CI runner as-is:
 
-    eula_to_txt.py INPUT.md OUTPUT.txt [--missing-ok] [--unresolved-ok] [--placeholder-title T]
+    eula_to_txt.py INPUT.md OUTPUT.txt [--missing-ok] [--unresolved-ok | --keep-unresolved]
+                   [--placeholder-title T]
 
 Also used for THIRD_PARTY_LICENSES.md (same placeholder set and comment syntax).
 
@@ -11,7 +12,10 @@ Conversion: HTML comments are removed, headings become upper-case lines, list it
 "- item", tables become tab-separated rows, inline emphasis/code/links are flattened.
 Every [[PLACEHOLDER]] token is substituted from the environment variable of the same name
 (PRODUCT_NAME, COMPANY_LEGAL_NAME, ...); a token that is still present afterwards is an
-error, because an installer must never ship a licence with blanks in it.
+error, because an installer must never ship a licence with blanks in it. --unresolved-ok
+replaces the whole document with a placeholder text instead (dry-run installers);
+--keep-unresolved converts the document and leaves the unresolved [[TOKENS]] in place
+(the plugin's About screen, which is built on machines without the company variables).
 
 Exit codes: 0 converted (or a placeholder was written under --missing-ok/--unresolved-ok),
 2 unresolved placeholders, 3 input file missing, 1 usage.
@@ -62,7 +66,9 @@ class UnresolvedPlaceholderError(ValueError):
         super().__init__("unresolved placeholders: " + ", ".join(self.names))
 
 
-def substitute_placeholders(text: str, values: Mapping[str, str]) -> str:
+def substitute_placeholders(text: str, values: Mapping[str, str], keep_unresolved: bool = False) -> str:
+    """Replace every [[TOKEN]] that has a value. A token without one raises, or is left
+    verbatim when ``keep_unresolved`` is set."""
     missing: list[str] = []
 
     def replace(match: re.Match[str]) -> str:
@@ -74,7 +80,7 @@ def substitute_placeholders(text: str, values: Mapping[str, str]) -> str:
         return value
 
     result = _PLACEHOLDER_RE.sub(replace, text)
-    if missing:
+    if missing and not keep_unresolved:
         raise UnresolvedPlaceholderError(missing)
     return result
 
@@ -136,9 +142,15 @@ def markdown_to_text(markdown: str) -> str:
     return text + "\n"
 
 
-def convert(markdown: str, values: Mapping[str, str]) -> str:
-    """Substitute placeholders, then flatten. Raises UnresolvedPlaceholderError."""
-    return markdown_to_text(substitute_placeholders(markdown, values))
+def convert(markdown: str, values: Mapping[str, str], keep_unresolved: bool = False) -> str:
+    """Substitute placeholders, then flatten. Raises UnresolvedPlaceholderError unless
+    ``keep_unresolved`` leaves the tokens in the text."""
+    return markdown_to_text(substitute_placeholders(markdown, values, keep_unresolved))
+
+
+def unresolved_placeholders(text: str) -> tuple[str, ...]:
+    """The [[TOKEN]] names still present in a converted text (for --keep-unresolved warnings)."""
+    return tuple(sorted(set(_PLACEHOLDER_RE.findall(text))))
 
 
 def placeholder_text(product_name: str, reason: str, title: str, source: str) -> str:
@@ -179,10 +191,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         default="End User Licence Agreement",
         help="heading of the placeholder text (e.g. 'Third-Party Notices')",
     )
-    parser.add_argument(
+    unresolved = parser.add_mutually_exclusive_group()
+    unresolved.add_argument(
         "--unresolved-ok",
         action="store_true",
         help="write a placeholder licence and warn when [[TOKENS]] have no value (dry runs only)",
+    )
+    unresolved.add_argument(
+        "--keep-unresolved",
+        action="store_true",
+        help="convert the document and leave [[TOKENS]] without a value in the text, with a warning",
     )
     args = parser.parse_args(argv)
     values = values_from_environment()
@@ -197,6 +215,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             " Do not publish this release."
         )
         text = placeholder_text(product_name, f"{args.input.name} is missing", args.placeholder_title, args.input.name)
+    elif args.keep_unresolved:
+        text = convert(args.input.read_text(encoding="utf-8"), values, keep_unresolved=True)
+        if names := unresolved_placeholders(text):
+            _warn(f"unresolved placeholders left in the text: {', '.join(names)}")
     else:
         try:
             text = convert(args.input.read_text(encoding="utf-8"), values)

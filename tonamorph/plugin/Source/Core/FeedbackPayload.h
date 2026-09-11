@@ -65,38 +65,44 @@ inline std::string jsonEscape (std::string_view text)
     return out;
 }
 
-/** Trims surrounding whitespace and cuts the note to maxFeedbackNoteLength code points
-    without splitting a UTF-8 sequence. */
-inline std::string truncateFeedbackNote (std::string_view note)
+/** Trims surrounding whitespace and cuts `text` to `maxCodePoints` code points without
+    splitting a UTF-8 sequence. */
+inline std::string trimAndTruncate (std::string_view text, std::size_t maxCodePoints)
 {
     auto isSpace = [] (unsigned char c) { return c == ' ' || c == '\t' || c == '\n' || c == '\r'; };
 
-    while (! note.empty() && isSpace (static_cast<unsigned char> (note.front())))
-        note.remove_prefix (1);
+    while (! text.empty() && isSpace (static_cast<unsigned char> (text.front())))
+        text.remove_prefix (1);
 
-    while (! note.empty() && isSpace (static_cast<unsigned char> (note.back())))
-        note.remove_suffix (1);
+    while (! text.empty() && isSpace (static_cast<unsigned char> (text.back())))
+        text.remove_suffix (1);
 
     std::size_t codePoints = 0;
     std::size_t bytes = 0;
 
-    while (bytes < note.size() && codePoints < maxFeedbackNoteLength)
+    while (bytes < text.size() && codePoints < maxCodePoints)
     {
-        const auto lead = static_cast<unsigned char> (note[bytes]);
+        const auto lead = static_cast<unsigned char> (text[bytes]);
         std::size_t length = 1;
 
         if ((lead & 0xe0) == 0xc0)      length = 2;
         else if ((lead & 0xf0) == 0xe0) length = 3;
         else if ((lead & 0xf8) == 0xf0) length = 4;
 
-        if (bytes + length > note.size())
+        if (bytes + length > text.size())
             break;
 
         bytes += length;
         ++codePoints;
     }
 
-    return std::string (note.substr (0, bytes));
+    return std::string (text.substr (0, bytes));
+}
+
+/** The feedback note: trimmed and cut to maxFeedbackNoteLength code points. */
+inline std::string truncateFeedbackNote (std::string_view note)
+{
+    return trimAndTruncate (note, maxFeedbackNoteLength);
 }
 
 /**

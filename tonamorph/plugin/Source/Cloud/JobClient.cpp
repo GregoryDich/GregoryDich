@@ -90,9 +90,7 @@ JobClient::~JobClient()
 
 juce::File JobClient::defaultCacheRoot()
 {
-    return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
-               .getChildFile (text (strings::productName))
-               .getChildFile ("jobs");
+    return AuthManager::defaultDataDirectory().getChildFile ("jobs");
 }
 
 juce::String JobClient::toString (State state)

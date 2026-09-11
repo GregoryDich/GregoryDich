@@ -40,7 +40,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             libasound2-dev libcurl4-openssl-dev libx11-dev libxrandr-dev \
             libxinerama-dev libxcursor-dev libxcomposite-dev libfreetype-dev \
-            libfontconfig1-dev libgl1-mesa-dev librubberband-dev
+            libfontconfig1-dev libgl1-mesa-dev librubberband-dev xvfb
 
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
@@ -75,6 +75,63 @@ jobs:
       - name: Build AU
         if: runner.os == 'macOS'
         run: cmake --build build --config Release --target Tonamorph_AU --parallel 4
+
+      # pluginval (pinned release) validates the VST3 - and, on macOS, the AU - at
+      # strictness 5, the level the README says to ship against. The Linux runner has no
+      # display, so the validator runs under xvfb-run; macOS runners can open windows, so
+      # the GUI tests stay on. The logs are uploaded whatever the outcome. These steps were
+      # written against the v1.0.4 release assets and have not yet run on the hosted
+      # runners: the first run is their real test.
+      - name: Download pluginval
+        if: runner.os != 'Windows'
+        env:
+          PLUGINVAL_VERSION: v1.0.4
+        run: |
+          case "$RUNNER_OS" in
+            Linux) asset="pluginval_Linux.zip"; binary="pluginval" ;;
+            macOS) asset="pluginval_macOS.zip"; binary="pluginval.app/Contents/MacOS/pluginval" ;;
+          esac
+          curl -sSfL --retry 3 -o "$RUNNER_TEMP/pluginval.zip" \
+            "https://github.com/Tracktion/pluginval/releases/download/${PLUGINVAL_VERSION}/${asset}"
+          unzip -q -o "$RUNNER_TEMP/pluginval.zip" -d "$RUNNER_TEMP/pluginval"
+          chmod +x "$RUNNER_TEMP/pluginval/$binary"
+          echo "PLUGINVAL=$RUNNER_TEMP/pluginval/$binary" >> "$GITHUB_ENV"
+
+      - name: Validate VST3 with pluginval (headless)
+        if: runner.os == 'Linux'
+        run: |
+          set -o pipefail
+          xvfb-run -a "$PLUGINVAL" --strictness-level 5 \
+            --validate "build/Tonamorph_artefacts/Release/VST3/Tonamorph.vst3" \
+            2>&1 | tee "$RUNNER_TEMP/pluginval-vst3.log"
+
+      - name: Validate VST3 with pluginval
+        if: runner.os == 'macOS'
+        run: |
+          set -o pipefail
+          "$PLUGINVAL" --strictness-level 5 \
+            --validate "build/Tonamorph_artefacts/Release/VST3/Tonamorph.vst3" \
+            2>&1 | tee "$RUNNER_TEMP/pluginval-vst3.log"
+
+      # An AU loads through the system component registry, so it is installed first.
+      - name: Validate AU with pluginval
+        if: runner.os == 'macOS'
+        run: |
+          set -o pipefail
+          mkdir -p "$HOME/Library/Audio/Plug-Ins/Components"
+          cp -R "build/Tonamorph_artefacts/Release/AU/Tonamorph.component" "$HOME/Library/Audio/Plug-Ins/Components/"
+          killall -9 AudioComponentRegistrar 2>/dev/null || true
+          "$PLUGINVAL" --strictness-level 5 \
+            --validate "$HOME/Library/Audio/Plug-Ins/Components/Tonamorph.component" \
+            2>&1 | tee "$RUNNER_TEMP/pluginval-au.log"
+
+      - name: Upload pluginval logs
+        if: always() && runner.os != 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pluginval-${{ runner.os }}
+          path: ${{ runner.temp }}/pluginval-*.log
+          if-no-files-found: ignore
 
       - name: Upload VST3
         uses: actions/upload-artifact@v4

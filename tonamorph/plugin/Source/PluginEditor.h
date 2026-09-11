@@ -13,8 +13,12 @@
  *   · on-screen MIDI keyboard, with a floating toast for hints and celebrations.
  * Overlays: LoginOverlay when signing in (opened by the header button or by dropping a
  * clip while signed out — the demo morph plays without an account), PaywallPrompt when
- * available credits reach 0 (contract §3, GTM §2.4). Every user-facing string comes from
- * Core/Strings.h.
+ * available credits reach 0 (contract §3, GTM §2.4), AboutOverlay (version, website,
+ * crash-report opt-in, third-party notices) from the header's About button, ReferralPanel
+ * ("Send a morph to a friend") from a header button that exists only while `/v1/me`
+ * carries `referral.url`, and the non-modal NpsCard 14 days after the first own-clip
+ * morph. The week-one gift toast is inferred from the balance poll (weekOneGiftArrived).
+ * Every user-facing string comes from Core/Strings.h.
  *
  * The editor is the FileDragAndDropTarget for the whole window and the
  * DragAndDropContainer for the export buttons. All callbacks run on the message thread.
@@ -25,8 +29,11 @@
 #include "Cloud/AuthManager.h"
 #include "Cloud/Models.h"
 #include "PluginProcessor.h"
+#include "UI/AboutOverlay.h"
 #include "UI/FeedbackBar.h"
 #include "UI/MessageToast.h"
+#include "UI/NpsCard.h"
+#include "UI/ReferralPanel.h"
 #include "UI/ScaleKeyboard.h"
 #include "UI/TonamorphLookAndFeel.h"
 #include "UI/VersionBanner.h"
@@ -222,6 +229,17 @@ private:
     void showPaywall (bool show);
     void openFileChooser();
     void openSettingsMenu();
+    void showAbout (bool show);
+    void showReferral (bool show);
+    /** The header's "Send a morph to a friend" exists only with a `referral.url` from `/v1/me`. */
+    void updateReferralButton();
+    /** The day-14 NPS card (core::shouldShowNpsCard): offered once per editor session, signed in. */
+    void maybeShowNpsCard();
+    /** POST /v1/nps; a 409 counts as answered, a 404 as one dismissal. */
+    void submitNps (int score, const juce::String& comment);
+    /** The week-one gift: the server's `gifts` list when it sends one, otherwise the balance
+        heuristic core::isWeekOneGiftDelta — one function, so the heuristic can be retired. */
+    bool weekOneGiftArrived (const cloud::CreditBalance& balance) const;
     void setupKnob (juce::Slider& slider, juce::Label& label, const juce::String& text);
 
     /** GET /v1/version at most once per 24 h; applies the cached answer meanwhile. */
@@ -249,6 +267,8 @@ private:
     ui::VersionBanner versionBanner;
     juce::Label titleLabel;
     juce::TextButton settingsButton;
+    juce::TextButton aboutButton;
+    juce::TextButton referralButton;
     juce::Label creditsLabel;
     juce::TextButton signInButton;
     juce::TextButton logoutButton;
@@ -297,13 +317,19 @@ private:
     // Overlays
     LoginOverlay loginOverlay;
     PaywallPrompt paywallPrompt;
+    ui::AboutOverlay aboutOverlay;
+    ui::ReferralPanel referralPanel;
+    ui::NpsCard npsCard;
     cloud::ApiClient::RequestId plansRequest = cloud::ApiClient::invalidRequest;
     cloud::ApiClient::RequestId versionRequest = cloud::ApiClient::invalidRequest;
+    cloud::ApiClient::RequestId npsRequest = cloud::ApiClient::invalidRequest;
     /** Set by "Not now": the prompt stays hidden until credits change or a job is refused. */
     bool paywallDismissed = false;
+    bool npsOffered = false;   ///< the card is offered at most once per editor session
 
     // Onboarding state (persisted flags live in PluginSettings)
     std::optional<int> lastKnownAvailable;   ///< for purchase detection by the balance poll
+    std::optional<int> lastKnownCredits;     ///< `balance.credits` for the week-one gift heuristic
     bool firstSoundHintActive = false;
     bool firstDragHintActive = false;
     std::uint32_t hintNoteCount = 0;

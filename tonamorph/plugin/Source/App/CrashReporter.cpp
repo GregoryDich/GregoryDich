@@ -1,5 +1,7 @@
 #include "App/CrashReporter.h"
 
+#include "Cloud/AuthManager.h"
+
 #include "Core/CrashReportText.h"
 #include "Core/Strings.h"
 
@@ -60,9 +62,7 @@ bool CrashReporter::isInstalled() noexcept
 
 juce::File CrashReporter::reportDirectory()
 {
-    return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
-               .getChildFile (strings::productName)
-               .getChildFile ("crash");
+    return cloud::AuthManager::defaultDataDirectory().getChildFile ("crash");
 }
 
 //==============================================================================

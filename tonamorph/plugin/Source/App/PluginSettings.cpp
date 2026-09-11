@@ -12,6 +12,9 @@ namespace
     constexpr const char* keyVersionCheckedMs = "version.lastCheckMs";
     constexpr const char* keyVersionInfo      = "version.lastResponse";
     constexpr const char* keyVersionDismissed = "version.dismissed";
+    constexpr const char* keyFirstMorphAtMs   = "firstMorph.atMs";
+    constexpr const char* keyNpsAnswered      = "nps.answered";
+    constexpr const char* keyNpsDismissals    = "nps.dismissals";
 } // namespace
 
 PluginSettings::PluginSettings()
@@ -20,7 +23,7 @@ PluginSettings::PluginSettings()
 }
 
 PluginSettings::PluginSettings (const juce::PropertiesFile::Options& options)
-    : file (std::make_shared<juce::PropertiesFile> (options))
+    : file (std::make_shared<juce::PropertiesFile> (cloud::AuthManager::storageFileFor (options), options))
 {
 }
 
@@ -48,6 +51,48 @@ void PluginSettings::markSeen (const juce::String& flag)
         return;
 
     file->setValue (flag, true);
+    file->saveIfNeeded();
+}
+
+//==============================================================================
+std::optional<juce::Time> PluginSettings::getFirstMorphAt() const
+{
+    const auto ms = file->getValue (keyFirstMorphAtMs).getLargeIntValue();
+
+    if (ms <= 0)
+        return std::nullopt;
+
+    return juce::Time (ms);
+}
+
+void PluginSettings::markFirstMorph (juce::Time time)
+{
+    if (getFirstMorphAt().has_value())
+        return;
+
+    file->setValue (keyFirstMorphAtMs, juce::String (time.toMilliseconds()));
+    file->saveIfNeeded();
+}
+
+bool PluginSettings::wasNpsAnswered() const
+{
+    return file->getBoolValue (keyNpsAnswered, false);
+}
+
+void PluginSettings::setNpsAnswered()
+{
+    file->setValue (keyNpsAnswered, true);
+    file->saveIfNeeded();
+}
+
+int PluginSettings::getNpsDismissals() const
+{
+    return file->getIntValue (keyNpsDismissals, 0);
+}
+
+void PluginSettings::incrementNpsDismissals()
+{
+    file->setValue (keyNpsDismissals, getNpsDismissals() + 1);
     file->saveIfNeeded();
 }
 

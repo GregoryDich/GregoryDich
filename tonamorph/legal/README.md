@@ -15,7 +15,7 @@ _Effective date: [[EFFECTIVE_DATE]]_
 | `cookie-policy.md` | `/legal/cookies` | Website cookies, consent mechanism | Cookie banner implementation |
 | `eula.md` | `/legal/eula` | The installed plugin: licence, restrictions, what it transmits, warranty, liability | Installer (accept step), plugin About screen |
 | `../LICENSE` | — | Proprietary notice for the repository | — |
-| `../THIRD_PARTY_LICENSES.md` | `/legal/third-party` | Every third-party component, its licence, obligations, and the pre-launch actions (two blockers) | Installer bundle, plugin About screen, website |
+| `../THIRD_PARTY_LICENSES.md` | `/legal/third-party` | Every third-party component, its licence and obligations (the pre-launch actions (two blockers) | Installer bundle, plugin About screen, website |
 
 ## 2. How the website renders these files
 
@@ -118,7 +118,7 @@ If any of these changes, change it everywhere it appears (grep for the number).
 ## 6. Publication order
 
 1. **Fill the placeholders** in the site configuration and render a preview of all six pages. Check that no placeholder token survives and that no HTML comment is visible.
-2. **Resolve the two licence blockers** in `../THIRD_PARTY_LICENSES.md` (Demucs weights; Rubber Band) — the Terms and EULA describe a product that cannot lawfully ship until they are closed.
+2. **Resolve the two licence blockers** in `../docs/LICENCE_ACTIONS.md` (Demucs weights; Rubber Band) — the Terms and EULA describe a product that cannot lawfully ship until they are closed.
 3. **Lawyer pass** over the checklist in section 4, in this order: privacy → terms → refunds → eula → cookies → copyright. Delete each marker as it is resolved.
 4. **Publish the Privacy Policy and Cookie Policy first.** They are required before any personal data is collected (sign-up, analytics), before the merchant-of-record application, and by the platform-API reviews the growth engine needs.
 5. **Wire the checkout**: link to `/legal/terms` and `/legal/refunds`; add the express-consent-and-acknowledgement checkbox for immediate delivery (Refund Policy s.3.2) and the withdrawal function; configure the merchant of record's refund settings to match the Refund Policy.

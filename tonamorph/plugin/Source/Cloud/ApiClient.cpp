@@ -636,6 +636,19 @@ ApiClient::RequestId ApiClient::submitFeedback (const juce::String& jobId, const
     });
 }
 
+ApiClient::RequestId ApiClient::postNps (const juce::String& jsonBody, Callback<NpsResponse> onDone)
+{
+    return enqueue ("POST /v1/nps", [this, jsonBody, onDone = std::move (onDone)] (RequestContext& context)
+    {
+        const auto url = makeUrl ("/v1/nps").withPOSTData (jsonBody);
+        const auto headers = buildHeaders (true, "Content-Type: application/json\r\n");
+        const auto http = performWithRetries (url, "POST", headers, getConfig(), false, context.cancelled, nullptr, {});
+
+        deliverResponse (onDone, makeResponse<NpsResponse> (http, jsonExtractor<NpsResponse> (&NpsResponse::fromJson)),
+                         [this, id = context.id] (std::function<void()> fn) { deliver (id, std::move (fn)); });
+    });
+}
+
 ApiClient::RequestId ApiClient::getVersion (Callback<VersionInfo> onDone)
 {
     return enqueue ("GET /v1/version", [this, onDone = std::move (onDone)] (RequestContext& context)

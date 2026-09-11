@@ -9,15 +9,17 @@ playable, scale-snapped sampler you can drag `.mid` or `.fsc` out of.
 Source/
   Core/        JUCE-free C++20: ScaleLock, Envelope, TransientDetector, ZeroCrossing,
                MidiFileWriter, FscWriter, Types, Strings (every user-facing string),
-               SemanticVersion, FeedbackPayload, CrashReportText — the code the unit
-               tests exercise
+               SemanticVersion, FeedbackPayload, CrashReportText, ParameterText (the
+               host-visible value text), Retention (NPS timing, week-one gift, referral
+               line) — the code the unit tests exercise
   Cloud/       ApiClient, AuthManager, JobClient (SSE), UploadEncoder, Models, SseParser,
                RetryPolicy — everything that talks HTTP
   Engine/      SamplerEngine, StemSound/StemVoice, PitchShifter, DrumKit,
                ScaleLockProcessor, AutoAdsr — the realtime-safe instrument
   Export/      MidiExporter, FscExporter, DragExport
   App/         PluginSettings (the settings file), CrashReporter (opt-in), DemoMorph
-  UI/          TonamorphLookAndFeel, ScaleKeyboard, MessageToast, FeedbackBar, VersionBanner
+  UI/          TonamorphLookAndFeel, ScaleKeyboard, MessageToast, FeedbackBar, VersionBanner,
+               PanelOverlay → AboutOverlay, ReferralPanel; NpsCard
   PluginProcessor.{h,cpp}, PluginEditor.{h,cpp}
 Resources/     generate_demo.py — builds the bundled demo morph at configure time
 Tests/         tonamorph_core_tests (no JUCE) + roundtrip.py
@@ -113,7 +115,7 @@ Other targets: `Tonamorph_Standalone` (a host-free app, handy for poking at the 
 
 ## Tests
 
-### `tonamorph_core_tests` — 48 JUCE-free unit tests
+### `tonamorph_core_tests` — 59 JUCE-free unit tests
 
 ```sh
 cmake --build build --target tonamorph_core_tests --parallel 4
@@ -121,14 +123,19 @@ ctest --test-dir build --output-on-failure          # add -C Release on Windows/
 ```
 
 The binary can also be run directly (`build/Tests/tonamorph_core_tests`); it prints one
-line per case and ends with `48 passed, 0 failed, 48 total`. Coverage: scale snapping and
+line per case and ends with `59 passed, 0 failed, 59 total`. Coverage: scale snapping and
 tie-breaking (`Source/Core/ScaleLock.h`), envelope/ADSR derivation, transient detection,
 zero-crossing trimming, the SMF writer, the `.fsc` writer, one combined export fixture,
 semantic version ordering (the update banner), the feedback JSON payload, the crash-report
-text format and its user-name scrubbing, the strings table (no entry over twelve words,
-and no product-name literal anywhere in `Source/` but `Core/Strings.h` — the test scans
-the tree; a line may opt out with a `not user-facing` comment) and the generated demo
-manifest (strict JSON syntax, required fields, bundle size under 1.5 MB).
+text format and its user-name scrubbing, the parameter value text (`2.0 ms` / `120 ms` /
+`1.20 s`, `80 %`, `-6.0 dB` with `-inf dB` at the floor, `250 Hz` / `1.25 kHz`, `0.71`,
+note names with middle C = C4 — and the tolerant, locale-independent parsers behind the
+text boxes), the retention rules (the day-14 NPS window and its two-dismissal cap, the
+`POST /v1/nps` body, the week-one gift heuristic, the referral strings), the strings table
+(no entry over twelve words, and no product-name literal anywhere in `Source/` but
+`Core/Strings.h` — the test scans the tree; a line may opt out with a `not user-facing`
+comment) and the generated demo manifest (strict JSON syntax, required fields, bundle size
+under 1.5 MB).
 
 ### `Tests/roundtrip.py` — the export format check
 
@@ -156,8 +163,8 @@ sample.mid: OK (7 notes over 2 tracks, PPQ 480, 124.0 BPM)
 sample.fsc: OK (7 note records, PPQ 96, verified with pyflp 2.2.1 NotesEvent.STRUCT)
 ```
 
-Neither this script nor pluginval runs in CI; the plugin workflow builds the VST3 (and
-the AU on macOS) and runs `ctest` only.
+The round-trip script does not run in CI; the plugin workflow builds the VST3 (and the AU
+on macOS), runs `ctest`, and then validates the builds with pluginval (next section).
 
 ### pluginval
 
@@ -170,6 +177,14 @@ headless Linux box the validator still needs an X display: prefix it with `xvfb-
 or add `--skip-gui-tests` to leave the editor out of the run. Add `--repeat 2
 --randomise` before a release, and `--timeout-ms "-1"` when stepping through it in a
 debugger. The flags above are those of pluginval 1.0.4.
+
+In CI (`.github/workflows/plugin.yml`) the Linux job runs that command under `xvfb-run
+-a` and the macOS job validates both the VST3 and the AU — the component is copied into
+`~/Library/Audio/Plug-Ins/Components` first, because an AU loads through the system
+registry — each with pluginval v1.0.4 downloaded from its GitHub release; the logs are
+uploaded as the `pluginval-<OS>` artifact whatever the outcome. Those steps were written
+against the 1.0.4 release asset names and have not yet run on the hosted runners: the
+first run is their real test.
 
 ## Install locations
 
@@ -224,14 +239,18 @@ credit.
 | section | what it holds |
 |---------|---------------|
 | **Banner** | Only when `GET /v1/version` (asked at most once per 24 h, cached in the settings file) reports a `latest` newer than the build: "Tonamorph x.y.z is available." with Download and Dismiss (per version); when the build is below `min_supported`, a persistent "Update required" bar instead. Every API request carries `X-Plugin-Version` and `X-Host` (the DAW, from `juce::PluginHostType`). |
-| **Header** | Title, a Settings menu (the "Send anonymous crash reports" opt-in, default off), the credit balance (`balance.available` from `GET /v1/me`), and sign in / log out. |
+| **Header** | Title, "Send a morph to a friend" (only while `GET /v1/me` carries `referral.url`), About, a Settings menu (the "Send anonymous crash reports" opt-in, default off), the credit balance (`balance.available` from `GET /v1/me`), and sign in / log out. |
+| **About** | Product name and version (`TONAMORPH_VERSION_STRING`), the website link, the same crash-report opt-in as a checkbox, and "Third-party notices": `THIRD_PARTY_LICENSES.md` rendered to text at configure time by `packaging/common/eula_to_txt.py --keep-unresolved` (placeholders such as `[[COMPANY_LEGAL_NAME]]` stay verbatim until a release build sets the repository variables) and embedded with the demo morph as `DemoData::third_party_notices_txt` (configure fails above 200 KB). Scrollable, selectable, with Copy — the notice obligation of that file's action 8. |
+| **Referral** | The share link from `referral.url` with Copy, "They get 5 free morphs. You get 3 when their first morph lands." and, once a friend joined, `friends_joined` / `morphs_earned`. Hidden when `/v1/me` has no `referral`. |
+| **NPS card** | 14 days after the first own-clip morph (`firstMorph.atMs` in the settings file, stamped on the first fresh morph) and while signed in: "How likely are you to recommend Tonamorph? 0–10" with a comment field, floating over the keyboard. Send → `POST /v1/nps {score, comment?}`; a 409 (already answered) counts as answered; "Not now" counts a dismissal. Never again after an answer or two dismissals; offered at most once per editor session (`Core/Retention.h`). |
+| **Week-one gift** | "One week in. Two morphs on us." — the `gift:week1` ledger entry is not visible through `/v1/me`, so the toast is inferred: `balance.credits` rose by exactly 2 between two balance answers and the first morph was 7–8 days ago (purchases add 50/60, referral grants 3, refunds 1). The decision sits in one editor function, `weekOneGiftArrived`, which prefers a `gifts` list in `/v1/me` whenever the server sends one. Shown once. |
 | **Drop zone** | The dashed drag target for the whole window; highlights during a drag, click to open a file chooser. |
 | **Progress** | A progress bar, the stage line (`upload → separate → transcribe → analyze → package`) fed by SSE, and a cancel button that drops the in-flight requests and, when the job is still
 `queued`, calls `DELETE /v1/jobs/{id}` so the reservation is released (a running job
 would answer `409`). |
 | **Category** | Bass / Drums / Synth / Vocals — which stem the keyboard plays. "Synth" is the contract's `other` stem. |
 | **Scale-Snap** | Mode (Detected, Major, Minor, PentatonicMajor, PentatonicMinor, Off) and root selectors, with the detected key and BPM shown beside them. Snapping is entirely client-side (contract §8); a note-off always uses the pitch its note-on was snapped to, even if the mode changed while the key was held. |
-| **Sound** | Attack / Decay / Sustain / Release (seeded from the stem's `suggested_adsr`), filter cutoff and resonance, gain, the root-target knob (`semitones = target_root_midi − stem.root_midi`) and the drum-mode toggle that maps slices to notes from 36 upward. |
+| **Sound** | Attack / Decay / Sustain / Release (seeded from the stem's `suggested_adsr`), filter cutoff and resonance, gain, the root-target knob (`semitones = target_root_midi − stem.root_midi`) and the drum-mode toggle that maps slices to notes from 36 upward. Knob text boxes and host parameter lists show `2.0 ms` / `120 ms` / `1.20 s`, `80 %`, `-6.0 dB` (`-inf dB` at the floor), `250 Hz` / `1.25 kHz`, `0.71` and note names (`C3`; the scale root shows `F#`), and accept the same spellings when typed (`Core/ParameterText.h`, wired through the parameters' string converters so hosts see the same text). |
 | **Export + feedback** | "Drag .mid" and "Drag .fsc" — drag them into the DAW to start an external file drag, or click for a save dialog. Files are written under `<temp>/Tonamorph/exports` and cleaned up after 24 h. To the right, once a fresh morph is playable: "How was this morph?" with Good / Not good; Not good opens the reason list (bleed, wrong key, MIDI off, clicks, slow, other) and an optional 140-character note. The rating goes to `POST /v1/jobs/{id}/feedback` with `drop_to_ready_ms`; `refunded: true` shows "Morph returned." and refreshes the balance. One rating per job (remembered in the settings file); a 404 from a backend without the route is treated as sent. |
 | **Keyboard** | An on-screen keyboard (`ui::ScaleKeyboard`) spanning MIDI 24–108, so the instrument is playable without a controller. A toast above it carries the onboarding hints ("Ready. Play C3 — that's your bass, in key." with C3 highlighted; "Drag .mid into your piano roll.") and the three celebrations: the first own-clip morph (in-scale keys glow for 2 s, "Your first morph. F minor · 124 BPM." with the real key and tempo), the first `.mid` drag that lands outside the window ("MIDI's in your DAW."), and the first purchase the balance poll sees ("50 morphs loaded. Thanks for backing a one-person shop." with the real count). All visual, never audio; "seen" flags live in the settings file, not in the project. |
 | **Overlays** | `LoginOverlay` (email + password against `POST /v1/auth/token`), opened by the header button or by a drop while signed out, dismissible; `PaywallPrompt` when available credits reach 0, built from `GET /v1/plans` and polling `GET /v1/me` every 5 s while open. |
@@ -257,7 +276,8 @@ when it answers, otherwise from the strings table; a plan without a `checkout_ur
 freshly seeded database, see [`db/README.md`](../db/README.md)) opens the website instead,
 so the prompt never appears without buttons.
 
-**Crash reports.** With "Send anonymous crash reports" on, a `juce::SystemStats` crash
+**Crash reports.** With "Send anonymous crash reports" on (the Settings menu or the
+checkbox on the About screen — one setting), a `juce::SystemStats` crash
 handler writes plugin version, OS, host, timestamp and the stack backtrace (home directory
 and user name scrubbed; never audio, tokens or project paths) to
 `<user application data>/Tonamorph/crash/`. The next editor open posts each report to
@@ -271,7 +291,11 @@ The base URL defaults to `https://api.tonamorph.com` (`ApiClient::Config::baseUr
 changed programmatically with `tonamorph::cloud::ApiClient::setBaseUrl()`; there is no
 user-facing setting or environment variable for it yet. Tokens (never the password) are
 persisted by `AuthManager` through a `juce::PropertiesFile` named `Tonamorph.settings`
-under a `Tonamorph` folder in the OS's application-data location.
+in the plugin's data directory (`AuthManager::defaultDataDirectory()`, shared with the
+job cache and the crash reports): `~/Library/Application Support/Tonamorph/` on macOS,
+`%APPDATA%\Tonamorph\` on Windows and `~/.config/Tonamorph/` (`$XDG_CONFIG_HOME`) on
+Linux — JUCE's own default would put a Linux settings file in `~/Tonamorph/`, so the
+path is resolved explicitly there.
 
 ## Threading rules
 

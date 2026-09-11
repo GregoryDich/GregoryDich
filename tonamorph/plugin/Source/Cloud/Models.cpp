@@ -503,6 +503,32 @@ juce::var AuthTokens::toVar() const
         .build();
 }
 
+std::optional<ReferralInfo> ReferralInfo::fromJson (const juce::var& json)
+{
+    ReferralInfo referral;
+
+    if (! readString (json, "code", referral.code, false)
+        || ! readString (json, "url", referral.url)
+        || ! readInt (json, "friends_joined", referral.friendsJoined, false)
+        || ! readInt (json, "morphs_earned", referral.morphsEarned, false))
+        return std::nullopt;
+
+    if (referral.url.trim().isEmpty())
+        return std::nullopt;
+
+    return referral;
+}
+
+juce::var ReferralInfo::toVar() const
+{
+    return ObjectBuilder()
+        .set ("code", code)
+        .set ("url", url)
+        .set ("friends_joined", friendsJoined)
+        .set ("morphs_earned", morphsEarned)
+        .build();
+}
+
 std::optional<MeResponse> MeResponse::fromJson (const juce::var& json)
 {
     MeResponse me;
@@ -511,12 +537,46 @@ std::optional<MeResponse> MeResponse::fromJson (const juce::var& json)
         || ! readObject (json, "balance", me.balance, &CreditBalance::fromJson))
         return std::nullopt;
 
+    // Growth fields the backend may add: any shape is tolerated, none is required.
+    if (const auto referral = get (json, "referral"); referral.isObject())
+        me.referral = ReferralInfo::fromJson (referral);
+
+    if (const auto gifts = get (json, "gifts"); gifts.isArray())
+    {
+        for (const auto& gift : *gifts.getArray())
+        {
+            if (gift.isString())
+            {
+                me.gifts.add (gift.toString().trim());
+                continue;
+            }
+
+            for (const auto* key : { "key", "id", "kind" })
+                if (const auto value = get (gift, key); value.isString())
+                {
+                    me.gifts.add (value.toString().trim());
+                    break;
+                }
+        }
+
+        me.gifts.removeEmptyStrings();
+    }
+
     return me;
 }
 
 juce::var MeResponse::toVar() const
 {
-    return ObjectBuilder().set ("user", user.toVar()).set ("balance", balance.toVar()).build();
+    ObjectBuilder builder;
+    builder.set ("user", user.toVar()).set ("balance", balance.toVar());
+
+    if (referral.has_value())
+        builder.set ("referral", referral->toVar());
+
+    if (! gifts.isEmpty())
+        builder.set ("gifts", stringArrayToVar (gifts));
+
+    return builder.build();
 }
 
 std::optional<PlanInfo> PlanInfo::fromJson (const juce::var& json)
@@ -1037,6 +1097,29 @@ juce::var FeedbackResponse::toVar() const
     return ObjectBuilder()
         .set ("refunded", refunded)
         .set ("balance", balance.has_value() ? balance->toVar() : juce::var())
+        .build();
+}
+
+std::optional<NpsResponse> NpsResponse::fromJson (const juce::var& json)
+{
+    NpsResponse response;
+
+    if (! readString (json, "id", response.id)
+        || ! readInt (json, "score", response.score)
+        || ! readString (json, "comment", response.comment, false)
+        || ! readString (json, "created_at", response.createdAt, false))
+        return std::nullopt;
+
+    return response;
+}
+
+juce::var NpsResponse::toVar() const
+{
+    return ObjectBuilder()
+        .set ("id", id)
+        .set ("score", score)
+        .set ("comment", nullableString (comment))
+        .set ("created_at", createdAt)
         .build();
 }
 

@@ -117,6 +117,29 @@ inline constexpr const char* settings          = "Settings";
 inline constexpr const char* crashReportsOptIn = "Send anonymous crash reports";
 
 //==============================================================================
+// About screen (licence notices, THIRD_PARTY_LICENSES.md action 8)
+inline constexpr const char* about             = "About";
+inline constexpr const char* aboutVersion      = "Version {version}";
+inline constexpr const char* thirdPartyNotices = "Third-party notices";
+inline constexpr const char* copyButton        = "Copy";
+inline constexpr const char* copied            = "Copied.";
+inline constexpr const char* closeButton       = "Close";
+
+//==============================================================================
+// Day-14 NPS card (GTM Appendix B §5)
+inline constexpr const char* npsQuestion           = "How likely are you to recommend {product}? 0–10";
+inline constexpr const char* npsCommentPlaceholder = "Why? (optional)";
+
+//==============================================================================
+// Referral share and the week-one gift (GTM §2.4). The referral promise is one sentence
+// in the plan; it is split here so each entry respects the twelve-word rule.
+inline constexpr const char* referralShare      = "Send a morph to a friend";
+inline constexpr const char* referralFriendLine = "They get 5 free morphs.";
+inline constexpr const char* referralSenderLine = "You get 3 when their first morph lands.";
+inline constexpr const char* referralStats      = "{friends} joined · {morphs} morphs earned";
+inline constexpr const char* giftWeekOne        = "One week in. Two morphs on us.";
+
+//==============================================================================
 // Controls
 inline constexpr const char* cancel          = "Cancel";
 inline constexpr const char* dragMid         = "Drag .mid";
@@ -175,6 +198,11 @@ inline constexpr Entry table[] = {
     { "createAccount", createAccount }, { "forgotPassword", forgotPassword },
     { "enterCredentials", enterCredentials }, { "logOut", logOut }, { "credits", credits },
     { "creditsUnknown", creditsUnknown }, { "settings", settings }, { "crashReportsOptIn", crashReportsOptIn },
+    { "about", about }, { "aboutVersion", aboutVersion }, { "thirdPartyNotices", thirdPartyNotices },
+    { "copyButton", copyButton }, { "copied", copied }, { "closeButton", closeButton },
+    { "npsQuestion", npsQuestion }, { "npsCommentPlaceholder", npsCommentPlaceholder },
+    { "referralShare", referralShare }, { "referralFriendLine", referralFriendLine },
+    { "referralSenderLine", referralSenderLine }, { "referralStats", referralStats }, { "giftWeekOne", giftWeekOne },
     { "cancel", cancel }, { "dragMid", dragMid }, { "dragFsc", dragFsc },
     { "chooseAudioFile", chooseAudioFile }, { "saveMidiFile", saveMidiFile }, { "saveFscFile", saveFscFile },
     { "savedFile", savedFile }, { "couldNotWrite", couldNotWrite }, { "scaleSnap", scaleSnap },
