@@ -15,7 +15,7 @@ _Effective date: [[EFFECTIVE_DATE]]_
 | `cookie-policy.md` | `/legal/cookies` | Website cookies, consent mechanism | Cookie banner implementation |
 | `eula.md` | `/legal/eula` | The installed plugin: licence, restrictions, what it transmits, warranty, liability | Installer (accept step), plugin About screen |
 | `../LICENSE` | — | Proprietary notice for the repository | — |
-| `../THIRD_PARTY_LICENSES.md` | `/legal/third-party` | Every third-party component, its licence and obligations (the pre-launch actions (two blockers) | Installer bundle, plugin About screen, website |
+| `../THIRD_PARTY_LICENSES.md` | `/legal/third-party` | Every third-party component, its licence and obligations; the pre-launch action list (two blockers) is internal, in `../docs/LICENCE_ACTIONS.md` | Installer bundle, plugin About screen, website |
 
 ## 2. How the website renders these files
 
