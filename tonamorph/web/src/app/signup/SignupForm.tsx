@@ -6,6 +6,8 @@ import { useEffect, useId, useState } from "react";
 import { MIN_PASSWORD_LENGTH, PasswordField } from "@/components/PasswordField";
 import { attributionFromSearch, readAttribution, type Attribution } from "@/lib/attribution";
 import { describeAuthError } from "@/lib/auth-messages";
+import { AuthUnavailable } from "@/components/AuthUnavailable";
+import { supabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/client";
 import { track } from "@/lib/track";
 
@@ -111,6 +113,8 @@ export function SignupForm({ loginHref }: { loginHref: string }) {
       </div>
     );
   }
+
+  if (!supabaseConfigured()) return <AuthUnavailable />;
 
   return (
     <form onSubmit={submit} className="space-y-5" noValidate>

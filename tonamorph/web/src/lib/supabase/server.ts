@@ -2,7 +2,7 @@ import "server-only";
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { supabaseEnv } from "./env";
+import { supabaseConfigured, supabaseEnv } from "./env";
 
 /** Cookie-backed Supabase client for server components, route handlers and server actions. */
 export async function createClient() {
@@ -32,6 +32,9 @@ export async function createClient() {
  * the token itself is then read from the session cookie.
  */
 export async function getSessionUser() {
+  // Without Supabase settings (a preview deployment before the project exists) every
+  // page renders signed-out instead of failing to build.
+  if (!supabaseConfigured()) return null;
   const supabase = await createClient();
   const {
     data: { user },

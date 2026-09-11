@@ -1,11 +1,21 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { supabaseEnv } from "./env";
+import { supabaseConfigured, supabaseEnv } from "./env";
 
 const PROTECTED_PREFIXES = ["/account", "/nps"];
 
 /** Refreshes the Supabase session cookie and guards protected routes (@supabase/ssr pattern). */
 export async function updateSession(request: NextRequest) {
+  if (!supabaseConfigured()) {
+    const { pathname, search } = request.nextUrl;
+    const isProtected = PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+    if (!isProtected) return NextResponse.next({ request });
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.search = "";
+    loginUrl.searchParams.set("next", `${pathname}${search}`);
+    return NextResponse.redirect(loginUrl);
+  }
   const { url, anonKey } = supabaseEnv();
   let response = NextResponse.next({ request });
 

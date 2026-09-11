@@ -3,6 +3,7 @@ export const AUTH_ERROR_MESSAGES: Record<string, string> = {
   confirm_failed: "That confirmation link is invalid or has already been used. Log in, or sign up again to get a new one.",
   link_expired: "That password reset link is invalid or has expired. Request a new one below.",
   session_expired: "Your session has expired. Log in again.",
+  auth_unavailable: "Accounts are not switched on yet. Come back soon.",
 };
 
 export function authErrorMessage(code: string | undefined): string | null {

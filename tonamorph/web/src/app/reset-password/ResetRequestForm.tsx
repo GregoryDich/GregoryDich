@@ -2,6 +2,8 @@
 
 import { useId, useState } from "react";
 import { describeAuthError } from "@/lib/auth-messages";
+import { AuthUnavailable } from "@/components/AuthUnavailable";
+import { supabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/client";
 
 export function ResetRequestForm() {
@@ -36,6 +38,8 @@ export function ResetRequestForm() {
       </p>
     );
   }
+
+  if (!supabaseConfigured()) return <AuthUnavailable />;
 
   return (
     <form onSubmit={submit} className="space-y-5" noValidate>

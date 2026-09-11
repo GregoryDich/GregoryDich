@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import { PasswordField } from "@/components/PasswordField";
 import { describeAuthError } from "@/lib/auth-messages";
+import { AuthUnavailable } from "@/components/AuthUnavailable";
+import { supabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/client";
 
 export function LoginForm({ next, initialError }: { next: string; initialError: string | null }) {
@@ -60,6 +62,8 @@ export function LoginForm({ next, initialError }: { next: string; initialError: 
     });
     setNotice(resendError ? describeAuthError(resendError) : "Confirmation email sent.");
   }
+
+  if (!supabaseConfigured()) return <AuthUnavailable />;
 
   return (
     <form onSubmit={submit} className="space-y-5" noValidate>

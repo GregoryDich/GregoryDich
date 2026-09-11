@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { MIN_PASSWORD_LENGTH, PasswordField } from "@/components/PasswordField";
 import { describeAuthError } from "@/lib/auth-messages";
+import { AuthUnavailable } from "@/components/AuthUnavailable";
+import { supabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/client";
 
 type SessionState = "checking" | "ready" | "missing";
@@ -84,6 +86,8 @@ export function NewPasswordForm() {
       </div>
     );
   }
+
+  if (!supabaseConfigured()) return <AuthUnavailable />;
 
   return (
     <form onSubmit={submit} className="space-y-5" noValidate>
