@@ -9,7 +9,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${brand.siteUrl}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${brand.siteUrl}/download`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${brand.siteUrl}/changelog`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
+    { url: `${brand.siteUrl}/roadmap`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${brand.siteUrl}/status`, lastModified: now, changeFrequency: "hourly", priority: 0.4 },
   ];
+  if (brand.samplabPageEnabled) {
+    pages.push({ url: `${brand.siteUrl}/samplab`, lastModified: now, changeFrequency: "monthly", priority: 0.6 });
+  }
   for (const slug of availableLegalSlugs()) {
     pages.push({ url: `${brand.siteUrl}/legal/${slug}`, lastModified: now, changeFrequency: "yearly", priority: 0.3 });
   }

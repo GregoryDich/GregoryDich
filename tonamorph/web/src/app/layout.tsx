@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { brand } from "@/lib/brand";
 import "./globals.css";
 
-const description = `${brand.productName} turns any audio clip into a playable instrument in about two seconds: cloud stem separation, MIDI transcription, key and BPM detection, straight into your DAW as a VST3 or AU plugin.`;
+const description = `${brand.productName} turns any audio into a playable instrument inside FL Studio and Ableton: stems, MIDI and key in seconds. Drop a clip, play it on your keys, drag the MIDI out. VST3 and AU.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(brand.siteUrl),
@@ -54,7 +54,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <SiteFooter />
         <CookieConsent />
-        <AttributionCapture />      </body>
+        <AttributionCapture />
+      </body>
     </html>
   );
 }

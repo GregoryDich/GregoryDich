@@ -13,6 +13,8 @@ const PATHS = {
   plans: "/v1/plans",
   jobs: "/v1/jobs",
   apiKeys: "/v1/api-keys",
+  status: "/v1/status",
+  nps: "/v1/nps",
 } as const;
 
 export class ApiError extends Error {
@@ -97,6 +99,25 @@ export interface ApiKeysPage {
 export interface ApiKeyCreated extends ApiKey {
   /** Plaintext secret, returned exactly once (§11). */
   key: string;
+}
+
+/** `GET /v1/status`: component health plus the last 24 hours of morph numbers. */
+export type ComponentState = "operational" | "degraded" | "down" | "maintenance";
+
+export interface ServiceStatus {
+  components: Record<"api" | "engine" | "payments" | "website", ComponentState | string>;
+  last_24h: {
+    morphs: number;
+    /** Fraction (0–1) of morphs that succeeded. */
+    success_rate: number;
+    p50_ms: number;
+    p95_ms: number;
+  };
+}
+
+export interface NpsSubmission {
+  score: number;
+  comment?: string;
 }
 
 // --- Error envelope --------------------------------------------------------------------
@@ -186,7 +207,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   if (response.status === 204) {
     return undefined as T;
   }
-  return (await response.json()) as T;
+  const text = await response.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 // --- Endpoints -------------------------------------------------------------------------
@@ -228,6 +250,16 @@ export const api = {
   /** §11 `DELETE /v1/api-keys/{id}` → 204. */
   revokeApiKey(token: string, id: string): Promise<void> {
     return request<void>(`${PATHS.apiKeys}/${encodeURIComponent(id)}`, { method: "DELETE", token });
+  },
+
+  /** `GET /v1/status` — public, cached for a minute (the status page revalidates on the same clock). */
+  getStatus(): Promise<ServiceStatus> {
+    return request<ServiceStatus>(PATHS.status, { revalidate: 60 });
+  },
+
+  /** `POST /v1/nps` — one answer per user per 30 days; the API answers 409 for a repeat. */
+  submitNps(token: string, submission: NpsSubmission): Promise<void> {
+    return request<void>(PATHS.nps, { method: "POST", token, body: submission });
   },
 };
 

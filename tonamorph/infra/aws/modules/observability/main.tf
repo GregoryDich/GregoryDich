@@ -38,9 +38,182 @@ resource "aws_sns_topic_subscription" "email" {
   endpoint  = var.alarm_email
 }
 
+# SMS is the only channel that wakes one person up. New AWS accounts start in the
+# SNS SMS sandbox: the number has to be verified in the SNS console (Text messaging →
+# Sandbox destination phone numbers) before a single message is delivered, and the
+# account-level monthly SMS spend limit (default 1 USD) may need raising.
+resource "aws_sns_topic_subscription" "sms" {
+  count = var.alarm_phone != "" ? 1 : 0
+
+  topic_arn = aws_sns_topic.alarms.arn
+  protocol  = "sms"
+  endpoint  = var.alarm_phone
+}
+
+# ---------------------------------------------------------------------------
+# Log metric filters
+#
+# The API (app.main.JsonFormatter) writes one JSON object per line:
+#   {"ts": ..., "level": "ERROR", "logger": ..., "msg": ..., <extra fields>}
+# and one "request" access line per HTTP request with method, path and status.
+# The GPU worker (worker.aws_worker) and the reaper (app.services.aws.reaper, run
+# as a one-off task in the API image, hence the API log group) use plain text:
+#   2026-09-11 14:05:00,123 LEVEL logger.name message
+# The patterns below match those exact shapes; change them together with the
+# log lines they name.
+# ---------------------------------------------------------------------------
+
+locals {
+  metrics_namespace = "${var.name}/jobs"
+}
+
+resource "aws_cloudwatch_log_metric_filter" "api_errors" {
+  name           = "${var.name}-api-errors"
+  log_group_name = var.api_log_group_name
+  pattern        = "{ $.level = \"ERROR\" }"
+
+  metric_transformation {
+    name          = "ApiErrors"
+    namespace     = local.metrics_namespace
+    value         = "1"
+    default_value = "0"
+    unit          = "Count"
+  }
+}
+
+# Denominator of the failure rate: every accepted POST /v1/jobs (202 per contract §2).
+resource "aws_cloudwatch_log_metric_filter" "jobs_submitted" {
+  name           = "${var.name}-jobs-submitted"
+  log_group_name = var.api_log_group_name
+  pattern        = "{ ($.msg = \"request\") && ($.method = \"POST\") && ($.path = \"/v1/jobs\") && ($.status = 202) }"
+
+  metric_transformation {
+    name          = "JobsSubmitted"
+    namespace     = local.metrics_namespace
+    value         = "1"
+    default_value = "0"
+    unit          = "Count"
+  }
+}
+
+# app/routers/jobs.py: the queue refused the job after it was created (credit released).
+resource "aws_cloudwatch_log_metric_filter" "jobs_handoff_failed" {
+  name           = "${var.name}-jobs-handoff-failed"
+  log_group_name = var.api_log_group_name
+  pattern        = "{ $.msg = \"job hand-off failed\" }"
+
+  metric_transformation {
+    name          = "JobsFailed"
+    namespace     = local.metrics_namespace
+    value         = "1"
+    default_value = "0"
+    unit          = "Count"
+  }
+}
+
+# app/services/aws/reaper.py: "reaped N stale job(s) running longer than Ts" — N jobs
+# failed because a worker died mid-job. The count is read from the sixth field.
+resource "aws_cloudwatch_log_metric_filter" "jobs_reaped" {
+  name           = "${var.name}-jobs-reaped"
+  log_group_name = var.api_log_group_name
+  pattern        = "[date, time, level, logger = \"tonamorph.aws.reaper\", word = \"reaped\", count, ...]"
+
+  metric_transformation {
+    name          = "JobsFailed"
+    namespace     = local.metrics_namespace
+    value         = "$count"
+    default_value = "0"
+    unit          = "Count"
+  }
+}
+
+# worker/aws_worker.py: "job rejected: <message> (<code>)" (input the pipeline refused,
+# job failed, message deleted) and "job attempt N failed" (pipeline crashed; the job is
+# failed on the last attempt, earlier attempts are redelivered). Every failed attempt
+# counts, so a crash loop reaches the threshold sooner rather than later.
+resource "aws_cloudwatch_log_metric_filter" "jobs_failed_worker" {
+  name           = "${var.name}-jobs-failed-worker"
+  log_group_name = var.worker_log_group_name
+  pattern        = "?\"job rejected\" ?\"job attempt\""
+
+  metric_transformation {
+    name          = "JobsFailed"
+    namespace     = local.metrics_namespace
+    value         = "1"
+    default_value = "0"
+    unit          = "Count"
+  }
+}
+
 # ---------------------------------------------------------------------------
 # Alarms
 # ---------------------------------------------------------------------------
+
+resource "aws_cloudwatch_metric_alarm" "job_failure_rate" {
+  alarm_name          = "${var.name}-job-failure-rate"
+  alarm_description   = "At least ${var.job_failure_rate_threshold_percent}% of jobs submitted in the last 15 minutes failed (rejected input, pipeline crash, hand-off failure or reaped), with at least ${var.job_failure_rate_min_jobs} submissions in the window. SLO: >= 99% of reserved jobs captured."
+  evaluation_periods  = 1
+  threshold           = var.job_failure_rate_threshold_percent
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  treat_missing_data  = "notBreaching"
+
+  metric_query {
+    id          = "rate"
+    expression  = "IF(submitted >= ${var.job_failure_rate_min_jobs}, FILL(failed, 0) / submitted * 100, 0)"
+    label       = "Job failure rate (%)"
+    return_data = true
+  }
+
+  metric_query {
+    id = "submitted"
+
+    metric {
+      namespace   = local.metrics_namespace
+      metric_name = "JobsSubmitted"
+      stat        = "Sum"
+      period      = 900
+    }
+  }
+
+  metric_query {
+    id = "failed"
+
+    metric {
+      namespace   = local.metrics_namespace
+      metric_name = "JobsFailed"
+      stat        = "Sum"
+      period      = 900
+    }
+  }
+
+  alarm_actions = [aws_sns_topic.alarms.arn]
+  ok_actions    = [aws_sns_topic.alarms.arn]
+
+  depends_on = [
+    aws_cloudwatch_log_metric_filter.jobs_submitted,
+    aws_cloudwatch_log_metric_filter.jobs_handoff_failed,
+    aws_cloudwatch_log_metric_filter.jobs_reaped,
+    aws_cloudwatch_log_metric_filter.jobs_failed_worker,
+  ]
+}
+
+resource "aws_cloudwatch_metric_alarm" "api_error_count" {
+  alarm_name          = "${var.name}-api-error-count"
+  alarm_description   = "The API logged at least ${var.api_error_count_threshold} ERROR lines in 5 minutes (unhandled exceptions, failed hand-offs, upstream failures)."
+  namespace           = local.metrics_namespace
+  metric_name         = "ApiErrors"
+  statistic           = "Sum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = var.api_error_count_threshold
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  treat_missing_data  = "notBreaching"
+
+  alarm_actions = [aws_sns_topic.alarms.arn]
+  ok_actions    = [aws_sns_topic.alarms.arn]
+
+  depends_on = [aws_cloudwatch_log_metric_filter.api_errors]
+}
 
 resource "aws_cloudwatch_metric_alarm" "dlq_depth" {
   alarm_name          = "${var.name}-dlq-depth"

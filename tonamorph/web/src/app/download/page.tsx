@@ -3,6 +3,7 @@ import Link from "next/link";
 import { latestRelease, releaseAssetUrl, releases } from "@/content/releases";
 import { brand } from "@/lib/brand";
 import { formatDate } from "@/lib/format";
+import { DownloadButton } from "./DownloadButton";
 
 export const metadata: Metadata = {
   title: "Download",
@@ -30,11 +31,12 @@ export default function DownloadPage() {
       <div className="mt-12 grid gap-4 md:grid-cols-2">
         <DownloadCard
           platform="macOS"
+          os="macos"
           formats="VST3 + AU · Apple silicon and Intel"
           fileLabel=".pkg installer"
           href={releaseAssetUrl(release, "macos")}
         />
-        <DownloadCard platform="Windows" formats="VST3 · 64-bit" fileLabel=".exe installer" href={releaseAssetUrl(release, "windows")} />
+        <DownloadCard platform="Windows" os="windows" formats="VST3 · 64-bit" fileLabel=".exe installer" href={releaseAssetUrl(release, "windows")} />
       </div>
 
       <div className="alert alert-info mt-6">
@@ -124,15 +126,25 @@ export default function DownloadPage() {
   );
 }
 
-function DownloadCard({ platform, formats, fileLabel, href }: { platform: string; formats: string; fileLabel: string; href: string }) {
+function DownloadCard({
+  platform,
+  os,
+  formats,
+  fileLabel,
+  href,
+}: {
+  platform: string;
+  os: "macos" | "windows";
+  formats: string;
+  fileLabel: string;
+  href: string;
+}) {
   return (
     <div className="card flex flex-col">
       <h2 className="text-2xl font-semibold tracking-tight">{platform}</h2>
       <p className="mt-1 text-sm text-ink-muted">{formats}</p>
       <div className="mt-8 flex-1" />
-      <a href={href} className="btn btn-primary btn-lg w-full" download>
-        Download for {platform}
-      </a>
+      <DownloadButton href={href} os={os} label={`Download for ${platform}`} />
       <p className="mt-3 text-center text-xs text-ink-dim">
         {fileLabel} · version {latestRelease.version}
       </p>

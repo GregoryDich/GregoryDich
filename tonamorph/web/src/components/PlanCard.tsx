@@ -1,15 +1,16 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { creditsLabel, planCopy } from "@/content/pricing";
 import type { Plan } from "@/lib/api";
 import { formatUsd } from "@/lib/format";
+import { AttributedLink } from "./AttributedLink";
+import { TrackedLink } from "./TrackedLink";
 
 export function PlanCard({ plan, action }: { plan: Plan; action: ReactNode }) {
   const copy = planCopy[plan.id];
   return (
     <div className={`card flex flex-col ${copy?.highlight ? "border-accent/60" : ""}`}>
       <p className="eyebrow">{copy?.eyebrow ?? "Plan"}</p>
-      <h2 className="mt-3 text-xl font-semibold">{plan.name}</h2>
+      <h2 className="mt-3 text-xl font-semibold">{copy?.title ?? plan.name}</h2>
       <p className="mt-4 text-4xl font-semibold tracking-tight">
         {formatUsd(plan.price_usd)}
         {plan.interval && <span className="text-base font-normal text-ink-dim"> / {plan.interval}</span>}
@@ -39,16 +40,21 @@ export function PlanAction({ plan, signedIn }: { plan: Plan; signedIn: boolean }
     return signedIn ? (
       <span className="btn btn-secondary w-full cursor-default">Included with your account</span>
     ) : (
-      <Link href="/signup" className="btn btn-primary w-full">
+      <AttributedLink href="/signup" className="btn btn-primary w-full" cta="start_free" location="pricing">
         Start free
-      </Link>
+      </AttributedLink>
     );
   }
   if (!signedIn) {
     return (
-      <Link href={`/signup?next=${encodeURIComponent("/pricing")}`} className="btn btn-secondary w-full">
+      <AttributedLink
+        href={`/signup?next=${encodeURIComponent("/pricing")}`}
+        className="btn btn-secondary w-full"
+        cta={`signup_to_buy_${plan.id}`}
+        location="pricing"
+      >
         Sign up to buy
-      </Link>
+      </AttributedLink>
     );
   }
   if (!plan.checkout_url) {
@@ -59,8 +65,8 @@ export function PlanAction({ plan, signedIn }: { plan: Plan; signedIn: boolean }
     );
   }
   return (
-    <a href={plan.checkout_url} className="btn btn-primary w-full" rel="noopener">
+    <TrackedLink href={plan.checkout_url} className="btn btn-primary w-full" cta={`checkout_${plan.id}`} location="pricing" external>
       {plan.interval ? "Subscribe" : "Buy now"}
-    </a>
+    </TrackedLink>
   );
 }

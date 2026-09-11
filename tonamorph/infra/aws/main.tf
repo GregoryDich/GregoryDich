@@ -212,15 +212,18 @@ module "ecs_gpu_worker" {
 module "observability" {
   source = "./modules/observability"
 
-  name                = local.name
-  job_queue_name      = module.queue.job_queue_name
-  dlq_name            = module.queue.dlq_name
-  alb_arn_suffix      = module.ecs_api.alb_arn_suffix
-  monthly_budget_usd  = var.monthly_budget_usd
-  alarm_email         = var.alarm_email
-  require_alarm_email = local.is_production
-  account_id          = data.aws_caller_identity.current.account_id
-  job_queue_arn       = module.queue.job_queue_arn
-  api_task_role_name  = module.iam.api_task_role_name
-  api_task_role_arn   = module.iam.api_task_role_arn
+  name                  = local.name
+  job_queue_name        = module.queue.job_queue_name
+  dlq_name              = module.queue.dlq_name
+  alb_arn_suffix        = module.ecs_api.alb_arn_suffix
+  monthly_budget_usd    = var.monthly_budget_usd
+  alarm_email           = var.alarm_email
+  alarm_phone           = var.alarm_phone
+  require_alarm_email   = local.is_production
+  account_id            = data.aws_caller_identity.current.account_id
+  job_queue_arn         = module.queue.job_queue_arn
+  api_task_role_name    = module.iam.api_task_role_name
+  api_task_role_arn     = module.iam.api_task_role_arn
+  api_log_group_name    = module.ecs_api.log_group_name
+  worker_log_group_name = module.ecs_gpu_worker.log_group_name
 }

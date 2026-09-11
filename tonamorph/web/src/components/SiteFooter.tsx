@@ -8,6 +8,8 @@ const PRODUCT_LINKS = [
   { href: "/pricing", label: "Pricing" },
   { href: "/download", label: "Download" },
   { href: "/changelog", label: "Changelog" },
+  { href: "/roadmap", label: "Roadmap" },
+  { href: "/status", label: "Status" },
   { href: "/#faq", label: "FAQ" },
 ];
 

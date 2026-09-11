@@ -25,7 +25,7 @@ the static plan facts and `/account` explains that live data is unavailable.
 |---------------------|-------------------------------------------|
 | `npm run lint`      | ESLint (`next/core-web-vitals`, `next/typescript`, `react/no-danger`) |
 | `npm run typecheck` | `tsc --noEmit`                            |
-| `npm test`          | Vitest (legal loader, redirect guard, API error mapping) |
+| `npm test`          | Vitest (legal loader, redirect guard, API error mapping, event tracking, speed wording, status parser) |
 | `npm run build`     | `next build`                              |
 
 CI should run, from this directory:
@@ -55,7 +55,7 @@ Never add the Supabase service-role key or any other secret to this project.
 | `NEXT_PUBLIC_SUPABASE_URL` | yes | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | Supabase anon key |
 | `NEXT_PUBLIC_SITE_URL` | yes | Canonical origin (metadata, sitemap, e-mail redirect targets) |
-| `NEXT_PUBLIC_API_URL` | production | Backend base URL (`/v1/me`, `/v1/plans`, `/v1/jobs`, `/v1/api-keys`) |
+| `NEXT_PUBLIC_API_URL` | production | Backend base URL (`/v1/me`, `/v1/plans`, `/v1/jobs`, `/v1/api-keys`, `/v1/status`, `/v1/nps`) |
 | `NEXT_PUBLIC_PRODUCT_NAME` | production | Product name; defaults to the working name |
 | `NEXT_PUBLIC_SUPPORT_EMAIL`, `NEXT_PUBLIC_PRIVACY_EMAIL`, `NEXT_PUBLIC_LEGAL_EMAIL` | production | Contact addresses (legal documents, footer, deletion requests) |
 | `NEXT_PUBLIC_COMPANY_LEGAL_NAME`, `NEXT_PUBLIC_COMPANY_ADDRESS`, `NEXT_PUBLIC_COMPANY_REG_ID` | production | Legal entity details substituted into the legal documents |
@@ -65,10 +65,48 @@ Never add the Supabase service-role key or any other secret to this project.
 | `NEXT_PUBLIC_PADDLE_ENV` | no | `sandbox` or `production` (default) |
 | `NEXT_PUBLIC_BILLING_PORTAL_URL` | no | Shows "Manage subscription" on `/account` |
 | `NEXT_PUBLIC_KLAVIYO_COMPANY_ID` | no | Loads Klaviyo after marketing consent; also unlocks its CSP entries |
+| `NEXT_PUBLIC_SAMPLAB_PAGE` | no | `1` publishes `/samplab` (and lists it in the sitemap); anything else answers 404. Switch it on only after the founder has read samplab.com |
 | `NEXT_PUBLIC_DOWNLOAD_BASE_URL` | no | Installer location; defaults to `/downloads` on this site |
 
 Installer file names are derived: `<base>/<version>/<product-slug>-<version>-macos-universal.pkg`
 and `…-windows-x64.exe`; versions come from `src/content/releases.ts`.
+
+## Pages
+
+| route | what it shows | data |
+|---|---|---|
+| `/` | Landing page in the final copy (hero, problem, how it works, speed, not-a-splitter, proof, free, FAQ) | `src/content/performance.ts` switches the speed headline: `MEASURED_P95_SECONDS` is `null` until the beta benchmark exists ("Playable in seconds, not minutes."), then the measured figure. `src/content/proof.ts` holds opted-in beta quotes; the section renders nothing while the list is empty — never add a quote the named person did not write |
+| `/pricing` | "50 morphs for $9, once. 60 morphs a month for $7.99." plus the guarantee | `GET /v1/plans` with the static facts in `src/content/pricing.ts` as fallback. Credits are called morphs in copy only; the API keeps `credits` |
+| `/status` | Component table, last-24-hour morphs / success / p50 / p95, incidents, scheduled maintenance, SLO targets | `GET /v1/status` (`{components:{api,engine,payments,website}, last_24h:{morphs,success_rate,p50_ms,p95_ms}}`), revalidated every 60 s; when the API is unreachable the page says so and still lists the components. Incidents and maintenance windows come from `src/content/incidents.ts` (empty by default), the targets from `src/content/slo.ts` |
+| `/nps` | 0–10 picker prefilled from `?score=` in the e-mail link, optional comment | `POST /v1/nps {score, comment?}` as the signed-in user through a server action; signed-out visitors go to `/login?next=/nps?score=…`; a 409 (one answer per 30 days) shows "Thanks, you already answered recently." |
+| `/roadmap` | Now / Next / Later | `src/content/roadmap.ts` |
+| `/changelog` | Releases, newest first | `src/content/releases.ts` |
+| `/samplab` | "Moving from Samplab? What carries over, what doesn't." — the only page allowed to mention the wind-down | 404 unless `NEXT_PUBLIC_SAMPLAB_PAGE=1` |
+
+## Events
+
+`src/lib/track.ts` wraps `track` from `@vercel/analytics` with a typed union of the web events
+from `docs/GTM_PLAN.md` (appendix C §3). Only these events, with only these properties, can be
+emitted; none of them carries an e-mail, user id, IP or free text (the NPS comment is sent to
+the API, never to analytics). Events are dropped when the visitor has rejected the analytics
+cookie category, when the page renders on the server, and when the `Analytics` component is
+not mounted.
+
+| event | properties | fired from |
+|---|---|---|
+| `cta_clicked` | `cta`, `location` (`header`, `hero`, `free`, `pricing`, `download`, `samplab`, `footer`) | `AttributedLink` with `cta`/`location`, `TrackedLink` |
+| `signup_started` | — | `/signup` form mounted |
+| `signup_completed` | `source: "web"` | `/signup` after `supabase.auth.signUp` succeeds (the backend sends the full event to Klaviyo) |
+| `plugin_downloaded` | `os: "macos" \| "windows"` | `/download` buttons |
+| `demo_play` | — | "Watch the 60 s demo" on the landing page |
+| `pricing_view` | — | `/pricing` mounted |
+| `checkout_started` | `plan_id`, `ref?` | `/checkout` once the Paddle overlay is requested |
+| `nps_submitted` | `score` | `/nps` after the API accepted the answer |
+
+**Custom events need Vercel Pro.** On the Hobby plan Vercel Web Analytics records page views
+only; `track()` calls are accepted by the script and discarded, so the funnel metrics in the
+GTM plan (`demo_play`, `pricing_view` → `signup_started`, …) exist only once the project is on
+Pro. Nothing else on the site depends on them.
 
 ## Vercel
 
@@ -147,6 +185,8 @@ continues to the account.
 
 * `src/middleware.ts` refreshes the Supabase session cookie on every request and sends
   anonymous visitors from `/account` to `/login?next=/account`.
+* `src/middleware.ts` also sends anonymous visitors from `/nps` to `/login?next=/nps?score=…`,
+  so the score from the e-mail link survives the sign-in.
 * `src/lib/api.ts` is the only place that talks to the backend. It runs on the server
   (server components and server actions), sends the Supabase access token as the Bearer
   token, and maps the contract's error envelope to `ApiError`. Nothing logs tokens.

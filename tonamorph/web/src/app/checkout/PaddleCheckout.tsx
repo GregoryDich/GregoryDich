@@ -1,8 +1,9 @@
 "use client";
 
 import Script from "next/script";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { brand } from "@/lib/brand";
+import { track } from "@/lib/track";
 
 interface PaddleGlobal {
   Initialize(options: { token: string; environment: "sandbox" | "production" }): void;
@@ -33,6 +34,10 @@ export interface CheckoutParams {
 /** Opens Paddle's overlay checkout once paddle.js has loaded. */
 export function PaddleCheckout({ params, token }: { params: CheckoutParams; token: string }) {
   const [state, setState] = useState<"loading" | "open" | "error">("loading");
+
+  useEffect(() => {
+    track("checkout_started", params.ref ? { plan_id: params.planId ?? "unknown", ref: params.ref } : { plan_id: params.planId ?? "unknown" });
+  }, [params.planId, params.ref]);
 
   const open = useCallback(() => {
     const paddle = window.Paddle;

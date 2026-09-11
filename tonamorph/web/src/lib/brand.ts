@@ -25,6 +25,7 @@ const raw = {
   downloadBaseUrl: process.env.NEXT_PUBLIC_DOWNLOAD_BASE_URL,
   paddleClientToken: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
   paddleEnv: process.env.NEXT_PUBLIC_PADDLE_ENV,
+  samplabPage: process.env.NEXT_PUBLIC_SAMPLAB_PAGE,
 };
 
 function text(value: string | undefined, fallback: string): string {
@@ -74,6 +75,8 @@ export const brand = {
   billingPortalUrl: optional(raw.billingPortalUrl),
   klaviyoCompanyId: optional(raw.klaviyoCompanyId),
   downloadBaseUrl: stripTrailingSlash(text(raw.downloadBaseUrl, "/downloads")),
+  /** `/samplab` is published only once the founder has verified the claim on samplab.com. */
+  samplabPageEnabled: raw.samplabPage?.trim() === "1",
 } as const;
 
 export type Brand = typeof brand;

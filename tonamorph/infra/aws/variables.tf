@@ -155,6 +155,17 @@ variable "alarm_email" {
   default     = ""
 }
 
+variable "alarm_phone" {
+  description = "Phone number (E.164) subscribed to the alarm/budget SNS topic by SMS; the only channel that pages one person. Optional; the number must be verified in the SNS SMS sandbox before messages arrive (see README, \"Alarms\")."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.alarm_phone == "" || can(regex("^\\+[1-9][0-9]{6,14}$", var.alarm_phone))
+    error_message = "alarm_phone must be empty or an E.164 number: a plus sign followed by 7 to 15 digits, no spaces."
+  }
+}
+
 variable "sentry_dsn" {
   description = "SENTRY_DSN for the API and worker tasks; empty disables error reporting. The CI passes the SENTRY_DSN repository secret through TF_VAR_sentry_dsn."
   type        = string

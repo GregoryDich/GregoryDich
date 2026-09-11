@@ -24,7 +24,7 @@ plugin ──HTTPS──> ALB ──> ECS Fargate (api)  ──SQS──> ECS EC
 | `modules/secrets` | Secrets Manager placeholders (`SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `LEMONSQUEEZY_WEBHOOK_SECRET`, `PADDLE_WEBHOOK_SECRET`, plus `CLOUDFRONT_PRIVATE_KEY` when CloudFront is on) |
 | `modules/ecs-api` | ACM certificate, ALB (HTTP→HTTPS, health check `/v1/health`), Fargate service with target-tracking CPU autoscaling, reaper scheduled task (`var.reaper_schedule_expression`, default `rate(5 minutes)`) |
 | `modules/ecs-gpu-worker` | GPU launch template + ASG + capacity provider, worker task (GPU=1), step scaling on queue depth with scale-to-zero |
-| `modules/observability` | SNS topic (production refuses to plan without `alarm_email`), alarms (DLQ depth, ALB 5xx rate, queue age), monthly budget with a kill-switch action at 100 % |
+| `modules/observability` | SNS topic (production refuses to plan without `alarm_email`; optional SMS via `alarm_phone`), log metric filters on the API and worker log groups, alarms (DLQ depth, ALB 5xx rate, queue age, job failure rate, API error count), monthly budget with an 80 % alert and a kill-switch action at 100 % |
 | `production.tfvars` | non-secret sizing for production |
 | `backend.hcl.example` | template for the S3 backend configuration |
 
@@ -146,7 +146,7 @@ Setting neither fails the plan with an explicit precondition message.
 | `gpu_instance_type` | `g5.xlarge` | validated against `g5.*` / `g4dn.*` |
 | `worker_min_capacity` / `worker_max_capacity` | `0` / `2` | worker tasks = GPU instances |
 | `api_desired_count` | `1` | CPU autoscaling up to `max(2×, 4)` |
-| `monthly_budget_usd` | `150` | account-wide budget, alerts at 80 % actual / 100 % forecast |
+| `monthly_budget_usd` | `150` (`300` in `production.tfvars`) | account-wide budget: notification at 80 % actual and 100 % forecast, kill-switch action at 100 % actual |
 | `image_tag` | `latest` | set by the CI to the git SHA |
 | `supabase_url` | — | `SUPABASE_URL` for API and worker |
 | `job_timeout_seconds` | `180` | `JOB_TIMEOUT_SECONDS`; the reaper releases jobs running longer |
@@ -154,6 +154,7 @@ Setting neither fails the plan with an explicit precondition message.
 | `create_github_oidc_provider` | `true` | `false` if the account already has the GitHub provider |
 | `enable_cloudfront` / `cloudfront_public_key_pem` | `false` / `""` | signed CloudFront URLs; also creates the `CLOUDFRONT_PRIVATE_KEY` secret |
 | `alarm_email` | `""` | e-mail subscription on the alarm topic; **required when `environment` is `prod`/`production`** (a precondition fails the plan otherwise) |
+| `alarm_phone` | `""` | E.164 number (`+14155550123`) subscribed to the alarm topic by SMS — the only channel that pages one person; see "Alarms" for the SNS sandbox step. Pass it as `TF_VAR_alarm_phone` or `-var alarm_phone=…` |
 | `maintenance_mode` | `false` | `MAINTENANCE_MODE` on the API tasks: `true` stops new job submissions (kill switch) |
 
 ## GitHub Actions configuration
@@ -168,6 +169,7 @@ Repository **variables** (Settings → Secrets and variables → Actions → Var
 | `SUPABASE_URL` | Supabase project URL |
 | `ROUTE53_ZONE_ID` or `ACM_CERTIFICATE_ARN` | see "TLS and DNS" (leave the other empty) |
 | `ALARM_EMAIL` | **required** for the production environment (`terraform plan` fails when empty) |
+| `ALARM_PHONE` | optional; only takes effect once `deploy.yml` exports it as `TF_VAR_alarm_phone` (not wired yet — until then pass `-var alarm_phone=…` from a workstation) |
 | `MAINTENANCE_MODE` | optional; `true` redeploys the API with new job submissions disabled (kill switch), unset/`false` otherwise |
 
 Create a GitHub **environment** named `production` with required reviewers; the
@@ -206,8 +208,9 @@ is unacceptable for the first job of the day.
 
 Always-on baseline independent of the GPU (us-east-1, approximate): NAT gateway
 ≈ $33 + data, ALB ≈ $17 + LCUs, one Fargate task 0.5 vCPU/1 GB ≈ $18, Secrets
-Manager ≈ $2, CloudWatch/ECR/EBS a few dollars — about $75/month. The budget
-default of $150 leaves ≈ $75 for GPU hours (≈ 75 busy A10G hours).
+Manager ≈ $2, CloudWatch/ECR/EBS a few dollars — about $75/month. The production
+budget of $300 (`production.tfvars`) leaves ≈ $225 for GPU hours (≈ 220 busy A10G
+hours); the variable default of $150 is meant for smaller environments.
 
 ## Reaper scheduled task
 
@@ -231,12 +234,42 @@ inside the database for non-AWS deployments.
   protection) launches and terminates GPU instances to match the task count and
   never terminates an instance that still runs a task.
 
+## Alarms
+
+Every alarm and budget notification is published to the `tonamorph-prod-alarms` SNS
+topic. `alarm_email` subscribes an address (mandatory in production; e-mail is a
+digest, not a page). `alarm_phone` adds an SMS subscription — the only channel that
+wakes one person up — and is opt-in:
+
+1. Set `alarm_phone` to the number in E.164 form (`+14155550123`), apply.
+2. New accounts sit in the **SNS SMS sandbox**: open SNS → Text messaging (SMS) →
+   Sandbox destination phone numbers, add the same number and enter the verification
+   code, or request production access. Until then SNS silently drops the messages.
+3. Check the account-level SMS spend limit (default 1 USD/month) under Text messaging
+   preferences; a noisy week can exhaust it.
+
+| alarm | fires when | what it means / what to do |
+|---|---|---|
+| `…-dlq-depth` | any message in the dead-letter queue (3 failed receives) | A job crashed the worker three times. Read the worker log, fix, then redrive (see Operations). The reaper already released the credit. |
+| `…-worker-queue-age` | the oldest queued job waited > 10 min for 5 min | Workers are not starting (GPU capacity, image pull, crash loop) or cannot keep up. Check the ASG and the worker log. |
+| `…-alb-5xx-rate` | > 5 % of ALB requests answered 5xx in 3 of 5 minutes | The API is failing or unreachable; plugins see errors on every call. Check the API log and target health. |
+| `…-job-failure-rate` | failed jobs ≥ 10 % of jobs submitted in a 15-minute window with ≥ 20 submissions | The SLO (≥ 99 % of reserved jobs captured) is being missed. Failures are counted from the logs: worker `job rejected` and `job attempt N failed` lines (every attempt counts, so a crash loop trips it fast), API `job hand-off failed`, and the reaper's `reaped N stale job(s)`. Below 90 % over 15 min, flip `MAINTENANCE_MODE=true` (users are not charged either way). |
+| `…-api-error-count` | ≥ 10 API log lines with `"level": "ERROR"` in 5 minutes | Unhandled exceptions or upstream failures (Supabase, SQS, S3). Open the API log group and Sentry. |
+| budget 80 % | actual spend passed 80 % of `monthly_budget_usd` | Heads-up; nothing changes. |
+| budget 100 % forecast | forecast spend will pass 100 % | Heads-up; nothing changes. |
+| budget 100 % actual (action) | actual spend passed 100 % | The kill switch attaches the deny-intake policy (see Operations). |
+
+The metric filters publish to the custom namespace `tonamorph-prod/jobs` (`ApiErrors`,
+`JobsSubmitted`, `JobsFailed`); they match the exact log shapes documented in
+`modules/observability/main.tf`, so a change to those log lines must update the
+patterns in the same commit. Missing data never breaches: a quiet night stays green.
+
 ## Operations
 
 * Logs: `aws logs tail /ecs/tonamorph-prod/api --follow`, same for `worker`.
 * Redrive the DLQ after a fix: `aws sqs start-message-move-task --source-arn <dlq-arn>`.
 * Alarms and budget notifications go to the `tonamorph-prod-alarms` SNS topic; set
-  `alarm_email` (mandatory in production) or subscribe another endpoint.
+  `alarm_email` (mandatory in production) and `alarm_phone` for SMS (see "Alarms").
 * **Budget kill switch.** At 100 % of `monthly_budget_usd` (actual spend) the budget
   action attaches `tonamorph-prod-budget-deny-job-intake` (Deny `sqs:SendMessage` on the
   job queue) to the API task role: `POST /v1/jobs` answers `503 worker_unavailable` and

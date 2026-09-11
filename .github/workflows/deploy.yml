@@ -32,6 +32,7 @@ env:
   # Kill switch: set the MAINTENANCE_MODE repository variable to true and re-run the workflow.
   TF_VAR_maintenance_mode: ${{ vars.MAINTENANCE_MODE || 'false' }}
   TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
+  TF_VAR_alarm_phone: ${{ vars.ALARM_PHONE }}
 
 jobs:
   images:

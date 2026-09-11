@@ -9,4 +9,4 @@ gpu_instance_type   = "g5.xlarge"
 worker_min_capacity = 0
 worker_max_capacity = 2
 api_desired_count   = 1
-monthly_budget_usd  = 150
+monthly_budget_usd  = 300

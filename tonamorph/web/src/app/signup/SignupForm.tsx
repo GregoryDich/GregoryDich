@@ -7,6 +7,7 @@ import { MIN_PASSWORD_LENGTH, PasswordField } from "@/components/PasswordField";
 import { attributionFromSearch, readAttribution, type Attribution } from "@/lib/attribution";
 import { describeAuthError } from "@/lib/auth-messages";
 import { createClient } from "@/lib/supabase/client";
+import { track } from "@/lib/track";
 
 type Status = "idle" | "submitting" | "sent";
 
@@ -25,6 +26,7 @@ export function SignupForm({ loginHref }: { loginHref: string }) {
   useEffect(() => {
     // URL parameters win over what an earlier visit stored.
     setAttribution({ ...readAttribution(), ...attributionFromSearch(window.location.search) });
+    track("signup_started");
   }, []);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -62,6 +64,7 @@ export function SignupForm({ loginHref }: { loginHref: string }) {
       setStatus("idle");
       return;
     }
+    track("signup_completed", { source: "web" });
     if (data.session) {
       // Email confirmation is disabled on this project: the account is live immediately.
       router.push("/account?welcome=1");
