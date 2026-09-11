@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { AttributedLink } from "@/components/AttributedLink";
 import { DemoVideo } from "@/components/DemoVideo";
+import { HowItWorksSteps } from "@/components/HowItWorksSteps";
 import { WatchDemoButton } from "@/components/WatchDemoButton";
+import { PRODUCT_PROMISE } from "@/content/landing";
 import { SPEED_CLAIM } from "@/content/performance";
 import { PRICING_HEADLINE } from "@/content/pricing";
 import { proofQuotes } from "@/content/proof";
@@ -9,12 +11,6 @@ import { brand } from "@/lib/brand";
 
 const OLD_WAY = ["Upload", "Wait", "Download", "Re-import", "Slice", "Re-pitch"];
 const NEW_WAY = ["Drop", "Play", "Drag"];
-
-const STEPS = [
-  { n: "1", title: "Drop", body: "Drop any clip up to 60 s." },
-  { n: "2", title: "Play", body: "Bass, drums, synth and vocals arrive mapped across your keyboard, locked to the detected key." },
-  { n: "3", title: "Drag", body: "Drag the .mid or .fsc into your piano roll." },
-];
 
 const COMPATIBILITY = ["FL Studio 21.2+", "Ableton Live 12", "Logic Pro 11 (AU)", "Windows", "macOS"];
 
@@ -54,10 +50,7 @@ export default function HomePage() {
           <h1 id="hero" className="mt-4 text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
             {brand.tagline}
           </h1>
-          <p className="mt-6 max-w-2xl text-lg text-ink-muted">
-            {brand.productName} turns any audio into a playable instrument inside FL Studio and Ableton: stems, MIDI and key in
-            seconds. Drop a clip, play it on your keys, drag the MIDI out.
-          </p>
+          <p className="mt-6 max-w-2xl text-lg text-ink-muted">{PRODUCT_PROMISE} Drop a clip, play it on your keys, drag the MIDI out.</p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <AttributedLink href="/signup" className="btn btn-primary btn-lg" cta="get_free_morphs" location="hero">
               Get 3 free morphs
@@ -89,15 +82,7 @@ export default function HomePage() {
           <h2 id="how" className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             Drop. Play. Drag.
           </h2>
-          <ol className="mt-10 grid gap-6 md:grid-cols-3">
-            {STEPS.map((step) => (
-              <li key={step.n} className="card">
-                <span className="font-mono text-sm text-accent">{step.n}</span>
-                <h3 className="mt-3 text-xl font-semibold">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-ink-muted">{step.body}</p>
-              </li>
-            ))}
-          </ol>
+          <HowItWorksSteps />
         </div>
       </section>
 

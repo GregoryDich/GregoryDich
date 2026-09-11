@@ -25,7 +25,7 @@ the static plan facts and `/account` explains that live data is unavailable.
 |---------------------|-------------------------------------------|
 | `npm run lint`      | ESLint (`next/core-web-vitals`, `next/typescript`, `react/no-danger`) |
 | `npm run typecheck` | `tsc --noEmit`                            |
-| `npm test`          | Vitest (legal loader, redirect guard, API error mapping, event tracking, speed wording, status parser) |
+| `npm test`          | Vitest (legal loader, redirect guard, referral code, API error mapping, event tracking, speed wording, status parser) |
 | `npm run build`     | `next build`                              |
 
 CI should run, from this directory:
@@ -82,6 +82,7 @@ and `…-windows-x64.exe`; versions come from `src/content/releases.ts`.
 | `/roadmap` | Now / Next / Later | `src/content/roadmap.ts` |
 | `/changelog` | Releases, newest first | `src/content/releases.ts` |
 | `/samplab` | "Moving from Samplab? What carries over, what doesn't." — the only page allowed to mention the wind-down | 404 unless `NEXT_PUBLIC_SAMPLAB_PAGE=1` |
+| `/m/<code>` | Referral landing for "send a morph to a friend" (`GET /v1/me` → `referral.url`): "A friend sent you 5 free morphs.", the product promise, the demo, how it works and one CTA to `/signup?ref=<code>` (`cta_clicked {cta: "claim_referral", location: "referral"}`) | No API call: the code is checked for shape only (`^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{8}$`, case-insensitive), anything else is a 404. `noindex`, not in the sitemap. The sign-up form stores the code as `referral_code` metadata and the database decides whether it is live. Copy in `src/content/referral.ts` |
 
 ## Events
 
@@ -94,7 +95,7 @@ not mounted.
 
 | event | properties | fired from |
 |---|---|---|
-| `cta_clicked` | `cta`, `location` (`header`, `hero`, `free`, `pricing`, `download`, `samplab`, `footer`) | `AttributedLink` with `cta`/`location`, `TrackedLink` |
+| `cta_clicked` | `cta`, `location` (`header`, `hero`, `free`, `pricing`, `download`, `samplab`, `footer`, `referral`) | `AttributedLink` with `cta`/`location`, `TrackedLink` |
 | `signup_started` | — | `/signup` form mounted |
 | `signup_completed` | `source: "web"` | `/signup` after `supabase.auth.signUp` succeeds (the backend sends the full event to Klaviyo) |
 | `plugin_downloaded` | `os: "macos" \| "windows"` | `/download` buttons |

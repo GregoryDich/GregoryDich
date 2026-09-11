@@ -15,6 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   if (brand.samplabPageEnabled) {
     pages.push({ url: `${brand.siteUrl}/samplab`, lastModified: now, changeFrequency: "monthly", priority: 0.6 });
   }
+  // `/m/<code>` referral links are personal (noindex) and never listed.
   for (const slug of availableLegalSlugs()) {
     pages.push({ url: `${brand.siteUrl}/legal/${slug}`, lastModified: now, changeFrequency: "yearly", priority: 0.3 });
   }

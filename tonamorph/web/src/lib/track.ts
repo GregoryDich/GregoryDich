@@ -8,7 +8,7 @@ import { readConsent } from "./consent";
  * user id, IP or anything else that identifies a person — and the union below is the
  * only way to emit one, so a new event has to be added here first.
  */
-export type CtaLocation = "header" | "hero" | "free" | "pricing" | "download" | "samplab" | "footer";
+export type CtaLocation = "header" | "hero" | "free" | "pricing" | "download" | "samplab" | "footer" | "referral";
 
 export type TrackEvent =
   | { name: "cta_clicked"; properties: { cta: string; location: CtaLocation } }
