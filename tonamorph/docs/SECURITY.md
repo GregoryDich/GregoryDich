@@ -76,6 +76,24 @@ Supabase Auth (GoTrue) issues the tokens; the backend only verifies them.
 * **Damage bound.** A stolen key can at most spend the owner's credits at 10 jobs per
   minute and read that owner's jobs; revocation is immediate.
 
+### 2.3 Admin key (§15)
+
+`GET /v1/admin/users/{user_id_or_email}` is the founder's read-only support lookup and
+the only route that accepts `ADMIN_API_KEY` (header `X-Admin-Key`). It is opt-in: while
+the setting is empty the route answers `404` before reading anything, so a deployment
+that does not set it has no admin surface at all. With it set, every request — right or
+wrong key — first spends one shared budget of 30 per minute (`429` beyond it), which
+throttles guessing as much as use, and only then is the key compared with
+`hmac.compare_digest` over bytes (a non-ASCII header cannot raise). The key is a
+`SecretStr` that never appears in logs or reprs, the audit line names the resolved user
+id and never the address the lookup was made with, and the access log writes this route
+as its template (`/v1/admin/users/{subject}`) for the same reason. The route reads only
+(the `support_user_overview` view plus the user's last 20 jobs and ledger entries, with
+every object URL blanked); no credit, key or profile can be changed through it. The key
+lives in Secrets Manager like the webhook secrets (§8) and is rotated the same way; a
+session token or an API key is refused here, and the admin key is refused everywhere
+else.
+
 ## 3. Payment webhooks (§4, §12)
 
 | provider | signature | replay bound | idempotency key |
@@ -275,6 +293,7 @@ Rules applied to both:
 | `SUPABASE_JWT_SECRET` or `SUPABASE_JWKS_URL` | Secrets Manager (URL may be plain config) | backend task |
 | Supabase service-role key | Secrets Manager | backend task |
 | `LEMONSQUEEZY_WEBHOOK_SECRET`, `PADDLE_WEBHOOK_SECRET` | Secrets Manager | backend task |
+| `ADMIN_API_KEY` (§2.3; optional — the admin route does not exist without it) | Secrets Manager | backend task |
 | CloudFront private key (`CLOUDFRONT_KEY_PAIR_ID` is the public handle) | Secrets Manager | backend task |
 | worker → Supabase service-role key (§4: same key as the API; least-privilege role is future work) | Secrets Manager | worker task |
 | Terraform state | remote backend with encryption and locking; contains ARNs, not values | operators |
@@ -300,6 +319,8 @@ signature header or a request body (rule shared across all components).
 | **Signed-URL sharing / scraping** | pass a stem URL around, or guess others | one object, `GET`-only, 24 h, no list permission; the key path is UUIDs; the plugin uses each URL once | §2, §10 |
 | **Affiliate self-referral** | buy with one's own `ref` code, or with a second account, to claw back 30 % | `record_purchase` resolves the code only through an active `referral_codes` row joined to an active `affiliates` row `where a.user_id <> p_user_id`, so a self-referral simply writes no commission. Commissions are written `pending` and are meant to be paid only after the chargeback window, with a refund setting `void` — but the payout hold, the void-on-refund step and any velocity check on new codes are **operational procedures, not code**; nothing in this repository pays out or voids automatically. A second account with a different `user_id` is not caught at all | §12 |
 | **Commission double-pay** | replay the webhook to get two commission rows | commission row keyed by the same idempotency key as the grant, in the same transaction | §12 |
+| **Refund replay / refund overdraft** | re-send an approved refund hoping to strip credits twice, or refund a pack whose credits were already spent and push the balance negative | `apply_purchase_refund` decides under the account lock: it removes `min(purchase credits, balance − reserved)` — a captured credit stays charged, a reserved one stays with its job, the balance never goes below zero — and records one `purchase_refunds` row per purchase, so a second delivery of the same refund answers with that row and moves nothing, however the balance changed since. A `pending` commission is voided in the same transaction; a `paid` one is left for the operator (§4) | §4, §12 |
+| **Referral farming** | sign up throwaway accounts with one's own code to mint credits | the friend's +2 needs a confirmed sign-up like the welcome grant (same Supabase settings, above); the referrer earns nothing at sign-up — only +3 when the friend's *first* job succeeds, which costs that account a credit — and at most 10 friends per referrer per 30 days are rewarded (`reward_referral`, decided under the referrer's account lock, keyed `referral:<friend>`). A user's own code and a deleted referrer's code are ignored; an affiliate code always wins over a user code, so the money programme cannot be hijacked by a generated code (§3, §12) | §3, §12 |
 | **Free-credit farming** | mass signups for 3 credits each | the grant is idempotent per user (`signup:<user id>`), and 3 credits ≈ $0.0075 of cost, so the loss per account is bounded and the GPU queue is protected by the 10/min submission limit. But the `on_auth_user_created` trigger fires on the `auth.users` insert, **before** any e-mail confirmation, and signup itself happens in GoTrue rather than in this API — so requiring confirmation before the grant, and rate-limiting signups per IP and e-mail domain, are Supabase Auth settings an operator must turn on, not something this repository enforces | §3, §5 |
 | **Credential stuffing** | password guessing through `/v1/auth/token` | a credential-keyed limit on the auth proxy — 10 attempts per minute per e-mail address regardless of source IP (§6; `backend/app/routers/auth.py` explains why IP keying was rejected), GoTrue's own lockout, no distinguishable error between wrong email and wrong password | §1 |
 | **Algorithm confusion** | sign a token with the public key as an HMAC secret | single pinned algorithm per deployment; `alg` from the token is never consulted for key selection | §1 |

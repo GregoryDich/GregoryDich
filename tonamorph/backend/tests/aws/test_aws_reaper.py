@@ -79,15 +79,45 @@ class FakeJobs:
 
 
 @dataclass
+class FakeRewards:
+    """``grant_week1_gifts`` as the tick sees it: whoever is due, once."""
+
+    due: list[UUID] = field(default_factory=list)
+
+    async def grant_week1_gifts(self) -> list[UUID]:
+        gifted, self.due = self.due, []
+        return gifted
+
+
+@dataclass
+class FakeGrowth:
+    gifted: list[UUID] = field(default_factory=list)
+
+    def gift_granted(self, user_id: UUID) -> None:
+        self.gifted.append(user_id)
+
+
+@dataclass
 class Services:
     jobs: FakeJobs
     credits: FakeCredits
+    rewards: FakeRewards = field(default_factory=FakeRewards)
+    growth: FakeGrowth = field(default_factory=FakeGrowth)
 
 
 @pytest.fixture
 def services() -> Services:
     credits = FakeCredits(credits=3)
     return Services(jobs=FakeJobs(credits), credits=credits)
+
+
+async def test_the_tick_grants_gifts_and_tells_each_user(services: Services) -> None:
+    lucky, other = uuid4(), uuid4()
+    services.rewards.due = [lucky, other]
+    assert await reaper.grant_gifts_once(services) == 2
+    assert services.growth.gifted == [lucky, other]
+    assert await reaper.grant_gifts_once(services) == 0
+    assert await reaper.run_once(services, 180) == (0, 0)
 
 
 async def test_reap_once_releases_stuck_reservation(services: Services) -> None:

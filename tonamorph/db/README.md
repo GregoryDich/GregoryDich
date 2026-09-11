@@ -1,8 +1,9 @@
 # Tonamorph — database
 
 PostgreSQL 16 / Supabase schema for the credit ledger, jobs, billing, API keys,
-affiliates and the quality loops (feedback, NPS, status) described in
-`docs/API_CONTRACT.md` (§2, §3, §6, §10, §11, §12, §14).
+affiliates, the quality loops (feedback, NPS, status), provider refunds, user referrals,
+the first-week gift and the support view described in `docs/API_CONTRACT.md` (§2, §3,
+§4, §6, §10, §11, §12, §14, §15).
 
 > ## ⚠ The seed cannot sell anything until you fill in `provider_variant_ids`
 >
@@ -63,8 +64,11 @@ db/
 │   ├── 0002_functions.sql   credit_balance type and every SECURITY DEFINER function
 │   ├── 0003_rls.sql         roles, privileges, row-level security, function grants
 │   ├── 0004_account_deletion.sql  sign-up metadata on profiles, tombstone deletion, auth.users delete trigger
-│   └── 0005_quality_loops.sql     job_feedback + bounded auto-refund, nps_responses, plugin_installs,
-│                                  user_facts / status_last_24h, growth_daily view, profiles.first_seen_at
+│   ├── 0005_quality_loops.sql     job_feedback + bounded auto-refund, nps_responses, plugin_installs,
+│   │                              user_facts / status_last_24h, growth_daily view, profiles.first_seen_at
+│   └── 0006_referrals_and_refunds.sql  purchase_refunds + apply_purchase_refund, user_referral_codes +
+│                                  profiles.referred_by + the referral reward in complete_job,
+│                                  grant_week1_gifts, support_user_overview view
 └── tests/
     ├── 00_local_auth_shim.sql   minimal auth.users / auth.uid() for local clusters only
     ├── run_tests.sh             throwaway PostgreSQL 16 cluster + all tests
@@ -173,6 +177,12 @@ the mutating ones; `get_balance` is also granted to `authenticated` and refuses 
 | `touch_plugin_install(p_user_id, p_plugin_version, p_host, p_os)` | `boolean` | true the first time the user is seen with this `(plugin_version, host)` pair (the `Plugin Installed` event); afterwards stamps `last_seen_at`, fills `os` when it was null, returns false. `22023` for an empty or over-long value, `P0404` unknown profile |
 | `user_facts(p_user_id)` | `(email, plan, morphs_total, first_morph_at, last_morph_at, has_purchased)` | read-only facts a growth event carries; no row for an unknown profile |
 | `status_last_24h()` | `(morphs, succeeded, failed, p50_ms, p95_ms)` | jobs that finished in the last 24 h (`succeeded`/`failed` only) and the latency percentiles of the successes, `finished_at - coalesce(started_at, created_at)`; nulls when nothing succeeded |
+| `apply_purchase_refund(p_provider text, p_order_id text, p_reason text)` | `table(credits_removed int, commission_voided boolean)` | a provider refund or chargeback (contract §4), under the account lock: removes `min(purchase.credits, balance - reserved)` — never a captured or reserved credit, never below zero — as one negative `adjust` row (source `<provider>:order:<id>`, key `refund:<provider>:<order_id>`), voids a `pending` commission (a `paid` one stays), ends a refunded subscription period (`cancelled`, `cancelled_at`, `current_period_end` cut to now) and recomputes `profiles.plan`; one `purchase_refunds` row per purchase makes a replay answer with the recorded outcome. `P0404` unknown purchase, `22023` bad provider or empty order id |
+| `user_referral_summary(p_user_id)` | `table(code text, friends_joined int, morphs_earned int)` | what `GET /v1/me` shows: the code (assigned here when a profile somehow has none), the profiles with `referred_by = p_user_id`, the sum of `referral` grants; no row for an unknown profile |
+| `grant_week1_gifts()` | `table(user_id uuid)` | cron / reaper entry point: grants 2 credits (source `gift:week1`, key `gift:week1:<user>`, no expiry) to every live profile created 7–8 days ago with a `credit_accounts` row and at least one `succeeded` job that was not gifted yet, and returns the ids gifted in this run; a second run finds nothing |
+| `handle_new_user()` (trigger, 0006) | — | as above, plus: a `referral_code` that names no affiliate code is looked up as a user code (`signup_referrer`: any case, a live owner, never the new user) — `profiles.referred_by` is set and 2 extra credits granted (source `referral_bonus`, key `referral_bonus:<user>`) |
+| `complete_job(p_job_id, p_result)` (0006) | `jobs` | as above, plus: when the job is the user's first success, `reward_referral(p_user_id)` |
+| `assign_user_referral_code()` (trigger) | — | on `profiles` insert: one `user_referral_codes` row per profile (`generate_user_referral_code()`); the migration backfills existing profiles |
 
 Tables added by `0005_quality_loops.sql`: `job_feedback` (one row per job: `rating`,
 `reason`, `note`, `drop_to_ready_ms`, `refunded`; owner may `select`), `nps_responses`
@@ -186,11 +196,48 @@ first_seen_at is null` when it first meets an account (the `Signed Up` event). T
 `delete_user_account` now also clears `job_feedback.note` and `nps_responses.comment` and
 deletes the user's `plugin_installs`; ratings and scores stay.
 
+Tables added by `0006_referrals_and_refunds.sql` (both `service_role` only, RLS on, no
+policies): `purchase_refunds` (primary key `purchase_id`; `user_id`, `provider`,
+`provider_order_id` — unique together —, `credits_removed`, `commission_voided`,
+`reason`, `created_at`) and `user_referral_codes` (`code` primary key — 8 characters of
+`ABCDEFGHJKMNPQRSTUVWXYZ23456789`, so nothing reads as `0/O` or `1/I/L` —, `user_id`
+unique, `created_at`), plus the column `profiles.referred_by` (the friend whose code the
+sign-up used; `on delete set null`). The view `support_user_overview` (`service_role`
+only) has one row per profile, tombstones included: `user_id`, `email`, `plan`,
+`created_at`, `deleted_at`, `balance`, `reserved`, `morphs_total`, `last_morph_at`
+(succeeded jobs), `purchases`, `refunds`, `api_keys` (unrevoked), `nps_score` (latest),
+`feedback_up`, `feedback_down`, `feedback_refunds`, `referral_code`, `referred_by`,
+`friends_joined` — what `GET /v1/admin/users/…` returns (contract §15). Deleting an
+account leaves its code row behind but unusable: `signup_referrer` and `reward_referral`
+both require a live referrer.
+
+The referral reward lives in `complete_job` on purpose: it is the one function every
+backend, worker and replay passes through, its idempotency key `referral:<friend>` is
+checked under the referrer's account lock, and the "first success" test is made on the
+`jobs` table in the same transaction — so a friend's first morph rewards the referrer
+exactly once whether the pipeline ran in the API, on a GPU worker, or twice.
+
+**Scheduling.** `infra/supabase/cleanup.sql` schedules `expire_credits()` and
+`reap_stale_jobs(180)` with pg_cron; the first-week gift needs one more line there, run
+hourly so every account gets a day's worth of attempts inside its 7–8-day window:
+
+```sql
+select cron.schedule('tonamorph_week1_gifts', '23 * * * *', $$select count(*) from public.grant_week1_gifts();$$);
+```
+
+The API's reaper task (`python -m app.services.aws.reaper`, EventBridge every five
+minutes) runs the same function and additionally emits the `Gift Granted` event for each
+account it gifted; the two coexist because the gift is keyed per user. A deployment
+without the reaper task gets the credits from pg_cron and no event.
+
 Internal helpers, called by the functions above and granted to nobody:
-`balance_of(p_account)`, `lock_credit_account(p_user_id)`, `append_ledger(...)` and
-`perishable_pool(p_user_id)` — the last replays a user's ledger in `seq` order to compute
+`balance_of(p_account)`, `lock_credit_account(p_user_id)`, `append_ledger(...)`,
+`perishable_pool(p_user_id)` — which replays a user's ledger in `seq` order to compute
 how many *expiring* credits are still unspent, which is what lets `expire_credits()`
-charge a spend to the grant it came off.
+charge a spend to the grant it came off —, `generate_user_referral_code()`,
+`signup_referrer(p_meta, p_user_id)` and `reward_referral(p_friend_id)` (3 credits to a
+live referrer, once per friend, at most 10 friends per referrer per 30 days; returns the
+referrer rewarded or null).
 
 Errors are raised with `SQLSTATE` / `MESSAGE` pairs the backend maps to HTTP:
 `P0402 insufficient_credits` (402), `P0404 not_found` (404), `P0409 conflict` (409),
@@ -218,9 +265,9 @@ The script needs the PostgreSQL 16 binaries (`PGBIN`, default
 stranded webhook claim), and always stops and removes the cluster on exit. Any failed assertion, SQL error or unexpected race outcome
 exits non-zero.
 
-A passing run ends with `ALL TESTS PASSED (13 test groups)`: the eleven `tests/test_*.sql`
-files (account_deletion, affiliates, api_keys, growth_daily, jobs, ledger, nps,
-quality_loops, rls, signup_metadata, webhooks) plus two concurrency races — the last
-credit, which must end with exactly one winner and one `insufficient_credits`, and a
-stranded webhook claim past its lease, which exactly one of two simultaneous workers may
-reclaim.
+A passing run ends with `ALL TESTS PASSED (17 test groups)`: the fifteen
+`tests/test_*.sql` files (account_deletion, affiliates, api_keys, gifts, growth_daily,
+jobs, ledger, nps, quality_loops, referrals, refunds, rls, signup_metadata, support_view,
+webhooks) plus two concurrency races — the last credit, which must end with exactly one
+winner and one `insufficient_credits`, and a stranded webhook claim past its lease, which
+exactly one of two simultaneous workers may reclaim.

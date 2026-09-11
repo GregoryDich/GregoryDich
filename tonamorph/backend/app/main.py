@@ -25,6 +25,7 @@ from app.middleware.body_limit import BodyLimitMiddleware
 from app.middleware.rate_limit import RateLimits
 from app.observability import init_sentry
 from app.routers import (
+    admin,
     api_keys,
     auth,
     credits,
@@ -87,6 +88,15 @@ def configure_logging(settings: Settings) -> None:
     logging.getLogger("sse_starlette.sse").setLevel(logging.INFO)
 
 
+def loggable_path(path: str | None) -> str | None:
+    """The access-log path. The admin lookup's subject may be an email address (§15), so
+    that one route is logged as its template; every other path is logged as requested,
+    which keeps job and key ids in the log."""
+    if path is not None and path.startswith(API_PREFIX + admin.USERS_PATH_PREFIX):
+        return API_PREFIX + admin.USERS_PATH_TEMPLATE
+    return path
+
+
 class RequestContextMiddleware:
     """Assigns/propagates ``X-Request-ID`` and writes one structured access-log line per
     HTTP request (method, path, status, duration; never headers or bodies)."""
@@ -118,7 +128,7 @@ class RequestContextMiddleware:
                 "request",
                 extra={
                     "method": scope.get("method"),
-                    "path": scope.get("path"),
+                    "path": loggable_path(scope.get("path")),
                     "status": status_code,
                     "duration_ms": round((time.perf_counter() - started) * 1000, 2),
                 },
@@ -181,6 +191,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         feedback.router,
         status.router,
         telemetry.router,
+        admin.router,
     ):
         app.include_router(router, prefix=API_PREFIX)
     return app

@@ -56,6 +56,7 @@ from app.schemas import (
     PurchaseExport,
     ReferralCodeExport,
     SubscriptionExport,
+    SupportUserOverview,
 )
 from app.services.credits import (
     ACTIVE_SUBSCRIPTION_STATUSES,
@@ -94,6 +95,29 @@ from app.services.quality import (
     elapsed_ms,
     percentile,
 )
+from app.services.rewards import (
+    REFERRAL_BONUS_NOTE,
+    REFERRAL_BONUS_SOURCE,
+    REFERRAL_CODE_ALPHABET,
+    REFERRAL_CODE_LENGTH,
+    REFERRAL_FRIEND_BONUS,
+    REFERRAL_REWARD,
+    REFERRAL_REWARD_CAP_PER_30_DAYS,
+    REFERRAL_REWARD_NOTE,
+    REFERRAL_REWARD_WINDOW_DAYS,
+    REFERRAL_SOURCE,
+    WEEK1_GIFT_CREDITS,
+    WEEK1_GIFT_MAX_DAYS,
+    WEEK1_GIFT_MIN_DAYS,
+    WEEK1_GIFT_NOTE,
+    WEEK1_GIFT_SOURCE,
+    ReferralReward,
+    ReferralSummary,
+    referral_bonus_key,
+    referral_reward_key,
+    reward_from_ledger_record,
+    week1_gift_key,
+)
 from app.services.supabase import (
     ACCOUNT_EXISTS_MESSAGE,
     EMAIL_NOT_CONFIRMED_MESSAGE,
@@ -109,8 +133,10 @@ from app.services.users import (
     signup_idempotency_key,
 )
 from app.services.webhooks import (
+    OPEN_SUBSCRIPTION_STATUSES,
     PurchaseProvider,
     PurchaseRecord,
+    RefundOutcome,
     SubscriptionRecord,
     SubscriptionStatus,
 )
@@ -206,6 +232,7 @@ class ProfileRow:
     marketing_opt_in: bool = False
     terms_accepted_at: datetime | None = None
     first_seen_at: datetime | None = None
+    referred_by: UUID | None = None
 
     def as_record(self) -> dict[str, Any]:
         return dict(self.__dict__)
@@ -391,6 +418,20 @@ class PluginInstallRow:
     os: str | None
     first_seen_at: datetime
     last_seen_at: datetime
+
+
+@dataclass
+class PurchaseRefundRow:
+    """A ``purchase_refunds`` row (0006): what a provider refund took back, once."""
+
+    purchase_id: UUID
+    user_id: UUID
+    provider: str
+    provider_order_id: str
+    credits_removed: int
+    commission_voided: bool
+    reason: str | None
+    created_at: datetime
 
 
 @dataclass
@@ -633,6 +674,9 @@ class MemoryStore:
     job_feedback: dict[UUID, JobFeedbackRow] = field(default_factory=dict)
     nps_responses: list[NpsRow] = field(default_factory=list)
     plugin_installs: dict[tuple[UUID, str, str], PluginInstallRow] = field(default_factory=dict)
+    purchase_refunds: dict[UUID, PurchaseRefundRow] = field(default_factory=dict)
+    user_referral_codes: dict[str, UUID] = field(default_factory=dict)
+    """``user_referral_codes`` as code → owner; every profile gets one in :meth:`ensure_user`."""
     _seq: int = 0
     _ledger_keys: dict[str, LedgerRow] = field(default_factory=dict)
     _job_entries: dict[tuple[UUID, str], LedgerRow] = field(default_factory=dict)
@@ -964,6 +1008,12 @@ class MemoryStore:
         job.started_at = job.started_at or now
         job.finished_at = now
         job.expires_at = expires_at
+        # The friend's first successful morph is what earns the referrer their credits.
+        if not any(
+            j.user_id == job.user_id and j.status == "succeeded" and j.id != job_id
+            for j in self.jobs.values()
+        ):
+            self.reward_referral(job.user_id)
         return job
 
     def fail_job(self, job_id: UUID, error: dict[str, Any] | None) -> JobRow:
@@ -1037,6 +1087,7 @@ class MemoryStore:
                 id=user_id, email=normalise_email(email) or None, created_at=self.now()
             )
             self.profiles[user_id] = profile
+            self.assign_user_referral_code(user_id)
             self.accounts.setdefault(user_id, AccountRow(user_id=user_id))
             if self.settings.free_signup_credits > 0:
                 self.grant_credits(
@@ -1053,15 +1104,27 @@ class MemoryStore:
     def handle_new_user(
         self, user_id: UUID, email: str, raw_user_meta_data: Mapping[str, Any]
     ) -> ProfileRow:
-        """``handle_new_user`` of 0004: the profile, the account and the welcome grant of
-        :meth:`ensure_user`, plus the sign-up metadata — the referral code only when it
-        names an active code, spelled as that code is."""
+        """``handle_new_user`` of 0004 and 0006: the profile, the account and the welcome
+        grant of :meth:`ensure_user`, plus the sign-up metadata — the referral code as an
+        affiliate code when it names an active one, spelled as that code is, otherwise as
+        a friend's user code, which links the profile and grants the friend bonus."""
         if user_id in self.profiles:
             return self.profiles[user_id]
-        profile = self.ensure_user(user_id, email)
         wanted = signup_meta_text(raw_user_meta_data, "referral_code")
         code = self.referral_codes.get(wanted.lower()) if wanted else None
-        profile.referral_code = code.code if code is not None and code.active else None
+        affiliate_code = code.code if code is not None and code.active else None
+        referrer = self.signup_referrer(wanted, user_id) if affiliate_code is None else None
+        profile = self.ensure_user(user_id, email)
+        profile.referral_code = affiliate_code
+        profile.referred_by = referrer
+        if referrer is not None:
+            self.grant_credits(
+                user_id,
+                REFERRAL_FRIEND_BONUS,
+                REFERRAL_BONUS_SOURCE,
+                referral_bonus_key(user_id),
+                REFERRAL_BONUS_NOTE,
+            )
         for key in UTM_KEYS:
             setattr(profile, key, signup_meta_text(raw_user_meta_data, key))
         profile.marketing_opt_in = signup_meta_bool(raw_user_meta_data, "marketing_opt_in")
@@ -1571,6 +1634,252 @@ class MemoryStore:
             p95_ms=int(round(p95)) if p95 is not None else None,
         )
 
+    # --- earned morphs (0006: referrals, the first-week gift), refunds, the support view ------
+
+    def generate_user_referral_code(self) -> str:
+        """``generate_user_referral_code`` of 0006: unique against user and affiliate codes."""
+        while True:
+            code = "".join(
+                secrets.choice(REFERRAL_CODE_ALPHABET) for _ in range(REFERRAL_CODE_LENGTH)
+            )
+            if code not in self.user_referral_codes and code.lower() not in self.referral_codes:
+                return code
+
+    def user_referral_code_of(self, user_id: UUID) -> str | None:
+        return next((c for c, owner in self.user_referral_codes.items() if owner == user_id), None)
+
+    def assign_user_referral_code(self, user_id: UUID) -> str:
+        """The ``profiles_assign_referral_code`` trigger: one code per profile."""
+        existing = self.user_referral_code_of(user_id)
+        if existing is not None:
+            return existing
+        code = self.generate_user_referral_code()
+        self.user_referral_codes[code] = user_id
+        return code
+
+    def signup_referrer(self, wanted: str | None, user_id: UUID) -> UUID | None:
+        """``signup_referrer`` of 0006: the live owner of a user code, never the new user."""
+        if not wanted:
+            return None
+        owner = self.user_referral_codes.get(wanted.strip().upper())
+        if owner is None or owner == user_id:
+            return None
+        profile = self.profiles.get(owner)
+        return owner if profile is not None and profile.deleted_at is None else None
+
+    def reward_referral(self, friend_id: UUID) -> UUID | None:
+        """``reward_referral`` of 0006: 3 credits to the referrer, once per friend, at most
+        10 friends per 30 days; ``None`` when nothing was granted."""
+        friend = self.profiles.get(friend_id)
+        referrer = (
+            self.profiles.get(friend.referred_by)
+            if friend is not None and friend.referred_by is not None
+            else None
+        )
+        if referrer is None or referrer.deleted_at is not None:
+            return None
+        if referral_reward_key(friend_id) in self._ledger_keys:
+            return None
+        self._lock_account(referrer.id)
+        since = self.now() - timedelta(days=REFERRAL_REWARD_WINDOW_DAYS)
+        recent = sum(
+            1
+            for row in self.ledger
+            if row.user_id == referrer.id
+            and row.entry_type == "grant"
+            and row.source == REFERRAL_SOURCE
+            and row.created_at >= since
+        )
+        if recent >= REFERRAL_REWARD_CAP_PER_30_DAYS:
+            return None
+        self.grant_credits(
+            referrer.id,
+            REFERRAL_REWARD,
+            REFERRAL_SOURCE,
+            referral_reward_key(friend_id),
+            REFERRAL_REWARD_NOTE,
+        )
+        return referrer.id
+
+    def user_referral_summary(self, user_id: UUID) -> ReferralSummary | None:
+        """``user_referral_summary`` of 0006; assigns a code to a profile without one."""
+        if user_id not in self.profiles:
+            return None
+        return ReferralSummary(
+            code=self.assign_user_referral_code(user_id),
+            friends_joined=sum(1 for p in self.profiles.values() if p.referred_by == user_id),
+            morphs_earned=sum(
+                row.amount
+                for row in self.ledger
+                if row.user_id == user_id
+                and row.entry_type == "grant"
+                and row.source == REFERRAL_SOURCE
+            ),
+        )
+
+    def referral_reward(self, friend_id: UUID) -> ReferralReward | None:
+        row = self._ledger_keys.get(referral_reward_key(friend_id))
+        return reward_from_ledger_record(row.as_record()) if row is not None else None
+
+    def grant_week1_gifts(self) -> list[UUID]:
+        """``grant_week1_gifts()`` of 0006: profiles 7–8 days old with a succeeded job, once."""
+        now = self.now()
+        window = (timedelta(days=WEEK1_GIFT_MIN_DAYS), timedelta(days=WEEK1_GIFT_MAX_DAYS))
+        granted: list[UUID] = []
+        for profile in sorted(self.profiles.values(), key=lambda p: p.created_at):
+            age = now - profile.created_at
+            if (
+                profile.deleted_at is not None
+                or profile.id not in self.accounts
+                or not window[0] <= age < window[1]
+                or week1_gift_key(profile.id) in self._ledger_keys
+                or not any(
+                    j.user_id == profile.id and j.status == "succeeded" for j in self.jobs.values()
+                )
+            ):
+                continue
+            self.grant_credits(
+                profile.id,
+                WEEK1_GIFT_CREDITS,
+                WEEK1_GIFT_SOURCE,
+                week1_gift_key(profile.id),
+                WEEK1_GIFT_NOTE,
+            )
+            granted.append(profile.id)
+        return granted
+
+    def apply_purchase_refund(
+        self, provider: str, order_id: str, reason: str | None
+    ) -> RefundOutcome:
+        """``apply_purchase_refund`` of 0006, rule for rule: min(purchase credits, available)
+        leaves the balance, the pending commission is voided, a refunded subscription
+        period ends now, and a replay answers with the recorded outcome."""
+        if provider not in ("lemonsqueezy", "paddle"):
+            raise _invalid_argument("p_provider must be lemonsqueezy or paddle")
+        if not order_id:
+            raise _invalid_argument("p_order_id is required")
+        purchase = self.find_purchase(provider, order_id)  # type: ignore[arg-type]
+        if purchase is None:
+            raise _not_found(f"purchase {provider}:{order_id}")
+        account = self._lock_account(purchase.user_id)
+        existing = self.purchase_refunds.get(purchase.id)
+        if existing is not None:
+            return RefundOutcome(
+                credits_removed=existing.credits_removed,
+                commission_voided=existing.commission_voided,
+            )
+        remove = min(purchase.credits, max(account.balance - account.reserved, 0))
+        if remove > 0:
+            self.adjust_credits(
+                purchase.user_id,
+                -remove,
+                f"{provider}:order:{order_id}",
+                f"refund:{provider}:{order_id}",
+                "Refunded at the provider" + (f": {reason}" if reason else ""),
+            )
+        commission = self.commissions.get(purchase.id)
+        voided = commission is not None and commission.status == "pending"
+        if commission is not None and voided:
+            commission.status = "void"
+        plan = self.plans.get(purchase.plan_id) if purchase.plan_id else None
+        if plan is not None and plan.interval is not None:
+            now = self.now()
+            for subscription in self.subscriptions.values():
+                if (
+                    subscription.user_id == purchase.user_id
+                    and subscription.provider == provider
+                    and subscription.plan_id in (purchase.plan_id, None)
+                    and subscription.status in OPEN_SUBSCRIPTION_STATUSES
+                ):
+                    subscription.status = "cancelled"
+                    subscription.cancelled_at = subscription.cancelled_at or now
+                    subscription.current_period_end = min(
+                        subscription.current_period_end or now, now
+                    )
+        self.purchase_refunds[purchase.id] = PurchaseRefundRow(
+            purchase_id=purchase.id,
+            user_id=purchase.user_id,
+            provider=provider,
+            provider_order_id=order_id,
+            credits_removed=remove,
+            commission_voided=voided,
+            reason=reason,
+            created_at=self.now(),
+        )
+        self.profiles[purchase.user_id].plan = self._plan_after_refund(purchase.user_id)
+        return RefundOutcome(credits_removed=remove, commission_voided=voided)
+
+    def _plan_after_refund(self, user_id: UUID) -> PlanKind:
+        """A subscription still running (a cancelled one until its period ends, §13),
+        else a pack that was not refunded, else free."""
+        now = self.now()
+        for subscription in self.subscriptions.values():
+            if subscription.user_id != user_id:
+                continue
+            if subscription.status in OPEN_SUBSCRIPTION_STATUSES or (
+                subscription.status == "cancelled"
+                and subscription.current_period_end is not None
+                and subscription.current_period_end > now
+            ):
+                return "subscription"
+        for purchase in self.purchases.values():
+            plan = self.plans.get(purchase.plan_id) if purchase.plan_id else None
+            if (
+                purchase.user_id == user_id
+                and plan is not None
+                and plan.interval is None
+                and plan.credits > 0
+                and purchase.id not in self.purchase_refunds
+            ):
+                return "credits"
+        return "free"
+
+    def support_overview(
+        self, *, user_id: UUID | None = None, email: str | None = None
+    ) -> SupportUserOverview | None:
+        """The ``support_user_overview`` row (0006) for a user id or an email address."""
+        if user_id is not None:
+            profile = self.profiles.get(user_id)
+        elif email:
+            profile = self.find_profile_by_email(email)
+        else:
+            profile = None
+        if profile is None:
+            return None
+        account = self.accounts.get(profile.id)
+        succeeded = [
+            j for j in self.jobs.values() if j.user_id == profile.id and j.status == "succeeded"
+        ]
+        feedback = [f for f in self.job_feedback.values() if f.user_id == profile.id]
+        answers = sorted(
+            (n for n in self.nps_responses if n.user_id == profile.id), key=lambda n: n.created_at
+        )
+        return SupportUserOverview(
+            user_id=profile.id,
+            email=profile.email,
+            plan=profile.plan,
+            created_at=profile.created_at,
+            deleted_at=profile.deleted_at,
+            balance=account.balance if account is not None else 0,
+            reserved=account.reserved if account is not None else 0,
+            morphs_total=len(succeeded),
+            last_morph_at=max((j.finished_at for j in succeeded if j.finished_at), default=None),
+            purchases=sum(1 for p in self.purchases.values() if p.user_id == profile.id),
+            refunds=sum(1 for r in self.purchase_refunds.values() if r.user_id == profile.id),
+            api_keys=sum(
+                1
+                for k in self.api_keys.values()
+                if k.user_id == profile.id and k.revoked_at is None
+            ),
+            nps_score=answers[-1].score if answers else None,
+            feedback_up=sum(1 for f in feedback if f.rating == "up"),
+            feedback_down=sum(1 for f in feedback if f.rating == "down"),
+            feedback_refunds=sum(1 for f in feedback if f.refunded),
+            referral_code=self.user_referral_code_of(profile.id),
+            referred_by=profile.referred_by,
+            friends_joined=sum(1 for p in self.profiles.values() if p.referred_by == profile.id),
+        )
+
     # --- API keys (§11) -------------------------------------------------------------------------
 
     def create_api_key(self, user_id: UUID, name: str | None) -> tuple[ApiKeyRow, str]:
@@ -1987,6 +2296,11 @@ class MemoryPurchasesService:
     ) -> PurchaseRecord | None:
         return self._store.find_purchase(provider, provider_order_id)
 
+    async def apply_refund(
+        self, provider: PurchaseProvider, provider_order_id: str, reason: str | None
+    ) -> RefundOutcome:
+        return self._store.apply_purchase_refund(provider, provider_order_id, reason)
+
 
 class MemoryQualityService:
     def __init__(self, store: MemoryStore) -> None:
@@ -2018,6 +2332,30 @@ class MemoryQualityService:
 
     async def status_last_24h(self) -> Last24hStats:
         return self._store.status_last_24h()
+
+
+class MemoryRewardsService:
+    def __init__(self, store: MemoryStore) -> None:
+        self._store = store
+
+    async def referral_summary(self, user_id: UUID) -> ReferralSummary | None:
+        return self._store.user_referral_summary(user_id)
+
+    async def referral_reward(self, friend_user_id: UUID) -> ReferralReward | None:
+        return self._store.referral_reward(friend_user_id)
+
+    async def grant_week1_gifts(self) -> list[UUID]:
+        return self._store.grant_week1_gifts()
+
+
+class MemorySupportService:
+    def __init__(self, store: MemoryStore) -> None:
+        self._store = store
+
+    async def overview(
+        self, *, user_id: UUID | None = None, email: str | None = None
+    ) -> SupportUserOverview | None:
+        return self._store.support_overview(user_id=user_id, email=email)
 
 
 class MemoryPlansService:
@@ -2059,13 +2397,16 @@ __all__ = [
     "MemoryPlansService",
     "MemoryPurchasesService",
     "MemoryQualityService",
+    "MemoryRewardsService",
     "MemoryStorageService",
     "MemoryStore",
+    "MemorySupportService",
     "MemoryUsersService",
     "MemoryWebhookEventsService",
     "NpsRow",
     "PluginInstallRow",
     "ProfileRow",
+    "PurchaseRefundRow",
     "ReferralCodeRow",
     "SentMail",
     "WebhookEventRow",

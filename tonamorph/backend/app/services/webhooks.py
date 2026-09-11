@@ -8,10 +8,22 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from app.errors import INTERNAL_ERROR, ApiException
 from app.services.supabase import SupabaseClient
 
 PurchaseProvider = Literal["lemonsqueezy", "paddle"]
 SubscriptionStatus = Literal["trialing", "active", "past_due", "paused", "cancelled", "expired"]
+OPEN_SUBSCRIPTION_STATUSES: frozenset[str] = frozenset({"trialing", "active", "past_due", "paused"})
+"""Statuses of a subscription that is still running (a refund of its period ends it)."""
+
+
+class RefundOutcome(BaseModel):
+    """What ``apply_purchase_refund`` did (§4): the credits taken back — the purchase's
+    credits capped at the balance that was still available — and whether a pending
+    affiliate commission was voided."""
+
+    credits_removed: int
+    commission_voided: bool
 
 
 class PurchaseRecord(BaseModel):
@@ -83,6 +95,14 @@ class PurchasesService(Protocol):
         self, provider: PurchaseProvider, provider_order_id: str
     ) -> PurchaseRecord | None:
         """The sale a provider refund or chargeback names (§4 ``Refund Issued``)."""
+        ...
+
+    async def apply_refund(
+        self, provider: PurchaseProvider, provider_order_id: str, reason: str | None
+    ) -> RefundOutcome:
+        """``apply_purchase_refund`` (§4): take back the purchase's unspent credits, void
+        its pending commission, end a refunded subscription; idempotent per purchase.
+        ``ApiException(NOT_FOUND)`` when no purchase was recorded under that order."""
         ...
 
 
@@ -224,11 +244,24 @@ class SupabasePurchasesService:
         )
         return PurchaseRecord.model_validate(rows[0]) if rows else None
 
+    async def apply_refund(
+        self, provider: PurchaseProvider, provider_order_id: str, reason: str | None
+    ) -> RefundOutcome:
+        rows = await self._client.rpc(
+            "apply_purchase_refund",
+            {"p_provider": provider, "p_order_id": provider_order_id, "p_reason": reason},
+        )
+        if not isinstance(rows, list) or not rows:
+            raise ApiException(INTERNAL_ERROR, message="Database returned no refund outcome.")
+        return RefundOutcome.model_validate(rows[0])
+
 
 __all__ = [
+    "OPEN_SUBSCRIPTION_STATUSES",
     "PurchaseProvider",
     "PurchaseRecord",
     "PurchasesService",
+    "RefundOutcome",
     "SubscriptionRecord",
     "SubscriptionStatus",
     "SupabasePurchasesService",

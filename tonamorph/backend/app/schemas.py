@@ -135,19 +135,33 @@ class Balance(CreditBalance):
     subscription_renews_at: datetime | None = None
 
 
+class ReferralInfo(ContractModel):
+    """The caller's own referral code (§1, §3 — "send a morph to a friend"): ``url`` is
+    the page a friend lands on, ``friends_joined`` how many signed up with the code and
+    ``morphs_earned`` the credits it has earned so far."""
+
+    code: str
+    url: str
+    friends_joined: int = Field(ge=0)
+    morphs_earned: int = Field(ge=0)
+
+
 class MeResponse(ContractModel):
     user: MeUser
     balance: Balance
+    referral: ReferralInfo | None = None
 
 
 class Profile(MeUser):
     """A ``profiles`` row as the services return it: the §1 user plus the deletion
     tombstone (`deleted_at`), which no response carries — a tombstoned profile is
-    refused at authentication (§1 account deletion) — and ``first_seen_at``, stamped
-    once when the API first meets the account (the ``Signed Up`` event, §14)."""
+    refused at authentication (§1 account deletion) — ``first_seen_at``, stamped once
+    when the API first meets the account (the ``Signed Up`` event, §14), and
+    ``referred_by``, the friend whose code the sign-up used (§3)."""
 
     deleted_at: datetime | None = None
     first_seen_at: datetime | None = None
+    referred_by: UUID | None = None
 
 
 class DeleteAccountRequest(ContractModel):
@@ -634,3 +648,39 @@ class CrashReport(ContractModel):
 
 class TelemetryAck(ContractModel):
     status: Literal["accepted"] = "accepted"
+
+
+# --- §15 Admin ------------------------------------------------------------------------------
+
+
+class SupportUserOverview(ContractModel):
+    """One row of the ``support_user_overview`` view (§6, §15)."""
+
+    user_id: UUID
+    email: str | None = None
+    plan: PlanKind
+    created_at: datetime
+    deleted_at: datetime | None = None
+    balance: int = Field(ge=0)
+    reserved: int = Field(ge=0)
+    morphs_total: int = Field(ge=0)
+    last_morph_at: datetime | None = None
+    purchases: int = Field(ge=0)
+    refunds: int = Field(ge=0)
+    api_keys: int = Field(ge=0)
+    nps_score: int | None = Field(default=None, ge=0, le=10)
+    feedback_up: int = Field(ge=0)
+    feedback_down: int = Field(ge=0)
+    feedback_refunds: int = Field(ge=0)
+    referral_code: str | None = None
+    referred_by: UUID | None = None
+    friends_joined: int = Field(ge=0)
+
+
+class AdminUserResponse(ContractModel):
+    """``GET /v1/admin/users/{subject}``: the overview plus the last 20 jobs (object URLs
+    blanked, as in the account export) and the last 20 ledger entries, newest first."""
+
+    user: SupportUserOverview
+    jobs: list[JobStatus]
+    ledger: list[LedgerEntry]

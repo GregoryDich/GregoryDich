@@ -125,6 +125,11 @@ class Settings(BaseSettings):
     """Klaviyo private API key. Empty disables event emission entirely; never logged."""
     klaviyo_timeout_seconds: float = Field(default=5.0, gt=0)
 
+    # Support (§15): the founder's read-only lookup exists only while this is set.
+    admin_api_key: SecretStr = SecretStr("")
+    """Key for ``GET /v1/admin/users/{id_or_email}`` (header ``X-Admin-Key``). Empty
+    makes the route answer 404; compared in constant time; never logged."""
+
     # Plugin release channel published by ``GET /v1/version`` (§14).
     plugin_latest_version: str = Field(default="0.1.0", pattern=PLUGIN_VERSION_PATTERN)
     plugin_min_supported_version: str = Field(default="0.1.0", pattern=PLUGIN_VERSION_PATTERN)

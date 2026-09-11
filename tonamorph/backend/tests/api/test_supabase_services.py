@@ -19,7 +19,9 @@ from app.services.events import JobEventBus
 from app.services.jobs import SERVER_IDEMPOTENCY_PREFIX, SupabaseJobsService
 from app.services.plans import SupabasePlansService, build_checkout_url
 from app.services.quality import SupabaseQualityService
+from app.services.rewards import SupabaseRewardsService
 from app.services.supabase import SupabaseClient, rpc_is_retryable
+from app.services.support import SupabaseSupportService
 from app.services.users import SupabaseUsersService
 from app.services.webhooks import SupabasePurchasesService, SupabaseWebhookEventsService
 
@@ -580,4 +582,89 @@ async def test_find_purchase_selects_by_provider_order(supabase: SupabaseClient)
     assert found is not None and found.user_id == user
     params = route.calls.last.request.url.params
     assert params["provider"] == "eq.paddle" and params["provider_order_id"] == "eq.txn_1"
+    await supabase.aclose()
+
+
+@respx.mock
+async def test_refund_referral_gift_and_support_calls(supabase: SupabaseClient) -> None:
+    """0006: the refund, referral summary, gift and support-view calls, by name."""
+    user, friend = uuid4(), uuid4()
+    stamp = "2026-09-11T12:00:00Z"
+
+    refund = rpc("apply_purchase_refund", [{"credits_removed": 50, "commission_voided": True}])
+    outcome = await SupabasePurchasesService(supabase).apply_refund("paddle", "txn_1", "chargeback")
+    assert outcome.credits_removed == 50 and outcome.commission_voided is True
+    assert sent(refund) == {"p_provider": "paddle", "p_order_id": "txn_1", "p_reason": "chargeback"}
+
+    rewards = SupabaseRewardsService(supabase)
+    summary = rpc(
+        "user_referral_summary", [{"code": "AB23CDEF", "friends_joined": 2, "morphs_earned": 3}]
+    )
+    got = await rewards.referral_summary(user)
+    assert got is not None and got.code == "AB23CDEF" and got.morphs_earned == 3
+    assert sent(summary) == {"p_user_id": str(user)}
+    rpc("user_referral_summary", [])
+    assert await rewards.referral_summary(user) is None
+
+    reward_row = respx.get(f"{BASE}/rest/v1/credit_ledger").mock(
+        return_value=httpx.Response(
+            200,
+            json=[
+                {
+                    "user_id": str(user),
+                    "amount": 3,
+                    "idempotency_key": f"referral:{friend}",
+                    "created_at": stamp,
+                }
+            ],
+        )
+    )
+    reward = await rewards.referral_reward(friend)
+    assert reward is not None and reward.referrer_id == user and reward.friend_id == friend
+    assert reward.credits == 3
+    params = reward_row.calls.last.request.url.params
+    assert params["idempotency_key"] == f"eq.referral:{friend}" and params["limit"] == "1"
+    assert params["select"] == "user_id,amount,idempotency_key,created_at"
+    reward_row.mock(return_value=httpx.Response(200, json=[]))
+    assert await rewards.referral_reward(friend) is None
+
+    gifts = rpc("grant_week1_gifts", [{"user_id": str(user)}, {"user_id": str(friend)}])
+    assert await rewards.grant_week1_gifts() == [user, friend]
+    assert sent(gifts) == {}
+
+    overview = {
+        "user_id": str(user),
+        "email": "a@b.c",
+        "plan": "credits",
+        "created_at": stamp,
+        "deleted_at": None,
+        "balance": 29,
+        "reserved": 0,
+        "morphs_total": 25,
+        "last_morph_at": stamp,
+        "purchases": 1,
+        "refunds": 0,
+        "api_keys": 1,
+        "nps_score": 8,
+        "feedback_up": 1,
+        "feedback_down": 1,
+        "feedback_refunds": 1,
+        "referral_code": "AB23CDEF",
+        "referred_by": None,
+        "friends_joined": 1,
+    }
+    view = respx.get(f"{BASE}/rest/v1/support_user_overview").mock(
+        return_value=httpx.Response(200, json=[overview])
+    )
+    support = SupabaseSupportService(supabase)
+    by_id = await support.overview(user_id=user)
+    assert by_id is not None and by_id.balance == 29 and by_id.nps_score == 8
+    assert view.calls.last.request.url.params["user_id"] == f"eq.{user}"
+    by_email = await support.overview(email="  A@B.c ")
+    assert by_email is not None and by_email.user_id == user
+    assert view.calls.last.request.url.params["email"] == "eq.a@b.c"
+    assert await support.overview() is None and view.call_count == 2
+
+    for name in ("apply_purchase_refund", "grant_week1_gifts", "user_referral_summary"):
+        assert rpc_is_retryable(name, {})
     await supabase.aclose()

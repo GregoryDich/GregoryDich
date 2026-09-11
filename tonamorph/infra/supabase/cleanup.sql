@@ -19,7 +19,8 @@ from cron.job
 where jobname in (
     'tonamorph_expire_credits',
     'tonamorph_reap_stale_jobs',
-    'tonamorph_purge_expired_jobs'
+    'tonamorph_purge_expired_jobs',
+    'tonamorph_week1_gifts'
 );
 
 -- Credit grants past their expires_at become ledger `expire` entries.
@@ -54,4 +55,14 @@ select cron.schedule(
     where j.expires_at < now()
       and j.status in ('succeeded', 'failed', 'cancelled');
     $$
+);
+
+-- First-week gift (GTM plan §2.4): two credits for accounts created 7–8 days ago
+-- with at least one succeeded job, once per account. The API reaper grants the
+-- same gifts and emits the Klaviyo event; this job is the fallback when no
+-- reaper runs (migration 0006, `grant_week1_gifts`).
+select cron.schedule(
+    'tonamorph_week1_gifts',
+    '23 * * * *',
+    $$select count(*) from public.grant_week1_gifts();$$
 );

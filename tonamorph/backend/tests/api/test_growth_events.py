@@ -480,12 +480,17 @@ async def test_refund_issued_is_attributed_through_the_purchase(
 
     refunds = by_metric(events_route, "Refund Issued")
     assert len(refunds) == 1
-    assert refunds[0]["properties"] == {"amount_usd": 9.0, "reason": "requested_by_customer"}
+    assert refunds[0]["properties"] == {
+        "amount_usd": 9.0,
+        "reason": "requested_by_customer",
+        "credits_removed": 50,
+        "commission_voided": False,
+    }
     assert refunds[0]["unique_id"] == "refund_issued:paddle:adjustment:adj_1"
     assert refunds[0]["profile"]["external_id"] == str(user)
     assert refunds[0]["profile"]["email"] == USER_EMAIL
-    # The money moved at the provider; the credits did not move here.
-    assert store.get_balance(user).credits == 53
+    # The money moved at the provider; the pack's unspent credits moved here (§4).
+    assert store.get_balance(user).credits == 3
 
 
 @respx.mock
@@ -534,4 +539,96 @@ def test_disabled_emitter_costs_nothing(store: MemoryStore, services: Services) 
     store.ensure_user(user, "a@b.c")
     services.growth.credits_refused(user, "a@b.c")
     services.growth.nps_submitted(user, "a@b.c", score=1, comment=None, response_id=uuid4())
+    services.growth.gift_granted(user)
     assert services.klaviyo.pending == 0
+
+
+@respx.mock
+async def test_referral_joined_and_rewarded_reach_the_referrer(
+    live: tuple[httpx.AsyncClient, Services],
+    events_route: respx.Route,
+    mint_jwt: Callable[..., str],
+    make_wav: Callable[..., bytes],
+) -> None:
+    """§3: ``Referral Joined`` when the friend is first seen, ``Referral Rewarded`` when
+    the friend's first morph succeeds — both to the referrer, both exactly once."""
+    client, services = live
+    store = services.memory
+    assert store is not None
+    referrer = uuid4()
+    referrer_auth = {"Authorization": f"Bearer {mint_jwt(str(referrer), email=USER_EMAIL)}"}
+    me = (await client.get("/v1/me", headers=referrer_auth)).json()
+    code = me["referral"]["code"]
+    store.gotrue.autoconfirm = True
+    session = store.gotrue.signup(
+        "friend@example.test", "hunter22", redirect_to="x", data={"referral_code": code}
+    )
+    friend = session["user"]["id"]
+    friend_auth = {"Authorization": f"Bearer {session['access_token']}"}
+    for _ in range(2):
+        assert (await client.get("/v1/me", headers=friend_auth)).status_code == 200
+    await services.klaviyo.flush()
+
+    joined = by_metric(events_route, "Referral Joined")
+    assert len(joined) == 1
+    assert joined[0]["properties"] == {
+        "friend_user_id": friend,
+        "source": "web",
+        "bonus_credits": 2,
+    }
+    assert joined[0]["unique_id"] == f"referral_joined:{friend}"
+    assert joined[0]["profile"]["external_id"] == str(referrer)
+    assert joined[0]["profile"]["email"] == USER_EMAIL
+    signed = by_metric(events_route, "Signed Up")
+    assert [e["profile"]["external_id"] for e in signed] == [str(referrer), friend]
+    assert not by_metric(events_route, "Referral Rewarded")
+
+    finished = await finish_job(client, friend_auth, make_wav(seconds=3.0))
+    assert finished["status"] == "succeeded"
+    # A replay of the first completion reaches the hook too and must not count twice.
+    row = store.jobs[UUID(finished["job_id"])]
+    await services.jobs.complete(row.id, JobResult.model_validate(row.result))
+    await services.klaviyo.flush()
+
+    rewarded = by_metric(events_route, "Referral Rewarded")
+    assert len(rewarded) == 2 and len({e["unique_id"] for e in rewarded}) == 1
+    assert rewarded[0]["properties"] == {"friend_user_id": friend, "credits": 3}
+    assert rewarded[0]["unique_id"] == f"referral_rewarded:{friend}"
+    assert rewarded[0]["profile"]["external_id"] == str(referrer)
+    assert rewarded[0]["profile"]["email"] == USER_EMAIL
+    assert store.get_balance(referrer).credits == 6
+
+    # The friend's second morph is not a first one: nothing more.
+    finished = await finish_job(client, friend_auth, make_wav(seconds=3.0))
+    assert finished["status"] == "succeeded"
+    await services.klaviyo.flush()
+    assert len(by_metric(events_route, "Referral Rewarded")) == 2
+
+
+@respx.mock
+async def test_gift_granted_leaves_from_the_reaper_tick(
+    live: tuple[httpx.AsyncClient, Services],
+    events_route: respx.Route,
+    mint_jwt: Callable[..., str],
+    make_wav: Callable[..., bytes],
+) -> None:
+    from app.services.aws import reaper
+
+    client, services = live
+    store = services.memory
+    assert store is not None
+    user = uuid4()
+    auth = {"Authorization": f"Bearer {mint_jwt(str(user), email=USER_EMAIL)}"}
+    assert (await finish_job(client, auth, make_wav(seconds=3.0)))["status"] == "succeeded"
+    store.profiles[user].created_at -= timedelta(days=7, hours=12)
+
+    assert await reaper.run_once(services, 180) == (0, 1)
+    assert await reaper.run_once(services, 180) == (0, 0)
+    await services.klaviyo.flush()
+    gifts = by_metric(events_route, "Gift Granted")
+    assert len(gifts) == 1
+    assert gifts[0]["properties"] == {"gift": "week1", "credits": 2}
+    assert gifts[0]["unique_id"] == f"gift_granted:week1:{user}"
+    assert gifts[0]["profile"]["external_id"] == str(user)
+    assert gifts[0]["profile"]["email"] == USER_EMAIL
+    assert (await client.get("/v1/me", headers=auth)).json()["balance"]["credits"] == 4

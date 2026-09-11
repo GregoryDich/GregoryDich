@@ -19,11 +19,14 @@ from uuid import UUID
 from app.schemas import JobStatus, PlanKind
 from app.services.klaviyo import (
     CREDITS_EXHAUSTED,
+    GIFT_GRANTED,
     MORPH_COMPLETED,
     MORPH_FAILED,
     NPS_SUBMITTED,
     PLUGIN_INSTALLED,
     PURCHASE_COMPLETED,
+    REFERRAL_JOINED,
+    REFERRAL_REWARDED,
     REFUND_ISSUED,
     SIGNED_UP,
     SUBSCRIPTION_CANCELLED,
@@ -33,6 +36,7 @@ from app.services.klaviyo import (
 )
 from app.services.plans import PlanRecord, PlansService, build_checkout_url
 from app.services.quality import QualityService, UserFacts, latency_ms
+from app.services.rewards import REFERRAL_FRIEND_BONUS, WEEK1_GIFT_CREDITS, RewardsService
 
 log = logging.getLogger("tonamorph.growth")
 
@@ -60,6 +64,9 @@ class SignupFacts:
     referral_code: str | None
     marketing_opt_in: bool
     utm: Mapping[str, str | None]
+    referred_by: UUID | None = None
+    """The friend whose user code the sign-up used (§3); the ``Referral Joined`` event
+    goes to them."""
 
     @classmethod
     def from_record(cls, record: Mapping[str, Any]) -> SignupFacts:
@@ -68,6 +75,7 @@ class SignupFacts:
             created = datetime.fromisoformat(created.replace("Z", "+00:00"))
         if not isinstance(created, datetime):
             created = datetime.now(UTC)
+        referred_by = record.get("referred_by")
         return cls(
             user_id=UUID(str(record["id"])),
             email=record.get("email") or None,
@@ -76,6 +84,7 @@ class SignupFacts:
             referral_code=record.get("referral_code"),
             marketing_opt_in=bool(record.get("marketing_opt_in")),
             utm={key: record.get(key) for key in UTM_FIELDS},
+            referred_by=UUID(str(referred_by)) if referred_by else None,
         )
 
 
@@ -93,11 +102,17 @@ def exhausted_unique_id(user_id: UUID, moment: datetime | None = None) -> str:
 
 class GrowthHooks:
     def __init__(
-        self, events: KlaviyoEvents, *, plans: PlansService, quality: QualityService
+        self,
+        events: KlaviyoEvents,
+        *,
+        plans: PlansService,
+        quality: QualityService,
+        rewards: RewardsService | None = None,
     ) -> None:
         self._events = events
         self._plans = plans
         self._quality = quality
+        self._rewards = rewards
 
     @property
     def enabled(self) -> bool:
@@ -190,6 +205,19 @@ class GrowthHooks:
             unique_id=f"signed_up:{facts.user_id}",
             profile_properties=profile,
         )
+        if facts.referred_by is not None:
+            # To the friend who invited them: exactly once, on the same stamp.
+            self._emit(
+                REFERRAL_JOINED,
+                facts.referred_by,
+                None,
+                {
+                    "friend_user_id": str(facts.user_id),
+                    "source": source,
+                    "bonus_credits": REFERRAL_FRIEND_BONUS,
+                },
+                unique_id=f"referral_joined:{facts.user_id}",
+            )
 
     def plugin_installed(
         self,
@@ -253,6 +281,8 @@ class GrowthHooks:
             )
             if result.balance_after == 0:
                 await self._credits_exhausted(user_id, email, facts, status.finished_at)
+            if morphs_total == 1:
+                await self._referral_rewarded(user_id)
             return
         error = status.error
         await self._events.send(
@@ -298,6 +328,33 @@ class GrowthHooks:
                 unique_id=exhausted_unique_id(user_id, moment),
                 profile_properties={"plan": plan, "credits_available": 0},
                 time=moment,
+            )
+        )
+
+    async def _referral_rewarded(self, friend_id: UUID) -> None:
+        """``Referral Rewarded`` to the referrer once the friend's first morph succeeded
+        and ``complete_job`` granted the reward (§3). Read after the fact, so a replay of
+        that first completion finds the same row and Klaviyo deduplicates it."""
+        if self._rewards is None:
+            return
+        try:
+            reward = await self._rewards.referral_reward(friend_id)
+        except Exception:
+            log.warning(
+                "referral reward unavailable for an event", extra={"user_id": str(friend_id)}
+            )
+            return
+        if reward is None:
+            return
+        facts = await self._facts(reward.referrer_id)
+        await self._events.send(
+            Event(
+                REFERRAL_REWARDED,
+                reward.referrer_id,
+                facts.email if facts is not None else None,
+                {"friend_user_id": str(friend_id), "credits": reward.credits},
+                unique_id=f"referral_rewarded:{friend_id}",
+                time=reward.created_at,
             )
         )
 
@@ -355,14 +412,33 @@ class GrowthHooks:
         amount_usd: float,
         reason: str | None,
         unique_id: str,
+        credits_removed: int = 0,
+        commission_voided: bool = False,
     ) -> None:
-        """``Refund Issued`` for a provider refund or chargeback (money, not credits)."""
+        """``Refund Issued`` for a provider refund or chargeback: the money, and what
+        ``apply_purchase_refund`` took back for it (§4)."""
         self._emit(
             REFUND_ISSUED,
             user_id,
             email,
-            {"amount_usd": amount_usd, "reason": reason},
+            {
+                "amount_usd": amount_usd,
+                "reason": reason,
+                "credits_removed": credits_removed,
+                "commission_voided": commission_voided,
+            },
             unique_id=unique_id,
+        )
+
+    def gift_granted(self, user_id: UUID) -> None:
+        """``Gift Granted``: the first-week gift landed (``grant_week1_gifts``, §3), so the
+        plugin banner and the email can say "One week in. Two morphs on us."."""
+        self._emit(
+            GIFT_GRANTED,
+            user_id,
+            None,
+            {"gift": "week1", "credits": WEEK1_GIFT_CREDITS},
+            unique_id=f"gift_granted:week1:{user_id}",
         )
 
     def nps_submitted(

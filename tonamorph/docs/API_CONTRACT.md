@@ -21,6 +21,14 @@ Appendix C §3–6): result feedback with the bounded automatic refund
 `GET /v1/status`, `GET /v1/version`, `POST /v1/telemetry/crash` and the growth events the
 backend emits to Klaviyo. Migration `0005_quality_loops.sql` carries the tables (§6).
 
+Added for the P1 rows of the go-to-market plan (`docs/GTM_PLAN.md` §2.4, §4; Appendix B
+§3, §6): provider refunds now move credits (§4); user referrals — "send a morph to a
+friend", a programme distinct from the affiliates of §12 — with `referral` on
+`GET /v1/me` (§1, §3); the first-week gift (§3); the `Referral Joined`,
+`Referral Rewarded` and `Gift Granted` events (§14); and a new §15 — the founder's
+read-only support lookup. Migration `0006_referrals_and_refunds.sql` carries the tables,
+functions and the `support_user_overview` view (§6).
+
 Base URL: `https://api.tonamorph.com` (the plugin's default; overridable at runtime with
 `tonamorph::cloud::ApiClient::setBaseUrl()`, which sets `ApiClient::Config::baseUrl`).
 All routes are versioned under `/v1`. All request/response bodies are JSON
@@ -166,9 +174,15 @@ GoTrue silently redirects to its own site URL instead.
 { "user": { "id": "<uuid>", "email": "a@b.c", "plan": "free|credits|subscription",
             "marketing_opt_in": false, "referral_code": "GREG30" },
   "balance": { "credits": 42, "reserved": 1, "available": 41,
-               "subscription_renews_at": "2026-10-01T00:00:00Z" } }
+               "subscription_renews_at": "2026-10-01T00:00:00Z" },
+  "referral": { "code": "AB23CDEF", "url": "https://tonamorph.com/m/AB23CDEF",
+                "friends_joined": 2, "morphs_earned": 6 } }
 ```
-`available = credits - reserved`. The plugin displays `available`.
+`available = credits - reserved`. The plugin displays `available`. `referral` is the
+caller's own code for "send a morph to a friend" (§3): `url` = `<AUTH_SITE_URL>/m/<code>`
+is what the share button hands out, `friends_joined` counts the accounts that signed up
+with the code and `morphs_earned` the credits it has earned so far. Every account has
+one; the block is `null` only for a profile row that no longer exists.
 
 Optional request headers, sent by the plugin and ignored on every other route:
 
@@ -192,7 +206,10 @@ through supabase-js with `options.data`, which GoTrue stores as
 `marketing_opt_in` (boolean, default `false`) and `terms_accepted_at` (timestamp, `null`
 when absent or unparsable) into `profiles`. `referral_code` is kept only when it names an
 **active** `referral_codes` row at sign-up time, spelled as that row spells it, and is
-`null` otherwise — an unknown code never fails a sign-up. The welcome grant is unchanged.
+`null` otherwise — an unknown code never fails a sign-up. A `referral_code` that names no
+affiliate code but another user's own code (§3) is not kept here either: that sign-up is
+linked to the friend (`profiles.referred_by`) and gets the friend bonus instead. The
+welcome grant is unchanged.
 The UTM fields and `terms_accepted_at` are not in this response; the export below carries
 them. Accounts created any other way (an API-first JWT, a sign-up without metadata) have
 `marketing_opt_in: false` and `referral_code: null`.
@@ -448,9 +465,12 @@ Counts against the reads budget (§5).
                  "source": "lemonsqueezy:order:123", "note": "Credit pack 50" } ],
   "next_cursor": null }
 ```
-`source` names what moved the credits: `signup`, `job:<job_id>`, `<provider>:order:<id>`,
-`support` for manual adjustments, and `account_deletion` for the single `adjust` entry
-that writes the unused balance off when the account is deleted (§1).
+`source` names what moved the credits: `signup`, `job:<job_id>`, `<provider>:order:<id>`
+(the grant of a purchase, and the negative `adjust` entry a provider refund of it writes,
+§4), `referral_bonus` and `referral` (the two sides of a referral, below), `gift:week1`
+(the first-week gift, below), `support` for manual adjustments, and `account_deletion`
+for the single `adjust` entry that writes the unused balance off when the account is
+deleted (§1).
 
 ### `GET /v1/plans?ref=<code>`   (public, `user_id` attached when called with auth)
 ```json
@@ -472,6 +492,35 @@ under `ENV=production`), and `python -m app.checks` prints the same list and exi
 non-zero, so a deployment can gate on it before a user meets a paywall with no buttons. New accounts are granted
 **3 credits** at signup.
 
+### Earned morphs: referrals and the first-week gift
+Two ways to earn credits without paying (`docs/GTM_PLAN.md` §2.4, Appendix B §3), both
+decided in the database (§6, `0006_referrals_and_refunds.sql`) so every backend and every
+replay agree:
+
+* **"Send a morph to a friend."** Every account owns an 8-character code (letters and
+  digits without `0/O` and `1/I/L`; case-insensitive on input) and shares
+  `<AUTH_SITE_URL>/m/<code>` (§1 `referral`). A sign-up whose `referral_code` metadata
+  names such a code — and no affiliate code, which wins when both match (§12) — is linked
+  to the referrer (`profiles.referred_by`) and granted **2** credits on top of the 3
+  welcome credits (`grant_credits`, source `referral_bonus`, key
+  `referral_bonus:<friend>`). The referrer earns **3** credits when the friend's **first**
+  job succeeds — inside `complete_job`, the one seam the API-inline pipeline, the remote
+  workers and a replay all pass through, never at sign-up (source `referral`, key
+  `referral:<friend>`) — so an account that never morphs earns nobody anything, and at
+  most **10** friends per referrer per 30 days are rewarded (a later friend still gets
+  their own bonus). A deleted referrer earns nothing and their code stops working; a
+  user's own code and an unknown code are ignored. The growth events are `Referral
+  Joined` and `Referral Rewarded` (§14).
+* **First-week gift.** `grant_week1_gifts()` (§6) grants **2** credits, once, to every
+  account created 7–8 days earlier that has at least one succeeded job (source
+  `gift:week1`, key `gift:week1:<user>`); zero-morph and deleted accounts get nothing. It
+  runs hourly from pg_cron (`db/README.md`) and from the API's reaper tick, which also
+  emits `Gift Granted` (§14) so the plugin banner and the email can say "One week in. Two
+  morphs on us."
+
+Neither earned credit expires. Both are ordinary `grant` entries, so a provider refund
+(§4) never touches them: it only takes back what the refunded purchase granted.
+
 ### In-plugin paywall
 When `balance.available` reaches 0 the plugin shows a prompt built from `/v1/plans`:
 "You've used your 3 free credits — unlock 50 more for $9, or subscribe for $7.99/mo",
@@ -488,8 +537,11 @@ The growth engine (see §11) authenticates with an API key and never sees this p
 * Header `X-Signature`: hex HMAC-SHA256 of the raw body with
   `LEMONSQUEEZY_WEBHOOK_SECRET`. Reject with `401` when invalid.
 * Events handled: `order_created` (credit pack), `subscription_created`,
-  `subscription_payment_success`, `subscription_cancelled`, `subscription_expired`, and
-  `order_refunded` (a money refund: emits `Refund Issued`, §14, and moves no credits).
+  `subscription_payment_success`, `subscription_cancelled`, `subscription_expired`,
+  `order_refunded` (a pack's money refund) and `subscription_payment_refunded` (a
+  subscription period's — LemonSqueezy refunds a period on its invoice, which is also the
+  id its purchase was recorded under). A refund applies the rule under "Refunds move
+  credits" below and emits `Refund Issued` (§14).
 * **Exactly one event per sale grants credits and writes the affiliate commission.**
   LemonSqueezy splits a subscription checkout over several events with different
   `data.id`s, so the plan decides which one pays: a one-off pack is paid for by its
@@ -530,17 +582,47 @@ no use for; the API runs with the default `SERVICE_ROLE=api`.
   `chargeback` (any other adjustment is acknowledged `ok` and ignored).
 * Idempotency key = `paddle:<event_type>:<event_id>`.
 
+### Refunds move credits
+An approved provider refund or chargeback — LemonSqueezy `order_refunded` /
+`subscription_payment_refunded`, Paddle `adjustment.created` / `adjustment.updated` with
+`action` `refund` or `chargeback` — is applied with `apply_purchase_refund(provider,
+order_id, reason)` (§6) in one transaction under the account lock:
+
+* **Credits.** The purchase's credits that are still unspent leave the balance as one
+  negative `adjust` ledger entry (source `<provider>:order:<id>`, key
+  `refund:<provider>:<order_id>`, note `Refunded at the provider[: <reason>]`). The
+  amount is **`min(purchase credits, balance − reserved)`**: a credit a job already
+  captured is gone and stays charged, a credit a running job holds reserved stays with
+  that job, and the balance never goes below zero. Nothing else the account holds —
+  welcome, earned or other purchases' credits — is touched, so a pack whose credits were
+  all spent refunds zero credits and only the money moves.
+* **Commission.** A `pending` affiliate commission on the purchase becomes `void` (§12);
+  one already `paid` stays `paid` for the operator to claw back.
+* **Subscription.** A refunded subscription period ends the subscription: `status =
+  cancelled`, `cancelled_at` set, `current_period_end` cut to now, and the profile falls
+  back to `credits` if it still holds an unrefunded pack, else `free`.
+* **Once.** One `purchase_refunds` row per purchase records `credits_removed` and
+  `commission_voided`; a second delivery of the same refund — or a partial refund of a
+  purchase already refunded — answers with that row and moves nothing, however much the
+  balance has changed since.
+
+A refund that names no recorded purchase (a subscription checkout's `order_refunded`
+names the order, while its periods were recorded under their invoices; a refund can also
+overtake the sale it reverses) is acknowledged `ok`, logged at warning level with the
+provider and order id for reconciliation, and moves nothing — the provider must not retry
+it forever. A Paddle adjustment names neither the customer nor the checkout's custom
+data, so its user is resolved through the purchase whose `provider_order_id` is its
+`transaction_id`; when neither that nor an email identifies anyone it is `404 not_found`
+and retried by the provider like any other unattributable event.
+
 ### Growth events from webhooks (§14)
 The paying event of a sale emits `Purchase Completed` (`is_renewal` is LemonSqueezy's
 `billing_reason = renewal` or Paddle's `origin = subscription_recurring`); a
 `subscription_cancelled` / `subscription.canceled` event emits `Subscription Cancelled`;
-a refund or chargeback emits `Refund Issued` with the money amount and the provider's
-reason. A Paddle adjustment names neither the customer nor the checkout's custom data,
-so it is attributed through the purchase whose `provider_order_id` is its
-`transaction_id`; an unknown one is `404 not_found` and retried by the provider like any
-other unattributable event. Refunds never move credits here (that reconciliation is
-manual, GTM plan §4 P1); every event is deduplicated at Klaviyo by the adjustment or order
-it names, so `adjustment.created` and `adjustment.updated` for one refund count once.
+a refund or chargeback emits `Refund Issued` with the money amount, the provider's
+reason and what the rule above took back (`credits_removed`, `commission_voided`). Every
+event is deduplicated at Klaviyo by the adjustment, order or invoice it names, so
+`adjustment.created` and `adjustment.updated` for one refund count once.
 
 ## 5. Errors
 ```json
@@ -642,6 +724,27 @@ that left the balance at zero), `purchases`, `revenue_cents`. `delete_user_accou
 also clears feedback notes and NPS comments and deletes the plugin installs (§1).
 Authenticated users may `select` their own `job_feedback` and `nps_responses` rows;
 `plugin_installs` and `growth_daily` are `service_role` only.
+
+`0006_referrals_and_refunds.sql` (§3 earned morphs, §4 refunds, §15) adds
+`purchase_refunds` (one row per refunded purchase: `credits_removed`,
+`commission_voided`, `reason`), `user_referral_codes(code pk, user_id unique)` — filled
+by a trigger on every new profile and backfilled for existing ones — and
+`profiles.referred_by`, plus, all `SECURITY DEFINER`, `service_role` only:
+`apply_purchase_refund(p_provider text, p_order_id text, p_reason text) →
+table(credits_removed int, commission_voided boolean)` (the §4 rule; `P0404` for an
+unknown purchase, `22023` for a bad provider or empty order id; idempotent),
+`user_referral_summary(p_user_id uuid) → table(code text, friends_joined int,
+morphs_earned int)` (what `GET /v1/me` reports; assigns a code to a profile without one;
+no row for an unknown profile) and `grant_week1_gifts() → table(user_id uuid)` (the
+accounts gifted in this run). `handle_new_user()` now also resolves a user code
+(`referred_by` + the 2-credit bonus) and `complete_job` rewards the referrer on the
+friend's first success through the internal `reward_referral(p_friend_id uuid) → uuid`.
+The view `support_user_overview` (`service_role` only) has one row per profile:
+`user_id`, `email`, `plan`, `created_at`, `deleted_at`, `balance`, `reserved`,
+`morphs_total`, `last_morph_at`, `purchases`, `refunds`, `api_keys` (unrevoked),
+`nps_score` (latest), `feedback_up`, `feedback_down`, `feedback_refunds`,
+`referral_code`, `referred_by`, `friends_joined` — the row `GET /v1/admin/users/…`
+returns (§15). `db/README.md` lists every signature.
 
 Job lifecycle in `jobs.status`: `queued → running → succeeded | failed | cancelled`.
 
@@ -782,6 +885,15 @@ idempotency key so a replayed webhook cannot double-pay. The code is also kept o
 `subscriptions.referral_code`, so a renewal whose `custom_data` no longer carries it is
 still attributed to the affiliate who brought the subscriber in.
 
+Affiliates are one of **two** reward programmes and the only one paid in money. The
+other — user referrals, "send a morph to a friend" (§3) — pays in credits, lives in its
+own tables (`user_referral_codes`, `profiles.referred_by`) and under its own ledger keys
+(`referral_bonus:<friend>`, `referral:<friend>`), and never writes a commission. The
+sign-up metadata field is shared: `referral_code` is resolved as an affiliate code first
+and as a user code second (a generated user code never spells an affiliate code), so an
+affiliate's code always keeps its commission. A provider refund voids the purchase's
+`pending` commission (§4).
+
 ## 13. Policies left open by earlier drafts
 
 * **Affiliate commissions recur.** Every purchase event that reaches `record_purchase`
@@ -881,8 +993,11 @@ each call. Both the API and the GPU worker need the key: `Morph Completed` /
 | `Checkout Started` | the website (`/checkout`); the backend has no trigger of its own, only the metric name (`app.services.klaviyo`) | `plan_id`, `ref` | — |
 | `Purchase Completed` | the paying webhook event of a sale (§4) | `plan_id`, `price_usd`, `credits`, `is_renewal`, `referral_code` | `plan` |
 | `Subscription Cancelled` | a provider cancellation event (§4) | `plan_id`, `period_end` | — |
-| `Refund Issued` | an approved provider refund or chargeback (§4) | `amount_usd`, `reason` | — |
+| `Refund Issued` | an approved provider refund or chargeback (§4) | `amount_usd`, `reason`, `credits_removed`, `commission_voided` | — |
 | `NPS Submitted` | `POST /v1/nps` | `score`, `comment` | `nps_score` |
+| `Referral Joined` | the API first meets an account that signed up with a user code (§3) — sent to the **referrer**, on the same stamp as the friend's `Signed Up`, so exactly once | `friend_user_id`, `source`, `bonus_credits` | — |
+| `Referral Rewarded` | `complete_job` granted the referrer's reward for the friend's first morph (§3) — sent to the **referrer** after `Morph Completed`; a replay of that completion carries the same `unique_id` | `friend_user_id`, `credits` | — |
+| `Gift Granted` | the reaper tick (`python -m app.services.aws.reaper`) ran `grant_week1_gifts()` and this account was gifted (§3) | `gift` (`week1`), `credits` | — |
 
 Klaviyo lists a metric only after its first event, so before flows are built the
 operator runs `python -m app.services.klaviyo seed --email <address>` in `backend/`,
@@ -893,3 +1008,39 @@ which upserts one throwaway profile and sends one sample event per metric.
 minutes with the repository variable `API_URL` (skipped, not failed, while it is unset),
 opens or updates one issue labelled `slo-breach` while the probe fails, and closes it on
 the next healthy probe.
+
+## 15. Admin
+
+### `GET /v1/admin/users/{user_id_or_email}`   (header `X-Admin-Key`)
+The founder's read-only support lookup behind the macros of `docs/GTM_PLAN.md` §2.5. The
+subject is a user id or an email address (matched trimmed and lower-cased, as `profiles`
+stores it). → `200`
+```json
+{ "user": { "user_id": "<uuid>", "email": "a@b.c", "plan": "credits", "created_at": "...",
+            "deleted_at": null, "balance": 29, "reserved": 0, "morphs_total": 25,
+            "last_morph_at": "...", "purchases": 1, "refunds": 0, "api_keys": 1,
+            "nps_score": 8, "feedback_up": 1, "feedback_down": 1, "feedback_refunds": 1,
+            "referral_code": "AB23CDEF", "referred_by": null, "friends_joined": 1 },
+  "jobs": [ <JobStatus, §2>… ],
+  "ledger": [ <LedgerEntry, §3>… ] }
+```
+`user` is the account's row of the `support_user_overview` view (§6): `balance` and
+`reserved` as the account holds them, `morphs_total` and `last_morph_at` over succeeded
+jobs, `purchases` and `refunds` (provider refunds, §4) as counts, `api_keys` the unrevoked
+keys, `nps_score` the latest answer or `null`, the feedback counts by rating and
+`feedback_refunds` the automatic refunds among them (§2), and the referral facts of §3. A
+deleted account keeps its row with `deleted_at` set and the tombstone address. `jobs` and
+`ledger` are the last **20** of each, newest first; every job `result` has its
+`stems[].url` and `midi.url` set to `null`, as in the account export (§1).
+
+Access. The route exists only while the backend setting `ADMIN_API_KEY` is set — without
+it every request answers `404 not_found` before anything is read. With it, one shared
+budget of **30 requests per minute** is spent by every call, right key or wrong, *before*
+the key is compared in constant time: over budget is `429 rate_limited` with
+`Retry-After`; a missing or wrong key `401 unauthorized` (`Invalid admin key.`); an
+unknown subject `404 not_found` (`No account matches.`). Each call leaves one audit line
+(`admin lookup`: whether it was asked by `id` or `email`, the outcome, and the resolved
+user id) and the access log records this route as its template, so an address used as
+the subject is never written to a log. The key is a `SecretStr` and never logged
+(`docs/SECURITY.md` §2.3). Session tokens and API keys are not accepted here, and the
+admin key is accepted nowhere else.

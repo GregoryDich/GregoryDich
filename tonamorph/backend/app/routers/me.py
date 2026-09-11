@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request, Response
 
@@ -20,8 +21,10 @@ from app.schemas import (
     DeleteAccountResponse,
     MeResponse,
     MeUser,
+    ReferralInfo,
 )
 from app.services.factory import Services
+from app.services.rewards import referral_url
 from app.services.users import normalise_email, purge_user_objects
 
 log = logging.getLogger("tonamorph.me")
@@ -95,6 +98,20 @@ async def note_plugin_seen(services: Services, principal: Principal, request: Re
         )
 
 
+async def referral_info(services: Services, user_id: UUID) -> ReferralInfo | None:
+    """The caller's own referral code and what it earned (§1, §3); ``url`` is the page a
+    friend lands on, under the same site the emailed links use."""
+    summary = await services.rewards.referral_summary(user_id)
+    if summary is None:
+        return None
+    return ReferralInfo(
+        code=summary.code,
+        url=referral_url(services.settings.auth_site_url, summary.code),
+        friends_joined=summary.friends_joined,
+        morphs_earned=summary.morphs_earned,
+    )
+
+
 def export_limiter(request: Request) -> TokenBucketLimiter:
     """The per-user export bucket, created with the app it belongs to on first use so
     every app instance (each test builds one) gets its own."""
@@ -126,6 +143,7 @@ async def me(
             referral_code=user.referral_code,
         ),
         balance=balance,
+        referral=await referral_info(services, principal.user_id),
     )
 
 

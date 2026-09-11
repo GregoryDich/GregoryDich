@@ -20,13 +20,16 @@ app/
                    rate_limit.py (per-principal token buckets, per-credential auth buckets,
                    stream-slot limiter)
   routers/         health, auth, me, jobs, credits, plans, api_keys, webhooks,
-                   feedback (job feedback + NPS), status (/status, /version), telemetry (crash)
+                   feedback (job feedback + NPS), status (/status, /version), telemetry (crash),
+                   admin (§15 support lookup, only while ADMIN_API_KEY is set)
   services/        Protocols (__init__.py) + one module per domain, both backends:
                    supabase.py (PostgREST/Storage/GoTrue over httpx), memory.py (tests/dev),
-                   credits, jobs, storage, users, api_keys, webhooks, plans, dispatch, events,
-                   quality (feedback, NPS, installs, status numbers), klaviyo (event transport,
-                   `python -m app.services.klaviyo seed`), growth (the hooks that emit §14 events),
-                   factory.py (build_services), aws/ (S3 + SQS + reaper)
+                   credits, jobs, storage, users, api_keys, webhooks (incl. provider refunds),
+                   plans, dispatch, events, quality (feedback, NPS, installs, status numbers),
+                   rewards (referral summary/reward, first-week gift), support (the §15 view),
+                   klaviyo (event transport, `python -m app.services.klaviyo seed`),
+                   growth (the hooks that emit §14 events), factory.py (build_services),
+                   aws/ (S3 + SQS + reaper: stale jobs + week-1 gifts)
   pipeline/        base.py (run_pipeline Protocol, get_pipeline), fake.py (offline CPU stub)
 worker/            GPU worker entry points (aws_worker, modal_app, runpod_handler)
 tests/             pytest; conftest provides settings/app/client, mint_jwt, make_wav;
@@ -138,13 +141,13 @@ errors — so the routes behave identically on either backend.
 ## Test
 
 ```bash
-python3 -m pytest -q       # 258 collected: 140 tests/api, 46 tests/pipeline, 50 tests/aws, 22 top-level
-ruff check app tests worker
+python3 -m pytest -q       # 438 collected
+ruff check app tests worker scripts
 ```
 
 The two skips are `tests/pipeline/test_pipeline_real.py` (GPU extras: torch, demucs,
 basic-pitch) and `tests/pipeline/test_worker_serverless.py` (modal not installed); with
-neither installed the suite reports **256 passed, 2 skipped**.
+neither installed the suite reports **436 passed, 2 skipped**.
 
 Tests are fully offline: `STORAGE_BACKEND=memory`, `TONAMORPH_PIPELINE=fake`, HS256 test
 JWTs minted in `tests/conftest.py`, AWS via moto, HTTP via respx. `tests/api` covers the
@@ -164,6 +167,7 @@ All keys are listed with placeholders in `.env.example`. The important groups:
 | Payments | `LEMONSQUEEZY_WEBHOOK_SECRET`, `PADDLE_WEBHOOK_SECRET`, `WEBHOOK_CLAIM_LEASE_SECONDS` |
 | Pipeline | `TONAMORPH_PIPELINE=fake\|local\|modal\|runpod\|aws`, `MODAL_APP_NAME`, `RUNPOD_ENDPOINT_ID`, `RUNPOD_API_KEY`, `SEPARATION_MODEL` (worker; default `htdemucs`), `ALLOW_UNLICENSED_SEPARATION_MODEL` (worker, internal testing only) |
 | Limits | `MAX_UPLOAD_BYTES`, `MAX_INPUT_SECONDS`, `FREE_SIGNUP_CREDITS`, `RATE_LIMIT_JOBS_PER_MIN`, `RATE_LIMIT_READS_PER_MIN`, `AFFILIATE_COMMISSION_RATE` |
+| Support | `ADMIN_API_KEY` — `GET /v1/admin/users/{id_or_email}` with `X-Admin-Key` (contract §15); empty = the route answers 404 |
 | Misc | `ENV=development\|test\|staging\|production`, `CORS_ALLOW_ORIGINS` |
 
 With `ENV=production` the settings refuse to start unless `SUPABASE_URL`, a JWT secret or

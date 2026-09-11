@@ -20,10 +20,16 @@ Subscription renewals grant perishable credits: the grant is issued here with
 ``record_purchase``'s own grant is a no-op and ``expire_credits()`` clears the remainder
 at the period boundary (§13). Credit-pack grants never expire.
 
+A provider refund or chargeback — Paddle ``adjustment.*`` once approved, LemonSqueezy
+``order_refunded`` for a pack and ``subscription_payment_refunded`` for a subscription
+period — is attributed through the purchase it names and applied with
+``apply_purchase_refund``: the purchase's credits that are still unspent leave the balance
+(never below zero, never a credit a job captured or still holds), a pending affiliate
+commission is voided and a refunded subscription period is ended (§4).
+
 Three growth events leave from here (§14): ``Purchase Completed`` for the paying event,
-``Subscription Cancelled`` for a cancellation, and ``Refund Issued`` for a provider refund
-or chargeback — Paddle ``adjustment.*`` once approved, LemonSqueezy ``order_refunded`` —
-which is attributed through the purchase it names and changes no credits here.
+``Subscription Cancelled`` for a cancellation, and ``Refund Issued`` — carrying the credits
+removed — for a refund or chargeback.
 """
 
 from __future__ import annotations
@@ -46,7 +52,7 @@ from app.errors import BAD_REQUEST, INVALID_SIGNATURE, NOT_FOUND, ApiException
 from app.schemas import PlanKind, WebhookAck
 from app.services.factory import Services
 from app.services.plans import PlanRecord
-from app.services.webhooks import PurchaseProvider, SubscriptionStatus
+from app.services.webhooks import PurchaseProvider, RefundOutcome, SubscriptionStatus
 
 log = logging.getLogger("tonamorph.webhooks")
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
@@ -68,7 +74,13 @@ LEMONSQUEEZY_SUBSCRIPTION_OBJECT_EVENTS = frozenset(
 LEMONSQUEEZY_SUBSCRIPTION_EVENTS = LEMONSQUEEZY_SUBSCRIPTION_OBJECT_EVENTS | {
     LEMONSQUEEZY_INVOICE_EVENT
 }
-LEMONSQUEEZY_REFUND_EVENT = "order_refunded"
+# A pack's money comes back on its order; a subscription period's on its invoice, which is
+# also the id its purchase was recorded under (LEMONSQUEEZY_INVOICE_EVENT).
+LEMONSQUEEZY_ORDER_REFUND_EVENT = "order_refunded"
+LEMONSQUEEZY_INVOICE_REFUND_EVENT = "subscription_payment_refunded"
+LEMONSQUEEZY_REFUND_EVENTS = frozenset(
+    {LEMONSQUEEZY_ORDER_REFUND_EVENT, LEMONSQUEEZY_INVOICE_REFUND_EVENT}
+)
 LEMONSQUEEZY_RENEWAL_REASON = "renewal"
 PADDLE_PURCHASE_EVENT = "transaction.completed"
 PADDLE_ADJUSTMENT_EVENTS = frozenset({"adjustment.created", "adjustment.updated"})
@@ -247,12 +259,13 @@ def parse_lemonsqueezy(payload: Mapping[str, Any]) -> WebhookEvent:
         event_id if event_type in LEMONSQUEEZY_SUBSCRIPTION_OBJECT_EVENTS else None
     )
     refund: RefundInfo | None = None
-    if event_type == LEMONSQUEEZY_REFUND_EVENT:
+    if event_type in LEMONSQUEEZY_REFUND_EVENTS:
+        kind = "order" if event_type == LEMONSQUEEZY_ORDER_REFUND_EVENT else "invoice"
         refund = RefundInfo(
             order_id=event_id,
             amount_cents=_int(attributes.get("refunded_amount")) or total,
             reason=None,
-            reference=f"lemonsqueezy:order:{event_id}",
+            reference=f"lemonsqueezy:{kind}:{event_id}",
         )
     return WebhookEvent(
         provider="lemonsqueezy",
@@ -435,6 +448,33 @@ async def resolve_plan(services: Services, event: WebhookEvent) -> PlanRecord:
     raise ApiException(NOT_FOUND, message="No plan matches this purchase.")
 
 
+async def apply_refund(services: Services, event: WebhookEvent) -> RefundOutcome | None:
+    """Take the refunded purchase's unspent credits back, void its pending commission and
+    end a refunded subscription period (``apply_purchase_refund``, §4).
+
+    ``None`` when the refund names no recorded purchase: the money moved at the provider,
+    but nothing here was granted under that id — a subscription's ``order_refunded``
+    names the checkout order while its periods were recorded under their invoices, and a
+    refund can reach us before the sale it reverses — so the delivery is acknowledged and
+    logged for reconciliation rather than retried by the provider forever.
+    """
+    refund = event.refund
+    assert refund is not None
+    extra = {"provider": event.provider, "event_type": event.event_type}
+    if refund.order_id is None:
+        log.warning("refund names no order", extra=extra)
+        return None
+    try:
+        return await services.purchases.apply_refund(event.provider, refund.order_id, refund.reason)
+    except ApiException as exc:
+        if exc.code != NOT_FOUND:
+            raise
+        log.warning(
+            "refund names no recorded purchase", extra={**extra, "order_id": refund.order_id}
+        )
+        return None
+
+
 async def process_event(services: Services, event: WebhookEvent) -> WebhookAck:
     """Claim the event, apply it, then close the claim.
 
@@ -532,11 +572,14 @@ async def _apply(services: Services, event: WebhookEvent) -> None:
             )
 
     if event.refund is not None:
+        outcome = await apply_refund(services, event)
         services.growth.refund_issued(
             user_id,
             event.email,
             amount_usd=event.refund.amount_cents / 100,
             reason=event.refund.reason,
+            credits_removed=outcome.credits_removed if outcome is not None else 0,
+            commission_voided=outcome.commission_voided if outcome is not None else False,
             unique_id=f"refund_issued:{event.refund.reference}",
         )
     log.info(
@@ -592,7 +635,7 @@ async def lemonsqueezy(
     if (
         event.event_type not in LEMONSQUEEZY_PURCHASE_EVENTS
         and event.event_type not in LEMONSQUEEZY_SUBSCRIPTION_EVENTS
-        and event.event_type != LEMONSQUEEZY_REFUND_EVENT
+        and event.event_type not in LEMONSQUEEZY_REFUND_EVENTS
     ):
         return WebhookAck(status="ok")
     return await process_event(services, event)

@@ -51,6 +51,9 @@ PURCHASE_COMPLETED = "Purchase Completed"
 SUBSCRIPTION_CANCELLED = "Subscription Cancelled"
 REFUND_ISSUED = "Refund Issued"
 NPS_SUBMITTED = "NPS Submitted"
+REFERRAL_JOINED = "Referral Joined"
+REFERRAL_REWARDED = "Referral Rewarded"
+GIFT_GRANTED = "Gift Granted"
 METRICS: tuple[str, ...] = (
     SIGNED_UP,
     PLUGIN_INSTALLED,
@@ -62,6 +65,9 @@ METRICS: tuple[str, ...] = (
     SUBSCRIPTION_CANCELLED,
     REFUND_ISSUED,
     NPS_SUBMITTED,
+    REFERRAL_JOINED,
+    REFERRAL_REWARDED,
+    GIFT_GRANTED,
 )
 
 
@@ -271,8 +277,16 @@ def sample_events(user_id: UUID, email: str) -> list[Event]:
             "referral_code": None,
         },
         SUBSCRIPTION_CANCELLED: {"plan_id": "sub_monthly", "period_end": stamp.isoformat()},
-        REFUND_ISSUED: {"amount_usd": 9.0, "reason": "requested_by_customer"},
+        REFUND_ISSUED: {
+            "amount_usd": 9.0,
+            "reason": "requested_by_customer",
+            "credits_removed": 50,
+            "commission_voided": False,
+        },
         NPS_SUBMITTED: {"score": 9, "comment": "test event"},
+        REFERRAL_JOINED: {"friend_user_id": str(uuid4()), "source": "web", "bonus_credits": 2},
+        REFERRAL_REWARDED: {"friend_user_id": str(uuid4()), "credits": 3},
+        GIFT_GRANTED: {"gift": "week1", "credits": 2},
     }
     return [
         Event(
@@ -324,6 +338,7 @@ if __name__ == "__main__":
 __all__ = [
     "CHECKOUT_STARTED",
     "CREDITS_EXHAUSTED",
+    "GIFT_GRANTED",
     "KLAVIYO_API_BASE",
     "KLAVIYO_REVISION",
     "METRICS",
@@ -332,6 +347,8 @@ __all__ = [
     "NPS_SUBMITTED",
     "PLUGIN_INSTALLED",
     "PURCHASE_COMPLETED",
+    "REFERRAL_JOINED",
+    "REFERRAL_REWARDED",
     "REFUND_ISSUED",
     "SIGNED_UP",
     "SUBSCRIPTION_CANCELLED",

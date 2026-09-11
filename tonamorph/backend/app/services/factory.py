@@ -36,15 +36,19 @@ from app.services.memory import (
     MemoryPlansService,
     MemoryPurchasesService,
     MemoryQualityService,
+    MemoryRewardsService,
     MemoryStorageService,
     MemoryStore,
+    MemorySupportService,
     MemoryUsersService,
     MemoryWebhookEventsService,
 )
 from app.services.plans import PlansService, SupabasePlansService
 from app.services.quality import QualityService, SupabaseQualityService
+from app.services.rewards import RewardsService, SupabaseRewardsService
 from app.services.storage import SupabaseStorageService
 from app.services.supabase import SupabaseClient
+from app.services.support import SupabaseSupportService, SupportService
 from app.services.users import SupabaseUsersService
 from app.services.webhooks import (
     PurchasesService,
@@ -83,6 +87,8 @@ class Services:
     purchases: PurchasesService
     plans: PlansService
     quality: QualityService
+    rewards: RewardsService
+    support: SupportService
     klaviyo: KlaviyoEvents
     growth: GrowthHooks
     dispatch: DispatchService
@@ -137,7 +143,9 @@ def build_services(settings: Settings) -> Services:
         credits: CreditsService = MemoryCreditsService(store)
         plans: PlansService = MemoryPlansService(store)
         quality: QualityService = MemoryQualityService(store)
-        growth = GrowthHooks(klaviyo, plans=plans, quality=quality)
+        rewards: RewardsService = MemoryRewardsService(store)
+        support: SupportService = MemorySupportService(store)
+        growth = GrowthHooks(klaviyo, plans=plans, quality=quality, rewards=rewards)
         jobs: JobsService = MemoryJobsService(
             store, bus, events_mode=mode, on_finished=growth.job_finished
         )
@@ -150,7 +158,9 @@ def build_services(settings: Settings) -> Services:
         credits = SupabaseCreditsService(client)
         plans = SupabasePlansService(client)
         quality = SupabaseQualityService(client)
-        growth = GrowthHooks(klaviyo, plans=plans, quality=quality)
+        rewards = SupabaseRewardsService(client)
+        support = SupabaseSupportService(client)
+        growth = GrowthHooks(klaviyo, plans=plans, quality=quality, rewards=rewards)
         jobs = SupabaseJobsService(client, bus, events_mode=mode, on_finished=growth.job_finished)
         users = SupabaseUsersService(client, settings, growth=growth)
         api_keys = SupabaseApiKeysService(client)
@@ -175,6 +185,8 @@ def build_services(settings: Settings) -> Services:
         purchases=purchases,
         plans=plans,
         quality=quality,
+        rewards=rewards,
+        support=support,
         klaviyo=klaviyo,
         growth=growth,
         dispatch=dispatch,

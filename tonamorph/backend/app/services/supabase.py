@@ -76,6 +76,12 @@ _LIST_RESERVED = ',.:()"\\ '
 #                                      keyed `refund:<job_id>` like any refund_job call.
 #   touch_plugin_install               a replay finds the row and only re-stamps last_seen_at.
 #   user_facts, status_last_24h        read-only.
+#   apply_purchase_refund              one purchase_refunds row per purchase; a replay answers
+#                                      with the recorded outcome and moves nothing.
+#   grant_week1_gifts                  every gift is keyed `gift:week1:<user>`; a second run
+#                                      finds nothing left to grant.
+#   user_referral_summary              read-only but for assigning a missing code, which a
+#                                      unique constraint keeps to one per profile.
 # Deliberately absent:
 #   submit_nps      a replay of an insert that committed answers P0409 (one answer per 30
 #                   days), which would report a recorded answer as refused.
@@ -92,12 +98,14 @@ _LIST_RESERVED = ',.:()"\\ '
 #                   the provider's next retry applies it (§4).
 IDEMPOTENT_RPCS: frozenset[str] = frozenset(
     {
+        "apply_purchase_refund",
         "authenticate_api_key",
         "complete_job",
         "delete_user_account",
         "fail_job",
         "get_balance",
         "grant_credits",
+        "grant_week1_gifts",
         "reap_stale_jobs",
         "record_job_feedback",
         "record_purchase",
@@ -110,6 +118,7 @@ IDEMPOTENT_RPCS: frozenset[str] = frozenset(
         "touch_plugin_install",
         "update_job_progress",
         "user_facts",
+        "user_referral_summary",
     }
 )
 

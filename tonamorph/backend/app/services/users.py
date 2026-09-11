@@ -59,11 +59,14 @@ def profile_from_record(record: Mapping[str, Any]) -> Profile:
         referral_code=record.get("referral_code"),
         deleted_at=record.get("deleted_at"),
         first_seen_at=record.get("first_seen_at"),
+        referred_by=record.get("referred_by"),
     )
 
 
 def exported_user_from_record(record: Mapping[str, Any]) -> ExportedUser:
-    base = profile_from_record(record).model_dump(exclude={"deleted_at", "first_seen_at"})
+    base = profile_from_record(record).model_dump(
+        exclude={"deleted_at", "first_seen_at", "referred_by"}
+    )
     extra = {k: record.get(k) for k in ExportedUser.model_fields if k not in base}
     return ExportedUser.model_validate({**base, **extra})
 
