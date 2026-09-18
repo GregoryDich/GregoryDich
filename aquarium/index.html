@@ -221,17 +221,21 @@
       if (e.image) {
         const im = new Image();
         im.onload = () => { if (im.naturalWidth > 0) { rec.img = im; rec.lod = makeLod(im); rec.ready = true; } };
-        im.onerror = () => { rec.ready = false; };
+        im.onerror = () => { rec.ready = false; rec.failed = true; };
         im.src = e.image;
       }
       PACK.push(rec);
     }
   })();
+  // виды с count: 0 (нет картинки) и виды, чьё фото не нашлось, не заселяются
+  const activePacks = () => PACK.filter((p) => p.count > 0 && !p.failed);
   function pickPack() {
-    let total = 0; for (const p of PACK) total += (p.count || 1);
+    const list = activePacks();
+    if (!list.length) return null;
+    let total = 0; for (const p of list) total += p.count;
     let r = Math.random() * total;
-    for (const p of PACK) { r -= (p.count || 1); if (r <= 0) return p; }
-    return PACK[0];
+    for (const p of list) { r -= p.count; if (r <= 0) return p; }
+    return list[0];
   }
 
   /* ---------- fish factory ---------- */
@@ -350,6 +354,7 @@
 
   function drawFish(f, t) {
     if (f.pack && f.pack.ready) { drawSpriteFish(f, t); return; }
+    if (f.pack && f.pack.image) return;            // фото ещё грузится или не нашлось — мультяшную замену не рисуем
     const sp = f.sp, L = f.len, Hh = L * sp.hScale;
     const speedFrac = clamp(Math.hypot(f.vx, f.vy) / (f.base * 1.4), 0.25, 1.8);
     const wag = Math.sin(t * f.swimFreq + f.phase) * 0.5 * speedFrac;
@@ -946,16 +951,17 @@
      ============================================================ */
   let fishes = [], bubbles = [], pellets = [], bubbleTimer = 0, streamX = 0, streamTimer = 0;
 
-  const targetFishCount = () => clamp(Math.round((W * H) / 70000), 8, 26);
+  const targetFishCount = () => clamp(Math.round((W * H) / 100000), 8, 22);
 
   function seedTank(n) {
     fishes = [];
     if (PACK.length) {
       // honour each species' "count", scaled to the screen-area target total
-      let baseTotal = 0; for (const p of PACK) baseTotal += (p.count || 1);
+      const active = activePacks();
+      let baseTotal = 0; for (const p of active) baseTotal += p.count;
       const scale = baseTotal ? n / baseTotal : 1;
-      for (const p of PACK) {
-        const c = Math.max(1, Math.round((p.count || 1) * scale));
+      for (const p of active) {
+        const c = Math.max(1, Math.round(p.count * scale));
         for (let i = 0; i < c; i++) fishes.push(makeFish({ pack: p }));
       }
     } else {
