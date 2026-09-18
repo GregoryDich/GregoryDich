@@ -957,10 +957,10 @@
       // непрерывный вертикальный поток пузырьков из одной точки рифа
       streamTimer -= dt;
       if (streamTimer <= 0) {
-        const b = makeBubble(streamX + rand(-7, 7), floorY - H * 0.02);
-        b.r = rand(1.5, 4.2); b.vy = rand(60, 100); b.wob = rand(0.8, 1.8);
+        const b = makeBubble(streamX + rand(-9, 9), floorY - H * 0.02);
+        b.r = rand(2, 6); b.vy = rand(60, 100); b.wob = rand(0.8, 1.8);
         bubbles.push(b);
-        streamTimer = rand(0.03, 0.09);
+        streamTimer = rand(0.02, 0.06);
       }
       bubbles = bubbles.filter((b) => updateBubble(b, dt, t));
       pellets = pellets.filter((p) => updatePellet(p, dt));

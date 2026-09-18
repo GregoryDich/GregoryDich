@@ -179,7 +179,7 @@ def anemone(name, coll, loc, r, color, tip, n=140, seed=0):
         bmesh.ops.create_cone(bm, cap_ends=True, segments=8, radius1=r * .06, radius2=r * .025, depth=L, matrix=M)
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free(); smooth(me)
     ob = new_obj(name, me, coll)
-    ob.data.materials.append(mat(name + '_m', color, rough=.5, sss=.35, bump=.15, bump_scale=20, tint2=tip, coat=.2)); return ob
+    ob.data.materials.append(mat(name + '_m', color, rough=.5, sss=.5, bump=.15, bump_scale=20, tint2=tip, coat=.2)); return ob
 
 def starfish(name, coll, loc, r, color, rot=0):
     bm = bmesh.new(); vs = []
@@ -278,9 +278,9 @@ branching('stag_white', BG, (-.3, 1.6, .05), 2.3, (.93, .92, .86), (1, 1, .97), 
 branching('crinoid_yellow', BG, (-3.8, .0, .05), 1.7, (.95, .8, .15), (1, .95, .5), seed=35, thick=.012, trunks=(10, 14))
 # передний план — рыбы проходят ЗА этим
 boulder('fg_orange', FG, (-3.2, -1.8, .35), .8, (.95, .45, .2), tint2=(.75, .28, .12), kind='lumpy', seed=60)
-anemone('anemone', FG, (.5, -1.3, .12), .62, (.98, .62, .5), (1, .85, .75), seed=61)
+anemone('anemone', FG, (.5, -1.3, .12), .7, (.98, .52, .36), (1, .78, .62), seed=61)
 tubes('tube_purple', FG, (3.9, -1.9, 0), 1.3, (.45, .25, .85), (.3, .15, .6), n=5, seed=62)
-starfish('star', FG, (2.6, -2.4, .02), .38, (.95, .5, .2), rot=.4)
+starfish('star', FG, (2.6, -2.4, .02), .55, (.95, .5, .2), rot=.4)
 boulder('fg_rock', FG, (1.6, -2.6, .15), .45, (.25, .25, .22), tint2=(.18, .25, .18), kind='rock', seed=63)
 boulder('fg_green', FG, (-1.4, -2.2, .25), .55, (.4, .65, .25), tint2=(.25, .45, .15), kind='brain', seed=64)
 
