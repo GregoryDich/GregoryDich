@@ -17,7 +17,9 @@ before spending weeks on the full index.
    to each other and to the machine labels, following `CODEBOOK.md`. Two
    equivalent instruments show one fragment at a time in a per-coder random
    order: `ws1_survey.html` (open in a browser; no server, no going back) or
-   a Google Form built by `gforms/` (see `gforms/README.md`). Both yield
+   a Google Form built by `gforms/` (see `gforms/README.md`), or the
+   claude.ai page built by `make_artifact_page.py` (adds an 8-item practice
+   block with feedback and per-item timing). All yield
    `frag_id, text, human_relevant_0_1, human_valence_minus_plus_none`.
 4. **LLM channel.** The same fragments are classified by an LLM with a fixed
    rubric (the second pre-registered channel).
