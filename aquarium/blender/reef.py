@@ -20,6 +20,7 @@ def arg(name, default, cast=str):
 PREVIEW = '--preview' in sys.argv
 OUT = arg('--out', 'out'); RES = arg('--res', 960 if PREVIEW else 1920, int)
 SAMPLES = arg('--samples', 24 if PREVIEW else 96, int); SEED = arg('--seed', 7, int)
+LAYERS = arg('--only', 'bg,fg').split(',')
 ASPECT = 16 / 10
 FOG = (.03, .16, .42)
 rng = random.Random(SEED)
@@ -98,9 +99,12 @@ def sand(coll):
     m = mat('sand', (.50, .45, .30), rough=.95, bump=.3, bump_scale=30, tint2=(.36, .33, .22))
     n = m.node_tree.nodes; l = m.node_tree.links; p = n['Principled BSDF']
     tc = n.new('ShaderNodeTexCoord'); vor = n.new('ShaderNodeTexVoronoi'); vor.feature = 'DISTANCE_TO_EDGE'
-    vor.inputs['Scale'].default_value = 170; l.new(tc.outputs['Generated'], vor.inputs['Vector'])
-    web = n.new('ShaderNodeMapRange'); web.inputs['From Min'].default_value = .0; web.inputs['From Max'].default_value = .03
-    web.inputs['To Min'].default_value = .16; web.inputs['To Max'].default_value = 0.0   # тонкая светлая сетка
+    vor.inputs['Scale'].default_value = 150
+    dn = n.new('ShaderNodeTexNoise'); dn.inputs['Scale'].default_value = 35; l.new(tc.outputs['Generated'], dn.inputs['Vector'])
+    vm = n.new('ShaderNodeVectorMath'); vm.operation = 'MULTIPLY_ADD'; vm.inputs[1].default_value = (.02, .02, .02)
+    l.new(dn.outputs['Color'], vm.inputs[0]); l.new(tc.outputs['Generated'], vm.inputs[2]); l.new(vm.outputs['Vector'], vor.inputs['Vector'])
+    web = n.new('ShaderNodeMapRange'); web.inputs['From Min'].default_value = .0; web.inputs['From Max'].default_value = .05
+    web.inputs['To Min'].default_value = .06; web.inputs['To Max'].default_value = 0.0   # едва заметная мягкая сетка
     l.new(vor.outputs['Distance'], web.inputs['Value'])
     p.inputs['Emission Color'].default_value = (.75, .92, 1.0, 1); l.new(web.outputs['Result'], p.inputs['Emission Strength'])
     ob.data.materials.append(m); return ob
@@ -239,9 +243,9 @@ def pebbles(name, coll, n, area, seed=0):
 sand(BG)
 # скальная стена слева (задник) и камни
 for i, (x, y, z, r) in enumerate([(-5.2, 1.5, .6, 2.4), (-4.4, 2.8, 2.4, 2.1), (-5.0, 1.0, 3.9, 1.7), (-3.6, 4.5, 1.0, 2.2), (-6.0, 4.0, 4.6, 1.9)]):
-    boulder(f'wall{i}', BG, (x, y, z), r, (.22, .2, .17), tint2=(.15, .22, .14), kind='rock', seed=i)
+    boulder(f'wall{i}', BG, (x, y, z), r, (.26, .24, .2), tint2=(.42, .28, .45), kind='rock', seed=i)
 for i, (x, y, z, r) in enumerate([(4.6, 5.5, .8, 2.3), (1.5, 6.5, 1.0, 2.6), (-1.5, 7.0, .8, 2.2), (6.2, 3.5, .5, 1.8)]):
-    boulder(f'rock{i}', BG, (x, y, z), r, (.2, .21, .19), tint2=(.14, .2, .15), kind='rock', seed=10 + i)
+    boulder(f'rock{i}', BG, (x, y, z), r, (.24, .23, .2), tint2=(.38, .26, .4), kind='rock', seed=10 + i)
 # кораллы-мозговики / мягкие — насыщенная палитра LMA2
 boulder('brain_pink', BG, (-2.3, 1.0, .55), 1.15, (.92, .42, .36), tint2=(.7, .25, .25), kind='brain', seed=20)
 boulder('brain_green', BG, (1.9, 1.8, .5), 1.0, (.45, .68, .25), tint2=(.25, .45, .15), kind='brain', seed=21)
@@ -266,7 +270,7 @@ seafan('fan_red', BG, (-3.9, 3.4, 3.1), 2.0, 1.8, (.85, .25, .2), yaw=.35)
 seafan('fan_orange', BG, (4.3, 2.4, 1.9), 1.5, 1.4, (.95, .6, .2), yaw=-.6)
 pebbles('pebbles', BG, 14, (-6, 6, -1, 4), seed=50)
 # крупные формы как в LMA2: пилон с жёлтыми губками справа, розовая «капуста» и белый ветвистый в центре, жёлтый кринoид слева
-boulder('pillar_right', BG, (5.0, 1.6, 1.4), 1.6, (.22, .2, .17), tint2=(.15, .22, .14), kind='rock', seed=36)
+boulder('pillar_right', BG, (5.0, 1.6, 1.4), 1.6, (.26, .24, .2), tint2=(.42, .28, .45), kind='rock', seed=36)
 tubes('tube_yellow_top', BG, (5.0, 1.4, 2.2), 2.2, (.95, .72, .15), (.7, .5, .1), n=7, seed=44)
 boulder('plate_orange', BG, (-3.4, .6, 1.3), 1.1, (.95, .55, .2), tint2=(.7, .35, .1), kind='plate', seed=29)
 cauliflower('cauli_pink', BG, (-1.0, .2, .3), 1.25, (.98, .55, .5), (.85, .35, .35), seed=70)
@@ -315,17 +319,19 @@ sc.view_settings.view_transform = 'Standard'; sc.view_settings.look = 'None'
 os.makedirs(OUT, exist_ok=True)
 
 import time; t = time.time()
-# слой 1: задник (без переднего плана)
-for o in FG.objects: o.hide_render = True
-sc.render.film_transparent = False
-sc.render.image_settings.file_format = 'JPEG'; sc.render.image_settings.quality = 92; sc.render.image_settings.color_mode = 'RGB'
-sc.render.filepath = os.path.join(OUT, 'reef_bg.jpg'); bpy.ops.render.render(write_still=True)
-print(f'OK reef_bg {time.time() - t:.0f}s', flush=True); t = time.time()
-# слой 2: передний план поверх «дырок» (задник как holdout — перекрывает и отбрасывает тени)
-for o in FG.objects: o.hide_render = False
-for o in BG.objects: o.is_holdout = True
-sc.render.film_transparent = True
-sc.render.image_settings.file_format = 'PNG'; sc.render.image_settings.color_mode = 'RGBA'
-sc.render.filepath = os.path.join(OUT, 'reef_fg.png'); bpy.ops.render.render(write_still=True)
-print(f'OK reef_fg {time.time() - t:.0f}s', flush=True)
+if 'bg' in LAYERS:
+    # слой 1: задник (без переднего плана)
+    for o in FG.objects: o.hide_render = True
+    sc.render.film_transparent = False
+    sc.render.image_settings.file_format = 'JPEG'; sc.render.image_settings.quality = 92; sc.render.image_settings.color_mode = 'RGB'
+    sc.render.filepath = os.path.join(OUT, 'reef_bg.jpg'); bpy.ops.render.render(write_still=True)
+    print(f'OK reef_bg {time.time() - t:.0f}s', flush=True); t = time.time()
+if 'fg' in LAYERS:
+    # слой 2: передний план поверх «дырок» (задник как holdout — перекрывает и отбрасывает тени)
+    for o in FG.objects: o.hide_render = False
+    for o in BG.objects: o.is_holdout = True
+    sc.render.film_transparent = True
+    sc.render.image_settings.file_format = 'PNG'; sc.render.image_settings.color_mode = 'RGBA'
+    sc.render.filepath = os.path.join(OUT, 'reef_fg.png'); bpy.ops.render.render(write_still=True)
+    print(f'OK reef_fg {time.time() - t:.0f}s', flush=True)
 if '--blend' in sys.argv: bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, 'reef.blend'))
