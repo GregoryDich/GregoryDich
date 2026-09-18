@@ -50,6 +50,8 @@
 
   const DPR = Math.min(window.devicePixelRatio || 1, 2);
   let W = 0, H = 0, floorY = 0;
+  const sizeScale = () => clamp(W / 1300, 0.8, 2.8);   // размер рыб — доля ширины экрана (как в LMA2)
+  const HAS_FILTER = "filter" in ctx;
   let paused = false;
 
   /* ---------- wallpaper / power mode (driven by the macOS app) ----------
@@ -102,26 +104,68 @@
   const FG_CANDIDATES = ["assets/reef_fg.png"];
   const FG_SPLIT = 0.82;
   let bgImg = null, bgReady = false, fgImg = null, fgReady = false;
+  // цветокоррекция под палитру LMA2 (глубже синий, сочнее кораллы) — ОДИН раз при
+  // загрузке в offscreen-canvas, а не фильтром на каждый кадр (дорого без GPU)
+  function graded(img) {
+    if (!HAS_FILTER) return img;
+    const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const g = c.getContext("2d"); g.filter = "blur(0.5px) saturate(1.08) contrast(1.04)"; g.drawImage(img, 0, 0);   // мягкость «как с камеры»; цвет воды выправлен в самом файле
+    return c;
+  }
+  // воздушная перспектива: дальние рыбы меньше, синее и мягче — варианты спрайта готовятся один раз
+  function makeLod(img) {
+    const v = (scale, tint, blur) => {
+      const c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(img.naturalWidth * scale)); c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+      const g = c.getContext("2d"); if (HAS_FILTER && blur) g.filter = `blur(${blur}px)`;
+      g.drawImage(img, 0, 0, c.width, c.height); g.filter = "none";
+      g.globalCompositeOperation = "source-atop"; g.fillStyle = `rgba(40,100,180,${tint})`; g.fillRect(0, 0, c.width, c.height);
+      return c;
+    };
+    return [v(0.5, 0.38, 1.2), v(0.75, 0.18, 0.5), img];
+  }
   (function loadBG(i) {
     if (i >= BG_CANDIDATES.length) return;
     const im = new Image();
-    im.onload = () => { bgImg = im; bgReady = true; };
+    im.onload = () => { bgImg = graded(im); bgReady = true; };
     im.onerror = () => loadBG(i + 1);
     im.src = BG_CANDIDATES[i];
   })(0);
   (function loadFG(i) {
     if (i >= FG_CANDIDATES.length) return;
     const im = new Image();
-    im.onload = () => { fgImg = im; fgReady = true; };
+    im.onload = () => { fgImg = graded(im); fgReady = true; };
     im.onerror = () => loadFG(i + 1);
     im.src = FG_CANDIDATES[i];
   })(0);
 
+  // планктон — медленно дрейфующие светлые частицы: оживляют толщу воды над рендером
+  let plankton = [];
+  function seedPlankton() {
+    plankton = [];
+    for (let i = 0; i < 70; i++) plankton.push({ x: rand(0, W), y: rand(0, H), r: rand(0.8, 2.2), vx: rand(-6, 6), vy: rand(-4, 2), ph: rand(0, TAU) });
+  }
+  function drawPlankton(t, dt) {
+    ctx.save(); ctx.fillStyle = "rgba(210,235,255,0.5)";
+    for (const p of plankton) {
+      if (!paused) {
+        p.x += p.vx * dt; p.y += p.vy * dt + Math.sin(t * 0.7 + p.ph) * 6 * dt;
+        if (p.x < -5) p.x = W + 5; else if (p.x > W + 5) p.x = -5;
+        if (p.y < -5) p.y = H + 5; else if (p.y > H + 5) p.y = -5;
+      }
+      ctx.globalAlpha = 0.2 + 0.25 * (0.5 + 0.5 * Math.sin(t * 1.3 + p.ph));
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // BG_ZOOM: слегка «наезжаем» на риф, якорь — низ кадра (песок остаётся, пустая вода сверху уходит)
+  const BG_ZOOM = 1.12;
   function drawCover(img) {
-    const iw = img.naturalWidth, ih = img.naturalHeight;
-    const sc = Math.max(W / iw, H / ih);
+    const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+    const sc = Math.max(W / iw, H / ih) * BG_ZOOM;
     const dw = iw * sc, dh = ih * sc;
-    ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    ctx.drawImage(img, (W - dw) / 2, H - dh, dw, dh);
   }
 
   /* ============================================================
@@ -176,7 +220,7 @@
       rec.img = null; rec.ready = false;
       if (e.image) {
         const im = new Image();
-        im.onload = () => { if (im.naturalWidth > 0) { rec.img = im; rec.ready = true; } };
+        im.onload = () => { if (im.naturalWidth > 0) { rec.img = im; rec.lod = makeLod(im); rec.ready = true; } };
         im.onerror = () => { rec.ready = false; };
         im.src = e.image;
       }
@@ -198,9 +242,9 @@
     let depth = opts.depth != null ? opts.depth : Math.random();
     let len;
     if (pack) {
-      len = rand(pack.sizeMin, pack.sizeMax) * (0.7 + depth * 0.5);
+      len = rand(pack.sizeMin, pack.sizeMax) * (0.7 + depth * 0.5) * sizeScale();
     } else {
-      len = rand(50, 96) * (0.55 + depth * 0.6);
+      len = rand(50, 96) * (0.55 + depth * 0.6) * sizeScale();
       if (sp.small) { len *= 0.6; depth = Math.min(depth, 0.45); }
     }
 
@@ -271,8 +315,8 @@
   // 2.5D PNG-рыба (нос вправо): тело идёт волной по вертикальным полосам,
   // хвост виляет сильнее всего; + наклон по вертикали, bob, глубина, мягкая тень.
   function drawSpriteFish(f, t) {
-    const img = f.pack.img;
-    const iw = img.naturalWidth, ih = img.naturalHeight;
+    const img = f.pack.lod ? f.pack.lod[f.depth < 0.35 ? 0 : f.depth < 0.7 ? 1 : 2] : f.pack.img;
+    const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
     const L = f.len, ar = (ih / iw) || 0.5, w = L, h = L * ar;
     const speedFrac = clamp(Math.hypot(f.vx, f.vy) / (f.base * 1.4), 0.25, 1.6);
     const bob = Math.sin(t * f.bob + f.phase) * f.bobAmp;
@@ -928,6 +972,7 @@
 
   function resize() {
     W = window.innerWidth; H = window.innerHeight; floorY = H * 0.78;
+    seedPlankton();
     canvas.width = Math.floor(W * DPR); canvas.height = Math.floor(H * DPR);
     canvas.style.width = W + "px"; canvas.style.height = H + "px";
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -969,8 +1014,9 @@
     // ---- render ----
     if (bgReady) {
       drawCover(bgImg);
-      // рендер рифа уже освещён — поверх лишь лёгкие живые лучи света
-      ctx.save(); ctx.globalAlpha = 0.35; drawRays(t); ctx.restore();
+      // рендер рифа уже освещён — поверх лишь живые лучи света
+      ctx.save(); ctx.globalAlpha = 0.5; drawRays(t); ctx.restore();
+      drawPlankton(t, dt);
     } else {
       drawWater();
       drawSurface(t);

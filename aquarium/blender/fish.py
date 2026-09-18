@@ -90,6 +90,12 @@ SPECIES = {
     'moorish_idol': dict(body='disc', Hs=1.6, Ws=.8, back=(.95,.95,.90), belly=(.98,.98,.95),
         patterns=[('ellipse',.51,.8,.14,.3,(.98,.82,.10),.2), ('bands',[.30,.75],.20,(.05,.05,.06),None,0)],
         fin=(.95,.95,.9), fin_edge=(.05,.05,.06), tail='truncate', tail_color=(.05,.05,.06), dorsal=('long',.35), anal=('sail',.10)),
+    'bicolor_angel': dict(body='disc', Hs=.8, back=(.98,.8,.1), belly=(1,.86,.3),
+        patterns=[('bicolor',.5,(.12,.22,.78),.03,0,'rear'), ('region',.80,.9,.5,1,(.12,.22,.78),.02)],
+        fin=(.15,.25,.8), fin_edge=(.05,.1,.5), tail='truncate', tail_color=(.98,.85,.15), tail_edge=(.9,.7,.1), dorsal=('sail',.12), anal=('sail',.10)),
+    'spanish_hogfish': dict(body='oval', Hs=1.05, back=(.8,.15,.35), belly=(.98,.8,.2),
+        patterns=[('region',0,1,.55,1,(.8,.15,.35),.05)],
+        fin=(.98,.75,.2), fin_edge=(.9,.5,.1), tail='forked', tail_color=(.98,.85,.15), dorsal=('long',.10), anal=('hump',.07)),
 }
 
 # ---------------------------------------------------------------- текстура окраса
@@ -112,8 +118,8 @@ def bake_texture(name, spec, W=1024, H=1024):
             for c in centers:
                 c, bulge = (c if isinstance(c, tuple) else (c, 0.0))
                 d = np.abs(V - (c + bulge * (1 - np.abs(2 * tb - 1))))
-                if ecol: paint(smooth(d, width/2 - .006, width/2 + .006) * (1 - smooth(d, width/2 + ew - .006, width/2 + ew + .006)), ecol)
-                paint(1 - smooth(d, width/2 - .006, width/2 + .006), color)
+                if ecol: paint(smooth(d, width/2 - .012, width/2 + .012) * (1 - smooth(d, width/2 + ew - .012, width/2 + ew + .012)), ecol)
+                paint(1 - smooth(d, width/2 - .012, width/2 + .012), color)
         elif kind == 'hstripes':
             _, count, wf, color = pat
             s = np.abs(((tb * count) % 1.0) - .5) * 2
@@ -129,7 +135,7 @@ def bake_texture(name, spec, W=1024, H=1024):
                 rr = r * rng.uniform(.65, 1.0)
                 du = np.minimum(np.abs(U - cu), 1 - np.abs(U - cu)) * 1.9
                 d = np.sqrt(du * du + (V - cv) ** 2)
-                mask = np.maximum(mask, 1 - smooth(d, rr - .006, rr + .006)); n -= 1
+                mask = np.maximum(mask, 1 - smooth(d, rr - .012, rr + .012)); n -= 1
                 if n <= 0: break
             paint(mask, color)
         elif kind == 'ellipse':                       # (cv, ct, rv, rt, color, soft) — органичное пятно
@@ -237,14 +243,25 @@ def body_material(img):
     m = bpy.data.materials.new('skin'); m.use_nodes = True; n = m.node_tree.nodes; l = m.node_tree.links
     p = n['Principled BSDF']
     tex = n.new('ShaderNodeTexImage'); tex.image = img; tex.interpolation = 'Cubic'
-    l.new(tex.outputs['Color'], p.inputs['Base Color'])
-    p.inputs['Roughness'].default_value = .30; p.inputs['Subsurface Weight'].default_value = .2
+    # живая кожа: лёгкая пятнистость цвета + чешуйки (ячейки Вороного), матово-влажная, без «пластика»
+    tc = n.new('ShaderNodeTexCoord')
+    mot = n.new('ShaderNodeTexNoise'); mot.inputs['Scale'].default_value = 5; mot.inputs['Detail'].default_value = 4
+    l.new(tc.outputs['Object'], mot.inputs['Vector'])
+    mmap = n.new('ShaderNodeMapRange'); mmap.inputs['From Min'].default_value = .3; mmap.inputs['From Max'].default_value = .7
+    mmap.inputs['To Min'].default_value = .86; mmap.inputs['To Max'].default_value = 1.1; l.new(mot.outputs['Fac'], mmap.inputs['Value'])
+    vor = n.new('ShaderNodeTexVoronoi'); vor.feature = 'DISTANCE_TO_EDGE'; vor.inputs['Scale'].default_value = 90
+    l.new(tc.outputs['Object'], vor.inputs['Vector'])
+    vmap = n.new('ShaderNodeMapRange'); vmap.inputs['From Min'].default_value = 0; vmap.inputs['From Max'].default_value = .04
+    vmap.inputs['To Min'].default_value = .84; vmap.inputs['To Max'].default_value = 1.0; l.new(vor.outputs['Distance'], vmap.inputs['Value'])
+    s1 = n.new('ShaderNodeVectorMath'); s1.operation = 'SCALE'; l.new(tex.outputs['Color'], s1.inputs[0]); l.new(mmap.outputs['Result'], s1.inputs['Scale'])
+    s2 = n.new('ShaderNodeVectorMath'); s2.operation = 'SCALE'; l.new(s1.outputs['Vector'], s2.inputs[0]); l.new(vmap.outputs['Result'], s2.inputs['Scale'])
+    l.new(s2.outputs['Vector'], p.inputs['Base Color'])
+    p.inputs['Roughness'].default_value = .5; p.inputs['Subsurface Weight'].default_value = .25
     p.inputs['Subsurface Radius'].default_value = (.04, .015, .008)
-    p.inputs['Coat Weight'].default_value = .5; p.inputs['Coat Roughness'].default_value = .08
-    p.inputs['Specular IOR Level'].default_value = .55
-    noise = n.new('ShaderNodeTexNoise'); noise.inputs['Scale'].default_value = 180; noise.inputs['Detail'].default_value = 3
-    bump = n.new('ShaderNodeBump'); bump.inputs['Strength'].default_value = .12
-    l.new(noise.outputs['Fac'], bump.inputs['Height']); l.new(bump.outputs['Normal'], p.inputs['Normal'])
+    p.inputs['Coat Weight'].default_value = .12; p.inputs['Coat Roughness'].default_value = .2
+    p.inputs['Specular IOR Level'].default_value = .35
+    bump = n.new('ShaderNodeBump'); bump.inputs['Strength'].default_value = .18; bump.inputs['Distance'].default_value = .01
+    l.new(vor.outputs['Distance'], bump.inputs['Height']); l.new(bump.outputs['Normal'], p.inputs['Normal'])
     return m
 
 def fin_material(name, color, edge, axis='X', edge_at_zero=True, alpha=1.0):
@@ -257,7 +274,7 @@ def fin_material(name, color, edge, axis='X', edge_at_zero=True, alpha=1.0):
     l.new(sep.outputs[axis], rc.inputs['Fac']); l.new(sep.outputs[axis], ra.inputs['Fac'])
     color = tuple(c * .88 for c in color); e = edge or color
     c0, c1 = ((e, color) if edge_at_zero else (color, e))
-    a0, a1 = (1.0, 1.0)                                    # плавники плотные, как в LMA2
+    a0, a1 = ((.55, .85) if edge_at_zero else (.85, .55))   # полупрозрачные к краю, как настоящие
     rc.color_ramp.elements[0].color = (*c0, 1); rc.color_ramp.elements[1].color = (*c1, 1)
     rc.color_ramp.elements[0].position = .0 if edge_at_zero else .4; rc.color_ramp.elements[1].position = .6 if edge_at_zero else 1.0
     ra.color_ramp.elements[0].color = (a0,) * 3 + (1,); ra.color_ramp.elements[1].color = (a1,) * 3 + (1,)
@@ -291,7 +308,7 @@ def setup_scene():
     sc.render.image_settings.file_format = 'PNG'; sc.render.image_settings.color_mode = 'RGBA'
     sc.view_settings.view_transform = 'Standard'; sc.view_settings.look = 'None'
     w = bpy.data.worlds.new('w'); sc.world = w; w.use_nodes = True
-    bg = w.node_tree.nodes['Background']; bg.inputs['Color'].default_value = (.03, .16, .38, 1); bg.inputs['Strength'].default_value = .7
+    bg = w.node_tree.nodes['Background']; bg.inputs['Color'].default_value = (.03, .16, .38, 1); bg.inputs['Strength'].default_value = 1.0
     target = link(bpy.data.objects.new('target', None))
     def light(name, typ, loc, energy, color, size=3):
         d = bpy.data.lights.new(name, typ); d.energy = energy; d.color = color
@@ -299,10 +316,10 @@ def setup_scene():
         o = link(bpy.data.objects.new(name, d)); o.location = loc
         c = o.constraints.new('TRACK_TO'); c.target = target; c.track_axis = 'TRACK_NEGATIVE_Z'; c.up_axis = 'UP_Y'
         return o
-    light('key', 'SUN', (1.5, -2.5, 4), 3.2, (1, .97, .9))
-    light('fill', 'AREA', (-2.5, -4, .8), 220, (.75, .88, 1), 4)
-    light('rim', 'AREA', (1.0, 3.5, 1.6), 260, (.6, .9, 1), 3)
-    light('top', 'AREA', (0, -.5, 3.5), 120, (.85, 1, 1), 3)
+    light('key', 'SUN', (1.5, -2.5, 4), 2.4, (.95, .97, 1))
+    light('fill', 'AREA', (-2.5, -4, .8), 150, (.6, .8, 1), 6)
+    light('rim', 'AREA', (1.0, 3.5, 1.6), 150, (.6, .9, 1), 3)
+    light('top', 'AREA', (0, -.5, 3.5), 90, (.85, 1, 1), 3)
     cd = bpy.data.cameras.new('cam'); cd.type = 'ORTHO'
     cam = link(bpy.data.objects.new('cam', cd)); cam.location = (0, -8, 0); cam.rotation_euler = (math.radians(90), 0, 0)
     sc.camera = cam
@@ -326,10 +343,10 @@ def build_fish(fid, spec):
     pec = fin_object('pectoral', pectoral_pts(r), loc=(-.5 + up, -pw(up) * .85, -ph(up) * .1),
                      rot=(math.radians(-25), math.radians(-15), 0), thick=.008)
     pec.data.materials.append(fin_material('pec_m', spec.get('pectoral', fin), edge, 'X', True, 1.0)); parts.append(pec)
-    ue = .84; re_ = .055 if spec['body'] in ('oval', 'small') else .062
+    ue = .84; re_ = .042 if spec['body'] in ('oval', 'small') else .048
     ez = ph(ue) * .25 + (-H * .10 * max(0.0, (ue - .72) / .28) ** 2)
-    eye = sphere('eye', re_, (-.5 + ue, -pw(ue) * .9, ez)); eye.data.materials.append(plain_material('eye_m', (.92, .78, .40), .15)); parts.append(eye)
-    pup = sphere('pupil', re_ * .52, (-.5 + ue, -pw(ue) * .9 - re_ * .62, ez)); pup.data.materials.append(plain_material('pupil_m', (.01, .01, .012), .2)); parts.append(pup)
+    eye = sphere('eye', re_, (-.5 + ue, -pw(ue) * .9, ez)); eye.data.materials.append(plain_material('eye_m', (.32, .2, .07), .25, .6)); parts.append(eye)
+    pup = sphere('pupil', re_ * .62, (-.5 + ue, -pw(ue) * .9 - re_ * .55, ez)); pup.data.materials.append(plain_material('pupil_m', (.01, .01, .012), .2)); parts.append(pup)
     root = link(bpy.data.objects.new('fish_' + fid, None))
     for p in parts: p.parent = root
     root.rotation_euler = (0, 0, math.radians(-8))          # чуть носом к камере — объём

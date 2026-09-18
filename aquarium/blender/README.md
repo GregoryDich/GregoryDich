@@ -1,4 +1,9 @@
-# Blender-пайплайн аквариума
+# Blender-пайплайн аквариума (альтернативный стиль)
+
+> **По умолчанию аквариум использует фотографии** (`assets/reef_bg.jpg`,
+> `fish/*.png` — вырезки настоящих фото). Этот процедурный пайплайн — альтернатива;
+> его выходы лежат в `fish/render/` и `assets/render/`. Чтобы включить его,
+> скопируйте файлы из этих папок на место (или перегенерируйте с `--out`, как ниже).
 
 Все «настоящие» картинки аквариума — рыбы и риф — **рендерятся Blender'ом (Cycles)
 из процедурных моделей**, которые строят два скрипта. Ничего не скачивается и не
@@ -24,10 +29,10 @@ Blender как Python-модуль (нужен Python 3.11):
 ## Команды
 
     cd aquarium/blender
-    python3 fish.py --out ../fish                        # все виды
-    python3 fish.py --out ../fish --only clownfish,blue_tang --samples 64 --res 1000
-    python3 fish.py --out ../fish --blend                # + .blend каждой рыбы
-    python3 reef.py --out ../assets                      # риф в два слоя
+    python3 fish.py --out ../fish/render                        # все виды
+    python3 fish.py --out ../fish/render --only clownfish,blue_tang --samples 64 --res 1000
+    python3 fish.py --out ../fish/render --blend                # + .blend каждой рыбы
+    python3 reef.py --out ../assets/render                      # риф в два слоя
     python3 reef.py --out /tmp/x --preview               # быстрая проверка
 
 ## Как добавить / поправить рыбу

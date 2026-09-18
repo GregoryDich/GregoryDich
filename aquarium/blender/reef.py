@@ -122,6 +122,7 @@ def boulder(name, coll, loc, r, color, tint2=None, kind='brain', seed=0, sss=.1)
     else:  # rock
         displace(ob, tex_clouds(name + '_t', .35 * r, 6), .7 * r)
     subsurf(ob, 1)
+    if kind in ('lumpy', 'plate'): sss = max(sss, .3)
     ob.data.materials.append(mat(name + '_m', color, rough=.8, sss=sss, bump=.8, bump_scale=16 / r, tint2=tint2, cells=(0 if kind == 'rock' else 60 / r)))
     return ob
 
@@ -165,7 +166,7 @@ def tubes(name, coll, loc, h, color, tint2, n=5, seed=0):
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free(); smooth(me)
     ob = new_obj(name, me, coll)
     displace(ob, tex_clouds(name + '_t', .25, 2), .06); subsurf(ob, 1)
-    ob.data.materials.append(mat(name + '_m', color, rough=.85, bump=.6, bump_scale=18, tint2=tint2)); return ob
+    ob.data.materials.append(mat(name + '_m', color, rough=.85, sss=.3, bump=.6, bump_scale=18, tint2=tint2)); return ob
 
 def anemone(name, coll, loc, r, color, tip, n=140, seed=0):
     r2 = random.Random(seed); bm = bmesh.new()
@@ -229,6 +230,14 @@ def cauliflower(name, coll, loc, r, color, tint2, n=42, seed=0):
     displace(ob, tex_clouds(name + '_t', .12 * r, 3), .12 * r); subsurf(ob, 1)
     ob.data.materials.append(mat(name + '_m', color, rough=.7, sss=.4, bump=.6, bump_scale=40 / r, tint2=tint2, cells=60 / r)); return ob
 
+def sponge_ball(name, coll, loc, r, color, tint2, seed=0):
+    bm = bmesh.new(); bmesh.ops.create_icosphere(bm, subdivisions=4 if PREVIEW else 5, radius=r)
+    me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free(); smooth(me)
+    ob = new_obj(name, me, coll, loc=loc, rot=(0, 0, seed))
+    t = bpy.data.textures.new(name + '_t', 'VORONOI'); t.noise_scale = .55 * r; t.weight_1 = 1
+    displace(ob, t, .5 * r, 'LOCAL'); subsurf(ob, 1)
+    ob.data.materials.append(mat(name + '_m', color, rough=.6, sss=.35, bump=.5, bump_scale=30 / r, tint2=tint2, cells=45 / r)); return ob
+
 def pebbles(name, coll, n, area, seed=0):
     r2 = random.Random(seed); bm = bmesh.new()
     for i in range(n):
@@ -269,6 +278,7 @@ anemone('anemone2', BG, (2.2, .3, .1), .5, (.95, .5, .35), (1, .8, .7), seed=43)
 seafan('fan_red', BG, (-3.9, 3.4, 3.1), 2.0, 1.8, (.85, .25, .2), yaw=.35)
 seafan('fan_orange', BG, (4.3, 2.4, 1.9), 1.5, 1.4, (.95, .6, .2), yaw=-.6)
 pebbles('pebbles', BG, 14, (-6, 6, -1, 4), seed=50)
+sponge_ball('sponge_bg', BG, (3.0, 2.0, .6), .6, (.95, .62, .14), (.7, .42, .06), seed=2)
 # крупные формы как в LMA2: пилон с жёлтыми губками справа, розовая «капуста» и белый ветвистый в центре, жёлтый кринoид слева
 boulder('pillar_right', BG, (5.0, 1.6, 1.4), 1.6, (.26, .24, .2), tint2=(.42, .28, .45), kind='rock', seed=36)
 tubes('tube_yellow_top', BG, (5.0, 1.4, 2.2), 2.2, (.95, .72, .15), (.7, .5, .1), n=7, seed=44)
@@ -283,6 +293,7 @@ tubes('tube_purple', FG, (3.9, -1.9, 0), 1.3, (.45, .25, .85), (.3, .15, .6), n=
 starfish('star', FG, (2.6, -2.4, .02), .55, (.95, .5, .2), rot=.4)
 boulder('fg_rock', FG, (1.6, -2.6, .15), .45, (.25, .25, .22), tint2=(.18, .25, .18), kind='rock', seed=63)
 boulder('fg_green', FG, (-1.4, -2.2, .25), .55, (.4, .65, .25), tint2=(.25, .45, .15), kind='brain', seed=64)
+sponge_ball('sponge_fg', FG, (1.4, -1.1, .55), .55, (.95, .6, .12), (.7, .4, .06), seed=1)
 
 for m in bpy.data.materials: add_fog(m)
 
@@ -294,7 +305,7 @@ ramp = n.new('ShaderNodeValToRGB'); e = ramp.color_ramp.elements
 e[0].color = (.01, .05, .18, 1); e[0].position = 0; e[1].color = (.16, .55, .9, 1); e[1].position = 1
 mid = ramp.color_ramp.elements.new(.45); mid.color = (.03, .18, .5, 1)
 l.new(sep.outputs['Z'], mr.inputs['Value']); l.new(mr.outputs['Result'], ramp.inputs['Fac']); l.new(ramp.outputs['Color'], bg.inputs['Color'])
-bg.inputs['Strength'].default_value = .45
+bg.inputs['Strength'].default_value = .35
 
 target = new_obj('target', None, sc.collection, loc=(.2, 1.0, 1.7))
 def light(name, typ, loc, energy, color, size=6):
@@ -303,9 +314,9 @@ def light(name, typ, loc, energy, color, size=6):
     if typ == 'SUN': d.angle = .03
     o = new_obj(name, d, sc.collection, loc=loc)
     c = o.constraints.new('TRACK_TO'); c.target = target; c.track_axis = 'TRACK_NEGATIVE_Z'; c.up_axis = 'UP_Y'; return o
-light('sun', 'SUN', (2, 4, 12), 4.2, (.85, .95, 1))
-light('fill', 'AREA', (-4, -9, 5), 120, (.6, .8, 1), 10)
-light('rim', 'AREA', (5, 8, 6), 400, (.5, .85, 1), 8)
+light('sun', 'SUN', (2, 4, 12), 5.0, (.85, .95, 1))
+light('fill', 'AREA', (-4, -9, 5), 60, (.6, .8, 1), 10)
+light('rim', 'AREA', (5, 8, 6), 300, (.5, .85, 1), 8)
 
 cd = bpy.data.cameras.new('cam'); cd.lens = 28; cd.sensor_width = 36
 cam = new_obj('cam', cd, sc.collection, loc=(.3, -7.2, 1.4))
