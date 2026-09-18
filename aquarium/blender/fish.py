@@ -251,7 +251,7 @@ def fin_material(name, color, edge, axis='X', edge_at_zero=True, alpha=1.0):
     """axis — вдоль какой оси Generated плавник вытянут (там край/кончик); лучи идут вдоль неё."""
     m = bpy.data.materials.new(name); m.use_nodes = True; n = m.node_tree.nodes; l = m.node_tree.links
     p = n['Principled BSDF']; out = n['Material Output']
-    p.inputs['Roughness'].default_value = .5; p.inputs['Coat Weight'].default_value = .15; p.inputs['Specular IOR Level'].default_value = .3
+    p.inputs['Roughness'].default_value = .75; p.inputs['Coat Weight'].default_value = .0; p.inputs['Specular IOR Level'].default_value = .1   # без блика — плавник не белеет
     tc = n.new('ShaderNodeTexCoord'); sep = n.new('ShaderNodeSeparateXYZ'); l.new(tc.outputs['Generated'], sep.inputs['Vector'])
     rc = n.new('ShaderNodeValToRGB'); ra = n.new('ShaderNodeValToRGB')
     l.new(sep.outputs[axis], rc.inputs['Fac']); l.new(sep.outputs[axis], ra.inputs['Fac'])
@@ -259,7 +259,7 @@ def fin_material(name, color, edge, axis='X', edge_at_zero=True, alpha=1.0):
     c0, c1 = ((e, color) if edge_at_zero else (color, e))
     a0, a1 = (1.0, 1.0)                                    # плавники плотные, как в LMA2
     rc.color_ramp.elements[0].color = (*c0, 1); rc.color_ramp.elements[1].color = (*c1, 1)
-    rc.color_ramp.elements[0].position = .0 if edge_at_zero else .55; rc.color_ramp.elements[1].position = .45 if edge_at_zero else 1.0
+    rc.color_ramp.elements[0].position = .0 if edge_at_zero else .4; rc.color_ramp.elements[1].position = .6 if edge_at_zero else 1.0
     ra.color_ramp.elements[0].color = (a0,) * 3 + (1,); ra.color_ramp.elements[1].color = (a1,) * 3 + (1,)
     l.new(rc.outputs['Color'], p.inputs['Base Color'])
     mul = n.new('ShaderNodeMath'); mul.operation = 'MULTIPLY'; mul.inputs[1].default_value = alpha
