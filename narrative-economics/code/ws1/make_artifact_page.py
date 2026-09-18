@@ -44,11 +44,22 @@ I18N = {
   "rules.4": "The order is random and different for every coder.",
   "field.name": "Your name or coder ID",
   "field.ph": "e.g. Anna, Coder_B",
-  "lang.ok": "I read English comfortably (the fragments are in English).",
   "consent": "I agree that my coding may be used and published as pseudonymised research data.",
+  "english.q": "How comfortably do you read English?",
+  "english.pick": "— choose —",
+  "english.native": "Native or near-native",
+  "english.fluent": "Fluent",
+  "english.good": "Good (I read articles without a dictionary)",
+  "english.basic": "Basic",
+  "err.english": "Please tell us how comfortably you read English.",
+  "err.basic": "This task needs comfortable English reading — thank you for your interest!",
+  "source.q": "How did you get this link?",
+  "source.public": "From a public post",
+  "source.researcher": "From the researcher personally",
+  "source.other": "Other",
+  "err.source": "Please tell us how you got the link.",
   "btn.start": "Start with the practice items",
   "err.name": "Please enter your name or coder ID.",
-  "err.lang": "Please confirm you read English comfortably.",
   "err.consent": "Please confirm the research-data consent.",
   "resume.finished": "This name has already finished all {n} fragments on this device. Resume shows the results again; Start over begins a fresh run.",
   "resume.found": "Saved progress for {name}: {done} of {n} fragments coded{practice}.",
@@ -137,11 +148,22 @@ I18N = {
   "rules.4": "Порядок случайный, у каждого кодировщика свой.",
   "field.name": "Ваше имя или код кодировщика",
   "field.ph": "например, Anna, Coder_B",
-  "lang.ok": "Я свободно читаю по-английски (фрагменты на английском).",
   "consent": "Я согласен/согласна, что моя разметка может быть использована и опубликована как обезличенные исследовательские данные.",
+  "english.q": "Насколько свободно вы читаете по-английски?",
+  "english.pick": "— выберите —",
+  "english.native": "Родной или почти родной",
+  "english.fluent": "Свободно",
+  "english.good": "Хорошо (читаю статьи без словаря)",
+  "english.basic": "Базовый",
+  "err.english": "Укажите, насколько свободно вы читаете по-английски.",
+  "err.basic": "Для этого задания нужно уверенное чтение по-английски — спасибо за интерес!",
+  "source.q": "Откуда у вас эта ссылка?",
+  "source.public": "Из публичного объявления",
+  "source.researcher": "Лично от исследователя",
+  "source.other": "Другое",
+  "err.source": "Укажите, откуда у вас ссылка.",
   "btn.start": "Начать с тренировочных примеров",
   "err.name": "Введите имя или код кодировщика.",
-  "err.lang": "Подтвердите, что свободно читаете по-английски.",
   "err.consent": "Подтвердите согласие на использование данных.",
   "resume.finished": "Под этим именем на этом устройстве уже размечены все {n} фрагментов. «Продолжить» покажет результаты снова, «Начать заново» запустит новый проход.",
   "resume.found": "Сохранённый прогресс для {name}: размечено {done} из {n}{practice}.",
@@ -230,11 +252,22 @@ I18N = {
   "rules.4": "הסדר אקראי ושונה אצל כל מקודד.",
   "field.name": "השם שלכם או מזהה מקודד",
   "field.ph": "לדוגמה: Anna, Coder_B",
-  "lang.ok": "אני קורא/ת אנגלית בנוחות (הקטעים באנגלית).",
   "consent": "אני מסכים/ה שהקידוד שלי ישמש ויפורסם כנתוני מחקר בשם בדוי.",
+  "english.q": "עד כמה בנוחות אתם קוראים אנגלית?",
+  "english.pick": "— בחרו —",
+  "english.native": "שפת אם או קרוב לזה",
+  "english.fluent": "שוטף",
+  "english.good": "טוב (קורא/ת מאמרים בלי מילון)",
+  "english.basic": "בסיסי",
+  "err.english": "נא לציין עד כמה בנוחות אתם קוראים אנגלית.",
+  "err.basic": "המשימה דורשת קריאה נוחה באנגלית — תודה על העניין!",
+  "source.q": "איך הגיע אליכם הקישור?",
+  "source.public": "מפרסום פומבי",
+  "source.researcher": "ישירות מהחוקר",
+  "source.other": "אחר",
+  "err.source": "נא לציין איך הגיע אליכם הקישור.",
   "btn.start": "להתחיל בפריטי התרגול",
   "err.name": "נא להזין שם או מזהה מקודד.",
-  "err.lang": "נא לאשר שאתם קוראים אנגלית בנוחות.",
   "err.consent": "נא לאשר את ההסכמה לשימוש בנתונים.",
   "resume.finished": "שם זה כבר סיים את כל {n} הקטעים במכשיר הזה. «להמשיך» יציג שוב את התוצאות, «להתחיל מחדש» יפתח מעבר חדש.",
   "resume.found": "התקדמות שמורה עבור {name}: קודדו {done} מתוך {n}{practice}.",
@@ -337,6 +370,8 @@ h2{font-size:18px;line-height:1.25;margin:0 0 10px;font-weight:650;text-wrap:bal
 label.field{display:block;font-size:13px;font-weight:600;margin-top:14px}
 input[type=text]{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font:inherit;background:var(--surface);color:var(--ink);margin-top:6px}
 input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+select{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font:inherit;background:var(--surface);color:var(--ink);margin-top:6px}
+select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .check{display:flex;gap:10px;align-items:flex-start;font-size:14px;margin-top:14px;cursor:pointer}
 .check input{margin-top:3px;accent-color:var(--accent)}
 .frag{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-block:12px 14px}
@@ -416,7 +451,21 @@ kbd{font:11px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:1px so
   </div>
   <label class="field" for="coder-name" data-i18n="field.name"></label>
   <input type="text" id="coder-name" data-i18n-ph="field.ph" autocomplete="off" maxlength="60">
-  <label class="check" for="lang-ok"><input type="checkbox" id="lang-ok"><span data-i18n="lang.ok"></span></label>
+  <label class="field" for="english-level" data-i18n="english.q"></label>
+  <select id="english-level">
+    <option value="" data-i18n="english.pick"></option>
+    <option value="native" data-i18n="english.native"></option>
+    <option value="fluent" data-i18n="english.fluent"></option>
+    <option value="good" data-i18n="english.good"></option>
+    <option value="basic" data-i18n="english.basic"></option>
+  </select>
+  <label class="field" for="source" data-i18n="source.q"></label>
+  <select id="source">
+    <option value="" data-i18n="english.pick"></option>
+    <option value="public" data-i18n="source.public"></option>
+    <option value="researcher" data-i18n="source.researcher"></option>
+    <option value="other" data-i18n="source.other"></option>
+  </select>
   <label class="check" for="consent-ok"><input type="checkbox" id="consent-ok"><span data-i18n="consent"></span></label>
   <div class="actions">
     <button class="btn" id="btn-start" type="button" data-i18n="btn.start"></button>
@@ -515,7 +564,7 @@ const use = name => (window.claude && typeof window.claude.use === "function")
 let S = blank();
 let q1 = null, q2 = null, itemStart = 0, checked = false, sessionTimer = null;
 
-function blank() { return { coder: "", mode: "welcome", pIdx: 0, cIdx: 0, order: [], answers: [], practice: [], startedAt: null, finishedAt: null, seed: 0, lang: LANG }; }
+function blank() { return { coder: "", mode: "welcome", pIdx: 0, cIdx: 0, order: [], answers: [], practice: [], startedAt: null, finishedAt: null, seed: 0, lang: LANG, english: "", source: "" }; }
 function t(k, vars) { let v = (I18N[LANG] && I18N[LANG][k] !== undefined) ? I18N[LANG][k] : I18N.en[k]; if (v === undefined) return k; if (vars) for (const x in vars) v = v.split("{" + x + "}").join(vars[x]); return v; }
 function why(i) { const a = (I18N[LANG] && I18N[LANG]["practice.why"]) || I18N.en["practice.why"]; return a[i] || ""; }
 let lastFb = null;
@@ -565,7 +614,10 @@ function setMsg(id, text, err) { const el = $(id); el.textContent = text || ""; 
 $("btn-start").addEventListener("click", () => {
   const name = $("coder-name").value.trim();
   if (!name) { setMsg("welcome-msg", t("err.name"), true); return; }
-  if (!$("lang-ok").checked) { setMsg("welcome-msg", t("err.lang"), true); return; }
+  const lvl = $("english-level").value, src = $("source").value;
+  if (!lvl) { setMsg("welcome-msg", t("err.english"), true); return; }
+  if (lvl === "basic") { setMsg("welcome-msg", t("err.basic"), true); return; }
+  if (!src) { setMsg("welcome-msg", t("err.source"), true); return; }
   if (!$("consent-ok").checked) { setMsg("welcome-msg", t("err.consent"), true); return; }
   setMsg("welcome-msg", "");
   const saved = loadSaved(name);
@@ -576,13 +628,13 @@ $("btn-start").addEventListener("click", () => {
       : t("resume.found", { name: name, done: done, n: N, practice: (saved.mode === "practice" ? t("resume.practice") : "") });
     $("resume").hidden = false;
     $("btn-resume").onclick = () => { S = saved; $("resume").hidden = true; if (S.lang) setLang(S.lang, false); resume(); };
-    $("btn-restart").onclick = () => { $("resume").hidden = true; begin(name); };
+    $("btn-restart").onclick = () => { $("resume").hidden = true; begin(name, lvl, src); };
     return;
   }
-  begin(name);
+  begin(name, lvl, src);
 });
-function begin(name) {
-  S = blank(); S.coder = name; S.seed = hashStr(name); S.lang = LANG;
+function begin(name, lvl, src) {
+  S = blank(); S.coder = name; S.seed = hashStr(name); S.lang = LANG; S.english = lvl || ""; S.source = src || "";
   S.order = seededShuffle(Array.from({ length: N }, (_, i) => i), S.seed);
   S.mode = "practice"; persist(); resume();
 }
@@ -686,10 +738,10 @@ function csvCell(s) { s = String(s == null ? "" : s); return /[",\n\r]/.test(s) 
 function buildCSV() {
   const text = {}; FRAGMENTS.forEach(f => { text[f.id] = f.text; });
   const rows = S.answers.slice().sort((a, b) => a.frag_id.localeCompare(b.frag_id));
-  const head = ["frag_id", "text", "human_relevant_0_1", "human_valence_minus_plus_none", "position", "time_seconds", "coder", "codebook_version", "order_seed", "session_start", "session_end", "ui_language"];
+  const head = ["frag_id", "text", "human_relevant_0_1", "human_valence_minus_plus_none", "position", "time_seconds", "coder", "codebook_version", "order_seed", "session_start", "session_end", "ui_language", "english_level", "source"];
   const lines = [head.join(",")];
   for (const r of rows) {
-    lines.push([r.frag_id, text[r.frag_id] || "", r.rel, r.val, r.position, r.secs, S.coder, CODEBOOK, S.seed, S.startedAt || "", S.finishedAt || "", S.lang || LANG].map(csvCell).join(","));
+    lines.push([r.frag_id, text[r.frag_id] || "", r.rel, r.val, r.position, r.secs, S.coder, CODEBOOK, S.seed, S.startedAt || "", S.finishedAt || "", S.lang || LANG, S.english || "", S.source || ""].map(csvCell).join(","));
   }
   return lines.join("\n") + "\n";
 }
