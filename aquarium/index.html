@@ -88,21 +88,33 @@
   }
 
   /* ============================================================
-     OPTIONAL REAL BACKGROUND  (literal 100% fidelity)
-     Drop the original still into aquarium/assets/ and it is used
-     as the backdrop instead of the procedural reef.
+     РИФ В ДВА СЛОЯ (рендер Blender, см. blender/reef.py)
+       assets/reef_bg.jpg — задник: вода, дальний риф, песок;
+       assets/reef_fg.png — прозрачный передний план (ближние кораллы):
+                            дальние рыбы проплывают ЗА ним, самые близкие
+                            (depth >= FG_SPLIT) — перед ним.
+     Если картинок нет — рисуется процедурный риф.
      ============================================================ */
   const BG_CANDIDATES = [
-    "assets/background.jpg", "assets/background.png",
+    "assets/reef_bg.jpg", "assets/background.jpg", "assets/background.png",
     "assets/reef.jpg", "assets/reef.png", "assets/marine.jpg",
   ];
-  let bgImg = null, bgReady = false;
+  const FG_CANDIDATES = ["assets/reef_fg.png"];
+  const FG_SPLIT = 0.82;
+  let bgImg = null, bgReady = false, fgImg = null, fgReady = false;
   (function loadBG(i) {
     if (i >= BG_CANDIDATES.length) return;
     const im = new Image();
     im.onload = () => { bgImg = im; bgReady = true; };
     im.onerror = () => loadBG(i + 1);
     im.src = BG_CANDIDATES[i];
+  })(0);
+  (function loadFG(i) {
+    if (i >= FG_CANDIDATES.length) return;
+    const im = new Image();
+    im.onload = () => { fgImg = im; fgReady = true; };
+    im.onerror = () => loadFG(i + 1);
+    im.src = FG_CANDIDATES[i];
   })(0);
 
   function drawCover(img) {
@@ -280,7 +292,7 @@
     // бегущая волна вдоль тела через вертикальные полосы
     // u=0 — хвост (слева), u=1 — нос (справа); амплитуда максимум у хвоста
     const n = 22;
-    const amp = h * (0.05 + 0.09 * speedFrac);
+    const amp = h * (0.03 + 0.05 * speedFrac);   // объёмные 3D-рыбы гнутся мягче
     const K = 5.0; // длина волны вдоль тела
     for (let i = 0; i < n; i++) {
       const u = i / (n - 1);
@@ -957,7 +969,8 @@
     // ---- render ----
     if (bgReady) {
       drawCover(bgImg);
-      // фотофон уже содержит свет/лучи — поверх только живые пузырьки и рыбы
+      // рендер рифа уже освещён — поверх лишь лёгкие живые лучи света
+      ctx.save(); ctx.globalAlpha = 0.35; drawRays(t); ctx.restore();
     } else {
       drawWater();
       drawSurface(t);
@@ -971,7 +984,9 @@
     }
 
     fishes.sort((a, b) => a.depth - b.depth);
-    for (const f of fishes) drawFish(f, t);
+    // дальние рыбы — за передним планом рифа, самые близкие — перед ним
+    for (const f of fishes) if (!fgReady || f.depth < FG_SPLIT) drawFish(f, t);
+    if (fgReady) { drawCover(fgImg); for (const f of fishes) if (f.depth >= FG_SPLIT) drawFish(f, t); }
     for (const p of pellets) drawPellet(p);
     for (const b of bubbles) drawBubble(b);
     drawVignette();
