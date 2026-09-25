@@ -1,0 +1,49 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__.*[Gg]mail.*",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 30,
+            "command": "G=\"${SUPPORT_GUARD_PATH:-$CLAUDE_PROJECT_DIR/tools/support_guard.py}\"; [ -f \"$G\" ] || G=\"${SUPPORT_GUARD_FALLBACK:-/home/user/tonamorph/tools/support_guard.py}\"; [ -f \"$G\" ] || { echo 'support-guard is missing, so Gmail stays closed: clone GregoryDich/tonamorph to /home/user/tonamorph' >&2; exit 2; }; python3 \"$G\" hook pre; s=$?; [ \"$s\" -eq 0 ] && exit 0; exit 2"
+          }
+        ]
+      },
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 30,
+            "command": "S=\"${SUPPORT_GUARD_STATE:-$HOME/.claude/support-guard}\"; [ -n \"$(ls -A \"$S/tainted\" 2>/dev/null)\" ] || exit 0; G=\"${SUPPORT_GUARD_PATH:-$CLAUDE_PROJECT_DIR/tools/support_guard.py}\"; [ -f \"$G\" ] || G=\"${SUPPORT_GUARD_FALLBACK:-/home/user/tonamorph/tools/support_guard.py}\"; [ -f \"$G\" ] || { echo 'support-guard: this session has read external email and the guard is missing; refusing' >&2; exit 2; }; python3 \"$G\" hook pre; s=$?; [ \"$s\" -eq 0 ] && exit 0; exit 2"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__.*[Gg]mail.*",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 30,
+            "command": "S=\"${SUPPORT_GUARD_STATE:-$HOME/.claude/support-guard}\"; G=\"${SUPPORT_GUARD_PATH:-$CLAUDE_PROJECT_DIR/tools/support_guard.py}\"; [ -f \"$G\" ] || G=\"${SUPPORT_GUARD_FALLBACK:-/home/user/tonamorph/tools/support_guard.py}\"; python3 \"$G\" hook post || { mkdir -p \"$S/tainted\" && : > \"$S/tainted/_unknown\"; }"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 30,
+            "command": "G=\"${SUPPORT_GUARD_PATH:-$CLAUDE_PROJECT_DIR/tools/support_guard.py}\"; [ -f \"$G\" ] || G=\"${SUPPORT_GUARD_FALLBACK:-/home/user/tonamorph/tools/support_guard.py}\"; [ -f \"$G\" ] && python3 \"$G\" hook prompt; exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}
