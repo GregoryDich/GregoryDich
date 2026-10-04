@@ -52,7 +52,7 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .22em
 .skip { position: absolute; inset-inline-start: 12px; top: -64px; z-index: 30; background: var(--green); color: var(--cream); padding: 10px 14px; border-radius: 6px; text-decoration: none; }
 .skip:focus { top: 12px; }
 .top-sentinel { position: absolute; top: 0; height: 1px; width: 1px; }
-.site-header { position: sticky; top: 0; z-index: 20; background: var(--paper); border-bottom: 1px solid transparent; transition: border-color .3s var(--ease), box-shadow .3s var(--ease); }
+.site-header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--paper); border-bottom: 1px solid transparent; transition: border-color .3s var(--ease), box-shadow .3s var(--ease); }
 .site-header.is-stuck { border-bottom-color: var(--line-soft); box-shadow: 0 10px 24px -20px rgba(36, 28, 18, .45); }
 .site-header__in { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0 24px; min-height: var(--header-h); }
 .brand { display: block; width: 150px; height: 34px; }
@@ -100,7 +100,7 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .22em
 .shelf__links a:hover { color: var(--green); text-decoration: underline; }
 
 /* Plates (product presentations) */
-.plate { position: relative; aspect-ratio: 1 / .9; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); overflow: hidden; isolation: isolate; }
+.plate { position: relative; max-width: 100%; aspect-ratio: 1 / .9; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); overflow: hidden; isolation: isolate; }
 .plate--bare { aspect-ratio: auto; height: 100%; background: none; border: 0; border-radius: 0; overflow: visible; }
 .plate .pic { position: absolute; }
 .plate .pic--main { inset: 9% 10% 12% 10%; }
@@ -229,14 +229,11 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .22em
   .step { padding-inline-start: 48px; }
 }
 
-/* Motion start states: only when scripts run and motion is welcome */
+/* Content is complete at rest; scripts only animate decorative lines from zero. */
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
-  .js .hero__title, .js .hero__sub, .js .hero__latin, .js .shelf .pic, .js .shelf .glow, .js .shelf__title, .js .shelf__links, .js .protocol .plate .pic, .js .maintain .pic { opacity: 0; }
-  .js .hero__rule { transform: scaleX(0); }
   .js .steps__bar { transform: scaleY(0); }
   .js .stages__line { transform: scaleX(0); }
-  .js .stage__num { opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .steps__bar { display: none; }

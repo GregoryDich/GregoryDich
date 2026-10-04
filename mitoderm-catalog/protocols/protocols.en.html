@@ -76,7 +76,7 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .22em
 .skip { position: absolute; inset-inline-start: 12px; top: -64px; z-index: 30; background: var(--green); color: var(--cream); padding: 10px 14px; border-radius: 6px; text-decoration: none; }
 .skip:focus { top: 12px; }
 .top-sentinel { position: absolute; top: 0; height: 1px; width: 1px; }
-.site-header { position: sticky; top: 0; z-index: 20; background: var(--paper); border-bottom: 1px solid transparent; transition: border-color .3s var(--ease), box-shadow .3s var(--ease); }
+.site-header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--paper); border-bottom: 1px solid transparent; transition: border-color .3s var(--ease), box-shadow .3s var(--ease); }
 .site-header.is-stuck { border-bottom-color: var(--line-soft); box-shadow: 0 10px 24px -20px rgba(36, 28, 18, .45); }
 .site-header__in { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0 24px; min-height: var(--header-h); }
 .brand { display: block; width: 150px; height: 34px; }
@@ -124,7 +124,7 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .22em
 .shelf__links a:hover { color: var(--green); text-decoration: underline; }
 
 /* Plates (product presentations) */
-.plate { position: relative; aspect-ratio: 1 / .9; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); overflow: hidden; isolation: isolate; }
+.plate { position: relative; max-width: 100%; aspect-ratio: 1 / .9; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); overflow: hidden; isolation: isolate; }
 .plate--bare { aspect-ratio: auto; height: 100%; background: none; border: 0; border-radius: 0; overflow: visible; }
 .plate .pic { position: absolute; }
 .plate .pic--main { inset: 9% 10% 12% 10%; }
@@ -253,14 +253,11 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .22em
   .step { padding-inline-start: 48px; }
 }
 
-/* Motion start states: only when scripts run and motion is welcome */
+/* Content is complete at rest; scripts only animate decorative lines from zero. */
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
-  .js .hero__title, .js .hero__sub, .js .hero__latin, .js .shelf .pic, .js .shelf .glow, .js .shelf__title, .js .shelf__links, .js .protocol .plate .pic, .js .maintain .pic { opacity: 0; }
-  .js .hero__rule { transform: scaleX(0); }
   .js .steps__bar { transform: scaleY(0); }
   .js .stages__line { transform: scaleX(0); }
-  .js .stage__num { opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .steps__bar { display: none; }
@@ -376,31 +373,16 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .22em
     var ease = [0.16, 1, 0.3, 1];
     var $ = function (sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); };
 
-    // Focal moment: the title settles, the gold rule draws, the product families rise onto their light.
+    // Focal moment: the gold rule draws and the product families settle onto their light.
+    // Everything starts visible; only position and the decorative glow change.
     var hero = document.querySelector('[data-hero]');
     if (hero && !reduce) {
-      animate(hero.querySelector('.hero__title'),
-        { opacity: [0, 1], clipPath: ['inset(0 0 100% 0)', 'inset(0 0 0% 0)'], transform: ['translateY(18px)', 'translateY(0px)'] },
-        { duration: 0.75, ease: ease });
-      animate(hero.querySelector('.hero__rule'), { transform: ['scaleX(0)', 'scaleX(1)'] }, { duration: 0.7, delay: 0.18, ease: ease });
-      animate($('.hero__sub, .hero__latin', hero), { opacity: [0, 1], transform: ['translateY(8px)', 'translateY(0px)'] },
-        { duration: 0.5, delay: stagger(0.06, { startDelay: 0.22 }), ease: ease });
+      animate(hero.querySelector('.hero__rule'), { transform: ['scaleX(0)', 'scaleX(1)'] }, { duration: 0.7, delay: 0.1, ease: ease });
       animate($('.shelf .glow', hero), { opacity: [0, 1], transform: ['scaleX(0.4)', 'scaleX(1)'] },
-        { duration: 0.9, delay: stagger(0.1, { startDelay: 0.3 }), ease: ease });
-      animate($('.shelf .pic', hero), { opacity: [0, 1], transform: ['translateY(40px)', 'translateY(0px)'] },
-        { duration: 0.8, delay: stagger(0.07, { startDelay: 0.38 }), ease: ease });
-      animate($('.shelf__title, .shelf__links', hero), { opacity: [0, 1], transform: ['translateY(8px)', 'translateY(0px)'] },
-        { duration: 0.5, delay: stagger(0.05, { startDelay: 0.6 }), ease: ease });
+        { duration: 1, delay: stagger(0.1, { startDelay: 0.1 }), ease: ease });
+      animate($('.shelf .pic', hero), { transform: ['translateY(18px)', 'translateY(0px)'] },
+        { duration: 0.9, delay: stagger(0.06, { startDelay: 0.15 }), ease: ease });
     }
-
-    // Product plates rise once, the first time they come into view.
-    $('.protocol .plate, .maintain .plate').forEach(function (plate) {
-      if (reduce) return;
-      inView(plate, function () {
-        animate($('.pic', plate), { opacity: [0, 1], transform: ['translateY(26px)', 'translateY(0px)'] },
-          { duration: 0.7, delay: stagger(0.1), ease: ease });
-      }, { amount: 0.3 });
-    });
 
     // Step sequences: the gold line follows reading progress, each marker fills once its step is reached.
     $('.steps-wrap').forEach(function (wrap) {
@@ -419,8 +401,6 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .22em
       if (reduce) return;
       inView(wrap, function () {
         animate(wrap.querySelector('.stages__line'), { transform: ['scaleX(0)', 'scaleX(1)'] }, { duration: 0.9, ease: ease });
-        animate($('.stage__num', wrap), { opacity: [0, 1], transform: ['scale(0.6)', 'scale(1)'] },
-          { duration: 0.5, delay: stagger(0.16, { startDelay: 0.1 }), ease: ease });
       }, { amount: 0.25 });
     });
 

@@ -9,31 +9,16 @@
     var ease = [0.16, 1, 0.3, 1];
     var $ = function (sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); };
 
-    // Focal moment: the title settles, the gold rule draws, the product families rise onto their light.
+    // Focal moment: the gold rule draws and the product families settle onto their light.
+    // Everything starts visible; only position and the decorative glow change.
     var hero = document.querySelector('[data-hero]');
     if (hero && !reduce) {
-      animate(hero.querySelector('.hero__title'),
-        { opacity: [0, 1], clipPath: ['inset(0 0 100% 0)', 'inset(0 0 0% 0)'], transform: ['translateY(18px)', 'translateY(0px)'] },
-        { duration: 0.75, ease: ease });
-      animate(hero.querySelector('.hero__rule'), { transform: ['scaleX(0)', 'scaleX(1)'] }, { duration: 0.7, delay: 0.18, ease: ease });
-      animate($('.hero__sub, .hero__latin', hero), { opacity: [0, 1], transform: ['translateY(8px)', 'translateY(0px)'] },
-        { duration: 0.5, delay: stagger(0.06, { startDelay: 0.22 }), ease: ease });
+      animate(hero.querySelector('.hero__rule'), { transform: ['scaleX(0)', 'scaleX(1)'] }, { duration: 0.7, delay: 0.1, ease: ease });
       animate($('.shelf .glow', hero), { opacity: [0, 1], transform: ['scaleX(0.4)', 'scaleX(1)'] },
-        { duration: 0.9, delay: stagger(0.1, { startDelay: 0.3 }), ease: ease });
-      animate($('.shelf .pic', hero), { opacity: [0, 1], transform: ['translateY(40px)', 'translateY(0px)'] },
-        { duration: 0.8, delay: stagger(0.07, { startDelay: 0.38 }), ease: ease });
-      animate($('.shelf__title, .shelf__links', hero), { opacity: [0, 1], transform: ['translateY(8px)', 'translateY(0px)'] },
-        { duration: 0.5, delay: stagger(0.05, { startDelay: 0.6 }), ease: ease });
+        { duration: 1, delay: stagger(0.1, { startDelay: 0.1 }), ease: ease });
+      animate($('.shelf .pic', hero), { transform: ['translateY(18px)', 'translateY(0px)'] },
+        { duration: 0.9, delay: stagger(0.06, { startDelay: 0.15 }), ease: ease });
     }
-
-    // Product plates rise once, the first time they come into view.
-    $('.protocol .plate, .maintain .plate').forEach(function (plate) {
-      if (reduce) return;
-      inView(plate, function () {
-        animate($('.pic', plate), { opacity: [0, 1], transform: ['translateY(26px)', 'translateY(0px)'] },
-          { duration: 0.7, delay: stagger(0.1), ease: ease });
-      }, { amount: 0.3 });
-    });
 
     // Step sequences: the gold line follows reading progress, each marker fills once its step is reached.
     $('.steps-wrap').forEach(function (wrap) {
@@ -52,8 +37,6 @@
       if (reduce) return;
       inView(wrap, function () {
         animate(wrap.querySelector('.stages__line'), { transform: ['scaleX(0)', 'scaleX(1)'] }, { duration: 0.9, ease: ease });
-        animate($('.stage__num', wrap), { opacity: [0, 1], transform: ['scale(0.6)', 'scale(1)'] },
-          { duration: 0.5, delay: stagger(0.16, { startDelay: 0.1 }), ease: ease });
       }, { amount: 0.25 });
     });
 
