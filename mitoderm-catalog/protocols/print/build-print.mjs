@@ -90,7 +90,7 @@ function html(C) {
   const parts = [];
   // Cover
   parts.push(`<template data-kind="fixed"><section class="page cover"><div class="cglow"></div><div class="cframe"></div>
-<img class="clogo" src="img/mitoderm-logo.webp" alt="MITODERM">
+<img class="clogo" src="img/mitoderm-logo.svg" alt="MITODERM">
 <div class="ctext">${C.hero.latin ? `<p class="ckick">${L(C.hero.latin)}</p>` : ''}<h1 class="ctitle1">${L(C.hero.title)}</h1><p class="csub">${L(C.hero.sub)}</p>
 <ul class="cfams">${C.families.map(f => `<li><span class="fam">${L(f.title)}</span>${f.tile.links.map(([t]) => `<span class="prot">${L(t)}</span>`).join('')}</li>`).join('')}</ul></div>
 <div class="cshelf">${shelf([['micro-boost-10', .86], ['vtech-system', .9], ['mitopen', 1], ['exo-nad', .5], ['exocell-mask', .64]], 384, 250, 10)}</div>
@@ -115,7 +115,7 @@ function html(C) {
       parts.push(opener(f, p, ORDER[p.id].map(k => (k === 'steps' ? steps(p.steps) : section(p[k.split(':')[0]][+k.split(':')[1]]))).join('')));
     }
   }
-  parts.push(`<template data-kind="fixed"><section class="page back"><div class="cglow"></div><div class="cframe"></div><img class="blogo" src="img/mitoderm-logo.webp" alt="MITODERM"></section></template>`);
+  parts.push(`<template data-kind="fixed"><section class="page back"><div class="cglow"></div><div class="cframe"></div><img class="blogo" src="img/mitoderm-logo.svg" alt="MITODERM"></section></template>`);
 
   return `<!doctype html>
 <html lang="${C.lang}" dir="${C.dir}">
@@ -185,7 +185,8 @@ p, h1, h2, h3, h4, ul, figure { margin: 0; padding: 0; }
 .cglow { position: absolute; left: 0; right: 0; bottom: -60px; height: 380px; background: radial-gradient(60% 55% at 62% 70%, rgba(212,168,83,.32), rgba(212,168,83,.1) 55%, rgba(212,168,83,0)); }
 [dir="rtl"] .cglow { background: radial-gradient(60% 55% at 38% 70%, rgba(212,168,83,.32), rgba(212,168,83,.1) 55%, rgba(212,168,83,0)); }
 .cframe { position: absolute; inset: 16px; border: 1px solid rgba(212, 168, 83, .5); }
-.clogo { position: absolute; top: 46px; inset-inline-start: 54px; width: 190px; filter: brightness(0) invert(1); }
+/* The logo is a white vector (traced from the 1600 px Figma original). No CSS filter: Chromium prints filtered elements as 300 dpi bitmaps. */
+.clogo { position: absolute; top: 46px; inset-inline-start: 54px; width: 190px; }
 .ctext { position: absolute; top: 132px; inset-inline-start: 54px; width: 330px; color: var(--cream); }
 .ckick { font: 500 10px/14px Rubik; letter-spacing: .16em; color: var(--glow); margin-bottom: 10px; }
 .ctitle1 { font: 700 30px/34px Rubik; color: var(--cream); text-wrap: balance; }
@@ -195,7 +196,7 @@ p, h1, h2, h3, h4, ul, figure { margin: 0; padding: 0; }
 .cfams .fam { display: block; font: 500 10px/14px Rubik; letter-spacing: .1em; color: var(--glow); margin-bottom: 2px; }
 .cfams .prot { display: block; font: 400 10px/14px Rubik; color: rgba(248, 243, 232, .85); }
 .cshelf { position: absolute; bottom: 76px; inset-inline-end: 40px; width: 384px; height: 250px; display: flex; align-items: flex-end; justify-content: center; gap: 10px; }
-.blogo { position: absolute; left: 50%; top: 50%; width: 300px; transform: translate(-50%, -50%); filter: brightness(0) invert(1); }
+.blogo { position: absolute; left: 50%; top: 50%; width: 300px; transform: translate(-50%, -50%); }
 
 /* Showcase: home maintenance products standing on one line, captions under them, text below */
 .sglow { position: absolute; left: 140px; right: 140px; top: 216px; height: 200px; background: radial-gradient(closest-side, rgba(212, 168, 83, .24), rgba(212, 168, 83, 0)); }
