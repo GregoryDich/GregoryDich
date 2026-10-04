@@ -108,7 +108,7 @@ function html(C) {
         parts.push(`<template data-kind="fixed"><section class="page showcase" style="${vars('maintain')}"><div class="band"></div><div class="wm">MITODERM</div>
 <h3 class="ctitle">${L(m.title)}</h3><div class="hair chair"></div><div class="sglow"></div>
 <div class="srow" style="gap:${G.toFixed(1)}px">${items.map(([k, w, h]) => `<div class="sslot" style="width:${w.toFixed(1)}px"><div class="simg"><img src="img/${k}.webp" alt="" style="height:${h.toFixed(1)}px;width:${w.toFixed(1)}px"></div><span class="sname" style="width:${(w + G - 8).toFixed(1)}px">${L(NAMES[k])}</span></div>`).join('')}</div>
-<div class="sline"></div><div class="stext">${m.body.map(item).join('')}</div>
+<div class="stext">${m.body.map(item).join('')}</div>
 <div class="colo"><bdi dir="ltr">${COLO}</bdi></div></section></template>`);
         continue;
       }
@@ -142,7 +142,6 @@ p, h1, h2, h3, h4, ul, figure { margin: 0; padding: 0; }
 .pframe { position: absolute; inset: 14px; border: 1px solid rgba(212, 168, 83, .45); }
 .pwm { position: absolute; top: 26px; left: 0; right: 0; text-align: center; font: 700 12px/16px Rubik; letter-spacing: .08em; color: #fff; }
 .pshelf { position: absolute; left: 32px; right: 32px; top: 74px; height: 262px; display: flex; align-items: flex-end; justify-content: center; gap: 14px; }
-.pshelf::after { content: ""; position: absolute; left: -8px; right: -8px; bottom: -1px; height: 1px; background: linear-gradient(90deg, rgba(212,168,83,0), rgba(212,168,83,.55), rgba(212,168,83,0)); }
 .pcolo { position: absolute; top: 527px; left: 0; right: 0; text-align: center; font: 400 10px/15px Rubik; color: #fff; }
 .side { position: absolute; top: 24px; bottom: 41px; inset-inline-start: 54px; width: 400px; display: flex; flex-direction: column; }
 .kicker { font: 500 10px/14px Rubik; letter-spacing: .1em; color: var(--acc); margin-bottom: 8px; }
@@ -204,14 +203,12 @@ p, h1, h2, h3, h4, ul, figure { margin: 0; padding: 0; }
 .sslot { display: flex; flex-direction: column; align-items: center; }
 .simg { height: 256px; display: flex; align-items: flex-end; }
 .sname { margin-top: 12px; flex: none; font: 500 10px/14px Rubik; letter-spacing: .04em; color: var(--acc); text-align: center; text-wrap: balance; }
-.sline { position: absolute; top: 354px; left: 54px; right: 54px; height: 1px; background: linear-gradient(90deg, rgba(158,102,31,0), rgba(158,102,31,.45), rgba(158,102,31,0)); }
 .stext { position: absolute; top: 428px; inset-inline-start: 54px; width: 686px; columns: 2; column-gap: 14px; }
 
 /* Packshots closing a protocol in the column its text leaves empty */
 .cfill { position: absolute; left: 0; right: 0; bottom: 0; }
 .fglow { position: absolute; left: 0; right: 0; bottom: 0; height: 70%; background: radial-gradient(closest-side, rgba(212, 168, 83, .2), rgba(212, 168, 83, 0)); }
 .fshelf { position: absolute; left: 0; right: 0; bottom: 22px; display: flex; align-items: flex-end; justify-content: center; gap: 14px; }
-.fshelf::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 1px; background: linear-gradient(90deg, rgba(158,102,31,0), rgba(158,102,31,.45), rgba(158,102,31,0)); }
 .stext .ul li { break-inside: avoid; }
 </style>
 </head>
