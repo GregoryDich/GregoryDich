@@ -153,3 +153,5 @@ ${assets.app}
 </html>
 `;
 }
+
+export { esc, clean, tieRu, PRODUCT_RE };
