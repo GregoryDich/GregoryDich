@@ -2,7 +2,7 @@
 // Usage: node mitoderm-catalog/protocols/print/build-print.mjs [he ru en]
 // Needs playwright-core (resolvable via NODE_PATH or PLAYWRIGHT_CORE) and Chromium (CHROMIUM_PATH).
 // QA_DIR=<dir> also writes a PNG of every page for review.
-// press.py then trims the page box and writes a -press.pdf copy with 3 mm bleed (needs python3 + PyMuPDF).
+// press.py then makes each PDF print-ready: exact page box plus 3 mm bleed (needs python3 + PyMuPDF).
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';

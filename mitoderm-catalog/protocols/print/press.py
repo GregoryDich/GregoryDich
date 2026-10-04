@@ -1,12 +1,14 @@
 # Post-processing of the Chromium PDFs (called by build-print.mjs; needs PyMuPDF: pip install pymupdf).
 # 1. Chromium rounds the page up to 595.92 x 420.96 pt, leaving a white hairline on the right and bottom
 #    edges. The page box is cut back to the layout, 794 x 561 px = 595.5 x 420.75 pt.
-# 2. A press copy gets 3 mm bleed: the page stays vector inside the trim, and every edge is extended
+# 2. The file is then rewritten print-ready with 3 mm bleed (one file per language, no separate copy):
+#    the page stays vector inside the trim, and every edge is extended
 #    outward by its own outermost pixels (a 1 px strip of a 600 dpi render, stretched over the bleed).
 #    TrimBox/BleedBox are set for the printer.
 #    Stretching the vector page itself instead makes renderers scale every image on the page 17x;
 #    MuPDF refuses that ("overly large image"), so a RIP could too.
 import io
+import os
 import sys
 import numpy as np
 import pymupdf
@@ -59,4 +61,5 @@ def press(src_path, out_path):
 if __name__ == '__main__':
     for path in sys.argv[1:]:
         trim(path)
-        press(path, path[:-4] + '-press.pdf')
+        press(path, path + '.tmp')
+        os.replace(path + '.tmp', path)
