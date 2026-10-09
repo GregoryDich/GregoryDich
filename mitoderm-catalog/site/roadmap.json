@@ -1,0 +1,13 @@
+{
+ "updated": "2026-10-10",
+ "proto_url": "https://claude.ai/artifact/HQsmahH1sHFVnnqU7ncf1Z",
+ "steps": [
+  {"id": "S1", "step": "Раскадровка 15 страниц + промпты кадров и переходов", "time": "40 мин", "weight": "ядро", "status": "done", "status_ru": "готово", "note": "4 сценариста по семействам → 4 критика (факты каталога, лестница Ханта, краткость). storyboard.md, prompts/*.md, лист Storyboard в Excel."},
+  {"id": "S2", "step": "Figma: цвета средств, пакшоты в HeroArt, логотип в шапках", "time": "30 мин", "weight": "высокая", "status": "running", "status_ru": "в работе", "note": "Цвета применены на всех страницах и карточках. Пакшоты: upload_assets заблокирован прокси → загрузка через текстовые узлы; логотип — после пакшотов."},
+  {"id": "S3a", "step": "Пилот EXOCELL MASK — HTML-прототип Story Scroll", "time": "60 мин", "weight": "ядро", "status": "done", "status_ru": "готово", "note": "7 блоков, скролл-скраб сцен, мобильная версия, reduced-motion. Пока кадры-заглушки; клипы и стиллы подключаются файлами scenes/ и transitions/."},
+  {"id": "S3b", "step": "Пилот EXOCELL MASK — генерация 7 кадров сцен", "time": "20 мин + генерация", "weight": "высокая", "status": "blocked", "status_ru": "ждёт решения", "note": "Higgsfield через MCP: бесплатный план не даёт генерировать («Requires basic plan or higher», баланс 1 кредит). Варианты: апгрейд плана, или генерация по промптам у тебя, или Figma AI (платно, кредиты Figma)."},
+  {"id": "S3c", "step": "Пилот EXOCELL MASK — 6 переходов в Kling", "time": "у заказчика", "weight": "высокая", "status": "todo", "status_ru": "после кадров", "note": "Пары старт/конец и промпты движения — в prompts/exocell-mask.md. Клипы 1920×1080 + кроп 1080×1350 → в прототип."},
+  {"id": "S4", "step": "Масштабирование на 11 средств + 3 страницы знаний", "time": "после одобрения пилота", "weight": "средняя", "status": "todo", "status_ru": "в очереди", "note": "Кадры батчами, раскадровка блоков в Figma, промпт Make v3 со сценарием, иврит для новых коротких строк."},
+  {"id": "S5", "step": "Репо и отчёт: storyboard, промпты, Excel, QA-report проход 37", "time": "10 мин", "weight": "средняя", "status": "running", "status_ru": "в работе", "note": "Коммит и пуш после финала workflow."}
+ ]
+}
