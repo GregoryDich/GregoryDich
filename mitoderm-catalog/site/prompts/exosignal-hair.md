@@ -24,7 +24,7 @@ Photoreal cinematic product hero, 16:9. A matte black landscape carton (wider th
 **Переход 0→1 (Kling, start frame = кадр 0, end frame = кадр 1):**
 
 ```
-Start: block-0 hero (black box right, ampoules in front). The camera slides along the gold lettering and up past the ampoule necks into the black; a circular scope light opens in the dark and reveals a ×50 scalp view: follicle openings, thin hairs. End: block-1 trichoscope macro. 4 s, lateral dolly then push-in, black to scope circle. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start: block-0 hero (black box right, ampoules in front). The camera slides along the box face and up past the ampoule necks into the black; a circular scope light opens in the dark and reveals a ×50 scalp view: follicle openings, thin hairs. End: block-1 trichoscope macro. 4 s, lateral dolly then push-in, black to scope circle. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 1 · Why — «Hair loss has a starting point»
@@ -56,7 +56,7 @@ CTA: Secondary: Full formula ↓
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal macro, 16:9. A clear glass ampoule with its neck snapped open, tilted, a single clear drop falling from it on the left; centre-right the drop enlarged into a translucent sphere (an engineered vesicle) with glowing strands and particles inside, warm gold (#C9A24A) backlight on matte black (#111111). Camera: 100 mm macro, f/4, sphere sharp, ampoule slightly soft. No overlay text, no logos, no labels.
+Photoreal macro, 16:9. A clear glass snap-neck ampoule with its neck snapped open, tilted, a single clear drop falling from it on the left; centre-right the drop enlarged into a translucent sphere (an engineered vesicle) with glowing strands and particles inside, warm gold (#C9A24A) backlight on matte black (#111111). Camera: 100 mm macro, f/4, sphere sharp, ampoule slightly soft. No overlay text, no logos, no labels.
 ```
 
 **Mobile 9:16:** Macro cropped to 4:5 centred on the sphere; the eight-dot ring stays; label pins become a 2×2 list below.
@@ -76,7 +76,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal cinematic portrait, 16:9. A woman in her thirties with fine, thinning hair sits facing the camera as if into a mirror; behind her a practitioner dressed in black parts her hair and applies a clear serum from a glass ampoule along the parting with gloved fingers. Her eyes meet the lens, hopeful and calm. Environment: dark trichology room with matte black walls, a warm gold key light from the front-left, a faint cool glow from a screen at the right edge. Camera: 85 mm, f/2, eye level, subject in the left two-thirds, right third dark for text. No overlay text, no logos.
+Photoreal cinematic portrait, 16:9. A woman in her thirties with fine, thinning hair sits facing the camera as if into a mirror; behind her a practitioner dressed in black parts her hair and applies a clear serum from a glass snap-neck ampoule along the parting with gloved fingers. Her eyes meet the lens, hopeful and calm. Environment: dark trichology room with matte black walls, a warm gold key light from the front-left, a faint cool glow from a white tablet screen on a stand at the right edge. Camera: 85 mm, f/2, eye level, subject in the left two-thirds, right third dark for text. No overlay text, no logos.
 ```
 
 **Mobile 9:16:** Portrait crops to 4:5 face-centred; text below; labels 2×2.
@@ -84,7 +84,7 @@ Photoreal cinematic portrait, 16:9. A woman in her thirties with fine, thinning 
 **Переход 3→4 (Kling, start frame = кадр 3, end frame = кадр 4):**
 
 ```
-Start: block-3 portrait. The small screen glow at the right edge grows and swings into frame: a scalp camera's screen showing the scope circle; the camera pans along the counter past the microneedling pen and the ampoule to the spray bottle; a gold line draws beneath them. End: block-4 counter scene. 4 s, pan left to right. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start: block-3 portrait. The screen glow at the right edge grows and swings into frame: a white tablet on a white stand showing the scope circle, a corded white handheld scope resting in front of it; the camera pans along the counter past the champagne-gold microneedling pen and the standing ampoule to a small clear glass spray bottle with a tall gold cap; a gold line draws beneath them. End: block-4 counter scene. 4 s, pan left to right. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 4 · Protocol — «Measure, open, deliver»
@@ -96,7 +96,7 @@ CTA: Secondary: See MITOPEN & MITOSCAN (links to the device pages) · Get the fu
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal counter scene, 16:9. On a black satin counter, left to right with space between: a handheld scalp camera with a small screen showing an abstract magnified scalp circle, a slim cordless microneedling pen, a clear glass ampoule standing in a small holder, and a small spray bottle at the far right. Lighting: thin warm gold rim light from above, soft fill, matte black background (#111111). Camera: 50 mm, slightly above eye level, f/8, all items sharp, the row centred with margins. No overlay text, no logos, screen content abstract, pack faces clean.
+Photoreal counter scene, 16:9. On a black satin counter, left to right with space between: a white tablet-style screen on a white stand with a silver cylindrical base, the screen showing an abstract magnified scalp circle, with a corded white handheld scope camera resting in front of it; a slim cordless microneedling pen with a champagne-gold body, rose-gold grip ring and clear needle cartridge; a clear glass snap-neck ampoule standing in a small holder; and a small clear glass spray bottle with a tall gold cap at the far right. Lighting: thin warm gold rim light from above, soft fill, matte black background (#111111). Camera: 50 mm, slightly above eye level, f/8, all items sharp, the row centred with margins. No overlay text, no logos, screen content abstract, pack faces clean.
 ```
 
 **Mobile 9:16:** Four cards stacked vertically with the gold line down the left; each card shows its object as a 1:1 crop; device links as small buttons.
@@ -104,7 +104,7 @@ Photoreal counter scene, 16:9. On a black satin counter, left to right with spac
 **Переход 4→5 (Kling, start frame = кадр 4, end frame = кадр 5):**
 
 ```
-Start: block-4 counter. The devices slide out of frame, the ampoule glides left into the black box as its lid lifts; five ampoules stand up in the tray inside, one lies down in front. End: block-5 open box. 4 s, orbit 30° around the box. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start: block-4 counter. Tablet, scope, pen and spray slide out of frame; the matte black box glides in from the right and settles in three-quarter view behind the standing ampoule; four more ampoules rise one by one beside it into a row, and the last tips gently over to lie in front. End: block-5 kit shot. 4 s, orbit 30° around the box. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 5 · Kit & facts — «Five sessions in one box»
@@ -116,7 +116,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal product shot, 16:9. The matte black landscape carton, lid lifted, in three-quarter view on the left, revealing five clear glass ampoules standing in a black tray inside; one ampoule taken out and lying in front. Lighting: warm gold key from the upper right, cool highlight on the glass necks, matte black background, a soft gold glow behind the box only. Camera: 70 mm, f/5.6, right third empty for numbers. No overlay text, no logos; pack faces clean.
+Photoreal product shot, 16:9. The matte black landscape carton, closed, in three-quarter view on the left; in front of it five clear glass snap-neck ampoules with colourless liquid, four standing in a row and one lying on its side in front. Lighting: warm gold key from the upper right, cool highlight on the glass necks, matte black background, a soft gold glow behind the box only. Camera: 70 mm, f/5.6, right third empty for numbers. No overlay text, no logos; pack faces clean.
 ```
 
 **Mobile 9:16:** Kit image full width; four numbers in a 2×2 grid with count-up.
@@ -124,7 +124,7 @@ Photoreal product shot, 16:9. The matte black landscape carton, lid lifted, in t
 **Переход 5→6 (Kling, start frame = кадр 5, end frame = кадр 6):**
 
 ```
-Start: block-5 open box. The lid closes; the ampoules line up in front; the box turns to face us and settles on the right third; a warm gold glow rises behind it and a reflection line draws. End: block-6 closing hero. 3 s, dolly-out. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start: block-5 kit shot. The lying ampoule rights itself; the row closes ranks in front; the box turns to face us and settles on the right third; a warm gold glow rises behind it and a reflection line draws. End: block-6 closing hero. 3 s, dolly-out. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 6 · Offer — «Bring EXOSIGNAL HAIR to your clinic»
@@ -136,7 +136,7 @@ CTA: Primary: Contact for price (WhatsApp + form) · Secondary: Book a MITOSCAN 
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal cinematic closing hero, 16:9. The matte black landscape carton on the right third on black satin, five clear ampoules lined up in front, a warm gold glow (#C9A24A) behind the box and a thin gold reflection line on the surface; the left two-thirds matte black for the offer and buttons. Camera: 85 mm, eye level, f/4. Quiet, premium, final. No overlay text, no logos; pack faces clean.
+Photoreal cinematic closing hero, 16:9. The matte black landscape carton on the right third on black satin, five clear snap-neck ampoules lined up in front, a warm gold glow (#C9A24A) behind the box and a thin gold reflection line on the surface; the left two-thirds matte black for the offer and buttons. Camera: 85 mm, eye level, f/4. Quiet, premium, final. No overlay text, no logos; pack faces clean.
 ```
 
 **Mobile 9:16:** Packshot small (≈35 vh) above the headline; two full-width buttons; contact row; sticky bar becomes the primary button.

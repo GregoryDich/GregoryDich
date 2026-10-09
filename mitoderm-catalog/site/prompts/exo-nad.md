@@ -16,7 +16,7 @@ CTA: Primary: Contact for price · Secondary: See the three stages ↓ (scrolls 
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal cinematic product hero, 16:9. A square carton finished in a champagne-gold gradient (pale warm ivory at the top left to deep gold at the right) standing on the right third on a warm cream stone surface; in front of it three vessels: a small amber glass vial with a silver cap, a small turquoise-blue glass vial with a silver cap, and a square clear glass bottle with a tall gold cap holding a pale liquid with fine gold flecks. Background: soft champagne (#F3E4C2) gradient, warm sunlight from the upper left, long soft shadows, subtle warm bloom. Camera: 85 mm, eye level, f/4, product sharp, left two-thirds clear for text. No overlay text, no logos; pack faces clean so the real packshot PNG can be composited.
+Photoreal cinematic product hero, 16:9. A near-square carton, slightly wider than tall, finished in a champagne-gold gradient (pale warm ivory at the top left to deep gold at the right) standing on the right third on a warm cream stone surface; in front of it three vessels: a small amber glass vial with a silver cap, a small turquoise-blue glass vial with a silver cap, and a square clear glass bottle with a tall gold cap holding a pale liquid with fine gold flecks. Background: soft champagne (#F3E4C2) gradient, warm sunlight from the upper left, long soft shadows, subtle warm bloom. Camera: 85 mm, eye level, f/4, product sharp, left two-thirds clear for text. No overlay text, no logos; pack faces clean so the real packshot PNG can be composited.
 ```
 
 **Mobile 9:16:** Stack: eyebrow, headline, line, chips 2×2, packshot full width cropped to box + vessels (≈55 vh), full-width 'Contact for price'; sticky CTA bar from here.
@@ -44,7 +44,7 @@ Photoreal beauty close-up, 16:9. A woman in her fifties, three-quarter profile, 
 **Переход 1→2 (Kling, start frame = кадр 1, end frame = кадр 2):**
 
 ```
-Start: block-1 cheek. The square bottle tilts into the frame; its contents separate into two visible layers; the camera glides between the lipid layer and the acid layer, past an amber vial, past a turquoise vial, as each liquid swirls; the three vessels line up. End: block-2 still life. 5 s, lateral glide through three liquids. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start: block-1 cheek. The square gold-capped bottle tilts into the frame, gold flecks drifting; the camera dives into its liquid, where an oily phase floats over a watery, fleck-filled phase, then glides on past an amber vial and a turquoise vial as each liquid swirls; the three vessels line up on cream stone. End: block-2 still life. 5 s, lateral glide through three liquids. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 2 · Inside — «Three liquids, one sequence»
@@ -56,7 +56,7 @@ CTA: Secondary: Full formula ↓
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal macro still life, 16:9. Three liquids in a row on warm cream stone under sunlight: left, a square clear glass bottle with a gold cap, its contents visibly separated into two layers — a clear oily phase floating over a pale fleck-filled phase; centre, an amber vial with a silver cap; right, a turquoise-blue vial with a silver cap; behind each an out-of-focus macro swirl of its liquid. Lighting: warm champagne (#F3E4C2) backdrop, strong sun from the left, gold flecks sparkling. Camera: 100 mm macro, f/4, vessels sharp. No overlay text, no logos; pack faces clean.
+Photoreal macro still life, 16:9. Three vessels in a row on warm cream stone under sunlight: left, a square clear glass bottle with a tall gold cap holding a pale liquid with fine gold flecks; centre, a small amber glass vial with a silver cap; right, a small turquoise-blue glass vial with a silver cap; behind each an out-of-focus macro swirl of its liquid — behind the bottle, a clear oily phase floating over a watery, fleck-filled phase. Lighting: warm champagne (#F3E4C2) backdrop, strong sun from the left, gold flecks sparkling. Camera: 100 mm macro, f/4, vessels sharp. No overlay text, no logos; pack faces clean.
 ```
 
 **Mobile 9:16:** Columns stack vertically 1-2-3, each a 16:9 crop of its vessel with the label beneath; 'Full formula' link at the end.
@@ -64,7 +64,7 @@ Photoreal macro still life, 16:9. Three liquids in a row on warm cream stone und
 **Переход 2→3 (Kling, start frame = кадр 2, end frame = кадр 3):**
 
 ```
-Start: block-2 vessels. Pull back; a woman faces us as into a mirror; a fan brush sweeps the two-phase peel over her cheek, then gloved fingers press a drop of pale serum into the cheekbone; her skin brightens in the sun and her eyes meet the lens. End: block-3 mirror portrait. 5 s, reverse dolly, bloom rises. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start: block-2 vessels. Pull back; a woman faces us as into a mirror; a fan brush sweeps the peel over her cheek, then gloved fingers press a drop of pale serum into the cheekbone; sunlight warms across her face and her eyes meet the lens. End: block-3 mirror portrait. 5 s, reverse dolly, bloom rises. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 3 · Feel it — «Renewed, firmer, more even»
@@ -84,7 +84,7 @@ Photoreal cinematic portrait, 16:9. A woman in her fifties sits facing the camer
 **Переход 3→4 (Kling, start frame = кадр 3, end frame = кадр 4):**
 
 ```
-Start: block-3 portrait. She closes her eyes; tilt down to the tray and continue to overhead; bottle, fan brush, amber vial, turquoise vial, folded mask, sunscreen glide into one row; a gold line draws and three dots pulse beneath. End: block-4 flat lay. 4 s, tilt-down to overhead. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start: block-3 portrait. She closes her eyes; tilt down to the tray and continue to overhead; gold-capped bottle, fan brush, amber vial, turquoise vial, folded pale-blue mask in front of a small teal carton, plain white sunscreen tube glide into one row; a gold line draws and three dots pulse beneath. End: block-4 flat lay. 4 s, tilt-down to overhead. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 4 · Protocol — «One visit, every 3–4 weeks»
@@ -96,7 +96,7 @@ CTA: Secondary: Get the full protocol (contact form, 'EXO-NAD protocol' pre-fill
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal top-down flat lay, 16:9. On warm cream stone, left to right in a straight row with space between: a square clear glass bottle with a gold cap and two-layer liquid, a fan brush, an amber vial with a silver cap, a turquoise vial with a silver cap, then a folded translucent pale-blue sheet mask on a teal card and a small white sunscreen tube. Lighting: sunlight from the upper left, long soft shadows, champagne (#F3E4C2) tone. Camera: overhead, 50 mm, f/8, all sharp. No overlay text, no logos; pack faces clean.
+Photoreal top-down flat lay, 16:9. On warm cream stone, left to right in a straight row with space between: a square clear glass bottle with a tall gold cap and pale gold-flecked liquid, a fan brush, a small amber vial with a silver cap, a small turquoise vial with a silver cap, then a folded translucent pale-blue sheet mask lying in front of a small matte teal carton and a plain white unbranded sunscreen tube. Lighting: sunlight from the upper left, long soft shadows, champagne (#F3E4C2) tone. Camera: overhead, 50 mm, f/8, all sharp. No overlay text, no logos; pack faces clean.
 ```
 
 **Mobile 9:16:** Steps stack vertically with the gold line down the left; each step a 1:1 crop of its vessel; badges as a chip row.
@@ -104,7 +104,7 @@ Photoreal top-down flat lay, 16:9. On warm cream stone, left to right in a strai
 **Переход 4→5 (Kling, start frame = кадр 4, end frame = кадр 5):**
 
 ```
-Start: block-4 flat lay. Items slide left into the champagne box as it rises to three-quarter view and its lid opens; inside, the 15 ml bottle, five amber vials and five turquoise vials appear and lay themselves out beside it. End: block-5 kit shot. 5 s, camera rises to 20° above eye level. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start: block-4 flat lay. Brush, mask, teal carton and sunscreen slide off-frame; the champagne box glides in and rises to three-quarter view as the camera lifts to 20° above eye level; the gold-capped bottle stays put while five amber vials and five turquoise vials glide in from the right into two rows beside the closed box. End: block-5 kit shot. 5 s, continuous camera lift. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 5 · Kit & facts — «One bottle, ten vials»
@@ -116,7 +116,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal product shot, 16:9. The champagne-gold gradient square carton, lid open, in three-quarter view on the left; beside it on cream stone, laid out neatly: one square clear glass bottle with a gold cap, a row of five amber vials with silver caps and a row of five turquoise-blue vials with silver caps. Lighting: warm sunlight from the upper right, soft champagne backdrop, gentle bloom. Camera: 70 mm, f/5.6, everything sharp, right third clear for numbers. No overlay text, no logos; pack faces clean.
+Photoreal product shot, 16:9. The champagne-gold gradient near-square carton, closed, in three-quarter view on the left; beside it on cream stone, laid out neatly: one square clear glass bottle with a tall gold cap and gold-flecked liquid, a row of five small amber vials with silver caps and a row of five small turquoise-blue vials with silver caps. Lighting: warm sunlight from the upper right, soft champagne backdrop, gentle bloom. Camera: 70 mm, f/5.6, everything sharp, right third clear for numbers. No overlay text, no logos; pack faces clean.
 ```
 
 **Mobile 9:16:** Kit image full width; four numbers 2×2 with count-up; caption below.
@@ -124,7 +124,7 @@ Photoreal product shot, 16:9. The champagne-gold gradient square carton, lid ope
 **Переход 5→6 (Kling, start frame = кадр 5, end frame = кадр 6):**
 
 ```
-Start: block-5 open box. The lid closes; the three hero vessels step forward; the box drifts to the right third; sunlight warms, bloom rises, a gold reflection line draws. End: block-6 closing hero. 3 s, dolly-out. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start: block-5 kit shot. The rows contract: one amber and one turquoise vial step forward beside the gold-capped bottle while the rest slide behind the box; the box drifts to the right third; sunlight warms, bloom rises, a gold reflection line draws. End: block-6 closing hero. 3 s, dolly-out. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 6 · Offer — «Bring EXO-NAD to your clinic»
@@ -136,7 +136,7 @@ CTA: Primary: Contact for price (WhatsApp + form) · Secondary: Request training
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal cinematic closing hero, 16:9. The champagne-gold carton on the right third on cream stone, the three vessels (amber vial, turquoise vial, square gold-capped bottle) in front, warm sunlight from the left, soft bloom, a thin gold reflection line; the left two-thirds clean champagne (#F3E4C2) for the offer and buttons. Camera: 85 mm, eye level, f/4. Warm, calm, final. No overlay text, no logos; pack faces clean.
+Photoreal cinematic closing hero, 16:9. The champagne-gold near-square carton on the right third on cream stone, the three vessels (small amber vial, small turquoise vial, square gold-capped bottle with gold-flecked liquid) in front, warm sunlight from the left, soft bloom, a thin gold reflection line; the left two-thirds clean champagne (#F3E4C2) for the offer and buttons. Camera: 85 mm, eye level, f/4. Warm, calm, final. No overlay text, no logos; pack faces clean.
 ```
 
 **Mobile 9:16:** Packshot small (≈35 vh) above the headline; two full-width buttons; contact row; sticky bar becomes the primary button.

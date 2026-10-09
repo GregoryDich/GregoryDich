@@ -29,7 +29,7 @@ Start frame: system at rest, screen showing a ×200 scalp image. The probe lifts
 
 ## Кадр 1 · Why — «Impression is not a plan.»
 
-Экран: To the naked eye, density, follicle count and hair diameter stay invisible — so goals, expectations and the course rest on impression alone.  
+Экран: To the naked eye, density, follicle count and hair diameter stay invisible — so goals and the course rest on impression alone.  
 Метки: Hair density · Follicle count · Hair diameter · Scalp condition  
 CTA: none
 
@@ -44,7 +44,7 @@ Bright consultation room in an aesthetic clinic, white walls, daylight from a la
 **Переход 1→2 (Kling, start frame = кадр 1, end frame = кадр 2):**
 
 ```
-Start frame: consultation room, probe on the desk. A practitioner's hand picks up the probe and brings its lens toward the camera; the ring light around the lens flares white-blue and fills the frame. End frame: the flare resolves into a full-screen ×50 scalp image (hair shafts, follicle openings); one scroll step later it jumps to ×200 — individual follicles and the scalp surface fill the frame. 5 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start frame: consultation room, probe on the desk. A practitioner's hand picks up the probe and brings its lens toward the camera; the probe's lens light flares white-blue and fills the frame. End frame: the flare resolves into a full-screen ×50 scalp image (hair shafts, follicle openings); one scroll step later it jumps to ×200 — individual follicles and the scalp surface fill the frame. 5 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 2 · Inside — «×50. ×200. On screen.»
@@ -109,7 +109,7 @@ Start frame: top-down desk. The camera swings down to a 3/4 front view; the comp
 
 ## Кадр 5 · Kit & facts — «One system. One screen.»
 
-Экран: 1× MITOSCAN — advanced hair & scalp diagnostic system with HD display and handheld scan probe. For professional use only.  
+Экран: 1× MITOSCAN — advanced hair & scalp diagnostic system: ×50 and ×200 magnification, HD imaging. For professional use only.  
 Метки: ×50 · ×200 · HD imaging · Before / after tracking  
 CTA: none
 
@@ -124,7 +124,7 @@ A white tablet-style diagnostic monitor on a low white stand showing an abstract
 **Переход 5→6 (Kling, start frame = кадр 5, end frame = кадр 6):**
 
 ```
-Start frame: system on a plinth. The plinth sinks away; the camera drops to table level and pulls back to the block-0 hero framing, screen brighter, the left half open for the offer. 3 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start frame: system on the plinth, 3/4 view. The plinth sinks away; the camera drops to table level and pulls back. End frame: the block-0 hero framing — monitor, docked probe and base on the right, screen brighter, the left half empty for the offer. 3 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 6 · Offer — «Bring MITOSCAN to your clinic»

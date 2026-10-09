@@ -24,19 +24,19 @@ Photoreal cinematic macro render, 16:9. A single elongated translucent silica mi
 **Переход 0→1 (Kling, start frame = кадр 0, end frame = кадр 1):**
 
 ```
-4 s. Start: the single spicule in the right third. The camera pulls back: the needle becomes one of thousands woven into a pale sponge skeleton; keep pulling back through clear green water until the whole sponge sits on a stone in a sunlit lake. Cut on a ripple to a laboratory dish where a heap of grey-green raw sponge powder sits under a loupe. End: block 1 frame frozen, green reduced to a thin line. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+4 s. Start: the single spicule in the right third. The camera pulls back: the needle becomes one of thousands woven into a pale sponge skeleton, then the whole sponge resting on a stone in clear, sunlit freshwater. Cut on a ripple to a laboratory dish where a heap of raw sponge powder sits under a loupe. End: block 1 frame frozen, green reduced to a thin line. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 1 · Why — «Raw sponge is not precise»
 
-Экран: Traditional Spongilla powder is one non-uniform mixture of the whole raw material; results depend on purity, spicule size and concentration.  
+Экран: Traditional Spongilla powder is one non-uniform mixture of the whole raw material; purity, size ratio and concentration decide everything.  
 Метки: Purification level · Size & length ratio · Precise concentration · Non-uniform powder  
 CTA: Text link 'What purification changes' (scrolls to block 2)
 
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal laboratory macro photograph, 16:9. A white ceramic laboratory dish holding a loose heap of raw grey-green sponge powder with visibly uneven fragments and fibrous residue, a brass-rimmed loupe lying beside it on a white bench; soft daylight from the left, cool sage-ivory palette, one green reflection in the loupe glass. 100 mm macro lens, f/4, slightly elevated angle, dish in the left two thirds, clean empty space on the right. No text, no labels, no logos.
+Photoreal laboratory macro photograph, 16:9. A white ceramic laboratory dish holding a loose heap of raw, muted grey-green sponge powder with visibly uneven fragments and fibrous residue, a brass-rimmed loupe lying beside it on a white bench; soft daylight from the left, cool sage-ivory palette, one green reflection in the loupe glass. 100 mm macro lens, f/4, slightly elevated angle, dish in the left two thirds, clean empty space on the right. No text, no labels, no logos.
 ```
 
 **Mobile 9:16:** 390 px: image on top (4:3, 45vh) cropped to the heap and loupe, text and chips below; scan line runs vertically.
@@ -44,10 +44,10 @@ Photoreal laboratory macro photograph, 16:9. A white ceramic laboratory dish hol
 **Переход 1→2 (Kling, start frame = кадр 1, end frame = кадр 2):**
 
 ```
-5 s. Start: the raw powder in the dish. The powder lifts into the air as a cloud and streams through four parallel glass channels; residue drops away at the first channel, then the particles sort themselves by length into four clean groups; the camera pushes into the longest group, picks one needle and slices it lengthwise to reveal the hollow inner cavity. End: block 2 - the cutaway spicule on the darkest green. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+5 s. Start: the raw powder in the dish. The powder lifts into the air as a cloud and streams through a clear glass sorting channel; residue drops away first, then the needles settle into two clean groups, short and long. The camera pushes into the long group, picks one needle and slices it lengthwise to reveal the hollow inner cavity. End: block 2 - the cutaway spicule on the darkest green. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
-## Кадр 2 · Inside — «Inside every needle, a channel»
+## Кадр 2 · Inside — «Every needle is hollow inside»
 
 Экран: Each purified spicule is porous with an elongated inner cavity - a miniature cannelloni - so it stimulates and delivers at once.  
 Метки: Four spicule types · Porous structure · Inner cavity · Hybrid delivery system  
@@ -56,15 +56,15 @@ CTA: Link 'See the products built on it' (block 4)
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal cinematic macro render, 16:9. A translucent silica micro-needle sliced lengthwise, the two halves slightly apart in the centre-right of frame, revealing an elongated hollow inner cavity with a finely porous wall, the cavity lit from inside with a pale amber glow; beside it to the left, four intact needles of increasing length lie in a neat row. Deep forest-green background #1E4634, cool green rim light, soft ivory key light, volumetric haze. 100 mm macro lens, f/2.8, shallow focus on the cavity. No text, no labels, no scale bars, no logos.
+Photoreal cinematic macro render, 16:9. A translucent silica micro-needle sliced lengthwise, the two halves slightly apart in the centre-right of frame, revealing an elongated hollow inner cavity with a finely porous wall, the cavity lit from inside with a soft warm glow; beside it to the left, two intact needles lie in a neat row, one short and one long. Deep forest-green background #1E4634, cool green rim light, soft ivory key light, volumetric haze. 100 mm macro lens, f/2.8, shallow focus on the cavity. No text, no labels, no scale bars, no logos.
 ```
 
-**Mobile 9:16:** 390 px: chips 2x2 above, cutaway render at 4:5 (55vh) below with the cavity centred; the four-length row becomes a small strip under the render; parallax off.
+**Mobile 9:16:** 390 px: chips 2x2 above, cutaway render at 4:5 (55vh) below with the cavity centred; the short/long pair becomes a small strip under the render; parallax off.
 
 **Переход 2→3 (Kling, start frame = кадр 2, end frame = кадр 3):**
 
 ```
-5 s. Start: the open spicule with its amber-lit cavity. The halves close, the needle shrinks and joins thousands of others suspended in a drop of amber serum; the camera pulls back until the drop sits on a fingertip; the fingertip rises and touches a cheek. The camera keeps pulling back: a woman at a mirror, fingertips on her cheekbone, looking straight at us. End: block 3 mirror portrait frozen. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+5 s. Start: the open spicule with its lit cavity. The halves close, the needle shrinks and joins thousands of others suspended in a drop of clear serum; the camera pulls back until the drop sits on a fingertip; the fingertip rises and touches a cheek. The camera keeps pulling back: a woman at a mirror, fingertips on her cheekbone, looking straight at us. End: block 3 mirror portrait frozen. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 3 · Feel it — «Resurfacing and delivery, together»
@@ -84,7 +84,7 @@ Photoreal cinematic portrait, 16:9. A woman in her late thirties with natural, l
 **Переход 3→4 (Kling, start frame = кадр 3, end frame = кадр 4):**
 
 ```
-3 s. Start: her eyes on the camera. She lowers her hand; the camera pans right to a pale-oak shelf beside the mirror, where four products stand under three soft spots; three green dots light along the shelf edge (clinic - home - recovery). End: block 4 shelf plate with the real packshots in place. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+3 s. Start: her eyes on the camera. She lowers her hand; the camera pans right to a pale-oak shelf beside the mirror, where the four products stand under three soft spots; three green dots light along the shelf edge (clinic - home - recovery). End: block 4 shelf plate with the real packshots in place. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 4 · Protocol — «Clinic, home, recovery»
@@ -109,9 +109,9 @@ Background plate only, 16:9 (real packshots are composited later). A pale-oak sh
 
 ## Кадр 5 · Kit & facts — «The numbers behind the needle»
 
-Экран: Penetration 80-300 µm into the epidermis, continued stimulation up to 72 h, four spicule types, fourth-generation purification.  
+Экран: Penetration 80-300 µm into the epidermis, continued stimulation up to 72 h, four spicule types, fourth-generation technology.  
 Метки: 80-300 µm penetration · 72 h stimulation · 4 spicule types · 4th generation  
-CTA: Text link 'Download the BIOSPICULE™ brochure (PDF)' - the existing MITODERM-BIOSPICULE-EN.pdf
+CTA: Text link 'Download the BIOSPICULE™ brochure (PDF)' - the existing pdf/MITODERM-BIOSPICULE-EN.pdf
 
 **Still 16:9 (Higgsfield / любой генератор):**
 
@@ -131,7 +131,7 @@ Photoreal scientific macro illustration, 16:9. A clean microscope-style view of 
 
 Экран: Our specialist will advise on MICRO BOOST 10% in the clinic and the home-care routine.  
 Метки: MICRO BOOST 10% · Home-care routine · Protocols & training included · Israel · clinics  
-CTA: Primary button 'Contact us' (green, opens form: name, phone, clinic, message); secondary 'Request prices'; sticky bottom CTA 'Contact us' on mobile
+CTA: Primary button 'Contact us' (green, opens form: name, phone, clinic, message); secondary 'See the range' (outline, to the four BIOSPICULE™ product pages); sticky bottom CTA 'Contact us' on mobile
 
 **Still 16:9 (Higgsfield / любой генератор):**
 

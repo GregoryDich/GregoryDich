@@ -16,7 +16,7 @@ CTA: 'Contact for Price' as a ghost button; scroll cue 'Turn the ring'
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Background plate for compositing: a warm champagne-gold brushed-metal studio surface with a soft horizon gradient from pale champagne to deeper sand, one large soft key light from the upper left and a subtle warm rim from the right, faint metallic sheen, the right third kept empty for a slender champagne-gold cordless microneedling pen with a ribbed rose-copper adjustment ring and a clear needle cartridge, precision-instrument mood, 85 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos.
+Background plate for compositing: a warm champagne-gold brushed-metal studio surface with a soft horizon gradient from pale champagne to deeper sand, one large soft key light from the upper left and a subtle warm rim from the right, faint metallic sheen, the right third kept empty for a slender champagne-gold cordless microneedling pen with a ribbed rose-copper adjustment ring, a small rose-copper button near the top and a clear needle cartridge at the tip, precision-instrument mood, 85 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos.
 ```
 
 **Mobile 9:16:** Stack: eyebrow, title, line, chips as a horizontal row; pen below at 45% width, vertical, right-aligned; sticky bottom bar 'Contact for Price'.
@@ -44,7 +44,7 @@ Triptych-ready clinical still: three soft-focus close-ups side by side — a wom
 **Переход 1→2 (Kling, start frame = кадр 1, end frame = кадр 2):**
 
 ```
-Start frame: triptych of areas. The three images slide apart and dim; the pen's cartridge enters at macro scale from the left; the camera orbits the ring as it turns one more step and the small LED near the top lights. End frame: macro of the clear cartridge with needles extended, the rose-copper ring sharp in the foreground, champagne background. 4 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start frame: triptych of areas. The three images slide apart and dim; the pen's cartridge enters at macro scale from the left; the camera orbits the ring as it turns one more step and the small dot above the button catches the light. End frame: macro of the clear cartridge with needles extended, the rose-copper ring sharp in the foreground, champagne background. 4 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 2 · Inside — «0.25 to 2.5 mm. Five speeds.»
@@ -104,7 +104,7 @@ Top-down view of a clinic treatment tray on a warm champagne-beige surface: a sl
 **Переход 4→5 (Kling, start frame = кадр 4, end frame = кадр 5):**
 
 ```
-Start frame: tray top-down. The tray fades; the pen rises to a 20° diagonal and the camera orbits 180° around it, showing the full barrel, the small rose-copper button and LED near the top, the ring and the cartridge. End frame: pen standing on a brushed-champagne plinth, 3/4 view, four empty slots beside it for stat tiles. 4 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start frame: tray top-down. The tray fades; the pen rises to a 20° diagonal and the camera orbits 180° around it, showing the full barrel, the small rose-copper button and the dot above it near the top, the ring and the cartridge. End frame: pen standing on a brushed-champagne plinth, 3/4 view, four empty slots beside it for stat tiles. 4 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 5 · Kit & facts — «One pen. Face and scalp.»
@@ -124,7 +124,7 @@ A slender champagne-gold cordless microneedling pen with a ribbed rose-copper ri
 **Переход 5→6 (Kling, start frame = кадр 5, end frame = кадр 6):**
 
 ```
-Start frame: pen on the plinth. The plinth sinks away; the pen tilts back to its block-0 diagonal and the camera pulls back to the hero framing, key light warmer and brighter, the left half open for the offer. 3 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start frame: pen upright on the plinth. The plinth sinks away; the pen tilts back to its 20° diagonal and the camera pulls back. End frame: the block-0 hero framing — pen on the right on the brushed-champagne surface, key light warmer and brighter, the left half empty for the offer. 3 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 6 · Offer — «Bring MITOPEN to your clinic»
@@ -144,5 +144,5 @@ A slender champagne-gold cordless microneedling pen with a ribbed rose-copper ri
 **Переход 6→7 (Kling, start frame = кадр 6, end frame = кадр 7):**
 
 ```
-End of page — no next block. Idle loop (6 s): the LED near the top pulses once every few seconds and the ring glints; 'back to top' flies the pen to its block-0 position. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+End of page — no next block. Idle loop (6 s): the rose-copper ring glints once every few seconds; 'back to top' flies the pen to its block-0 position. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```

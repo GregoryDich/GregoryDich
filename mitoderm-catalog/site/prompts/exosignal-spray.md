@@ -16,7 +16,7 @@ CTA: 'Where to buy' as a ghost button; scroll cue 'Press'
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Background plate for compositing: a near-black studio with a cool silver-white rim light from the upper right, a barely visible reflective black surface, a frozen cloud of fine mist droplets suspended in the light at the right third of the frame (where a slim clear-glass 15 ml spray bottle with a tall brushed-silver cap and its tall matte-black carton will be composited), very faint haze, monochrome black-and-white grade with a silver tint, 85 mm, f/4, low camera, photoreal, cinematic, 16:9, no text, no logos.
+Background plate for compositing: a near-black studio with a warm gold rim light from the upper right, a barely visible reflective black surface, a frozen cloud of fine mist droplets suspended in the light at the right third of the frame (where a slim frosted-glass 15 ml spray bottle with a tall polished-gold cap and its tall matte-black rectangular carton will be composited), very faint haze, black-and-gold grade with frosted-white highlights, 85 mm, f/4, low camera, photoreal, cinematic, 16:9, no text, no logos.
 ```
 
 **Mobile 9:16:** Stack: eyebrow, title, line, chips as a horizontal row; bottle below at 55% width, right-aligned, carton hidden; sticky bottom bar 'Where to buy'.
@@ -24,27 +24,27 @@ Background plate for compositing: a near-black studio with a cool silver-white r
 **Переход 0→1 (Kling, start frame = кадр 0, end frame = кадр 1):**
 
 ```
-Start frame: bottle at rest, mist frozen. The silver cap depresses; a fine mist blooms in slow motion in the rim light and drifts left across the frame; the camera follows the mist. End frame: the mist dissolves into a top-down close-up of dark hair parted to expose the scalp, lit by the same cool light; the bottle now small at the lower right. 4 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start frame: bottle at rest, mist frozen. The gold cap lifts away and the pump head presses; a fine mist blooms in slow motion in the gold rim light and drifts left across the frame; the camera follows the mist. End frame: the mist dissolves into a top-down close-up of dark hair parted to expose the scalp, lit by the same warm light; the bottle now small at the lower right. 4 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 1 · Why — «The days between treatments count.»
 
-Экран: EXOSIGNAL HAIR works in the clinic. Hair thinning, brittle hair and scalp imbalance need support on the days in between.  
+Экран: EXOSIGNAL HAIR is the clinic treatment. Hair thinning, brittle hair and scalp imbalance need support on the days in between.  
 Метки: Hair thinning · Fine, brittle hair · Scalp imbalance · After hair transplantation  
 CTA: none
 
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Top-down close-up of a person's dark hair parted with a comb to expose a clean line of scalp, cool silver-white directional light from the upper right, deep black surroundings, monochrome black-and-white grade with silver tint, clinical and intimate, left third of the frame dark and empty for copy, 100 mm macro, f/4, photoreal, cinematic, 16:9, no text, no logos.
+Top-down close-up of a person's dark hair parted with a comb to expose a clean line of scalp, warm gold directional light from the upper right, deep black surroundings, black-and-gold grade, clinical and intimate, left third of the frame dark and empty for copy, 100 mm macro, f/4, photoreal, cinematic, 16:9, no text, no logos.
 ```
 
-**Mobile 9:16:** Parting image full-width behind the copy at 50% opacity; the 14-day strip becomes a 7-day strip to fit 390 px.
+**Mobile 9:16:** Parting image full-width behind the copy at 50% opacity; the two-point visit line shortens to fit 390 px.
 
 **Переход 1→2 (Kling, start frame = кадр 1, end frame = кадр 2):**
 
 ```
-Start frame: hair parting from above. The bottle rises from the lower right into frame and sprays once toward the parting; the camera dives with the mist down to the scalp. End frame: extreme macro of droplets settling between hair strands on the scalp, catching silver light. 4 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start frame: hair parting from above. The bottle rises from the lower right into frame and sprays once toward the parting; the camera dives with the mist down to the scalp. End frame: extreme macro of droplets settling between hair strands on the scalp, catching warm gold light. 4 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 2 · Inside — «One mist. Three jobs.»
@@ -56,7 +56,7 @@ CTA: none; micro-interaction: tap a chip to light its droplet zone
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Extreme macro of fine clear droplets settling on scalp skin between dark hair strands, droplets catching cool silver-white light, shallow depth of field, deep black background, monochrome grade with silver tint, clinical-scientific mood for a black-white-silver page, 100 mm macro, f/4, photoreal, cinematic, 16:9, no text, no diagrams, no logos.
+Extreme macro of fine clear droplets settling on scalp skin between dark hair strands, droplets catching warm gold rim light, shallow depth of field, deep black background, black-and-gold grade, clinical-scientific mood for a black-and-gold page, 100 mm macro, f/4, photoreal, cinematic, 16:9, no text, no diagrams, no logos.
 ```
 
 **Mobile 9:16:** Macro as background; chips 2×2 under the line; hotspots replaced by a sequential pulse.
@@ -64,7 +64,7 @@ Extreme macro of fine clear droplets settling on scalp skin between dark hair st
 **Переход 2→3 (Kling, start frame = кадр 2, end frame = кадр 3):**
 
 ```
-Start frame: droplet macro. The droplets sink into the skin and vanish; the camera pulls back fast out of the hair, rises, and we find ourselves as a bathroom mirror. End frame: medium shot, a woman in her 30s facing the camera, one hand parting her hair, the spray bottle in the other raised to the scalp, cool white bathroom light, the black carton on the shelf. 5 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start frame: droplet macro. The droplets sink into the skin and vanish; the camera pulls back fast out of the hair, rises, and we find ourselves as a bathroom mirror. End frame: medium shot, a woman in her 30s facing the camera, one hand parting her hair, the spray bottle in the other raised to the scalp, one warm practical light, the matte-black carton on the shelf. 5 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 3 · Feel it — «Light on the scalp. No rinsing.»
@@ -76,7 +76,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Medium close-up of a woman in her 30s facing the camera as if it were her bathroom mirror, one hand parting her dark hair to expose the scalp, the other holding a slim clear-glass spray bottle with a tall brushed-silver cap at the parting, calm expression, cool white bathroom light, black tiled wall, a tall matte-black carton on the shelf, monochrome black-and-white grade with silver tint, 50 mm, f/2.8, photoreal, cinematic, natural skin and hair, 16:9, no text, no logos.
+Medium close-up of a woman in her 30s facing the camera as if it were her bathroom mirror, one hand parting her dark hair to expose the scalp, the other holding a slim frosted-glass spray bottle with a tall polished-gold cap at the parting, calm expression, one warm practical light, dark tiled wall, a tall matte-black carton on the shelf, black-and-gold grade, 50 mm, f/2.8, photoreal, cinematic, natural skin and hair, 16:9, no text, no logos.
 ```
 
 **Mobile 9:16:** 4:5 portrait crop centred on her face and hands; copy below; chips in a horizontal row.
@@ -84,7 +84,7 @@ Medium close-up of a woman in her 30s facing the camera as if it were her bathro
 **Переход 3→4 (Kling, start frame = кадр 3, end frame = кадр 4):**
 
 ```
-Start frame: fingertips massaging the parting. She lowers her hands and lets the hair fall back; the camera tilts down to her hand placing the bottle on the shelf. End frame: the bottle standing on the shelf beside the carton, 3/4 top-down, cool light, copy space on the left. 3 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start frame: fingertips massaging the parting. She lowers her hands and lets the hair fall back; the camera tilts down to her hand placing the bottle on the shelf. End frame: the bottle standing on the shelf beside the carton, 3/4 top-down, warm light, copy space on the left. 3 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 4 · Protocol — «Part. Spray. Massage.»
@@ -96,15 +96,15 @@ CTA: 'Ask your specialist' (ghost)
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-A slim clear-glass 15 ml spray bottle with a tall brushed-silver cap standing on a black stone bathroom shelf beside its tall matte-black carton, cool morning window light from the left, soft reflection, black background, calm daily-ritual mood for a black-white-silver page, 50 mm, f/4, photoreal, cinematic, 16:9, no text, no logos.
+A slim frosted-glass 15 ml spray bottle with a tall polished-gold cap standing on a black stone bathroom shelf beside its tall matte-black rectangular carton, warm morning window light from the left, soft reflection, black background, calm daily-ritual mood for a black-and-gold page, 50 mm, f/4, photoreal, cinematic, 16:9, no text, no logos.
 ```
 
-**Mobile 9:16:** Bottle 40% width centred; steps stack as three rows; 'works with' as a horizontal scroll row.
+**Mobile 9:16:** Bottle 40% width centred; steps stack as three rows; 'works with' as a single packshot card.
 
 **Переход 4→5 (Kling, start frame = кадр 4, end frame = кадр 5):**
 
 ```
-Start frame: bottle and carton on the shelf. The carton turns to face us and its top flap opens; the bottle lifts and slides down into the carton's cradle; the camera moves to a 3/4 top angle. End frame: open carton with the bottle seated inside, flap raised, on black. 4 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start frame: bottle and carton on the shelf. The carton turns to face us and its top flap opens; the bottle lifts and lowers halfway into the carton; the camera moves to a 3/4 top angle. End frame: open carton with the bottle standing half-inside, flap raised, on black. 4 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 5 · Kit & facts — «15 ml. Daily. No rinse.»
@@ -116,7 +116,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Top-down 3/4 view of a tall matte-black rectangular carton opened at the top, a slim clear-glass spray bottle with a brushed-silver cap seated inside on a black insert, on a black reflective surface, cool silver-white key light from the upper left, deep black surroundings, precise unboxing mood for a black-white-silver page, 50 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos.
+Top-down 3/4 view of a tall matte-black rectangular carton opened at the top, a slim frosted-glass spray bottle with a tall polished-gold cap standing half-inside it, on a black reflective surface, warm gold key light from the upper left, deep black surroundings, precise unboxing mood for a black-and-gold page, 50 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos.
 ```
 
 **Mobile 9:16:** Stat tiles 2×2 above; carton image full-width below; indication chips wrap in two rows.
@@ -124,19 +124,19 @@ Top-down 3/4 view of a tall matte-black rectangular carton opened at the top, a 
 **Переход 5→6 (Kling, start frame = кадр 5, end frame = кадр 6):**
 
 ```
-Start frame: open carton. The flap closes; the bottle rises out and stands beside the carton; the camera drops to table level and pulls back to the block-0 composition, rim light brighter, the copy side empty. 3 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Start frame: open carton with the bottle half-inside. The bottle rises out and stands beside the carton; the flap closes; the camera drops to table level and pulls back. End frame: the block-0 composition — bottle and carton side by side on the right, gold rim light brighter, the left half empty for the offer. 3 s. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 6 · Offer — «Keep the follicles supported between visits»
 
 Экран: Available through MITODERM partner clinics. Ask your specialist how EXOSIGNAL SPRAY fits your programme.  
-Метки: Partner clinics · Hair-loss programmes · After hair transplantation · Training & protocols  
-CTA: Primary: 'Where to buy' (white fill, black text). Secondary: 'Ask a specialist' (ghost) → contact form / WhatsApp. Mobile: sticky bottom bar 'Where to buy'.
+Метки: Partner clinics · Hair-loss programmes · After hair transplantation · Between EXOSIGNAL HAIR treatments  
+CTA: Primary: 'Where to buy' (gold fill, black text). Secondary: 'Ask a specialist' (ghost) → contact form / WhatsApp. Mobile: sticky bottom bar 'Where to buy'.
 
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-A slim clear-glass 15 ml spray bottle with a tall brushed-silver cap standing beside its tall matte-black carton on a black reflective surface, a fine frozen mist above the nozzle, bright cool silver-white rim light from the upper right, deep black surroundings, left half of the frame empty and dark for copy, premium closing shot for a black-white-silver page, 85 mm, f/4, photoreal, cinematic, 16:9, no text, no logos.
+A slim frosted-glass 15 ml spray bottle with a tall polished-gold cap standing beside its tall matte-black rectangular carton on a black reflective surface, a fine frozen mist above the cap, bright warm gold rim light from the upper right, deep black surroundings, left half of the frame empty and dark for copy, premium closing shot for a black-and-gold page, 85 mm, f/4, photoreal, cinematic, 16:9, no text, no logos.
 ```
 
 **Mobile 9:16:** Title, line, full-width primary button, secondary as a text link; packshot below at 50%; sticky bar persists.
@@ -144,5 +144,5 @@ A slim clear-glass 15 ml spray bottle with a tall brushed-silver cap standing be
 **Переход 6→7 (Kling, start frame = кадр 6, end frame = кадр 7):**
 
 ```
-End of page — no next block. Idle loop (6 s): a single mist puff every few seconds dissolving in the rim light; 'back to top' flies the bottle to its block-0 position. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+End of page — no next block. Idle loop (6 s): a single mist puff every few seconds dissolving in the gold rim light; 'back to top' flies the bottle to its block-0 position. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```

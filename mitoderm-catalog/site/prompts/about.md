@@ -9,14 +9,14 @@
 
 ## Кадр 0 · Meet — «Where science meets beauty»
 
-Экран: An Israeli company bringing advanced Italian and Korean laboratory technologies to professional skin and scalp care.  
-Метки: MITO - cellular energy · DERM - the skin · Israel · Italy · Korea · Professional aesthetics  
+Экран: An Israeli company bringing advanced Italian and South Korean laboratory technologies to professional skin and scalp care.  
+Метки: MITO - cellular energy · DERM - the skin · Israel · Italy · South Korea · Professional aesthetics  
 CTA: Scroll cue 'Explore the portfolio' (arrow, scroll-bound); header holds the permanent 'Contact us' button
 
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal cinematic product still, 16:9. A thick round polished-gold medallion with a blank brushed face stands upright on a dark lacquered walnut surface in a dim studio; deep warm bronze-black background #1C1510, soft golden rim light from the upper right, a faint warm glow halo behind the medallion only, gentle reflection on the surface. Out of focus in the lower right, three small glass ampoules and a white syringe cap catch gold highlights. 85 mm lens, f/2.8, shallow depth of field, slight low angle, subject in the right third, empty negative space on the left. No text, no logos, no engravings on the medallion.
+Photoreal cinematic product still, 16:9. A thick round polished-gold medallion with a blank brushed face stands upright on a dark lacquered walnut surface in a dim studio; deep warm bronze-black background #1C1510, soft golden rim light from the upper right, a faint warm glow halo behind the medallion only, gentle reflection on the surface. Out of focus in the lower right, three small clear glass ampoules and a small syringe catch gold highlights. 85 mm lens, f/2.8, shallow depth of field, slight low angle, subject in the right third, empty negative space on the left. No text, no logos, no engravings on the medallion.
 ```
 
 **Mobile 9:16:** 390 px: stack. Wordmark animation full width at top (MITO | DERM joining), 4 labels become a 2x2 chip grid, the medallion image cropped to 4:5 under the text at 55vh; the scroll cue sits above the fold edge; header 'Contact us' becomes the sticky bottom bar from this block on.
@@ -44,14 +44,14 @@ Photoreal editorial photograph, 16:9. Close crop of a treatment room: a stainles
 **Переход 1→2 (Kling, start frame = кадр 1, end frame = кадр 2):**
 
 ```
-4 s. Start: the closed carton on the trolley. The lid lifts as the camera cranes up and over; the inside glows warm gold, and five objects rise out of it in sequence and spread into an arc on an ivory studio surface: the V-TECH SYSTEM kit, the EXO-NAD kit, the MICRO BOOST 10% syringe, the MITOPEN pen, the MITOSCAN device. The carton fades away. End: block 2 - the gold medallion at the centre of the arc, the five real packshots around it. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+4 s. Start: the closed carton on the trolley. The lid lifts as the camera cranes up and over; the inside glows warm gold, and five objects rise out together and spread into an arc on an ivory studio surface: the V-TECH SYSTEM kit, the EXO-NAD kit, the MICRO BOOST 10% syringe, the MITOPEN pen, the MITOSCAN device (real packshots composited). The carton fades away. End: block 2 - the gold medallion at the centre of the arc, the five real packshots around it. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 2 · Inside — «Five technologies, one portfolio»
 
-Экран: Synthetic exosomes, peptides and PDRN, NAD+ and biomimetic ingredients, BIOSPICULE™ purified spicules, and the MITOPEN and MITOSCAN devices.  
+Экран: Synthetic exosomes, peptides and PDRN, NAD+ and biomimetic ingredients, BIOSPICULE™ spicules, and the MITOPEN and MITOSCAN devices.  
 Метки: Synthetic exosomes · Peptides · PDRN · NAD+ · BIOSPICULE™ spicules · MITOPEN · MITOSCAN  
-CTA: Each label is a chip-link to its page (Synthetic exosomes, BIOSPICULE™, MITOPEN, MITOSCAN)
+CTA: Chips link to a page where one exists (Synthetic exosomes, BIOSPICULE™, MITOPEN, MITOSCAN); the peptides chip is static
 
 **Still 16:9 (Higgsfield / любой генератор):**
 
@@ -64,10 +64,10 @@ Background plate only, 16:9 (real packshots are composited later). A seamless wa
 **Переход 2→3 (Kling, start frame = кадр 2, end frame = кадр 3):**
 
 ```
-4 s. Start: the arc of five products on ivory. The camera dollies right along the arc, past the MITOPEN and through a glass partition; the ivory studio becomes a warm modern clinic. A practitioner in white picks one object from the arc - the V-TECH ampoule - turns toward the camera and raises her eyes to it as to a mirror. End: block 3 full-bleed portrait frozen. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+4 s. Start: the arc of five products on ivory. The camera dollies right along the arc, past the MITOPEN and through a glass partition; the ivory studio becomes a warm modern clinic. A practitioner in white picks one object from the arc - a V-TECH ampoule - turns toward the camera and raises her eyes to it as to a mirror. End: block 3 full-bleed portrait frozen. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
-## Кадр 3 · Feel it — «Your clinic, fully equipped»
+## Кадр 3 · Feel it — «A complete framework for your clinic»
 
 Экран: Every technology arrives with complete treatment protocols, professional training and scientific education for your team.  
 Метки: Treatment protocols · Professional training · Scientific education · Specialist support  
@@ -76,7 +76,7 @@ CTA: Button 'Talk to our specialist' (outline, gold) - opens the contact form of
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal cinematic portrait, 16:9. A confident female aesthetic practitioner in her thirties in a white uniform stands in a bright modern clinic and looks directly into the lens as if into a mirror; in her right hand a small clear glass ampoule with an amber serum, in her left a blank white card; behind her, out of focus, a reclining treatment chair with a client and a window with warm afternoon light. Warm ivory and gold palette, skin tones natural, gentle gold rim light on her shoulder. 85 mm lens, f/2, eye level, subject in the right two thirds, soft empty space on the left. No text, no logos, no brand marks on the uniform.
+Photoreal cinematic portrait, 16:9. A confident female aesthetic practitioner in her thirties in a white uniform stands in a bright modern clinic and looks directly into the lens as if into a mirror; in her right hand a small clear glass ampoule, in her left a blank white card; behind her, out of focus, a reclining treatment chair with a client and a window with warm afternoon light. Warm ivory and gold palette, skin tones natural, gentle gold rim light on her shoulder. 85 mm lens, f/2, eye level, subject in the right two thirds, soft empty space on the left. No text, no logos, no brand marks on the uniform or the ampoule.
 ```
 
 **Mobile 9:16:** 390 px: crop the portrait to her face and hands (4:5, 70vh), labels stacked under the photo on ivory, button full width.
@@ -96,7 +96,7 @@ CTA: Text link 'See the standards' (scrolls to block 5)
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal top-down (flat-lay) photograph, 16:9. A clean pale-oak clinic desk seen from directly above: an open blank white binder with ring spine, a tablet with a dark blank screen, one clear glass ampoule with amber serum, a steel spatula and a folded white towel, arranged in a loose row from left to right. Soft daylight from the top, warm ivory tones, a faint gold reflection on the ampoule. 35 mm lens, f/8, perfectly perpendicular. No text, no logos, no printed pages.
+Photoreal top-down (flat-lay) photograph, 16:9. A clean pale-oak clinic desk seen from directly above: an open blank white binder with ring spine, a tablet with a dark blank screen, one small clear glass ampoule, a steel spatula and a folded white towel, arranged in a loose row from left to right. Soft daylight from the top, warm ivory tones, a faint gold reflection on the ampoule. 35 mm lens, f/8, perfectly perpendicular. No text, no logos, no printed pages.
 ```
 
 **Mobile 9:16:** 390 px: the three cards stack vertically with the gold line drawing down their left edge; background photo replaced by a flat tinted ivory so the cards stay legible.
@@ -104,19 +104,19 @@ Photoreal top-down (flat-lay) photograph, 16:9. A clean pale-oak clinic desk see
 **Переход 4→5 (Kling, start frame = кадр 4, end frame = кадр 5):**
 
 ```
-3 s. Start: the top-down desk. The camera zooms into the ampoule until its glass fills the frame; the amber liquid brightens and the frame cuts to a gloved hand holding a clear vial up against a bright laboratory window. End: block 5 image frozen with the four stat counters starting at zero. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+3 s. Start: the top-down desk. The camera zooms into the ampoule until its glass fills the frame; the glass brightens and the frame cuts to a gloved hand holding a clear vial up against a bright laboratory window. End: block 5 image frozen with the four stat counters starting at zero. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 5 · Kit & facts — «Four principles, no exceptions»
 
 Экран: Innovation, quality, safety and ease of use - every technology in the portfolio is evaluated against all four before it reaches a clinic.  
 Метки: Innovation · Quality · Safety · Ease of use  
-CTA: Text link 'Download the catalogue (PDF)' - the existing MITODERM-Catalog-EN.pdf / HE.pdf
+CTA: Text link 'Download the catalogue (PDF)' - the existing pdf/MITODERM-Catalog-EN.pdf (HE version for the Hebrew page)
 
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal laboratory still, 16:9. A hand in a white nitrile glove holds a small clear glass vial of pale amber liquid up to a bright frosted laboratory window; behind it, out of focus, white lab benches and glassware. Clean white and ivory palette with one warm gold highlight running through the vial. 100 mm macro lens, f/2.8, eye level, vial in the right third, soft empty space on the left. No text, no labels on the vial, no logos.
+Photoreal laboratory still, 16:9. A hand in a white nitrile glove holds a small clear glass vial of pale liquid up to a bright frosted laboratory window; behind it, out of focus, white lab benches and glassware. Clean white and ivory palette with one warm gold highlight running through the vial. 100 mm macro lens, f/2.8, eye level, vial in the right third, soft empty space on the left. No text, no labels on the vial, no logos.
 ```
 
 **Mobile 9:16:** 390 px: stat row becomes a 2x2 grid of numbers, principles a vertical list, vial photo cropped square under the stats; the PDF link stays as a text link above the sticky CTA bar.
