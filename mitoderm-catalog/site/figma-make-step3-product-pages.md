@@ -1,9 +1,13 @@
 # Figma Make — Step 3: product pages from the catalogue
 
 Как пользоваться: открыть Make-файл «Design modern website for mitoderm.com», приложить
-`pdf/MITODERM-Catalog-EN.pdf` (и при желании HE/RU) и вставить весь текст ниже начиная с
-«STEP 3». Make строит страницы по уже существующему дизайну файла и заменяет текущие
-продуктовые страницы. Фото подставляются потом — на каждой странице оставлены слоты.
+`pdf/MITODERM-Catalog-EN.pdf` (для иврита — `pdf/MITODERM-Catalog-HE-36.pdf`) и
+`site/mitoderm-site-blocks.xlsx`, вставить весь текст ниже начиная с «STEP 3». Make строит
+страницы по уже существующему дизайну файла и заменяет текущие продуктовые страницы.
+**EXO-NAD и EXOCELL MASK — брать новые версии по каталогу** (в Excel помечены «Use in
+Make = yes»; старые страницы оставлены только как исходники). Готовые макеты всех
+страниц лежат в Figma «MitoDerm — Catalog · Product Pages» (страницы `Product — …`,
+`About — …`, `Science — …`). Фото подставляются потом — на каждой странице оставлены слоты.
 
 ---
 
@@ -12,6 +16,13 @@ existing visual system of this site (header, type scale, colours, buttons, foote
 switch). Replace the current product pages with the set below; add the missing ones; link them
 from the Catalog grid (filters: All · Exosomes · Peels · Masks · Hair · Bio-Spicules · Home care ·
 Devices). Do not invent facts, numbers or ingredients — only what is listed here.
+
+DESIGN RULES (proven on the MITODERM protocol pages, keep them):
+- Font Rubik (Light for display, Regular body, Medium labels, Bold wordmark); dark theme, gold #c9a24a accents, 1160px content column at 1440.
+- Packshots: PNG with transparent background in the HERO slot; a soft gold glow is allowed only BEHIND a product on a dark surface — never a glow on an empty band.
+- Motion (vanilla Motion): hero fade-in, packshots rise on reveal, the gold step line draws on scroll, section indicator in the header; with prefers-reduced-motion everything is static and fully visible. No JavaScript → nothing hidden.
+- Acceptance at 1440×900 and 390×844: 0 console errors, 0 horizontal scroll, every packshot visible after scrolling.
+- Hebrew version: same skeleton mirrored RTL (text right-aligned, nav and chips mirrored), texts verbatim from the "Blocks HE" sheet of the Excel, Latin product/ingredient names stay Latin, dashes and punctuation as in the Hebrew catalogue.
 
 PAGE TEMPLATE (same order on every product page):
 1. Hero — eyebrow (line/category), product name, tagline, 2-sentence lead, buttons
@@ -69,6 +80,42 @@ lentigo, scars, post-acne, mild–moderate acne, thin/devitalised/dull skin; fac
 décolleté, hands, back.
 
 === PRO · SYNTHETIC EXOSOME LINE ===
+
+EXO-NAD (PRO) — Three-stage biohacking system for skin renewal  [NEW VERSION — replaces the existing EXO-NAD page]
+Eyebrow: Synthetic exosomes · skin longevity peel. Lead: professional multi-stage peeling
+system from the VM laboratories (Italy), inspired by cellular-longevity research: biphasic
+peel + neutralizer-restorer + Longevity Serum with synthetic exosomes, NAD⁺ and peptides.
+Stats: 3 treatment stages · ≈30% AHA+BHA in the peel · 3–4 wk between treatments · Fitzpatrick I–VI.
+Benefits: Renewal (dead-cell removal, texture) · Firmness & elasticity, fewer fine lines ·
+Even tone (sun/age spots, PIH, post-acne; melasma-prone skin) · Radiance (pre-event; mature,
+tired, dull skin).
+System: 1 EXO BIPHASIC PEEL — lipid phase for comfort + acid phase (AHA+BHA ≈30%,
+tranexamic acid, antioxidants) → 2 pH NORMALIZER — neutralises and rebalances; collagen,
+peptides, vitamin B12 → 3 LONGEVITY SERUM — synthetic exosomes, NAD⁺, Epitalon, GHK-Cu,
+peptides. Finish: EXOCELL MASK or DERMA RECOVERY CREAM + sun protection.
+Formula: AHA+BHA complex (≈30%) · tranexamic acid & antioxidants · collagen & biomimetic
+peptides · vitamin B12 · synthetic exosomes · NAD⁺ · Epitalon · GHK-Cu.
+Kit: Biphasic Peel 15 ml · pH Normalizer 5 × 5 ml · Longevity Serum 5 × 5 ml.
+Indications: dead-cell removal · accelerated renewal · texture · firmness & elasticity ·
+fine lines · uneven tone · melasma-prone skin · sun & age spots · PIH & post-acne marks ·
+radiance · mature, tired, dull skin · anti-ageing. Works with: EXOCELL MASK · DERMA
+RECOVERY CREAM · EXOTECH GEL.
+
+EXOCELL MASK (PRO) — Advanced bio-cellulose mask, your second skin  [NEW VERSION — replaces the existing EXOCELL page]
+Eyebrow: Synthetic exosomes · professional mask. Lead: advanced adhesion technology,
+synthetic exosomal structures and hydrating, soothing actives — the finishing step after
+professional treatments when the skin needs intensive hydration and barrier support.
+Stats: 5 masks per box · bio-cellulose structure · post-procedure finishing step · instant hydration & cooling.
+Benefits: Intensive hydration · Soothing after treatments · Barrier support, cooling ·
+Smoothing & firming — fresh, calm, supple, radiant skin.
+How it works: 1 Apply on cleansed skin — adheres evenly, minimal air pockets → 2 Moist
+environment, continuous serum–skin contact → 3 Remove: hydrated, smooth, radiant skin
+(dry, tired, sensitive, devitalised skin).
+Formula: synthetic exosomal structures · polynucleotides · hyaluronic acid, glycerol &
+plant oils · plant & algae extracts · Hexapeptide-8 · Coenzyme Q10 · Nannochloropsis
+oculata · Spilanthes acmella. Pack: 5 masks.
+Indications / best used after: V-TECH SYSTEM · EXO-NAD · MICRO BOOST 10% · microneedling ·
+post-procedure protocols · dry, tired, sensitive, devitalised skin.
 
 V-TECH SYSTEM (PRO) — Clinical skin regeneration at the dermal level
 Eyebrow: Synthetic exosomes · professional kit. Lead: professional treatment kit based on
@@ -265,3 +312,6 @@ CELLULAR AGE DEFENSE 2.5% — Spicule serum with Bakuchiol and 5 peptides (home)
 DERMA RECOVERY CREAM — Snail-collagen barrier cream after every protocol (home)
 MITOPEN — Cordless microneedling pen, 0.25–2.5 mm (device)
 MITOSCAN — ×50/×200 scalp & hair diagnostics (device)
+MITOTECH CELL BOOSTER — Two-vial cell booster for in-clinic protocols with MITOPEN or MICRO BOOST 10% (PRO, "Coming soon" card, no page yet; protocol: booster vial poured into the concentrated powder vial → clear solution, up to 2 ml for face/neck/décolleté; finish EXOCELL MASK + DERMA RECOVERY CREAM + SPF 30)
+
+STEP 4 (later) — 3D VERSION: the same pages with 3D packshots (hero product rotating on scroll / drag), to be briefed separately after the pages are approved.
