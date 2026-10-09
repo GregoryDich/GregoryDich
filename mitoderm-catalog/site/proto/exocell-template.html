@@ -1,0 +1,327 @@
+<title>EXOCELL MASK</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap">
+<style>
+/* Layout: one product, one scroll. Seven blocks = seven steps of the awareness ladder; between them a sticky stage
+   that scrubs a clip (or crossfades two stills) with the scroll, so the box opens and the mask reaches the face
+   as the reader moves down. Committed single dark look in the product's own turquoise. */
+:root {
+  --bg: #07090b; --bg-2: #0d1416; --panel: #0f1a1c; --line: rgba(255,255,255,.09);
+  --fg: #eef3f3; --fg-2: #a9b6b8; --mute: #6f8082;
+  --accent: #6fb7ba; --accent-2: #8cd0d3; --accent-deep: #1f4c50; --glow: rgba(111,183,186,.32);
+  --btn: #f5f2f0; --btn-fg: #08080a;
+  --display: 300 clamp(44px, 9vw, 112px)/.95 Rubik, system-ui, sans-serif;
+  --h2: 300 clamp(30px, 4.6vw, 56px)/1.08 Rubik, system-ui, sans-serif;
+  --body: 400 clamp(15px, 1.15vw, 17px)/1.6 Rubik, system-ui, sans-serif;
+  --label: 500 12px/1 Rubik, system-ui, sans-serif;
+  --gutter: clamp(18px, 5vw, 72px); --maxw: 1200px; --radius: 22px; --ease: cubic-bezier(.16,1,.3,1);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: var(--body); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; text-wrap: pretty; }
+a { color: inherit; }
+img, video { max-width: 100%; display: block; }
+.wrap { width: min(var(--maxw), 100% - 2 * var(--gutter)); margin-inline: auto; }
+.eyebrow { font: var(--label); letter-spacing: .18em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 14px; }
+.eyebrow::before { content: ""; width: 28px; height: 1px; background: var(--accent); }
+.label { font: var(--label); letter-spacing: .14em; text-transform: uppercase; color: var(--fg-2); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 30px; border-radius: 40px; font: 500 15px/1 Rubik, system-ui, sans-serif; text-decoration: none; cursor: pointer; border: 1px solid transparent; transition: transform .25s var(--ease), background .25s; }
+.btn:active { transform: scale(.98); }
+.btn.primary { background: var(--btn); color: var(--btn-fg); }
+.btn.ghost { border-color: rgba(255,255,255,.25); color: var(--fg); background: transparent; }
+.btn:focus-visible, a:focus-visible, button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; }
+
+/* header */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; backdrop-filter: blur(14px); background: rgba(7,9,11,.72); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; min-height: 64px; gap: 20px; }
+.top img { height: 22px; width: auto; }
+.top nav { display: flex; gap: 26px; font: 400 14px/1 Rubik, system-ui, sans-serif; color: var(--fg-2); }
+.top nav a { text-decoration: none; }
+.top nav a:hover { color: var(--fg); }
+@media (max-width: 720px) { .top nav { display: none; } }
+
+/* 0 · Meet */
+.hero { position: relative; overflow: hidden; padding-block: clamp(40px, 8vw, 96px) clamp(48px, 8vw, 120px); isolation: isolate; }
+.hero .bg { position: absolute; inset: 0; z-index: -1; background: radial-gradient(60% 55% at 72% 40%, var(--glow), transparent 70%), linear-gradient(180deg, #0b1416, var(--bg) 85%); }
+.hero .scene { position: absolute; inset: 0; z-index: -2; object-fit: cover; width: 100%; height: 100%; opacity: .55; }
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: clamp(24px, 5vw, 64px); align-items: center; }
+.hero h1 { font: var(--display); letter-spacing: -.02em; margin-top: 22px; }
+.hero .tag { font: 300 clamp(20px, 2.2vw, 26px)/1.25 Rubik, system-ui, sans-serif; color: var(--fg); margin-top: 18px; max-width: 24ch; }
+.hero .lead { color: var(--fg-2); margin-top: 18px; max-width: 52ch; }
+.hero .cta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 30px; }
+.hero .art { position: relative; aspect-ratio: 1; max-width: 560px; justify-self: end; width: 100%; }
+.hero .art::before { content: ""; position: absolute; inset: 8%; border-radius: 50%; background: radial-gradient(circle, var(--glow), transparent 68%); filter: blur(6px); }
+.hero .art img { position: relative; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 30px 40px rgba(0,0,0,.55)); animation: float 7s ease-in-out infinite; }
+@keyframes float { 50% { transform: translateY(-10px); } }
+@media (max-width: 860px) { .hero .wrap { grid-template-columns: 1fr; } .hero .art { justify-self: center; max-width: 420px; order: -1; } }
+
+/* stage (scroll-scrubbed clip or crossfade of two stills) */
+.scrub { position: relative; height: var(--len, 240vh); }
+.stage { position: sticky; top: 0; height: 100svh; overflow: hidden; background: var(--bg-2); }
+.stage .still, .stage video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.stage .still.b { opacity: 0; }
+.stage video { opacity: 0; }
+.stage.has-video video { opacity: 1; }
+.stage.has-video .still { opacity: 0 !important; }
+.stage .cap { position: absolute; left: 0; right: 0; bottom: max(48px, 8vh); padding-inline: var(--gutter); display: grid; gap: 10px; opacity: 1; transform: translateY(0); transition: opacity .5s, transform .6s var(--ease); }
+.stage .cap h2 { font: var(--h2); max-width: 18ch; }
+.stage .cap p { color: var(--fg-2); max-width: 44ch; }
+.stage .cap.dim { opacity: .0; transform: translateY(10px); }
+.stage .veil { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7,9,11,.15), rgba(7,9,11,.05) 40%, rgba(7,9,11,.78)); pointer-events: none; }
+.stage .marks { position: absolute; inset: 0; pointer-events: none; }
+.mark { position: absolute; display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid rgba(255,255,255,.22); border-radius: 30px; background: rgba(7,9,11,.55); backdrop-filter: blur(8px); font: 400 14px/1 Rubik, system-ui, sans-serif; opacity: 0; transform: translateY(8px); transition: opacity .4s, transform .5s var(--ease); }
+.mark::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(111,183,186,.25); }
+.mark.on { opacity: 1; transform: none; }
+.hint { position: absolute; left: 50%; transform: translateX(-50%); bottom: 16px; font: var(--label); letter-spacing: .14em; color: var(--mute); text-transform: uppercase; }
+
+/* blocks */
+.block { padding-block: clamp(64px, 10vw, 140px); border-top: 1px solid var(--line); }
+.block .head { display: grid; gap: 18px; max-width: 760px; }
+.block h2 { font: var(--h2); }
+.block .sub { color: var(--fg-2); max-width: 56ch; }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+.chip { padding: 12px 20px; border: 1px solid rgba(255,255,255,.2); border-radius: 30px; font: 400 15px/1 Rubik, system-ui, sans-serif; }
+.chip.acc { border-color: var(--accent); color: var(--accent-2); }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 44px; }
+.step { display: grid; gap: 14px; min-width: 0; padding-top: 18px; border-top: 1px solid var(--accent-deep); }
+.step .n { font: 300 44px/1 Rubik, system-ui, sans-serif; color: var(--accent); }
+.step h3 { font: 400 22px/1.2 Rubik, system-ui, sans-serif; }
+.step p { color: var(--fg-2); }
+@media (max-width: 760px) { .steps { grid-template-columns: 1fr; gap: 22px; } }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin-top: 40px; }
+.fact { display: grid; gap: 8px; padding: 22px 0; border-top: 1px solid var(--line); min-width: 0; }
+.fact b { font: 300 40px/1 Rubik, system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.fact span { font: var(--label); letter-spacing: .08em; color: var(--fg-2); text-transform: uppercase; }
+@media (max-width: 760px) { .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kit { margin-top: 36px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.kit .card { padding: 32px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); display: grid; gap: 10px; min-width: 0; }
+.kit .card b { font: 300 32px/1 Rubik, system-ui, sans-serif; color: var(--accent); }
+.kit .card h3 { font: 400 20px/1.2 Rubik, system-ui, sans-serif; }
+.kit .card p { color: var(--fg-2); }
+details { border-top: 1px solid var(--line); }
+details summary { cursor: pointer; padding: 18px 0; font: 400 16px/1 Rubik, system-ui, sans-serif; color: var(--fg); list-style: none; display: flex; justify-content: space-between; }
+details summary::after { content: "+"; color: var(--accent); }
+details[open] summary::after { content: "–"; }
+details ol { margin: 0 0 20px; padding-left: 20px; color: var(--fg-2); display: grid; gap: 8px; }
+@media (max-width: 760px) { .kit { grid-template-columns: 1fr; } }
+
+/* 6 · Offer */
+.offer { padding-block: clamp(64px, 10vw, 140px) clamp(96px, 12vw, 160px); }
+.offer .box { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 28px; padding: clamp(36px, 6vw, 80px); background: linear-gradient(180deg, #112022, var(--bg-2)); display: grid; gap: 18px; justify-items: start; }
+.offer .box::after { content: ""; position: absolute; width: 520px; height: 520px; right: -160px; top: -220px; border-radius: 50%; background: radial-gradient(circle, var(--glow), transparent 65%); pointer-events: none; }
+.offer h2 { font: var(--h2); max-width: 16ch; }
+.offer p { color: var(--fg-2); max-width: 52ch; }
+.offer form { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) auto; width: min(560px, 100%); margin-top: 8px; }
+.offer input { min-width: 0; min-height: 52px; padding: 0 18px; border-radius: 40px; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.04); color: var(--fg); font: var(--body); }
+.offer .ok { color: var(--accent-2); }
+@media (max-width: 560px) { .offer form { grid-template-columns: 1fr; } }
+.foot { border-top: 1px solid var(--line); padding-block: 28px calc(28px + 64px); color: var(--mute); font: 400 13px/1.5 Rubik, system-ui, sans-serif; }
+.foot .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
+.foot img { height: 16px; width: auto; opacity: .8; }
+
+/* sticky mobile action */
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom, 0px)); background: rgba(7,9,11,.82); backdrop-filter: blur(12px); border-top: 1px solid var(--line); display: none; align-items: center; justify-content: space-between; gap: 12px; }
+.bar b { font: 500 13px/1.25 Rubik, system-ui, sans-serif; min-width: 0; }
+.bar .btn { min-height: 44px; padding-inline: 18px; white-space: nowrap; flex: none; }
+@media (max-width: 760px) { .bar { display: flex; } }
+
+/* reveal: elements rest visible; motion only nudges them in */
+.rv { transform: translateY(14px); opacity: .55; transition: transform .8s var(--ease), opacity .8s; }
+.rv.in { transform: none; opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .rv { transform: none; opacity: 1; transition: none; }
+  .hero .art img { animation: none; }
+  .scrub { height: auto; }
+  .stage { position: relative; height: min(70vh, 560px); }
+  .stage .still.b { opacity: 1; }
+  .stage video { display: none; }
+  .mark { opacity: 1; transform: none; }
+  .stage .cap.dim { opacity: 1; transform: none; }
+}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <a href="#top" aria-label="MITODERM"><img src="data:image/png;base64,__LOGO__" alt="MITODERM"></a>
+    <nav><a href="#why">Why</a><a href="#inside">Inside</a><a href="#feel">Feel it</a><a href="#protocol">Protocol</a><a href="#offer">Offer</a></nav>
+    <a class="btn ghost" href="#offer" style="min-height:40px;padding-inline:18px">Contact for price</a>
+  </div>
+</header>
+
+<!-- 0 · Meet -->
+<section class="hero" id="top">
+  <img class="scene" src="__S1_SRC__" data-fallback="__S1_FALLBACK__" alt="">
+  <div class="bg"></div>
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Synthetic exosomes · professional mask</div>
+      <h1>EXOCELL MASK</h1>
+      <p class="tag">Your client's second skin after the procedure.</p>
+      <p class="lead">A bio-cellulose sheet with synthetic exosomal structures. It goes on the moment the needle, the peel or the laser is done, and the skin calms down while the serum keeps working.</p>
+      <div class="cta"><a class="btn primary" href="#offer">Contact for price</a><a class="btn ghost" href="#why">See how it works</a></div>
+    </div>
+    <div class="art"><img src="data:image/png;base64,__PACK__" alt="EXOCELL MASK box and sheet mask"></div>
+  </div>
+</section>
+
+<!-- transition 1 · the box opens -->
+<div class="scrub" style="--len:220vh">
+  <div class="stage" data-clip="__T1__">
+    <img class="still a" src="__S1_SRC__" data-fallback="__S1_FALLBACK__" alt="">
+    <img class="still b" src="__S2_SRC__" data-fallback="__S2_FALLBACK__" alt="">
+    <video muted playsinline preload="auto"></video>
+    <div class="veil"></div>
+    <div class="cap" data-from="0" data-to=".45" id="why">
+      <div class="eyebrow">Why</div>
+      <h2>After the needle, the peel, the laser, the skin asks for one thing.</h2>
+      <p>Calm, cool, water. In the first twenty minutes, before anything else.</p>
+    </div>
+    <div class="cap dim" data-from=".55" data-to="1">
+      <div class="eyebrow">Inside</div>
+      <h2>One sheet. The whole serum stays on the skin.</h2>
+      <p>Thin, flexible bio-cellulose adheres with almost no air pockets, so the active serum keeps touching the skin until you lift it off.</p>
+    </div>
+    <div class="hint">Scroll</div>
+  </div>
+</div>
+
+<!-- 2 · Inside: what the sheet carries -->
+<section class="block" id="inside">
+  <div class="wrap">
+    <div class="head rv">
+      <div class="eyebrow">What's inside</div>
+      <h2>Four actives that make it more than a mask.</h2>
+      <p class="sub">Synthetic exosomal structures carry the serum. The rest is what tired, freshly treated skin needs.</p>
+    </div>
+    <div class="chips rv">
+      <span class="chip acc">Synthetic exosomal structures</span><span class="chip acc">Polynucleotides</span><span class="chip acc">Hyaluronic acid, glycerol &amp; plant oils</span><span class="chip acc">Coenzyme Q10</span>
+    </div>
+    <details class="rv" style="margin-top:28px">
+      <summary>Full formula</summary>
+      <ol><li>Synthetic exosomal structures</li><li>Polynucleotides</li><li>Hyaluronic acid, glycerol &amp; plant oils</li><li>Plant extracts &amp; algae extract</li><li>Hexapeptide-8</li><li>Ubiquinone (Coenzyme Q10)</li><li>Nannochloropsis oculata extract</li><li>Spilanthes acmella extract</li></ol>
+    </details>
+  </div>
+</section>
+
+<!-- transition 2 · the mirror -->
+<div class="scrub" style="--len:260vh">
+  <div class="stage" data-clip="__T3__" id="feel">
+    <img class="still a" src="__S2_SRC__" data-fallback="__S2_FALLBACK__" alt="">
+    <img class="still b" src="__S3_SRC__" data-fallback="__S3_FALLBACK__" alt="">
+    <video muted playsinline preload="auto"></video>
+    <div class="veil"></div>
+    <div class="marks">
+      <span class="mark" data-at=".35" style="left:8%;top:28%">Intensive hydration, immediately</span>
+      <span class="mark" data-at=".55" style="right:8%;top:42%">Calm after the procedure</span>
+      <span class="mark" data-at=".75" style="left:12%;top:60%">Barrier supported, cooled, refreshed</span>
+    </div>
+    <div class="cap" data-from="0" data-to="1">
+      <div class="eyebrow">Feel it</div>
+      <h2>She sees the result in the mirror. You see it at the next visit.</h2>
+      <p>Fresh, calm, smooth, supple, radiant: the words the catalogue uses are the words clients use.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 4 · Protocol -->
+<section class="block" id="protocol">
+  <div class="wrap">
+    <div class="head rv">
+      <div class="eyebrow">Protocol</div>
+      <h2>Three steps, no rinsing.</h2>
+      <p class="sub">The soothing finish of every advanced aesthetic protocol.</p>
+    </div>
+    <div class="steps">
+      <div class="step rv"><span class="n">01</span><h3>Apply</h3><p>Place the mask on cleansed skin right after the procedure. The thin bio-cellulose adheres evenly with minimal air pockets.</p></div>
+      <div class="step rv"><span class="n">02</span><h3>Absorb</h3><p>The close contact creates a moist environment and continuous contact between the active serum and the skin.</p></div>
+      <div class="step rv"><span class="n">03</span><h3>Finish</h3><p>Lift it off. The skin is left hydrated, smooth, supple and radiant, ideal for dry, tired, sensitive or devitalised skin.</p></div>
+    </div>
+    <div class="chips rv"><span class="label" style="align-self:center;margin-right:6px">Works with</span><span class="chip">V-TECH SYSTEM</span><span class="chip">EXO-NAD peel</span><span class="chip">MICRO BOOST 10%</span><span class="chip">Microneedling</span><span class="chip">DERMA RECOVERY CREAM</span></div>
+  </div>
+</section>
+
+<!-- 5 · Kit & facts -->
+<section class="block" id="kit">
+  <div class="wrap">
+    <div class="head rv">
+      <div class="eyebrow">Kit &amp; facts</div>
+      <h2>What's in the box.</h2>
+    </div>
+    <div class="facts rv">
+      <div class="fact"><b>5</b><span>Masks per box</span></div>
+      <div class="fact"><b>Bio</b><span>Cellulose sheet</span></div>
+      <div class="fact"><b>Post</b><span>Procedure finishing step</span></div>
+      <div class="fact"><b>Instant</b><span>Hydration &amp; cooling</span></div>
+    </div>
+    <div class="kit">
+      <div class="card rv"><b>5×</b><h3>Single-use bio-cellulose masks</h3><p>Each sheet comes soaked in its active serum. One mask, one procedure, one client.</p></div>
+      <div class="card rv"><b>PRO</b><h3>For professional use only</h3><p>Trained by MITODERM, with the protocols of V-TECH, EXO-NAD and the BIOSPICULE™ line.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · Offer -->
+<section class="offer" id="offer">
+  <div class="wrap">
+    <div class="box rv">
+      <div class="eyebrow">Offer</div>
+      <h2>Bring EXOCELL MASK to your clinic.</h2>
+      <p>Price list, training and the full treatment protocols come with the first box. Leave a number or an e-mail and our specialist calls you back.</p>
+      <form id="lead">
+        <input id="contact" name="contact" type="text" inputmode="email" placeholder="Phone or e-mail" aria-label="Phone or e-mail" required>
+        <button class="btn primary" type="submit">Contact for price</button>
+      </form>
+      <p class="ok" id="ok" hidden>Thank you. We will be in touch within one working day.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap"><img src="data:image/png;base64,__LOGO__" alt="MITODERM"><span>© 2026 MITODERM · Where science meets beauty</span></div>
+</footer>
+
+<div class="bar"><b>EXOCELL MASK · 5 masks</b><a class="btn primary" href="#offer">Contact for price</a></div>
+
+<script>
+(function () {
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // stills: generated scenes when published next to the page, otherwise the labelled placeholder
+  document.querySelectorAll('img[data-fallback]').forEach(function (im) {
+    im.addEventListener('error', function () { if (im.src !== im.dataset.fallback) im.src = im.dataset.fallback; });
+    if (im.complete && im.naturalWidth === 0) im.src = im.dataset.fallback;
+  });
+  // stages: scrub a clip when it exists, otherwise crossfade the two stills
+  var stages = Array.prototype.map.call(document.querySelectorAll('.stage'), function (st) {
+    var v = st.querySelector('video'), src = st.dataset.clip;
+    var s = { el: st, wrap: st.parentElement, v: v, ready: false, b: st.querySelector('.still.b'), caps: st.querySelectorAll('.cap'), marks: st.querySelectorAll('.mark') };
+    if (!reduce && src) {
+      v.addEventListener('loadedmetadata', function () { s.ready = true; st.classList.add('has-video'); });
+      v.addEventListener('error', function () { s.ready = false; st.classList.remove('has-video'); });
+      v.src = src; v.load();
+    }
+    return s;
+  });
+  var vh = window.innerHeight, ticking = false;
+  function clamp(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+  function update() {
+    ticking = false; vh = window.innerHeight;
+    stages.forEach(function (s) {
+      var r = s.wrap.getBoundingClientRect();
+      var p = clamp(-r.top / (r.height - vh));
+      if (s.ready && s.v.duration) { var t = p * (s.v.duration - .05); if (Math.abs(s.v.currentTime - t) > .02) s.v.currentTime = t; }
+      else s.b.style.opacity = p;
+      s.caps.forEach(function (c) { var a = +c.dataset.from, b = +c.dataset.to; c.classList.toggle('dim', !(p >= a && p <= b)); });
+      s.marks.forEach(function (m) { m.classList.toggle('on', p >= +m.dataset.at); });
+    });
+  }
+  if (!reduce) {
+    window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { threshold: .15 });
+    document.querySelectorAll('.rv').forEach(function (el) { io.observe(el); });
+  } else { document.querySelectorAll('.rv').forEach(function (el) { el.classList.add('in'); }); }
+  document.getElementById('lead').addEventListener('submit', function (e) { e.preventDefault(); document.getElementById('ok').hidden = false; e.target.querySelector('button').disabled = true; });
+})();
+</script>
