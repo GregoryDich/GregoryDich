@@ -14,6 +14,16 @@
       "headers": {
         "x-api-key": "${API_KEY_21ST}"
       }
+    },
+    "atlascloud": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "atlascloud-mcp"
+      ],
+      "env": {
+        "ATLASCLOUD_API_KEY": "${ATLASCLOUD_API_KEY}"
+      }
     }
   }
 }
