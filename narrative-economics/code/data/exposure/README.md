@@ -167,8 +167,9 @@ file's 923 titles contains "All Other".
 `has_base_row == False` and replaces the misleading specialty title with
 `[no .00 row; N specialty row(s)] <first specialty title>`. Whether they enter
 the primary analysis (keep, drop, or keep and report without them as a
-robustness check) is a specification choice. It must be logged with the
-primary measure (see "Choices to log").
+robustness check) was a specification choice. D36.9 settles it: the codes
+are kept and flagged, and the results without them are a robustness check
+(see "Primary measure").
 
 | SOC | n_onet | O*NET-SOC rows averaged (title) |
 |---|---:|---|
@@ -199,14 +200,59 @@ primary measure (see "Choices to log").
 
 ---
 
-## Primary measure (to be logged as a decision before any outcome data is seen)
+## Primary measure (decided: ROADMAP D36.9, 2026-10-10)
 
 The pre-registration (A.2; `PREREGISTRATION_EN.md` line 55) says only:
 "Eloundou et al. (2023) GPT-exposure scores as the primary measure." It names
 no column. The published file has six candidates (human or GPT-4 × α, β, ζ),
-and turning it into `Exposure_i` involves further choices. All of them must
-be logged in ROADMAP.md as dated decisions **before any outcome data
-(Revelio flows, enrollment proxies) is opened**.
+and turning it into `Exposure_i` involves further choices (items 1–5 below).
+
+**Decision D36.9.** The project lead took this decision on 2026-10-10. It is
+logged in ROADMAP.md as D36.9. **PI confirmation: TODO.**
+
+| Item | Choice | D36.9 |
+|---|---|---|
+| 1 | Rater | Human annotators. |
+| 2 | Exposure level | β (E1 + 0.5·E2). |
+| 1–2 | Primary measure | `human_rating_beta` (`exposure_scores.PRIMARY_MEASURE = "human_beta"`). |
+| 1–2 | First robustness check | `dv_rating_beta` (GPT-4 β). It is reported next to the primary in every main table, not only in an appendix. |
+| 1–2 | Further robustness checks | `human_rating_alpha` and `human_rating_gamma` (lower and upper bounds), `dv_rating_alpha` and `dv_rating_gamma`. Felten AIOE and Webb, as pre-registered in A.6(2). |
+| 3 | Task weighting | The published core-weighted `occ_level.csv`, used as is, with no re-derivation. |
+| 4 | Aggregation to 6-digit SOC | Unweighted mean over the detailed O*NET-SOC rows. The 24 SOC codes without a `.00` row (residual codes, see "Aggregation" above) are kept and flagged (`has_base_row == False`). Dropping them is a robustness check (`get_scores(..., drop_no_base_row=True)`). |
+| 5 | Comparability with Ozkan–Sullivan (D17) | **Open**: see below. |
+| — | Disclosure | Pre-lock project documents labelled the intended measure α. The paper discloses this (see "How the project came to say α" below). |
+
+**Timing.** The pre-registration was "Registered prior to accessing outcome
+data or running any estimation" (`PREREGISTRATION_EN.md` line 7). D36.9 was
+taken before any outcome data was opened. No outcome data (Revelio flows,
+enrollment proxies) is in the repository, and ROADMAP.md lists the Revelio
+request as still open (WS2).
+
+**D36.9 was taken while item 5 was still open.** The exposure measure that
+Ozkan–Sullivan use (D17) is still unknown. The reasons for not waiting:
+
+- Item 5 cannot be resolved from this environment by any known date.
+  stlouisfed.org is unreachable, and the web-search budget was used up on
+  2026-10-10.
+- Leaving the measure open while outcome data are procured (WS2) would
+  undermine the ordering that the registration relies on.
+- The cost to comparability is limited. GPT-4 β and the other four Eloundou
+  columns are pre-specified robustness measures. If Ozkan–Sullivan use one of
+  these columns, the comparable estimate is already among the reported
+  results.
+
+If they use a measure outside these six columns, how the D17 replication
+handles it has not been decided (TODO: lead/PI, before outcome data).
+
+**Not part of D36.9** (open; TODO: lead/PI, to be decided before outcome
+data):
+
+- (a) whether to add, as a further robustness check, a recomputation with
+  equal task weights from `full_labelset.tsv` (item 3). The paper uses equal
+  weights for Figures 3 and 5 and Tables 4 and 5.
+- (b) whether to add the `.00`-row-only aggregation as a robustness check
+  (item 4).
+- (c) item 5.
 
 ### How the project came to say "α"
 
@@ -217,17 +263,19 @@ Every project document written before the pre-registration was locked
   'GPTs are GPTs' exposure scores (alpha)";
 - the commit message of `492573c` (2026-06-14): "26 key occupations with
   Eloundou GPT-exposure alpha scores";
-- ROADMAP.md line 74 ("SOC → alpha") and line 274 ("Eloundou α");
-- the project README.md line 24 ("Eloundou GPT-α").
+- ROADMAP.md line 74 as it stood until `61e80bb` ("SOC → alpha"), and line
+  274, entry D25 ("Eloundou α"), which still stands;
+- the project README.md line 24 as it stood until `61e80bb` ("Eloundou
+  GPT-α").
 
 The α label arrived only with the hand-typed values. Those values are
 unsourced and are not α (`AUDIT_hardcoded_vs_source.md`). No document
 records α as a deliberate design decision, and the locked text names no
-column. The paper should still disclose that pre-lock project notes said α
-and explain why the logged measure differs. Otherwise a referee could read the
-change as a post-hoc measure switch.
+column. As D36.9 requires, the paper discloses that pre-lock project notes
+said α and explains why the logged measure differs. Otherwise a referee could
+read the change as a post-hoc switch of measure.
 
-### Choices to log
+### Items 1–5 (background to D36.9)
 
 1. **Rater:** human annotators vs GPT-4 (rubric 1).
 2. **Exposure level:** α (E1), β (E1 + 0.5·E2) or ζ (E1 + E2).
@@ -238,29 +286,25 @@ change as a post-hoc measure switch.
    equal weights) and Table 5. Footnote 8 says results "do not change
    meaningfully" between the two schemes. The difference is not negligible
    for single occupations: `human_rating_alpha` differs by up to 0.133.
-   Proposal: use the published file as is (core-weighted, no re-derivation);
-   recompute with equal weights from `full_labelset.tsv` as a robustness
-   check.
-4. **Aggregation to 6-digit SOC:** mean over detailed rows (current) vs the
-   `.00` row only. Also how to treat the **24 SOC codes without a `.00` row**
-   (see above): keep them, drop them, or keep them and report without them.
+   D36.9: use the published file as is (core-weighted, no re-derivation).
+   An equal-weight recomputation is not part of D36.9 (open point (a) above).
+4. **Aggregation to 6-digit SOC:** mean over detailed rows vs the `.00` row
+   only; and the treatment of the **24 SOC codes without a `.00` row** (see
+   above). D36.9: mean over detailed rows; the 24 codes are kept and flagged,
+   and the results without them are a robustness check. The `.00`-only
+   variant is not part of D36.9 (open point (b) above).
 5. **Comparability with Ozkan–Sullivan (D17).** ROADMAP D17 (line 266)
    commits the project to replicating the St. Louis Fed (2025) AI-exposure ×
    unemployment panel. Which exposure measure that work uses could not be
-   determined: stlouisfed.org is blocked and the web-search budget was used
-   up in this session. **TODO:** identify their measure (rater, level,
-   weighting, occupation coding) and weigh D17 comparability before the PI
-   logs items 1–4.
+   determined: stlouisfed.org is blocked, and the web-search budget was used
+   up (2026-10-10).
+   **TODO:** identify their measure (rater, level, weighting, occupation
+   coding). D36.9 was taken without it (see "D36.9 was taken while item 5
+   was still open" above).
 
-### Proposal (tentative, pending item 5)
-
-**`human_rating_beta` (human annotators, β) as the primary measure.**
-`dv_rating_beta` (GPT-4 β) is the first robustness check and is reported next
-to the primary in every main table, not only in an appendix. Then come
-`human_rating_alpha` and `human_rating_gamma` (lower and upper bounds),
-`dv_rating_alpha` and `dv_rating_gamma`, and Felten AIOE and Webb as
-pre-registered in A.6(2). The evidence below supports β clearly. It does
-**not** settle the rater.
+The evidence below supports β clearly. It does **not** by itself settle the
+rater. D36.9 settles the rater as a decision, for the reasons given under
+"Rationale".
 
 ### Evidence
 
@@ -320,7 +364,8 @@ pre-registered in A.6(2). The evidence below supports β clearly. It does
    results"), but it also calls both raters primary (§1, §5.1). Taking human β
    follows that statement. It does **not** remove a researcher degree of
    freedom: the rater, the weighting (item 3) and the aggregation (item 4)
-   remain choices that must be logged.
+   are choices. D36.9 logs them before any outcome data is seen, and that
+   logging is what keeps them from being post-hoc.
 2. **Reliability does not favour either rater.** GPT-4 labels depend on the
    prompt: two GPT-4 rubrics agree on only 76.0% of task labels at β (Table 2;
    §3.4.2). The human labels have no reported inter-rater reliability and
@@ -335,12 +380,13 @@ pre-registered in A.6(2). The evidence below supports β clearly. It does
    (§1), and the authors also labelled part of the human data (§3.3).
 
 **Against this choice:** GPT-4 β is reportedly what Canaries uses (unverified,
-above), and it may be what Ozkan–Sullivan use (unknown, item 5). If the PI
-gives more weight to comparability with those follow-ups than to the
-source's §3.4.2 statement, `dv_rating_beta` is the defensible alternative.
-Because of the re-ranking shown above, the two should be reported side by
-side whichever is primary. The choice, and items 3–5, must be logged before
-outcome data are seen.
+above), and it may be what Ozkan–Sullivan use (unknown, item 5). Someone who
+gives more weight to comparability with those follow-ups than to the source's
+§3.4.2 statement would choose `dv_rating_beta`, which is a defensible
+alternative. D36.9 therefore reports GPT-4 β next to the primary in every
+main table: because of the re-ranking shown above, the two must be read side
+by side. If the PI, on confirming D36.9, changes the primary measure, the
+change must be logged before any outcome data is seen.
 
 ---
 
@@ -428,23 +474,29 @@ labour-supply weight), are inferred, not verified. The file is
 
 ## Open issues
 
-- **Decision log.** Items 1–5 under "Choices to log" (rater, exposure level,
-  task weighting, aggregation including the 24 codes without a `.00` row,
-  and D17 comparability) must be entered in ROADMAP.md as dated decisions by
-  the PI before outcome data are accessed. This track does not edit
-  ROADMAP.md.
-- **Ozkan–Sullivan (D17) exposure measure unknown.** TODO: identify it
-  (stlouisfed.org blocked, web-search budget used up) before the rater is
-  decided.
+- **Decision log.** D36.9 (2026-10-10, the lead) settles items 1–4: rater,
+  exposure level, task weighting, and aggregation including the 24 codes
+  without a `.00` row. PI confirmation: TODO. Still open, to be logged before
+  outcome data are accessed: item 5 and the optional robustness variants
+  (a) and (b) under "Primary measure". This track does not edit ROADMAP.md.
+  ROADMAP.md line 74 already cites "D36.9" and "эррата D36" ("erratum D36"),
+  so the ROADMAP entry D36 must contain both D36.9 and the α erratum.
+- **Ozkan–Sullivan (D17) exposure measure unknown.** TODO: identify it.
+  stlouisfed.org is blocked, and the web-search budget was used up on
+  2026-10-10. D36.9 was taken without it. If their measure is not one of the
+  six Eloundou columns, decide how the D17 replication handles it before
+  outcome data.
 - **Unverified citations (TODO-verify).** Brynjolfsson, Chandar & Chen
   (Canaries) rater and column; Gimbel et al. (Yale Budget Lab) weighting and
   rater; Acemoglu's index; the *Science* issue number and DOI; EIG author
-  surnames. None of these may carry the decision until the sources are read.
-- **Erratum for the "α" label.** README.md line 24 ("Eloundou GPT-α") and
-  ROADMAP.md lines 74 and 274 describe the removed hand-typed values as
-  Eloundou α. They need correcting, citing `AUDIT_hardcoded_vs_source.md`
-  (outside this track). The paper should disclose the pre-lock α label (see
-  "How the project came to say α").
+  surnames. None of these carries D36.9, and none may carry a later change
+  until the sources are read.
+- **Erratum for the "α" label.** README.md line 24 and ROADMAP.md line 74
+  were corrected in `61e80bb` and now cite `AUDIT_hardcoded_vs_source.md`.
+  ROADMAP.md line 74 also cites "эррата D36" ("erratum D36"). ROADMAP.md
+  line 274 (entry D25, a dated log entry) still says "Eloundou α". The erratum
+  in D36 has to cover it; this is outside this track. The paper discloses
+  the pre-lock α label (see "How the project came to say α").
 - **Upstream commit SHA** for openai/GPTs-are-GPTs could not be recorded
   (blocked). Blob SHA-1 and SHA-256 above identify the content.
 - **SOC 2010 → 2018 crosswalk** needed for AIOE (BLS

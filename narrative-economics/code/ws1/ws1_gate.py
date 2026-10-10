@@ -38,7 +38,7 @@ def compute_and_print(name, pairs_raw):
     print(f"  observed   : {info['po']:.3f} ({info['agree']}/{n})")
     print(f"  expected   : {info['pe']:.3f}")
     print(f"  κ = {k:.4f}  [{interpret(k)}]")
-    gate = k >= 0.70
+    gate = k >= 0.70 - 1e-9  # same float tolerance as the summary table below
     print(f"  gate ≥ 0.70: {'PASS ✓' if gate else 'FAIL ✗'}")
     return k
 
@@ -123,7 +123,7 @@ def main():
         if k is None:
             print(f"{name:<40} {'N/A':>8} {'—':>8}")
         else:
-            gate = "PASS" if k >= 0.70 else "FAIL"
+            gate = "PASS" if k >= 0.70 - 1e-9 else "FAIL"  # tolerance: an exact 0.70 may compute as 0.6999...; a true kappa != 0.70 is a ratio with denominator <= n^2, so it differs from 0.70 by >= 1/(10 n^2) > 1e-9 for n < 10,000
             print(f"{name:<40} {k:>8.3f} {gate:>8}")
 
     # --- Disagreement analysis ---

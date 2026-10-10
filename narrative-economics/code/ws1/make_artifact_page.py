@@ -7,29 +7,38 @@ Reads coding_sample.csv (git-ignored) or recovers the fragments from
 ws1_survey.html, and writes a single HTML file WITHOUT doctype/html/head/body
 (the artifact publisher wraps it). Output goes to --out (default: scratch).
 """
-import argparse, csv, json, os
+import argparse, csv, hashlib, json, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CODEBOOK = "v1"
 
 PRACTICE = [
-    {"text": "The bank says its new AI assistant will let it cut about 300 back-office roles by next year.",
+    {"text": "The highway authority says its new AI number-plate cameras will let it get rid of almost all of its 140 toll-booth attendants by next summer.",
      "rel": "1", "val": "minus"},
-    {"text": "Since the hospital started using AI to schedule operating rooms, it has hired two more data analysts to run the system.",
+    {"text": "The vineyard co-op near us started using AI to spot leaf disease from drone photos, and to feed it they now employ eight full-time drone pilots they never needed before.",
      "rel": "1", "val": "plus"},
-    {"text": "Everyone panicked that AI would replace paralegals. Two years on, the firm employs more paralegals than before.",
+    {"text": "When the museum launched its AI audio guide, the local paper said the tour guides would all be replaced. It never happened: the museum has more guides on staff now, because the guided tours keep selling out.",
      "rel": "1", "val": "plus"},
-    {"text": "The company laid off 800 people in March, most of them in sales and marketing.",
+    {"text": "A bakery chain up north is closing eleven of its shops, so about 120 bakers and counter staff will be let go before the month is over.",
      "rel": "0", "val": "none"},
-    {"text": "The newest model now scores higher than 90% of humans on the bar exam.",
+    {"text": "The new AI model can look at a hand-drawn floor plan and turn it into a full 3D walkthrough in under a minute.",
      "rel": "0", "val": "none"},
-    {"text": "Was it really the AI, or did management just need an excuse for the layoffs? Honestly, nobody knows yet.",
+    {"text": "The airline says its new AI check-in kiosks are the reason it's cutting 260 ground staff, but its fuel costs doubled over the same months, so I'm not at all sure the kiosks are really what's behind it.",
      "rel": "1", "val": "none"},
-    {"text": "AI will wipe out a lot of clerical work, but it will also create a wave of new roles in oversight and maintenance.",
+    {"text": "At our recycling plant, the new AI sorting arms put about forty line pickers out of work, but because the arms let the plant take in so much more material, it has hired about forty extra people for its collection crews.",
      "rel": "1", "val": "mixed"},
-    {"text": "AI is going to change the economy in ways we can't imagine. The real question is where you will stand in the new one.",
+    {"text": "Official figures out this week show that since the shipping lines switched to AI route planning, the country's fruit exports have gone up by about a fifth.",
      "rel": "0", "val": "none"},
 ]
+
+# Identifier of the practice set (item texts and answers): first 12 hex digits of the SHA-256 of
+# the canonical JSON of PRACTICE. The page stores it with every checked practice answer and
+# exports it per coder as `practice_set`, so a coder's practice score can be tied to the items
+# they saw. Pages built before this column existed did not store it; their entries export as
+# "untagged". All those builds used one earlier set (the same eight texts and answers from
+# 17a5ebd to 61e80bb), whose identifier under this rule is 13a6364e02dc.
+PRACTICE_SET = hashlib.sha256(json.dumps(PRACTICE, sort_keys=True, ensure_ascii=False,
+                                         separators=(",", ":")).encode("utf-8")).hexdigest()[:12]
 
 I18N = {
  "en": {
@@ -126,14 +135,14 @@ I18N = {
   "msg.declined": "Not saved — try again, or copy the text below.",
   "msg.wait": "Please wait a moment and try again.",
   "practice.why": [
-   "An AI word, a job word, and a claim that AI shrinks the work: relevant, alarming.",
-   "AI plus hiring: the fragment says AI created work, so it is reassuring.",
-   "It quotes “replace” but argues the fear was wrong. Debunking destruction is plus, not minus (rule 1).",
-   "Layoffs, but no AI or automation word anywhere in the fragment. Do not borrow the video's topic.",
-   "AI capability only: no job, occupation, hiring or wage outcome is mentioned.",
-   "AI and layoffs are both there, but the speaker doubts AI is the cause. Doubt about the cause is none (rule 2).",
-   "Destruction and creation stated with roughly equal weight.",
-   "AI is present, but there is no occupation and no labour outcome: too vague to count."
+   "Relevance rule: an AI word (“AI number-plate cameras”), a job word (“toll-booth attendants”) and a link (the AI lets the authority get rid of them), so relevant. It argues that AI destroys these jobs: minus.",
+   "Relevance rule: AI, a job word (“employ eight full-time drone pilots”) and a link, so relevant. Using AI created jobs that did not exist before: plus (AI creates jobs).",
+   "It uses “replaced”, but the point is that the fear proved wrong: the museum now has more guides. Debunking destruction is plus, not minus (rule 1).",
+   "Job losses, but no AI or automation word anywhere in the fragment, so the relevance rule fails: not relevant. Do not borrow the video's topic.",
+   "AI capability only. The relevance rule also needs a job, occupation, hiring or wage word in the fragment itself, and there is none: not relevant.",
+   "AI, jobs and a link are all there, so relevant, but the speaker doubts that the AI is really the cause of the cuts. Doubt about the cause is none, not minus (rule 2).",
+   "Relevant. Jobs lost to AI and about as many jobs created by it get equal weight; neither side dominates: mixed.",
+   "AI and an economic result (fruit exports up), but no job, occupation, hiring or wage word, so the relevance rule fails: not relevant. An effect on trade or the economy is not, by itself, an effect on work."
   ]
  },
  "ru": {
@@ -230,14 +239,14 @@ I18N = {
   "msg.declined": "Не сохранено — попробуйте ещё раз или скопируйте текст ниже.",
   "msg.wait": "Подождите немного и попробуйте снова.",
   "practice.why": [
-   "Есть слово об ИИ, слово о работе и утверждение, что ИИ сокращает работу: релевантно, тревожно.",
-   "ИИ плюс найм: фрагмент говорит, что ИИ создал работу, — значит, успокаивающий.",
-   "Цитирует «replace», но утверждает, что страх был напрасным. Разоблачение угрозы — plus, а не minus (правило 1).",
-   "Увольнения, но во фрагменте нет ни одного слова об ИИ или автоматизации. Тему видео не подставляем.",
-   "Только возможности ИИ: ни профессии, ни найма, ни зарплаты, ни другого исхода для работы.",
-   "ИИ и увольнения есть, но говорящий сомневается, что причина — ИИ. Сомнение в причине = none (правило 2).",
-   "Разрушение и созидание примерно с равным весом.",
-   "ИИ есть, но нет ни профессии, ни исхода для работы: слишком размыто."
+   "Правило релевантности: есть слово об ИИ («AI number-plate cameras»), слово о работе («toll-booth attendants») и связь (ИИ позволяет от них избавиться) — релевантно. Утверждается, что ИИ уничтожает эти рабочие места: minus.",
+   "Правило релевантности: есть ИИ, слово о работе («employ eight full-time drone pilots») и связь — релевантно. Внедрение ИИ создало рабочие места, которых раньше не было: plus (ИИ создаёт работу).",
+   "Здесь есть слово «replaced», но смысл в том, что страх не оправдался: гидов в музее теперь больше. Разоблачение угрозы — plus, а не minus (правило 1).",
+   "Сокращения есть, но во фрагменте нет ни одного слова об ИИ или автоматизации, поэтому правило релевантности не выполнено: нерелевантно. Тему видео не подставляем.",
+   "Только возможности ИИ. Для релевантности в самом фрагменте нужно ещё слово о работе, профессии, найме или зарплате, а его нет: нерелевантно.",
+   "ИИ, рабочие места и связь между ними есть — релевантно, но говорящий сомневается, что сокращения действительно вызваны ИИ. Сомнение в причине = none, а не minus (правило 2).",
+   "Релевантно. Потеря рабочих мест из-за ИИ и примерно столько же новых мест, созданных благодаря ему, подаются с равным весом; ни одна сторона не перевешивает: смешанный (mixed).",
+   "ИИ и экономический результат (экспорт фруктов вырос) есть, но нет ни слова о работе, профессии, найме или зарплате, поэтому правило релевантности не выполнено: нерелевантно. Влияние на торговлю или экономику само по себе — ещё не влияние на работу."
   ]
  },
  "he": {
@@ -334,14 +343,14 @@ I18N = {
   "msg.declined": "לא נשמר — נסו שוב, או העתיקו את הטקסט שלמטה.",
   "msg.wait": "נא להמתין רגע ולנסות שוב.",
   "practice.why": [
-   "יש מילת AI, מילת עבודה, וטענה ש-AI מצמצם את העבודה: רלוונטי, מדאיג.",
-   "AI ועוד גיוס: הקטע אומר ש-AI יצר עבודה, ולכן הוא מרגיע.",
-   "הקטע מצטט «replace» אבל טוען שהפחד היה שגוי. הפרכת החיסול היא plus, לא minus (כלל 1).",
-   "פיטורים, אבל אין בקטע אף מילה של AI או אוטומציה. לא שואלים את נושא הסרטון.",
-   "יכולת של AI בלבד: לא מוזכרת שום משרה, מקצוע, גיוס או שכר.",
-   "גם AI וגם פיטורים נמצאים, אבל הדובר מפקפק ש-AI הוא הסיבה. ספק לגבי הסיבה = none (כלל 2).",
-   "חיסול ויצירה במשקל שווה בערך.",
-   "AI נמצא, אבל אין מקצוע ואין תוצאה תעסוקתית: מעורפל מדי כדי להיחשב."
+   "כלל הרלוונטיות: יש מילת AI («AI number-plate cameras»), מילת עבודה («toll-booth attendants») וחיבור (ה-AI מאפשר להיפטר מהם), ולכן רלוונטי. הטענה היא ש-AI מחסל את המשרות האלה: minus.",
+   "כלל הרלוונטיות: יש AI, מילת עבודה («employ eight full-time drone pilots») וחיבור, ולכן רלוונטי. השימוש ב-AI יצר משרות שלא היו קודם: plus (AI יוצר משרות).",
+   "הקטע משתמש במילה «replaced», אבל הטענה היא שהפחד התברר כשגוי: יש היום במוזיאון יותר מדריכים. הפרכת החיסול היא plus, לא minus (כלל 1).",
+   "יש פיטורים, אבל אין בקטע אף מילה של AI או אוטומציה, ולכן כלל הרלוונטיות לא מתקיים: לא רלוונטי. את מה שחסר לא משלימים מנושא הסרטון.",
+   "יכולת של AI בלבד. כלל הרלוונטיות דורש גם מילה של משרה, מקצוע, גיוס או שכר בקטע עצמו, ואין כזו: לא רלוונטי.",
+   "יש AI, משרות וחיבור ביניהם, ולכן רלוונטי, אבל הדובר מפקפק בכך שה-AI הוא באמת הסיבה לקיצוצים. ספק לגבי הסיבה = none, לא minus (כלל 2).",
+   "רלוונטי. משרות שאבדו בגלל AI ובערך אותו מספר משרות שהוא יצר מקבלים משקל שווה, ואף צד לא גובר: מעורב (mixed).",
+   "יש AI ויש תוצאה כלכלית (יצוא הפירות עלה), אבל אין אף מילה של משרה, מקצוע, גיוס או שכר, ולכן כלל הרלוונטיות לא מתקיים: לא רלוונטי. השפעה על הסחר או על הכלכלה כשלעצמה אינה השפעה על התעסוקה."
   ]
  }
 }
@@ -556,6 +565,7 @@ const PRACTICE = __PRACTICE_JSON__;
 const I18N = __I18N_JSON__;
 let LANG = "en";
 const CODEBOOK = "__CODEBOOK__";
+const PRACTICE_SET = "__PRACTICE_SET__";
 const N = FRAGMENTS.length;
 const $ = id => document.getElementById(id);
 const use = name => (window.claude && typeof window.claude.use === "function")
@@ -696,7 +706,7 @@ function showFeedback() {
   const it = PRACTICE[S.pIdx];
   const ok = (q1 === it.rel) && (it.rel === "0" ? true : q2 === it.val);
   lastFb = { i: S.pIdx, ok: ok }; renderFeedback();
-  S.practice.push({ i: S.pIdx, rel: q1, val: q2, ok: ok });
+  S.practice.push({ i: S.pIdx, rel: q1, val: q2, ok: ok, set: PRACTICE_SET });
 }
 $("btn-next").addEventListener("click", () => {
   if (q1 === null || q2 === null) return;
@@ -748,10 +758,16 @@ function buildCSV() {
   const text = {}; FRAGMENTS.forEach(f => { text[f.id] = f.text; });
   const rows = S.answers.slice().sort((a, b) => a.frag_id.localeCompare(b.frag_id));
   const pf = practiceFirst();
-  const head = ["frag_id", "text", "human_relevant_0_1", "human_valence_minus_plus_none", "position", "time_seconds", "coder", "codebook_version", "order_seed", "session_start", "session_end", "ui_language", "english_level", "source", "practice_correct", "practice_n"];
+  // Practice set(s) of the first attempts counted by practiceFirst() (same first-entry rule):
+  // "untagged" = an entry saved by a page built before the set was recorded; several sets are
+  // joined with "+" (a session that crossed a republish with new practice items).
+  const firstSeen = new Set(), sets = new Set();
+  for (const p of (S.practice || [])) { if (!p || firstSeen.has(p.i)) continue; firstSeen.add(p.i); sets.add(p.set || "untagged"); }
+  const pset = Array.from(sets).sort().join("+");
+  const head = ["frag_id", "text", "human_relevant_0_1", "human_valence_minus_plus_none", "position", "time_seconds", "coder", "codebook_version", "order_seed", "session_start", "session_end", "ui_language", "english_level", "source", "practice_correct", "practice_n", "practice_set"];
   const lines = [head.join(",")];
   for (const r of rows) {
-    lines.push([r.frag_id, text[r.frag_id] || "", r.rel, r.val, r.position, r.secs, S.coder, CODEBOOK, S.seed, S.startedAt || "", S.finishedAt || "", S.lang || LANG, S.english || "", S.source || "", pf.ok, pf.n].map(csvCell).join(","));
+    lines.push([r.frag_id, text[r.frag_id] || "", r.rel, r.val, r.position, r.secs, S.coder, CODEBOOK, S.seed, S.startedAt || "", S.finishedAt || "", S.lang || LANG, S.english || "", S.source || "", pf.ok, pf.n, pset].map(csvCell).join(","));
   }
   return lines.join("\n") + "\n";
 }
@@ -823,8 +839,10 @@ def main():
     page = (TEMPLATE.replace("__FRAGMENTS_JSON__", js(frags))
                     .replace("__PRACTICE_JSON__", js(PRACTICE))
                     .replace("__I18N_JSON__", js(I18N))
-                    .replace("__CODEBOOK__", CODEBOOK))
-    assert all(m not in page for m in ("__FRAGMENTS" + "_JSON__", "__PRACTICE" + "_JSON__", "__I18N" + "_JSON__"))
+                    .replace("__CODEBOOK__", CODEBOOK)
+                    .replace("__PRACTICE_SET__", PRACTICE_SET))
+    assert all(m not in page for m in ("__FRAGMENTS" + "_JSON__", "__PRACTICE" + "_JSON__", "__I18N" + "_JSON__",
+                                       "__PRACTICE" + "_SET__"))
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     with open(a.out, "w", encoding="utf-8") as fh:
         fh.write(page)

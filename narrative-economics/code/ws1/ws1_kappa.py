@@ -38,7 +38,7 @@ def interpret(k):
     if k < 0.20: return "slight"
     if k < 0.40: return "fair"
     if k < 0.60: return "moderate"
-    if k < 0.70: return "substantial (below gate)"
+    if k < 0.70 - 1e-9: return "substantial (below gate)"  # float tolerance: an exact 0.70 may compute as 0.6999...
     if k < 0.80: return "substantial (PASS)"
     return "almost perfect (PASS)"
 
@@ -68,7 +68,7 @@ def main():
     print(f"  expected agr : {info['pe']:.3f}")
     print(f"  Cohen's kappa: {k:.3f}  [{interpret(k)}]")
     print(f"  gate (>= {args.gate}): "
-          f"{'PASS' if k >= args.gate else 'FAIL -> revise classifier'}")
+          f"{'PASS' if k >= args.gate - 1e-9 else 'FAIL -> revise classifier'}")
 
 
 if __name__ == "__main__":

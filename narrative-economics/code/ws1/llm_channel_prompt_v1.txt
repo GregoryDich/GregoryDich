@@ -55,6 +55,50 @@ Does the fragment text have an AI token AND a labor token AND a connection betwe
   - the speaker gives both directions about equally: "mixed"
   - relevant, but no direction / a question / "is it even AI?": "none"
 
+WORKED EXAMPLES
+
+Before coding, the human coders in this study work through the 8 practice items below. After answering each item they are shown the codebook answer and its explanation, which is given under each item here in the same words. The practice items were constructed for training; none of them is a fragment you will be asked to code.
+
+Practice item 1
+Fragment: The highway authority says its new AI number-plate cameras will let it get rid of almost all of its 140 toll-booth attendants by next summer.
+Codebook answer: relevant = Yes, valence = Alarming (minus). Relevance rule: an AI word (“AI number-plate cameras”), a job word (“toll-booth attendants”) and a link (the AI lets the authority get rid of them), so relevant. It argues that AI destroys these jobs: minus.
+In the output format: {"relevant": 1, "valence": "minus"}
+
+Practice item 2
+Fragment: The vineyard co-op near us started using AI to spot leaf disease from drone photos, and to feed it they now employ eight full-time drone pilots they never needed before.
+Codebook answer: relevant = Yes, valence = Reassuring (plus). Relevance rule: AI, a job word (“employ eight full-time drone pilots”) and a link, so relevant. Using AI created jobs that did not exist before: plus (AI creates jobs).
+In the output format: {"relevant": 1, "valence": "plus"}
+
+Practice item 3
+Fragment: When the museum launched its AI audio guide, the local paper said the tour guides would all be replaced. It never happened: the museum has more guides on staff now, because the guided tours keep selling out.
+Codebook answer: relevant = Yes, valence = Reassuring (plus). It uses “replaced”, but the point is that the fear proved wrong: the museum now has more guides. Debunking destruction is plus, not minus (rule 1).
+In the output format: {"relevant": 1, "valence": "plus"}
+
+Practice item 4
+Fragment: A bakery chain up north is closing eleven of its shops, so about 120 bakers and counter staff will be let go before the month is over.
+Codebook answer: relevant = No. Job losses, but no AI or automation word anywhere in the fragment, so the relevance rule fails: not relevant. Do not borrow the video's topic.
+In the output format: {"relevant": 0, "valence": "none"}
+
+Practice item 5
+Fragment: The new AI model can look at a hand-drawn floor plan and turn it into a full 3D walkthrough in under a minute.
+Codebook answer: relevant = No. AI capability only. The relevance rule also needs a job, occupation, hiring or wage word in the fragment itself, and there is none: not relevant.
+In the output format: {"relevant": 0, "valence": "none"}
+
+Practice item 6
+Fragment: The airline says its new AI check-in kiosks are the reason it's cutting 260 ground staff, but its fuel costs doubled over the same months, so I'm not at all sure the kiosks are really what's behind it.
+Codebook answer: relevant = Yes, valence = Neutral / no direction (none). AI, jobs and a link are all there, so relevant, but the speaker doubts that the AI is really the cause of the cuts. Doubt about the cause is none, not minus (rule 2).
+In the output format: {"relevant": 1, "valence": "none"}
+
+Practice item 7
+Fragment: At our recycling plant, the new AI sorting arms put about forty line pickers out of work, but because the arms let the plant take in so much more material, it has hired about forty extra people for its collection crews.
+Codebook answer: relevant = Yes, valence = Mixed. Relevant. Jobs lost to AI and about as many jobs created by it get equal weight; neither side dominates: mixed.
+In the output format: {"relevant": 1, "valence": "mixed"}
+
+Practice item 8
+Fragment: Official figures out this week show that since the shipping lines switched to AI route planning, the country's fruit exports have gone up by about a fifth.
+Codebook answer: relevant = No. AI and an economic result (fruit exports up), but no job, occupation, hiring or wage word, so the relevance rule fails: not relevant. An effect on trade or the economy is not, by itself, an effect on work.
+In the output format: {"relevant": 0, "valence": "none"}
+
 OUTPUT
 
 Respond with only a JSON object and no other text:

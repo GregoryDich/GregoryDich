@@ -6,4 +6,6 @@ dict_labels.csv
 toy.csv
 ALL_TRANSCRIPTS.txt
 gforms/generated/
+# raw LLM-channel logs contain fragment text; only their SHA-256 (in llm_labels_run.json) is committed
+llm_raw_log*.jsonl
 !llm_channel_prompt_v1.txt

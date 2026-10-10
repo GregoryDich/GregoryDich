@@ -4,57 +4,84 @@ ws1_llm_channel.py - WS1.0 LLM classification channel, frozen v1
 (PROTOCOL_WS1.0.md section 12; the second pre-registered channel, A.2/A.6.3).
 
 One Anthropic Messages API request per fragment (never several fragments in
-one prompt). The system prompt is the whole of llm_channel_prompt_v1.txt (the
-CODEBOOK.md v1 rules; no examples from the 300 fragments or the 8 practice
-items); the user message is USER_TEMPLATE with one fragment; the reply is
-constrained by a JSON schema (structured outputs) to
+one prompt). The system prompt is the whole of llm_channel_prompt_v1.txt: the
+CODEBOOK.md v1 rules plus, as worked examples, the 8 practice items of the
+coding page with their codebook answers and explanations, in the words the
+human coders are shown (instruction parity, PROTOCOL 12.5.3). No evaluation
+fragment is in the prompt; each request carries exactly one evaluation
+fragment, in the user message (USER_TEMPLATE). The reply is constrained by a
+JSON schema (structured outputs) to
     {"relevant": 0|1, "valence": "minus"|"plus"|"mixed"|"none"}.
 
-Frozen: the script refuses to run if the prompt file or the request
-specification (model, parameters, schema, user template) differs from the
-hashes below. A changed channel is a new version (PROTOCOL 12.3).
+Frozen identity (PROTOCOL 12.5.3): the SHA-256 of this file (request
+construction, reply parser, label mapping, outputs), of the prompt file, of
+the request specification and of the input set (the 300 frag_id + text). The
+frozen values are read from verify_frozen_channels.py (FROZEN), which holds
+the values written in PROTOCOL section 12. The script refuses to run, dry runs
+included, if any of the four differs. A changed channel is a new version.
 
 Model and parameters (from the claude-api skill reference, models cached
 2026-10-06, and the installed anthropic SDK 1.13.0):
   - claude-opus-5-5: the current Opus model and the reference's default. The
     reference lists no dated snapshot id for it and says the id is complete as
-    written; dated ids exist only for older models. Every response's `model`
-    field is logged, so a change of the served model would be visible.
+    written. The served model of every response is logged and written next to
+    each label, so a change of the served model would be visible.
   - No temperature/top_p/top_k: this model rejects them (400) and SDK 1.x has
-    no such arguments; the reference notes temperature 0 never guaranteed
-    identical outputs anyway. Thinking cannot be disabled on this model;
-    effort is fixed at "low", the reference's setting when determinism is the
-    aim. Outputs are therefore not guaranteed bit-reproducible: the labels of
-    record are those of the first complete run.
+    no such arguments; the reference notes that temperature 0 never
+    guaranteed identical outputs and, where determinism was the intent, points
+    to effort "low" with a tighter prompt. Thinking cannot be disabled on this
+    model. Effort is "low". Outputs are not
+    guaranteed to repeat run to run; which run is the run of record is fixed
+    in PROTOCOL 12.6.
   - No refusal fallback to another model (a fallback would change the
     instrument); a refusal is logged and the label left missing.
 
-Every attempt is appended to a JSONL log (request with the system text
-replaced by its SHA-256, the full response incl. served model, request id and
-usage, timestamps). Re-running resumes: fragments with a final record are
-skipped. Labels go to llm_labels.csv (frag_id, relevant_llm, valence_llm,
-status_llm), sorted by frag_id.
+A run is one raw log file, identified by the run id in its first record, and
+may take several invocations: re-running with the same --log resumes
+(fragments with a final record are skipped) and a complete log is never
+appended to again. Every attempt is appended to the log (request with the
+system text replaced by its SHA-256, the full response incl. served model,
+request id and usage, timestamps). The log contains fragment text and is
+git-ignored; its SHA-256 goes into the run record next to the labels.
+
+Outputs:
+  llm_labels.csv      frag_id, relevant_llm, valence_llm, status_llm,
+                      model_served; sorted by frag_id; no fragment text
+  llm_labels_run.json run record: run id, SHA-256 of llm_labels.csv and of
+                      the raw log, the four frozen identities, served models,
+                      status counts, first and last timestamps
+  llm_raw_log.jsonl   the raw log (git-ignored)
+The run record of one run is never overwritten by another run: a replicate
+run uses a new --out and a new --log.
 
 Usage:
-    python3 ws1_llm_channel.py --dry-run          # no API call, no key needed
+    python3 ws1_llm_channel.py --dry-run          # no API call, no key, no file written
     ANTHROPIC_API_KEY=... python3 ws1_llm_channel.py
         [--fragments coding_sample.csv|ws1_survey.html] [--out llm_labels.csv]
-        [--log llm_raw_log.jsonl] [--coder-format llm_labels_coderformat.csv]
+        [--log llm_raw_log.jsonl] [--record llm_labels_run.json]
+        [--coder-format llm_labels_coderformat.csv]
 --coder-format additionally writes the labels with the coder columns
-(frag_id, human_relevant_0_1, human_valence_minus_plus_none) that
-ws1_reliability.py --channel LLM=... reads.
+(frag_id, human_relevant_0_1, human_valence_minus_plus_none);
+ws1_reliability.py --channel LLM=llm_labels.csv reads either file.
 """
-import argparse, copy, csv, datetime, hashlib, json, os, platform, random, sys, time
+import argparse, ast, copy, csv, datetime, hashlib, json, os, platform, random, sys, time, uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CHANNEL = "ws1-llm-channel-v1"
 PROMPT_FILE = os.path.join(HERE, "llm_channel_prompt_v1.txt")
-FROZEN_PROMPT_SHA256 = "17a98727a1a018544fc5203676f0066c901853fbc8b3e394a4e39d1f52cfd340"
-FROZEN_SPEC_SHA256 = "31611568e0657a2ad763e7a3fc1b11d0fcab956fcb478542713a5709efff49d6"
+RUNNER_FILE = os.path.abspath(__file__)
+FROZEN_TABLE_FILE = os.path.join(HERE, "verify_frozen_channels.py")
+# identity field -> key of the FROZEN table in verify_frozen_channels.py
+FROZEN_KEYS = {"runner_sha256": "llm_runner_sha256", "prompt_sha256": "llm_prompt_sha256",
+               "spec_sha256": "llm_spec_sha256", "input_set_sha256": "input_set_sha256"}
+WHAT = {"runner_sha256": "ws1_llm_channel.py (runner: request, reply parser, label mapping, outputs)",
+        "prompt_sha256": "llm_channel_prompt_v1.txt (system prompt)",
+        "spec_sha256": "request specification (model, parameters, schema, user template)",
+        "input_set_sha256": "input set (the 300 frag_id + text)"}
 
 MODEL = "claude-opus-5-5"
 EFFORT = "low"
-MAX_TOKENS = 2048          # the JSON reply is ~15 tokens; thinking counts toward max_tokens on this model
+MAX_TOKENS = 4096          # the JSON reply is ~15 tokens; adaptive thinking counts toward max_tokens
 VALENCES = ("minus", "plus", "mixed", "none")
 OUTPUT_SCHEMA = {
     "type": "object",
@@ -67,12 +94,12 @@ OUTPUT_SCHEMA = {
 }
 USER_TEMPLATE = "Code this fragment.\n\n<fragment>\n{fragment}\n</fragment>"
 
-# pre-specified handling (PROTOCOL 12.2)
+# pre-specified handling (PROTOCOL 12.5.3)
 RETRY_STATUS = (408, 409, 429)   # plus every status >= 500, and connection errors / timeouts
 TRANSPORT_ATTEMPTS = 8           # per request; when exhausted the run stops (rerun resumes)
 CONTENT_ATTEMPTS = 3             # identical requests when the reply is not a valid label
 BACKOFF_BASE, BACKOFF_MAX = 2.0, 120.0   # seconds; exponential with jitter, or retry-after
-TIMEOUT_S = 120.0
+TIMEOUT_S = 180.0
 
 # claude-opus-5-5 list prices, USD per million tokens (claude-api skill, cached 2026-10-06)
 PRICE_IN, PRICE_OUT, PRICE_CACHE_WRITE_5M, PRICE_CACHE_READ = 4.00, 20.00, 5.00, 0.20
@@ -80,7 +107,7 @@ CACHE_MIN_TOKENS = 512           # minimum cacheable prefix on this model (same 
 
 
 class ChannelAbort(Exception):
-    """The run cannot continue (frozen-spec mismatch, API error, retries exhausted)."""
+    """The run cannot continue (frozen-identity mismatch, API error, retries exhausted)."""
 
 
 # ---------------------------------------------------------------------------
@@ -88,6 +115,11 @@ class ChannelAbort(Exception):
 # ---------------------------------------------------------------------------
 def sha256_bytes(data):
     return hashlib.sha256(data).hexdigest()
+
+
+def sha256_file(path):
+    with open(path, "rb") as fh:
+        return sha256_bytes(fh.read())
 
 
 def canonical_json(obj):
@@ -129,17 +161,37 @@ def spec_sha256(prompt_sha):
     return sha256_bytes(canonical_json(build_request(prompt_ref(prompt_sha), "{fragment}")).encode("utf-8"))
 
 
-def check_frozen(prompt_sha):
-    """Raise ChannelAbort unless prompt file and request spec match the frozen hashes."""
-    if prompt_sha != FROZEN_PROMPT_SHA256:
-        raise ChannelAbort(f"{os.path.basename(PROMPT_FILE)} has sha256 {prompt_sha}, frozen value is "
-                           f"{FROZEN_PROMPT_SHA256}. The LLM channel is frozen (PROTOCOL_WS1.0.md section 12); "
-                           "a revised prompt is a new channel version in a new file.")
-    spec = spec_sha256(prompt_sha)
-    if spec != FROZEN_SPEC_SHA256:
-        raise ChannelAbort(f"request specification has sha256 {spec}, frozen value is {FROZEN_SPEC_SHA256} "
-                           "(model, parameters, schema or user template changed). The LLM channel is frozen.")
-    return spec
+def identity(prompt_sha, frags):
+    """The four frozen identities of a run (PROTOCOL 12.5.3)."""
+    return {"runner_sha256": sha256_file(RUNNER_FILE), "prompt_sha256": prompt_sha,
+            "spec_sha256": spec_sha256(prompt_sha), "input_set_sha256": fragments_sha256(frags)}
+
+
+def frozen_table(path=None):
+    """The FROZEN dict literal of verify_frozen_channels.py, read without executing that file."""
+    path = path or FROZEN_TABLE_FILE
+    try:
+        with open(path, encoding="utf-8") as fh:
+            tree = ast.parse(fh.read(), path)
+        for node in tree.body:
+            if (isinstance(node, ast.Assign) and len(node.targets) == 1
+                    and isinstance(node.targets[0], ast.Name) and node.targets[0].id == "FROZEN"):
+                return ast.literal_eval(node.value)
+    except (OSError, SyntaxError, ValueError) as e:
+        raise ChannelAbort(f"cannot read the frozen values from {path}: {type(e).__name__}: {e}") from e
+    raise ChannelAbort(f"no FROZEN table in {path}")
+
+
+def check_frozen(ident, table=None):
+    """Raise ChannelAbort unless all four identities equal the frozen values."""
+    frozen = frozen_table() if table is None else table
+    bad = [f"{WHAT[k]}: sha256 {ident[k]}, frozen value {frozen.get(fk)}"
+           for k, fk in FROZEN_KEYS.items() if ident[k] != frozen.get(fk)]
+    if bad:
+        raise ChannelAbort("the LLM channel is frozen (PROTOCOL_WS1.0.md section 12.5.3) and differs:\n  "
+                           + "\n  ".join(bad) + "\nA changed channel is a new version (new prompt file, "
+                           "runner and channel name), evaluated on fresh fragments (12.6); the input set is fixed.")
+    return ident
 
 
 # ---------------------------------------------------------------------------
@@ -173,7 +225,7 @@ def fragments_sha256(frags):
 
 
 # ---------------------------------------------------------------------------
-# responses
+# responses: reply parser and label mapping (part of the frozen runner)
 # ---------------------------------------------------------------------------
 def response_to_dict(resp):
     if hasattr(resp, "to_dict"):
@@ -272,16 +324,29 @@ def append_log(path, record):
         os.fsync(fh.fileno())
 
 
-def final_records(records, frags, prompt_sha, spec):
-    """{frag_id: final attempt record}; refuses a log written for another spec or input."""
+def log_run_id(records):
+    """The run id of a log: the run_id of its first record that has one (None for a new log)."""
+    for r in records:
+        if r.get("run_id"):
+            return r["run_id"]
+    return None
+
+
+def final_records(records, frags, ctx):
+    """{frag_id: final attempt record}; refuses a log of another run, channel identity or input."""
     text_sha = {f["id"]: sha256_bytes(f["text"].encode("utf-8")) for f in frags}
     out = {}
     for r in records:
+        if r.get("run_id") != ctx["run_id"]:
+            raise ChannelAbort(f"log record ({r.get('type')}, {r.get('frag_id', '-')}) belongs to run "
+                               f"{r.get('run_id')}, not {ctx['run_id']}: one log holds one run; use a new --log")
+        for k in ("runner_sha256", "prompt_sha256", "spec_sha256", "input_set_sha256"):
+            if k in r and r[k] != ctx[k]:
+                raise ChannelAbort(f"log record ({r.get('type')}, {r.get('frag_id', '-')}) was written with "
+                                   f"another {k} ({r[k]}); use a new --log")
         if r.get("type") != "attempt" or not r.get("final"):
             continue
         fid = r["frag_id"]
-        if r.get("prompt_sha256") != prompt_sha or r.get("spec_sha256") != spec:
-            raise ChannelAbort(f"log record for {fid} was written by another channel spec; use a new --log")
         if fid not in text_sha or r.get("fragment_sha256") != text_sha[fid]:
             raise ChannelAbort(f"log record for {fid} does not match the current fragment text; use a new --log")
         if fid in out:
@@ -293,16 +358,16 @@ def final_records(records, frags, prompt_sha, spec):
 # ---------------------------------------------------------------------------
 # run
 # ---------------------------------------------------------------------------
-def classify_fragment(client, frag, prompt_text, prompt_sha, spec, log_path, sleep=time.sleep, rng=None):
+def classify_fragment(client, frag, prompt_text, ctx, log_path, sleep=time.sleep, rng=None):
     """All attempts for one fragment; returns its final record."""
     rng = rng or random.Random()
     req = build_request(prompt_text, frag["text"])
     logged_req = copy.deepcopy(req)
-    logged_req["system"][0]["text"] = prompt_ref(prompt_sha)
-    base = {"type": "attempt", "channel": CHANNEL, "frag_id": frag["id"],
+    logged_req["system"][0]["text"] = prompt_ref(ctx["prompt_sha256"])
+    base = {"type": "attempt", "channel": CHANNEL, "run_id": ctx["run_id"], "frag_id": frag["id"],
             "fragment_sha256": sha256_bytes(frag["text"].encode("utf-8")),
-            "prompt_sha256": prompt_sha, "spec_sha256": spec, "model_requested": MODEL,
-            "request": logged_req}
+            "runner_sha256": ctx["runner_sha256"], "prompt_sha256": ctx["prompt_sha256"],
+            "spec_sha256": ctx["spec_sha256"], "model_requested": MODEL, "request": logged_req}
     for content_attempt in range(1, CONTENT_ATTEMPTS + 1):
         for transport_attempt in range(1, TRANSPORT_ATTEMPTS + 1):
             t_req, t0 = utcnow(), time.monotonic()
@@ -340,26 +405,26 @@ def classify_fragment(client, frag, prompt_text, prompt_sha, spec, log_path, sle
     raise AssertionError("unreachable")
 
 
-def run(client, frags, prompt_text, prompt_sha, spec, log_path, source, sleep=time.sleep, rng=None):
-    frags = prepare_fragments(frags)
-    done = final_records(read_log(log_path), frags, prompt_sha, spec)
+def run(client, frags, prompt_text, ctx, log_path, source, done, sleep=time.sleep, rng=None):
+    """Send every fragment without a final record; called only when there is something to send."""
     todo = [f for f in frags if f["id"] not in done]
     try:
         import anthropic
         sdk = anthropic.__version__
     except ImportError:
         sdk = None
-    append_log(log_path, {"type": "run_start", "channel": CHANNEL, "ts": utcnow(), "model": MODEL,
-                          "effort": EFFORT, "max_tokens": MAX_TOKENS, "prompt_sha256": prompt_sha,
-                          "spec_sha256": spec, "fragments_source": os.path.basename(source),
-                          "fragments_sha256": fragments_sha256(frags), "n_fragments": len(frags),
+    append_log(log_path, {"type": "run_start", "channel": CHANNEL, "run_id": ctx["run_id"], "ts": utcnow(),
+                          "model": MODEL, "effort": EFFORT, "max_tokens": MAX_TOKENS,
+                          "runner_sha256": ctx["runner_sha256"], "prompt_sha256": ctx["prompt_sha256"],
+                          "spec_sha256": ctx["spec_sha256"], "input_set_sha256": ctx["input_set_sha256"],
+                          "fragments_source": os.path.basename(source), "n_fragments": len(frags),
                           "n_already_final": len(done), "anthropic_sdk": sdk,
                           "python": platform.python_version()})
     for k, f in enumerate(todo, 1):
-        rec = classify_fragment(client, f, prompt_text, prompt_sha, spec, log_path, sleep=sleep, rng=rng)
+        rec = classify_fragment(client, f, prompt_text, ctx, log_path, sleep=sleep, rng=rng)
         done[f["id"]] = rec
         print(f"[{k}/{len(todo)}] {f['id']}: {rec['status']} {rec.get('relevant')} {rec.get('valence')}")
-    append_log(log_path, {"type": "run_end", "channel": CHANNEL, "ts": utcnow(),
+    append_log(log_path, {"type": "run_end", "channel": CHANNEL, "run_id": ctx["run_id"], "ts": utcnow(),
                           "n_final": len(done), "complete": len(done) == len(frags)})
     return done
 
@@ -375,19 +440,18 @@ def write_labels(frags, finals, out_path, coder_format=None):
         status = r["status"] if r else "pending"
         counts[status] = counts.get(status, 0) + 1
         ok = status == "ok"
-        rows.append((f["id"], str(r["relevant"]) if ok else "", r["valence"] if ok else "", status))
+        rows.append((f["id"], str(r["relevant"]) if ok else "", r["valence"] if ok else "", status,
+                     (r.get("model_served") or "") if r else ""))
     with open(out_path, "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh, lineterminator="\n")
-        w.writerow(["frag_id", "relevant_llm", "valence_llm", "status_llm"])
+        w.writerow(["frag_id", "relevant_llm", "valence_llm", "status_llm", "model_served"])
         w.writerows(rows)
     if coder_format:
         with open(coder_format, "w", newline="", encoding="utf-8") as fh:
             w = csv.writer(fh, lineterminator="\n")
             w.writerow(["frag_id", "human_relevant_0_1", "human_valence_minus_plus_none"])
             w.writerows(r[:3] for r in rows)
-    with open(out_path, "rb") as fh:
-        digest = sha256_bytes(fh.read())
-    return digest, counts.get("pending", 0) == 0, counts
+    return sha256_file(out_path), counts.get("pending", 0) == 0, counts
 
 
 def usage_cost(records):
@@ -400,6 +464,50 @@ def usage_cost(records):
             + tot["cache_creation_input_tokens"] * PRICE_CACHE_WRITE_5M
             + tot["cache_read_input_tokens"] * PRICE_CACHE_READ) / 1e6
     return tot, cost
+
+
+def default_record_path(out_path):
+    return os.path.splitext(out_path)[0] + "_run.json"
+
+
+def check_record_owner(record_path, run_id):
+    """Refuse to overwrite the run record of another run (e.g. the committed run of record).
+    run_id is the id of the log's run, None for a new log (which can own no existing record)."""
+    if not os.path.exists(record_path):
+        return
+    try:
+        with open(record_path, encoding="utf-8") as fh:
+            owner = json.load(fh).get("run_id")
+    except (OSError, ValueError, AttributeError) as e:
+        raise ChannelAbort(f"{record_path} exists but is not a run record ({e}); it is not overwritten") from e
+    if run_id is None or owner != run_id:
+        raise ChannelAbort(f"{record_path} is the run record of run {owner}; this log is "
+                           f"{'a new run' if run_id is None else 'run ' + run_id}. A replicate run "
+                           "writes to a new --out and a new --log (PROTOCOL 12.6).")
+
+
+def run_record(records, finals, frags, ctx, out_path, log_path, labels_sha, complete, counts):
+    """The run record: a function of the log and the labels only (no wall-clock value of its own)."""
+    att = [r for r in records if r.get("type") == "attempt"]
+    starts = [r for r in records if r.get("type") == "run_start"]
+    tot, cost = usage_cost(records)
+    return {
+        "channel": CHANNEL, "protocol": "PROTOCOL_WS1.0.md section 12", "run_id": ctx["run_id"],
+        "complete": complete, "n_fragments": len(frags), "status_counts": counts,
+        "valence_coerced": sum(1 for r in finals.values() if r.get("valence_coerced")),
+        "labels_file": os.path.basename(out_path), "labels_sha256": labels_sha,
+        "raw_log_file": os.path.basename(log_path), "raw_log_sha256": sha256_file(log_path),
+        "runner_sha256": ctx["runner_sha256"], "prompt_sha256": ctx["prompt_sha256"],
+        "spec_sha256": ctx["spec_sha256"], "input_set_sha256": ctx["input_set_sha256"],
+        "model_requested": MODEL, "effort": EFFORT, "max_tokens": MAX_TOKENS,
+        "models_served": sorted({r["model_served"] for r in att if r.get("model_served")}),
+        "invocations": len(starts), "attempts": len(att),
+        "first_request_utc": min((r["ts_request"] for r in att), default=None),
+        "last_response_utc": max((r.get("ts_response") or "" for r in att), default=None),
+        "anthropic_sdk": sorted({str(r.get("anthropic_sdk")) for r in starts}),
+        "python": sorted({str(r.get("python")) for r in starts}),
+        "usage_totals": tot, "cost_usd_list_price": round(cost, 4),
+    }
 
 
 def estimate(prompt_text, todo):
@@ -435,31 +543,41 @@ def estimate(prompt_text, todo):
 def main(argv=None, client=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--dry-run", action="store_true",
-                    help="print the exact first request, the request count and a cost estimate; no API call")
+                    help="print the identity check, the exact first request, the request count and a cost "
+                         "estimate; no API call, no file written")
     ap.add_argument("--fragments", default=None, help="coding_sample.csv or ws1_survey.html "
                     "(default: coding_sample.csv if present, else ws1_survey.html)")
     ap.add_argument("--out", default=os.path.join(HERE, "llm_labels.csv"))
     ap.add_argument("--log", default=os.path.join(HERE, "llm_raw_log.jsonl"))
+    ap.add_argument("--record", default=None, help="run record (default: <out without .csv>_run.json)")
     ap.add_argument("--coder-format", default=None,
                     help="also write the labels in the coder columns read by ws1_reliability.py --channel")
     a = ap.parse_args(argv)
+    record_path = a.record or default_record_path(a.out)
     try:
         prompt_text, prompt_sha = read_prompt()
-        spec = check_frozen(prompt_sha)
         if a.fragments:
             frags, src = (load_fragments(None, a.fragments) if a.fragments.lower().endswith(".html")
                           else load_fragments(a.fragments, None))
         else:
             frags, src = load_fragments(os.path.join(HERE, "coding_sample.csv"), os.path.join(HERE, "ws1_survey.html"))
         frags = prepare_fragments(frags)
-        done = final_records(read_log(a.log), frags, prompt_sha, spec)
+        ident = check_frozen(identity(prompt_sha, frags))
+        records = read_log(a.log)
+        old_id = log_run_id(records)
+        if records and old_id is None:
+            raise ChannelAbort(f"{a.log} has records but no run id; use a new --log")
+        check_record_owner(record_path, old_id)
+        ctx = dict(ident, run_id=old_id or uuid.uuid4().hex)
+        done = final_records(records, frags, ctx)
         todo = [f for f in frags if f["id"] not in done]
         print(f"{CHANNEL}: model {MODEL}, effort {EFFORT}, max_tokens {MAX_TOKENS}, adaptive thinking, "
               f"JSON-schema output, no sampling parameters, no fallback")
-        print(f"prompt {os.path.basename(PROMPT_FILE)} sha256 {prompt_sha} (frozen: OK)")
-        print(f"request spec sha256 {spec} (frozen: OK)")
-        print(f"fragments {len(frags)} from {os.path.basename(src)}, input-set sha256 {fragments_sha256(frags)}")
-        print(f"log {a.log}: {len(done)} fragment(s) already final -> {len(todo)} to send")
+        for k in FROZEN_KEYS:
+            print(f"{WHAT[k]}: sha256 {ident[k]} (frozen: OK)")
+        print(f"fragments {len(frags)} from {os.path.basename(src)}")
+        print(f"log {a.log}: " + (f"run {old_id}, " if old_id else "new run, ")
+              + f"{len(done)} fragment(s) already final -> {len(todo)} to send")
         if a.dry_run:
             if todo:
                 print(f"\n--- exact request for the first fragment to send ({todo[0]['id']}) ---")
@@ -467,34 +585,36 @@ def main(argv=None, client=None):
             print("\n--- estimate ---")
             print(estimate(prompt_text, todo))
             return 0
-        if client is None:
+        if todo and client is None:
             if not os.environ.get("ANTHROPIC_API_KEY"):
                 raise ChannelAbort("ANTHROPIC_API_KEY is not set (it is read from the environment only "
                                    "and never written to the log)")
             import anthropic
             client = anthropic.Anthropic(max_retries=0, timeout=TIMEOUT_S)   # retries are ours, so all are logged
         try:
-            run(client, frags, prompt_text, prompt_sha, spec, a.log, src)
+            if todo:
+                run(client, frags, prompt_text, ctx, a.log, src, done)
         finally:
             records = read_log(a.log)
-            finals = final_records(records, frags, prompt_sha, spec)
-            digest, complete, counts = write_labels(frags, finals, a.out, a.coder_format)
-            tot, cost = usage_cost(records)
-            served = sorted({r.get("model_served") for r in records
-                             if r.get("type") == "attempt" and r.get("model_served")})
-            print(f"\nlabels -> {a.out}  status counts {counts}")
-            print(f"coerced valence (relevant 0 with a valence): "
-                  f"{sum(1 for r in finals.values() if r.get('valence_coerced'))}")
-            print(f"served model(s): {served}" + ("" if served in ([], [MODEL]) else "  WARNING: differs from "
-                                                   f"the requested {MODEL}"))
-            print(f"usage {tot}, cost at list price ${cost:.2f}")
-            if complete:
-                with open(a.log, "rb") as fh:
-                    log_digest = sha256_bytes(fh.read())
-                print(f"COMPLETE. Deposit before opening human labels: sha256({os.path.basename(a.out)}) = {digest}; "
-                      f"sha256({os.path.basename(a.log)}) = {log_digest}")
-            else:
-                print("INCOMPLETE: rerun to resume (fragments with a final record are skipped)")
+            if records:
+                finals = final_records(records, frags, ctx)
+                digest, complete, counts = write_labels(frags, finals, a.out, a.coder_format)
+                rec = run_record(records, finals, frags, ctx, a.out, a.log, digest, complete, counts)
+                with open(record_path, "w", encoding="utf-8", newline="\n") as fh:
+                    fh.write(json.dumps(rec, indent=1, sort_keys=True, ensure_ascii=False) + "\n")
+                print(f"\nlabels -> {a.out}  status counts {counts}")
+                print(f"coerced valence (relevant 0 with a valence): {rec['valence_coerced']}")
+                served = rec["models_served"]
+                print(f"served model(s): {served}" + ("" if served in ([], [MODEL]) else "  WARNING: differs from "
+                                                       f"the requested {MODEL}"))
+                print(f"usage {rec['usage_totals']}, cost at list price ${rec['cost_usd_list_price']:.2f}")
+                print(f"run record -> {record_path}: run {ctx['run_id']}, sha256({os.path.basename(a.out)}) = "
+                      f"{digest}, sha256({os.path.basename(a.log)}) = {rec['raw_log_sha256']}")
+                if complete:
+                    print("COMPLETE. Commit the labels and the run record (not the raw log, which is git-ignored); "
+                          "the run of record is defined in PROTOCOL_WS1.0.md 12.6.")
+                else:
+                    print("INCOMPLETE: rerun with the same --log to resume (fragments with a final record are skipped)")
     except ChannelAbort as e:
         print(f"stopped: {e}", file=sys.stderr)
         return 2

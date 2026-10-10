@@ -7,8 +7,9 @@ from the authors' public repository (openai/GPTs-are-GPTs, MIT licence),
 stored in data/exposure/eloundou/. Robustness (pre-registration A.6 item 2):
 Felten, Raj & Seamans AIOE and Webb (2020) patent-based scores.
 
-Provenance, SHA-256 checksums, column definitions and the proposed choice of
-primary measure are documented in data/exposure/README.md. Every number this
+Provenance, SHA-256 checksums, column definitions and the primary measure
+(decision D36.9 in ROADMAP.md, 2026-10-10) are documented in
+data/exposure/README.md. Every number this
 module returns comes from those files; nothing is typed in by hand.
 
 The six Eloundou measures (names used in this module -> column in the file):
@@ -23,8 +24,8 @@ The six Eloundou measures (names used in this module -> column in the file):
 Each is the share (0-1) of an occupation's O*NET tasks rated exposed, with core
 tasks weighted twice as heavily as supplemental ones (verified: this rule
 reproduces occ_level.csv exactly from full_labelset.tsv). Parts of the paper
-(Table 4, Figures 3 and 5) use equal task weights instead; which weighting
-the analysis uses is an open choice documented in data/exposure/README.md.
+(Table 4, Figures 3 and 5) use equal task weights instead. D36.9 uses the
+published core-weighted file as is (data/exposure/README.md).
 
 Aggregation to 6-digit SOC (the pre-registered unit, A.1): the file is keyed by
 8-digit O*NET-SOC 2019 codes (e.g. 15-1252.00), which nest inside 2018 SOC
@@ -32,8 +33,9 @@ codes. A 6-digit SOC score is the unweighted mean of its detailed O*NET-SOC
 rows; `n_onet` records how many rows were averaged (798 SOC codes from 923
 O*NET-SOC rows; 67 SOC codes have more than one row). No employment weights
 exist below the 6-digit level, so the mean is unweighted. 24 SOC codes have
-no '.00' row and are flagged `has_base_row == False` (see aggregate_to_soc);
-they are kept, not dropped, until the PI decides how to treat them.
+no '.00' row and are flagged `has_base_row == False` (see aggregate_to_soc).
+D36.9 keeps them in the primary analysis; leaving them out is a robustness
+check (get_scores(..., drop_no_base_row=True)).
 
 Felten AIOE uses 2010 SOC codes and Webb uses occ1990dd codes; neither can be
 merged with the 2018-SOC Eloundou scores without a crosswalk that is not yet in
@@ -61,10 +63,13 @@ ELOUNDOU_COLUMNS = {
 }
 ELOUNDOU_MEASURES = tuple(ELOUNDOU_COLUMNS)
 
-# Proposed primary measure. It is a proposal until the PI logs it as a decision
-# in ROADMAP.md before any outcome data is seen; the rationale is in
-# data/exposure/README.md ("Primary measure"). The other five are robustness.
+# Primary measure: decision D36.9 (ROADMAP.md, 2026-10-10, taken by the project
+# lead before any outcome data was opened; PI confirmation: TODO). GPT-4 beta is
+# the first robustness check, reported next to the primary in every main table;
+# the alpha and gamma (zeta) columns of both raters are further robustness
+# checks. Rationale and open points: data/exposure/README.md ("Primary measure").
 PRIMARY_MEASURE = "human_beta"
+FIRST_ROBUSTNESS_MEASURE = "gpt4_beta"
 
 # Occupations central to H1/H6, kept as SOC codes only; titles and scores are
 # read from the data. 31-1131 is the 2018-SOC code for Nursing Assistants
@@ -232,18 +237,26 @@ def load_eloundou(path=None):
     return aggregate_to_soc(load_eloundou_onet(path))
 
 
-def get_scores(measure=PRIMARY_MEASURE, level="soc", path=None):
+def get_scores(measure=PRIMARY_MEASURE, level="soc", path=None,
+               drop_no_base_row=False):
     """Return one Eloundou measure as a Series indexed by occupation code.
 
     measure: one of ELOUNDOU_MEASURES.
     level: 'soc' (6-digit SOC, mean over detailed codes) or 'onet'
            (8-digit O*NET-SOC, as published).
+    drop_no_base_row: level 'soc' only. True leaves out the 24 SOC codes that
+           have no '.00' O*NET row (the D36.9 robustness check); the default
+           keeps them, as the primary analysis does.
     """
     if measure not in ELOUNDOU_COLUMNS:
         raise ValueError(f"measure must be one of {ELOUNDOU_MEASURES}")
     if level == "soc":
         df, key = load_eloundou(path), "soc"
+        if drop_no_base_row:
+            df = df[df["has_base_row"]]
     elif level == "onet":
+        if drop_no_base_row:
+            raise ValueError("drop_no_base_row applies to level='soc' only")
         df, key = load_eloundou_onet(path), "onet_soc"
     else:
         raise ValueError("level must be 'soc' or 'onet'")
