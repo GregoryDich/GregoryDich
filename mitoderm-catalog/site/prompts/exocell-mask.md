@@ -16,7 +16,7 @@ CTA: Primary: Contact for price · Secondary: See what's inside ↓
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/exocell-mask.webp. Photoreal cinematic product hero, 16:9. A matte teal (#6FAEB0) portrait-format rectangular carton standing on the right third on a wet pale-aqua stone surface; beside it, floating slightly above the surface, a translucent pale-blue bio-cellulose face mask with eye, nose and mouth cut-outs, folded in half along its vertical centre line so one eye cut-out and half the mouth cut-out show, tiny water droplets on its surface. Background: cool turquoise gradient (#DDF3F3 to #6FAEB0), soft cool key light from the upper left, a cool rim light on the mask edge, reflections in the wet surface. Camera: 85 mm, eye level, f/4, product sharp, left two-thirds clear for text. No overlay text or captions; no text other than the packaging's own printing; the packaging reproduced exactly from the attached packshot photo (mitoderm-catalog/protocols/assets/img/exocell-mask.webp): same colours, wordmark and every printed word spelled as on the pack, crisp and legible.
+REFERENCE IMAGES: attach the EXOCELL MASK box photo. Copy the carton exactly from the attached box photo: its colour, the VM monogram with 'VM corporation', the 'EXOCELL' wordmark ('EXO' bold, 'CELL' thin) with letter-spaced 'MASK' beneath, and the small multilingual text block near the bottom — every word spelled exactly as on that box, crisp and legible; add no line that is not on the reference. Photoreal cinematic product hero, 16:9, 4K. SET (identical in every key frame): a polished black glass counter in a near-black studio (#0b0f10), no haze. CARTON: upright on the glass in the right third, about 45% of the frame height, turned about 20 degrees so its left side panel shows (three-quarter view). SHEET: in front of the carton and to its left, not touching it, one unfolded bio-cellulose face mask: a thin, wet, translucent milky-white film with a faint aqua tint, eye, nose and mouth cut-outs, fine water droplets, lying almost flat on the glass with its upper edge lifted a few centimetres toward the camera. LIGHT (identical in every key frame): one soft teal (#6fb7ba) key from the upper left, a faint neutral fill from the front, a thin teal rim on the sheet edge, the carton softly reflected in the glass. CAMERA: 85 mm, eye level, f/8, carton and sheet sharp; the left half of the frame empty near-black for text. No people, no hands. No captions or overlay text, no text other than the packaging's own print, no extra objects.
 ```
 
 **Mobile 9:16:** Stack: eyebrow, headline, line, chips 2×2, packshot full width cropped to box + mask (≈55 vh), full-width 'Contact for price'; sticky CTA bar from here.
@@ -24,7 +24,7 @@ REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/
 **Переход 0→1 (Kling, start frame = кадр 0, end frame = кадр 1):**
 
 ```
-Start: block-0 hero (teal box right, folded mask beside it). The mask lifts off the surface and the fold opens to a third as the camera slides behind it; through the translucent sheet a woman's post-procedure cheek comes into focus, flushed and tight. End: block-1 close-up with the mask half-unfolded at the right edge. 4 s, lateral dolly behind the sheet. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Branch A (no faces): BRANCH A. Start frame: the hero — the teal carton upright in the right third on the black glass counter, the unfolded pale-blue sheet mask resting in front-left of it, near-black studio, soft teal key from the upper left. Camera only: a slow, steady push-in toward the sheet on the glass, focus settling on the sheet's lifted edge and the eye cut-out; as the camera closes in, the carton drifts to the right edge of the frame and softens out of focus. Nothing in the scene moves: the sheet stays on the glass, the carton stays on its spot, lighting unchanged. End frame: the macro. One continuous dolly-in, no cuts, no zoom bursts, no new objects, no people, the carton keeps its printing unchanged and legible, no added text.  ||  Branch B (with a model): Start frame: the hero — carton on the right, the sheet on the black glass. End frame: the treatment scene — the client on the bed, the carton on the side table in the same place on the right. The camera pulls back and rises in one move; the glass counter becomes the side table; a practitioner's gloved hands lift the sheet from the glass and lay it on the client's face. The carton keeps its printing unchanged and legible, no added text, no cuts, no morphing of faces. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 1 · Why — «After the procedure, skin needs calm»
@@ -36,16 +36,10 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal beauty close-up, 16:9. A woman in her thirties, three-quarter view, eyes closed, skin just after an in-clinic procedure: evenly flushed, slightly tight and dry, a few tiny pinpoint marks on the cheek — honest, calm, not dramatic. Cool soft light from the front-left, a pale-aqua wall behind, slight mist in the air. At the right edge, out of focus, a pale-blue bio-cellulose sheet mask half-unfolded, hovering. Camera: 100 mm, f/2.8, focus on the cheek, the face in the left two-thirds. No overlay text, no logos.
+No generation for this block: built from crops of the key frames, real packshots and CSS (decision of the review board).
 ```
 
 **Mobile 9:16:** Image full-bleed at 90 vh cropped to the cheek (mask edge cropped out); text overlaid on the lower 40 % over a teal gradient; chips scroll horizontally.
-
-**Переход 1→2 (Kling, start frame = кадр 1, end frame = кадр 2):**
-
-```
-Start: block-1 cheek. The mask continues unfolding to flat and floats toward the lens; the camera dives into the sheet until fibres fill the frame, serum beads, and a translucent sphere settles among the fibres. End: block-2 macro. 5 s, continuous push-in, cool light brightens. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
-```
 
 ## Кадр 2 · Inside — «What the sheet holds»
 
@@ -56,7 +50,7 @@ CTA: Secondary: Full formula ↓
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal extreme macro, 16:9. The surface of a translucent bio-cellulose sheet seen very close: a fine fibre mesh glistening with clear serum, water droplets beading, one enlarged translucent sphere (an engineered vesicle) resting among the fibres with soft particles inside it. Colour: pale aqua and turquoise (#DDF3F3, #6FAEB0), cool backlight through the sheet, a cool white highlight on the droplets. Camera: 100 mm macro, f/4, sphere sharp, fibres softening toward the right third. No overlay text, no logos, no labels.
+Branch A only. REFERENCE IMAGES: attach the EXOCELL MASK box photo and the hero frame. Photoreal macro still, 16:9, 4K — the same set and light as the hero, nothing moved. CAMERA: 100 mm macro, f/4, pushed in close to the sheet on the black glass: in focus, the lifted edge of the translucent milky-white bio-cellulose film (faint aqua tint) and one eye cut-out, its fine fibrous translucency and water droplets catching the teal light; the carton stands where it stood, softly out of focus at the right edge, its print as on the box photo. No people, no hands. No captions or overlay text, no text other than the packaging's own print, no floating fibres, no vesicle or particle illustrations.
 ```
 
 **Mobile 9:16:** Macro cropped to 4:5 centred on the sphere; label pins become a 2×2 list below; caption and 'Full formula' link at the end.
@@ -64,7 +58,7 @@ Photoreal extreme macro, 16:9. The surface of a translucent bio-cellulose sheet 
 **Переход 2→3 (Kling, start frame = кадр 2, end frame = кадр 3):**
 
 ```
-Start: block-2 fibres. Pull back: the flat sheet is in a woman's hands; she faces us as into a mirror, lifts the mask and lays it on her face, smoothing from the centre outward; the sheet turns transparent on contact; her eyes meet the lens. End: block-3 mirror portrait. 5 s, reverse dolly then hold. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Branch A: BRANCH A. Start frame: the macro — the sheet's lifted edge and eye cut-out with droplets in focus, the carton soft at the right edge. Camera only: a slow pull-back and crane-up to about 20 degrees above the counter; the carton returns to the right third at its hero size and comes into focus, the whole sheet on the glass comes into view and reads as a full face shape. Nothing in the scene moves; lighting unchanged — soft teal key from the upper left, faint white fill. End frame: the kit still life. One continuous camera move, no cuts, no new objects, no hands, no people, the carton keeps its printing unchanged and legible, no added text. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 3 · Feel it — «Cool, calm, deeply hydrated»
@@ -76,7 +70,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal cinematic portrait, 16:9. A woman in her thirties sits in a treatment chair facing the camera as if into a mirror, a translucent pale-blue bio-cellulose mask laid over her face and turned nearly invisible on contact, tiny droplets on its surface; her eyes meet the lens through the eye cut-outs, calm and relieved; her hands rest at the jaw as if she has just smoothed it on. Environment: a cool turquoise-lit room with pale-aqua walls, soft cool key light from the front-left, a subtle rim. Camera: 85 mm, f/2, eye level, subject in the left two-thirds, right third soft teal for text. No overlay text, no logos.
+Branch B. REFERENCE IMAGES: attach the EXOCELL MASK box photo and the treatment photos. Copy the carton exactly from the attached box photo: its colour, the VM monogram with 'VM corporation', the 'EXOCELL' wordmark ('EXO' bold, 'CELL' thin) with letter-spaced 'MASK' beneath, and the small multilingual text block near the bottom — every word spelled exactly as on that box, crisp and legible; add no line that is not on the reference. Photoreal cinematic treatment scene, 16:9, 4K, the same teal light as the hero. A woman in her thirties reclines on a treatment bed, eyes closed, calm, hair under a black disposable cap; a bio-cellulose sheet mask lies smoothly on her face — on skin it turns almost clear and milky, eye and mouth cut-outs sitting precisely, minimal air pockets, a few droplets; a practitioner's hands in black nitrile gloves peel the pale-blue protective backing film away from the mask at the forehead. In the right third, on a black glass side table at shoulder height, the EXOCELL MASK carton, about 35% of the frame height, turned 20 degrees to show its left side panel. CAMERA: 50 mm, slightly above, f/4, face, sheet and carton sharp; the left third darker for text. Realistic skin texture, no redness, no retouched plastic skin. No captions or overlay text, no text other than the packaging's own print, no purple, no extra people.  ||  Branch B alternative (mirror with sachet): REFERENCE IMAGES: attach the sachet photo and the mirror photo. Photoreal portrait, 16:9, 4K, minimal clinic washroom with black walls and the same soft teal light. A woman in her thirties, dark hair pulled back, freshly treated calm skin, faces the camera as if it were her mirror and holds one sealed single-mask sachet copied exactly from the attached sachet photo: pale-aqua foil, the VM monogram and 'EXOCELL MASK' printed on the front at shoulder height on the right, front of the sachet toward the camera and readable. CAMERA: 50 mm, f/2.8, face and sachet sharp; left half dark for text. No captions or overlay text, no text other than the packaging's own print, no mirror frame, no extra objects.
 ```
 
 **Mobile 9:16:** Portrait crops to 4:5 with the masked face centred; text below; labels 2×2.
@@ -84,7 +78,7 @@ Photoreal cinematic portrait, 16:9. A woman in her thirties sits in a treatment 
 **Переход 3→4 (Kling, start frame = кадр 3, end frame = кадр 4):**
 
 ```
-Start: block-3 portrait, mask on. She lifts the mask from the chin with both hands; the camera pulls back to a wider three-quarter view of the chair as the practitioner's gloved hands enter to take the sheet; hold as the translucent sheet hangs between them in the cool light. End: block-4 centre panel (mask lifted away, skin dewy). 4 s, slow pull-back; the side panels of block 4 then slide in on scroll, not in the video. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
+Branch B: Start frame: the treatment scene. End frame: the kit still life. The gloved hands lift the pale-blue backing film away and set five sealed sachets on the glass in front of the carton; the camera cranes up about 20 degrees while the bed and the client slide out of frame to the left; the carton stays in place in the right third. The carton and sachets keep their printing unchanged and legible, no added text, no cuts. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
 ```
 
 ## Кадр 4 · Protocol — «Apply. Absorb. Finish.»
@@ -96,16 +90,10 @@ CTA: Secondary: See the protocols it finishes (links to V-TECH, EXO-NAD, MICRO B
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal triptych in a single 16:9 frame, three evenly spaced moments separated by narrow bands of pale aqua, same woman, chair and room as the mirror portrait: left, gloved hands lift an unfolded pale-blue bio-cellulose sheet mask toward her cleansed face; centre, the mask lies flat on her face, translucent, adhering with no air pockets; right, the mask lifted away from the chin, skin dewy and smooth. Cool turquoise light (#6FAEB0), pale-aqua background, soft shadows. Camera: 50 mm, f/4, eye level in each panel. No overlay text, no logos.
+No generation for this block: built from crops of the key frames, real packshots and CSS (decision of the review board).
 ```
 
 **Mobile 9:16:** Panels stack vertically with the step line down the left; each panel a 4:5 crop; 'Works with' chips scroll horizontally.
-
-**Переход 4→5 (Kling, start frame = кадр 4, end frame = кадр 5):**
-
-```
-Start: block-4 triptych, centre panel. The side panels slide away; the lifted sheet floats toward the lens and settles down flat onto wet pale-aqua stone as the teal carton glides in from the right and stops in three-quarter view behind it. End: block-5 kit shot. 4 s, orbit 30° around the carton. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
-```
 
 ## Кадр 5 · Kit & facts — «Five masks, one box»
 
@@ -116,16 +104,10 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/exocell-mask.webp. Photoreal product shot, 16:9. The matte teal portrait-format carton, closed, in three-quarter view on the left on wet pale-aqua stone; in front of it one unfolded translucent pale-blue bio-cellulose face mask with eye, nose and mouth cut-outs lying flat on the stone, droplets on its surface. Lighting: cool key from the upper right, turquoise gradient backdrop, reflections in the wet stone. Camera: 70 mm, f/5.6, all sharp, right third clear for numbers. No overlay text or captions; no text other than the packaging's own printing; the packaging reproduced exactly from the attached packshot photo (mitoderm-catalog/protocols/assets/img/exocell-mask.webp): same colours, wordmark and every printed word spelled as on the pack, crisp and legible.
+REFERENCE IMAGES: attach the EXOCELL MASK box photo and the sachet photo. Copy the carton exactly from the attached box photo: its colour, the VM monogram with 'VM corporation', the 'EXOCELL' wordmark ('EXO' bold, 'CELL' thin) with letter-spaced 'MASK' beneath, and the small multilingual text block near the bottom — every word spelled exactly as on that box, crisp and legible; add no line that is not on the reference. Photoreal product still life, 16:9, 4K — the same black glass set and teal light as the hero, camera raised about 20 degrees above the counter. The carton stands in the right third at the same scale as the hero (about 45% of the frame height), turned 20 degrees to show its left side panel; in front of it, five sealed single-mask sachets copied exactly from the attached sachet photo: pale-aqua foil, the VM monogram and 'EXOCELL MASK' printed on the front fan out across the glass, the front one slightly lifted; droplets on the glass. Left half empty near-black for numbers. No people, no hands. No captions or overlay text, no text other than the packaging's own print, no extra objects.
 ```
 
 **Mobile 9:16:** Kit image full width; four facts 2×2; caption below.
-
-**Переход 5→6 (Kling, start frame = кадр 5, end frame = кадр 6):**
-
-```
-Start: block-5 kit shot. The flat mask lifts off the stone, folds in half and floats up beside the carton as in the opening frame; the carton settles on the right third, cool light rises, a reflection line draws. End: block-6 closing hero. 3 s, dolly-out. Keep the packaging, colours and lighting identical to both frames; no text, no logos, no added objects; smooth camera, no cuts.
-```
 
 ## Кадр 6 · Offer — «Bring EXOCELL MASK to your clinic»
 
@@ -136,7 +118,7 @@ CTA: Primary: Contact for price (WhatsApp + form) · Secondary: Add to a V-TECH 
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/exocell-mask.webp. Photoreal cinematic closing hero, 16:9. The matte teal portrait-format carton on the right third on wet pale-aqua stone, the translucent pale-blue mask folded in half floating beside it as in the opening frame, cool key light, a thin cool reflection line on the surface; the left two-thirds clean pale aqua (#DDF3F3) for the offer and buttons. Camera: 85 mm, eye level, f/4. Cool, calm, final. No overlay text or captions; no text other than the packaging's own printing; the packaging reproduced exactly from the attached packshot photo (mitoderm-catalog/protocols/assets/img/exocell-mask.webp): same colours, wordmark and every printed word spelled as on the pack, crisp and legible.
+No generation for this block: built from crops of the key frames, real packshots and CSS (decision of the review board).
 ```
 
 **Mobile 9:16:** Packshot small (≈35 vh) above the headline; two full-width buttons; contact row; sticky bar becomes the primary button.
