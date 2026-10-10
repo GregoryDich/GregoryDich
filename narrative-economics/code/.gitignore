@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+# Exposure data without a redistribution licence: fetch with
+# `python exposure_scores.py download` (see data/exposure/README.md)
+data/exposure/felten/
+data/exposure/webb/

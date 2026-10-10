@@ -21,7 +21,7 @@ Full analysis pipeline validated on simulated data. Run `python run_all.py` — 
 | DiD | `did_simulate.py` | TWFE recovers true β (bias 1.1%), flat pre-trends |
 | LP-IRF | `local_projection.py` | Behavior responds to narrative BEFORE productivity (H1) |
 | Placebo | `placebo_test.py` | Fictitious shocks yield null (p=0.000) |
-| Exposure | `exposure_scores.py` | 26 key occupations with Eloundou GPT-α scores |
+| Exposure | `exposure_scores.py` | Eloundou et al. (2023) occupation-level exposure, loaded from the published data (`code/data/exposure/`); the 26 hand-typed values used before 2026-10-10 had no source — see `code/data/exposure/AUDIT_hardcoded_vs_source.md` |
 | Simulation | `simulate.py` | Two competing narratives with known R₀ |
 | Growth proxy | `growth.py` | Exponential-growth R₀ from early take-off |
 | GDELT | `gdelt_client.py` | Wired, needs egress allowlist |

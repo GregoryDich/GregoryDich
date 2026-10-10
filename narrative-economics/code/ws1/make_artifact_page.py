@@ -578,7 +578,7 @@ function refreshDynamic() {
     $("btn-next").textContent = nextLabel();
     if (lastFb && !$("feedback").hidden) renderFeedback();
   }
-  if (!$("s-finish").hidden) $("practice-score").textContent = t("practice.score", { ok: S.practice.filter(p => p.ok).length, n: PRACTICE.length });
+  if (!$("s-finish").hidden) $("practice-score").textContent = t("practice.score", { ok: practiceFirst().ok, n: PRACTICE.length });
   $("welcome-msg").textContent = ""; $("finish-msg").textContent = ""; $("resume").hidden = true;
 }
 function setLang(l, fromUser) {
@@ -735,13 +735,23 @@ document.addEventListener("keydown", e => {
 
 // ---------- finish ----------
 function csvCell(s) { s = String(s == null ? "" : s); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+// Practice score on the FIRST attempt (PROTOCOL_WS1.0.md 5(b)). S.practice gets one entry per
+// "Check answer"; a coder who changes an answer after checking, or reloads mid-item, adds more
+// entries for the same item. The first entry per item index is the first attempt. S.practice is
+// part of the saved state, so this also holds for resumed sessions.
+function practiceFirst() {
+  const seen = new Set(); let ok = 0;
+  for (const p of (S.practice || [])) { if (!p || seen.has(p.i)) continue; seen.add(p.i); if (p.ok) ok++; }
+  return { ok: ok, n: seen.size };
+}
 function buildCSV() {
   const text = {}; FRAGMENTS.forEach(f => { text[f.id] = f.text; });
   const rows = S.answers.slice().sort((a, b) => a.frag_id.localeCompare(b.frag_id));
-  const head = ["frag_id", "text", "human_relevant_0_1", "human_valence_minus_plus_none", "position", "time_seconds", "coder", "codebook_version", "order_seed", "session_start", "session_end", "ui_language", "english_level", "source"];
+  const pf = practiceFirst();
+  const head = ["frag_id", "text", "human_relevant_0_1", "human_valence_minus_plus_none", "position", "time_seconds", "coder", "codebook_version", "order_seed", "session_start", "session_end", "ui_language", "english_level", "source", "practice_correct", "practice_n"];
   const lines = [head.join(",")];
   for (const r of rows) {
-    lines.push([r.frag_id, text[r.frag_id] || "", r.rel, r.val, r.position, r.secs, S.coder, CODEBOOK, S.seed, S.startedAt || "", S.finishedAt || "", S.lang || LANG, S.english || "", S.source || ""].map(csvCell).join(","));
+    lines.push([r.frag_id, text[r.frag_id] || "", r.rel, r.val, r.position, r.secs, S.coder, CODEBOOK, S.seed, S.startedAt || "", S.finishedAt || "", S.lang || LANG, S.english || "", S.source || "", pf.ok, pf.n].map(csvCell).join(","));
   }
   return lines.join("\n") + "\n";
 }
@@ -751,8 +761,7 @@ async function finish() {
   const n = S.answers.length, rel = S.answers.filter(a => a.rel === "1").length;
   const mins = (S.startedAt && S.finishedAt) ? Math.round((Date.parse(S.finishedAt) - Date.parse(S.startedAt)) / 60000) : 0;
   $("st-n").textContent = n; $("st-rel").textContent = rel; $("st-min").textContent = mins; $("st-med").textContent = median(S.answers.map(a => a.secs));
-  const pOk = S.practice.filter(p => p.ok).length;
-  $("practice-score").textContent = t("practice.score", { ok: pOk, n: PRACTICE.length });
+  $("practice-score").textContent = t("practice.score", { ok: practiceFirst().ok, n: PRACTICE.length });
   const csv = buildCSV(); $("csv-box").value = csv;
   $("session-log").textContent = "coder=" + S.coder + " · codebook " + CODEBOOK + " · order seed " + S.seed + " · started " + (S.startedAt || "—") + " · finished " + (S.finishedAt || "—") + " · " + n + " rows";
   $("btn-copy").onclick = async () => {

@@ -6,3 +6,4 @@ dict_labels.csv
 toy.csv
 ALL_TRANSCRIPTS.txt
 gforms/generated/
+!llm_channel_prompt_v1.txt
