@@ -74,16 +74,18 @@ Text printed on each product's packaging, transcribed 10/10/2026 from the high-r
 
 ## exosignal-spray
 
-Пакшот: `site/img/exosignal-spray.png` — ⚠ the only packshot is 400×300 — ask the client for a proper one before generating
+Пакшот: `site/img/exosignal-spray-hand.jpg` — ⚠ no studio packshot yet; the reference is the client photo of the bottle in hand (cropped, real label)
 
 - **tall box** — matte black box, gold and white print
   - top: VM monogram
   - centre, gold: 'EXOSIGNAL' ('EXO' bold), below it letter-spaced 'S P R A Y · H O M E'
   - lower: 'EXOSIGNAL SPRAY HOME' and [unreadable] four tiny white lines, a small boxed label
-- **spray bottle** — white-silver cylinder with a gold cap
-  - VM monogram
-  - 'EXOSIGNAL' running vertically ('EXO' bold)
-  - [unreadable] two tiny lines at the bottom
+- **spray bottle** — frosted translucent glass cylinder, ribbed gold metallic cap
+  - VM monogram, below it [unreadable] one tiny line
+  - 'EXOSIGNAL' running vertically ('EXO' bold black, 'SIGNAL' thin), beside it letter-spaced 'S P R A Y · H O M E'
+  - 'EXOSIGNAL SPRAY HOME'
+  - 'Deep nourishing scalp serum' and [unreadable] three tiny lines (the same line in Italian, Spanish and French)
+  - bold: 'HOME USE'
 
 ## exotech-gel
 
@@ -119,7 +121,7 @@ Text printed on each product's packaging, transcribed 10/10/2026 from the high-r
   - 'BIOSPICULE' / 'SERUM'
   - round medallion in a green ring with dark green spicules
   - gold-framed box: 'ADVANCED' / 'BIOSPICULE TECHNOLOGY'
-  - bottom: '30 ml ℮ 1.0 fl.oz.'
+  - bottom: '30ml ℮ 1.0 fl.oz.'
 
 ## cellular-age-defense-2-5
 
@@ -132,19 +134,35 @@ Text printed on each product's packaging, transcribed 10/10/2026 from the high-r
   - 'BIOSPICULE' / 'SERUM'
   - round medallion in a dark green ring with dark green spicules
   - gold-framed box: 'ADVANCED' / 'BIOSPICULE TECHNOLOGY'
-  - bottom: '30 ml ℮ 1.0 fl.oz.'
+  - bottom: '30ml ℮ 1.0 fl.oz.'
+- **airless pump bottle** — matte white cylinder with a white pump cap, black and gold print
+  - left edge, running vertically bottom-to-top: 'MITODERM' (bold black) and beside it 'BIOSPICULE SYSTEM' (thin black)
+  - gold M monogram
+  - 'BIOSPICULE' / 'SERUM'
+  - bold: 'CELL CELLULAR' / 'AGE DEFENSE' / '2.5%' (so printed on the client's render; 'CELL CELLULAR' looks like a design typo, confirm with the client before generating)
+  - 'ADVANCED' / 'BIOSPICULE' / 'TECHNOLOGY'
+  - 'MADE IN KOREA'
+  - bottom: '30ml ℮ 1.0 fl.oz.'
 
 ## derma-recovery-cream
 
 Пакшот: `protocols/assets/img/derma-recovery.webp`
 
-- **box** — ivory box, dark green and gold print
+- **box** — ivory box, sage-green band, dark green and gold print
   - top: gold M monogram
   - 'MITODERM' letter-spaced, below 'BIOSPICULE SYSTEM'
-  - dark green band with gold text 'DERMA RECOVERY' / 'CREAM'
-  - 'SNAIL COLLAGEN'
+  - sage-green band with gold text 'DERMA RECOVERY' / 'CREAM'
+  - 'SNAIL COLLAGEN' in bold dark green
   - white cream swirl illustration
   - gold-framed box: 'Daily nourishing collagen cream' / 'for healthy-looking glow'
+  - bottom: '50 ml ℮ 1.69 fl.oz.'
+- **jar** — frosted white jar, clear frosted lid over a black band
+  - left edge, running vertically bottom-to-top: 'MITODERM' (bold black) and beside it 'BIOSPICULE SYSTEM' (thin black)
+  - gold M monogram
+  - bold: 'DERMA' / 'RECOVERY' / 'CREAM'
+  - bold: 'SNAIL COLLAGEN'
+  - thin-framed box: 'Daily nourishing collagen cream' / 'for healthy-looking glow'
+  - 'MADE IN KOREA'
   - bottom: '50 ml ℮ 1.69 fl.oz.'
 
 ## mitopen

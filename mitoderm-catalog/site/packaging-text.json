@@ -31,10 +31,12 @@
      "lower block, white: 'EXOSIGNAL HAIR' / 'SIERO NUTRIENTE PER IL CUOIO CAPELLUTO' / 'NOURISHING SCALP SERUM' / 'SÉRUM NOURRISSANT CUIR CHEVELU' / 'SERUM NUTRITIVO PARA EL CUERO CABELLUDO'",
      "'Net 5 x 5 ml ℮ 5 x 0.17 fl.oz.'"]},
    {"what": "5 ampoules", "look": "clear glass ampoules with a white ring at the neck", "front": ["'EXOSIGNAL HAIR' printed vertically in black ('EXO' bold)"]}]},
- "exosignal-spray": {"packshot": "site/img/exosignal-spray.png", "objects": [
+ "exosignal-spray": {"packshot": "site/img/exosignal-spray-hand.jpg", "objects": [
    {"what": "tall box", "look": "matte black box, gold and white print", "front": ["top: VM monogram", "centre, gold: 'EXOSIGNAL' ('EXO' bold), below it letter-spaced 'S P R A Y · H O M E'", "lower: 'EXOSIGNAL SPRAY HOME' and [unreadable] four tiny white lines, a small boxed label"]},
-   {"what": "spray bottle", "look": "white-silver cylinder with a gold cap", "front": ["VM monogram", "'EXOSIGNAL' running vertically ('EXO' bold)", "[unreadable] two tiny lines at the bottom"]}],
-   "_warning": "the only packshot is 400×300 — ask the client for a proper one before generating"},
+   {"what": "spray bottle", "look": "frosted translucent glass cylinder, ribbed gold metallic cap", "front": [
+     "VM monogram, below it [unreadable] one tiny line", "'EXOSIGNAL' running vertically ('EXO' bold black, 'SIGNAL' thin), beside it letter-spaced 'S P R A Y · H O M E'",
+     "'EXOSIGNAL SPRAY HOME'", "'Deep nourishing scalp serum' and [unreadable] three tiny lines (the same line in Italian, Spanish and French)", "bold: 'HOME USE'"]}],
+   "_warning": "no studio packshot yet; the reference is the client photo of the bottle in hand (cropped, real label)"},
  "exotech-gel": {"packshot": "protocols/assets/img/exotech-gel.webp", "objects": [
    {"what": "cube box", "look": "mirror gold foil cube with a black diagonal panel on the left side", "front": ["'EXOTECH' ('EXO' bold) in black, below it italic letter-spaced 'G E L'"]},
    {"what": "spherical jar", "look": "polished gold sphere jar with a thin seam", "front": ["'EXOTECH' / italic 'GEL' in black"]}]},
@@ -47,17 +49,25 @@
    {"what": "tall slim box", "look": "ivory box, medium green and gold print", "front": [
      "top: gold M monogram", "'MITODERM' letter-spaced, below 'BIOSPICULE SYSTEM'",
      "medium green band with gold text 'CELL RENEW' / '1.5%'", "'BIOSPICULE' / 'SERUM'", "round medallion in a green ring with dark green spicules",
-     "gold-framed box: 'ADVANCED' / 'BIOSPICULE TECHNOLOGY'", "bottom: '30 ml ℮ 1.0 fl.oz.'"]}]},
+     "gold-framed box: 'ADVANCED' / 'BIOSPICULE TECHNOLOGY'", "bottom: '30ml ℮ 1.0 fl.oz.'"]}]},
  "cellular-age-defense-2-5": {"packshot": "site/img/cellular-age-25.png", "objects": [
    {"what": "tall slim box", "look": "ivory box, dark green and gold print", "front": [
      "top: gold M monogram", "'MITODERM' letter-spaced, below 'BIOSPICULE SYSTEM'",
      "dark green band with gold text 'CELLULAR AGE' / 'DEFENSE 2.5%'", "'BIOSPICULE' / 'SERUM'", "round medallion in a dark green ring with dark green spicules",
-     "gold-framed box: 'ADVANCED' / 'BIOSPICULE TECHNOLOGY'", "bottom: '30 ml ℮ 1.0 fl.oz.'"]}]},
+     "gold-framed box: 'ADVANCED' / 'BIOSPICULE TECHNOLOGY'", "bottom: '30ml ℮ 1.0 fl.oz.'"]},
+   {"what": "airless pump bottle", "look": "matte white cylinder with a white pump cap, black and gold print", "front": [
+     "left edge, running vertically bottom-to-top: 'MITODERM' (bold black) and beside it 'BIOSPICULE SYSTEM' (thin black)", "gold M monogram", "'BIOSPICULE' / 'SERUM'",
+     "bold: 'CELL CELLULAR' / 'AGE DEFENSE' / '2.5%' (so printed on the client's render; 'CELL CELLULAR' looks like a design typo, confirm with the client before generating)",
+     "'ADVANCED' / 'BIOSPICULE' / 'TECHNOLOGY'", "'MADE IN KOREA'", "bottom: '30ml ℮ 1.0 fl.oz.'"]}]},
  "derma-recovery-cream": {"packshot": "protocols/assets/img/derma-recovery.webp", "objects": [
-   {"what": "box", "look": "ivory box, dark green and gold print", "front": [
+   {"what": "box", "look": "ivory box, sage-green band, dark green and gold print", "front": [
      "top: gold M monogram", "'MITODERM' letter-spaced, below 'BIOSPICULE SYSTEM'",
-     "dark green band with gold text 'DERMA RECOVERY' / 'CREAM'", "'SNAIL COLLAGEN'", "white cream swirl illustration",
-     "gold-framed box: 'Daily nourishing collagen cream' / 'for healthy-looking glow'", "bottom: '50 ml ℮ 1.69 fl.oz.'"]}]},
+     "sage-green band with gold text 'DERMA RECOVERY' / 'CREAM'", "'SNAIL COLLAGEN' in bold dark green", "white cream swirl illustration",
+     "gold-framed box: 'Daily nourishing collagen cream' / 'for healthy-looking glow'", "bottom: '50 ml ℮ 1.69 fl.oz.'"]},
+   {"what": "jar", "look": "frosted white jar, clear frosted lid over a black band", "front": [
+     "left edge, running vertically bottom-to-top: 'MITODERM' (bold black) and beside it 'BIOSPICULE SYSTEM' (thin black)", "gold M monogram",
+     "bold: 'DERMA' / 'RECOVERY' / 'CREAM'", "bold: 'SNAIL COLLAGEN'", "thin-framed box: 'Daily nourishing collagen cream' / 'for healthy-looking glow'",
+     "'MADE IN KOREA'", "bottom: '50 ml ℮ 1.69 fl.oz.'"]}]},
  "mitopen": {"packshot": "protocols/assets/img/mitopen.webp", "objects": [
    {"what": "microneedling pen", "look": "champagne-gold metal body, rose-gold knurled grip ring and button, clear needle cartridge", "front": ["'MITOPEN' printed vertically in white along the body", "a small engraved V near the top cone"]}]},
  "mitoscan": {"packshot": "protocols/assets/img/mitoscan.webp", "objects": [
