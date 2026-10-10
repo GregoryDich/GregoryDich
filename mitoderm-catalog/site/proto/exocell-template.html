@@ -64,6 +64,9 @@ img, video { max-width: 100%; display: block; }
 .stage video { opacity: 0; }
 .stage.has-video video { opacity: 1; }
 .stage.has-video .still { opacity: 0 !important; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
+.stage.has-seq canvas { opacity: 1; }
+.stage.has-seq .still, .stage.has-seq video { opacity: 0 !important; }
 .stage .cap { position: absolute; left: 0; right: 0; bottom: max(48px, 8vh); padding-inline: var(--gutter); display: grid; gap: 10px; opacity: 1; transform: translateY(0); transition: opacity .5s, transform .6s var(--ease); }
 .stage .cap h2 { font: var(--h2); max-width: 18ch; }
 .stage .cap p { color: var(--fg-2); max-width: 44ch; }
@@ -135,7 +138,7 @@ details ol { margin: 0 0 20px; padding-left: 20px; color: var(--fg-2); display: 
   .scrub { height: auto; }
   .stage { position: relative; height: min(70vh, 560px); }
   .stage .still.b { opacity: 1; }
-  .stage video { display: none; }
+  .stage video, .stage canvas { display: none; }
   .mark { opacity: 1; transform: none; }
   .stage .cap.dim { opacity: 1; transform: none; }
 }
@@ -171,6 +174,7 @@ details ol { margin: 0 0 20px; padding-left: 20px; color: var(--fg-2); display: 
     <img class="still a" src="__S1_SRC__" data-fallback="__S1_FALLBACK__" alt="">
     <img class="still b" src="__S2_SRC__" data-fallback="__S2_FALLBACK__" alt="">
     <video muted playsinline preload="auto"></video>
+    <canvas aria-hidden="true"></canvas>
     <div class="veil"></div>
     <div class="cap" data-from="0" data-to=".45" id="why">
       <div class="eyebrow">Why</div>
@@ -210,6 +214,7 @@ details ol { margin: 0 0 20px; padding-left: 20px; color: var(--fg-2); display: 
     <img class="still a" src="__S2_SRC__" data-fallback="__S2_FALLBACK__" alt="">
     <img class="still b" src="__S3_SRC__" data-fallback="__S3_FALLBACK__" alt="">
     <video muted playsinline preload="auto"></video>
+    <canvas aria-hidden="true"></canvas>
     <div class="veil"></div>
     <div class="marks">
       <span class="mark" data-at=".35" style="left:8%;top:28%">Intensive hydration, immediately</span>
@@ -292,16 +297,43 @@ details ol { margin: 0 0 20px; padding-left: 20px; color: var(--fg-2); display: 
     if (im.complete && im.naturalWidth === 0) im.src = im.dataset.fallback;
   });
   // stages: scrub a clip when it exists, otherwise crossfade the two stills
+  // Frame sequences (Apple-style): <clip>.mp4 -> folder <clip>/0001.webp ... drawn on a canvas by scroll progress.
+  // Loads lazily when the section comes near; falls back to the clip, then to the still crossfade.
   var stages = Array.prototype.map.call(document.querySelectorAll('.stage'), function (st) {
-    var v = st.querySelector('video'), src = st.dataset.clip;
-    var s = { el: st, wrap: st.parentElement, v: v, ready: false, b: st.querySelector('.still.b'), caps: st.querySelectorAll('.cap'), marks: st.querySelectorAll('.mark') };
+    var v = st.querySelector('video'), src = st.dataset.clip, cv = st.querySelector('canvas');
+    var s = { el: st, wrap: st.parentElement, v: v, ready: false, b: st.querySelector('.still.b'), caps: st.querySelectorAll('.cap'), marks: st.querySelectorAll('.mark'), cv: cv, frames: [], seq: false, last: -1 };
     if (!reduce && src) {
-      v.addEventListener('loadedmetadata', function () { s.ready = true; st.classList.add('has-video'); });
-      v.addEventListener('error', function () { s.ready = false; st.classList.remove('has-video'); });
-      v.src = src; v.load();
+      var dir = src.replace(/\.[a-z0-9]+$/i, '') + '/', max = +(st.dataset.count || 90);
+      s.loadSeq = function () {
+        if (s.loading) return; s.loading = true;
+        var i = 1, miss = 0;
+        (function next() {
+          if (i > max) return;
+          var im = new Image();
+          im.onload = function () { s.frames.push(im); if (s.frames.length === 1) { s.seq = true; st.classList.add('has-seq'); } i++; next(); };
+          im.onerror = function () { if (s.frames.length === 0 && ++miss > 0) { startVideo(); } };
+          im.src = dir + ('000' + i).slice(-4) + '.webp';
+        })();
+      };
+      function startVideo() {
+        v.addEventListener('loadedmetadata', function () { s.ready = true; st.classList.add('has-video'); });
+        v.addEventListener('error', function () { s.ready = false; st.classList.remove('has-video'); });
+        v.src = src; v.load();
+      }
+      var near = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { s.loadSeq(); near.disconnect(); } }); }, { rootMargin: '150% 0px' });
+      near.observe(st.parentElement);
     }
     return s;
   });
+  function drawFrame(s, p) {
+    var n = s.frames.length; if (!n) return;
+    var idx = Math.round(p * (n - 1)); if (idx === s.last) return; s.last = idx;
+    var im = s.frames[idx], cv = s.cv, dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    var W = Math.round(cv.clientWidth * dpr), Hh = Math.round(cv.clientHeight * dpr);
+    if (cv.width !== W || cv.height !== Hh) { cv.width = W; cv.height = Hh; }
+    var k = Math.max(W / im.naturalWidth, Hh / im.naturalHeight), w = im.naturalWidth * k, h = im.naturalHeight * k;
+    cv.getContext('2d').drawImage(im, (W - w) / 2, (Hh - h) / 2, w, h);
+  }
   var vh = window.innerHeight, ticking = false;
   function clamp(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
   function update() {
@@ -309,7 +341,8 @@ details ol { margin: 0 0 20px; padding-left: 20px; color: var(--fg-2); display: 
     stages.forEach(function (s) {
       var r = s.wrap.getBoundingClientRect();
       var p = clamp(-r.top / (r.height - vh));
-      if (s.ready && s.v.duration) { var t = p * (s.v.duration - .05); if (Math.abs(s.v.currentTime - t) > .02) s.v.currentTime = t; }
+      if (s.seq) drawFrame(s, p);
+      else if (s.ready && s.v.duration) { var t = p * (s.v.duration - .05); if (Math.abs(s.v.currentTime - t) > .02) s.v.currentTime = t; }
       else s.b.style.opacity = p;
       s.caps.forEach(function (c) { var a = +c.dataset.from, b = +c.dataset.to; c.classList.toggle('dim', !(p >= a && p <= b)); });
       s.marks.forEach(function (m) { m.classList.toggle('on', p >= +m.dataset.at); });
@@ -317,7 +350,7 @@ details ol { margin: 0 0 20px; padding-left: 20px; color: var(--fg-2); display: 
   }
   if (!reduce) {
     window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
-    window.addEventListener('resize', update);
+    window.addEventListener('resize', function () { stages.forEach(function (s) { s.last = -1; }); update(); });
     update();
     var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { threshold: .15 });
     document.querySelectorAll('.rv').forEach(function (el) { io.observe(el); });
