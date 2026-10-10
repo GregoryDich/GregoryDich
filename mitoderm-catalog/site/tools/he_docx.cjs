@@ -46,8 +46,9 @@ const cell = (children, width, shade) => new TableCell({
 const lines = (s) => (s || '').split(' · ').filter(Boolean);
 
 function row(fieldHe, heText, enText, opts = {}) {
-  const heParas = (opts.split ? lines(heText) : [heText]).map((t) => hePara(t || '—', opts.bold ? { bold: true } : {}));
-  const enParas = (opts.split ? lines(enText) : [enText]).map((t) => enPara(t || '—'));
+  const split = (v) => (Array.isArray(v) ? v : opts.split ? lines(v) : [v]);
+  const heParas = split(heText).map((t) => hePara(t || '—', opts.bold ? { bold: true } : {}));
+  const enParas = split(enText).map((t) => enPara(t || '—'));
   return new TableRow({ children: [
     cell([hePara(fieldHe, { bold: true, size: 20, color: GREEN })], W.field, FILL),
     cell(heParas.length ? heParas : [hePara('—')], W.he),
@@ -85,7 +86,7 @@ function storyPage(p) {
     out.push(table([
       row('כותרת', by[`b${n}.title`].he, by[`b${n}.title`].en, { bold: true }),
       row('משפט', by[`b${n}.line`].he, by[`b${n}.line`].en),
-      row('תגיות', labels.map((l) => l.he).join(' · '), labels.map((l) => l.en).join(' · '), { split: true }),
+      row('תגיות', labels.map((l) => l.he), labels.map((l) => l.en)),
       row('כפתורים וקישורים', cta.he, cta.en, { split: true }),
     ]));
   }
@@ -159,7 +160,7 @@ const cover = [
     children: [heRun('טקסטים לאתר בעברית — גרסה 2', { size: 36, bold: true })] }),
   new Paragraph({ bidirectional: true, alignment: AlignmentType.CENTER, spacing: { after: 600 },
     children: [heRun('עמוד הבית ו־15 עמודים · 10.10.2026', { size: 24, color: GREY })] }),
-  hePara('כל עמוד בנוי משבעה בלוקים: היכרות, למה, מה בפנים, התחושה, פרוטוקול, באריזה, הצעה. ' +
+  hePara(`כל עמוד בנוי משבעה בלוקים: ${BLOCK_HE.join(', ')}. ` +
     'לכל בלוק: כותרת, משפט אחד, תגיות וכפתורים. בעמודה הימנית — הטקסט בעברית, בשמאלית — המקור באנגלית לבדיקה.'),
   hePara('בסוף כל עמוד מוצר: פרטים מהקטלוג (נתונים, פרוטוקול, רכיבים, תכולת האריזה, אינדיקציות) — הטקסט המאושר מהקטלוג, ללא שינוי.'),
   hePara('שמות המוצרים, הרכיבים והמכשירים נשארים באותיות לטיניות, כמו בקטלוג.'),

@@ -148,6 +148,9 @@ def cmd_inputs(story_path, home_path, work):
 
 LATIN = re.compile(r'[A-Za-z][A-Za-z0-9⁺™\-]*(?:[ .][A-Z0-9][A-Za-z0-9⁺™\-]*)*')
 NUM = re.compile(r'\d+(?:[.,]\d+)?')
+# Hebrew writes some small numbers as words or dual forms: שבועיים = 2 weeks, פעמיים = twice.
+NUM_WORDS = {'2': ('שבועיים', 'פעמיים', 'יומיים', 'שתי', 'שני'), '3': ('תלת', 'שלוש', 'שלושה'),
+             '4': ('רביעי', 'ארבע', 'ארבעה')}
 
 
 def visible_en(item):
@@ -164,7 +167,7 @@ def cmd_merge(out_path):
     for g in out:
         for p in g['pages']:
             got[p['slug']] = {it['key']: it for it in p['items']}
-    problems = []
+    problems, kept = [], []
     result = {'note': 'Hebrew texts of the v2 Story Scroll site. Source: storyboard.json + home.en.json; '
                       'reviewed by a Hebrew copy editor and a fidelity checker.', 'pages': []}
     for slug, items in expected.items():
@@ -182,18 +185,26 @@ def cmd_merge(out_path):
             elif not he:
                 problems.append(f'{slug}/{it["key"]}: empty Hebrew')
             if he and re.search(r'[א-ת]', he) is None and re.search(r'[a-z]{4,}', he):
-                problems.append(f'{slug}/{it["key"]}: no Hebrew letters: {he}')
+                # Names kept in Latin exactly as in English (INCI, product parts, slogan) are the
+                # catalogue convention; anything else is an untranslated string.
+                if he.rstrip('.').lower() == en_vis.rstrip('.').lower():
+                    kept.append(f'{slug}/{it["key"]}: {he}')
+                else:
+                    problems.append(f'{slug}/{it["key"]}: no Hebrew letters: {he}')
             for num in set(NUM.findall(en_vis)):
-                if num not in he:
+                if num not in he and not any(w in he for w in NUM_WORDS.get(num, ())):
                     problems.append(f'{slug}/{it["key"]}: number {num} lost: {he}')
             rows.append({'key': it['key'], 'kind': it['kind'], 'en': en_vis, 'en_spec': it['en'], 'he': he,
                          'note': h.get('note', '')})
         result['pages'].append({'slug': slug, 'name': next((p['name'] for p in story['pages'] if p['slug'] == slug), 'Home'),
                                 'items': rows})
     dump(result, os.path.join(SITE, 'storyboard.he.json'))
-    print(f'pages {len(result["pages"])}, items {sum(len(p["items"]) for p in result["pages"])}, problems {len(problems)}')
+    print(f'pages {len(result["pages"])}, items {sum(len(p["items"]) for p in result["pages"])}, '
+          f'kept in Latin {len(kept)}, problems {len(problems)}')
+    for p in kept:
+        print('   latin:', p)
     for p in problems:
-        print('  ', p)
+        print('   PROBLEM:', p)
     return problems
 
 

@@ -7,7 +7,7 @@
 - **Главный редактор — заказчик.** Важные детали (тексты, кадры, палитра, структура) утверждать с ним до траты кредитов и до больших объёмов. Кредиты тратятся только после «утверждаю». Контрольные картинки/скриншоты присылать, промпты давать так, чтобы он мог генерировать сам.
 - **Сайт.** Главное — средства и приборы; каталог и доп. страницы без акцента. About оставить как есть (при необходимости урезать вдвое, повторы убрать), суть About встроить кратко в основной сайт там, где это ведёт к «любви» к продукту. Страницы средств — в цвете средства; линейка для лица на тёмной базе. Продукт — герой, пакшот справа в первом блоке; блоки не перегружать; путь клиента по лестнице Бена Ханта, ёмко; переходы между блоками как видео по скроллу; мобильные версии; настоящий логотип. 3D-версии нет — её заменяет видео-скролл.
 - **Кадры.** Три ключевых кадра на страницу (не семь) + два перехода; переходы в Kling (сам заказчик или автоматизация через API после утверждения кадров). Упаковка в кадре воспроизводится по настоящему пакшоту, который прикладывается к генерации как референс, со всеми надписями; «чистая коробка без надписей» запрещена (на ней генерация теряет брендинг). Композит фасада — только запасной путь.
-- **Языки.** Иврит дословно по источнику, RTL, род; Excel всех блоков EN и HE (лист `Blocks HE`). Новый продукт MITOTECH CELL BOOSTER (описан в протоколах, пакшота нет).
+- **Языки.** Иврит дословно по источнику, RTL, род; Excel всех блоков EN и HE (лист `Blocks HE`). Тексты сайта v2 на иврите — `site/storyboard.he.json` → Word `site/MITODERM-site-texts-HE.docx` и лист `Story HE`; термины — `site/glossary-he.md`; mitoderm.com — образец языка (RU/HE/EN), не дизайна. Новый продукт MITOTECH CELL BOOSTER (описан в протоколах, пакшота нет).
 - **Инфраструктура.** Не отключать TLS, не снимать прокси. Ветка `claude/mitoderm-figma-catalog-74tbuw`, `git push -u origin`, трейлеры Co-Authored-By и Claude-Session, без идентификаторов модели в коммитах. Репо публичный — секретов в файлах не держать. Ultracode включён: содержательные задачи — через Workflow с проверкой скептиками.
 - **Ключи.** GitHub «Agents secrets» (Higgsfield, gemini) сюда не доходят — ключи только через секреты облачного окружения (`HIGGSFIELD_API_KEY`, `ATLASCLOUD_API_KEY`, `GEMINI_API_KEY`) и домены в Network access (`api.atlascloud.ai`, `generativelanguage.googleapis.com`, хост API Higgsfield). Балансы: Atlas Cloud $25 (переходы Kling дешевле), Higgsfield $5 (самое сложное), Gemini (дешёвые стиллы).
 
@@ -18,7 +18,7 @@
 - **Раскадровка 15 страниц** (`site/storyboard.md`, `site/prompts/<slug>.md`, Excel лист `Storyboard`, страница https://claude.ai/artifact/9qQAWwXjDq1dBd2JemFcRs с роадмапом и Copy-промптами).
 - **Коллегия EXOCELL** (`site/review-board-exocell.md`, лист `Board`): 7 блоков переписаны, кадры 0 · 3 · 5, переходы 0→3 и 3→5, 5 вопросов, две цены; идёт исправление по скептику. **Консилиум** (`site/project-council.md`, лист `Council`) — в работе.
 - **Инструменты:** `site/tools/transitions.py` (Atlas Cloud Kling start/end → WebP-кадры), `site/roadmap.json`, `QA-report.md` проход 37, `design-rules.md` раздел «Сайт v2».
-- **Excel** `site/mitoderm-site-blocks.xlsx`: Blocks EN · Blocks HE · Catalog · Photo slots · Old pages · Make prompt · Storyboard · Board (· Council).
+- **Excel** `site/mitoderm-site-blocks.xlsx`: Blocks EN · Blocks HE · Catalog · Photo slots · Old pages · Make prompt · Storyboard · Story HE · Board (· Council).
 
 ## 3. Этапы с апрувами (каждый заканчивается словом заказчика)
 
