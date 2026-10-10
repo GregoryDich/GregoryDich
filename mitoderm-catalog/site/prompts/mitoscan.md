@@ -16,7 +16,7 @@ CTA: 'Contact for Price' as a ghost button; scroll cue 'Lift the probe'
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Background plate for compositing: a bright clinical white studio with a seamless white-to-pale-blue gradient, soft overhead daylight and a faint cool blue reflected glow on a white glossy tabletop at the right third of the frame (where a white tablet-style diagnostic monitor on a low stand, a white handheld scan probe with a coiled cable and a brushed-silver cylindrical base will be composited), subtle depth haze, 85 mm, f/5.6, low camera at table height, photoreal, cinematic, 16:9, no text, no logos.
+Background plate for compositing: a bright clinical white studio with a seamless white-to-pale-blue gradient, soft overhead daylight and a faint cool blue reflected glow on a white glossy tabletop at the right third of the frame (where a white tablet-style diagnostic monitor on a low stand, a white handheld scan probe with a coiled cable and a brushed-silver cylindrical base will be composited), subtle depth haze, 85 mm, f/5.6, low camera at table height, photoreal, cinematic, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): TABLET — white tablet on a white stand, black screen: on screen: a teal-to-purple target logo, 'Mitoscan' in white, below 'By Mitoderm Ltd' || HANDHELD SCANNER — white handset with a black oval panel, white coiled cable: on the panel: 'Mitoscan' / 'By Mitoderm Ltd' in white || BASE — brushed silver cylinder with chrome ends: small chrome badge 'Mitoscan'.
 ```
 
 **Mobile 9:16:** Stack: eyebrow, title, line, chips as a horizontal row; packshot below full-width (monitor + probe), base cropped; sticky bottom bar 'Contact for Price'.
@@ -36,7 +36,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Bright consultation room in an aesthetic clinic, white walls, daylight from a large window on the left, a white tablet-style diagnostic monitor on a low stand turned toward an empty white client chair, a white handheld scan probe resting on the desk, cool blue glow on the wall from the screen, clean white-and-blue grade, calm honest mood, 35 mm, f/4, photoreal, cinematic, 16:9, no text, no logos, screen content blurred.
+Bright consultation room in an aesthetic clinic, white walls, daylight from a large window on the left, a white tablet-style diagnostic monitor on a low stand turned toward an empty white client chair, a white handheld scan probe resting on the desk, cool blue glow on the wall from the screen, clean white-and-blue grade, calm honest mood, 35 mm, f/4, photoreal, cinematic, 16:9, no text, no logos, screen content blurred. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): TABLET — white tablet on a white stand, black screen: on screen: a teal-to-purple target logo, 'Mitoscan' in white, below 'By Mitoderm Ltd' || HANDHELD SCANNER — white handset with a black oval panel, white coiled cable: on the panel: 'Mitoscan' / 'By Mitoderm Ltd' in white || BASE — brushed silver cylinder with chrome ends: small chrome badge 'Mitoscan'.
 ```
 
 **Mobile 9:16:** Room image full-width behind the copy at 60% opacity; chips 2×2.
@@ -76,7 +76,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Aesthetic-clinic consultation: a practitioner in a white coat holds a white handheld scan probe against the parting of a seated client's dark hair and points to a white tablet-style monitor showing an abstract magnified scalp image, the client looking at the screen with interest, bright daylight room, cool blue screen glow on their faces, white-and-blue grade, 35 mm, f/2.8, photoreal, cinematic, natural skin and hair, 16:9, no text, no logos.
+Aesthetic-clinic consultation: a practitioner in a white coat holds a white handheld scan probe against the parting of a seated client's dark hair and points to a white tablet-style monitor showing an abstract magnified scalp image, the client looking at the screen with interest, bright daylight room, cool blue screen glow on their faces, white-and-blue grade, 35 mm, f/2.8, photoreal, cinematic, natural skin and hair, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): TABLET — white tablet on a white stand, black screen: on screen: a teal-to-purple target logo, 'Mitoscan' in white, below 'By Mitoderm Ltd' || HANDHELD SCANNER — white handset with a black oval panel, white coiled cable: on the panel: 'Mitoscan' / 'By Mitoderm Ltd' in white || BASE — brushed silver cylinder with chrome ends: small chrome badge 'Mitoscan'.
 ```
 
 **Mobile 9:16:** 4:5 crop on the client's face and the screen; copy below; chips in a row.
@@ -96,7 +96,7 @@ CTA: 'Contact for Price' (ghost)
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Top-down view of a white clinic desk: a white tablet-style diagnostic monitor on a low stand glowing faintly blue, a white handheld scan probe with a coiled cable docked beside it, a brushed-silver cylindrical base unit, empty white space along the bottom of the frame for three cards, soft even daylight, clean white-and-blue grade, 50 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos, screen content blurred.
+Top-down view of a white clinic desk: a white tablet-style diagnostic monitor on a low stand glowing faintly blue, a white handheld scan probe with a coiled cable docked beside it, a brushed-silver cylindrical base unit, empty white space along the bottom of the frame for three cards, soft even daylight, clean white-and-blue grade, 50 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos, screen content blurred. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): TABLET — white tablet on a white stand, black screen: on screen: a teal-to-purple target logo, 'Mitoscan' in white, below 'By Mitoderm Ltd' || HANDHELD SCANNER — white handset with a black oval panel, white coiled cable: on the panel: 'Mitoscan' / 'By Mitoderm Ltd' in white || BASE — brushed silver cylinder with chrome ends: small chrome badge 'Mitoscan'.
 ```
 
 **Mobile 9:16:** Desk image full-width; steps stack as three rows; 'works with' as a horizontal scroll row.
@@ -116,7 +116,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-A white tablet-style diagnostic monitor on a low white stand showing an abstract magnified scalp image, a white handheld scan probe with a coiled white cable docked at its right, a brushed-silver cylindrical base unit with chrome ends in front, all on a white plinth, 3/4 view, soft daylight with a cool blue screen glow, white-to-pale-blue background, left half of the frame empty for stat tiles, 85 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos.
+A white tablet-style diagnostic monitor on a low white stand showing an abstract magnified scalp image, a white handheld scan probe with a coiled white cable docked at its right, a brushed-silver cylindrical base unit with chrome ends in front, all on a white plinth, 3/4 view, soft daylight with a cool blue screen glow, white-to-pale-blue background, left half of the frame empty for stat tiles, 85 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): TABLET — white tablet on a white stand, black screen: on screen: a teal-to-purple target logo, 'Mitoscan' in white, below 'By Mitoderm Ltd' || HANDHELD SCANNER — white handset with a black oval panel, white coiled cable: on the panel: 'Mitoscan' / 'By Mitoderm Ltd' in white || BASE — brushed silver cylinder with chrome ends: small chrome badge 'Mitoscan'.
 ```
 
 **Mobile 9:16:** Stat tiles 2×2 above; kit image full-width below.
@@ -136,7 +136,7 @@ CTA: Primary: 'Contact for Price' (blue fill, white text). Secondary: 'Ask about
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-A white tablet-style diagnostic monitor on a low stand glowing cool blue with an abstract magnified scalp image, a white handheld scan probe docked at its right and a brushed-silver cylindrical base in front, on a white glossy tabletop, bright soft daylight, white-to-pale-blue gradient background, left half of the frame empty for copy, premium closing shot for a white-and-blue page, 85 mm, f/4, photoreal, cinematic, 16:9, no text, no logos.
+A white tablet-style diagnostic monitor on a low stand glowing cool blue with an abstract magnified scalp image, a white handheld scan probe docked at its right and a brushed-silver cylindrical base in front, on a white glossy tabletop, bright soft daylight, white-to-pale-blue gradient background, left half of the frame empty for copy, premium closing shot for a white-and-blue page, 85 mm, f/4, photoreal, cinematic, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): TABLET — white tablet on a white stand, black screen: on screen: a teal-to-purple target logo, 'Mitoscan' in white, below 'By Mitoderm Ltd' || HANDHELD SCANNER — white handset with a black oval panel, white coiled cable: on the panel: 'Mitoscan' / 'By Mitoderm Ltd' in white || BASE — brushed silver cylinder with chrome ends: small chrome badge 'Mitoscan'.
 ```
 
 **Mobile 9:16:** Title, line, full-width primary button, secondary as a text link; packshot below full-width; sticky bar persists.

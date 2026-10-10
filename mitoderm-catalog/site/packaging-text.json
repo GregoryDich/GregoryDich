@@ -1,0 +1,67 @@
+{
+ "_note": "Text printed on each product's packaging, transcribed 10/10/2026 from the high-resolution packshots in protocols/print/img and site/img. Lines marked [unreadable] are too small to read even on the source: generators must render them as fine grey lines, never invent words. Used verbatim in every image prompt.",
+ "exocell-mask": {"packshot": "protocols/assets/img/exocell-mask.webp", "objects": [
+   {"what": "carton (main photo version)", "look": "matte muted-teal portrait carton (#5ca0a5), dark navy print", "front": [
+     "top centre: VM monogram, below it small 'VM corporation'",
+     "centre: 'EXOCELL' in wide-spaced capitals ('EXO' bold, 'CELL' thin), below it letter-spaced 'M A S K'",
+     "below the middle, light italic pale aqua, two lines: 'Your Second Skin' / 'For Exo Bio-Regeneration'",
+     "small block, first line bold: 'Professional facial moisturizing mask' / 'Maschera viso idratante ad uso professionale' / 'Mascarilla hidratante facial profesional' / 'Masque hydratant visage professionnel'",
+     "bottom two lines: '5 face masks – maschere viso - máscaras facial - masques facial' / 'Net 5 x 25 ml ℮ 5 x 0.84 fl.oz'"],
+    "side": ["left side panel: 'EXOCELL' and 'MASK' running vertically, grey"]},
+   {"what": "carton (lighter second version, if that box is attached)", "look": "pale aqua carton, dark navy print", "front": [
+     "top centre: VM monogram, 'VM corporation'", "centre: 'EXOCELL' / letter-spaced 'M A S K'",
+     "small block: 'Professional facial moisturizing mask imbued in serum' / 'Maschera viso idratante ad uso professionale imbevuta con siero' / 'Mascarilla hidratante facial profesional empapada en suero' / 'Masque hydratant visage professionnel imbibés de sérum'",
+     "'5 face masks – maschere viso - máscaras facial - masques facial' / 'Net 5 x 25 ml ℮ 5 x 0.84 fl.oz' / 'Total 125 ml ℮ Total 4,23 fl.oz.'"]},
+   {"what": "single-mask sachet", "look": "pale aqua foil sachet", "front": ["VM monogram top centre", "'EXOCELL' / letter-spaced 'MASK'", "[unreadable] two tiny lines near the bottom"]},
+   {"what": "sheet mask", "look": "translucent milky-white bio-cellulose, faint aqua tint, eye, nose and mouth cut-outs, a small slit at the right jaw; pale-blue protective film", "front": []}]},
+ "v-tech-system": {"packshot": "protocols/assets/img/vtech-system.webp", "objects": [
+   {"what": "tall carton", "look": "mirror-polished gold foil, black bands at top and bottom", "front": [
+     "top: 'VM' in silver letters", "centre: a large black 'V' with a small inverted black triangle above it",
+     "lower third: 'V-TECH' letter-spaced (the V drawn as the same V-with-triangle mark), below it letter-spaced 'S Y S T E M'"]},
+   {"what": "5 vials", "look": "amber glass vials with white flip-off caps, amber label", "front": ["white V-with-triangle mark", "'V-TECH'", "[unreadable] one tiny line under 'V-TECH'", "white graduation ticks on the side"]},
+   {"what": "gel mask sachet", "look": "gold foil sachet with a small white nozzle cap on the left", "front": ["large black V-with-triangle mark", "'V-TECH' letter-spaced, below it 'G E L   M A S K'", "[unreadable] four tiny lines at the bottom"]}]},
+ "exo-nad": {"packshot": "protocols/assets/img/exo-nad.webp", "objects": [
+   {"what": "square box", "look": "brushed gold gradient box with a thin lid line near the bottom, black print", "front": ["top centre: VM monogram, 'VM corporation'", "centre: 'EXO-NAD' ('EXO-' thin, 'NAD' bold)", "below: letter-spaced 'SKIN LONGEVITY PEELING'"]},
+   {"what": "peel bottle", "look": "clear square glass bottle with a gold cap, gold flakes in the liquid", "front": ["'EXO-NAD'", "'SKIN LONGEVITY PEELING'"]},
+   {"what": "amber vial", "look": "amber glass vial, silver crimp cap", "front": ["VM monogram", "'PH NORMALIZER' bold white"]},
+   {"what": "teal vial", "look": "blue-teal glass vial, silver crimp cap", "front": ["VM monogram", "'LONGEVITY SERUM' bold white"]}]},
+ "exosignal-hair": {"packshot": "protocols/assets/img/exosignal-hair.webp", "objects": [
+   {"what": "flat box", "look": "matte black box, gold and white print", "front": [
+     "top centre: grey VM monogram, small 'VM corporation'", "centre, gold: 'EXOSIGNAL' ('EXO' bold) with letter-spaced 'H A I R' below right",
+     "lower block, white: 'EXOSIGNAL HAIR' / 'SIERO NUTRIENTE PER IL CUOIO CAPELLUTO' / 'NOURISHING SCALP SERUM' / 'SÉRUM NOURRISSANT CUIR CHEVELU' / 'SERUM NUTRITIVO PARA EL CUERO CABELLUDO'",
+     "'Net 5 x 5 ml ℮ 5 x 0.17 fl.oz.'"]},
+   {"what": "5 ampoules", "look": "clear glass ampoules with a white ring at the neck", "front": ["'EXOSIGNAL HAIR' printed vertically in black ('EXO' bold)"]}]},
+ "exosignal-spray": {"packshot": "site/img/exosignal-spray.png", "objects": [
+   {"what": "tall box", "look": "matte black box, gold and white print", "front": ["top: VM monogram", "centre, gold: 'EXOSIGNAL' ('EXO' bold), below it letter-spaced 'S P R A Y · H O M E'", "lower: 'EXOSIGNAL SPRAY HOME' and [unreadable] four tiny white lines, a small boxed label"]},
+   {"what": "spray bottle", "look": "white-silver cylinder with a gold cap", "front": ["VM monogram", "'EXOSIGNAL' running vertically ('EXO' bold)", "[unreadable] two tiny lines at the bottom"]}],
+   "_warning": "the only packshot is 400×300 — ask the client for a proper one before generating"},
+ "exotech-gel": {"packshot": "protocols/assets/img/exotech-gel.webp", "objects": [
+   {"what": "cube box", "look": "mirror gold foil cube with a black diagonal panel on the left side", "front": ["'EXOTECH' ('EXO' bold) in black, below it italic letter-spaced 'G E L'"]},
+   {"what": "spherical jar", "look": "polished gold sphere jar with a thin seam", "front": ["'EXOTECH' / italic 'GEL' in black"]}]},
+ "micro-boost-10": {"packshot": "protocols/assets/img/micro-boost-10.webp", "objects": [
+   {"what": "tall slim box", "look": "ivory box, dark green and gold print", "front": [
+     "top: gold M monogram", "'MITODERM' letter-spaced dark green, below 'BIOSPICULE PROFESSIONAL'",
+     "dark green band with gold text 'MICRO BOOST 10%'", "'SPICULE SERUM'", "round medallion in a gold ring with dark green spicules",
+     "gold-framed box: 'Concentrated' / 'Spicule System'", "between two thin lines: 'PROFESSIONAL TREATMENT'", "bottom: '3 ml ℮ 0.10 fl.oz.'"]}]},
+ "cell-renew-1-5": {"packshot": "site/img/cell-renew-15.png", "objects": [
+   {"what": "tall slim box", "look": "ivory box, medium green and gold print", "front": [
+     "top: gold M monogram", "'MITODERM' letter-spaced, below 'BIOSPICULE SYSTEM'",
+     "medium green band with gold text 'CELL RENEW' / '1.5%'", "'BIOSPICULE' / 'SERUM'", "round medallion in a green ring with dark green spicules",
+     "gold-framed box: 'ADVANCED' / 'BIOSPICULE TECHNOLOGY'", "bottom: '30 ml ℮ 1.0 fl.oz.'"]}]},
+ "cellular-age-defense-2-5": {"packshot": "site/img/cellular-age-25.png", "objects": [
+   {"what": "tall slim box", "look": "ivory box, dark green and gold print", "front": [
+     "top: gold M monogram", "'MITODERM' letter-spaced, below 'BIOSPICULE SYSTEM'",
+     "dark green band with gold text 'CELLULAR AGE' / 'DEFENSE 2.5%'", "'BIOSPICULE' / 'SERUM'", "round medallion in a dark green ring with dark green spicules",
+     "gold-framed box: 'ADVANCED' / 'BIOSPICULE TECHNOLOGY'", "bottom: '30 ml ℮ 1.0 fl.oz.'"]}]},
+ "derma-recovery-cream": {"packshot": "protocols/assets/img/derma-recovery.webp", "objects": [
+   {"what": "box", "look": "ivory box, dark green and gold print", "front": [
+     "top: gold M monogram", "'MITODERM' letter-spaced, below 'BIOSPICULE SYSTEM'",
+     "dark green band with gold text 'DERMA RECOVERY' / 'CREAM'", "'SNAIL COLLAGEN'", "white cream swirl illustration",
+     "gold-framed box: 'Daily nourishing collagen cream' / 'for healthy-looking glow'", "bottom: '50 ml ℮ 1.69 fl.oz.'"]}]},
+ "mitopen": {"packshot": "protocols/assets/img/mitopen.webp", "objects": [
+   {"what": "microneedling pen", "look": "champagne-gold metal body, rose-gold knurled grip ring and button, clear needle cartridge", "front": ["'MITOPEN' printed vertically in white along the body", "a small engraved V near the top cone"]}]},
+ "mitoscan": {"packshot": "protocols/assets/img/mitoscan.webp", "objects": [
+   {"what": "tablet", "look": "white tablet on a white stand, black screen", "front": ["on screen: a teal-to-purple target logo, 'Mitoscan' in white, below 'By Mitoderm Ltd'"]},
+   {"what": "handheld scanner", "look": "white handset with a black oval panel, white coiled cable", "front": ["on the panel: 'Mitoscan' / 'By Mitoderm Ltd' in white"]},
+   {"what": "base", "look": "brushed silver cylinder with chrome ends", "front": ["small chrome badge 'Mitoscan'"]}]}
+}

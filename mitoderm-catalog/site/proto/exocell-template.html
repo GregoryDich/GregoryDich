@@ -44,7 +44,9 @@ img, video { max-width: 100%; display: block; }
 /* 0 · Meet */
 .hero { position: relative; overflow: hidden; padding-block: clamp(40px, 8vw, 96px) clamp(48px, 8vw, 120px); isolation: isolate; }
 .hero .bg { position: absolute; inset: 0; z-index: -1; background: radial-gradient(60% 55% at 72% 40%, var(--glow), transparent 70%), linear-gradient(180deg, #0b1416, var(--bg) 85%); }
-.hero .scene { position: absolute; inset: 0; z-index: -2; object-fit: cover; width: 100%; height: 100%; opacity: .55; }
+.hero .scene { position: absolute; inset: 0; z-index: -2; object-fit: cover; object-position: 70% 50%; width: 100%; height: 100%; opacity: .55; }
+@media (min-width: 761px) { .hero.has-scene .scene { opacity: 1; left: 30%; width: 70%; object-position: 75% 50%; } .hero.has-scene .bg { background: linear-gradient(90deg, rgba(7,9,11,.92) 0%, rgba(7,9,11,.55) 38%, transparent 60%); } .hero.has-scene .art { visibility: hidden; } }
+.kitshot { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 18px; border: 1px solid var(--line); margin-top: 28px; display: block; background: var(--bg-2); }
 .hero .wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: clamp(24px, 5vw, 64px); align-items: center; }
 .hero h1 { font: var(--display); letter-spacing: -.02em; margin-top: 22px; }
 .hero .tag { font: 300 clamp(20px, 2.2vw, 26px)/1.25 Rubik, system-ui, sans-serif; color: var(--fg); margin-top: 18px; max-width: 24ch; }
@@ -253,6 +255,7 @@ details ol { margin: 0 0 20px; padding-left: 20px; color: var(--fg-2); display: 
       <div class="eyebrow">Kit &amp; facts</div>
       <h2>What's in the box.</h2>
     </div>
+    <img class="kitshot rv" src="__S4_SRC__" data-fallback="__S4_FALLBACK__" alt="EXOCELL MASK box with five sealed single-mask sachets" loading="lazy">
     <div class="facts rv">
       <div class="fact"><b>5</b><span>Masks per box</span></div>
       <div class="fact"><b>Bio</b><span>Cellulose sheet</span></div>
@@ -292,6 +295,10 @@ details ol { margin: 0 0 20px; padding-left: 20px; color: var(--fg-2); display: 
 (function () {
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // stills: generated scenes when published next to the page, otherwise the labelled placeholder
+  // hero: when the generated hero frame loads, it becomes the full-bleed visual on desktop (the floating packshot hides)
+  var hs = document.querySelector('.hero .scene');
+  function heroOk() { if (hs.naturalWidth > 0 && hs.src.indexOf('data:') !== 0) hs.parentElement.classList.add('has-scene'); }
+  if (hs) { hs.addEventListener('load', heroOk); if (hs.complete) heroOk(); }
   document.querySelectorAll('img[data-fallback]').forEach(function (im) {
     im.addEventListener('error', function () { if (im.src !== im.dataset.fallback) im.src = im.dataset.fallback; });
     if (im.complete && im.naturalWidth === 0) im.src = im.dataset.fallback;
@@ -343,7 +350,7 @@ details ol { margin: 0 0 20px; padding-left: 20px; color: var(--fg-2); display: 
       var p = clamp(-r.top / (r.height - vh));
       if (s.seq) drawFrame(s, p);
       else if (s.ready && s.v.duration) { var t = p * (s.v.duration - .05); if (Math.abs(s.v.currentTime - t) > .02) s.v.currentTime = t; }
-      else s.b.style.opacity = p;
+      else { var q = clamp((p - .4) / .2); s.b.style.opacity = q * q * (3 - 2 * q); }
       s.caps.forEach(function (c) { var a = +c.dataset.from, b = +c.dataset.to; c.classList.toggle('dim', !(p >= a && p <= b)); });
       s.marks.forEach(function (m) { m.classList.toggle('on', p >= +m.dataset.at); });
     });

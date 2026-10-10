@@ -16,7 +16,7 @@ CTA: 'Contact for Price' as a ghost button; scroll cue 'Turn the ring'
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Background plate for compositing: a warm champagne-gold brushed-metal studio surface with a soft horizon gradient from pale champagne to deeper sand, one large soft key light from the upper left and a subtle warm rim from the right, faint metallic sheen, the right third kept empty for a slender champagne-gold cordless microneedling pen with a ribbed rose-copper adjustment ring, a small rose-copper button near the top and a clear needle cartridge at the tip, precision-instrument mood, 85 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos.
+Background plate for compositing: a warm champagne-gold brushed-metal studio surface with a soft horizon gradient from pale champagne to deeper sand, one large soft key light from the upper left and a subtle warm rim from the right, faint metallic sheen, the right third kept empty for a slender champagne-gold cordless microneedling pen with a ribbed rose-copper adjustment ring, a small rose-copper button near the top and a clear needle cartridge at the tip, precision-instrument mood, 85 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): MICRONEEDLING PEN — champagne-gold metal body, rose-gold knurled grip ring and button, clear needle cartridge: 'MITOPEN' printed vertically in white along the body; a small engraved V near the top cone.
 ```
 
 **Mobile 9:16:** Stack: eyebrow, title, line, chips as a horizontal row; pen below at 45% width, vertical, right-aligned; sticky bottom bar 'Contact for Price'.
@@ -56,7 +56,7 @@ CTA: none; micro-interaction: scroll scrubs the ring — a depth scale (0.25–2
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Extreme macro of the tip of a slender champagne-gold cordless microneedling pen: a clear plastic needle cartridge with fine needle tips just extended, a ribbed rose-copper adjustment ring in the foreground, brushed champagne-metal barrel receding out of focus, warm soft key light with a cool rim to separate the clear plastic, champagne-beige background, precision-instrument mood, 100 mm macro, f/5.6, photoreal, cinematic, 16:9, no text, no numbers, no logos.
+Extreme macro of the tip of a slender champagne-gold cordless microneedling pen: a clear plastic needle cartridge with fine needle tips just extended, a ribbed rose-copper adjustment ring in the foreground, brushed champagne-metal barrel receding out of focus, warm soft key light with a cool rim to separate the clear plastic, champagne-beige background, precision-instrument mood, 100 mm macro, f/5.6, photoreal, cinematic, 16:9, no text, no numbers, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): MICRONEEDLING PEN — champagne-gold metal body, rose-gold knurled grip ring and button, clear needle cartridge: 'MITOPEN' printed vertically in white along the body; a small engraved V near the top cone.
 ```
 
 **Mobile 9:16:** Macro as background; readouts stack above the chips; chips 2×2.
@@ -76,7 +76,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Aesthetic-clinic treatment scene: a practitioner in white nitrile gloves holding a slender champagne-gold cordless microneedling pen with a ribbed rose-copper ring, gliding it across the cheek of a reclined calm client whose eyes look toward the camera, warm soft clinical light, champagne and cream room tones, shallow depth of field on the pen and cheek, 50 mm, f/2.8, photoreal, cinematic, natural skin, 16:9, no text, no logos.
+Aesthetic-clinic treatment scene: a practitioner in white nitrile gloves holding a slender champagne-gold cordless microneedling pen with a ribbed rose-copper ring, gliding it across the cheek of a reclined calm client whose eyes look toward the camera, warm soft clinical light, champagne and cream room tones, shallow depth of field on the pen and cheek, 50 mm, f/2.8, photoreal, cinematic, natural skin, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): MICRONEEDLING PEN — champagne-gold metal body, rose-gold knurled grip ring and button, clear needle cartridge: 'MITOPEN' printed vertically in white along the body; a small engraved V near the top cone.
 ```
 
 **Mobile 9:16:** 4:5 crop on the practitioner's hand and the client's cheek; copy below; chips in a row.
@@ -96,7 +96,7 @@ CTA: 'Contact for Price' (ghost)
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Top-down view of a clinic treatment tray on a warm champagne-beige surface: a slender champagne-gold cordless microneedling pen with a ribbed rose-copper ring lying centred, empty space left and right of the pen for product packshots, white gauze and a glass dish at the edges, soft even clinical light, precise calm mood for a champagne-metal page, 50 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos.
+Top-down view of a clinic treatment tray on a warm champagne-beige surface: a slender champagne-gold cordless microneedling pen with a ribbed rose-copper ring lying centred, empty space left and right of the pen for product packshots, white gauze and a glass dish at the edges, soft even clinical light, precise calm mood for a champagne-metal page, 50 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): MICRONEEDLING PEN — champagne-gold metal body, rose-gold knurled grip ring and button, clear needle cartridge: 'MITOPEN' printed vertically in white along the body; a small engraved V near the top cone.
 ```
 
 **Mobile 9:16:** Pen 40% width centred; steps as three stacked rows; 'works with' as a horizontal scroll row of three packshots.
@@ -116,7 +116,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-A slender champagne-gold cordless microneedling pen with a ribbed rose-copper ring and clear needle cartridge standing upright on a round brushed-champagne metal plinth, 3/4 view, warm soft key light from the upper left and a thin cool rim light, champagne-beige gradient background, left half of the frame empty for stat tiles, precision-instrument mood, 85 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos.
+A slender champagne-gold cordless microneedling pen with a ribbed rose-copper ring and clear needle cartridge standing upright on a round brushed-champagne metal plinth, 3/4 view, warm soft key light from the upper left and a thin cool rim light, champagne-beige gradient background, left half of the frame empty for stat tiles, precision-instrument mood, 85 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): MICRONEEDLING PEN — champagne-gold metal body, rose-gold knurled grip ring and button, clear needle cartridge: 'MITOPEN' printed vertically in white along the body; a small engraved V near the top cone.
 ```
 
 **Mobile 9:16:** Stat tiles 2×2 above; pen image full-width below.
@@ -136,7 +136,7 @@ CTA: Primary: 'Contact for Price' (charcoal fill, champagne text). Secondary: 'A
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-A slender champagne-gold cordless microneedling pen with a ribbed rose-copper ring resting at a 20° diagonal on a warm champagne brushed-metal surface, bright soft key light from the upper left, warm rim from the right, faint metallic sheen, left half of the frame empty for copy, premium closing shot for a champagne-metal page, 85 mm, f/4, photoreal, cinematic, 16:9, no text, no logos.
+A slender champagne-gold cordless microneedling pen with a ribbed rose-copper ring resting at a 20° diagonal on a warm champagne brushed-metal surface, bright soft key light from the upper left, warm rim from the right, faint metallic sheen, left half of the frame empty for copy, premium closing shot for a champagne-metal page, 85 mm, f/4, photoreal, cinematic, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): MICRONEEDLING PEN — champagne-gold metal body, rose-gold knurled grip ring and button, clear needle cartridge: 'MITOPEN' printed vertically in white along the body; a small engraved V near the top cone.
 ```
 
 **Mobile 9:16:** Title, line, full-width primary button, secondary as a text link; pen below at 45%; sticky bar persists.

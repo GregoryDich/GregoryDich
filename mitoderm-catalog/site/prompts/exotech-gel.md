@@ -16,7 +16,7 @@ CTA: 'Where to buy' as a ghost button; scroll cue 'Open the sphere'
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Background plate for compositing: a near-black studio tabletop with a faint mirror reflection, deep charcoal-bronze gradient rising to pure black at the top, one warm gold light sweep entering from the upper right, soft volumetric haze, very subtle gold dust suspended in the air, the right third kept empty for a mirror-polished gold sphere jar with a thin seam just below its equator and a black cube box whose front face is mirror-gold foil with a black diagonal wedge at the left edge, photoreal cinematic product photography, 85 mm lens, f/4, low camera at jar height, 16:9, no text, no captions, no logos.
+Background plate for compositing: a near-black studio tabletop with a faint mirror reflection, deep charcoal-bronze gradient rising to pure black at the top, one warm gold light sweep entering from the upper right, soft volumetric haze, very subtle gold dust suspended in the air, the right third kept empty for a mirror-polished gold sphere jar with a thin seam just below its equator and a black cube box whose front face is mirror-gold foil with a black diagonal wedge at the left edge, photoreal cinematic product photography, 85 mm lens, f/4, low camera at jar height, 16:9, no text, no captions, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): CUBE BOX — mirror gold foil cube with a black diagonal panel on the left side: 'EXOTECH' ('EXO' bold) in black, below it italic letter-spaced 'G E L' || SPHERICAL JAR — polished gold sphere jar with a thin seam: 'EXOTECH' / italic 'GEL' in black.
 ```
 
 **Mobile 9:16:** Stack: eyebrow, title (2 lines), line, chips as a horizontal scroll row; packshot moves below the copy at 70% width, right-aligned, box hidden; CTA becomes a sticky bottom bar 'Where to buy'.
@@ -36,7 +36,7 @@ CTA: none (scroll cue)
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Cinematic low-key portrait of a woman in her 40s, calm neutral expression, face lit by a single warm gold edge light from the right, deep black background, natural un-retouched skin, shallow depth of field, 85 mm, f/2, dark bronze grade with gold highlights for a black-and-gold page, left third of the frame kept empty and dark for a floating half-open mirror-gold sphere jar, photoreal, 16:9, no text, no logos.
+Cinematic low-key portrait of a woman in her 40s, calm neutral expression, face lit by a single warm gold edge light from the right, deep black background, natural un-retouched skin, shallow depth of field, 85 mm, f/2, dark bronze grade with gold highlights for a black-and-gold page, left third of the frame kept empty and dark for a floating half-open mirror-gold sphere jar, photoreal, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): CUBE BOX — mirror gold foil cube with a black diagonal panel on the left side: 'EXOTECH' ('EXO' bold) in black, below it italic letter-spaced 'G E L' || SPHERICAL JAR — polished gold sphere jar with a thin seam: 'EXOTECH' / italic 'GEL' in black.
 ```
 
 **Mobile 9:16:** Portrait becomes the full-width background at 60% opacity with copy over it; the sphere shrinks to a 120 px element pinned top-right so the opening motion continues at the same scroll position.
@@ -76,7 +76,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Medium close-up of a woman in her 40s facing the camera as if it were her bathroom mirror, massaging a thin layer of translucent gel into her cheek with two fingers, eyes meeting the lens, calm evening mood, dark bathroom with one warm gold practical light, a mirror-gold sphere jar open on the shelf beside her with its upper hemisphere resting next to it, black-and-gold grade, 50 mm, f/2.8, photoreal, cinematic, natural skin, 16:9, no text, no logos.
+Medium close-up of a woman in her 40s facing the camera as if it were her bathroom mirror, massaging a thin layer of translucent gel into her cheek with two fingers, eyes meeting the lens, calm evening mood, dark bathroom with one warm gold practical light, a mirror-gold sphere jar open on the shelf beside her with its upper hemisphere resting next to it, black-and-gold grade, 50 mm, f/2.8, photoreal, cinematic, natural skin, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): CUBE BOX — mirror gold foil cube with a black diagonal panel on the left side: 'EXOTECH' ('EXO' bold) in black, below it italic letter-spaced 'G E L' || SPHERICAL JAR — polished gold sphere jar with a thin seam: 'EXOTECH' / italic 'GEL' in black.
 ```
 
 **Mobile 9:16:** 4:5 portrait crop, her face centred; copy below the image; chips in a horizontal scroll row.
@@ -96,7 +96,7 @@ CTA: 'Ask your specialist' (ghost)
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-A closed mirror-polished gold sphere jar on a dark stone bathroom shelf in soft morning window light from the left, a folded white towel out of focus behind, black background fading to warm bronze, calm daily-ritual mood for a black-and-gold page, 50 mm, f/4, photoreal, cinematic, 16:9, no text, no logos.
+A closed mirror-polished gold sphere jar on a dark stone bathroom shelf in soft morning window light from the left, a folded white towel out of focus behind, black background fading to warm bronze, calm daily-ritual mood for a black-and-gold page, 50 mm, f/4, photoreal, cinematic, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): CUBE BOX — mirror gold foil cube with a black diagonal panel on the left side: 'EXOTECH' ('EXO' bold) in black, below it italic letter-spaced 'G E L' || SPHERICAL JAR — polished gold sphere jar with a thin seam: 'EXOTECH' / italic 'GEL' in black.
 ```
 
 **Mobile 9:16:** Sphere 50% width centred; steps stack as three full-width rows; 'works with' as a horizontal scroll row of three mini packshots.
@@ -116,7 +116,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Top-down 3/4 view of a black cube box with a mirror-gold foil front face and a black diagonal wedge at its left edge, a mirror-polished gold sphere jar standing in front of it, both on a black reflective surface, warm gold key light from the upper left, deep black surroundings, luxury still-life mood for a black-and-gold page, 50 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos.
+Top-down 3/4 view of a black cube box with a mirror-gold foil front face and a black diagonal wedge at its left edge, a mirror-polished gold sphere jar standing in front of it, both on a black reflective surface, warm gold key light from the upper left, deep black surroundings, luxury still-life mood for a black-and-gold page, 50 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): CUBE BOX — mirror gold foil cube with a black diagonal panel on the left side: 'EXOTECH' ('EXO' bold) in black, below it italic letter-spaced 'G E L' || SPHERICAL JAR — polished gold sphere jar with a thin seam: 'EXOTECH' / italic 'GEL' in black.
 ```
 
 **Mobile 9:16:** Stat tiles 2×2 above; box image full-width below; indication chips wrap in two rows.
@@ -136,7 +136,7 @@ CTA: Primary: 'Where to buy' (gold fill, black text). Secondary: 'Ask a speciali
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Mirror-polished gold sphere jar standing beside a black cube box whose front face is mirror-gold foil with a black diagonal wedge at the left edge, both on a black reflective surface, generous warm gold light from the upper right, soft gold haze, deep black surroundings, left half of the frame empty and dark for copy, premium closing shot for a black-and-gold page, 85 mm, f/4, photoreal, cinematic, 16:9, no text, no logos.
+Mirror-polished gold sphere jar standing beside a black cube box whose front face is mirror-gold foil with a black diagonal wedge at the left edge, both on a black reflective surface, generous warm gold light from the upper right, soft gold haze, deep black surroundings, left half of the frame empty and dark for copy, premium closing shot for a black-and-gold page, 85 mm, f/4, photoreal, cinematic, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): CUBE BOX — mirror gold foil cube with a black diagonal panel on the left side: 'EXOTECH' ('EXO' bold) in black, below it italic letter-spaced 'G E L' || SPHERICAL JAR — polished gold sphere jar with a thin seam: 'EXOTECH' / italic 'GEL' in black.
 ```
 
 **Mobile 9:16:** Title, line, full-width primary button, secondary as a text link; packshot below at 60%; the sticky bottom bar 'Where to buy' persists from block 0.

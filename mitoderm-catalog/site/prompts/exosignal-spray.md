@@ -16,7 +16,7 @@ CTA: 'Where to buy' as a ghost button; scroll cue 'Press'
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Background plate for compositing: a near-black studio with a warm gold rim light from the upper right, a barely visible reflective black surface, a frozen cloud of fine mist droplets suspended in the light at the right third of the frame (where a slim frosted-glass 15 ml spray bottle with a tall polished-gold cap and its tall matte-black rectangular carton will be composited), very faint haze, black-and-gold grade with frosted-white highlights, 85 mm, f/4, low camera, photoreal, cinematic, 16:9, no text, no logos.
+Background plate for compositing: a near-black studio with a warm gold rim light from the upper right, a barely visible reflective black surface, a frozen cloud of fine mist droplets suspended in the light at the right third of the frame (where a slim frosted-glass 15 ml spray bottle with a tall polished-gold cap and its tall matte-black rectangular carton will be composited), very faint haze, black-and-gold grade with frosted-white highlights, 85 mm, f/4, low camera, photoreal, cinematic, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): TALL BOX — matte black box, gold and white print: top: VM monogram; centre, gold: 'EXOSIGNAL' ('EXO' bold), below it letter-spaced 'S P R A Y · H O M E'; lower: 'EXOSIGNAL SPRAY HOME' and [unreadable] four tiny white lines, a small boxed label || SPRAY BOTTLE — white-silver cylinder with a gold cap: VM monogram; 'EXOSIGNAL' running vertically ('EXO' bold); [unreadable] two tiny lines at the bottom.
 ```
 
 **Mobile 9:16:** Stack: eyebrow, title, line, chips as a horizontal row; bottle below at 55% width, right-aligned, carton hidden; sticky bottom bar 'Where to buy'.
@@ -76,7 +76,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Medium close-up of a woman in her 30s facing the camera as if it were her bathroom mirror, one hand parting her dark hair to expose the scalp, the other holding a slim frosted-glass spray bottle with a tall polished-gold cap at the parting, calm expression, one warm practical light, dark tiled wall, a tall matte-black carton on the shelf, black-and-gold grade, 50 mm, f/2.8, photoreal, cinematic, natural skin and hair, 16:9, no text, no logos.
+Medium close-up of a woman in her 30s facing the camera as if it were her bathroom mirror, one hand parting her dark hair to expose the scalp, the other holding a slim frosted-glass spray bottle with a tall polished-gold cap at the parting, calm expression, one warm practical light, dark tiled wall, a tall matte-black carton on the shelf, black-and-gold grade, 50 mm, f/2.8, photoreal, cinematic, natural skin and hair, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): TALL BOX — matte black box, gold and white print: top: VM monogram; centre, gold: 'EXOSIGNAL' ('EXO' bold), below it letter-spaced 'S P R A Y · H O M E'; lower: 'EXOSIGNAL SPRAY HOME' and [unreadable] four tiny white lines, a small boxed label || SPRAY BOTTLE — white-silver cylinder with a gold cap: VM monogram; 'EXOSIGNAL' running vertically ('EXO' bold); [unreadable] two tiny lines at the bottom.
 ```
 
 **Mobile 9:16:** 4:5 portrait crop centred on her face and hands; copy below; chips in a horizontal row.
@@ -96,7 +96,7 @@ CTA: 'Ask your specialist' (ghost)
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-A slim frosted-glass 15 ml spray bottle with a tall polished-gold cap standing on a black stone bathroom shelf beside its tall matte-black rectangular carton, warm morning window light from the left, soft reflection, black background, calm daily-ritual mood for a black-and-gold page, 50 mm, f/4, photoreal, cinematic, 16:9, no text, no logos.
+A slim frosted-glass 15 ml spray bottle with a tall polished-gold cap standing on a black stone bathroom shelf beside its tall matte-black rectangular carton, warm morning window light from the left, soft reflection, black background, calm daily-ritual mood for a black-and-gold page, 50 mm, f/4, photoreal, cinematic, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): TALL BOX — matte black box, gold and white print: top: VM monogram; centre, gold: 'EXOSIGNAL' ('EXO' bold), below it letter-spaced 'S P R A Y · H O M E'; lower: 'EXOSIGNAL SPRAY HOME' and [unreadable] four tiny white lines, a small boxed label || SPRAY BOTTLE — white-silver cylinder with a gold cap: VM monogram; 'EXOSIGNAL' running vertically ('EXO' bold); [unreadable] two tiny lines at the bottom.
 ```
 
 **Mobile 9:16:** Bottle 40% width centred; steps stack as three rows; 'works with' as a single packshot card.
@@ -116,7 +116,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Top-down 3/4 view of a tall matte-black rectangular carton opened at the top, a slim frosted-glass spray bottle with a tall polished-gold cap standing half-inside it, on a black reflective surface, warm gold key light from the upper left, deep black surroundings, precise unboxing mood for a black-and-gold page, 50 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos.
+Top-down 3/4 view of a tall matte-black rectangular carton opened at the top, a slim frosted-glass spray bottle with a tall polished-gold cap standing half-inside it, on a black reflective surface, warm gold key light from the upper left, deep black surroundings, precise unboxing mood for a black-and-gold page, 50 mm, f/5.6, photoreal, cinematic, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): TALL BOX — matte black box, gold and white print: top: VM monogram; centre, gold: 'EXOSIGNAL' ('EXO' bold), below it letter-spaced 'S P R A Y · H O M E'; lower: 'EXOSIGNAL SPRAY HOME' and [unreadable] four tiny white lines, a small boxed label || SPRAY BOTTLE — white-silver cylinder with a gold cap: VM monogram; 'EXOSIGNAL' running vertically ('EXO' bold); [unreadable] two tiny lines at the bottom.
 ```
 
 **Mobile 9:16:** Stat tiles 2×2 above; carton image full-width below; indication chips wrap in two rows.
@@ -136,7 +136,7 @@ CTA: Primary: 'Where to buy' (gold fill, black text). Secondary: 'Ask a speciali
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-A slim frosted-glass 15 ml spray bottle with a tall polished-gold cap standing beside its tall matte-black rectangular carton on a black reflective surface, a fine frozen mist above the cap, bright warm gold rim light from the upper right, deep black surroundings, left half of the frame empty and dark for copy, premium closing shot for a black-and-gold page, 85 mm, f/4, photoreal, cinematic, 16:9, no text, no logos.
+A slim frosted-glass 15 ml spray bottle with a tall polished-gold cap standing beside its tall matte-black rectangular carton on a black reflective surface, a fine frozen mist above the cap, bright warm gold rim light from the upper right, deep black surroundings, left half of the frame empty and dark for copy, premium closing shot for a black-and-gold page, 85 mm, f/4, photoreal, cinematic, 16:9, no text, no logos. PACKAGING TEXT — reproduce exactly as listed, every word spelled exactly as written here, crisp and legible, nothing added or translated (lines marked [unreadable] are tiny grey lines, not words): TALL BOX — matte black box, gold and white print: top: VM monogram; centre, gold: 'EXOSIGNAL' ('EXO' bold), below it letter-spaced 'S P R A Y · H O M E'; lower: 'EXOSIGNAL SPRAY HOME' and [unreadable] four tiny white lines, a small boxed label || SPRAY BOTTLE — white-silver cylinder with a gold cap: VM monogram; 'EXOSIGNAL' running vertically ('EXO' bold); [unreadable] two tiny lines at the bottom.
 ```
 
 **Mobile 9:16:** Title, line, full-width primary button, secondary as a text link; packshot below at 50%; sticky bar persists.
