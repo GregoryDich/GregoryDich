@@ -16,7 +16,7 @@ CTA: Primary: Contact for price · Secondary: See the three stages ↓ (scrolls 
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal cinematic product hero, 16:9. A near-square carton, slightly wider than tall, finished in a champagne-gold gradient (pale warm ivory at the top left to deep gold at the right) standing on the right third on a warm cream stone surface; in front of it three vessels: a small amber glass vial with a silver cap, a small turquoise-blue glass vial with a silver cap, and a square clear glass bottle with a tall gold cap holding a pale liquid with fine gold flecks. Background: soft champagne (#F3E4C2) gradient, warm sunlight from the upper left, long soft shadows, subtle warm bloom. Camera: 85 mm, eye level, f/4, product sharp, left two-thirds clear for text. No overlay text, no logos; pack faces clean so the real packshot PNG can be composited.
+REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/exo-nad.webp. Photoreal cinematic product hero, 16:9. A near-square carton, slightly wider than tall, finished in a champagne-gold gradient (pale warm ivory at the top left to deep gold at the right) standing on the right third on a warm cream stone surface; in front of it three vessels: a small amber glass vial with a silver cap, a small turquoise-blue glass vial with a silver cap, and a square clear glass bottle with a tall gold cap holding a pale liquid with fine gold flecks. Background: soft champagne (#F3E4C2) gradient, warm sunlight from the upper left, long soft shadows, subtle warm bloom. Camera: 85 mm, eye level, f/4, product sharp, left two-thirds clear for text. No overlay text or captions; no text other than the packaging's own printing; the packaging reproduced exactly from the attached packshot photo (mitoderm-catalog/protocols/assets/img/exo-nad.webp): same colours, wordmark and every printed word spelled as on the pack, crisp and legible.
 ```
 
 **Mobile 9:16:** Stack: eyebrow, headline, line, chips 2×2, packshot full width cropped to box + vessels (≈55 vh), full-width 'Contact for price'; sticky CTA bar from here.
@@ -56,7 +56,7 @@ CTA: Secondary: Full formula ↓
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal macro still life, 16:9. Three vessels in a row on warm cream stone under sunlight: left, a square clear glass bottle with a tall gold cap holding a pale liquid with fine gold flecks; centre, a small amber glass vial with a silver cap; right, a small turquoise-blue glass vial with a silver cap; behind each an out-of-focus macro swirl of its liquid — behind the bottle, a clear oily phase floating over a watery, fleck-filled phase. Lighting: warm champagne (#F3E4C2) backdrop, strong sun from the left, gold flecks sparkling. Camera: 100 mm macro, f/4, vessels sharp. No overlay text, no logos; pack faces clean.
+REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/exo-nad.webp. Photoreal macro still life, 16:9. Three vessels in a row on warm cream stone under sunlight: left, a square clear glass bottle with a tall gold cap holding a pale liquid with fine gold flecks; centre, a small amber glass vial with a silver cap; right, a small turquoise-blue glass vial with a silver cap; behind each an out-of-focus macro swirl of its liquid — behind the bottle, a clear oily phase floating over a watery, fleck-filled phase. Lighting: warm champagne (#F3E4C2) backdrop, strong sun from the left, gold flecks sparkling. Camera: 100 mm macro, f/4, vessels sharp. No overlay text or captions; no text other than the packaging's own printing; the packaging reproduced exactly from the attached packshot photo (mitoderm-catalog/protocols/assets/img/exo-nad.webp): same colours, wordmark and every printed word spelled as on the pack, crisp and legible.
 ```
 
 **Mobile 9:16:** Columns stack vertically 1-2-3, each a 16:9 crop of its vessel with the label beneath; 'Full formula' link at the end.
@@ -96,7 +96,7 @@ CTA: Secondary: Get the full protocol (contact form, 'EXO-NAD protocol' pre-fill
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal top-down flat lay, 16:9. On warm cream stone, left to right in a straight row with space between: a square clear glass bottle with a tall gold cap and pale gold-flecked liquid, a fan brush, a small amber vial with a silver cap, a small turquoise vial with a silver cap, then a folded translucent pale-blue sheet mask lying in front of a small matte teal carton and a plain white unbranded sunscreen tube. Lighting: sunlight from the upper left, long soft shadows, champagne (#F3E4C2) tone. Camera: overhead, 50 mm, f/8, all sharp. No overlay text, no logos; pack faces clean.
+REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/exo-nad.webp. Photoreal top-down flat lay, 16:9. On warm cream stone, left to right in a straight row with space between: a square clear glass bottle with a tall gold cap and pale gold-flecked liquid, a fan brush, a small amber vial with a silver cap, a small turquoise vial with a silver cap, then a folded translucent pale-blue sheet mask lying in front of a small matte teal carton and a plain white unbranded sunscreen tube. Lighting: sunlight from the upper left, long soft shadows, champagne (#F3E4C2) tone. Camera: overhead, 50 mm, f/8, all sharp. No overlay text or captions; no text other than the packaging's own printing; the packaging reproduced exactly from the attached packshot photo (mitoderm-catalog/protocols/assets/img/exo-nad.webp): same colours, wordmark and every printed word spelled as on the pack, crisp and legible.
 ```
 
 **Mobile 9:16:** Steps stack vertically with the gold line down the left; each step a 1:1 crop of its vessel; badges as a chip row.
@@ -116,7 +116,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal product shot, 16:9. The champagne-gold gradient near-square carton, closed, in three-quarter view on the left; beside it on cream stone, laid out neatly: one square clear glass bottle with a tall gold cap and gold-flecked liquid, a row of five small amber vials with silver caps and a row of five small turquoise-blue vials with silver caps. Lighting: warm sunlight from the upper right, soft champagne backdrop, gentle bloom. Camera: 70 mm, f/5.6, everything sharp, right third clear for numbers. No overlay text, no logos; pack faces clean.
+REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/exo-nad.webp. Photoreal product shot, 16:9. The champagne-gold gradient near-square carton, closed, in three-quarter view on the left; beside it on cream stone, laid out neatly: one square clear glass bottle with a tall gold cap and gold-flecked liquid, a row of five small amber vials with silver caps and a row of five small turquoise-blue vials with silver caps. Lighting: warm sunlight from the upper right, soft champagne backdrop, gentle bloom. Camera: 70 mm, f/5.6, everything sharp, right third clear for numbers. No overlay text or captions; no text other than the packaging's own printing; the packaging reproduced exactly from the attached packshot photo (mitoderm-catalog/protocols/assets/img/exo-nad.webp): same colours, wordmark and every printed word spelled as on the pack, crisp and legible.
 ```
 
 **Mobile 9:16:** Kit image full width; four numbers 2×2 with count-up; caption below.
@@ -136,7 +136,7 @@ CTA: Primary: Contact for price (WhatsApp + form) · Secondary: Request training
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal cinematic closing hero, 16:9. The champagne-gold near-square carton on the right third on cream stone, the three vessels (small amber vial, small turquoise vial, square gold-capped bottle with gold-flecked liquid) in front, warm sunlight from the left, soft bloom, a thin gold reflection line; the left two-thirds clean champagne (#F3E4C2) for the offer and buttons. Camera: 85 mm, eye level, f/4. Warm, calm, final. No overlay text, no logos; pack faces clean.
+REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/exo-nad.webp. Photoreal cinematic closing hero, 16:9. The champagne-gold near-square carton on the right third on cream stone, the three vessels (small amber vial, small turquoise vial, square gold-capped bottle with gold-flecked liquid) in front, warm sunlight from the left, soft bloom, a thin gold reflection line; the left two-thirds clean champagne (#F3E4C2) for the offer and buttons. Camera: 85 mm, eye level, f/4. Warm, calm, final. No overlay text or captions; no text other than the packaging's own printing; the packaging reproduced exactly from the attached packshot photo (mitoderm-catalog/protocols/assets/img/exo-nad.webp): same colours, wordmark and every printed word spelled as on the pack, crisp and legible.
 ```
 
 **Mobile 9:16:** Packshot small (≈35 vh) above the headline; two full-width buttons; contact row; sticky bar becomes the primary button.

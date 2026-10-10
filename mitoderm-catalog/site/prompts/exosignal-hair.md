@@ -16,7 +16,7 @@ CTA: Primary: Contact for price · Secondary: See what's inside ↓
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal cinematic product hero, 16:9. A matte black landscape carton (wider than tall) standing on the right third on a black satin surface; in front of it five clear glass snap-neck ampoules with colourless liquid standing in a loose row, catching a warm gold edge light (#C9A24A). Background: matte black (#111111), a faint warm gold glow only behind the carton, no haze elsewhere. Lighting: warm key from the upper left, a cool white highlight along the ampoule necks. Camera: 85 mm, eye level, f/4, product sharp, left two-thirds empty for text. No overlay text, no logos; pack faces clean so the real packshot PNG can be composited.
+REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/exosignal-hair.webp. Photoreal cinematic product hero, 16:9. A matte black landscape carton (wider than tall) standing on the right third on a black satin surface; in front of it five clear glass snap-neck ampoules with colourless liquid standing in a loose row, catching a warm gold edge light (#C9A24A). Background: matte black (#111111), a faint warm gold glow only behind the carton, no haze elsewhere. Lighting: warm key from the upper left, a cool white highlight along the ampoule necks. Camera: 85 mm, eye level, f/4, product sharp, left two-thirds empty for text. No overlay text or captions; no text other than the packaging's own printing; the packaging reproduced exactly from the attached packshot photo (mitoderm-catalog/protocols/assets/img/exosignal-hair.webp): same colours, wordmark and every printed word spelled as on the pack, crisp and legible.
 ```
 
 **Mobile 9:16:** Stack: eyebrow, headline, line, chips 2×2, packshot full width cropped to the box and ampoules (≈50 vh), full-width 'Contact for price'. Sticky bottom CTA bar from here to block 6.
@@ -96,7 +96,7 @@ CTA: Secondary: See MITOPEN & MITOSCAN (links to the device pages) · Get the fu
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal counter scene, 16:9. On a black satin counter, left to right with space between: a white tablet-style screen on a white stand with a silver cylindrical base, the screen showing an abstract magnified scalp circle, with a corded white handheld scope camera resting in front of it; a slim cordless microneedling pen with a champagne-gold body, rose-gold grip ring and clear needle cartridge; a clear glass snap-neck ampoule standing in a small holder; and a small clear glass spray bottle with a tall gold cap at the far right. Lighting: thin warm gold rim light from above, soft fill, matte black background (#111111). Camera: 50 mm, slightly above eye level, f/8, all items sharp, the row centred with margins. No overlay text, no logos, screen content abstract, pack faces clean.
+REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/exosignal-hair.webp. Photoreal counter scene, 16:9. On a black satin counter, left to right with space between: a white tablet-style screen on a white stand with a silver cylindrical base, the screen showing an abstract magnified scalp circle, with a corded white handheld scope camera resting in front of it; a slim cordless microneedling pen with a champagne-gold body, rose-gold grip ring and clear needle cartridge; a clear glass snap-neck ampoule standing in a small holder; and a small clear glass spray bottle with a tall gold cap at the far right. Lighting: thin warm gold rim light from above, soft fill, matte black background (#111111). Camera: 50 mm, slightly above eye level, f/8, all items sharp, the row centred with margins. No overlay text or captions, no text other than the packaging's own printing, screen content abstract, the packaging reproduced exactly from the attached packshot photo (mitoderm-catalog/protocols/assets/img/exosignal-hair.webp): same colours, wordmark and every printed word spelled as on the pack, crisp and legible.
 ```
 
 **Mobile 9:16:** Four cards stacked vertically with the gold line down the left; each card shows its object as a 1:1 crop; device links as small buttons.
@@ -116,7 +116,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal product shot, 16:9. The matte black landscape carton, closed, in three-quarter view on the left; in front of it five clear glass snap-neck ampoules with colourless liquid, four standing in a row and one lying on its side in front. Lighting: warm gold key from the upper right, cool highlight on the glass necks, matte black background, a soft gold glow behind the box only. Camera: 70 mm, f/5.6, right third empty for numbers. No overlay text, no logos; pack faces clean.
+REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/exosignal-hair.webp. Photoreal product shot, 16:9. The matte black landscape carton, closed, in three-quarter view on the left; in front of it five clear glass snap-neck ampoules with colourless liquid, four standing in a row and one lying on its side in front. Lighting: warm gold key from the upper right, cool highlight on the glass necks, matte black background, a soft gold glow behind the box only. Camera: 70 mm, f/5.6, right third empty for numbers. No overlay text or captions; no text other than the packaging's own printing; the packaging reproduced exactly from the attached packshot photo (mitoderm-catalog/protocols/assets/img/exosignal-hair.webp): same colours, wordmark and every printed word spelled as on the pack, crisp and legible.
 ```
 
 **Mobile 9:16:** Kit image full width; four numbers in a 2×2 grid with count-up.
@@ -136,7 +136,7 @@ CTA: Primary: Contact for price (WhatsApp + form) · Secondary: Book a MITOSCAN 
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal cinematic closing hero, 16:9. The matte black landscape carton on the right third on black satin, five clear snap-neck ampoules lined up in front, a warm gold glow (#C9A24A) behind the box and a thin gold reflection line on the surface; the left two-thirds matte black for the offer and buttons. Camera: 85 mm, eye level, f/4. Quiet, premium, final. No overlay text, no logos; pack faces clean.
+REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/exosignal-hair.webp. Photoreal cinematic closing hero, 16:9. The matte black landscape carton on the right third on black satin, five clear snap-neck ampoules lined up in front, a warm gold glow (#C9A24A) behind the box and a thin gold reflection line on the surface; the left two-thirds matte black for the offer and buttons. Camera: 85 mm, eye level, f/4. Quiet, premium, final. No overlay text or captions; no text other than the packaging's own printing; the packaging reproduced exactly from the attached packshot photo (mitoderm-catalog/protocols/assets/img/exosignal-hair.webp): same colours, wordmark and every printed word spelled as on the pack, crisp and legible.
 ```
 
 **Mobile 9:16:** Packshot small (≈35 vh) above the headline; two full-width buttons; contact row; sticky bar becomes the primary button.

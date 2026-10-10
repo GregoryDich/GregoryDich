@@ -16,7 +16,7 @@ CTA: Primary: Contact for price · Secondary: See what's inside ↓
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal cinematic product hero, 16:9. A matte teal (#6FAEB0) portrait-format rectangular carton standing on the right third on a wet pale-aqua stone surface; beside it, floating slightly above the surface, a translucent pale-blue bio-cellulose face mask with eye, nose and mouth cut-outs, folded in half along its vertical centre line so one eye cut-out and half the mouth cut-out show, tiny water droplets on its surface. Background: cool turquoise gradient (#DDF3F3 to #6FAEB0), soft cool key light from the upper left, a cool rim light on the mask edge, reflections in the wet surface. Camera: 85 mm, eye level, f/4, product sharp, left two-thirds clear for text. No overlay text, no logos; pack faces clean so the real packshot PNG can be composited.
+REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/exocell-mask.webp. Photoreal cinematic product hero, 16:9. A matte teal (#6FAEB0) portrait-format rectangular carton standing on the right third on a wet pale-aqua stone surface; beside it, floating slightly above the surface, a translucent pale-blue bio-cellulose face mask with eye, nose and mouth cut-outs, folded in half along its vertical centre line so one eye cut-out and half the mouth cut-out show, tiny water droplets on its surface. Background: cool turquoise gradient (#DDF3F3 to #6FAEB0), soft cool key light from the upper left, a cool rim light on the mask edge, reflections in the wet surface. Camera: 85 mm, eye level, f/4, product sharp, left two-thirds clear for text. No overlay text or captions; no text other than the packaging's own printing; the packaging reproduced exactly from the attached packshot photo (mitoderm-catalog/protocols/assets/img/exocell-mask.webp): same colours, wordmark and every printed word spelled as on the pack, crisp and legible.
 ```
 
 **Mobile 9:16:** Stack: eyebrow, headline, line, chips 2×2, packshot full width cropped to box + mask (≈55 vh), full-width 'Contact for price'; sticky CTA bar from here.
@@ -116,7 +116,7 @@ CTA: none
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal product shot, 16:9. The matte teal portrait-format carton, closed, in three-quarter view on the left on wet pale-aqua stone; in front of it one unfolded translucent pale-blue bio-cellulose face mask with eye, nose and mouth cut-outs lying flat on the stone, droplets on its surface. Lighting: cool key from the upper right, turquoise gradient backdrop, reflections in the wet stone. Camera: 70 mm, f/5.6, all sharp, right third clear for numbers. No overlay text, no logos; pack face clean.
+REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/exocell-mask.webp. Photoreal product shot, 16:9. The matte teal portrait-format carton, closed, in three-quarter view on the left on wet pale-aqua stone; in front of it one unfolded translucent pale-blue bio-cellulose face mask with eye, nose and mouth cut-outs lying flat on the stone, droplets on its surface. Lighting: cool key from the upper right, turquoise gradient backdrop, reflections in the wet stone. Camera: 70 mm, f/5.6, all sharp, right third clear for numbers. No overlay text or captions; no text other than the packaging's own printing; the packaging reproduced exactly from the attached packshot photo (mitoderm-catalog/protocols/assets/img/exocell-mask.webp): same colours, wordmark and every printed word spelled as on the pack, crisp and legible.
 ```
 
 **Mobile 9:16:** Kit image full width; four facts 2×2; caption below.
@@ -136,7 +136,7 @@ CTA: Primary: Contact for price (WhatsApp + form) · Secondary: Add to a V-TECH 
 **Still 16:9 (Higgsfield / любой генератор):**
 
 ```
-Photoreal cinematic closing hero, 16:9. The matte teal portrait-format carton on the right third on wet pale-aqua stone, the translucent pale-blue mask folded in half floating beside it as in the opening frame, cool key light, a thin cool reflection line on the surface; the left two-thirds clean pale aqua (#DDF3F3) for the offer and buttons. Camera: 85 mm, eye level, f/4. Cool, calm, final. No overlay text, no logos; pack faces clean.
+REFERENCE IMAGE: attach the product photo mitoderm-catalog/protocols/assets/img/exocell-mask.webp. Photoreal cinematic closing hero, 16:9. The matte teal portrait-format carton on the right third on wet pale-aqua stone, the translucent pale-blue mask folded in half floating beside it as in the opening frame, cool key light, a thin cool reflection line on the surface; the left two-thirds clean pale aqua (#DDF3F3) for the offer and buttons. Camera: 85 mm, eye level, f/4. Cool, calm, final. No overlay text or captions; no text other than the packaging's own printing; the packaging reproduced exactly from the attached packshot photo (mitoderm-catalog/protocols/assets/img/exocell-mask.webp): same colours, wordmark and every printed word spelled as on the pack, crisp and legible.
 ```
 
 **Mobile 9:16:** Packshot small (≈35 vh) above the headline; two full-width buttons; contact row; sticky bar becomes the primary button.
