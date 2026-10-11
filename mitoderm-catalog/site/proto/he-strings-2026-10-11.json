@@ -1,0 +1,96 @@
+{
+ "_note": "New / composed Hebrew strings for the MASK and V-TECH pages (11/10/2026): translator, two independent reviewers (native editor; fidelity to the owner protocols), fixer. Owner-protocol wording kept verbatim where quoted.",
+ "items": [
+  {
+   "key": "form.error",
+   "en": "Sending failed. Please try again, or message us on WhatsApp.",
+   "he": "הטופס לא נשלח. נסו שוב או כתבו לנו ב-WhatsApp.",
+   "where": "Lead form error state, above the WhatsApp button. No callback times.",
+   "note": "Unchanged; no review issues. «הטופס לא נשלח» is the negative of the live site's success message «הטופס נשלח בהצלחה» (form-he.json → form.sent). It uses plural imperatives (נסו, כתבו). WhatsApp stays in Latin, as in storyboard.he.json «WhatsApp / התקשרו», and takes the prefix with a hyphen (ב-WhatsApp), per the glossary rule for a Latin word after a prefix."
+  },
+  {
+   "key": "form.consent_required",
+   "en": "Please confirm that you agree to the terms.",
+   "he": "יש לאשר את התנאים",
+   "where": "Under the consent checkbox when the form is sent without it (other errors are in form-he.json → form.errors; match their style).",
+   "note": "Review applied. «לאשר את ההסכמה» said the same thing twice: you would be confirming your consent. «יש לאשר את התנאים» is the usual Israeli form wording. It points back to the checkbox label «אני מסכים/ה לתנאי מיטודרם בע״מ*» (form-he.json). The impersonal, gender-free form with no final period follows form-he.json → form.errors («שם הוא שדה חובה», «אימייל לא תקין»)."
+  },
+  {
+   "key": "spec.empty",
+   "en": "No certified specialists in this category yet — see the full list.",
+   "he": "עדיין אין מומחים מוסמכים בקטגוריה זו – ראו את הרשימה המלאה.",
+   "where": "Specialists block when a filter chip has no cards; the full-list button follows.",
+   "note": "Review applied after checking the sources. In the plural, the house style is the inclusive masculine form. The same block's heading has «מומחי Mitoderm מוסמכים» (make-dictionary-spec.json → spec.title), the Make dictionary has «מטפלים מוסמכים» (tech.devices.3.body), and product-pages.he.json has «המומחים שלנו». The glossary also uses the masculine plural for people («מטופלים», «אנשי מקצוע»). The brief's slash examples («טריכולוג/ית», «מוסמך/ת») are singular, for one person. Kept from the candidate: the plural imperative «ראו», the spaced en dash (glossary: «Тире «–» с пробелами») and the final period."
+  },
+  {
+   "key": "ui.close",
+   "en": "Close",
+   "he": "סגירה",
+   "where": "Close button of the lead form (aria-label and visible text). A candidate «סגירה» exists — keep it if correct.",
+   "note": "Unchanged; no review issues. Same as proto/exocell-he-ui.json → close_label. It is the standard gender-free noun label for a close button and works as both visible text and aria-label."
+  },
+  {
+   "key": "spec.certified",
+   "en": "Certified",
+   "he": "מוסמך/ת",
+   "where": "Badge on a specialist card next to the profession tag; must not assume the person's gender (approved design had «מוסמך»).",
+   "note": "Unchanged; no review issues. The Make dictionary (spec.certified) has «מוסמך». The brief's singular slash form «מוסמך/ת» makes it gender-neutral, because this badge refers to one specialist."
+  },
+  {
+   "key": "mask.use",
+   "en": "For professional and home use.",
+   "he": "לשימוש מקצועי וביתי.",
+   "where": "EXOCELL MASK purchase screen, under the headline, replacing «לשימוש מקצועי בלבד.». Base it on the owner's protocol subtitle «פרוטוקול שימוש מקצועי וביתי».",
+   "note": "Unchanged; no review issues. «שימוש מקצועי וביתי» is verbatim from the owner's EXOCELL MASK protocol subtitle «פרוטוקול שימוש מקצועי וביתי» (content.he.mjs, line 202). It takes the same ל- form and final period as the reviewed «לשימוש מקצועי בלבד.»."
+  },
+  {
+   "key": "mask.step2.time",
+   "en": "Up to 30 minutes",
+   "he": "עד 30 דקות",
+   "where": "Chip on EXOCELL MASK protocol step 2 («ספיגה»). The owner's protocol says «יש להשאיר את המסכה על העור למשך עד־30 דקות.» — take the wording from there.",
+   "note": "Unchanged; no review issues. Comes from the owner's «יש להשאיר את המסכה על העור למשך עד־30 דקות.» (content.he.mjs, line 206). It uses the spacing the owner uses elsewhere in the same protocols: «זמן חשיפה כולל: עד 30 דקות.» (line 170)."
+  },
+  {
+   "key": "vtech.course.label",
+   "en": "4–6 treatments per course",
+   "he": "4–6 טיפולים בסדרה",
+   "where": "Fact label on the V-TECH kit screen; replaces reviewed «4 טיפולים בסדרה». Protocol: «סדרה מומלצת: 6-4טיפולים, בהתאם למצב העור ולמטרת הטיפול.»",
+   "note": "Unchanged; no review issues. It keeps the reviewed pattern «4 טיפולים בסדרה» (storyboard.he.json) and uses the range from the owner's protocol, «סדרה מומלצת: 6-4טיפולים» (content.he.mjs, line 57). The range is written in logical order with the low number first and an unspaced en dash, per the glossary («80–100»). It displays as «6–4», the way the owner's original looks, and reads 4 to 6 in RTL."
+  },
+  {
+   "key": "vtech.kit.line",
+   "en": "5 serum ampoules of 5 ml and 5 gel-mask sachets of 5 ml. Recommended course: 4–6 treatments, depending on skin condition and the treatment goal.",
+   "he": "5 אמפולות סרום של 5 מ״ל ו-5 שקיות מסכת ג׳ל של 5 מ״ל. סדרה מומלצת: 4–6 טיפולים, בהתאם למצב העור ולמטרת הטיפול.",
+   "where": "V-TECH kit screen line. First sentence is reviewed already: «5 אמפולות סרום של 5 מ״ל ו-5 שקיות מסכת ג׳ל של 5 מ״ל.»; second sentence is the protocol's — keep both verbatim (fix only the spacing «6-4טיפולים»).",
+   "note": "Unchanged; no review issues. Sentence 1 is verbatim from storyboard.he.json (line 309). Sentence 2 is verbatim from the owner's protocol, «סדרה מומלצת: 6-4טיפולים, בהתאם למצב העור ולמטרת הטיפול.» (content.he.mjs, line 57). The only change is a missing space added in «6-4טיפולים» and the range written 4–6 with an en dash (RTL-correct, as in vtech.course.label). The reviewed line's old second clause is dropped, as it is in the English."
+  },
+  {
+   "key": "vtech.protocol.line",
+   "en": "One treatment every 14 days. Recommended course: 4–6 treatments, depending on skin condition and the treatment goal.",
+   "he": "טיפול אחד בכל 14 יום. סדרה מומלצת: 4–6 טיפולים, בהתאם למצב העור ולמטרת הטיפול.",
+   "where": "V-TECH protocol screen line under «שלושה שלבים, כל שבועיים». Verbatim from the protocol: «טיפול אחד בכל 14 יום.» and «סדרה מומלצת: 6-4טיפולים, בהתאם למצב העור ולמטרת הטיפול.»",
+   "note": "Unchanged; no review issues. Both sentences are verbatim from the owner's V-TECH protocol (content.he.mjs, lines 56–57). The only change is the range «6-4טיפולים», which becomes «4–6 טיפולים» (space added, en dash, reads 4 to 6 in RTL)."
+  },
+  {
+   "key": "vtech.protocol.biospicule",
+   "en": "With BIOSPICULE™ MICRO BOOST 10%: a course of 3–4 treatments, 4 weeks apart.",
+   "he": "בשילוב BIOSPICULE™ MICRO BOOST 10%: סדרה של 3–4 טיפולים, במרווח של 4 שבועות בין טיפול לטיפול.",
+   "where": "Small note under the V-TECH protocol steps. Protocol BIOSPICULE™ MICROBOOST 10% + VTECH: «ניתן לבצע סדרה של 4–3 טיפולים, במרווח של 4 שבועות בין טיפול לטיפול.»",
+   "note": "Unchanged; no review issues. «סדרה של … טיפולים, במרווח של 4 שבועות בין טיפול לטיפול» is verbatim from the owner's «ניתן לבצע סדרה של 4–3 טיפולים, …» (content.he.mjs, line 69). «ניתן לבצע» is left out because the English has no equivalent. The range is written in logical order with the low number first, so it reads 3 to 4 in RTL, like the other ranges. «בשילוב» is the owner's word. The product name stays Latin and unbroken."
+  },
+  {
+   "key": "vtech.dose",
+   "en": "Recommended dose per treatment area (face, neck or décolleté): V-TECH Serum up to 2 ml · V-TECH Gel Mask up to 2 ml",
+   "he": "מינון מומלץ לאזור טיפול אחד – פנים / צוואר / מחשוף: V-TECH Serum עד 2 מ״ל · V-TECH Gel Mask עד 2 מ״ל",
+   "where": "Purchase-card line for V-TECH. Protocol: «מינון מומלץ» / «לאזור טיפול אחד – פנים / צוואר / מחשוף:» / «V-TECH Serum: עד 2 מ״ל» / «V-TECH Gel Mask: עד 2 מ״ל».",
+   "note": "Unchanged; no review issues. Joins on one line the owner's V-TECH protocol heading «מינון מומלץ», the body «לאזור טיפול אחד – פנים / צוואר / מחשוף:» and the list «V-TECH Serum: עד 2 מ״ל», «V-TECH Gel Mask: עד 2 מ״ל» (content.he.mjs, line 35). The colons after the product names are dropped so the line doesn't have two colons in a row, matching the English «V-TECH Serum up to 2 ml». מ״ל uses gershayim (U+05F4)."
+  },
+  {
+   "key": "vtech.finish",
+   "en": "Then: EXOCELL MASK (recommended) → DERMA RECOVERY CREAM → sunscreen (mandatory)",
+   "he": "לאחר מכן: EXOCELL MASK (מומלץ) ← DERMA RECOVERY CREAM ← מקדם הגנה (חובה)",
+   "where": "V-TECH protocol step 3 short label. Protocol «לאחר הסרום»: «מומלץ להניח מסכת EXOCELL MASK…», «בסיום DERMA RECOVERY CREAM», «מקדם הגנה חובה».",
+   "note": "Unchanged; no review issues. Uses the owner's words from the «לאחר הסרום» part of the V-TECH protocol (content.he.mjs, lines 50–53): «מומלץ להניח מסכת EXOCELL MASK…», «בסיום DERMA RECOVERY CREAM», «מקדם הגנה חובה». «לאחר מכן» follows the reviewed storyboard wording («לאחר מכן DERMA RECOVERY CREAM»). The arrows are «←», per the glossary rule that → becomes ← in RTL."
+  }
+ ]
+}
