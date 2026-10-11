@@ -7,7 +7,15 @@ from PIL import Image
 
 # `python3 build-exocell.py` builds the still version (exocell-mask.html); `python3 build-exocell.py 3d` builds the
 # 3D scroll version (exocell-mask-3d.html) from exocell-3d-template.html with the same texts.
-MODE = '3d' if '3d' in sys.argv[1:] else 'still'
+# `... 3d --private <figma-texts.json> [--out <page.html>]` builds the review copy with the specialists' photos, names
+# and phones. That data must never reach this public repository, so the private page is written next to the JSON
+# (or to --out) and the build refuses any path inside the git checkout. Without --private the specialists block shows
+# a monogram and the city only.
+ARGS = sys.argv[1:]
+MODE = '3d' if '3d' in ARGS else 'still'
+opt = lambda name: ARGS[ARGS.index(name) + 1] if name in ARGS else None
+PRIVATE, OUT = opt('--private'), opt('--out')
+assert not PRIVATE or MODE == '3d', '--private applies to the 3D page only'
 H = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.normpath(os.path.join(H, '..'))
 REPO = os.path.normpath(os.path.join(SITE, '..'))
@@ -127,6 +135,118 @@ SCENES = {
 for k, (src, fb) in SCENES.items():
     ASSETS[f'__{k}_SRC__'], ASSETS[f'__{k}_FALLBACK__'] = src, fb
 
+
+# ---- 3D page: screen order of the approved Figma design (page 98:2): meet, why, inside, feel, kit, protocol, offer,
+# specialists; the lead form of mitoderm.com in this design. New strings come only from the reviewed sources below.
+def ltr_runs(s):
+    """Escape a Hebrew line and isolate its Latin runs, so 'Ubiquinone – קו־אנזים Q10' keeps its order in RTL."""
+    out, pos = [], 0
+    for m in re.finditer(r'[A-Za-z][A-Za-z0-9.\-]*(?: [A-Za-z0-9][A-Za-z0-9.\-]*)*', s):
+        out += [esc(s[pos:m.start()]), f'<bdi dir="ltr">{esc(m.group(0))}</bdi>']
+        pos = m.end()
+    return ''.join(out) + esc(s[pos:])
+
+
+def git_root(path):
+    p = os.path.dirname(os.path.abspath(path))
+    while p != os.path.dirname(p):
+        if os.path.exists(os.path.join(p, '.git')):
+            return p
+        p = os.path.dirname(p)
+    return None
+
+
+def head_shot(path, width=520, aspect=4 / 3):
+    """Head-and-shoulders crop of a portrait: the subject is what differs from each row's background (its left edge);
+    the first rows of the subject are the head, and the crop is about three and a half head widths wide."""
+    import numpy as np
+    im = Image.open(path).convert('RGB')
+    a = np.asarray(im.resize((160, round(160 * im.height / im.width))), dtype=float)
+    h, w, _ = a.shape
+    m = np.sqrt(((a - np.median(a[:, :max(4, w // 10)], axis=1, keepdims=True)) ** 2).sum(2)) > 38
+    top = np.where(m.sum(1) > w * 0.04)[0][0]
+    ys, xs = np.nonzero(m[top:top + max(3, h // 8)])
+    cx, hw = xs.mean() / w, (np.percentile(xs, 95) - np.percentile(xs, 5)) / w
+    W = min(im.width, hw * 3.6 * im.width)
+    H_ = min(im.height, W / aspect)
+    W = H_ * aspect
+    x0 = min(max(cx * im.width - W / 2, 0), im.width - W)
+    y0 = min(max(top * im.width / w - H_ * 0.08, 0), im.height - H_)
+    im = im.crop((round(x0), round(y0), round(x0 + W), round(y0 + H_)))
+    im = im.resize((width, round(width / aspect)), Image.LANCZOS)
+    buf = io.BytesIO()
+    im.save(buf, 'JPEG', quality=80, optimize=True, progressive=True)
+    return 'data:image/jpeg;base64,' + base64.b64encode(buf.getvalue()).decode()
+
+
+PIN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>'
+CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.8"/></svg>'
+
+if MODE == '3d':
+    mk = load(SITE, 'sources/make-dictionary-spec.json')        # Make site dictionary: the specialists block
+    mkh = lambda k: mk[k]['he']
+    form = load(SITE, 'sources/mitoderm-com/form-he.json')        # the lead form of mitoderm.com
+    ff = form['form']
+    dz = load(H, 'exocell-he-design.json')                        # lines added for this design (two-layer mask)
+    carton_front = load(SITE, 'packaging-text.json')['exocell-mask']['objects'][0]['front']
+    net = next(m.group(1) for line in carton_front for m in [re.search(r"'(Net [^'℮]+?) ℮", line)] if m)
+    tel = '+972' + re.sub(r'\D', '', ui['phone'])[1:]
+    site = load(SITE, 'sources/mitoderm-com/contacts.json')       # contacts as on mitoderm.com (owner 11/10)
+    assert site['phone'] == ui['phone'] and site['email'] == ui['email'] and site['whatsapp_link'].endswith(ui['wa_number'])
+    hrs = site['hours_he']
+    for k in ('feel_link',):                                      # not on the Figma screens
+        T.pop(k)
+    for k in ('feel_chips', 'feel_marks', 'kit_chips', 'offer_chips'):
+        RAW.pop(k)
+    T.update({
+        'nav_spec': mkh('nav.specialists'), 'kit_double': dz['s5.double']['he'],
+        'wa_display': site['whatsapp'], 'foot_access': site['footer_he']['accessibility'], 'foot_privacy': site['footer_he']['privacy'],
+        'hours': f"{hrs['title']}: {hrs['workWeek']} · {hrs['friday']}: {hrs['fridayText']} · {hrs['saturday']}: {hrs['closed']}",
+        'phone_href': 'tel:' + tel, 'email_href': 'mailto:' + ui['email'] + '?subject=' + urllib.parse.quote('EXOCELL MASK'),
+        'card_title': d['s04'][1], 'card_qty': d['kit'][0][0], 'card_line': d['kit'][0][1] + ' — ' + d['kit'][0][2],
+        'card_double': dz['kit.double']['he'], 'card_net': net, 'card_actives_h': d['s03'][0], 'card_chip': x['b6.line'],
+        'spec_kicker': mkh('spec.kicker'), 'spec_h2': mkh('spec.title'), 'spec_p': mkh('tech.face.1.body'),
+        'spec_filter': mkh('spec.filter.profession'), 'spec_list': form['specialists']['title'],
+        'spec_join_h': mkh('spec.join.title'), 'spec_join_cta': mkh('spec.join.cta'),
+        'form_p1': ff['titleP1'], 'form_p2': ff['titleP2'].strip(), 'form_p3': ff['titleP3'], 'form_sub': ff['subtitle'],
+        'f_name': ff['placeholderInputName'], 'f_prof': ff['placeholderProfession'], 'f_email': ff['placeholderEmailName'],
+        'f_phone': ff['placeholderPhoneName'], 'f_consent': ff['checkboxLabel'], 'f_submit': form['buttons']['requestCallback'],
+        'f_privacy': ff['sharing'], 'f_sent': ff['sent']['text'], 'f_sent_gold': ff['sent']['textColored'],
+        'f_sent_mob': ff['sent']['mobTitle'], 'f_more': form['buttons']['learnMore'], 'close_label': ui['close_label'],
+    })
+    RAW.update({
+        'inside_formula_list': ''.join(f'<li>{ltr_runs(t)}</li>' for t in d['ingredients']),
+        'card_actives': ''.join(f'<li>{ltr_runs(t)}</li>' for t in d['ingredients']),
+        'feel_pins': ''.join(f'<li class="mark">{esc(t)}</li>' for t in labels(3)),
+        'protocol_steps': ''.join(f'<li class="step rv" style="--d:{i * .08:.2f}s"><span class="n">0{i + 1}</span><h3>{esc(t)}</h3><p>{esc(s)}</p></li>'
+                                  for i, (t, s) in enumerate(d['steps'])),
+        # the form's validation messages, as on mitoderm.com (read by the page script)
+        'form_errors': json.dumps(ff['errors'], ensure_ascii=False).replace('<', '\\u003c'),
+        'spec_chips': ''.join(f'<button type="button" class="fchip" data-tag="{esc(tag)}" aria-pressed="{"true" if tag == ui["spec_tag_face"] else "false"}">{esc(label)}</button>'
+                              for label, tag in [(mkh('spec.filter.all'), '*'), (ui['spec_tag_face'],) * 2, (ui['spec_tag_scalp'],) * 2,
+                                                 (mkh('prof.trichologist'),) * 2]),
+    })
+    tags = (f'<div class="tags"><span class="tag">{esc(ui["spec_tag_face"])}</span>'
+            f'<span class="ok">{CHECK}{esc(mkh("spec.certified"))}</span></div>')
+    book = lambda href, extra='': f'<a class="book" href="{esc(href)}"{extra}>{esc(mkh("spec.book"))} <span aria-hidden="true">↗</span></a>'
+    if PRIVATE:  # review copy: photos, names and phones of the three specialists in the design
+        s8 = json.load(open(PRIVATE, encoding='utf-8'))['S8_specialists']
+        RAW['spec_cards'] = ''.join(
+            f'<article class="spec rv" style="--d:{i * .08:.2f}s" data-tags="{esc(ui["spec_tag_face"])}">'
+            f'<div class="pic"><img src="{head_shot(os.path.join(s8["photos_dir"], c["photo"]))}" alt="{esc(c["name"])}" loading="lazy"></div>'
+            f'<div class="sb"><h3>{esc(c["name"])}</h3><p class="city">{PIN}<span>{esc(c["city"])}</span></p>'
+            f'<p class="tel">{esc(s8["phone_label"])} <a href="tel:{esc(c["phone"])}"><bdi dir="ltr">{esc(c["phone"])}</bdi></a></p>'
+            f'{tags}{book("tel:" + c["phone"])}</div></article>' for i, c in enumerate(s8['cards']))
+    else:  # public build: a monogram and the city only, no names, addresses, phones or photos
+        RAW['spec_cards'] = ''.join(
+            f'<article class="spec mono rv" style="--d:{i * .08:.2f}s" data-tags="{esc(ui["spec_tag_face"])}">'
+            f'<div class="av" aria-hidden="true">{esc(city[0])}</div>'
+            f'<div class="sb"><h3 class="city">{PIN}<span>{esc(city)}</span></h3>'
+            f'{tags}{book(wa(ui["wa_text_price"]), " data-lead")}</div></article>' for i, city in enumerate(ui['spec_demo_cities']))
+    ASSETS['__SACHET__'] = jpeg_uri(os.path.join(SITE, 'img/exocell-sachet-front.jpg'))    # print of the single sachet
+    ASSETS['__MIRROR__'] = jpeg_uri(os.path.join(H, 'scenes/03-mirror.jpg'))              # the approved treatment frame
+    ASSETS['__KIT__'] = data_uri(os.path.join(SITE, 'design/exocell-3d/kit-hd.png'), 760, 'WEBP')  # bright kit render
+
 page = open(os.path.join(H, 'exocell-3d-template.html' if MODE == '3d' else 'exocell-template.html'), encoding='utf-8').read()
 used = set(re.findall(r'\{\{\{?(\w+)\}?\}\}', page))
 missing = used - set(T) - set(RAW)
@@ -139,7 +259,9 @@ for k, v in ASSETS.items():
     page = page.replace(k, v)
 left = re.findall(r'__[A-Z0-9_]+__|\{\{', page)
 assert not left, f'unfilled placeholders: {sorted(set(left))}'
-out = os.path.join(H, 'exocell-mask-3d.html' if MODE == '3d' else 'exocell-mask.html')
+out = os.path.abspath(OUT or (os.path.join(os.path.dirname(os.path.abspath(PRIVATE)), 'exocell-mask-3d.html') if PRIVATE else
+                              os.path.join(H, 'exocell-mask-3d.html' if MODE == '3d' else 'exocell-mask.html')))
+assert not (PRIVATE and git_root(out)), f'refusing to write the private build inside the git checkout: {out}'
 with open(out, 'w', encoding='utf-8') as f:
     f.write(page)
 print(out, len(page), 'bytes;', len(T), 'texts,', len(RAW), 'blocks')

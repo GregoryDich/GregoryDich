@@ -1,5 +1,5 @@
 {
- "note": "UI strings of the Hebrew EXOCELL MASK page that are not in storyboard.he.json or product-pages.he.json. Contacts and 'לכל הפרטים' as on mitoderm.com/he; line names and use badges as in the Make site (products.ts).",
+ "note": "UI strings of the Hebrew EXOCELL MASK page that are not in storyboard.he.json or product-pages.he.json. Contacts and 'לכל הפרטים' as on mitoderm.com/he; line names and use badges as in the Make site (products.ts). spec_tag_face, spec_tag_scalp and spec_demo_cities copied from the approved Figma design (page 98:2, S8) on 11/10/2026. close_label (aria-label of the lead form close button) is a new UI word, pending the owner's review.",
  "page_title": "EXOCELL MASK – מיטודרם",
  "nav_label": "ניווט בעמוד",
  "kitshot_alt": "אריזת EXOCELL MASK וחמש מסכות בשקיקים אטומים",
@@ -20,5 +20,13 @@
  "phone": "054-326-2182",
  "email_label": "דוא״ל:",
  "email": "info@mitoderm.com",
- "bar": "5 מסכות · EXOCELL MASK"
+ "bar": "5 מסכות · EXOCELL MASK",
+ "spec_tag_face": "פנים",
+ "spec_tag_scalp": "קרקפת",
+ "spec_demo_cities": [
+  "לוד",
+  "קרית אתא",
+  "כרמיאל"
+ ],
+ "close_label": "סגירה"
 }
