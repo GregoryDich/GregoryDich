@@ -2,9 +2,12 @@
 # and transition frames are loaded from scenes/ and transitions/ next to the page when present.
 # Text comes only from reviewed sources: storyboard.he.json (board version of EXOCELL), product-pages.he.json
 # (catalogue details) and exocell-he-ui.json (UI strings). The build fails if any placeholder is left unfilled.
-import base64, html, io, json, os, re, urllib.parse
+import base64, html, io, json, os, re, sys, urllib.parse
 from PIL import Image
 
+# `python3 build-exocell.py` builds the still version (exocell-mask.html); `python3 build-exocell.py 3d` builds the
+# 3D scroll version (exocell-mask-3d.html) from exocell-3d-template.html with the same texts.
+MODE = '3d' if '3d' in sys.argv[1:] else 'still'
 H = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.normpath(os.path.join(H, '..'))
 REPO = os.path.normpath(os.path.join(SITE, '..'))
@@ -65,6 +68,9 @@ T = {
     'related_line_h': ui['related_line_h'], 'related_more_h': ui['related_more_h'],
     'footer': home['home.footer-2'], 'bar_note': ui['bar'].split(' · ')[0], 'bar_name': ui['bar'].split(' · ')[1],
 }
+if MODE == '3d':
+    T['nav_meet'] = nav[0]  # the 3D version has a section dock with all seven blocks
+    T['page_title'] = ui['page_title'].replace('EXOCELL MASK', 'EXOCELL MASK 3D', 1)  # tells the two samples apart
 RAW = {
     'hero_chips': chips(labels(0), 'drop'),
     'why_chips': chips(labels(1)[1:], 'gold'),
@@ -105,6 +111,15 @@ ASSETS = {
 for k, clip in (('__T1__', 'transitions/01-settle.mp4'), ('__T2__', 'transitions/02-kit.mp4')):
     ready = os.path.exists(os.path.join(H, clip[:-4], '0001.webp')) or os.path.exists(os.path.join(H, clip))
     ASSETS[k] = clip if ready else ''
+def jpeg_uri(path):
+    with open(path, 'rb') as f:
+        return 'data:image/jpeg;base64,' + base64.b64encode(f.read()).decode()
+
+
+if MODE == '3d':  # carton faces cut and straightened from the packshot (site/img/exocell-box-*.jpg)
+    ASSETS['__BOX_FRONT__'] = jpeg_uri(os.path.join(SITE, 'img/exocell-box-front.jpg'))
+    ASSETS['__BOX_SIDE__'] = jpeg_uri(os.path.join(SITE, 'img/exocell-box-side.jpg'))
+    ASSETS['__PACKSHOT__'] = data_uri(os.path.join(REPO, 'protocols/assets/img/exocell-mask.webp'), 900, 'WEBP')
 SCENES = {
     'S1': ('scenes/01-meet.jpg', ph('01', '#1f6b70')), 'S2': ('scenes/02-inside.jpg', ph('02', '#2a8a8e')),
     'S3': ('scenes/03-mirror.jpg', ph('03', '#357f86')), 'S4': ('scenes/04-protocol.jpg', ph('04', '#1d5a62')),
@@ -112,7 +127,7 @@ SCENES = {
 for k, (src, fb) in SCENES.items():
     ASSETS[f'__{k}_SRC__'], ASSETS[f'__{k}_FALLBACK__'] = src, fb
 
-page = open(os.path.join(H, 'exocell-template.html'), encoding='utf-8').read()
+page = open(os.path.join(H, 'exocell-3d-template.html' if MODE == '3d' else 'exocell-template.html'), encoding='utf-8').read()
 used = set(re.findall(r'\{\{\{?(\w+)\}?\}\}', page))
 missing = used - set(T) - set(RAW)
 unused = (set(T) | set(RAW)) - used
@@ -124,7 +139,7 @@ for k, v in ASSETS.items():
     page = page.replace(k, v)
 left = re.findall(r'__[A-Z0-9_]+__|\{\{', page)
 assert not left, f'unfilled placeholders: {sorted(set(left))}'
-out = os.path.join(H, 'exocell-mask.html')
+out = os.path.join(H, 'exocell-mask-3d.html' if MODE == '3d' else 'exocell-mask.html')
 with open(out, 'w', encoding='utf-8') as f:
     f.write(page)
 print(out, len(page), 'bytes;', len(T), 'texts,', len(RAW), 'blocks')

@@ -1,0 +1,586 @@
+<title>{{page_title}}</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500&family=Frank+Ruhl+Libre:wght@300;400;500&family=Heebo:wght@300;400;500&display=swap">
+<script>document.documentElement.lang = 'he'; document.documentElement.dir = 'rtl'; document.documentElement.classList.add('js');</script>
+<style>
+/* EXOCELL MASK, Hebrew, 3D scroll version. Two layers, as on the reference site the owner sent: a far background (moving
+   teal smoke and particles) whose angle follows the pointer, and the product in front of it: the real carton as a 3D
+   box, five foil sachets, the sheet mask and serum drops, which move between the seven blocks as you scroll. The copy
+   keeps the left half on wide screens; the objects live on the right. Same texts, colours and type as the still
+   version. A committed single dark look. */
+:root {
+  --bg: #0a0a0b; --ink: #111114; --charcoal: #1a1a1f;
+  --cream: #f6f3ec; --text: rgba(246,243,236,.74); --text-soft: rgba(246,243,236,.84); --text-faint: rgba(246,243,236,.56);
+  --gold: #c9a24b; --gold-soft: #d8bd7e; --gold-faint: rgba(201,162,75,.5); --gold-wash: rgba(201,162,75,.14);
+  --hairline: rgba(201,162,75,.22); --hairline-cream: rgba(246,243,236,.1); --on-gold: #0a0a0b;
+  --drop: #6fb7ba; --drop-soft: #9fd6d8;
+  --display: 'Cormorant Garamond', 'Frank Ruhl Libre', Georgia, serif;
+  --body: 'Jost', 'Heebo', system-ui, sans-serif;
+  --gutter: clamp(18px, 5vw, 72px); --maxw: 1200px; --ease: cubic-bezier(.22,1,.36,1);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--cream); font: 300 clamp(15px, 1.15vw, 17px)/1.7 var(--body); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 400; text-wrap: balance; }
+p { margin: 0; text-wrap: pretty; }
+a { color: inherit; }
+img { max-width: 100%; display: block; }
+bdi { unicode-bidi: isolate; }
+.wrap { width: min(var(--maxw), 100% - 2 * var(--gutter)); margin-inline: auto; }
+.kicker { display: flex; align-items: center; gap: 14px; font: 500 13px/1.2 var(--body); letter-spacing: .04em; color: var(--gold); }
+.kicker::after { content: ""; width: 40px; height: 1px; background: rgba(201,162,75,.3); }
+.badges { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.badge { border-radius: 999px; padding: 4px 12px; font: 500 12px/1.4 var(--body); border: 1px solid var(--gold-faint); color: var(--gold-soft); }
+.badge.pro { background: var(--gold); color: var(--on-gold); border-color: var(--gold); }
+.mark-line { font: 500 12px/1 var(--body); letter-spacing: .24em; color: var(--gold); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 30px; border-radius: 999px; font: 500 15px/1 var(--body); text-decoration: none; cursor: pointer; border: 1px solid transparent; transition: transform .3s var(--ease), background-color .3s, color .3s; }
+.btn:hover { transform: scale(1.03); }
+.btn.primary { background: var(--gold); color: var(--on-gold); }
+.btn.ghost { border-color: var(--gold); color: var(--gold); background: transparent; }
+.btn.ghost:hover { background: var(--gold); color: var(--on-gold); }
+.btn:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip { padding: 10px 18px; border: 1px solid rgba(246,243,236,.18); border-radius: 999px; font: 400 15px/1.2 var(--body); color: var(--text-soft); background: rgba(10,10,11,.45); backdrop-filter: blur(6px); }
+.chip.drop { border-color: rgba(111,183,186,.55); color: var(--drop-soft); }
+.chip.gold { border-color: var(--gold-faint); color: var(--gold-soft); }
+.textlink { color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-faint); padding-bottom: 2px; justify-self: start; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* the 3D layer sits behind everything; sections are transparent so it shows through */
+#gl { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
+.still-fallback { display: none; }
+.nogl #gl { display: none; }
+.nogl .still-fallback { display: block; position: fixed; inset: 0; z-index: 0; background: radial-gradient(60% 60% at 72% 50%, rgba(111,183,186,.22), transparent 70%), var(--bg); }
+.nogl .still-fallback img { position: absolute; right: 6%; top: 50%; transform: translateY(-50%); width: min(44vw, 560px); }
+main, .top, .foot, .dock, .bar { position: relative; z-index: 1; }
+
+/* header: logo and the price button; the section menu is the dock at the bottom, as on the reference */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; min-height: 76px; gap: 20px; }
+.top .logo img { height: 28px; width: auto; }
+.top .btn { min-height: 42px; padding-inline: 20px; font-size: 14px; background: rgba(10,10,11,.4); backdrop-filter: blur(8px); }
+@media (max-width: 460px) { .top .btn { display: none; } }
+
+/* sections: copy in the left half (the objects take the right); each block gets a screen of its own */
+.sec { min-height: 100svh; display: grid; align-items: center; padding-block: clamp(80px, 12vh, 140px); }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); direction: ltr; }
+.split > .col { direction: rtl; display: grid; gap: 18px; justify-items: start; max-width: 540px; min-width: 0; }
+.sec h2 { font: 400 clamp(34px, 4.6vw, 58px)/1.06 var(--display); color: var(--cream); }
+.sec p { color: var(--text); max-width: 46ch; }
+.hero h1 { font: 500 clamp(48px, 7vw, 100px)/1 var(--display); letter-spacing: .01em; }
+.hero .tag { font: 400 clamp(22px, 2.4vw, 30px)/1.3 var(--display); color: var(--gold-soft); }
+.cta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }
+.hint { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); color: var(--gold-soft); font: 400 12px/1 var(--body); display: grid; justify-items: center; gap: 6px; }
+.hint i { display: block; width: 1px; height: 22px; background: var(--gold-soft); animation: bob 2s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(8px); } }
+.hero { position: relative; }
+details { margin-top: 6px; border-top: 1px solid var(--hairline-cream); width: 100%; }
+details summary { cursor: pointer; padding: 16px 0; font: 400 16px/1 var(--body); color: var(--cream); list-style: none; display: flex; justify-content: space-between; }
+details summary::-webkit-details-marker { display: none; }
+details summary::after { content: "+"; color: var(--gold); }
+details[open] summary::after { content: "–"; }
+details ol { margin: 0 0 18px; padding-inline-start: 22px; color: var(--text); display: grid; gap: 6px; background: rgba(10,10,11,.5); }
+.pins { display: grid; gap: 10px; justify-items: start; }
+.mark { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid rgba(111,183,186,.45); border-radius: 999px; background: rgba(10,10,11,.55); backdrop-filter: blur(8px); font: 400 14px/1.2 var(--body); color: var(--cream); }
+.mark::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--drop); box-shadow: 0 0 0 4px rgba(111,183,186,.22); }
+.feel .chips { display: none; }
+
+/* protocol: the three steps take the full width; the objects step back behind them */
+.protocol .col { max-width: 720px; }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 44px; direction: rtl; }
+.step { display: grid; gap: 12px; align-content: start; min-width: 0; padding: 32px; border-radius: 24px; background: rgba(26,26,31,.82); backdrop-filter: blur(10px); border: 1px solid var(--hairline-cream); }
+.step .n { font: 300 22px/1 var(--display); color: var(--gold); }
+.step h3 { font: 400 22px/1.2 var(--display); color: var(--cream); }
+.step p { color: var(--text-faint); font-size: .95em; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 28px; width: 100%; margin-top: 8px; }
+.fact { display: grid; gap: 8px; padding-top: 16px; border-top: 1px solid var(--hairline); min-width: 0; }
+.fact b { font: 400 clamp(26px, 3vw, 38px)/1.1 var(--display); color: var(--cream); font-variant-numeric: tabular-nums; }
+.fact span { font: 400 14px/1.4 var(--body); color: var(--text-faint); }
+
+.offer .box { position: relative; overflow: hidden; border: 1px solid var(--hairline); border-radius: 28px; padding: clamp(28px, 5vw, 64px); background: linear-gradient(135deg, rgba(20,17,10,.88), rgba(42,33,19,.84) 55%, rgba(20,17,10,.88)); backdrop-filter: blur(8px); display: grid; gap: 18px; justify-items: start; }
+.contacts { display: flex; flex-wrap: wrap; gap: 8px 28px; color: var(--text-soft); font-size: 15px; }
+.contacts span b { color: var(--gold-soft); font-weight: 400; }
+
+.related { padding-block: clamp(64px, 9vw, 120px) clamp(120px, 14vw, 180px); background: linear-gradient(to bottom, transparent, var(--ink) 18%); }
+.related h2 { font: 400 clamp(26px, 3vw, 36px)/1.15 var(--display); color: var(--cream); }
+.related h2 + .cards { margin-top: 28px; }
+.related .cards + h2 { margin-top: 64px; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+@media (max-width: 960px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .cards { grid-template-columns: 1fr; } }
+.card { display: flex; flex-direction: column; overflow: hidden; border-radius: 24px; background: var(--charcoal); border: 1px solid var(--gold-wash); text-decoration: none; min-width: 0; }
+.card .pic { height: 210px; display: grid; place-items: center; background: radial-gradient(120% 100% at 50% 0%, var(--gold-wash), transparent 70%); }
+.card .pic img { max-height: 75%; max-width: 70%; object-fit: contain; transition: transform .5s var(--ease); }
+.card:hover .pic img { transform: scale(1.05); }
+.card .body { padding: 24px; display: grid; gap: 8px; justify-items: start; }
+.card h3 { font: 500 22px/1.15 var(--display); color: var(--cream); }
+.card p { font-size: 14px; color: var(--text-faint); }
+.card .go { margin-top: 6px; font: 400 13px/1 var(--body); color: var(--gold-soft); }
+.foot { border-top: 1px solid var(--hairline-cream); padding-block: 36px calc(36px + 72px); color: var(--text-faint); font: 300 13px/1.5 var(--body); background: var(--bg); }
+.foot .wrap { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; align-items: center; }
+.foot img { height: 44px; width: auto; opacity: .9; }
+
+/* section dock at the bottom (as on the reference): the active block is lit */
+.dock { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 25; display: flex; gap: 6px; padding: 6px; border-radius: 999px; background: rgba(10,10,11,.62); backdrop-filter: blur(12px); border: 1px solid var(--hairline-cream); }
+.dock a { padding: 9px 16px; border-radius: 999px; font: 400 13px/1 var(--body); color: var(--text-faint); text-decoration: none; white-space: nowrap; transition: background-color .3s, color .3s; }
+.dock a.on { background: var(--gold); color: var(--on-gold); }
+@media (max-width: 860px) { .dock { display: none; } }
+
+/* sticky mobile action */
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom, 0px)); background: rgba(10,10,11,.86); backdrop-filter: blur(12px); border-top: 1px solid var(--hairline); display: none; align-items: center; justify-content: space-between; gap: 12px; }
+.bar b { font: 500 13px/1.3 var(--body); min-width: 0; display: grid; }
+.bar b small { font: 400 12px/1.3 var(--body); color: var(--text-faint); }
+.bar .btn { min-height: 44px; padding-inline: 18px; white-space: nowrap; flex: none; font-size: 14px; }
+
+/* phone: the objects take the upper part of the screen, the copy sits under them */
+@media (max-width: 760px) {
+  .split { grid-template-columns: 1fr; }
+  .split > .col { max-width: none; }
+  .sec { min-height: 118svh; align-items: end; padding-block: 50svh 72px; }
+  .sec h1, .sec h2, .sec p { text-shadow: 0 1px 14px rgba(10,10,11,.9); }
+  .hero.sec { padding-top: 46svh; }
+  .protocol.sec, .offer.sec { padding-top: 40svh; }
+  .steps { grid-template-columns: 1fr; }
+  .hint { display: none; }
+  .bar { display: flex; }
+}
+
+/* reveal as in Make (0.6 s, 20 px, once); without JS everything shows */
+.js .rv { opacity: 0; transform: translateY(20px); transition: opacity .6s var(--ease), transform .6s var(--ease); transition-delay: var(--d, 0s); }
+.js .rv.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .js .rv { opacity: 1; transform: none; transition: none; }
+  .hint i { animation: none; }
+  .btn:hover, .card:hover .pic img { transform: none; }
+}
+</style>
+
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="still-fallback" aria-hidden="true"><img src="__PACKSHOT__" alt=""></div>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="MITODERM"><img src="__LOGO_MARK__" alt="MITODERM"></a>
+    <a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener">{{cta_price}}</a>
+  </div>
+</header>
+
+<main>
+<!-- 0 · Meet: the box turns in front of the moving background -->
+<section class="sec hero" id="top" data-st="0">
+  <div class="wrap split">
+    <div class="col">
+      <div class="badges rv"><span class="mark-line"><bdi>{{line_mark}}</bdi></span><span class="badge">{{line_name}}</span><span class="badge pro">{{use_pro}}</span></div>
+      <div class="kicker rv" style="--d:.06s">{{hero_eyebrow}}</div>
+      <h1 class="rv" style="--d:.12s"><bdi>{{hero_h1}}</bdi></h1>
+      <p class="tag rv" style="--d:.18s">{{hero_tag}}</p>
+      <p class="rv" style="--d:.24s">{{hero_lead}}</p>
+      <div class="chips rv" style="--d:.3s">{{{hero_chips}}}</div>
+      <div class="cta rv" style="--d:.36s"><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener">{{cta_price}}</a><a class="btn ghost" href="#inside">{{hero_more}}</a></div>
+    </div>
+    <div></div>
+  </div>
+  <div class="hint" aria-hidden="true">{{scroll_hint}}<i></i></div>
+</section>
+
+<!-- 1 · Why: the box turns to its side, drops rise -->
+<section class="sec" id="why" data-st="1">
+  <div class="wrap split">
+    <div class="col">
+      <div class="kicker rv">{{nav_why}}</div>
+      <h2 class="rv" style="--d:.06s">{{why_h2}}</h2>
+      <p class="rv" style="--d:.12s">{{why_p}}</p>
+      <div class="kicker rv" style="--d:.18s;margin-top:6px">{{why_kicker}}</div>
+      <div class="chips rv" style="--d:.24s">{{{why_chips}}}</div>
+    </div>
+    <div></div>
+  </div>
+</section>
+
+<!-- 2 · Inside: the box steps back, five sachets fan out -->
+<section class="sec" id="inside" data-st="2">
+  <div class="wrap split">
+    <div class="col">
+      <div class="kicker rv">{{nav_inside}}</div>
+      <h2 class="rv" style="--d:.06s">{{inside_h2}}</h2>
+      <p class="rv" style="--d:.12s">{{inside_p}}</p>
+      <div class="kicker rv" style="--d:.18s">{{inside_head}}</div>
+      <div class="chips rv" style="--d:.24s">{{{inside_chips}}}</div>
+      <details class="rv" style="--d:.3s">
+        <summary>{{inside_formula}}</summary>
+        <ol>{{{inside_formula_list}}}</ol>
+      </details>
+    </div>
+    <div></div>
+  </div>
+</section>
+
+<!-- 3 · Feel it: the sachets fly past, the sheet mask unfolds -->
+<section class="sec feel" id="feel" data-st="3">
+  <div class="wrap split">
+    <div class="col">
+      <div class="kicker rv">{{nav_feel}}</div>
+      <h2 class="rv" style="--d:.06s">{{feel_h2}}</h2>
+      <p class="rv" style="--d:.12s">{{feel_p}}</p>
+      <div class="pins rv" style="--d:.18s">{{{feel_marks}}}</div>
+      <div class="chips">{{{feel_chips}}}</div>
+      <a class="textlink rv" style="--d:.24s" href="#offer">{{feel_link}}</a>
+    </div>
+    <div></div>
+  </div>
+</section>
+
+<!-- 4 · Protocol: the objects step back behind the three steps -->
+<section class="sec protocol" id="protocol" data-st="4">
+  <div class="wrap">
+    <div class="split"><div class="col">
+      <div class="kicker rv">{{nav_protocol}}</div>
+      <h2 class="rv" style="--d:.06s">{{protocol_h2}}</h2>
+      <p class="rv" style="--d:.12s">{{protocol_p}}</p>
+    </div><div></div></div>
+    <div class="steps">{{{protocol_steps}}}</div>
+    <div class="chips rv" style="margin-top:28px"><span class="chip gold">{{protocol_finish}}</span></div>
+  </div>
+</section>
+
+<!-- 5 · Kit & facts: box and the five sachets together -->
+<section class="sec" id="kit" data-st="5">
+  <div class="wrap split">
+    <div class="col">
+      <div class="kicker rv">{{nav_kit}}</div>
+      <h2 class="rv" style="--d:.06s">{{kit_h2}}</h2>
+      <p class="rv" style="--d:.12s">{{kit_p}}</p>
+      <p class="sr">{{kitshot_alt}}</p>
+      <div class="facts">{{{kit_facts}}}</div>
+      <div class="chips rv">{{{kit_chips}}}</div>
+    </div>
+    <div></div>
+  </div>
+</section>
+
+<!-- 6 · Offer -->
+<section class="sec offer" id="offer" data-st="6">
+  <div class="wrap split">
+    <div class="col">
+      <div class="box rv">
+        <div class="kicker">{{nav_offer}}</div>
+        <h2>{{offer_h2}}</h2>
+        <p>{{offer_p}}</p>
+        <div class="chips">{{{offer_chips}}}</div>
+        <div class="cta"><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener">{{cta_price}}</a><a class="btn ghost" href="__WA_BUNDLE__" target="_blank" rel="noopener">{{offer_bundle}}</a></div>
+        <div class="contacts"><span>{{phone_label}} <b><bdi dir="ltr">{{phone}}</bdi></b></span><span>{{email_label}} <b><bdi dir="ltr">{{email}}</bdi></b></span></div>
+      </div>
+    </div>
+    <div></div>
+  </div>
+</section>
+
+<section class="related" data-st="7">
+  <div class="wrap">
+    <h2 class="rv">{{related_line_h}}</h2>
+    <div class="cards">{{{related_line}}}</div>
+    <h2 class="rv">{{related_more_h}}</h2>
+    <div class="cards">{{{related_more}}}</div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="wrap"><img src="__LOGO_FULL__" alt="MITODERM — Where Science Meets Beauty"><span>{{footer}}</span></div>
+</footer>
+
+<nav class="dock" aria-label="{{nav_label}}"><a href="#top" data-i="0">{{nav_meet}}</a><a href="#why" data-i="1">{{nav_why}}</a><a href="#inside" data-i="2">{{nav_inside}}</a><a href="#feel" data-i="3">{{nav_feel}}</a><a href="#protocol" data-i="4">{{nav_protocol}}</a><a href="#kit" data-i="5">{{nav_kit}}</a><a href="#offer" data-i="6">{{nav_offer}}</a></nav>
+
+<div class="bar"><b><bdi>{{bar_name}}</bdi><small>{{bar_note}}</small></b><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener">{{cta_price}}</a></div>
+
+<script>
+// page script: reveal on scroll and the dock; works with or without the 3D layer
+(function () {
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var secs = Array.prototype.slice.call(document.querySelectorAll('[data-st]'));
+  var dock = Array.prototype.slice.call(document.querySelectorAll('.dock a'));
+  function stageNow() {
+    var mid = window.innerHeight / 2, best = 0;
+    secs.forEach(function (s) { var r = s.getBoundingClientRect(); if (r.top <= mid) best = +s.dataset.st; });
+    return best;
+  }
+  function onScroll() { var i = stageNow(); dock.forEach(function (a) { a.classList.toggle('on', +a.dataset.i === Math.min(i, 6)); }); }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  if (reduce || !('IntersectionObserver' in window)) { document.querySelectorAll('.rv').forEach(function (el) { el.classList.add('in'); }); return; }
+  var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -80px 0px' });
+  document.querySelectorAll('.rv').forEach(function (el) { io.observe(el); });
+  // if three.js cannot load (offline, blocked), show the still packshot instead of an empty background
+  setTimeout(function () { if (!window.__glReady) document.documentElement.classList.add('nogl'); }, 6000);
+})();
+</script>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js';
+
+const canvas = document.getElementById('gl');
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }); }
+catch (e) { document.documentElement.classList.add('nogl'); throw e; }
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.setClearColor(0x0a0a0b, 1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 80);
+camera.position.set(0, 0, 7);
+
+// environment for reflections: a small dark room with soft light panels (teal, gold, white), baked once
+{
+  const pm = new THREE.PMREMGenerator(renderer), room = new THREE.Scene();
+  room.add(new THREE.Mesh(new THREE.BoxGeometry(12, 8, 12), new THREE.MeshBasicMaterial({ color: 0x0b0d0e, side: THREE.BackSide })));
+  const panel = (c, i, x, y, z, w, h, ry) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(i) })); m.position.set(x, y, z); m.rotation.y = ry; room.add(m); };
+  panel(0xffffff, 3.2, -4.5, 2.4, 1, 3, 2.2, Math.PI / 2);
+  panel(0x6fb7ba, 2.4, 4.8, 0.5, -1, 3, 4, -Math.PI / 2);
+  panel(0xc9a24b, 1.6, 0, 3.8, -4, 6, 1, 0);
+  scene.environment = pm.fromScene(room, 0.04).texture;
+  pm.dispose();
+}
+scene.add(new THREE.HemisphereLight(0xdff6f6, 0x0a0a0b, 0.5));
+const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(-3, 4, 5); scene.add(key);
+const rim = new THREE.PointLight(0x6fb7ba, 22, 12); rim.position.set(3.6, 1.2, 1.5); scene.add(rim);
+const warm = new THREE.PointLight(0xc9a24b, 10, 10); warm.position.set(-1, -2.2, 2.5); scene.add(warm);
+
+// ---- far layer: moving smoke on a big plane plus drifting specks; the camera's sway reveals its depth
+const bgMat = new THREE.ShaderMaterial({
+  uniforms: { t: { value: 0 }, glow: { value: 1 } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+  fragmentShader: `
+    varying vec2 vUv; uniform float t; uniform float glow;
+    float h(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
+    float n(vec2 p){ vec2 i=floor(p), f=fract(p); vec2 u=f*f*(3.0-2.0*f);
+      return mix(mix(h(i),h(i+vec2(1,0)),u.x), mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x), u.y); }
+    float fbm(vec2 p){ float v=0.0, a=0.5; for(int k=0;k<5;k++){ v+=a*n(p); p*=2.03; a*=0.5; } return v; }
+    void main(){
+      vec2 p = vUv * vec2(3.2, 1.9);
+      float a = fbm(p + vec2(t*0.018, -t*0.011));
+      float b = fbm(p*1.7 - vec2(t*0.012, t*0.02) + a*1.6);
+      vec3 col = vec3(0.039, 0.039, 0.043);
+      vec3 teal = vec3(0.30, 0.62, 0.64), deep = vec3(0.07, 0.19, 0.21), gold = vec3(0.79, 0.64, 0.29);
+      float smoke = smoothstep(0.42, 0.88, b);
+      col += deep * smoke * 1.6 * glow;
+      col += teal * pow(smoke, 3.0) * 0.55 * glow;
+      col += gold * smoothstep(0.7, 0.95, a) * 0.07 * glow;
+      float v = smoothstep(1.15, 0.25, length((vUv - 0.5) * vec2(1.4, 1.0)));
+      gl_FragColor = vec4(col * (0.35 + 0.65 * v), 1.0);
+    }`,
+  depthWrite: false
+});
+const bg = new THREE.Mesh(new THREE.PlaneGeometry(48, 28), bgMat);
+bg.position.z = -14; scene.add(bg);
+
+const dust = (() => {
+  const N = 420, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), c1 = new THREE.Color(0x9fd6d8), c2 = new THREE.Color(0xd8bd7e);
+  for (let i = 0; i < N; i++) {
+    pos[i * 3] = (Math.random() - 0.5) * 22; pos[i * 3 + 1] = (Math.random() - 0.5) * 13; pos[i * 3 + 2] = -12 + Math.random() * 13;
+    const c = Math.random() < 0.8 ? c1 : c2; col.set([c.r, c.g, c.b], i * 3);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const dot = document.createElement('canvas'); dot.width = dot.height = 32;
+  const x = dot.getContext('2d'), gr = x.createRadialGradient(16, 16, 0, 16, 16, 16);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, 32, 32);
+  const m = new THREE.PointsMaterial({ size: 0.06, map: new THREE.CanvasTexture(dot), vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending });
+  const p = new THREE.Points(g, m); scene.add(p); return p;
+})();
+
+// ---- the product
+const loader = new THREE.TextureLoader();
+const tex = (src) => { const t = loader.load(src); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+const front = tex('__BOX_FRONT__'), side = tex('__BOX_SIDE__');
+const sideR = side.clone(); sideR.wrapS = THREE.RepeatWrapping; sideR.repeat.x = -1; sideR.needsUpdate = true;
+const carton = (o) => new THREE.MeshStandardMaterial(Object.assign({ color: 0x5ca0a5, roughness: 0.62, metalness: 0.0 }, o));
+// face order: +x, -x, +y, -y, +z (front), -z
+const box = new THREE.Mesh(new THREE.BoxGeometry(1.48, 2.0, 0.27), [
+  carton({ map: sideR, color: 0xffffff }), carton({ map: side, color: 0xffffff }),
+  carton({ color: 0x5a9ea2 }), carton({ color: 0x4f9094 }),
+  carton({ map: front, color: 0xffffff }), carton({ color: 0x57999d })
+]);
+scene.add(box);
+
+const foil = new THREE.MeshPhysicalMaterial({ color: 0xa9e0e2, metalness: 0.45, roughness: 0.32, clearcoat: 0.7, clearcoatRoughness: 0.18, emissive: 0x123335, emissiveIntensity: 0.35 });
+const sachets = [];
+for (let i = 0; i < 5; i++) {
+  const s = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.34, 0.035), foil.clone());
+  scene.add(s); sachets.push(s);
+}
+
+// the sheet mask: a translucent sheet with eye, nose and mouth openings, curved like a face
+function maskTexture() {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 660; const x = c.getContext('2d');
+  const W = 512, H = 660;
+  x.beginPath();
+  x.moveTo(W * .5, H * .02);
+  x.bezierCurveTo(W * .9, H * .02, W * .99, H * .3, W * .95, H * .52);
+  x.bezierCurveTo(W * .9, H * .8, W * .68, H * .98, W * .5, H * .99);
+  x.bezierCurveTo(W * .32, H * .98, W * .1, H * .8, W * .05, H * .52);
+  x.bezierCurveTo(W * .01, H * .3, W * .1, H * .02, W * .5, H * .02);
+  const g = x.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, 'rgba(240,252,252,.96)'); g.addColorStop(1, 'rgba(200,236,238,.9)');
+  x.fillStyle = g; x.fill();
+  for (let i = 0; i < 2600; i++) { x.fillStyle = 'rgba(255,255,255,' + (Math.random() * .05) + ')'; x.fillRect(Math.random() * W, Math.random() * H, 1.5, 1.5); }
+  x.globalCompositeOperation = 'destination-out'; x.fillStyle = '#000';  // openings must be fully cut
+  const hole = (cx, cy, rx, ry, rot) => { x.beginPath(); x.ellipse(cx, cy, rx, ry, rot, 0, Math.PI * 2); x.fill(); };
+  hole(W * .32, H * .42, W * .11, H * .042, .08); hole(W * .68, H * .42, W * .11, H * .042, -.08);
+  hole(W * .5, H * .76, W * .14, H * .04, 0);
+  x.beginPath(); x.moveTo(W * .44, H * .62); x.quadraticCurveTo(W * .5, H * .66, W * .56, H * .62); x.lineTo(W * .5, H * .64); x.closePath(); x.fill();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const maskGeo = new THREE.PlaneGeometry(1.5, 1.94, 48, 60);
+{
+  const p = maskGeo.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i);
+    let z = -0.42 * Math.pow(x / 0.75, 2) - 0.14 * Math.pow(y / 0.97, 2);
+    z += 0.11 * Math.exp(-(x * x) / 0.012 - Math.pow(y + 0.05, 2) / 0.09);
+    p.setZ(i, z);
+  }
+  maskGeo.computeVertexNormals();
+}
+const mask = new THREE.Mesh(maskGeo, new THREE.MeshPhysicalMaterial({ map: maskTexture(), color: 0xd6eff0, transparent: true, alphaTest: 0.02, side: THREE.DoubleSide, roughness: 0.26, sheen: 1, sheenColor: new THREE.Color(0x9fd6d8), emissive: 0x0f2c2e, emissiveIntensity: 0.2, depthWrite: false }));
+mask.userData = { maxO: 0.8, alwaysT: true };  // a hydrogel sheet: always see-through
+scene.add(mask);
+
+// serum drops
+const DROPS = 22, drops = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 28, 20), new THREE.MeshPhysicalMaterial({ color: 0xbfeef0, roughness: 0.05, metalness: 0, transmission: 0.92, thickness: 0.6, ior: 1.33, clearcoat: 1 }), DROPS);
+const dropSeed = Array.from({ length: DROPS }, (_, i) => ({ a: Math.random() * Math.PI * 2, r: 0.9 + Math.random() * 1.1, y: (Math.random() - 0.5) * 2.4, z: (Math.random() - 0.3) * 1.4, s: 0.03 + Math.random() * 0.07, sp: 0.15 + Math.random() * 0.35 }));
+scene.add(drops);
+
+// ---- choreography: one pose per block (0 Meet … 6 Offer, 7 after); poses blend as the page scrolls
+// pose = [x, y, z, rotX, rotY, rotZ, scale, opacity]
+const P = (x, y, z, rx, ry, rz, s, o) => ({ x, y, z, rx, ry, rz, s, o });
+const BOX = [
+  P(1.75, -0.05, 0.2, 0.06, -0.52, 0.07, 1, 1),
+  P(1.9, 0.15, -0.4, 0.12, -1.05, 0.12, 0.95, 1),
+  P(2.5, 0.35, -2.2, 0.1, -0.35, 0.05, 0.85, 1),
+  P(3.6, -0.6, -4.5, 0.2, 0.4, 0.2, 0.8, 0.5),
+  P(3.3, 1.35, -3.6, 0.1, -0.7, 0.08, 0.7, 0.55),
+  P(1.8, 0.05, -0.2, 0.04, -0.32, 0.03, 1, 1),
+  P(1.7, 0.0, 0.3, 0.05, -0.6 + Math.PI * 2, 0.05, 1.05, 1),
+  P(1.9, 1.2, -5, 0.3, -0.2 + Math.PI * 2, 0.1, 0.8, 0)
+];
+// sachets: hidden behind the box, then a fan, then they fly past the camera, then a neat hand in front of the box
+const SACH = [0, 1, 2, 3, 4].map(i => {
+  const k = i - 2;
+  return [
+    P(1.6, -0.05, -0.1, 0, -0.52, 0, 0.6, 0),
+    P(1.9, 0.15, -0.6, 0, -1.0, 0, 0.6, 0),
+    P(1.75 + k * 0.62, 0.05 - Math.abs(k) * 0.16, 0.5 - Math.abs(k) * 0.12, 0.05, -0.25 + k * 0.08, -k * 0.13, 0.82, 1),
+    P(1.7 + k * 3.2, 3.0 + Math.abs(k) * 0.5, 1.0, 0.7, k * 0.8, k * 0.6, 0.9, 0),  // they lift away past the frame edges
+    P(1.7 + k * 3.2, 3.0 + Math.abs(k) * 0.5, 1.0, 0.7, k * 0.8, k * 0.6, 0.9, 0),
+    P(2.45 + k * 0.17, -0.55 + Math.abs(k) * 0.02, 0.45 + i * 0.03, -0.05, -0.32, -k * 0.11, 0.62, 1),
+    P(1.7, 0.0, 0.0, 0.05, -0.6, 0, 0.6, 0),
+    P(1.9, 1.2, -5, 0, 0, 0, 0.6, 0)
+  ];
+});
+const MASK = [
+  P(3.4, 0.4, -3, 0, -0.8, 0.2, 0.5, 0),
+  P(3.4, 0.4, -3, 0, -0.8, 0.2, 0.5, 0),
+  P(2.9, 0.6, -2.4, 0.1, -0.6, 0.15, 0.6, 0),
+  P(1.55, 0.08, 0.6, 0.02, -0.32, 0.02, 1.08, 1),
+  P(2.3, -1.25, -2.8, 0.1, -0.5, 0.1, 0.62, 0.5),
+  P(3.2, 0.9, -3, 0, -0.6, 0.1, 0.5, 0),
+  P(3.2, 0.9, -3, 0, -0.6, 0.1, 0.5, 0),
+  P(3.2, 0.9, -3, 0, -0.6, 0.1, 0.5, 0)
+];
+const DROPC = [ // centre and spread of the drop cloud
+  P(1.6, 0, 0.2, 0, 0, 0, 1, 1), P(1.8, 0.4, 0, 0, 0, 0, 1.25, 1), P(1.9, 0.2, -0.4, 0, 0, 0, 1.2, 0.55),
+  P(1.55, 0.05, 0.9, 0, 0, 0, 0.95, 1), P(2.6, 0, -2.4, 0, 0, 0, 1.4, 0.35), P(1.9, 0, 0.2, 0, 0, 0, 1.1, 0.6),
+  P(1.7, 0, 0.3, 0, 0, 0, 1.15, 1), P(1.9, 1, -4, 0, 0, 0, 1, 0)
+];
+
+const ease = t => t * t * (3 - 2 * t);
+function pose(track, s) {
+  const i = Math.max(0, Math.min(track.length - 1, Math.floor(s))), j = Math.min(track.length - 1, i + 1), t = ease(Math.max(0, Math.min(1, s - i)));
+  const a = track[i], b = track[j], r = {};
+  for (const k in a) r[k] = a[k] + (b[k] - a[k]) * t;
+  return r;
+}
+let phone = false;
+function place(obj, p, extra = {}) {
+  let { x, y, z, s } = p;
+  if (phone) { x = x * 0.3 - 0.35; y = y * 0.6 + 1.25; s *= 0.56; }
+  obj.position.set(x + (extra.x || 0), y + (extra.y || 0), z);
+  obj.rotation.set(p.rx, p.ry + (extra.ry || 0), p.rz);
+  obj.scale.setScalar(s);
+  const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+  // only a fading object is drawn as transparent, so solid ones keep correct depth order
+  const o = p.o * (obj.userData.maxO || 1);
+  mats.forEach(m => { const want = obj.userData.alwaysT || o < 0.999; if (m.transparent !== want) { m.transparent = want; m.needsUpdate = true; } m.opacity = o; m.visible = o > 0.01; });
+}
+
+// scroll → stage: each block's centre is a whole stage; between centres the stage is fractional
+const secs = Array.from(document.querySelectorAll('[data-st]'));
+let anchors = [];
+function measure() {
+  anchors = secs.map(el => { const r = el.getBoundingClientRect(); return { st: +el.dataset.st, y: r.top + window.scrollY + Math.min(r.height, window.innerHeight * 1.6) / 2 - window.innerHeight / 2 }; });
+}
+function stage() {
+  const y = window.scrollY;
+  if (y <= anchors[0].y) return 0;
+  for (let i = 0; i < anchors.length - 1; i++) {
+    const a = anchors[i], b = anchors[i + 1];
+    if (y < b.y) return a.st + (b.st - a.st) * (y - a.y) / Math.max(1, b.y - a.y);
+  }
+  return anchors[anchors.length - 1].st;
+}
+
+const pointer = { x: 0, y: 0 }, sway = { x: 0, y: 0 };
+window.addEventListener('pointermove', e => { pointer.x = e.clientX / window.innerWidth * 2 - 1; pointer.y = e.clientY / window.innerHeight * 2 - 1; }, { passive: true });
+
+function resize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  phone = w < 760;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.fov = phone ? 48 : 35; camera.updateProjectionMatrix();
+  measure();
+}
+window.addEventListener('resize', resize); resize();
+window.addEventListener('load', measure);
+
+const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), v3 = new THREE.Vector3(), sc = new THREE.Vector3();
+let s = 0, last = performance.now(), visible = true;
+document.addEventListener('visibilitychange', () => { visible = !document.hidden; if (visible) { last = performance.now(); requestAnimationFrame(frame); } });
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  const t = reduce ? 0 : now / 1000;
+  const target = stage();
+  s += (target - s) * (reduce || window.__snap ? 1 : Math.min(1, dt * 6));  // __snap: test hook, no easing
+  // the far layer turns with the pointer (camera sways around the product), the near objects keep their place
+  if (!reduce) { sway.x += (pointer.x - sway.x) * 0.05; sway.y += (pointer.y - sway.y) * 0.05; }
+  camera.position.set(sway.x * 0.9, -sway.y * 0.45, 7);
+  camera.lookAt(phone ? -0.35 : 0.9, phone ? 0.05 : 0, 0);  // on a phone the objects sit in the upper third
+  bg.rotation.set(sway.y * 0.05, sway.x * 0.08, 0);  // the far layer turns a little more than the scene
+  bgMat.uniforms.t.value = t;
+  dust.rotation.y = t * 0.01; dust.position.y = Math.sin(t * 0.1) * 0.2;
+
+  const bob = Math.sin(t * 0.9) * 0.05;
+  place(box, pose(BOX, s), { y: bob, ry: Math.sin(t * 0.45) * 0.07 });
+  sachets.forEach((m, i) => place(m, pose(SACH[i], s), { y: Math.sin(t * 0.8 + i) * 0.025 }));
+  place(mask, pose(MASK, s), { y: Math.sin(t * 0.7 + 1) * 0.04, ry: Math.sin(t * 0.35) * 0.05 });
+
+  const c = pose(DROPC, s);
+  let cx = c.x, cy = c.y, cs = c.s;
+  if (phone) { cx = cx * 0.3 - 0.35; cy = cy * 0.6 + 1.25; cs *= 0.62; }
+  dropSeed.forEach((d, i) => {
+    const a = d.a + t * d.sp * 0.25;
+    v3.set(cx + Math.cos(a) * d.r * cs, cy + d.y * cs * 0.8 + Math.sin(t * d.sp + i) * 0.08, c.z + d.z + Math.sin(a) * 0.4);
+    const k = d.s * (phone ? 0.7 : 1) * c.o; sc.set(k, k * 1.08, k);  // drops fade by shrinking
+    drops.setMatrixAt(i, m4.compose(v3, q, sc));
+  });
+  drops.instanceMatrix.needsUpdate = true;
+  drops.visible = c.o > 0.01;
+
+  renderer.render(scene, camera);
+  window.__glReady = true;
+  if (visible && !reduce) requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+if (reduce) window.addEventListener('scroll', () => requestAnimationFrame(frame), { passive: true });
+</script>
