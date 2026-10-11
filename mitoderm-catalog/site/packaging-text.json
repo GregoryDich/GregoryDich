@@ -18,8 +18,8 @@
    {"what": "tall carton", "look": "mirror-polished gold foil, black bands at top and bottom", "front": [
      "top: 'VM' in silver letters", "centre: a large black 'V' with a small inverted black triangle above it",
      "lower third: 'V-TECH' letter-spaced (the V drawn as the same V-with-triangle mark), below it letter-spaced 'S Y S T E M'"]},
-   {"what": "5 vials", "look": "amber glass vials with white flip-off caps, amber label", "front": ["white V-with-triangle mark", "'V-TECH'", "[unreadable] one tiny line under 'V-TECH'", "white graduation ticks on the side"]},
-   {"what": "gel mask sachet", "look": "gold foil sachet with a small white nozzle cap on the left", "front": ["large black V-with-triangle mark", "'V-TECH' letter-spaced, below it 'G E L   M A S K'", "[unreadable] four tiny lines at the bottom"]}]},
+   {"what": "5 ampoules (vials) of V-TECH Serum, 5 ml", "look": "amber glass vials with silver flip-off caps (owner photo #79; the old packshot render shows white caps), amber label", "front": ["white V-with-triangle mark", "'V-TECH'", "[unreadable] one tiny line under 'V-TECH'", "white graduation ticks on the side"]},
+   {"what": "5 gel-mask sachets (V-TECH Gel Mask, 5 ml each; owner: «5 масок и 5 ампул», kit diagram photos #78/#83)", "look": "gold foil sachet with a small white nozzle cap on the left", "front": ["large black V-with-triangle mark", "'V-TECH' letter-spaced, below it 'G E L   M A S K'", "[unreadable] four tiny lines at the bottom"]}]},
  "exo-nad": {"packshot": "protocols/assets/img/exo-nad.webp", "objects": [
    {"what": "square box", "look": "brushed gold gradient box with a thin lid line near the bottom, black print", "front": ["top centre: VM monogram, 'VM corporation'", "centre: 'EXO-NAD' ('EXO-' thin, 'NAD' bold)", "below: letter-spaced 'SKIN LONGEVITY PEELING'"]},
    {"what": "peel bottle", "look": "clear square glass bottle with a gold cap, gold flakes in the liquid", "front": ["'EXO-NAD'", "'SKIN LONGEVITY PEELING'"]},
