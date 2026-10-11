@@ -1,0 +1,18 @@
+{
+ "_note": "Texts copied verbatim from the owner's Figma Make site (file 2cPYbQWBx2qn4rUl9TSxE1, src/app/i18n/dictionary.ts) on 11/10/2026. Used for the 'who performs the treatment' block; keys keep Make's names.",
+ "spec.kicker": {"en": "Find a Specialist", "ru": "Найти специалиста", "he": "מצאו מומחה"},
+ "spec.title": {"en": "Certified Mitoderm professionals", "ru": "Сертифицированные специалисты Mitoderm", "he": "מומחי Mitoderm מוסמכים"},
+ "spec.intro": {"en": "Every specialist below is trained and accredited to deliver authentic Mitoderm protocols. Find a trusted clinic near you and book your consultation.", "ru": "Каждый специалист ниже обучен и аккредитован для проведения подлинных протоколов Mitoderm. Найдите проверенную клинику рядом и запишитесь на консультацию.", "he": "כל מומחה כאן מוכשר ומוסמך להעניק פרוטוקולים מקוריים של Mitoderm. מצאו מרפאה מהימנה בקרבתכם וקבעו ייעוץ."},
+ "spec.filter.profession": {"en": "Profession", "ru": "Профессия", "he": "מקצוע"},
+ "spec.filter.all": {"en": "All", "ru": "Все", "he": "הכל"},
+ "spec.certified": {"en": "Certified", "ru": "Сертифицирован", "he": "מוסמך"},
+ "spec.book": {"en": "Book consultation", "ru": "Записаться", "he": "קביעת ייעוץ"},
+ "spec.join.title": {"en": "Are you a cosmetologist?", "ru": "Вы косметолог?", "he": "אתם קוסמטיקאים?"},
+ "spec.join.cta": {"en": "Apply to join", "ru": "Подать заявку", "he": "הגשת בקשה"},
+ "prof.trichologist": {"en": "Trichologist", "ru": "Трихолог", "he": "טריכולוג/ית"},
+ "nav.specialists": {"en": "Specialists", "ru": "Специалисты", "he": "מומחים"},
+ "tech.face.1.body": {"en": "The V-Tech protocol, the Exo-NAD peeling and the Exocell mask are performed by a professional.", "ru": "Протокол V-Tech, пилинг Exo-NAD и маска Exocell выполняются специалистом.", "he": "פרוטוקול V-Tech, פילינג Exo-NAD ומסכת Exocell מבוצעים על ידי איש מקצוע."},
+ "tech.hair.1.body": {"en": "Exosignal Hair is a precision ampoule treatment applied during in-clinic sessions.", "ru": "Exosignal Hair — прецизионное ампульное средство для применения в клинике.", "he": "Exosignal Hair הוא טיפול אמפולות מדויק המיושם במפגשים במרפאה."},
+ "tech.devices.3.body": {"en": "Both instruments are operated by trained practitioners as part of a clinical protocol.", "ru": "Оба прибора используются обученными специалистами в рамках клинического протокола.", "he": "שני המכשירים מופעלים על ידי מטפלים מוסמכים כחלק מפרוטוקול קליני."},
+ "tech.biospicules.1.body": {"en": "The 10% Micro Boost is applied in the clinic to prepare the skin for an intensive treatment.", "ru": "10% Micro Boost наносится в клинике, подготавливая кожу к интенсивной процедуре.", "he": "ה-Micro Boost בריכוז 10% מיושם במרפאה כדי להכין את העור לטיפול אינטנסיבי."}
+}

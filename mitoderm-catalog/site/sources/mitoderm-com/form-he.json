@@ -1,0 +1,70 @@
+{
+ "_note": "Hebrew texts of the lead form on mitoderm.com (product pages, he locale), copied verbatim from the site's translation data on 11/10/2026. Used for the form in the new design; not rewritten.",
+ "buttons": {
+  "contactForPrice": "לקבלת פרטים על מחירים",
+  "contactForPrice1": "לקבלת מידע על המחיר",
+  "contactForInfo": "לקבלת מידע נוסף",
+  "requestCallback": "בקשה לשיחה חוזרת",
+  "contactForSolutions": "לקבלת פתרונות מותאמים אישית",
+  "learnMore": "למידע נוסף",
+  "seat": "הזמנת מקום",
+  "reserveSeat": "הזמנת מקום"
+ },
+ "form": {
+  "titleP1": "לקבלת פתרונות",
+  "titleP2": "מותאמים ",
+  "titleP3": "לקליניקה שלך",
+  "subtitle": "השאר הודעה ונציגנו יצרו עמך קשר",
+  "placeholderInputName": "שם ושם משפחה",
+  "placeholderEmailName": "אימייל",
+  "placeholderPhoneName": "טלפון",
+  "placeholderProfession": "מקצוע",
+  "checkboxLabel": "אני מסכים/ה לתנאי מיטודרם בע״מ*",
+  "sharing": "המידע שתמסור משמש את חברת מיטודרם בע\"מ בלבד *",
+  "errors": {
+   "name_length": "השם חייב להכיל לפחות 3 תווים",
+   "name_required": "שם הוא שדה חובה",
+   "email_required": "אימייל הוא שדה חובה",
+   "email_invalid": "אימייל לא תקין",
+   "phone_required": "מספר הטלפון הוא שדה חובה",
+   "phone_length": "מספר הטלפון חייב להכיל לפחות 10 תווים",
+   "profession_length": "שם המקצוע חייב להיות באורך של לפחות 3 תווים",
+   "profession_required": "שם המקצוע נדרש"
+  },
+  "sent": {
+   "mobTitle": "איזה כיף!",
+   "text": "הטופס נשלח",
+   "textColored": "בהצלחה"
+  },
+  "placeholderInputID": "מספר תעודת זהות",
+  "eventTitle": "הבטיחו את מקומכם בארוע",
+  "numberTickets": "כרטיס",
+  "total": "סה׳׳כ",
+  "promo": "קוד קופון",
+  "apply": "להגיש",
+  "success": "אתה מקבל הנחה של 10%",
+  "wrongPromo": "קוד קופון שגוי"
+ },
+ "specialists": {
+  "title": "רשימת קוסמטיקאיות וקליניקות מוסמכות",
+  "filterProfession": "סינון לפי מקצוע",
+  "professions": [
+   "טיפולים בפנים",
+   "טיפולים בשיער",
+   "טיפולים בפנים ושיער",
+   "הכל"
+  ],
+  "filterRegion": "בחר אזור",
+  "regions": [
+   "צפון",
+   "מרכז",
+   "דרום",
+   "גוש דן",
+   "הכל"
+  ],
+  "filterCity": "בחר עיר",
+  "reset": "אפס כל הסינונים",
+  "_data": "91 entries (name, city, phone); profession, area and instagram are empty for every entry on 11/10/2026, so the site's filters return nothing. Names and phones are kept out of this public repository."
+ },
+ "leads_api": "The site posts leads as JSON {name, phone, email, source, conversationSummary} to /api/leads."
+}
