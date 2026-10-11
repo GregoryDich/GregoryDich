@@ -196,12 +196,16 @@ def sheet(wb, title, cols, rows, he_cols=()):
 
 stories = data['stories']
 wb = Workbook(); wb.remove(wb.active)
-sheet(wb, 'Overview', [('Страница', 22), ('Статус', 18), ('Slug', 20), ('Линейка', 16), ('Назначение', 14), ('Цветовое окружение', 40),
-                       ('Экран с оттенком серии', 12), ('Герой-объект', 30), ('Сюжет одной строкой', 60), ('Метки специалистов', 18),
-                       ('Фото заказчика (№ в коллаже)', 24), ('Новых строк', 10), ('Вопросов', 10)],
-      [[s['name'], s.get('_status', 'готово'), s['slug'], s['line'], s['use'], s['colour_env'], s['series_tint_screen'], s['hero_object'], s['story_one_line'],
-        ' · '.join(TAGS[t][0] for t in SPEC_TAGS.get(s['slug'], ['face'])), PHOTOS.get(s['slug'], ''),
-        len(s.get('new_strings', [])), len(s.get('questions_ru', []))] for s in stories])
+DRAFT = any('_status' in s for s in stories)
+ov_rows = [[s['name'], s.get('_status', 'готово'), s['slug'], s['line'], s['use'], s['colour_env'], s['series_tint_screen'], s['hero_object'],
+            s['story_one_line'], ' · '.join(TAGS[t][0] for t in SPEC_TAGS.get(s['slug'], ['face'])), PHOTOS.get(s['slug'], ''),
+            len(s.get('new_strings', [])), len(s.get('questions_ru', []))] for s in stories]
+ov_cols = [('Страница', 22), ('Статус', 18), ('Slug', 20), ('Линейка', 16), ('Назначение', 14), ('Цветовое окружение', 40),
+           ('Экран с оттенком серии', 12), ('Герой-объект', 30), ('Сюжет одной строкой', 60), ('Метки специалистов', 18),
+           ('Фото заказчика (№ в коллаже)', 24), ('Новых строк', 10), ('Вопросов', 10)]
+if not DRAFT:  # the status column only matters while some pages are still in review
+    ov_cols.pop(1); ov_rows = [r[:1] + r[2:] for r in ov_rows]
+sheet(wb, 'Overview', ov_cols, ov_rows)
 rows = []
 for s in stories:
     for sc in s['screens']:

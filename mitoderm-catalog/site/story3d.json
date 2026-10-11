@@ -3700,185 +3700,366 @@
  ],
  "new_strings": [
   {
+   "slug": "v-tech-system",
    "key": "kit.alt",
    "en": "V-TECH SYSTEM box with five serum ampoules and five gel-mask sachets",
-   "where": "alt-текст картинки набора на экране 7 и статичной картинки на мобильном. Иврит — через переводчика и двух рецензентов, как s5.double у MASK, по образцу ui.kitshot_alt и со словами из проверенного vp: 5 אמפולות ו-5 שקיות מסכת ג׳ל",
-   "slug": "v-tech-system"
+   "where": "alt-текст картинки набора на экране 7 и статичной картинки на мобильном. Иврит — через переводчика и двух рецензентов, как s5.double у MASK, по образцу ui.kitshot_alt и со словами из проверенного vp: 5 אמפולות ו-5 שקיות מסכת ג׳ל"
   },
   {
+   "slug": "exo-nad",
    "key": "x.line_badge",
    "en": "PEELING",
-   "where": "Бейдж линейки на экранах 1 и 7, через промежуток после бейджа «מקצועי» (home.tg). Без рамки и заливки, текст #d8c48a с точкой. Иврит — после ответа на вопрос 6 (латиница, как BIOSPICULE, или перевод, как «מכשור» на главной).",
-   "slug": "exo-nad"
+   "where": "Бейдж линейки на экранах 1 и 7, через промежуток после бейджа «מקצועי» (home.tg). Без рамки и заливки, текст #d8c48a с точкой. Иврит — после ответа на вопрос 6 (латиница, как BIOSPICULE, или перевод, как «מכשור» на главной)."
   },
   {
+   "slug": "exo-nad",
    "key": "x.contacts",
    "en": "WhatsApp · Phone · Email",
-   "where": "Экран 7, последняя строка под главной кнопкой: три иконки с подписями. Иврит не переводится заново, а собирается из проверенных слов b6.cta: «WhatsApp · טלפון · דוא״ל», WhatsApp латиницей как название бренда.",
-   "slug": "exo-nad"
+   "where": "Экран 7, последняя строка под главной кнопкой: три иконки с подписями. Иврит не переводится заново, а собирается из проверенных слов b6.cta: «WhatsApp · טלפון · דוא״ל», WhatsApp латиницей как название бренда."
   },
   {
+   "slug": "exocell-mask",
    "key": "line.mark",
    "en": "V-TECH FACE",
-   "where": "Экран 1 — бейдж рядом с home.tg; экран 7 — бейдж в шапке карточки. Латиница без перевода, название линейки из design-rules.md (site/proto/exocell-he-ui.json → line_mark)",
-   "slug": "exocell-mask"
+   "where": "Экран 1 — бейдж рядом с home.tg; экран 7 — бейдж в шапке карточки. Латиница без перевода, название линейки из design-rules.md (site/proto/exocell-he-ui.json → line_mark)"
   },
   {
+   "slug": "exocell-mask",
    "key": "s5.double",
    "en": "Double mask: a white layer and a blue layer, applied one after the other.",
-   "where": "Экран 5, подпись с точкой у двух слоёв маски. Проверенный иврит: site/proto/exocell-he-design.json → s5.double",
-   "slug": "exocell-mask"
+   "where": "Экран 5, подпись с точкой у двух слоёв маски. Проверенный иврит: site/proto/exocell-he-design.json → s5.double"
   },
   {
+   "slug": "exocell-mask",
    "key": "kit.double",
    "en": "Each mask has two layers – white and blue – applied in turn.",
-   "where": "Экран 7, карточка, под строкой cat.kit[0]. Проверенный иврит: site/proto/exocell-he-design.json → kit.double",
-   "slug": "exocell-mask"
+   "where": "Экран 7, карточка, под строкой cat.kit[0]. Проверенный иврит: site/proto/exocell-he-design.json → kit.double"
   },
   {
+   "slug": "exocell-mask",
    "key": "kit.net",
    "en": "Net 5 x 25 ml",
-   "where": "Экран 7, карточка, под kit.double; LTR, как напечатано на обеих версиях коробки (packaging-text.json exocell-mask.objects[0].front[4], objects[1].front[3])",
-   "slug": "exocell-mask"
+   "where": "Экран 7, карточка, под kit.double; LTR, как напечатано на обеих версиях коробки (packaging-text.json exocell-mask.objects[0].front[4], objects[1].front[3])"
   },
   {
+   "slug": "exocell-mask",
    "key": "contact.phone",
    "en": "054-326-2182",
-   "where": "Экран 7, контакты, после b6.cta[2]; ссылка tel:, в bdi dir=ltr (site/proto/exocell-he-ui.json → phone)",
-   "slug": "exocell-mask"
+   "where": "Экран 7, контакты, после b6.cta[2]; ссылка tel:, в bdi dir=ltr (site/proto/exocell-he-ui.json → phone)"
   },
   {
+   "slug": "exocell-mask",
    "key": "contact.email",
    "en": "info@mitoderm.com",
-   "where": "Экран 7, контакты, после b6.cta[3]; ссылка mailto:, LTR (site/proto/exocell-he-ui.json → email)",
-   "slug": "exocell-mask"
+   "where": "Экран 7, контакты, после b6.cta[3]; ссылка mailto:, LTR (site/proto/exocell-he-ui.json → email)"
   },
   {
+   "slug": "exocell-mask",
    "key": "ui.bar",
    "en": "5 masks · EXOCELL MASK",
-   "where": "Липкая панель на телефоне (M1–M6, на M7 до кнопки) рядом с b0.cta[0]. Проверенный иврит: site/proto/exocell-he-ui.json → bar. Заменяет срез b5.title, который ломается при правке заголовка",
-   "slug": "exocell-mask"
+   "where": "Липкая панель на телефоне (M1–M6, на M7 до кнопки) рядом с b0.cta[0]. Проверенный иврит: site/proto/exocell-he-ui.json → bar. Заменяет срез b5.title, который ломается при правке заголовка"
   },
   {
+   "slug": "exosignal-hair",
    "key": "line.mark",
    "en": "HAIR",
-   "where": "Бейдж линейки латиницей, как V-TECH FACE у MASK (в шаблоне это line_mark; home.tg соответствует use_pro). Экраны 1 и 7 — ряд бейджей рядом с home.tg; экран 5 — над ампулой и флаконом EXOSIGNAL SPRAY (оттенок серии).",
-   "slug": "exosignal-hair"
+   "where": "Бейдж линейки латиницей, как V-TECH FACE у MASK (в шаблоне это line_mark; home.tg соответствует use_pro). Экраны 1 и 7 — ряд бейджей рядом с home.tg; экран 5 — над ампулой и флаконом EXOSIGNAL SPRAY (оттенок серии)."
   },
   {
+   "slug": "exosignal-hair",
    "key": "wa_text_price",
    "en": "Hello, I'd like pricing details for EXOSIGNAL HAIR",
-   "where": "Готовый текст WhatsApp во всех кнопках цены на странице: в шапке, b0.cta, b6.label1, в липкой полосе. На иврите — формула wa_text_price со страницы MASK, в которой заменено только название.",
-   "slug": "exosignal-hair"
+   "where": "Готовый текст WhatsApp во всех кнопках цены на странице: в шапке, b0.cta, b6.label1, в липкой полосе. На иврите — формула wa_text_price со страницы MASK, в которой заменено только название."
   },
   {
+   "slug": "exosignal-hair",
    "key": "wa_text_demo",
    "en": "Hello, I'd like to book a MITOSCAN demo for EXOSIGNAL HAIR",
-   "where": "Экран 7, строка контактов: текстовая ссылка «לתיאום הדגמת MITOSCAN» из b6.cta.",
-   "slug": "exosignal-hair"
+   "where": "Экран 7, строка контактов: текстовая ссылка «לתיאום הדגמת MITOSCAN» из b6.cta."
   },
   {
+   "slug": "exosignal-spray",
    "key": "ui.line_mark",
    "en": "HAIR",
-   "where": "Бейдж линейки латиницей, как «V-TECH FACE» на MASK: экраны 1, 2 и 7 и шапка карточки «מה בפנים». Ключ идёт в UI-файл спрея — копию site/proto/exocell-he-ui.json; оттуда без изменений берутся ui.use_home, ui.phone_label, ui.phone, ui.email_label, ui.email, ui.wa_number и ui.wa_text_product.",
-   "slug": "exosignal-spray"
+   "where": "Бейдж линейки латиницей, как «V-TECH FACE» на MASK: экраны 1, 2 и 7 и шапка карточки «מה בפנים». Ключ идёт в UI-файл спрея — копию site/proto/exocell-he-ui.json; оттуда без изменений берутся ui.use_home, ui.phone_label, ui.phone, ui.email_label, ui.email, ui.wa_number и ui.wa_text_product."
   },
   {
+   "slug": "exosignal-spray",
    "key": "ui.line_name",
    "en": "Hair & scalp",
-   "where": "Название линейки на иврите рядом с бейджем HAIR на экранах 1, 2 и 7 (на MASK это «התחדשות הפנים»). Иврит на ревью, см. вопрос 8.",
-   "slug": "exosignal-spray"
+   "where": "Название линейки на иврите рядом с бейджем HAIR на экранах 1, 2 и 7 (на MASK это «התחדשות הפנים»). Иврит на ревью, см. вопрос 8."
   },
   {
+   "slug": "exotech-gel",
    "key": "line.mark",
    "en": "V-TECH FACE",
-   "where": "Series element: kicker on screens 1 and 7, with the reviewed caption b0.label4 / b6.label3 below it in the same element. Latin, not translated.",
-   "slug": "exotech-gel"
+   "where": "Series element: kicker on screens 1 and 7, with the reviewed caption b0.label4 / b6.label3 below it in the same element. Latin, not translated."
   },
   {
+   "slug": "exotech-gel",
    "key": "wa.exotech-gel",
    "en": "Hello! Where can I buy EXOTECH GEL?",
-   "where": "Pre-filled WhatsApp message behind every 'Where to buy' on this page: screen 1 ghost button, mobile bottom bar, screen 7 main button. Needs Hebrew review.",
-   "slug": "exotech-gel"
+   "where": "Pre-filled WhatsApp message behind every 'Where to buy' on this page: screen 1 ghost button, mobile bottom bar, screen 7 main button. Needs Hebrew review."
   },
   {
+   "slug": "micro-boost-10",
    "key": "line_mark",
    "en": "BIOSPICULE™",
-   "where": "Бейдж линейки рядом с золотой монограммой M, только экран 7. Ключ тот же, что в site/proto/exocell-he-ui.json, значение для MICRO BOOST; в иврите латиницей",
-   "slug": "micro-boost-10"
+   "where": "Бейдж линейки рядом с золотой монограммой M, только экран 7. Ключ тот же, что в site/proto/exocell-he-ui.json, значение для MICRO BOOST; в иврите латиницей"
   },
   {
+   "slug": "micro-boost-10",
    "key": "kitshot_alt",
    "en": "MICRO BOOST 10% box and a 3 ml syringe",
-   "where": "Alt рендера комплекта на экране 7. Ключ тот же, что у MASK; иврит делает тот же редактор иврита по образцу kitshot_alt MASK",
-   "slug": "micro-boost-10"
+   "where": "Alt рендера комплекта на экране 7. Ключ тот же, что у MASK; иврит делает тот же редактор иврита по образцу kitshot_alt MASK"
   },
   {
+   "slug": "cell-renew-1-5",
    "key": "badge.line",
    "en": "BIOSPICULE™",
-   "where": "Бейдж линейки в цвете линейки: экран 5 рядом с золотой M и шапка карточки «что внутри» на экране 7, как mark-line «V-TECH FACE» у MASK. Название латиницей, на иврите тоже «BIOSPICULE™», без перевода.",
-   "slug": "cell-renew-1-5"
+   "where": "Бейдж линейки в цвете линейки: экран 5 рядом с золотой M и шапка карточки «что внутри» на экране 7, как mark-line «V-TECH FACE» у MASK. Название латиницей, на иврите тоже «BIOSPICULE™», без перевода."
   },
   {
+   "slug": "cell-renew-1-5",
    "key": "badge.home",
    "en": "Home care",
-   "where": "Бейдж назначения с золотым контуром в карточке «что внутри», экран 7. Не переводить заново: на иврите утверждённое «טיפוח ביתי» (design-rules, «Назначение — отдельный бейдж»; use_home в proto/exocell-he-ui.json; то же слово в cat.eyebrow).",
-   "slug": "cell-renew-1-5"
+   "where": "Бейдж назначения с золотым контуром в карточке «что внутри», экран 7. Не переводить заново: на иврите утверждённое «טיפוח ביתי» (design-rules, «Назначение — отдельный бейдж»; use_home в proto/exocell-he-ui.json; то же слово в cat.eyebrow)."
   },
   {
+   "slug": "derma-recovery-cream",
    "key": "kit.alt",
    "en": "DERMA RECOVERY CREAM box and 50 ml jar",
-   "where": "Screen 7 — alt text of the kit render (box and jar). Hebrew goes through review, following the pattern of ui.kitshot_alt.",
-   "slug": "derma-recovery-cream"
+   "where": "Screen 7 — alt text of the kit render (box and jar). Hebrew goes through review, following the pattern of ui.kitshot_alt."
   },
   {
+   "slug": "mitoscan",
    "key": "ui.wa_text_price",
    "en": "Hello, I'd like to get details on MITOSCAN prices",
-   "where": "Предзаполненный текст WhatsApp для главной кнопки b4.cta, липкой панели и контакта WhatsApp на экране 7. Это параметризация проверенной строки wa_text_price со страницы MASK (proto/exocell-he-ui.json), меняется только имя: «שלום, אשמח לקבל פרטים על מחירי MITOSCAN»",
-   "slug": "mitoscan"
+   "where": "Предзаполненный текст WhatsApp для главной кнопки b4.cta, липкой панели и контакта WhatsApp на экране 7. Это параметризация проверенной строки wa_text_price со страницы MASK (proto/exocell-he-ui.json), меняется только имя: «שלום, אשמח לקבל פרטים על מחירי MITOSCAN»"
   },
   {
+   "slug": "home",
    "key": "home.line.vtech-face",
    "en": "V-TECH FACE",
-   "where": "Марка серии латиницей, не переводится: кикер и бейдж линейки на экране 2, подпись группы на экранах 1 и 7, пункт 2 дока. Для остальных линеек подписи уже есть: catalog.chips[2] / [5] / [4] и home.sl-2",
-   "slug": "home"
+   "where": "Марка серии латиницей, не переводится: кикер и бейдж линейки на экране 2, подпись группы на экранах 1 и 7, пункт 2 дока. Для остальных линеек подписи уже есть: catalog.chips[2] / [5] / [4] и home.sl-2"
   },
   {
+   "slug": "home",
    "key": "home.s2.line",
    "en": "V-TECH SYSTEM in the clinic, EXOCELL MASK to finish, EXOTECH GEL at home.",
-   "where": "Строка экрана 2. Сокращение synthetic-exosomes:b4.line: иврит вырезается из проверенной строки, убираются EXO-NAD и часть про кожу головы",
-   "slug": "home"
+   "where": "Строка экрана 2. Сокращение synthetic-exosomes:b4.line: иврит вырезается из проверенной строки, убираются EXO-NAD и часть про кожу головы"
   },
   {
+   "slug": "home",
    "key": "home.kit.mask-net",
    "en": "Net 5 x 25 ml",
-   "where": "Экран 7, состав EXOCELL MASK в аккордеоне, после exocell-mask:b5.label1. Напечатано на коробке (packaging-text exocell-mask objects[0].front[4]); LTR, без перевода",
-   "slug": "home"
+   "where": "Экран 7, состав EXOCELL MASK в аккордеоне, после exocell-mask:b5.label1. Напечатано на коробке (packaging-text exocell-mask objects[0].front[4]); LTR, без перевода"
   },
   {
+   "slug": "home",
    "key": "home.contact.whatsapp",
    "en": "WhatsApp",
-   "where": "Экран 7, ряд контактов под главной кнопкой, рядом с сегментами exocell-mask:b6.cta#3 (телефон) и #4 (e-mail). Латиница, название бренда",
-   "slug": "home"
+   "where": "Экран 7, ряд контактов под главной кнопкой, рядом с сегментами exocell-mask:b6.cta#3 (телефон) и #4 (e-mail). Латиница, название бренда"
   },
   {
+   "slug": "home",
    "key": "home.scroll",
    "en": "Scroll",
-   "where": "Экран 1, подсказка прокрутки над нижним доком",
-   "slug": "home"
+   "where": "Экран 1, подсказка прокрутки над нижним доком"
   },
   {
+   "slug": "catalog",
    "key": "catalog.chips",
    "en": "All · Exosomes · Peels · Masks · Hair · Bio-Spicules · Home care · Devices",
-   "where": "Экран 2: строка чипов и липкая строка фильтра на экранах 3–6. Фрагменты [2], [4], [5] — бейджи линеек и подписи дока, [6] — бейдж домашнего ухода (как на главной). Иврит уже есть дословно в листе Catalog (строка Filters · Chips HE) — перенести без изменений",
-   "slug": "catalog"
+   "where": "Экран 2: строка чипов и липкая строка фильтра на экранах 3–6. Фрагменты [2], [4], [5] — бейджи линеек и подписи дока, [6] — бейдж домашнего ухода (как на главной). Иврит уже есть дословно в листе Catalog (строка Filters · Chips HE) — перенести без изменений"
   },
   {
+   "slug": "catalog",
    "key": "catalog.filters.title",
    "en": "Choose a category",
-   "where": "Экран 2, заголовок над полкой и чипами",
-   "slug": "catalog"
+   "where": "Экран 2, заголовок над полкой и чипами"
   }
  ],
- "hebrew": []
+ "hebrew": [
+  {
+   "slug": "v-tech-system",
+   "key": "kit.alt",
+   "he": "אריזת V-TECH SYSTEM עם 5 אמפולות סרום ו-5 שקיות מסכת ג׳ל",
+   "note": "Unchanged; both reviewers approved it. Follows the ui.kitshot_alt pattern (אריזת + name). The counts and items come from the verified storyboard wording (vp, and b5: 5 אמפולות סרום … ו-5 שקיות מסכת ג׳ל). Digits follow the glossary and the geresh is U+05F3. Still needs the translator plus two reviewers, as with s5.double."
+  },
+  {
+   "slug": "exo-nad",
+   "key": "x.line_badge",
+   "he": "PEELING",
+   "note": "Unchanged. Kept in Latin, because design-rules.md names the series PEELING, alongside V-TECH FACE, HAIR and BIOSPICULE™. Depends on question 6: if the owner wants it translated, use פילינג (the glossary word for peel and catalogue chip [2])."
+  },
+  {
+   "slug": "exo-nad",
+   "key": "x.contacts",
+   "he": "WhatsApp · טלפון · דוא״ל",
+   "note": "Unchanged. טלפון · דוא״ל is verbatim from the verified b6.cta. WhatsApp is a brand name and stays in Latin. Put the container in dir=rtl, not dir=auto, so WhatsApp ends up on the right."
+  },
+  {
+   "slug": "exocell-mask",
+   "key": "line.mark",
+   "he": "V-TECH FACE",
+   "note": "Unchanged. Latin series mark, verbatim line_mark from site/proto/exocell-he-ui.json."
+  },
+  {
+   "slug": "exocell-mask",
+   "key": "s5.double",
+   "he": "מסכה כפולה: שכבה לבנה ושכבה כחולה, שמניחים בזו אחר זו.",
+   "note": "Unchanged. Verbatim from site/proto/exocell-he-design.json s5.double (already reviewed). The feminine forms agree with מסכה and שכבה."
+  },
+  {
+   "slug": "exocell-mask",
+   "key": "kit.double",
+   "he": "כל מסכה מורכבת משתי שכבות – לבנה וכחולה – שמניחים בזו אחר זו.",
+   "note": "Unchanged. Verbatim from site/proto/exocell-he-design.json kit.double. En dashes (U+2013) with spaces, as the glossary requires."
+  },
+  {
+   "slug": "exocell-mask",
+   "key": "kit.net",
+   "he": "Net 5 x 25 ml",
+   "note": "Unchanged and not translated, exactly as printed on both box versions (packaging-text.json exocell-mask). Wrap in <bdi dir=\"ltr\">."
+  },
+  {
+   "slug": "exocell-mask",
+   "key": "contact.phone",
+   "he": "054-326-2182",
+   "note": "Unchanged. Verbatim from exocell-he-ui.json phone. Use a tel: link inside <bdi dir=\"ltr\">."
+  },
+  {
+   "slug": "exocell-mask",
+   "key": "contact.email",
+   "he": "info@mitoderm.com",
+   "note": "Unchanged. Verbatim from exocell-he-ui.json email. Use a mailto: link, LTR, inside <bdi dir=\"ltr\">."
+  },
+  {
+   "slug": "exocell-mask",
+   "key": "ui.bar",
+   "he": "5 מסכות · EXOCELL MASK",
+   "note": "Unchanged. Verbatim from exocell-he-ui.json bar. The string starts with a digit, so the parent element must be dir=rtl."
+  },
+  {
+   "slug": "exosignal-hair",
+   "key": "line.mark",
+   "he": "HAIR",
+   "note": "Unchanged. Latin series mark from design-rules, not translated."
+  },
+  {
+   "slug": "exosignal-hair",
+   "key": "wa_text_price",
+   "he": "שלום, אשמח לקבל פרטים על מחירי EXOSIGNAL HAIR",
+   "note": "Unchanged. The MASK wa_text_price formula from exocell-he-ui.json, with only the product name changed."
+  },
+  {
+   "slug": "exosignal-hair",
+   "key": "wa_text_demo",
+   "he": "שלום, אשמח לתאם הדגמת MITOSCAN עבור EXOSIGNAL HAIR",
+   "note": "Unchanged; both reviewers approved it. It opens with the verified wa formula, and לתאם הדגמת MITOSCAN is the verb form of the verified b6.cta wording לתיאום הדגמת MITOSCAN. עבור stands for 'for' and keeps the two Latin names apart. אשמח has no gender. Hebrew review is still pending, as noted."
+  },
+  {
+   "slug": "exosignal-spray",
+   "key": "ui.line_mark",
+   "he": "HAIR",
+   "note": "Unchanged. Latin series mark, as on EXOSIGNAL HAIR."
+  },
+  {
+   "slug": "exosignal-spray",
+   "key": "ui.line_name",
+   "he": "שיער וקרקפת",
+   "note": "Unchanged. Uses the glossary words שיער and קרקפת in the same order as the verified home.card-12 (אבחון שיער וקרקפת). It replaces the placeholder התחדשות הפנים that was copied from MASK. Pending owner question 8."
+  },
+  {
+   "slug": "exotech-gel",
+   "key": "line.mark",
+   "he": "V-TECH FACE",
+   "note": "Unchanged. Latin series mark; design-rules places EXOTECH GEL in the V-TECH FACE series."
+  },
+  {
+   "slug": "exotech-gel",
+   "key": "wa.exotech-gel",
+   "he": "שלום! איפה אפשר לקנות את EXOTECH GEL?",
+   "note": "Unchanged; both reviewers approved it. Built on the glossary entry Where to buy = איפה לקנות. The impersonal אפשר has no gender, and את is required before the definite product name. The message starts in Hebrew, so the RTL paragraph puts the ? at the left end. Hebrew review is still pending, as noted."
+  },
+  {
+   "slug": "micro-boost-10",
+   "key": "line_mark",
+   "he": "BIOSPICULE™",
+   "note": "Unchanged. Latin with ™, as the glossary requires."
+  },
+  {
+   "slug": "micro-boost-10",
+   "key": "kitshot_alt",
+   "he": "אריזת MICRO BOOST 10% ומזרק של 3 מ״ל",
+   "note": "Unchanged. Follows the MASK kitshot_alt pattern. מזרק של 3 מ״ל is verbatim from the verified b0.label2, with gershayim U+05F4. Bidi keeps 10% attached to the Latin name."
+  },
+  {
+   "slug": "cell-renew-1-5",
+   "key": "badge.line",
+   "he": "BIOSPICULE™",
+   "note": "Unchanged. Latin with ™ kept, not translated."
+  },
+  {
+   "slug": "cell-renew-1-5",
+   "key": "badge.home",
+   "he": "טיפוח ביתי",
+   "note": "Unchanged. This is the approved badge word use_home (exocell-he-ui.json, design-rules), and it is also catalogue chip [6]. It is deliberately not the running-text glossary term טיפול ביתי."
+  },
+  {
+   "slug": "derma-recovery-cream",
+   "key": "kit.alt",
+   "he": "אריזת DERMA RECOVERY CREAM וצנצנת של 50 מ״ל",
+   "note": "Hebrew unchanged. Note corrected as reviewer 2 asked: צנצנת is the word already used on EXOTECH GEL (storyboard b0.cta and b5.title, where it renders the spherical jar). 50 מ״ל matches the carton and the verified derma b0.label2 and b5.label1. The pattern follows ui.kitshot_alt and מזרק של 3 מ״ל. Needs review, like the other kitshot alts."
+  },
+  {
+   "slug": "mitoscan",
+   "key": "ui.wa_text_price",
+   "he": "שלום, אשמח לקבל פרטים על מחירי MITOSCAN",
+   "note": "Unchanged. The MASK wa_text_price formula with only the name changed."
+  },
+  {
+   "slug": "home",
+   "key": "home.line.vtech-face",
+   "he": "V-TECH FACE",
+   "note": "Unchanged. Latin series mark, not translated."
+  },
+  {
+   "slug": "home",
+   "key": "home.s2.line",
+   "he": "בקליניקה – V-TECH SYSTEM, ולסיום EXOCELL MASK; בבית – EXOTECH GEL.",
+   "note": "Unchanged. An exact cut of the verified synthetic-exosomes b4.line, with ' או EXO-NAD' and the scalp clause removed. The en dashes, ולסיום and the semicolon are kept. It opens in Hebrew, so the paragraph is RTL."
+  },
+  {
+   "slug": "home",
+   "key": "home.kit.mask-net",
+   "he": "Net 5 x 25 ml",
+   "note": "Unchanged. As printed on the carton and the same as exocell-mask kit.net. Not translated; wrap in <bdi dir=\"ltr\">."
+  },
+  {
+   "slug": "home",
+   "key": "home.contact.whatsapp",
+   "he": "WhatsApp",
+   "note": "Unchanged. Brand name in Latin."
+  },
+  {
+   "slug": "home",
+   "key": "home.scroll",
+   "he": "גללו",
+   "note": "Unchanged. Verbatim from exocell-he-ui.json scroll_hint; plural imperative."
+  },
+  {
+   "slug": "catalog",
+   "key": "catalog.chips",
+   "he": "הכל · אקסוזומים · פילינג · מסכות · שיער · ביו-ספיקולות · טיפוח ביתי · מכשור",
+   "note": "Unchanged. I checked it again: it matches mitoderm-site-blocks.xlsx, sheet Catalog, row Filters · Chips HE, character for character. Question for the owner, as reviewer 1 raised: chip [0] is spelled הכל, while the verified site texts use the full spelling הכול (storyboard: משנה הכול, קובעים הכול). Change it in both the sheet and the site only if the owner agrees."
+  },
+  {
+   "slug": "catalog",
+   "key": "catalog.filters.title",
+   "he": "בחרו קטגוריה",
+   "note": "Unchanged. A new UI string in the plural imperative, as the glossary requires. It is short and adds nothing to 'Choose a category'."
+  }
+ ]
 }
