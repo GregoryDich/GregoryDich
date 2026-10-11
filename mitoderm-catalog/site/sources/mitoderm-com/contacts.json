@@ -1,0 +1,19 @@
+{
+  "_source": "mitoderm.com /he and /en, fetched 11/10/2026 (dictionary 'contacts', 'footer', schema.org ContactPoint). Owner 11/10: everything on mitoderm.com is correct; do not promise a callback time.",
+  "phone": "054-326-2182",
+  "phone_label_he": "לכל הפרטים:",
+  "phone_en": "+972 54-326-2182",
+  "whatsapp": "+972-54-762-1889",
+  "whatsapp_link": "https://wa.me/972547621889",
+  "email": "info@mitoderm.com",
+  "email_academy": "Mitoderm@gmail.com",
+  "_email_note": "info@mitoderm.com is the main-site address (product pages, forms). Mitoderm@gmail.com appears only in the MITODERM ACADEMY events contacts block — use it on events pages only.",
+  "address_he": "רפאל איתן 38, רמת גן, 5590500",
+  "address_en": "Rafael Eitan 38, Ramat Gan, 5590500",
+  "hours_he": {"title": "שעות פעילות", "workWeek": "ראשון - חמישי", "friday": "שישי", "fridayText": "בתיאום מראש בלבד", "saturday": "שבת", "closed": "סגור"},
+  "hours_en": {"title": "Office Hours", "workWeek": "Sunday - Thursday", "friday": "Friday", "fridayText": "By appointment only", "saturday": "Saturday", "closed": "Closed"},
+  "footer_he": {"copyright": "© כל הזכויות שמורות למיטודרם בע\"מ", "accessibility": "הצהרת נגישות", "privacy": "מדיניות פרטיות", "group": "SinoSciences Group"},
+  "footer_en": {"copyrightText": "Mitoderm. All Rights Reserved.", "accessibility": "Accessibility Statement", "privacy": "Privacy Policy", "group": "SinoSciences Group"},
+  "callback_time": null,
+  "_callback_note": "Owner 11/10: do not state how soon a manager calls back."
+}
