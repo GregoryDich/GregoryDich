@@ -100,6 +100,8 @@ details ol { margin: 0 0 18px; padding-inline-start: 22px; color: var(--text); d
 .fact span { font: 400 14px/1.4 var(--body); color: var(--text-faint); }
 .sec .dbl { display: inline-flex; align-items: center; gap: 10px; max-width: min(86vw, 460px); padding: 10px 16px; border: 1px solid rgba(111,183,186,.45); border-radius: 18px; background: rgba(10,10,11,.7); backdrop-filter: blur(8px); font: 400 14px/1.4 var(--body); color: var(--cream); }
 .sec .dbl::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--drop); box-shadow: 0 0 0 4px rgba(111,183,186,.22); }
+.gl-on .sec .dbl { max-width: min(460px, calc(50vw - 24px)); }
+@media (max-width: 760px) { .gl-on .sec .dbl { max-width: min(86vw, 460px); } }
 .gl-on .dbl { position: fixed; left: 0; top: 0; z-index: 2; margin: 0; pointer-events: none; opacity: 0; visibility: hidden; will-change: transform; }
 .gl-on .dbl.on { opacity: var(--do, 1); visibility: visible; }
 
@@ -132,10 +134,11 @@ details ol { margin: 0 0 18px; padding-inline-start: 22px; color: var(--text); d
 .kitcard .chip { justify-self: start; padding: 8px 16px; font-size: 14px; }
 
 /* 7 · Specialists: who performs the treatment (Make design); full width, no 3D objects */
-.spec-sec.sec { padding-block: 92px 100px; }
-.spec-sec .wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; justify-items: start; }
+.spec-sec.sec { padding-block: 80px 92px; }
+.spec-sec .wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; justify-items: start; }
 .spec-sec .wrap > * { max-width: 100%; }
 .spec-sec p.intro { max-width: min(60ch, 100%); }
+.spec-sec h2 { font-size: clamp(34px, 4vw, 52px); }
 .filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 8px; }
 .filter .lbl { font: 400 14px/1 var(--body); color: var(--text-faint); letter-spacing: .04em; margin-inline-end: 4px; }
 .fchip { min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(246,243,236,.2); background: rgba(10,10,11,.45); color: var(--text-soft); font: 400 14px/1 var(--body); cursor: pointer; transition: background-color .3s, color .3s, border-color .3s; }
@@ -143,10 +146,10 @@ details ol { margin: 0 0 18px; padding-inline-start: 22px; color: var(--text); d
 .specs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; width: 100%; margin-top: 6px; }
 .spec { --card: rgb(24,24,28); display: flex; flex-direction: column; min-width: 0; overflow: hidden; border-radius: 22px; background: var(--card); border: 1px solid var(--hairline); }
 .spec[hidden] { display: none; }
-.spec .pic { position: relative; height: 188px; background: var(--ink); }
+.spec .pic { position: relative; height: 228px; background: var(--ink); }
 .spec .pic img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
-.spec .pic::after { content: ""; position: absolute; inset: 52% 0 -1px; background: linear-gradient(to bottom, rgba(24,24,28,0), var(--card)); }
-.spec .sb { display: grid; gap: 8px; justify-items: start; padding: 4px 22px 14px; }
+.spec .pic::after { content: ""; position: absolute; inset: 62% 0 -1px; background: linear-gradient(to bottom, rgba(24,24,28,0), var(--card)); }
+.spec .sb { display: grid; gap: 6px; justify-items: start; padding: 2px 22px 12px; }
 .spec.mono .sb { padding-top: 14px; }
 .spec .av { width: 58px; height: 58px; margin: 22px 22px 0; border-radius: 50%; border: 1px solid var(--gold); display: grid; place-items: center; font: 400 28px/1 var(--display); color: var(--gold-soft); background: rgba(10,10,11,.6); }
 .spec h3 { font: 400 26px/1.15 var(--display); color: var(--cream); }
@@ -885,7 +888,11 @@ function resize() {
   W = window.innerWidth; Hh = window.innerHeight;
   phone = phoneQ.matches;
   renderer.setSize(W, Hh, false);
-  camera.aspect = W / Hh; camera.fov = phone ? 48 : 35; camera.updateProjectionMatrix();
+  // narrower than 16:10 (tablets, small windows): widen the vertical view so the scene keeps its 16:10 framing and the
+  // objects stay in the right half, clear of the copy
+  camera.aspect = W / Hh;
+  camera.fov = phone ? 48 : Math.max(35, 2 * Math.atan(Math.tan(17.5 * Math.PI / 180) * 1.6 / camera.aspect) * 180 / Math.PI);
+  camera.updateProjectionMatrix();
   measure(); sizeDbl();
   if (reduce) requestAnimationFrame(frame);
 }
