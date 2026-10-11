@@ -27,6 +27,7 @@ for h in data.get('hebrew', []):
     new.setdefault((h['slug'], h['key']), {}).update(he=h['he'])
 
 MISSING = '⚠ нет ключа: '
+PENDING = '⏳ перевод на иврит и две проверки идут'
 
 # The 'who performs the treatment' block (owner 11/10): screen 8 on every page, right after the price screen.
 # Texts come from the owner's Make site (sources/make-dictionary-spec.json) and from mitoderm.com (sources/mitoderm-com).
@@ -34,13 +35,17 @@ MAKE = load('sources/make-dictionary-spec.json')
 FORM = load('sources/mitoderm-com/form-he.json')
 FORM_EN = {  # English site form, from the owner's screenshots of mitoderm.com (11/10)
     'form.titleP1': 'Get Personalized', 'form.titleP2': 'Solutions', 'form.titleP3': 'for Your Practice',
-    'form.subtitle': 'Our Specialist Will Reach Out Within 30 Minutes', 'form.placeholderInputName': 'Name',
+    'form.subtitle': 'Our Specialist Will Reach Out',  # site dictionary; owner 11/10: never promise a callback time
+    'form.placeholderInputName': 'Name',
     'form.placeholderEmailName': 'E-mail', 'form.placeholderPhoneName': 'Phone Number', 'form.placeholderProfession': 'Profession',
     'form.checkboxLabel': 'I agree with rules of Mitoderm *', 'form.sharing': 'Your information will never be shared with third parties *',
     'buttons.requestCallback': 'Request A Callback', 'form.sent.mobTitle': 'Congratulations!', 'form.sent.text': 'Your form has been submitted',
     'form.sent.textColored': 'successfully', 'buttons.contactForPrice': 'Contact for price', 'specialists.title': 'Certified cosmetologists and clinics',
     'buttons.learnMore': 'More info', 'form.eventTitle': 'Reserve your spot for the Event', 'form.placeholderInputID': 'ID Card Number',
     'form.numberTickets': 'Tickets', 'form.total': 'TOTAL', 'form.promo': 'Promo Code', 'form.apply': 'Apply', 'buttons.reserveSeat': 'Reserve a Seat'}
+SITE_HE = load('sources/mitoderm-com/products-he.json')  # mitoderm.com product texts (owner 11/10: very good, not perfect — best of site + catalogue)
+SITE_EN = load('sources/mitoderm-com/products-en.json')
+CONTACTS = load('sources/mitoderm-com/contacts.json')
 TAGS = {'face': ('פנים', 'Face', 'заказчик'), 'scalp': ('קרקפת', 'Scalp', 'заказчик'),
         'trich': (MAKE['prof.trichologist']['he'], MAKE['prof.trichologist']['en'], 'Make')}
 SPEC_LINE = {'v-tech-system': 'tech.face.1.body', 'exo-nad': 'tech.face.1.body', 'exocell-mask': 'tech.face.1.body',
@@ -49,10 +54,10 @@ SPEC_LINE = {'v-tech-system': 'tech.face.1.body', 'exo-nad': 'tech.face.1.body',
 SPEC_TAGS = {'exosignal-hair': ['scalp', 'trich'], 'exosignal-spray': ['scalp', 'trich'], 'mitopen': ['face', 'scalp'],
              'home': ['face', 'scalp', 'trich'], 'catalog': ['face', 'scalp', 'trich']}
 # owner's photos in the Figma collage (site/photo-catalog.md), by page
-PHOTOS = {'exocell-mask': '11–24 (саше, двойная маска, нанесение)', 'v-tech-system': '40, 42, 44–50, 53, 54, 60',
-          'exo-nad': '26–32, 35, 39, 51, 63, 64', 'exosignal-hair': '36, 47, 55, 58', 'exosignal-spray': '2, 3, 21, 33, 34, 41, 43, 59, 65',
+PHOTOS = {'exocell-mask': '11–24 (саше, двойная маска, нанесение)', 'v-tech-system': '40, 42, 44–50, 53, 54, 60, 78–80, 82, 83',
+          'exo-nad': '26–32, 35, 39, 51, 63, 64, 84', 'exosignal-hair': '36, 47, 55, 58', 'exosignal-spray': '2, 3, 21, 33, 34, 41, 43, 59, 65',
           'exotech-gel': '37, 38, 52', 'mitopen': '56, 57', 'derma-recovery-cream': '1, 5, 73', 'micro-boost-10': '6, 67–69, 72, 74, 77',
-          'cell-renew-1-5': '10, 70, 75, 67–69', 'cellular-age-defense-2-5': '7, 9, 67–69', 'mitoscan': '— (нужно фото прибора)',
+          'cell-renew-1-5': '10, 70, 75, 67–69', 'cellular-age-defense-2-5': '7, 9, 67–69', 'mitoscan': '81',
           'home': '66, 71, 76', 'catalog': 'пакшоты всех средств'}
 
 
@@ -76,12 +81,44 @@ def flat(v):
     return str(v)
 
 
+UI = load('proto/exocell-he-ui.json')  # page UI strings (Hebrew), reviewed with the MASK page
+
+
 def resolve(slug, key):
-    """-> (he, en) for a text key, or a marked miss"""
+    """-> (he, en) for a text key, or a marked miss. Accepts the forms the story writers used:
+    'a + b' or 'a, b' (several keys), 'page:key' (another page), 'key[i]' (i-th item of a ' · ' list), a trailing '(note)'."""
     if not key:
         return '', ''
-    key = key.strip()
+    key = re.sub(r'\s*\([^()]*\)', '', key.strip())          # writer notes in brackets
+    key = re.split(r'\s+(?:—|→)\s*', key)[0].strip()           # '... → screen 7', '... — one button'
+    key = ' '.join(w for w in key.split() if not re.search('[а-яё]', w, re.I) and not re.fullmatch(r'[A-Z0-9%-]+', w))  # notes in key fields
+    key = re.sub(r'(^|(?<=[\s+·/,]))new:', '', key).strip()      # 'new:key' = a reviewed new string
+    if key.lower() in ('none', '-', '—', ''):
+        return '', ''
+    m = re.fullmatch(r'(cat|sb)\[([a-z0-9-]+)\]\.(.+)', key)   # cat[slug].path / sb[slug].key
+    if m:
+        return resolve(m.group(2), ('cat.' if m.group(1) == 'cat' else '') + m.group(3))
+    m = re.fullmatch(r'(.+)#(\d+)', key)                         # key#n = n-th item (1-based)
+    if m:
+        return resolve(slug, f'{m.group(1)}[{int(m.group(2)) - 1}]')
+    parts = [p for p in re.split(r'\s*[+·]\s*|\s+/\s+|,\s*(?=[a-z])|\s+(?=[a-z][a-z0-9-]*[.:\[])', key) if p]
+    if len(parts) > 1:
+        got = [resolve(slug, p) for p in parts]
+        return ' · '.join(g[0] for g in got if g[0]), ' · '.join(g[1] for g in got if g[1])
+    m = re.fullmatch(r'([a-z0-9-]+):(.+)', key)
+    if m and not key.startswith(('make.', 'site.', 'tag.', 'cat.', 'mdc.', 'ui.')):
+        return resolve(m.group(1), m.group(2))
+    m = re.fullmatch(r'(b\d\.[a-z]+\d?|vp)\[(\d+)\]', key)
+    if m:
+        he, en = resolve(slug, m.group(1))
+        if not he.startswith(MISSING):
+            i = int(m.group(2))
+            hs, es = he.split(' · '), en.split(' · ')
+            return (hs[i] if i < len(hs) else he), (es[i] if i < len(es) else en)
     try:
+        if key.startswith('ui.'):
+            v = UI[key[3:]]
+            return v, (v if re.fullmatch(r'[ -~]+', v) else '')
         m = re.fullmatch(r'nav\[(\d)\]', key)
         if m:
             return nav_he[int(m.group(1))], nav_en[int(m.group(1))]
@@ -91,6 +128,8 @@ def resolve(slug, key):
         if key.startswith('site.'):
             path = key[5:]
             return form_value(path), FORM_EN.get(path, '')
+        if key.startswith('mdc.'):
+            return flat(walk(SITE_HE, key[4:])), flat(walk(SITE_EN, key[4:]))
         if key.startswith('tag.'):
             t = TAGS[key[4:]]
             return t[0], t[1]
@@ -102,7 +141,7 @@ def resolve(slug, key):
             return page[key]['he'], page[key]['en']
         if (slug, key) in new:
             n = new[(slug, key)]
-            return n.get('he', MISSING + key + ' (иврит не готов)'), n.get('en', '')
+            return n.get('he', PENDING), n.get('en', '')
     except (KeyError, IndexError, TypeError):
         pass
     return MISSING + key, MISSING + key
@@ -132,10 +171,10 @@ def sheet(wb, title, cols, rows, he_cols=()):
 
 stories = data['stories']
 wb = Workbook(); wb.remove(wb.active)
-sheet(wb, 'Overview', [('Страница', 22), ('Slug', 20), ('Линейка', 16), ('Назначение', 14), ('Цветовое окружение', 40),
+sheet(wb, 'Overview', [('Страница', 22), ('Статус', 18), ('Slug', 20), ('Линейка', 16), ('Назначение', 14), ('Цветовое окружение', 40),
                        ('Экран с оттенком серии', 12), ('Герой-объект', 30), ('Сюжет одной строкой', 60), ('Метки специалистов', 18),
                        ('Фото заказчика (№ в коллаже)', 24), ('Новых строк', 10), ('Вопросов', 10)],
-      [[s['name'], s['slug'], s['line'], s['use'], s['colour_env'], s['series_tint_screen'], s['hero_object'], s['story_one_line'],
+      [[s['name'], s.get('_status', 'готово'), s['slug'], s['line'], s['use'], s['colour_env'], s['series_tint_screen'], s['hero_object'], s['story_one_line'],
         ' · '.join(TAGS[t][0] for t in SPEC_TAGS.get(s['slug'], ['face'])), PHOTOS.get(s['slug'], ''),
         len(s.get('new_strings', [])), len(s.get('questions_ru', []))] for s in stories])
 rows = []
@@ -204,7 +243,59 @@ for kind, what, key in FORM_ROWS:
     note = 'Индикатор загрузки, поля затемнены (как на сайте)' if what == 'Загрузка' else ''
     frows.append([kind, what, he, en, key or '—', note])
 sheet(wb, 'Form', [('Форма', 22), ('Элемент', 24), ('HE', 50), ('EN', 40), ('Ключ', 34), ('Примечание', 40)], frows, he_cols=('HE',))
-sheet(wb, 'Questions', [('Страница', 20), ('Вопрос заказчику', 100)], [[s['name'], q] for s in stories for q in s.get('questions_ru', [])])
+# mitoderm.com: a very good version of product texts (owner 11/10: take the best of it and of the catalogue); contacts as on the site
+MDC = [('V-TECH SYSTEM', ['intro.text', 'fastResult.subtitle', 'fastResult.text', 'solution.main.title', 'solution.main.subtitle']
+        + ['solution.main.item1title'] + [f'solution.main.item1textP{i}' for i in range(1, 7)]
+        + ['solution.main.item2title'] + [f'solution.main.item2textP{i}' for i in range(1, 6)]
+        + ['solution.main.bundleTitle', 'solution.main.bundleText1', 'solution.main.bundleText2', 'solution.main.discountTitle',
+           'solution.main.discountLabelText1', 'solution.main.discountLabelText2', 'howToUse.title'] + [f'howToUse.main.item{i}' for i in range(1, 7)]
+        + ['synergy.title', 'synergy.item1.title', 'synergy.item1.text1', 'synergy.item1.text2', 'synergy.item1.text3', 'synergy.item2.title',
+           'synergy.item2.text', 'synergy.item3.title', 'synergy.item3.text']),
+       ('EXOTECH GEL', ['intro.gelSubtitle', 'solution.gel.itemTitle'] + [f'solution.gel.item{i}' for i in range(1, 7)]
+        + ['solution.gel.discountTitle', 'solution.gel.discountLabelText2', 'solution.gel.bundleText1', 'solution.gel.bundleText3']
+        + [f'howToUse.gel.item{i}' for i in range(1, 6)]),
+       ('EXOSIGNAL SPRAY', ['intro.hairSubtitle', 'solution.hair.itemTitle'] + [f'solution.hair.item{i}' for i in range(1, 7)]
+        + ['solution.hair.discountTitle', 'solution.hair.discountLabelText2', 'solution.hair.bundleText1', 'solution.hair.bundleText2']),
+       ('EXOSIGNAL HAIR', ['intro.signalSubtitle', 'solution.signal.title'] + [f'solution.signal.item{i}' for i in range(1, 7)]
+        + ['solution.signal.bundleTitle'] + [f'solution.signal.bundleText{i}' for i in range(1, 5)] + [f'howToUse.hair.item{i}' for i in range(1, 7)]),
+       ('Общее', ['unique.textP1', 'unique.textP2', 'unique.textP3', 'buttons.contactForPrice', 'buttons.requestCallback', 'buttons.learnMore'])]
+mrows = [[prod, k, *resolve('', 'mdc.' + k)] for prod, keys in MDC for k in keys]
+C = CONTACTS
+mrows += [['Контакты', 'телефон', f"{C['phone_label_he']} {C['phone']}", C['phone_en']], ['Контакты', 'WhatsApp', C['whatsapp'], C['whatsapp']],
+          ['Контакты', 'почта (сайт и формы)', C['email'], C['email']], ['Контакты', 'почта Академии (только мероприятия)', C['email_academy'], C['email_academy']],
+          ['Контакты', 'адрес', C['address_he'], C['address_en']],
+          ['Контакты', 'часы', f"{C['hours_he']['workWeek']} · {C['hours_he']['friday']}: {C['hours_he']['fridayText']} · {C['hours_he']['saturday']}: {C['hours_he']['closed']}",
+           f"{C['hours_en']['workWeek']} · {C['hours_en']['friday']}: {C['hours_en']['fridayText']} · {C['hours_en']['saturday']}: {C['hours_en']['closed']}"],
+          ['Контакты', 'срок обратного звонка', 'не указываем (заказчик 11/10)', 'not stated (owner 11/10)']]
+sheet(wb, 'mitoderm.com', [('Средство', 18), ('Ключ на сайте', 34), ('HE', 60), ('EN', 60)], mrows, he_cols=('HE',))
+# answers already given by the owner (11/10) or found in his sources: mitoderm.com, protocols/src/content.*.mjs
+CONTACTS_RU = ('Как на mitoderm.com (заказчик 11/10): кнопка WhatsApp +972-54-762-1889, телефон 054-326-2182, '
+               'почта info@mitoderm.com (Mitoderm@gmail.com — только для мероприятий). Срок обратного звонка не пишем.')
+SPECIALISTS_RU = 'Таблицу специалистов заказчик пришлёт позже (11/10). До неё кнопка ведёт на форму заявки, без JS — в WhatsApp.'
+ANSWERS = [
+    ('', ('Контакты', 'контакты', 'WhatsApp ведёт на номер', 'Какие номер WhatsApp'), CONTACTS_RU),
+    ('', ('איפה לקנות',), SPECIALISTS_RU),
+    ('v-tech-system', ('Флакон или ампула',), 'В тексте — «אמפולות», как на mitoderm.com («5 אמפולות V-Tech Serum בנפח 5 מ׳׳ל כל אחת»); в 3D — флакон, как на фото. Заказчик 11/10: «5 масок и 5 ампул».'),
+    ('v-tech-system', ('Колпачок флакона',), 'Серебряный, как на фото 79. Сыворотку набирают в шприц 3 мл иглой для набора (протоколы заказчика, V-TECH + MITOPEN, шаг 1).'),
+    ('v-tech-system', ('Гиалуроновая кислота и алоэ',), 'В гель-маске: mitoderm.com, состав V-Tech Gel Mask 5ml — «חומצה היאלורונית במשקל מולקולרי נמוך, אלוורה».'),
+    ('v-tech-system', ('Сколько флаконов и саше',), 'Протоколы заказчика: на зону (лицо, шея или декольте) до 2 мл сыворотки и до 2 мл гель-маски; раз в 14 дней, курс 4–6 процедур, затем поддержка раз в 2–3 месяца. Сколько процедур на коробку — в протоколах нет.'),
+    ('v-tech-system', ('Шаг 1 протокола',), 'Протокол заказчика называется «V-TECH + MITOPEN»: сыворотку вносят MITOPEN, мезопеном или другим подходящим оборудованием. MITOPEN показываем как перекрёстную продажу.'),
+    ('v-tech-system', ('Финиш',), 'Протокол заказчика: рекомендована EXOCELL MASK, в конце DERMA RECOVERY CREAM, защита от солнца обязательна. Даём оба чипа.'),
+    ('exo-nad', ('Сколько процедур рассчитано',), 'Протоколы заказчика: набора хватает до 15 процедур, в зависимости от расхода.'),
+    ('exocell-mask', ('Слои маски',), 'Заказчик 11/10: маска двухкомпонентная, «2 в 1»; тексты s5.double и kit.double не трогаем. Снимает профессионал в клинике, клиент может использовать после процедуры.'),
+    ('exocell-mask', ('времени экспозиции',), 'Протоколы заказчика: оставить маску до 30 минут, затем снять и вбить остаток сыворотки в кожу.'),
+    ('exosignal-spray', ('состав спрея',), 'Есть на mitoderm.com: синтетические экзосомы, PDRN низкой молекулярной массы, пантенол, биотин, биомиметические пептиды 8 видов; флакон 15 мл (лист mitoderm.com).'),
+    ('exosignal-spray', ('Сколько нажатий',), 'mitoderm.com: раз в день на чистую сухую кожу головы, встряхнуть, распылить у корней, слегка помассировать; лучше вечером, курс два месяца. Число нажатий там не указано.'),
+    ('mitoscan', ('Кнопка цены',), 'Да: «לקבלת פרטים על מחירים» — как на mitoderm.com.'),
+    ('', ('MITOTECH CELL BOOSTER',), 'В протоколах заказчика: два флакона — бустер и концентрат-порошок, смешать до прозрачного раствора, до 2 мл на лицо, шею и декольте. Линейка там не указана.'),
+]
+def answer(slug, q):
+    for sl, keys, a in ANSWERS:
+        if (not sl or sl == slug) and any(k in q for k in keys):
+            return a
+    return ''
+qrows = [[s['name'], q, answer(s['slug'], q)] for s in stories for q in s.get('questions_ru', [])]
+sheet(wb, 'Questions', [('Страница', 20), ('Вопрос заказчику', 90), ('Ответ / решение (источник)', 70)], qrows)
 out = os.path.join(SITE, 'MITODERM-3D-story.xlsx')
 wb.save(out)
 misses = sum(str(c.value).startswith(MISSING) for ws in wb.worksheets for row in ws.iter_rows() for c in row if c.value)
