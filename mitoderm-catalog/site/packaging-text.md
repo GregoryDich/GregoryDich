@@ -24,7 +24,7 @@ Text printed on each product's packaging, transcribed 10/10/2026 from the high-r
   - small block, first line bold: 'Professional facial moisturizing mask imbued in serum', then the same three lines in Italian, Spanish and French as on the lighter carton
   - bottom: '1 face mask – maschera viso - máscara facial - masque facial' / '25 ml' and '0.84 fl.oz' on one line
   - _a mock-up of the sachet in the same collage reads 'Net 2.3 g / 0.08 oz' without 'imbued in serum'; the real photo reads 25 ml, which matches the carton (5 x 25 ml)_
-- **sheet mask** — translucent milky-white bio-cellulose, faint aqua tint, eye, nose and mouth cut-outs, a small slit at the right jaw; it comes on a removable pale-blue carrier film: the mask is laid on the face with the blue film outside, smoothed, then the blue film is peeled off and only the translucent mask stays on the skin (owner 11/10: 'снимаемая', application photos in the same collage). One photo shows a separate white perforated piece on the same blue film captioned 'דקולטה' (décolleté)
+- **sheet mask** — translucent milky-white bio-cellulose, faint aqua tint, eye, nose and mouth cut-outs, a small slit at the right jaw; double, two-component (2-in-1): a milky-white layer and a pale-blue layer (owner, 11/10). In the clinic the professional applies and removes it; clients can also use it after the procedure (owner, 11/10)
 
 ## v-tech-system
 
