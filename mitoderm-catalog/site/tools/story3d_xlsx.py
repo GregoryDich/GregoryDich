@@ -26,6 +26,10 @@ new = {(n['slug'], n['key']): n for n in data.get('new_strings', [])}
 for h in data.get('hebrew', []):
     new.setdefault((h['slug'], h['key']), {}).update(he=h['he'])
 
+# a new key whose Hebrew already passed review elsewhere: take it verbatim instead of a fresh translation
+REVIEWED = {('catalog', 'catalog.chips'): 'הכל · אקסוזומים · פילינג · מסכות · שיער · ביו-ספיקולות · טיפוח ביתי · מכשור'}  # sheet Catalog, Filters · Chips HE
+for k, he in REVIEWED.items():
+    new.setdefault(k, {}).update(he=he)
 MISSING = '⚠ нет ключа: '
 PENDING = '⏳ перевод на иврит и две проверки идут'
 
@@ -81,7 +85,9 @@ def flat(v):
     return str(v)
 
 
-UI = load('proto/exocell-he-ui.json')  # page UI strings (Hebrew), reviewed with the MASK page
+UI = load('proto/exocell-he-ui.json')
+TOKEN = (r'«[^»]*»|(?:new:)?(?:[a-z0-9-]+:)?(?:cat|sb)\[[a-z0-9-]+\]\.[A-Za-z0-9_.\[\]-]+'
+         r'|(?:new:)?(?:[a-z0-9-]+:)?[a-z][a-z0-9_-]*(?:\.[A-Za-z0-9_-]+|\[\d+\])+(?:#\d+)?|\bnav\[\d\]|\bvp\b|\bnone\b')  # page UI strings (Hebrew), reviewed with the MASK page
 
 
 def resolve(slug, key):
@@ -89,7 +95,15 @@ def resolve(slug, key):
     'a + b' or 'a, b' (several keys), 'page:key' (another page), 'key[i]' (i-th item of a ' · ' list), a trailing '(note)'."""
     if not key:
         return '', ''
-    key = re.sub(r'\s*\([^()]*\)', '', key.strip())          # writer notes in brackets
+    key = key.strip()
+    key = re.sub(r'(b\d\.label)(\d)[–-](\d)', lambda m: ' · '.join(m.group(1) + str(i) for i in range(int(m.group(2)), int(m.group(3)) + 1)), key)
+    if re.search(r'[\s·+,/«]', key):                             # several keys, maybe mixed with notes
+        toks = re.findall(TOKEN, re.sub(r'\([^()]*\)', ' ', key))
+        if len(toks) > 1 or (toks and toks[0] != key):
+            got = [(t[1:-1], t[1:-1]) if t.startswith('«') else resolve(slug, t) for t in toks]
+            got = [g for g in got if g[0].strip(' –—-')]
+            return ' · '.join(g[0] for g in got), ' · '.join(g[1] for g in got)
+    key = re.sub(r'\s*\([^()]*\)', '', key)                  # writer notes in brackets
     key = re.split(r'\s+(?:—|→)\s*', key)[0].strip()           # '... → screen 7', '... — one button'
     key = ' '.join(w for w in key.split() if not re.search('[а-яё]', w, re.I) and not re.fullmatch(r'[A-Z0-9%-]+', w))  # notes in key fields
     key = re.sub(r'(^|(?<=[\s+·/,]))new:', '', key).strip()      # 'new:key' = a reviewed new string
@@ -139,6 +153,17 @@ def resolve(slug, key):
         page = he_pages['home'] if key.startswith('home.') else he_pages.get(slug, {})
         if key in page:
             return page[key]['he'], page[key]['en']
+        m = re.fullmatch(r'(.+?)\[(\d+)\]', key)
+        nk = (slug, m.group(1)) if m and (slug, m.group(1)) in new else None
+        if m and not nk and m.group(1).startswith('catalog.') and ('catalog', m.group(1)) in new:
+            nk = ('catalog', m.group(1))
+        if nk:
+            n, i = new[nk], int(m.group(2))
+            he, en = n.get('he', PENDING), n.get('en', '')
+            hs, es = he.split(' · '), en.split(' · ')
+            return (hs[i] if i < len(hs) and he != PENDING else he), (es[i] if i < len(es) else en)
+        if key.startswith('catalog.') and ('catalog', key) in new and (slug, key) not in new:
+            slug = 'catalog'
         if (slug, key) in new:
             n = new[(slug, key)]
             return n.get('he', PENDING), n.get('en', '')
