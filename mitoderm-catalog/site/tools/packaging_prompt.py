@@ -25,6 +25,8 @@ def render_md(data=DATA):
         for o in v['objects']:
             out.append(f"- **{o['what']}** — {o['look']}")
             out += [f'  - {line}' for line in o.get('front', []) + o.get('side', [])]
+            if o.get('note'):
+                out.append(f"  - _{o['note']}_")
         out.append('')
     return '\n'.join(out)
 

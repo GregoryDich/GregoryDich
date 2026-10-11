@@ -18,11 +18,13 @@ Text printed on each product's packaging, transcribed 10/10/2026 from the high-r
   - centre: 'EXOCELL' / letter-spaced 'M A S K'
   - small block: 'Professional facial moisturizing mask imbued in serum' / 'Maschera viso idratante ad uso professionale imbevuta con siero' / 'Mascarilla hidratante facial profesional empapada en suero' / 'Masque hydratant visage professionnel imbibés de sérum'
   - '5 face masks – maschere viso - máscaras facial - masques facial' / 'Net 5 x 25 ml ℮ 5 x 0.84 fl.oz' / 'Total 125 ml ℮ Total 4,23 fl.oz.'
-- **single-mask sachet** — pale aqua foil sachet
-  - VM monogram top centre
-  - 'EXOCELL' / letter-spaced 'MASK'
-  - [unreadable] two tiny lines near the bottom
-- **sheet mask** — translucent milky-white bio-cellulose, faint aqua tint, eye, nose and mouth cut-outs, a small slit at the right jaw; double: a milky-white layer and a pale-blue layer, applied one after the other (owner, 11/10)
+- **single-mask sachet** — turquoise foil sachet with rounded corners and a tear notch at the top left, dark navy print (owner's photos in Figma, page 'About — MITODERM', frame HeroArt 88:2, 11/10)
+  - VM monogram top centre, below it small 'VM corporation'
+  - centre: 'EXOCELL' ('EXO' bold, 'CELL' thin), below it letter-spaced 'M A S K'
+  - small block, first line bold: 'Professional facial moisturizing mask imbued in serum', then the same three lines in Italian, Spanish and French as on the lighter carton
+  - bottom: '1 face mask – maschera viso - máscara facial - masque facial' / '25 ml' and '0.84 fl.oz' on one line
+  - _a mock-up of the sachet in the same collage reads 'Net 2.3 g / 0.08 oz' without 'imbued in serum'; the real photo reads 25 ml, which matches the carton (5 x 25 ml)_
+- **sheet mask** — translucent milky-white bio-cellulose, faint aqua tint, eye, nose and mouth cut-outs, a small slit at the right jaw; it comes on a removable pale-blue carrier film: the mask is laid on the face with the blue film outside, smoothed, then the blue film is peeled off and only the translucent mask stays on the skin (owner 11/10: 'снимаемая', application photos in the same collage). One photo shows a separate white perforated piece on the same blue film captioned 'דקולטה' (décolleté)
 
 ## v-tech-system
 

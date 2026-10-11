@@ -1,11 +1,11 @@
 {
- "note": "Hebrew strings added for the EXOCELL MASK 3D story design (Figma page 98:2), translator + two reviewers, 11/10/2026.",
- "s5.double": {
-  "en": "Double mask: a white layer and a blue layer, applied one after the other.",
-  "he": "מסכה כפולה: שכבה לבנה ושכבה כחולה, שמניחים בזו אחר זו."
+ "note": "Hebrew strings added for the EXOCELL MASK 3D story design (Figma page 98:2), translator + two reviewers, 11/10/2026. s5.film and kit.film replace s5.double and kit.double: the blue layer is a removable carrier film, not a second mask (owner's application photos, 11/10).",
+ "s5.film": {
+  "en": "A mask on a pale-blue film: lay it on, smooth it, peel the film away.",
+  "he": "מסכה על גבי שכבת מגן תכלת: מניחים על העור, מחליקים ומקלפים את שכבת המגן."
  },
- "kit.double": {
-  "en": "Each mask has two layers – white and blue – applied in turn.",
-  "he": "כל מסכה מורכבת משתי שכבות – לבנה וכחולה – שמניחים בזו אחר זו."
+ "kit.film": {
+  "en": "Each mask comes on a pale-blue film that is peeled off after application.",
+  "he": "כל מסכה מגיעה על גבי שכבת מגן תכלת שמקלפים לאחר הנחת המסכה על העור."
  }
 }
