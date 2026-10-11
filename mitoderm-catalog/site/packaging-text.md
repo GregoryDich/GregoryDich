@@ -76,7 +76,7 @@ Text printed on each product's packaging, transcribed 10/10/2026 from the high-r
 
 ## exosignal-spray
 
-Пакшот: `site/img/exosignal-spray-hand.jpg` — ⚠ no studio packshot yet; the reference is the client photo of the bottle in hand (cropped, real label)
+Пакшот: фото заказчика № 2, 3, 21 в Figma (`93:8081`, `93:8083`, `104:8121` — коробка и флакон на белом). ⚠ Студийного пакшота нет. Кроп флакона в руке у лица — фото с человеком, хранится закрыто, в репозиторий не кладётся
 
 - **tall box** — matte black box, gold and white print
   - top: VM monogram
