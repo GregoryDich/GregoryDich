@@ -96,18 +96,19 @@ RAW = {
 }
 
 
-def card(slug, img, use, i):
+def card(slug, img, use, i, txt=esc):
     c = cat[slug]
     return (f'<a class="card rv" style="--d:{i * .08:.2f}s" href="{esc(wa(ui["wa_text_product"].format(name=c["name"])))}" target="_blank" rel="noopener">'
             f'<div class="pic"><img src="{data_uri(os.path.join(REPO, "protocols/assets/img", img), 360, "WEBP")}" alt="{esc(c["name"])}" loading="lazy"></div>'
             f'<div class="body"><span class="badge{" pro" if use == "pro" else " home"}">{esc(ui["use_pro" if use == "pro" else "use_home"])}</span>'
-            f'<h3><bdi>{esc(c["name"])}</bdi></h3><p>{esc(c["tagline"])}</p><span class="go">{esc(ui["card_cta"])} ←</span></div></a>')
+            f'<h3><bdi>{txt(c["name"])}</bdi></h3><p>{txt(c["tagline"])}</p><span class="go">{esc(ui["card_cta"])} ←</span></div></a>')
 
 
-RAW['related_line'] = ''.join(card(s, f, u, i) for i, (s, f, u) in enumerate([
-    ('v-tech-system', 'vtech-system.webp', 'pro'), ('exotech-gel', 'exotech-gel.webp', 'home')]))
-RAW['related_more'] = ''.join(card(s, f, u, i) for i, (s, f, u) in enumerate([
-    ('exo-nad', 'exo-nad.webp', 'pro'), ('micro-boost-10', 'micro-boost-10.webp', 'pro'), ('derma-recovery-cream', 'derma-recovery.webp', 'home')]))
+RELATED = {'related_line': [('v-tech-system', 'vtech-system.webp', 'pro'), ('exotech-gel', 'exotech-gel.webp', 'home')],
+           'related_more': [('exo-nad', 'exo-nad.webp', 'pro'), ('micro-boost-10', 'micro-boost-10.webp', 'pro'),
+                            ('derma-recovery-cream', 'derma-recovery.webp', 'home')]}
+for key, row in RELATED.items():
+    RAW[key] = ''.join(card(s, f, u, i) for i, (s, f, u) in enumerate(row))
 
 ASSETS = {
     '__LOGO_MARK__': data_uri(os.path.join(SITE, 'img/mitoderm-logo-white-mark.png'), 300),
@@ -127,7 +128,6 @@ def jpeg_uri(path):
 if MODE == '3d':  # carton faces cut and straightened from the packshot (site/img/exocell-box-*.jpg)
     ASSETS['__BOX_FRONT__'] = jpeg_uri(os.path.join(SITE, 'img/exocell-box-front.jpg'))
     ASSETS['__BOX_SIDE__'] = jpeg_uri(os.path.join(SITE, 'img/exocell-box-side.jpg'))
-    ASSETS['__PACKSHOT__'] = data_uri(os.path.join(REPO, 'protocols/assets/img/exocell-mask.webp'), 900, 'WEBP')
 SCENES = {
     'S1': ('scenes/01-meet.jpg', ph('01', '#1f6b70')), 'S2': ('scenes/02-inside.jpg', ph('02', '#2a8a8e')),
     'S3': ('scenes/03-mirror.jpg', ph('03', '#357f86')), 'S4': ('scenes/04-protocol.jpg', ph('04', '#1d5a62')),
@@ -145,6 +145,38 @@ def ltr_runs(s):
         out += [esc(s[pos:m.start()]), f'<bdi dir="ltr">{esc(m.group(0))}</bdi>']
         pos = m.end()
     return ''.join(out) + esc(s[pos:])
+
+
+def keep(s):
+    """Escape a Hebrew line and keep each Latin name whole and in order: 'EXOCELL MASK' never breaks across lines,
+    'BIOSPICULE™' keeps its ™ after the word, and a one-letter prefix stays with its name ('ו-Q10')."""
+    out, pos = [], 0
+    for m in re.finditer(r'(?<![\u05d0-\u05ea])([\u05d0-\u05ea]-)?([A-Za-z][A-Za-z0-9™®%\-]*(?:[ /]+[A-Za-z0-9][A-Za-z0-9™®%\-]*)*)', s):
+        run = f'<bdi>{esc(m.group(2))}</bdi>'
+        out += [esc(s[pos:m.start()]), f'<span class="nw">{esc(m.group(1))}{run}</span>' if m.group(1) else run.replace('<bdi>', '<bdi class="nw">', 1)]
+        pos = m.end()
+    return ''.join(out) + esc(s[pos:])
+
+
+def fallback_still():
+    """The still shown before the first 3D frame and without WebGL: the bright kit render with the two layers of the
+    mask (white and blue) in front, from the layer renders in site/design/exocell-3d."""
+    d3 = os.path.join(SITE, 'design/exocell-3d')
+    kit = Image.open(os.path.join(d3, 'kit-hd.png')).convert('RGBA')
+    kit = kit.crop(kit.getbbox())
+    masks = Image.open(os.path.join(d3, 'layers/d5-burst-mask.png')).convert('RGBA')
+    masks = masks.crop(masks.getbbox())
+    mw = round(kit.width * 0.62)
+    masks = masks.resize((mw, round(masks.height * mw / masks.width)), Image.LANCZOS)
+    W, H_ = kit.width + round(mw * 0.28), kit.height + round(masks.height * 0.42)
+    c = Image.new('RGBA', (W, H_), (0, 0, 0, 0))
+    c.alpha_composite(kit, (0, 0))
+    c.alpha_composite(masks, (W - mw, H_ - masks.height))
+    c = c.crop(c.getbbox())
+    c = c.resize((720, round(720 * c.height / c.width)), Image.LANCZOS)
+    buf = io.BytesIO()
+    c.save(buf, 'WEBP', quality=82, method=6)
+    return 'data:image/webp;base64,' + base64.b64encode(buf.getvalue()).decode()
 
 
 def git_root(path):
@@ -194,40 +226,56 @@ if MODE == '3d':
     site = load(SITE, 'sources/mitoderm-com/contacts.json')       # contacts as on mitoderm.com (owner 11/10)
     assert site['phone'] == ui['phone'] and site['email'] == ui['email'] and site['whatsapp_link'].endswith(ui['wa_number'])
     hrs = site['hours_he']
-    for k in ('feel_link',):                                      # not on the Figma screens
+    for k in ('feel_link', 'protocol_finish'):                    # not on the Figma screens / now protocol_chip
         T.pop(k)
+    for k in ('offer_h2', 'inside_p', 'protocol_p'):              # copy with Latin names in it
+        RAW[k] = keep(T.pop(k))
+    for key, row in RELATED.items():
+        RAW[key] = ''.join(card(s, f, u, i, keep) for i, (s, f, u) in enumerate(row))
+    # Reviewed strings (he-strings-2026-10-11.json → exocell-he-ui.json, same keys); each hook keeps its approved default
+    # (or stays empty) if its key is missing. Nothing here is invented.
+    hook = lambda k, default='': ui.get(k, default)
     for k in ('feel_chips', 'feel_marks', 'kit_chips', 'offer_chips'):
         RAW.pop(k)
     T.update({
         'nav_spec': mkh('nav.specialists'), 'kit_double': dz['s5.double']['he'],
         'wa_display': site['whatsapp'], 'foot_access': site['footer_he']['accessibility'], 'foot_privacy': site['footer_he']['privacy'],
-        'hours': f"{hrs['title']}: {hrs['workWeek']} · {hrs['friday']}: {hrs['fridayText']} · {hrs['saturday']}: {hrs['closed']}",
+        'spec_empty': hook('spec.empty'),
         'phone_href': 'tel:' + tel, 'email_href': 'mailto:' + ui['email'] + '?subject=' + urllib.parse.quote('EXOCELL MASK'),
         'card_title': d['s04'][1], 'card_qty': d['kit'][0][0], 'card_line': d['kit'][0][1] + ' — ' + d['kit'][0][2],
-        'card_double': dz['kit.double']['he'], 'card_net': net, 'card_actives_h': d['s03'][0], 'card_chip': x['b6.line'],
-        'spec_kicker': mkh('spec.kicker'), 'spec_h2': mkh('spec.title'), 'spec_p': mkh('tech.face.1.body'),
+        'card_double': dz['kit.double']['he'], 'card_net': net, 'card_actives_h': d['s03'][0], 'card_chip': hook('mask.use', x['b6.line']),
+        'spec_kicker': mkh('spec.kicker'), 'spec_h2': mkh('spec.title'),
         'spec_filter': mkh('spec.filter.profession'), 'spec_list': form['specialists']['title'],
         'spec_join_h': mkh('spec.join.title'), 'spec_join_cta': mkh('spec.join.cta'),
         'form_p1': ff['titleP1'], 'form_p2': ff['titleP2'].strip(), 'form_p3': ff['titleP3'], 'form_sub': ff['subtitle'],
         'f_name': ff['placeholderInputName'], 'f_prof': ff['placeholderProfession'], 'f_email': ff['placeholderEmailName'],
         'f_phone': ff['placeholderPhoneName'], 'f_consent': ff['checkboxLabel'], 'f_submit': form['buttons']['requestCallback'],
         'f_privacy': ff['sharing'], 'f_sent': ff['sent']['text'], 'f_sent_gold': ff['sent']['textColored'],
-        'f_sent_mob': ff['sent']['mobTitle'], 'f_more': form['buttons']['learnMore'], 'close_label': ui['close_label'],
+        'f_sent_mob': ff['sent']['mobTitle'], 'f_more': form['buttons']['learnMore'], 'close_label': ui['ui.close'],
     })
+    T['offer_p'] = hook('mask.use', T['offer_p'])
+    chip_parts = labels(4)[3].split(' · ')                        # '+ DERMA RECOVERY CREAM' · 'הגנה מהשמש'
     RAW.update({
+        'spec_p': keep(mkh('tech.face.1.body')),
+        'form_fail': keep(hook('form.error')),
+        'hours': ''.join(f'<span>{esc(t)}</span>' for t in (f"{hrs['title']}: {hrs['workWeek']}", f"{hrs['friday']}: {hrs['fridayText']}",
+                                                               f"{hrs['saturday']}: {hrs['closed']}")),
+        'protocol_chip': '<span class="sep"> · </span>'.join(f'<span class="nw">{keep(t)}</span>' for t in chip_parts),
         'inside_formula_list': ''.join(f'<li>{ltr_runs(t)}</li>' for t in d['ingredients']),
         'card_actives': ''.join(f'<li>{ltr_runs(t)}</li>' for t in d['ingredients']),
         'feel_pins': ''.join(f'<li class="mark">{esc(t)}</li>' for t in labels(3)),
-        'protocol_steps': ''.join(f'<li class="step rv" style="--d:{i * .08:.2f}s"><span class="n">0{i + 1}</span><h3>{esc(t)}</h3><p>{esc(s)}</p></li>'
+        # step 02 «ספיגה» carries the time from the owner's protocol («עד 30 דקות»)
+        'protocol_steps': ''.join(f'<li class="step rv" style="--d:{i * .08:.2f}s"><span class="n">0{i + 1}</span><h3>{esc(t)}</h3><p>{esc(s)}</p>'
+                                  + (f'<span class="chip drop sm">{esc(hook("mask.step2.time"))}</span>' if i == 1 and hook('mask.step2.time') else '') + '</li>'
                                   for i, (t, s) in enumerate(d['steps'])),
         # the form's validation messages, as on mitoderm.com (read by the page script)
-        'form_errors': json.dumps(ff['errors'], ensure_ascii=False).replace('<', '\\u003c'),
+        'form_errors': json.dumps(dict(ff['errors'], consent_required=hook('form.consent_required')), ensure_ascii=False).replace('<', '\\u003c'),
         'spec_chips': ''.join(f'<button type="button" class="fchip" data-tag="{esc(tag)}" aria-pressed="{"true" if tag == ui["spec_tag_face"] else "false"}">{esc(label)}</button>'
                               for label, tag in [(mkh('spec.filter.all'), '*'), (ui['spec_tag_face'],) * 2, (ui['spec_tag_scalp'],) * 2,
                                                  (mkh('prof.trichologist'),) * 2]),
     })
     tags = (f'<div class="tags"><span class="tag">{esc(ui["spec_tag_face"])}</span>'
-            f'<span class="ok">{CHECK}{esc(mkh("spec.certified"))}</span></div>')
+            f'<span class="ok">{CHECK}{esc(hook("spec.certified", mkh("spec.certified")))}</span></div>')
     book = lambda href, extra='': f'<a class="book" href="{esc(href)}"{extra}>{esc(mkh("spec.book"))} <span aria-hidden="true">↗</span></a>'
     if PRIVATE:  # review copy: photos, names and phones of the three specialists in the design
         s8 = json.load(open(PRIVATE, encoding='utf-8'))['S8_specialists']
@@ -245,6 +293,7 @@ if MODE == '3d':
             f'{tags}{book(wa(ui["wa_text_price"]), " data-lead")}</div></article>' for i, city in enumerate(ui['spec_demo_cities']))
     ASSETS['__SACHET__'] = jpeg_uri(os.path.join(SITE, 'img/exocell-sachet-front.jpg'))    # print of the single sachet
     ASSETS['__MIRROR__'] = jpeg_uri(os.path.join(H, 'scenes/03-mirror.jpg'))              # the approved treatment frame
+    ASSETS['__FALLBACK__'] = fallback_still()
     ASSETS['__KIT__'] = data_uri(os.path.join(SITE, 'design/exocell-3d/kit-hd.png'), 760, 'WEBP')  # bright kit render
 
 page = open(os.path.join(H, 'exocell-3d-template.html' if MODE == '3d' else 'exocell-template.html'), encoding='utf-8').read()

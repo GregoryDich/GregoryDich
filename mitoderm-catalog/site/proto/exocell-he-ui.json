@@ -1,5 +1,5 @@
 {
- "note": "UI strings of the Hebrew EXOCELL MASK page that are not in storyboard.he.json or product-pages.he.json. Contacts and 'לכל הפרטים' as on mitoderm.com/he; line names and use badges as in the Make site (products.ts). spec_tag_face, spec_tag_scalp and spec_demo_cities copied from the approved Figma design (page 98:2, S8) on 11/10/2026. close_label (aria-label of the lead form close button) is a new UI word, pending the owner's review.",
+ "note": "UI strings of the Hebrew EXOCELL MASK page that are not in storyboard.he.json or product-pages.he.json. Contacts and 'לכל הפרטים' as on mitoderm.com/he; line names and use badges as in the Make site (products.ts). spec_tag_face, spec_tag_scalp and spec_demo_cities copied from the approved Figma design (page 98:2, S8) on 11/10/2026. form.error, form.consent_required, spec.empty, ui.close, spec.certified, mask.use and mask.step2.time copied from he-strings-2026-10-11.json (translator, two reviewers, fixer; 11/10/2026).",
  "page_title": "EXOCELL MASK – מיטודרם",
  "nav_label": "ניווט בעמוד",
  "kitshot_alt": "אריזת EXOCELL MASK וחמש מסכות בשקיקים אטומים",
@@ -28,5 +28,11 @@
   "קרית אתא",
   "כרמיאל"
  ],
- "close_label": "סגירה"
+ "form.error": "הטופס לא נשלח. נסו שוב או כתבו לנו ב-WhatsApp.",
+ "form.consent_required": "יש לאשר את התנאים",
+ "spec.empty": "עדיין אין מומחים מוסמכים בקטגוריה זו – ראו את הרשימה המלאה.",
+ "ui.close": "סגירה",
+ "spec.certified": "מוסמך/ת",
+ "mask.use": "לשימוש מקצועי וביתי.",
+ "mask.step2.time": "עד 30 דקות"
 }

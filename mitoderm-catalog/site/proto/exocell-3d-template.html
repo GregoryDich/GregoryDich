@@ -28,6 +28,7 @@ a { color: inherit; }
 img { max-width: 100%; display: block; }
 bdi { unicode-bidi: isolate; }
 [hidden] { display: none !important; }
+.nw { white-space: nowrap; }
 svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .wrap { width: min(var(--maxw), 100% - 2 * var(--gutter)); margin-inline: auto; }
 .kicker { display: flex; align-items: center; gap: 14px; font: 500 13px/1.2 var(--body); letter-spacing: .04em; color: var(--gold); }
@@ -53,7 +54,7 @@ ul.plain, ol.plain { list-style: none; margin: 0; padding: 0; }
    for good when there is no WebGL or three.js cannot load) the still packshot stands in, then fades out. */
 #gl { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
 .still-fallback { position: fixed; inset: 0; z-index: 0; background: radial-gradient(60% 60% at 72% 50%, rgba(111,183,186,.22), transparent 70%), var(--bg); transition: opacity .8s var(--ease), visibility 0s linear .8s; }
-.still-fallback img { position: absolute; right: 6%; top: 50%; transform: translateY(-50%); width: min(44vw, 560px); }
+.still-fallback img { position: absolute; right: 6%; top: 50%; transform: translateY(-50%); width: min(40vw, 520px); }
 .gl-on .still-fallback { opacity: 0; visibility: hidden; }
 .nogl #gl { display: none; }
 main, .top, .foot, .dock, .bar { position: relative; z-index: 1; }
@@ -75,7 +76,7 @@ main, .top, .foot, .dock, .bar { position: relative; z-index: 1; }
 .hero h1 { font: 500 clamp(48px, 7vw, 100px)/1 var(--display); letter-spacing: .01em; }
 .hero .tag { font: 400 clamp(22px, 2.4vw, 30px)/1.3 var(--display); color: var(--gold-soft); }
 .cta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }
-.hint { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); color: var(--gold-soft); font: 400 12px/1 var(--body); display: grid; justify-items: center; gap: 6px; }
+.hint { position: absolute; left: 75%; bottom: 150px; transform: translateX(-50%); color: var(--gold-soft); font: 400 12px/1 var(--body); display: grid; justify-items: center; gap: 6px; }
 .hint i { display: block; width: 1px; height: 22px; background: var(--gold-soft); animation: bob 2s ease-in-out infinite; }
 @keyframes bob { 50% { transform: translateY(8px); } }
 .hero { position: relative; }
@@ -98,12 +99,15 @@ details ol { margin: 0 0 18px; padding-inline-start: 22px; color: var(--text); d
 .fact { display: grid; gap: 8px; padding-top: 16px; border-top: 1px solid var(--hairline); min-width: 0; }
 .fact b { font: 400 clamp(26px, 3vw, 38px)/1.1 var(--display); color: var(--cream); font-variant-numeric: tabular-nums; }
 .fact span { font: 400 14px/1.4 var(--body); color: var(--text-faint); }
-.sec .dbl { display: inline-flex; align-items: center; gap: 10px; max-width: min(86vw, 460px); padding: 10px 16px; border: 1px solid rgba(111,183,186,.45); border-radius: 18px; background: rgba(10,10,11,.7); backdrop-filter: blur(8px); font: 400 14px/1.4 var(--body); color: var(--cream); }
-.sec .dbl::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--drop); box-shadow: 0 0 0 4px rgba(111,183,186,.22); }
-.gl-on .sec .dbl { max-width: min(460px, calc(50vw - 24px)); }
-@media (max-width: 760px) { .gl-on .sec .dbl { max-width: min(86vw, 460px); } }
-.gl-on .dbl { position: fixed; left: 0; top: 0; z-index: 2; margin: 0; pointer-events: none; opacity: 0; visibility: hidden; will-change: transform; }
-.gl-on .dbl.on { opacity: var(--do, 1); visibility: visible; }
+.sec .dbl, .dbl.fl { display: inline-flex; align-items: center; gap: 10px; max-width: min(86vw, 460px); margin: 0; padding: 10px 16px; border: 1px solid rgba(111,183,186,.45); border-radius: 18px; background: rgba(10,10,11,.72); backdrop-filter: blur(8px); font: 400 14px/1.4 var(--body); color: var(--cream); }
+.sec .dbl::before, .dbl.fl::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--drop); box-shadow: 0 0 0 4px rgba(111,183,186,.22); }
+/* the floating copy (made by the 3D script) sits in a free spot next to the masks; the one in the copy is kept for
+   screen readers and shows whenever no free spot exists at this screen size */
+.dbl.fl { position: fixed; left: 0; top: 0; z-index: 2; pointer-events: none; opacity: 0; visibility: hidden; will-change: transform, opacity; }
+.dbl.fl.v1 { max-width: 270px; }
+.dbl.fl.v2 { max-width: 190px; }
+.dbl.fl.on { opacity: var(--do, 1); visibility: visible; }
+.gl-on .kit .dbl.away { visibility: hidden; }
 
 /* 5 · Protocol: copy and the finishing chip on the left, the three steps along the bottom (01 on the right) */
 .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 24px; margin: 44px 0 0; padding: 0; list-style: none; direction: rtl; }
@@ -111,6 +115,7 @@ details ol { margin: 0 0 18px; padding-inline-start: 22px; color: var(--text); d
 .step .n { font: 300 22px/1 var(--display); color: var(--gold); }
 .step h3 { font: 400 24px/1.2 var(--display); color: var(--cream); }
 .step p { color: var(--text-faint); font: 400 15px/1.6 var(--body); }
+.step .chip.sm { justify-self: start; padding: 6px 14px; font-size: 14px; }
 
 /* 6 · Offer: copy, buttons and contacts on the left; the "what's in the box" card on the right */
 .offer .cta { flex-direction: column; align-items: flex-start; }
@@ -118,7 +123,8 @@ details ol { margin: 0 0 18px; padding-inline-start: 22px; color: var(--text); d
 .contacts a { display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 4px 2px; border-bottom: 1px solid var(--hairline-cream); color: var(--text-soft); text-decoration: none; font: 400 15px/1.3 var(--body); }
 .contacts a:hover { color: var(--cream); }
 .contacts svg { width: 20px; height: 20px; color: var(--gold); flex: none; }
-.sec p.hours { margin-top: 4px; font: 400 13px/1.5 var(--body); color: var(--text-faint); }
+.sec p.hours { margin-top: 4px; font: 400 13px/1.6 var(--body); color: var(--text-faint); }
+.sec p.hours span { display: block; }
 .kitcard { justify-self: end; align-self: center; width: min(100%, 540px); display: grid; gap: 12px; padding: 26px 30px 28px; border-radius: 28px; border: 1px solid var(--hairline); background: linear-gradient(160deg, rgba(28,27,31,.95), rgba(14,14,17,.95)); box-shadow: 0 30px 90px rgba(0,0,0,.5); }
 .kc-head { display: flex; align-items: center; gap: 14px; }
 .kc-head h3 { font: 400 28px/1.1 var(--display); color: var(--cream); }
@@ -148,7 +154,7 @@ details ol { margin: 0 0 18px; padding-inline-start: 22px; color: var(--text); d
 .spec[hidden] { display: none; }
 .spec .pic { position: relative; height: 228px; background: var(--ink); }
 .spec .pic img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
-.spec .pic::after { content: ""; position: absolute; inset: 62% 0 -1px; background: linear-gradient(to bottom, rgba(24,24,28,0), var(--card)); }
+.spec .pic::after { content: ""; position: absolute; inset: 28% 0 -1px; background: linear-gradient(to bottom, rgba(24,24,28,0) 0%, rgba(24,24,28,.06) 22%, rgba(24,24,28,.22) 44%, rgba(24,24,28,.5) 64%, rgba(24,24,28,.82) 84%, var(--card) 100%); }
 .spec .sb { display: grid; gap: 6px; justify-items: start; padding: 2px 22px 12px; }
 .spec.mono .sb { padding-top: 14px; }
 .spec .av { width: 58px; height: 58px; margin: 22px 22px 0; border-radius: 50%; border: 1px solid var(--gold); display: grid; place-items: center; font: 400 28px/1 var(--display); color: var(--gold-soft); background: rgba(10,10,11,.6); }
@@ -176,8 +182,8 @@ details ol { margin: 0 0 18px; padding-inline-start: 22px; color: var(--text); d
 @media (max-width: 960px) { .cards, .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .cards, .specs { grid-template-columns: 1fr; } }
 .card { display: flex; flex-direction: column; overflow: hidden; border-radius: 24px; background: var(--charcoal); border: 1px solid var(--gold-wash); text-decoration: none; min-width: 0; }
-.card .pic { height: 210px; display: grid; place-items: center; background: radial-gradient(120% 100% at 50% 0%, var(--gold-wash), transparent 70%); }
-.card .pic img { max-height: 75%; max-width: 70%; object-fit: contain; transition: transform .5s var(--ease); }
+.card .pic { position: relative; height: 210px; background: radial-gradient(120% 100% at 50% 0%, var(--gold-wash), transparent 70%); }
+.card .pic img { position: absolute; inset: 22px 15%; width: 70%; height: calc(100% - 44px); max-width: none; object-fit: contain; transition: transform .5s var(--ease); }
 .card:hover .pic img { transform: scale(1.05); }
 .card .body { padding: 24px; display: grid; gap: 8px; justify-items: start; }
 .card h3 { font: 500 22px/1.15 var(--display); color: var(--cream); }
@@ -236,6 +242,9 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 .privacy { display: flex; align-items: center; gap: 8px; margin-top: 14px; font: 400 13px/1.4 var(--body); color: var(--text-faint); }
 .privacy svg { width: 16px; height: 16px; flex: none; color: var(--gold); }
 .lead-fail { margin-top: 14px; }
+.fail-msg { margin-bottom: 10px; font: 400 15px/1.45 var(--body); color: var(--error); }
+.fail-msg:empty { display: none; }
+.spec-empty { color: var(--text-soft); font: 400 15px/1.5 var(--body); }
 .lead-fail .btn { width: 100%; }
 .lead-done { display: grid; gap: 18px; justify-items: start; align-content: center; min-height: 100%; outline: none; }
 .lead-done h2 { font: 400 clamp(32px, 3.6vw, 44px)/1.1 var(--display); }
@@ -247,9 +256,11 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 
 /* phone: the objects take the upper part of the screen, the copy sits under them */
 @media (max-width: 760px) {
-  .top { background: linear-gradient(to bottom, rgba(10,10,11,.92) 60%, rgba(10,10,11,0)); }
+  .top { background: rgba(10,10,11,.94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hairline-cream); }
   .still-fallback { background: radial-gradient(80% 40% at 50% 26%, rgba(111,183,186,.22), transparent 70%), var(--bg); }
-  .still-fallback img { right: 50%; top: 27%; transform: translate(50%, -50%); width: min(66vw, 320px); }
+  .still-fallback img { right: 50%; top: 30%; transform: translate(50%, -50%); width: min(58vw, 270px); }
+  .chip.duo { display: inline-grid; justify-items: center; text-align: center; border-radius: 20px; }
+  .chip.duo .sep { display: none; }
   .split { grid-template-columns: 1fr; }
   .split > .col { max-width: none; }
   .sec { min-height: 100svh; align-items: end; padding-block: 44svh calc(88px + env(safe-area-inset-bottom, 0px)); }
@@ -262,6 +273,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   .feel.sec { align-items: center; padding-top: 96px; }
   .feel .shot { order: -1; justify-self: stretch; width: 100%; margin-bottom: 28px; border-radius: 20px; }
   .protocol.sec { padding-top: 36svh; }
+  .kit.sec { padding-top: 46svh; }
   .offer.sec, .spec-sec.sec { min-height: auto; align-items: start; padding-block: 100px 96px; }
   .kitcard { justify-self: stretch; margin-top: 36px; padding: 22px 20px 24px; }
   .kc-act { columns: 1; }
@@ -294,7 +306,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 </style>
 
 <canvas id="gl" aria-hidden="true"></canvas>
-<div class="still-fallback" aria-hidden="true"><img src="__PACKSHOT__" alt=""></div>
+<div class="still-fallback" aria-hidden="true"><img src="__FALLBACK__" alt=""></div>
 
 <header class="top">
   <div class="wrap">
@@ -341,7 +353,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
     <div class="col">
       <div class="kicker rv">{{nav_inside}}</div>
       <h2 class="rv" style="--d:.06s">{{inside_h2}}</h2>
-      <p class="rv" style="--d:.12s">{{inside_p}}</p>
+      <p class="rv" style="--d:.12s">{{{inside_p}}}</p>
       <div class="kicker rv" style="--d:.18s">{{inside_head}}</div>
       <div class="chips rv" style="--d:.24s">{{{inside_chips}}}</div>
       <details class="rv" style="--d:.3s">
@@ -386,8 +398,8 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
     <div class="split"><div class="col">
       <div class="kicker rv">{{nav_protocol}}</div>
       <h2 class="rv" style="--d:.06s">{{protocol_h2}}</h2>
-      <p class="rv" style="--d:.12s">{{protocol_p}}</p>
-      <div class="chips rv" style="--d:.18s"><span class="chip gold">{{protocol_finish}}</span></div>
+      <p class="rv" style="--d:.12s">{{{protocol_p}}}</p>
+      <div class="chips rv" style="--d:.18s"><span class="chip gold duo">{{{protocol_chip}}}</span></div>
     </div><div></div></div>
     <ol class="steps">{{{protocol_steps}}}</ol>
   </div>
@@ -398,7 +410,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   <div class="wrap split">
     <div class="col">
       <div class="kicker rv">{{nav_offer}}</div>
-      <h2 class="rv" style="--d:.06s">{{offer_h2}}</h2>
+      <h2 class="rv" style="--d:.06s">{{{offer_h2}}}</h2>
       <p class="rv" style="--d:.12s">{{offer_p}}</p>
       <div class="cta rv" style="--d:.18s"><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{cta_price}}</a><a class="btn ghost" href="__WA_BUNDLE__" target="_blank" rel="noopener">{{offer_bundle}}</a></div>
       <div class="contacts rv" style="--d:.24s">
@@ -406,7 +418,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
         <a href="__WA_PRICE__" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 8.6c0 3.4 3 6.4 6.4 6.4l1-1.6-2-1-1 .8a5 5 0 0 1-2.6-2.6l.8-1-1-2z"/></svg><span><bdi dir="ltr">WhatsApp</bdi> <bdi dir="ltr">{{wa_display}}</bdi></span></a>
         <a href="{{email_href}}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg><span>{{email_label}} <bdi dir="ltr">{{email}}</bdi></span></a>
       </div>
-      <p class="hours rv" style="--d:.3s">{{hours}}</p>
+      <p class="hours rv" style="--d:.3s">{{{hours}}}</p>
     </div>
     <aside class="kitcard rv" style="--d:.1s" aria-labelledby="kitcard-h">
       <div class="kc-head"><h3 id="kitcard-h">{{card_title}}</h3><span class="badge"><bdi>{{line_mark}}</bdi></span></div>
@@ -426,9 +438,10 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   <div class="wrap">
     <div class="kicker rv">{{spec_kicker}}</div>
     <h2 class="rv" id="spec-h" style="--d:.06s">{{spec_h2}}</h2>
-    <p class="intro rv" style="--d:.12s">{{spec_p}}</p>
+    <p class="intro rv" style="--d:.12s">{{{spec_p}}}</p>
     <div class="filter rv" style="--d:.18s" role="group" aria-labelledby="spec-f"><span class="lbl" id="spec-f">{{spec_filter}}</span>{{{spec_chips}}}</div>
     <div class="specs" aria-live="polite">{{{spec_cards}}}</div>
+    <p class="spec-empty" role="status" hidden>{{spec_empty}}</p>
     <div class="spec-foot rv">
       <a class="btn primary" href="https://www.mitoderm.com/he" target="_blank" rel="noopener">{{spec_list}}</a>
       <div class="join"><span>{{spec_join_h}}</span><a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{spec_join_cta}}</a></div>
@@ -470,10 +483,10 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
           <div class="f"><input name="email" type="email" dir="ltr" autocomplete="email" inputmode="email" placeholder="{{f_email}}" aria-label="{{f_email}}" aria-describedby="e-email" required><p class="err" id="e-email"></p></div>
           <div class="f"><input name="phone" type="tel" dir="ltr" autocomplete="tel" inputmode="tel" placeholder="{{f_phone}}" aria-label="{{f_phone}}" aria-describedby="e-phone" required><p class="err" id="e-phone"></p></div>
         </div>
-        <label class="consent"><input type="checkbox" name="consent" required><span>{{f_consent}}</span></label>
+        <label class="consent"><input type="checkbox" name="consent" aria-describedby="e-consent" required><span>{{f_consent}}</span></label><p class="err" id="e-consent"></p>
         <button class="btn primary submit" type="submit"><span>{{f_submit}}</span><i aria-hidden="true"></i></button>
         <p class="privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>{{f_privacy}}</span></p>
-        <div class="lead-fail" role="status" hidden><a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 8.6c0 3.4 3 6.4 6.4 6.4l1-1.6-2-1-1 .8a5 5 0 0 1-2.6-2.6l.8-1-1-2z"/></svg><bdi dir="ltr">WhatsApp</bdi></a></div>
+        <div class="lead-fail" role="alert" hidden><p class="fail-msg">{{{form_fail}}}</p><a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 8.6c0 3.4 3 6.4 6.4 6.4l1-1.6-2-1-1 .8a5 5 0 0 1-2.6-2.6l.8-1-1-2z"/></svg><bdi dir="ltr">WhatsApp</bdi></a></div>
       </div>
       <div class="lead-done" role="status" tabindex="-1" hidden>
         <p class="mob">{{f_sent_mob}}</p>
@@ -517,6 +530,8 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   function filter(tag) {
     chips.forEach(function (c) { c.setAttribute('aria-pressed', String(c.dataset.tag === tag)); });
     cards.forEach(function (c) { c.hidden = !(tag === '*' || c.dataset.tags.split('|').indexOf(tag) >= 0); });
+    var empty = document.querySelector('.spec-empty');
+    if (empty) empty.hidden = !empty.textContent.trim() || cards.some(function (c) { return !c.hidden; });
   }
   chips.forEach(function (c) { c.addEventListener('click', function () { filter(c.dataset.tag); }); });
   var pressed = chips.filter(function (c) { return c.getAttribute('aria-pressed') === 'true'; })[0];
@@ -544,7 +559,11 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
     document.getElementById('e-' + name).textContent = msg;
     return !msg;
   }
-  function checkConsent() { consent.setAttribute('aria-invalid', String(!consent.checked)); return consent.checked; }
+  function checkConsent() {
+    consent.setAttribute('aria-invalid', String(!consent.checked));
+    document.getElementById('e-consent').textContent = consent.checked ? '' : (ERR.consent_required || '');
+    return consent.checked;
+  }
   NAMES.forEach(function (n) { form.elements[n].addEventListener('input', function () { if (tried) check(n); }); });
   consent.addEventListener('change', function () { if (tried) checkConsent(); });
 
@@ -584,7 +603,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   function reset() {
     form.reset(); tried = false; body.hidden = false; done.hidden = true; fail.hidden = true;
     NAMES.forEach(function (n) { form.elements[n].removeAttribute('aria-invalid'); document.getElementById('e-' + n).textContent = ''; });
-    consent.removeAttribute('aria-invalid');
+    consent.removeAttribute('aria-invalid'); document.getElementById('e-consent').textContent = '';
   }
   function paintPanel() {  // the far smoke of the page, full-bleed, painted once (same noise as the 3D background)
     if (painted) return; painted = true;
@@ -801,25 +820,25 @@ const AWAY = P(3.4, 1.6, -6, 0.1, -0.5, 0.08, 0.6, 0, { lid: 0 });
 const BOX = [
   P(1.75, -0.05, 0.2, 0.06, -0.55, 0.07, 1, 1, { lid: 0 }),          // d1 meet
   P(1.75, -0.55, 0.3, 0.62, -0.58, 0.05, 1, 1, { lid: 1.95 }),       // d2 the lid opens, the mask's edge shows
-  P(1.75, -0.95, 0.1, 0.38, -0.5, 0.03, 1, 1, { lid: 2.2 }),         // d3 the mask is out
+  P(1.75, -0.68, 0.1, 0.38, -0.5, 0.03, 0.92, 1, { lid: 2.2 }),      // d3 the mask is out (box kept clear of the dock)
   P(3.0, -0.3, -4.2, 0.25, -0.3, 0.08, 0.8, 0, { lid: 1.2 }),        // feel: recedes behind the photo
   P(2.05, 0.1, -1.6, 0.08, -0.45, 0.04, 0.88, 1, { lid: 0 }),        // d5 kit
   P(3.3, 1.35, -3.6, 0.1, -0.7, 0.08, 0.7, 1, { lid: 0 }),           // d6 protocol: far back
   AWAY, AWAY, AWAY
 ];
 // the mask: inside the box (attached, att 1) until it rises out (render.html d3), white in the kit, gone after
-const OUT = P(1.55, 0.72, 0.55, -0.42, -0.42, 0.06, 0.92, 0.8, { att: 0, col: 0, ly: 0.78, ls: 0.88 });
+const OUT = P(1.55, 0.85, 0.55, -0.42, -0.42, 0.06, 0.8, 0.8, { att: 0, col: 0, ly: 0.78, ls: 0.88 });
 const MASK = [
   Object.assign({}, OUT, { o: 0, att: 1, ly: 0 }),
   Object.assign({}, OUT, { att: 1 }),
   OUT,
   P(2.6, 1.2, -2.5, -0.2, -0.6, 0.1, 0.6, 0, { att: 0, col: 0.5, ly: 0.78, ls: 0.88 }),
-  P(2.6, -1.25, 0.9, 0.05, -0.3, 0.06, 0.6, 0.95, { att: 0, col: 1, ly: 0.78, ls: 0.88 }),
+  P(2.7, -1.0, 0.9, 0.05, -0.3, 0.06, 0.6, 0.95, { att: 0, col: 1, ly: 0.78, ls: 0.88 }),
   P(2.3, -1.25, -2.8, 0.1, -0.5, 0.1, 0.62, 0, { att: 0, col: 1, ly: 0.78, ls: 0.88 })  // gone on the protocol: it must not show through the steps
 ];
 while (MASK.length < 9) MASK.push(MASK[5]);
 const BLUE_IN = P(2.4, -0.4, -1.2, 0, -0.5, 0, 0.45, 0), BLUE_OFF = P(2.3, -1.25, -2.8, 0.1, -0.5, 0.1, 0.6, 0);
-const MASK2 = [BLUE_IN, BLUE_IN, BLUE_IN, BLUE_IN, P(3.15, -1.35, 1.15, 0.05, -0.5, -0.05, 0.6, 0.86), BLUE_OFF, BLUE_OFF, BLUE_OFF, BLUE_OFF];
+const MASK2 = [BLUE_IN, BLUE_IN, BLUE_IN, BLUE_IN, P(3.22, -1.1, 1.15, 0.05, -0.5, -0.05, 0.6, 0.86), BLUE_OFF, BLUE_OFF, BLUE_OFF, BLUE_OFF];
 // sachets: hidden in the box until the kit, where they burst around it (render.html d5), then back into the far box
 const D5 = [[1.5, 1.3, 0.5, 0.5, -0.5, 0.35, 0.68], [3.62, 0.23, 0.3, -0.2, 0.5, -0.3, 0.66], [2.64, 1.89, -0.5, 0.5, 0.4, 0.6, 0.6],
             [1.35, -1.05, 1.0, -0.5, -0.6, -0.25, 0.66], [2.55, 0.85, 2.0, 0.2, -0.25, 0.12, 0.58]];
@@ -833,6 +852,8 @@ const DROPC = [ // centre and spread of the drop cloud
   P(2.4, 0.6, -3, 0, 0, 0, 1, 0), P(2.4, 0.6, -3, 0, 0, 0, 1, 0), P(2.4, 0.6, -3, 0, 0, 0, 1, 0)
 ];
 const GLOW = [1, 1, 1, 1, 1, 1, 1, 0.68, 0.68];  // the smoke calms down under the specialists
+// phone: per block, how much the upper-third group shrinks (k) and moves up (dy), so it clears the header and the copy
+const PHK = [1, 1, 0.85, 1, 0.8, 1, 1, 1, 1], PHY = [0, 0, 0.25, 0, 0, 0, 0, 0, 0];
 
 const ease = t => t * t * (3 - 2 * t);
 function pose(track, s) {
@@ -843,7 +864,7 @@ function pose(track, s) {
   for (const k in a) r[k] = a[k] + (b[k] - a[k]) * t;
   return r;
 }
-let phone = false;
+let phone = false, phk = 1, phy = 0;
 const mats = (obj) => obj.userData.mats || (obj.userData.mats = (() => {
   const set = new Set();
   obj.traverse(o => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (!m.userData.off) set.add(m); }); });
@@ -851,7 +872,7 @@ const mats = (obj) => obj.userData.mats || (obj.userData.mats = (() => {
 })());
 function place(obj, p, extra = {}) {
   let { x, y, s } = p;
-  if (phone) { x = x * 0.3 - 0.35; y = y * 0.6 + 1.25; s *= 0.56; }
+  if (phone) { x = x * 0.3 - 0.35; y = y * 0.6 * phk + 1.25 + phy; s *= 0.56 * phk; }
   obj.position.set(x + (extra.x || 0), y + (extra.y || 0), p.z);
   obj.rotation.set(p.rx, p.ry + (extra.ry || 0), p.rz);
   obj.scale.setScalar(s);
@@ -860,7 +881,7 @@ function place(obj, p, extra = {}) {
   mats(obj).forEach(m => { const want = obj.userData.alwaysT || o < 0.999; if (m.transparent !== want) { m.transparent = want; m.needsUpdate = true; } m.opacity = o; m.visible = o > 0.01; });
 }
 
-// scroll → stage: each block's centre is a whole stage; between centres the stage is fractional
+// scroll → stage: a block that fits the screen is a whole stage when centred; a taller one when its top is at the top
 const secs = Array.from(document.querySelectorAll('[data-st]'));
 let anchors = [];
 function measure() {
@@ -879,11 +900,102 @@ function stage() {
 const pointer = { x: 0, y: 0 }, sway = { x: 0, y: 0 };
 window.addEventListener('pointermove', e => { pointer.x = e.clientX / window.innerWidth * 2 - 1; pointer.y = e.clientY / window.innerHeight * 2 - 1; }, { passive: true });
 
-// the caption about the two-layer mask rides above the white mask in the kit block
-const dbl = document.querySelector('.kit .dbl');
-let dblW = 0, dblH = 0;
-const sizeDbl = () => { if (dbl) { dblW = dbl.offsetWidth; dblH = dbl.offsetHeight; } };
-let W = 1, Hh = 1;
+const m4 = new THREE.Matrix4(), mL = new THREE.Matrix4(), q = new THREE.Quaternion(), qA = new THREE.Quaternion(), v3 = new THREE.Vector3(), vA = new THREE.Vector3(), sc = new THREE.Vector3(), sA = new THREE.Vector3();
+// all near objects in their pose for stage s at time t (also used to test the kit layout at stage 4)
+function poseScene(s, t) {
+  camera.position.set(sway.x * 0.9, -sway.y * 0.45, 7);
+  camera.lookAt(phone ? -0.35 : 0.9, phone ? 0.05 : 0, 0);  // on a phone the objects sit in the upper third
+  camera.updateMatrixWorld();
+  phk = pose(PHK, s); phy = pose(PHY, s);
+  const bp = pose(BOX, s);
+  place(box, bp, { y: Math.sin(t * 0.9) * 0.05, ry: Math.sin(t * 0.45) * 0.07 });
+  hinge.rotation.x = -bp.lid;
+  box.updateMatrixWorld();
+  const sp = SACH.map((tr, i) => { const p = pose(tr, s); place(sachets[i], p, { y: Math.sin(t * 0.8 + i) * 0.025 }); return p; });
+  // the mask: its own pose, blended with a pose inside the box while it is attached (stages 0–1)
+  const mp = pose(MASK, s);
+  place(mask, mp, { y: Math.sin(t * 0.7 + 1) * 0.04, ry: Math.sin(t * 0.35) * 0.05 });
+  if (mp.att > 0.001) {
+    mL.compose(vA.set(0, mp.ly, 0), qA.identity(), sA.setScalar(mp.ls));
+    m4.multiplyMatrices(box.matrixWorld, mL).decompose(vA, qA, sA);
+    mask.position.lerp(vA, mp.att); mask.quaternion.slerp(qA, mp.att); mask.scale.lerp(sA, mp.att);
+  }
+  mask.material.color.lerpColors(MASK_C0, MASK_C1, mp.col);
+  const m2p = pose(MASK2, s);
+  place(mask2, m2p, { y: Math.sin(t * 0.7 + 2.2) * 0.035 });
+  return { bp, sp, mp, m2p };
+}
+
+// The caption about the two-layer mask: a floating copy sits next to the masks in a free spot of the kit screen, never
+// over an object, inside the screen, clear of the copy, the header and the dock. Whether such a spot exists is decided
+// per screen size at the kit pose; if not, the caption stays in the copy (the in-copy one also serves screen readers).
+const dbl = document.querySelector('.kit .dbl'), kick = document.querySelector('.kit .kicker');
+const fl = dbl ? dbl.cloneNode(true) : null;
+if (fl) { fl.classList.add('fl'); fl.setAttribute('aria-hidden', 'true'); document.body.appendChild(fl); }
+const flSize = [[0, 0], [0, 0], [0, 0]], cap = { on: false, r: [0, 0, 0, 0] };  // one, two and three lines
+let flPos = null, capFits = false, W = 1, Hh = 1;
+function sizeFl() {
+  if (!fl) return;
+  for (let v = 0; v < 3; v++) { fl.classList.toggle('v1', v === 1); fl.classList.toggle('v2', v === 2); flSize[v] = [fl.offsetWidth, fl.offsetHeight]; }
+  fl.classList.remove('v1', 'v2');
+}
+const cv = new THREE.Vector3();
+function rectOf(obj) {  // screen rectangle of an object: the corners of each part's own (rotated) box, projected
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  obj.updateWorldMatrix(true, true);
+  obj.traverse(o => {
+    if (!o.isMesh) return;
+    const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox();
+    const b = g.boundingBox;
+    for (let i = 0; i < 8; i++) {
+      cv.set(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z).applyMatrix4(o.matrixWorld).project(camera);
+      const px = (cv.x + 1) / 2 * W, py = (1 - cv.y) / 2 * Hh;
+      x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py);
+    }
+  });
+  return [x0, y0, x1, y1];
+}
+function findSpot(p, copyTop, keepLast) {
+  const obs = [];
+  if (p.bp.o > 0.05) obs.push(rectOf(box));
+  p.sp.forEach((sp, i) => { if (sp.o > 0.05) obs.push(rectOf(sachets[i])); });
+  const mR = rectOf(mask), m2R = rectOf(mask2);
+  obs.push(mR, m2R);
+  const ax = (Math.min(mR[0], m2R[0]) + Math.max(mR[2], m2R[2])) / 2, ay = Math.min(mR[1], m2R[1]);  // top centre of the masks
+  const L = phone ? 12 : W / 2 + 16, R = W - 12, T = 88, B = phone ? Math.min(Hh - 80, copyTop - 14) : Hh - 100;
+  const free = (x, y, w, h) => x >= L && x + w <= R && y >= T && y + h <= B &&
+    obs.every(o => x > o[2] + 8 || x + w < o[0] - 8 || y > o[3] + 8 || y + h < o[1] - 8);
+  if (keepLast && flPos) {
+    const [w, h] = flSize[flPos[2]], x = ax + flPos[0], y = ay + flPos[1];
+    if (free(x, y, w, h)) return [x, y, flPos[2]];
+  }
+  let best = null, bd = Infinity;
+  for (let v = 0; v < 3; v++) {
+    const [w, h] = flSize[v];
+    if (!w) continue;
+    for (let y = T; y + h <= B; y += 8) for (let x = L; x + w <= R; x += 8) {
+      if (!free(x, y, w, h)) continue;
+      const d = Math.hypot(x + w / 2 - ax, y + h - ay) + v * 80;  // nearest to the masks; one line preferred
+      if (d < bd) { bd = d; best = [x, y, v]; }
+    }
+  }
+  flPos = best ? [best[0] - ax, best[1] - ay, best[2]] : null;
+  return best;
+}
+// test hook: screen rectangles of the visible near objects (the verification checks them against copy, header, dock)
+window.__objRects = () => [box, ...sachets, mask, mask2].filter(o => mats(o).some(m => m.visible && m.opacity > 0.05)).map(rectOf);
+function checkFit() {  // at this screen size, is there a free spot at the kit pose (no sway, no bob)?
+  if (!fl || !anchors.length) return;
+  sizeFl();
+  const sw = [sway.x, sway.y]; sway.x = sway.y = 0;
+  const a4 = anchors.find(a => a.st === 4);
+  const copyTop = kick ? kick.getBoundingClientRect().top + window.scrollY - (a4 ? a4.y : 0) : Hh;
+  capFits = !!findSpot(poseScene(4, 0), copyTop, false);
+  sway.x = sw[0]; sway.y = sw[1];
+  dbl.classList.toggle('away', capFits);
+  if (reduce) requestAnimationFrame(frame);
+}
+
 function resize() {
   W = window.innerWidth; Hh = window.innerHeight;
   phone = phoneQ.matches;
@@ -893,15 +1005,15 @@ function resize() {
   camera.aspect = W / Hh;
   camera.fov = phone ? 48 : Math.max(35, 2 * Math.atan(Math.tan(17.5 * Math.PI / 180) * 1.6 / camera.aspect) * 180 / Math.PI);
   camera.updateProjectionMatrix();
-  measure(); sizeDbl();
+  measure(); checkFit();
   if (reduce) requestAnimationFrame(frame);
 }
+const relayout = () => { measure(); checkFit(); };
 window.addEventListener('resize', resize); resize();
-window.addEventListener('load', () => { measure(); sizeDbl(); });
-if ('ResizeObserver' in window) new ResizeObserver(() => { measure(); sizeDbl(); }).observe(document.body);
-if (document.fonts) document.fonts.ready.then(() => { measure(); sizeDbl(); });
+window.addEventListener('load', relayout);
+if ('ResizeObserver' in window) new ResizeObserver(relayout).observe(document.body);
+if (document.fonts) document.fonts.ready.then(relayout);
 
-const m4 = new THREE.Matrix4(), mL = new THREE.Matrix4(), q = new THREE.Quaternion(), qA = new THREE.Quaternion(), v3 = new THREE.Vector3(), vA = new THREE.Vector3(), sc = new THREE.Vector3(), sA = new THREE.Vector3();
 let s = 0, last = performance.now(), visible = true;
 document.addEventListener('visibilitychange', () => { visible = !document.hidden; if (visible) { last = performance.now(); requestAnimationFrame(frame); } });
 function frame(now) {
@@ -916,63 +1028,50 @@ function frame(now) {
   else s += (target - s) * (window.__snap ? 1 : Math.min(1, dt * 6));  // __snap: test hook, no easing
   // the far layer turns with the pointer (camera sways around the product), the near objects keep their place
   if (!reduce) { sway.x += (pointer.x - sway.x) * 0.05; sway.y += (pointer.y - sway.y) * 0.05; }
-  camera.position.set(sway.x * 0.9, -sway.y * 0.45, 7);
-  camera.lookAt(phone ? -0.35 : 0.9, phone ? 0.05 : 0, 0);  // on a phone the objects sit in the upper third
-  camera.updateMatrixWorld();
   bg.rotation.set(sway.y * 0.05, sway.x * 0.08, 0);  // the far layer turns a little more than the scene
   bgMat.uniforms.t.value = t;
   bgMat.uniforms.glow.value = pose(GLOW, s);
   dust.rotation.y = t * 0.01; dust.position.y = Math.sin(t * 0.1) * 0.2;
+  const p = poseScene(s, t);
 
-  const bob = Math.sin(t * 0.9) * 0.05;
-  const bp = pose(BOX, s);
-  place(box, bp, { y: bob, ry: Math.sin(t * 0.45) * 0.07 });
-  hinge.rotation.x = -bp.lid;
-  box.updateMatrixWorld();
-  sachets.forEach((m, i) => place(m, pose(SACH[i], s), { y: Math.sin(t * 0.8 + i) * 0.025 }));
-
-  // the mask: its own pose, blended with a pose inside the box while it is attached (stages 0–1)
-  const mp = pose(MASK, s);
-  place(mask, mp, { y: Math.sin(t * 0.7 + 1) * 0.04, ry: Math.sin(t * 0.35) * 0.05 });
-  if (mp.att > 0.001) {
-    mL.compose(vA.set(0, mp.ly, 0), qA.identity(), sA.setScalar(mp.ls));
-    m4.multiplyMatrices(box.matrixWorld, mL).decompose(vA, qA, sA);
-    mask.position.lerp(vA, mp.att); mask.quaternion.slerp(qA, mp.att); mask.scale.lerp(sA, mp.att);
+  // the floating caption, while the kit block is on screen
+  cap.on = false;
+  if (fl) {
+    const on = capFits ? Math.max(0, 1 - Math.abs(s - 4) * 3) * (p.mp.o > 0.05 ? 1 : 0) : 0;
+    const spot = on > 0.01 ? findSpot(p, kick ? kick.getBoundingClientRect().top : Hh, true) : null;
+    if (spot) {
+      const [w, h] = flSize[spot[2]];
+      fl.classList.toggle('v1', spot[2] === 1); fl.classList.toggle('v2', spot[2] === 2);
+      fl.style.transform = `translate(${spot[0].toFixed(1)}px, ${spot[1].toFixed(1)}px)`;
+      fl.style.setProperty('--do', on.toFixed(3));
+      cap.on = true; cap.r = [spot[0], spot[1], spot[0] + w, spot[1] + h];
+    }
+    fl.classList.toggle('on', !!spot);
   }
-  mask.material.color.lerpColors(MASK_C0, MASK_C1, mp.col);
-  place(mask2, pose(MASK2, s), { y: Math.sin(t * 0.7 + 2.2) * 0.035 });
 
   const c = pose(DROPC, s);
   let cx = c.x, cy = c.y, cs = c.s;
-  if (phone) { cx = cx * 0.3 - 0.35; cy = cy * 0.6 + 1.25; cs *= 0.62; }
+  if (phone) { cx = cx * 0.3 - 0.35; cy = cy * 0.6 * phk + 1.25 + phy; cs *= 0.62 * phk; }
   dropSeed.forEach((d, i) => {
     const a = d.a + t * d.sp * 0.25;
     v3.set(cx + Math.cos(a) * d.r * cs, cy + d.y * cs * 0.8 + Math.sin(t * d.sp + i) * 0.08, c.z + d.z + Math.sin(a) * 0.4);
-    // drops never cross the copy: they shrink away before the text column (desktop) or the lower half (phone)
+    // drops never cross the copy: they shrink away before the text column (desktop) or the lower half (phone),
+    // and around the floating caption
     vA.copy(v3).project(camera);
-    const edge = phone ? ease(Math.max(0, Math.min(1, (vA.y + 0.02) / 0.16))) : ease(Math.max(0, Math.min(1, (vA.x + 0.06) / 0.16)));
+    let edge = phone ? ease(Math.max(0, Math.min(1, (vA.y + 0.02) / 0.16))) : ease(Math.max(0, Math.min(1, (vA.x + 0.06) / 0.16)));
+    if (cap.on) {
+      const px = (vA.x + 1) / 2 * W, py = (1 - vA.y) / 2 * Hh;
+      const gx = Math.max(cap.r[0] - px, 0, px - cap.r[2]), gy = Math.max(cap.r[1] - py, 0, py - cap.r[3]);
+      edge *= ease(Math.min(1, Math.hypot(gx, gy) / 46));
+    }
     const k = d.s * (phone ? 0.7 : 1) * c.o * edge; sc.set(k, k * 1.08, k);  // drops fade by shrinking
     drops.setMatrixAt(i, m4.compose(v3, q, sc));
   });
   drops.instanceMatrix.needsUpdate = true;
   drops.visible = c.o > 0.01;
 
-  if (dbl) {  // caption over the white mask while the kit block is on screen
-    const on = Math.max(0, 1 - Math.abs(s - 4) * 3) * (mp.o > 0.05 ? 1 : 0);
-    dbl.classList.toggle('on', on > 0.01);
-    if (on > 0.01) {
-      mask.updateMatrixWorld();
-      vA.set(0, 0.97, 0).applyMatrix4(mask.matrixWorld).project(camera);
-      const px = (vA.x + 1) / 2 * W, py = (1 - vA.y) / 2 * Hh;
-      const min = phone ? 12 : W / 2 + 12;
-      const x = Math.max(min, Math.min(W - 12 - dblW, px - dblW / 2)), y = Math.max(84, py - dblH - 14);
-      dbl.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
-      dbl.style.setProperty('--do', on.toFixed(3));
-    }
-  }
-
   renderer.render(scene, camera);
-  if (!window.__glReady) { window.__glReady = true; root.classList.add('gl-on'); sizeDbl(); }
+  if (!window.__glReady) { window.__glReady = true; root.classList.add('gl-on'); checkFit(); }
   if (visible && !reduce) requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
