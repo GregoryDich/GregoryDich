@@ -296,6 +296,17 @@ def answer(slug, q):
     return ''
 qrows = [[s['name'], q, answer(s['slug'], q)] for s in stories for q in s.get('questions_ru', [])]
 sheet(wb, 'Questions', [('Страница', 20), ('Вопрос заказчику', 90), ('Ответ / решение (источник)', 70)], qrows)
+# facts checked against the owner's protocols, mitoderm.com and the catalogue after the stories were written (11/10)
+RECON = os.path.join(SITE, 'story3d-recon.json')
+if os.path.exists(RECON):
+    KIND = {'wrong': 'ошибка', 'conflict_between_sources': 'источники расходятся', 'missing_important': 'не хватает важного',
+            'answer_to_open_question': 'ответ на вопрос'}
+    names = {s['slug']: s['name'] for s in stories}
+    rec = sorted(json.load(open(RECON, encoding='utf-8'))['confirmed'], key=lambda f: ([s['slug'] for s in stories].index(f['page']) if f['page'] in names else 99, str(f['screen'])))
+    sheet(wb, 'Сверка с источниками', [('Страница', 20), ('Экран', 8), ('Что', 24), ('Тип', 16), ('В сюжете', 44), ('В источнике', 50),
+                                       ('Источник', 30), ('Предложение', 50), ('Проверка скептика', 40)],
+          [[names.get(f['page'], f['page']), f['screen'], f['field'], KIND.get(f['kind'], f['kind']), f['story_says'], f['source_says'],
+            f['source_file'].replace('/home/user/GregoryDich/mitoderm-catalog/', ''), f['proposal_ru'], f.get('verify_ru', '')] for f in rec])
 out = os.path.join(SITE, 'MITODERM-3D-story.xlsx')
 wb.save(out)
 misses = sum(str(c.value).startswith(MISSING) for ws in wb.worksheets for row in ws.iter_rows() for c in row if c.value)
