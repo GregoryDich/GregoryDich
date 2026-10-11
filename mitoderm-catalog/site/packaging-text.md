@@ -22,7 +22,7 @@ Text printed on each product's packaging, transcribed 10/10/2026 from the high-r
   - VM monogram top centre
   - 'EXOCELL' / letter-spaced 'MASK'
   - [unreadable] two tiny lines near the bottom
-- **sheet mask** — translucent milky-white bio-cellulose, faint aqua tint, eye, nose and mouth cut-outs, a small slit at the right jaw; pale-blue protective film
+- **sheet mask** — translucent milky-white bio-cellulose, faint aqua tint, eye, nose and mouth cut-outs, a small slit at the right jaw; double: a milky-white layer and a pale-blue layer, applied one after the other (owner, 11/10)
 
 ## v-tech-system
 
