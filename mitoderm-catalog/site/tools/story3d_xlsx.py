@@ -7,7 +7,8 @@ typed here: each key is resolved against the reviewed sources (storyboard.he.jso
 reviewed new strings, so the workbook shows exactly the Hebrew and English that passed review. An unknown key is
 marked, not guessed.
 
-Usage: python3 site/tools/story3d_xlsx.py
+Usage: python3 site/tools/story3d_xlsx.py          (the Hebrew workbook for the owner, fails on any Russian left)
+       python3 site/tools/story3d_xlsx.py --ru     (the Russian working copy)
 """
 import json, os, re
 from openpyxl import Workbook
@@ -336,7 +337,74 @@ if os.path.exists(RECON):
                                        ('Источник', 30), ('Предложение', 50), ('Проверка скептика', 40)],
           [[names.get(f['page'], f['page']), f['screen'], f['field'], KIND.get(f['kind'], f['kind']), f['story_says'], f['source_says'],
             f['source_file'].replace('/home/user/GregoryDich/mitoderm-catalog/', ''), f['proposal_ru'], f.get('verify_ru', '')] for f in rec])
-out = os.path.join(SITE, 'MITODERM-3D-story.xlsx')
-wb.save(out)
 misses = sum(str(c.value).startswith(MISSING) for ws in wb.worksheets for row in ws.iter_rows() for c in row if c.value)
-print(out, {ws.title: ws.max_row - 1 for ws in wb.worksheets}, 'unresolved keys:', misses)
+
+# ---- Hebrew workbook (owner 11/10: the Excel is for the Israeli team, entirely in Hebrew). Every Russian (and English
+# working) cell value was exported to site/xlsx-he/ru/<page>.json and translated by a translator and a native-editor
+# review into site/xlsx-he/he/<page>.json (same ids). Here each cell is replaced by the reviewed Hebrew of the same
+# text; the site's English copy in the EN columns stays as it is. The Russian workbook stays a working copy.
+CYR = re.compile('[А-Яа-яЁё]')
+XH = os.path.join(SITE, 'xlsx-he')
+EN_NOTES = {'сообщить о выходе': 'notify-on-launch form'}  # the MITOTECH CELL BOOSTER card (story3d.json, home)
+def build_he():
+    pairs = {}
+    for f in sorted(os.listdir(os.path.join(XH, 'ru'))):
+        if not os.path.exists(os.path.join(XH, 'he', f)):
+            continue  # not translated yet: its cells show up below as Russian left
+        ru, he = (json.load(open(os.path.join(XH, d, f), encoding='utf-8'))['items'] for d in ('ru', 'he'))
+        for k, v in ru.items():
+            if he.get(k) and not CYR.search(he[k]):
+                pairs.setdefault(v.strip(), he[k].strip())
+    def tr(v):
+        t = v.strip()
+        if t in pairs:
+            return pairs[t]
+        for sep in (' · ', ' | ', '; '):  # cells joined from several reviewed parts
+            parts = t.split(sep)
+            if len(parts) > 1 and all(x.strip() in pairs or not CYR.search(x) for x in parts):
+                return sep.join(pairs.get(x.strip(), x) for x in parts)
+        return v
+    left = []
+    for ws in wb.worksheets:
+        en_cols = {c.column for c in ws[1] if isinstance(c.value, str) and re.search(r'(^|\s)EN$', c.value.strip())}
+        ws.sheet_view.rightToLeft = True
+        for row in ws.iter_rows():
+            for c in row:
+                if isinstance(c.value, str):
+                    if c.column in en_cols:  # English site copy stays; a Russian working note inside it becomes English
+                        for ru_note, en_note in EN_NOTES.items():
+                            c.value = c.value.replace(ru_note, en_note)
+                    else:
+                        c.value = tr(c.value)
+                    if CYR.search(c.value):
+                        left.append((ws.title, c.coordinate, c.value[:60]))
+                if c.row > 1:
+                    c.alignment = WRAP if c.column in en_cols else RTL
+                else:
+                    c.alignment = Alignment(wrap_text=True, vertical='top', horizontal='right', readingOrder=2)
+        ws.title = tr(ws.title)[:31]
+    # the roadmap: stages, what each needs from the owner, status (site/xlsx-he/roadmap: translator, two reviewers, fixer)
+    rm = os.path.join(XH, 'roadmap')
+    if os.path.exists(os.path.join(rm, 'he.json')):
+        ru, he = (json.load(open(os.path.join(rm, f), encoding='utf-8')) for f in ('ru.json', 'he.json'))
+        H = he['items']
+        rows = [[H.get(f'r{r}c{c}', v) for c, v in enumerate(row)] for r, row in enumerate(ru['rows'])]
+        ws = sheet(wb, H['h0'], [(H[f'h{i}'], w) for i, w in enumerate((8, 70, 16, 40, 34))], rows, he_cols=tuple(H[f'h{i}'] for i in range(5)))
+        ws.sheet_view.rightToLeft = True; ws.freeze_panes = 'B2'
+        ws.title = '\u05de\u05e4\u05ea \u05d3\u05e8\u05db\u05d9\u05dd'  # מפת דרכים
+        wb.move_sheet(ws, offset=-(len(wb.worksheets) - 1))
+        left += [(ws.title, c.coordinate, c.value[:60]) for row in ws.iter_rows() for c in row if isinstance(c.value, str) and CYR.search(c.value)]
+    return left
+
+if '--ru' in __import__('sys').argv:
+    out = os.path.join(SITE, 'MITODERM-3D-story-ru.xlsx')  # working copy for me, not for the owner
+    wb.save(out)
+    print(out, {ws.title: ws.max_row - 1 for ws in wb.worksheets}, 'unresolved keys:', misses)
+else:
+    left = build_he()
+    out = os.path.join(SITE, 'MITODERM-3D-story.xlsx')
+    wb.save(out)
+    print(out, {ws.title: ws.max_row - 1 for ws in wb.worksheets}, 'unresolved keys:', misses, 'cells with Cyrillic:', len(left))
+    for x in left[:40]:
+        print('  RU left:', *x)
+    assert not left, 'Russian left in the Hebrew workbook'
