@@ -10,13 +10,14 @@ TEX, OUT, SHOT = sys.argv[1:4]
 WIDTH = int(sys.argv[4]) if len(sys.argv) > 4 else 2880
 SAMPLES = int(sys.argv[5]) if len(sys.argv) > 5 else 256
 
-# kit: the insert at 0.8 so a vial is ~1/5 of the carton height, as in the packshot; the sachets fan out to the right as in
-# the storyboard, larger (about the carton's width) and clear of the last vial
-POUCHES = [[3.35 + i * 0.1, -0.25 - i * 0.05, -0.8 + i * 0.2, 0.12, -0.62, -0.2 + i * 0.09, 0.85] for i in range(5)]
-KIT = dict(box=dict(p=(2.25, 0.55, -1.8), r=(0.04, -0.36, 0.01), s=0.95), tray=dict(p=(2.2, -0.95, -0.2), r=(0.36, -0.36, 0), s=0.8), pouches=POUCHES)
+# kit: the insert at 0.62 so a vial body is ~0.2 of the carton width, as in the packshot; the sachets fan out to the right
+# as in the storyboard, about the carton's width, clear of the last vial; the carton leans back a little so it does not
+# mirror the vials
+POUCHES = [[3.42 + i * 0.1, -0.37 - i * 0.05, -0.85 + i * 0.2, 0.12, -0.62, -0.2 + i * 0.09, 0.88] for i in range(5)]
+KIT = dict(box=dict(p=(2.25, 0.55, -1.8), r=(-0.03, -0.32, 0.01), s=0.95), tray=dict(p=(2.3, -0.82, -0.45), r=(0.36, -0.36, 0), s=0.62), pouches=POUCHES)
 SHOTS = {
-    'v1-meet': dict(aspect=1.6, cam=(0, 0, 7), look=(0.9, 0, 0), box=dict(p=(1.8, -0.05, 0.2), r=(0.06, -0.48, 0.05), s=1)),
-    'v6-kit': dict(aspect=1.6, cam=(0, 0, 7), look=(1.2, 0, 0), **KIT),
+    'v1-meet': dict(aspect=1.6, cam=(0, 0, 7), look=(0.9, 0, 0), box=dict(p=(1.8, -0.05, 0.2), r=(0.06, -0.48, 0.0), s=1)),
+    'v6-kit': dict(aspect=1.6, cam=(0.4, 0.1, 6.0), look=(1.6, -0.15, 0), **KIT),  # closer than S1: the kit is smaller now, true to scale
     'kit-hd': dict(aspect=1400 / 1100, cam=(2.35, 0.35, 6.0), look=(2.35, -0.25, 0), **KIT),
 }
 S = SHOTS[SHOT]
@@ -88,29 +89,30 @@ def printed(name, key, layers):
     return m
 
 
-GOLD = (0.89, 0.67, 0.27, 1)  # linear of the packshot foil (sRGB 0.95, 0.84, 0.56)
+GOLD = (0.87, 0.60, 0.21, 1)  # linear of the packshot foil (sRGB 0.94, 0.80, 0.50)
 # carton: a few broad vertical bows in the sleeve (crisp light/dark bands in the mirror) + a faint fine crinkle
-FOIL = (((1.0, 0.22, 1.0), 1.6, 0.0, 0.03), ((1, 1, 1), 30.0, 0.0, 0.00012))
+FOIL = (((1.0, 0.15, 1.0), 1.3, 0.0, 0.035),)  # broad bows only: any fine layer read as hammered metal
 box_front = printed('box-front', 'box-front', FOIL)
 box_side = printed('box-side', 'box-side', FOIL)
 box_back, nt, b = mat('box-back', **{'Base Color': GOLD, 'Metallic': 1.0, 'Roughness': 0.06}); relief(nt, b, FOIL)
 box_end = mat('box-end', **{'Base Color': (0.015, 0.015, 0.016, 1), 'Roughness': 0.3, 'Specular IOR Level': 0.5})[0]
 # sachet: glossy foil with two or three soft dents and a fine crinkle, no stretched streaks
-SACHET = (((1.4, 1.4, 1.4), 1.8, 1.0, 0.02), ((1, 1, 1), 26.0, 0.0, 0.0006))
+SACHET = (((1.4, 1.4, 1.4), 1.8, 0.0, 0.02), ((1, 1, 1), 26.0, 0.0, 0.0002))
 sachet_front = printed('sachet-front', 'sachet', SACHET)
-sachet_back, nt, b = mat('sachet-back', **{'Base Color': GOLD, 'Metallic': 1.0, 'Roughness': 0.18}); relief(nt, b, SACHET)
+sachet_back, nt, b = mat('sachet-back', **{'Base Color': GOLD, 'Metallic': 1.0, 'Roughness': 0.12}); relief(nt, b, SACHET)
 white = mat('white-plastic', **{'Base Color': (0.85, 0.85, 0.83, 1), 'Roughness': 0.35, 'Coat Weight': 0.3})[0]
 alu = mat('aluminium', **{'Base Color': (0.92, 0.92, 0.92, 1), 'Metallic': 1.0, 'Roughness': 0.3})[0]
 # amber glass up to the cap, as on the real vials; the serum deepens the orange of the body
-glass = mat('amber-glass', **{'Base Color': (1.0, 0.62, 0.3, 1), 'Transmission Weight': 1.0, 'Roughness': 0.015, 'IOR': 1.5})[0]
+glass = mat('amber-glass', **{'Base Color': (1.0, 0.52, 0.2, 1), 'Transmission Weight': 1.0, 'Roughness': 0.015, 'IOR': 1.5})[0]
 serum, nt, b = mat('serum', **{'Base Color': (1, 1, 1, 1), 'Transmission Weight': 1.0, 'Roughness': 0.0, 'IOR': 1.34})
-va = nt.nodes.new('ShaderNodeVolumeAbsorption'); va.inputs['Color'].default_value = (0.97, 0.5, 0.1, 1); va.inputs['Density'].default_value = 8
+va = nt.nodes.new('ShaderNodeVolumeAbsorption'); va.inputs['Color'].default_value = (0.95, 0.42, 0.06, 1); va.inputs['Density'].default_value = 10
 nt.links.new(va.outputs[0], nt.nodes['Material Output'].inputs['Volume'])
 label, nt, b = mat('label', **{'Base Color': (0.86, 0.86, 0.84, 1), 'Roughness': 0.45})
 mix, tr, lab = nt.nodes.new('ShaderNodeMixShader'), nt.nodes.new('ShaderNodeBsdfTransparent'), image(nt, 'label.png')
 nt.links.new(lab.outputs['Alpha'], mix.inputs['Fac']); nt.links.new(tr.outputs[0], mix.inputs[1]); nt.links.new(b.outputs[0], mix.inputs[2])
 nt.links.new(mix.outputs[0], nt.nodes['Material Output'].inputs['Surface'])
-tray_mat, nt, b = mat('tray', **{'Base Color': (0.02, 0.02, 0.02, 1), 'Roughness': 0.42, 'Specular IOR Level': 0.5})  # neutral black plastic
+tray_mat, nt, b = mat('tray', **{'Base Color': (0.012, 0.012, 0.012, 1), 'Roughness': 0.3, 'Specular IOR Level': 0.5,
+                                  'Coat Weight': 0.3, 'Coat Roughness': 0.15})  # glossy neutral black plastic
 relief(nt, b, (((1, 1, 1), 400.0, 2.0, 0.0004),))
 
 # ---------- carton 0.95 x 2.31 x 0.40: front +z, sides ±x, black ends ±y, plain gold back ----------
@@ -149,11 +151,12 @@ def lathe(profile, seg=96, name='lathe', smooth=True, sharp=35):
 
 OUTER = [(0, 0), (0.15, 0), (0.16, 0.015), (0.16, 0.43), (0.15, 0.47), (0.1, 0.505), (0.086, 0.53), (0.086, 0.55)]
 INNER = [(0.074, 0.55), (0.074, 0.53), (0.088, 0.508), (0.138, 0.472), (0.148, 0.43), (0.148, 0.027), (0.138, 0.012), (0, 0.012)]
-SERUM = [(0, 0.014), (0.137, 0.014), (0.146, 0.028), (0.146, 0.40), (0, 0.40)]
+SERUM = [(0, 0.014), (0.137, 0.014), (0.146, 0.028), (0.146, 0.425), (0, 0.425)]  # filled to the shoulder
 vial_meshes = dict(glass=lathe(OUTER + INNER, name='glass', sharp=60), serum=lathe(SERUM, name='serum', sharp=60),
-                   crimp=lathe([(0, 0.535), (0.104, 0.535), (0.104, 0.635), (0, 0.635)], name='crimp'),
-                   top=lathe([(0, 0.5), (0.14, 0.5), (0.15, 0.512), (0.152, 0.622), (0.146, 0.638), (0.136, 0.642), (0.136, 0.656),
-                              (0.128, 0.668), (0, 0.668)], name='top'))
+                   crimp=lathe([(0, 0.505), (0.104, 0.505), (0.104, 0.555), (0, 0.555)], name='crimp'),
+                   # flip-off cap: flared skirt ~0.85 of the body width over a short aluminium crimp, flat disc on top
+                   top=lathe([(0, 0.545), (0.122, 0.545), (0.132, 0.552), (0.135, 0.62), (0.13, 0.632), (0.12, 0.635), (0.12, 0.645),
+                              (0.112, 0.652), (0, 0.652)], name='top'))
 bm = bmesh.new(); uvl = bm.loops.layers.uv.new('UVMap'); N = 128; ring = []
 for j, y in enumerate((0.06, 0.40)):  # open sleeve, u = 0 at the back; the print block (u = 0.5) faces the vial's +z
     ring.append([bm.verts.new((0.1615 * math.sin(math.pi + 2 * math.pi * k / N), y, 0.1615 * math.cos(math.pi + 2 * math.pi * k / N))) for k in range(N + 1)])
@@ -168,7 +171,7 @@ def make_vial(a, parent=root):
     g = obj('vial', parent=parent, p=a[:3], r=a[3:6], s=a[6])
     obj('glass', vial_meshes['glass'], (glass,), g); obj('serum', vial_meshes['serum'], (serum,), g)
     obj('label', vial_meshes['label'], (label,), g)
-    bevel(obj('crimp', vial_meshes['crimp'], (alu,), g), 0.006, 3); bevel(obj('top', vial_meshes['top'], (white,), g), 0.008, 3)
+    bevel(obj('crimp', vial_meshes['crimp'], (alu,), g), 0.006, 3); bevel(obj('top', vial_meshes['top'], (white,), g), 0.003, 2)
     return g
 
 # ---------- gel-mask sachet: gold foil pillow with the real print, flat sealed rim, white nozzle on the left ----------
@@ -223,8 +226,8 @@ def make_tray(t):
     return g
 
 # ---------- light: dark room, white softbox left, warm gold right, gold strip above, warm fills in front ----------
-def panel(color, strength, x, y, z, w, h, ry, rx=0):
-    """Softbox card seen only in reflections: even light with soft edges (the last 30 % of each half-side fades out)."""
+def panel(color, strength, x, y, z, w, h, ry, rx=0, soft=0.3):
+    """Softbox card seen only in reflections: even light, the outer `soft` part of each half-side fades out."""
     m, nt, _ = mat('panel')
     em = nt.nodes.new('ShaderNodeEmission'); em.inputs['Color'].default_value = (*color, 1)
     tc, mp, sep, mt = (nt.nodes.new(t) for t in ('ShaderNodeTexCoord', 'ShaderNodeMapping', 'ShaderNodeSeparateXYZ', 'ShaderNodeMath'))
@@ -233,7 +236,7 @@ def panel(color, strength, x, y, z, w, h, ry, rx=0):
     edges = []
     for axis in ('X', 'Y'):
         ab, fr = nt.nodes.new('ShaderNodeMath'), nt.nodes.new('ShaderNodeMapRange'); ab.operation = 'ABSOLUTE'
-        fr.inputs['From Min'].default_value = 0.7; fr.inputs['From Max'].default_value = 1.0
+        fr.inputs['From Min'].default_value = 1 - soft; fr.inputs['From Max'].default_value = 1.0
         fr.inputs['To Min'].default_value = 1.0; fr.inputs['To Max'].default_value = 0.0; fr.interpolation_type = 'SMOOTHSTEP'
         nt.links.new(sep.outputs[axis], ab.inputs[0]); nt.links.new(ab.outputs[0], fr.inputs['Value']); edges.append(fr)
     nt.links.new(edges[0].outputs['Result'], mt.inputs[0]); nt.links.new(edges[1].outputs['Result'], mt.inputs[1])
@@ -263,8 +266,10 @@ panel(srgb(0xf3dcb0), 2.0, 4.8, 0.4, -0.5, 3, 4, -math.pi / 2)
 panel(srgb(0xe8d6a8), 1.5, 0, 3.8, -2, 7, 1.2, 0, math.pi / 2)
 # the carton front mirrors x -3.6..-1.7 of this wall in S1 and x -2.4..-0.5 in the kit: light bars with narrow dark gaps,
 # so the foil shows bands as in the packshot while the print stays on light; tall enough for the print low on the carton
-for x, w, k in ((-3.45, 1.9, 2.0), (-1.85, 0.8, 2.2), (-0.9, 0.5, 2.2), (0.3, 1.0, 2.4)):
-    panel(srgb(0xfff3e0), k, x, 0.0, 5.6, w, 6.6, math.pi)
+for x, w, k in ((-3.45, 1.9, 1.5), (-1.85, 0.8, 1.6), (-0.9, 0.5, 1.6), (0.3, 1.0, 1.8)):
+    panel(srgb(0xfff3e0), k, x, 0.0, 5.6, w, 6.6, math.pi, soft=0.15)
+for x in (-3.0, -1.75):  # two narrow hot strips in front of the cards: the clipped white streaks of the real foil
+    panel(srgb(0xffffff), 9.0, x, 0.0, 5.5, 0.16, 6.6, math.pi, soft=0.4)
 panel(srgb(0xf3dcb0), 1.8, 5.0, 0.5, -3.8, 2, 5, -0.675)  # back-right strip: a gold edge on the carton's right side
 area('key', (1, 1, 1), 800, (4.5, 4.5, 4.5), (2.0, 0, 0), 2.5)  # upper right, where the smoke is brightest
 area('fill', srgb(0xfff3e0), 320, (-3, 2, 5), (1.5, 0, 0), 3.0)
@@ -277,7 +282,7 @@ if 'box' in S: make_box(S['box']['p'], S['box']['r'], S['box']['s'])
 if 'tray' in S:
     make_tray(S['tray'])
     # backlight seen only through the glass (as in packshot photography), so the serum glows orange instead of going dark
-    bl = panel(srgb(0xffe2a6), 1.4, 2.2, -0.55, -1.15, 2.4, 0.8, -0.36)
+    bl = panel(srgb(0xffe2a6), 1.0, 2.3, -0.5, -1.3, 1.9, 0.6, -0.36)
     bl.visible_glossy = False; bl.visible_diffuse = False
 for a in S.get('pouches', []): make_pouch(a)
 cam = obj('camera', bpy.data.cameras.new('camera')); cam.data.sensor_fit = 'VERTICAL'
