@@ -10,8 +10,10 @@ TEX, OUT, SHOT = sys.argv[1:4]
 WIDTH = int(sys.argv[4]) if len(sys.argv) > 4 else 2880
 SAMPLES = int(sys.argv[5]) if len(sys.argv) > 5 else 256
 
-POUCHES = [[3.0 + i * 0.1, -0.3 - i * 0.05, -0.75 + i * 0.2, 0.12, -0.62, -0.2 + i * 0.09, 0.68] for i in range(5)]
-KIT = dict(box=dict(p=(2.25, 0.55, -1.8), r=(0.04, -0.36, 0.01), s=0.95), tray=dict(p=(2.0, -0.95, -0.2), r=(0.36, -0.36, 0), s=1.0), pouches=POUCHES)
+# kit: the insert at 0.8 so a vial is ~1/5 of the carton height, as in the packshot; the sachets fan out to the right as in
+# the storyboard, larger (about the carton's width) and clear of the last vial
+POUCHES = [[3.35 + i * 0.1, -0.25 - i * 0.05, -0.8 + i * 0.2, 0.12, -0.62, -0.2 + i * 0.09, 0.85] for i in range(5)]
+KIT = dict(box=dict(p=(2.25, 0.55, -1.8), r=(0.04, -0.36, 0.01), s=0.95), tray=dict(p=(2.2, -0.95, -0.2), r=(0.36, -0.36, 0), s=0.8), pouches=POUCHES)
 SHOTS = {
     'v1-meet': dict(aspect=1.6, cam=(0, 0, 7), look=(0.9, 0, 0), box=dict(p=(1.8, -0.05, 0.2), r=(0.06, -0.48, 0.05), s=1)),
     'v6-kit': dict(aspect=1.6, cam=(0, 0, 7), look=(1.2, 0, 0), **KIT),
@@ -60,47 +62,56 @@ def image(nt, file, data=False):
     n.image.colorspace_settings.name = 'Non-Color' if data else 'sRGB'; return n
 
 
-def crinkle(nt, b, scale, strength, size=6.0, detail=3.0):
-    """Foil wrinkles: noise in object space, stretched along the sheet so the reflections break into streaks."""
-    tc, mp, nz, bp = (nt.nodes.new(t) for t in ('ShaderNodeTexCoord', 'ShaderNodeMapping', 'ShaderNodeTexNoise', 'ShaderNodeBump'))
-    mp.inputs['Scale'].default_value = scale; nz.inputs['Scale'].default_value = size; nz.inputs['Detail'].default_value = detail
-    nz.inputs['Roughness'].default_value = 0.55; bp.inputs['Strength'].default_value = strength; bp.inputs['Distance'].default_value = 0.02
-    nt.links.new(tc.outputs['Object'], mp.inputs['Vector']); nt.links.new(mp.outputs['Vector'], nz.inputs['Vector'])
-    nt.links.new(nz.outputs['Fac'], bp.inputs['Height']); nt.links.new(bp.outputs['Normal'], b.inputs['Normal'])
+def relief(nt, b, layers):
+    """Surface relief in object space: layers of (mapping scale, noise size, detail, height in scene units), bump on bump."""
+    tc, prev = nt.nodes.new('ShaderNodeTexCoord'), None
+    for scale, size, detail, height in layers:
+        mp, nz, bp = (nt.nodes.new(t) for t in ('ShaderNodeMapping', 'ShaderNodeTexNoise', 'ShaderNodeBump'))
+        mp.inputs['Scale'].default_value = scale; nz.inputs['Scale'].default_value = size; nz.inputs['Detail'].default_value = detail
+        bp.inputs['Strength'].default_value = 1.0; bp.inputs['Distance'].default_value = height
+        nt.links.new(tc.outputs['Object'], mp.inputs['Vector']); nt.links.new(mp.outputs['Vector'], nz.inputs['Vector'])
+        nt.links.new(nz.outputs['Fac'], bp.inputs['Height'])
+        if prev: nt.links.new(prev.outputs['Normal'], bp.inputs['Normal'])
+        prev = bp
+    nt.links.new(prev.outputs['Normal'], b.inputs['Normal'])
 
 
-def printed(name, key, scale, strength, rough_k=1.0):
+def printed(name, key, layers):
+    """Foil with the real print: metal from the mask; the ink is a rough black dielectric that stays black in any reflection."""
     m, nt, b = mat(name)
     nt.links.new(image(nt, f'{key}-albedo.png').outputs['Color'], b.inputs['Base Color'])
     metal = image(nt, f'{key}-metal.png', True); nt.links.new(metal.outputs['Color'], b.inputs['Metallic'])
-    sp = nt.nodes.new('ShaderNodeMapRange'); sp.inputs['To Min'].default_value = 0.12; sp.inputs['To Max'].default_value = 0.5
-    nt.links.new(metal.outputs['Color'], sp.inputs['Value']); nt.links.new(sp.outputs['Result'], b.inputs['Specular IOR Level'])  # ink stays black
-    rk = nt.nodes.new('ShaderNodeMath'); rk.operation = 'MULTIPLY'; rk.inputs[1].default_value = rough_k
-    nt.links.new(image(nt, f'{key}-rough.png', True).outputs['Color'], rk.inputs[0]); nt.links.new(rk.outputs[0], b.inputs['Roughness'])
-    crinkle(nt, b, scale, strength)
+    sp = nt.nodes.new('ShaderNodeMapRange'); sp.inputs['To Min'].default_value = 0.25; sp.inputs['To Max'].default_value = 0.5
+    nt.links.new(metal.outputs['Color'], sp.inputs['Value']); nt.links.new(sp.outputs['Result'], b.inputs['Specular IOR Level'])
+    nt.links.new(image(nt, f'{key}-rough.png', True).outputs['Color'], b.inputs['Roughness'])
+    relief(nt, b, layers)
     return m
 
 
-GOLD = (0.85, 0.54, 0.17, 1)
-FOIL = ((2.4, 0.45, 2.4), 0.07)  # wrinkles of the carton foil: stretched along the height, as on the packshot
-box_front = printed('box-front', 'box-front', *FOIL, 0.8)
-box_side = printed('box-side', 'box-side', *FOIL, 0.8)
-box_back, nt, b = mat('box-back', **{'Base Color': GOLD, 'Metallic': 1.0, 'Roughness': 0.14}); crinkle(nt, b, *FOIL)
-box_end = mat('box-end', **{'Base Color': (0.006, 0.006, 0.007, 1), 'Roughness': 0.62, 'Specular IOR Level': 0.15})[0]
-SACHET = ((2, 3, 2), 0.07)  # softer than the carton: the sachet foil is glossy with shallow folds
-sachet_front = printed('sachet-front', 'sachet', *SACHET, 0.85)
-sachet_back, nt, b = mat('sachet-back', **{'Base Color': GOLD, 'Metallic': 1.0, 'Roughness': 0.16}); crinkle(nt, b, *SACHET)
-white = mat('white-plastic', **{'Base Color': (0.82, 0.82, 0.8, 1), 'Roughness': 0.32, 'Coat Weight': 0.4})[0]
-alu = mat('aluminium', **{'Base Color': (0.91, 0.91, 0.9, 1), 'Metallic': 1.0, 'Roughness': 0.24})[0]
-glass = mat('amber-glass', **{'Base Color': (1.0, 0.72, 0.42, 1), 'Transmission Weight': 1.0, 'Roughness': 0.015, 'IOR': 1.5})[0]
+GOLD = (0.89, 0.67, 0.27, 1)  # linear of the packshot foil (sRGB 0.95, 0.84, 0.56)
+# carton: a few broad vertical bows in the sleeve (crisp light/dark bands in the mirror) + a faint fine crinkle
+FOIL = (((1.0, 0.22, 1.0), 1.6, 0.0, 0.03), ((1, 1, 1), 30.0, 0.0, 0.00012))
+box_front = printed('box-front', 'box-front', FOIL)
+box_side = printed('box-side', 'box-side', FOIL)
+box_back, nt, b = mat('box-back', **{'Base Color': GOLD, 'Metallic': 1.0, 'Roughness': 0.06}); relief(nt, b, FOIL)
+box_end = mat('box-end', **{'Base Color': (0.015, 0.015, 0.016, 1), 'Roughness': 0.3, 'Specular IOR Level': 0.5})[0]
+# sachet: glossy foil with two or three soft dents and a fine crinkle, no stretched streaks
+SACHET = (((1.4, 1.4, 1.4), 1.8, 1.0, 0.02), ((1, 1, 1), 26.0, 0.0, 0.0006))
+sachet_front = printed('sachet-front', 'sachet', SACHET)
+sachet_back, nt, b = mat('sachet-back', **{'Base Color': GOLD, 'Metallic': 1.0, 'Roughness': 0.18}); relief(nt, b, SACHET)
+white = mat('white-plastic', **{'Base Color': (0.85, 0.85, 0.83, 1), 'Roughness': 0.35, 'Coat Weight': 0.3})[0]
+alu = mat('aluminium', **{'Base Color': (0.92, 0.92, 0.92, 1), 'Metallic': 1.0, 'Roughness': 0.3})[0]
+# amber glass up to the cap, as on the real vials; the serum deepens the orange of the body
+glass = mat('amber-glass', **{'Base Color': (1.0, 0.62, 0.3, 1), 'Transmission Weight': 1.0, 'Roughness': 0.015, 'IOR': 1.5})[0]
 serum, nt, b = mat('serum', **{'Base Color': (1, 1, 1, 1), 'Transmission Weight': 1.0, 'Roughness': 0.0, 'IOR': 1.34})
-va = nt.nodes.new('ShaderNodeVolumeAbsorption'); va.inputs['Color'].default_value = (0.97, 0.45, 0.03, 1); va.inputs['Density'].default_value = 16
+va = nt.nodes.new('ShaderNodeVolumeAbsorption'); va.inputs['Color'].default_value = (0.97, 0.5, 0.1, 1); va.inputs['Density'].default_value = 8
 nt.links.new(va.outputs[0], nt.nodes['Material Output'].inputs['Volume'])
 label, nt, b = mat('label', **{'Base Color': (0.86, 0.86, 0.84, 1), 'Roughness': 0.45})
 mix, tr, lab = nt.nodes.new('ShaderNodeMixShader'), nt.nodes.new('ShaderNodeBsdfTransparent'), image(nt, 'label.png')
 nt.links.new(lab.outputs['Alpha'], mix.inputs['Fac']); nt.links.new(tr.outputs[0], mix.inputs[1]); nt.links.new(b.outputs[0], mix.inputs[2])
 nt.links.new(mix.outputs[0], nt.nodes['Material Output'].inputs['Surface'])
-tray_mat = mat('tray', **{'Base Color': (0.005, 0.005, 0.006, 1), 'Roughness': 0.55, 'Specular IOR Level': 0.25, 'Coat Weight': 0.12, 'Coat Roughness': 0.6})[0]
+tray_mat, nt, b = mat('tray', **{'Base Color': (0.02, 0.02, 0.02, 1), 'Roughness': 0.42, 'Specular IOR Level': 0.5})  # neutral black plastic
+relief(nt, b, (((1, 1, 1), 400.0, 2.0, 0.0004),))
 
 # ---------- carton 0.95 x 2.31 x 0.40: front +z, sides ±x, black ends ±y, plain gold back ----------
 def make_box(p, r, s):
@@ -118,7 +129,7 @@ def make_box(p, r, s):
         f = bm.faces.new([v(*c) for c in corners]); f.material_index = mi
         for loop, t in zip(f.loops, ((0, 0), (1, 0), (1, 1), (0, 1))): loop[uv].uv = t
     ob = obj('box', to_mesh(bm, 'box', smooth=False, sharp=0), (box_front, box_side, box_end, box_back), p=p, r=r, s=s)
-    bevel(ob, 0.004, 2)
+    bevel(ob, 0.006, 3)
     return ob
 
 # ---------- vial: amber glass shell with thickness, serum inside, white print, aluminium crimp, white flip-off top ----------
@@ -141,9 +152,10 @@ INNER = [(0.074, 0.55), (0.074, 0.53), (0.088, 0.508), (0.138, 0.472), (0.148, 0
 SERUM = [(0, 0.014), (0.137, 0.014), (0.146, 0.028), (0.146, 0.40), (0, 0.40)]
 vial_meshes = dict(glass=lathe(OUTER + INNER, name='glass', sharp=60), serum=lathe(SERUM, name='serum', sharp=60),
                    crimp=lathe([(0, 0.535), (0.104, 0.535), (0.104, 0.635), (0, 0.635)], name='crimp'),
-                   top=lathe([(0, 0.634), (0.094, 0.634), (0.094, 0.669), (0, 0.669)], name='top'))
+                   top=lathe([(0, 0.5), (0.14, 0.5), (0.15, 0.512), (0.152, 0.622), (0.146, 0.638), (0.136, 0.642), (0.136, 0.656),
+                              (0.128, 0.668), (0, 0.668)], name='top'))
 bm = bmesh.new(); uvl = bm.loops.layers.uv.new('UVMap'); N = 128; ring = []
-for j, y in enumerate((0.06, 0.40)):  # open sleeve, u = 0 at the back as three's CylinderGeometry(thetaStart = PI)
+for j, y in enumerate((0.06, 0.40)):  # open sleeve, u = 0 at the back; the print block (u = 0.5) faces the vial's +z
     ring.append([bm.verts.new((0.1615 * math.sin(math.pi + 2 * math.pi * k / N), y, 0.1615 * math.cos(math.pi + 2 * math.pi * k / N))) for k in range(N + 1)])
 for k in range(N):
     f = bm.faces.new((ring[0][k], ring[0][k + 1], ring[1][k + 1], ring[1][k]))
@@ -160,13 +172,13 @@ def make_vial(a, parent=root):
     return g
 
 # ---------- gel-mask sachet: gold foil pillow with the real print, flat sealed rim, white nozzle on the left ----------
-def pillow_mesh(w=1.0, h=0.58, depth=0.035, nx=120, ny=70):
+def pillow_mesh(w=1.0, h=0.58, depth=0.011, nx=120, ny=70):  # a flat sachet, only a slight puff in the middle
     bm = bmesh.new(); uv = bm.loops.layers.uv.new('UVMap'); F, B = {}, {}
     for i in range(nx + 1):
         for j in range(ny + 1):
             x, y = i / nx * 2 - 1, j / ny * 2 - 1
-            seal = abs(x) > 0.95 or abs(y) > 0.91
-            z = 0 if seal else depth * (1 - abs(x / 0.95) ** 6) * (1 - abs(y / 0.91) ** 6)
+            seal = abs(x) > 0.95 or abs(y) > 0.89
+            z = 0 if seal else depth * (1 - abs(x / 0.95) ** 4) * (1 - abs(y / 0.89) ** 4)
             F[i, j] = bm.verts.new((x * w / 2, y * h / 2, z + 0.0006))
             B[i, j] = bm.verts.new((x * w / 2, y * h / 2, -z - 0.0006))
     for i in range(nx):
@@ -206,19 +218,27 @@ def make_tray(t):
     for v in bm.verts: v.co = Vector((v.co.x * 1.6, v.co.y * 0.05 + H / 2, v.co.z * 0.32))
     c = bpy.data.objects.new('bed', to_mesh(bm, 'bed', smooth=False, sharp=0)); cutters.objects.link(c); c.parent = g; c.location = (0, 0, 0.27); c.hide_render = True
     bo = slab.modifiers.new('wells', 'BOOLEAN'); bo.operation = 'DIFFERENCE'; bo.operand_type = 'COLLECTION'; bo.collection = cutters; bo.solver = 'EXACT'
-    for i in range(5): make_vial((-0.78 + i * 0.39, H / 2 - 0.02, -0.2, 0, 0, 0, 0.9), g)
+    for i, jit in enumerate((0.05, -0.04, 0.02, -0.06, 0.04)):  # turned towards the camera, a little unevenly
+        make_vial((-0.78 + i * 0.39, H / 2 - 0.02, -0.2, 0, 0.09 + jit, 0, 0.9), g)
     return g
 
 # ---------- light: dark room, white softbox left, warm gold right, gold strip above, warm fills in front ----------
 def panel(color, strength, x, y, z, w, h, ry, rx=0):
-    """Softbox seen only in reflections: bright core with a soft falloff (spherical gradient over the panel's UV)."""
+    """Softbox card seen only in reflections: even light with soft edges (the last 30 % of each half-side fades out)."""
     m, nt, _ = mat('panel')
     em = nt.nodes.new('ShaderNodeEmission'); em.inputs['Color'].default_value = (*color, 1)
-    tc, mp, gr, mt = (nt.nodes.new(t) for t in ('ShaderNodeTexCoord', 'ShaderNodeMapping', 'ShaderNodeTexGradient', 'ShaderNodeMath'))
-    gr.gradient_type = 'SPHERICAL'; mp.inputs['Location'].default_value = (0, 0, 0); mp.inputs['Scale'].default_value = (2 / w, 2 / h, 1)
-    mt.operation = 'MULTIPLY'; mt.inputs[1].default_value = strength * 1.6
-    nt.links.new(tc.outputs['Object'], mp.inputs['Vector']); nt.links.new(mp.outputs['Vector'], gr.inputs['Vector'])
-    nt.links.new(gr.outputs['Fac'], mt.inputs[0]); nt.links.new(mt.outputs[0], em.inputs['Strength'])
+    tc, mp, sep, mt = (nt.nodes.new(t) for t in ('ShaderNodeTexCoord', 'ShaderNodeMapping', 'ShaderNodeSeparateXYZ', 'ShaderNodeMath'))
+    mp.inputs['Scale'].default_value = (2 / w, 2 / h, 1); mt.operation = 'MULTIPLY'
+    nt.links.new(tc.outputs['Object'], mp.inputs['Vector']); nt.links.new(mp.outputs['Vector'], sep.inputs['Vector'])
+    edges = []
+    for axis in ('X', 'Y'):
+        ab, fr = nt.nodes.new('ShaderNodeMath'), nt.nodes.new('ShaderNodeMapRange'); ab.operation = 'ABSOLUTE'
+        fr.inputs['From Min'].default_value = 0.7; fr.inputs['From Max'].default_value = 1.0
+        fr.inputs['To Min'].default_value = 1.0; fr.inputs['To Max'].default_value = 0.0; fr.interpolation_type = 'SMOOTHSTEP'
+        nt.links.new(sep.outputs[axis], ab.inputs[0]); nt.links.new(ab.outputs[0], fr.inputs['Value']); edges.append(fr)
+    nt.links.new(edges[0].outputs['Result'], mt.inputs[0]); nt.links.new(edges[1].outputs['Result'], mt.inputs[1])
+    st = nt.nodes.new('ShaderNodeMath'); st.operation = 'MULTIPLY'; st.inputs[1].default_value = strength
+    nt.links.new(mt.outputs[0], st.inputs[0]); nt.links.new(st.outputs[0], em.inputs['Strength'])
     nt.links.new(em.outputs[0], nt.nodes['Material Output'].inputs['Surface'])
     bm = bmesh.new(); bmesh.ops.create_grid(bm, x_segments=1, y_segments=1, size=0.5)
     for v in bm.verts: v.co = Vector((v.co.x * w, v.co.y * h, 0))
@@ -232,20 +252,23 @@ def srgb(hexv):
     return tuple(v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4 for v in c)
 
 
-def area(name, color, power, pos, target, size):
+def area(name, color, power, pos, target, size):  # lamps light the scene but are not mirrored: the cards shape the reflections
     li = bpy.data.lights.new(name, 'AREA'); li.energy = power; li.color = color; li.size = size
-    ob = obj(name, li); ob.matrix_basis = look_matrix(pos, target)
+    ob = obj(name, li); ob.matrix_basis = look_matrix(pos, target); ob.visible_glossy = False
 
 
+# near-white cards (the foil itself gives the gold), with a dark gap in front so the mirror shows bands, as in the packshot
 panel(srgb(0xffffff), 3.0, -4.5, 1.6, 1, 3, 3, math.pi / 2)
-panel(srgb(0xe9c27a), 2.2, 4.8, 0.4, -0.5, 3, 4, -math.pi / 2)
-panel(srgb(0xc9a24b), 1.8, 0, 3.8, -2, 7, 1.2, 0, math.pi / 2)
-panel(srgb(0xf2c878), 1.7, -1.6, 0.2, 5.8, 6, 5.0, math.pi)  # taller than the three.js one, so the print low on the carton sits on bright foil
-panel(srgb(0xe9c27a), 2.0, 5.0, 0.5, -3.8, 2, 5, -0.675)  # back-right strip: a gold edge on the carton's right side
-panel(srgb(0xffe2a6), 1.4, 2.5, -1.5, 5, 3, 2, math.pi)
-area('key', (1, 1, 1), 900, (-3, 4, 5), (1.5, 0, 0), 3.0)
-area('rim', srgb(0xd8bd7e), 500, (4.6, 1.6, 1.0), (2.0, 0, -0.5), 1.2)
-area('warm', srgb(0xc9a24b), 260, (-1, -2.4, 2.8), (1.8, 0, 0), 1.5)
+panel(srgb(0xf3dcb0), 2.0, 4.8, 0.4, -0.5, 3, 4, -math.pi / 2)
+panel(srgb(0xe8d6a8), 1.5, 0, 3.8, -2, 7, 1.2, 0, math.pi / 2)
+# the carton front mirrors x -3.6..-1.7 of this wall in S1 and x -2.4..-0.5 in the kit: light bars with narrow dark gaps,
+# so the foil shows bands as in the packshot while the print stays on light; tall enough for the print low on the carton
+for x, w, k in ((-3.45, 1.9, 2.0), (-1.85, 0.8, 2.2), (-0.9, 0.5, 2.2), (0.3, 1.0, 2.4)):
+    panel(srgb(0xfff3e0), k, x, 0.0, 5.6, w, 6.6, math.pi)
+panel(srgb(0xf3dcb0), 1.8, 5.0, 0.5, -3.8, 2, 5, -0.675)  # back-right strip: a gold edge on the carton's right side
+area('key', (1, 1, 1), 800, (4.5, 4.5, 4.5), (2.0, 0, 0), 2.5)  # upper right, where the smoke is brightest
+area('fill', srgb(0xfff3e0), 320, (-3, 2, 5), (1.5, 0, 0), 3.0)
+area('rim', srgb(0xf3dcb0), 400, (4.6, 1.6, 1.0), (2.0, 0, -0.5), 1.2)
 world = bpy.data.worlds.new('room'); scn.world = world; world.use_nodes = True
 world.node_tree.nodes['Background'].inputs['Color'].default_value = (0.006, 0.005, 0.004, 1)
 
@@ -254,7 +277,7 @@ if 'box' in S: make_box(S['box']['p'], S['box']['r'], S['box']['s'])
 if 'tray' in S:
     make_tray(S['tray'])
     # backlight seen only through the glass (as in packshot photography), so the serum glows orange instead of going dark
-    bl = panel(srgb(0xffe2a6), 1.4, 2.0, -0.45, -1.15, 2.8, 0.9, -0.36)
+    bl = panel(srgb(0xffe2a6), 1.4, 2.2, -0.55, -1.15, 2.4, 0.8, -0.36)
     bl.visible_glossy = False; bl.visible_diffuse = False
 for a in S.get('pouches', []): make_pouch(a)
 cam = obj('camera', bpy.data.cameras.new('camera')); cam.data.sensor_fit = 'VERTICAL'
@@ -265,7 +288,7 @@ r, c = scn.render, scn.cycles
 r.engine = 'CYCLES'; c.device = 'CPU'; c.samples = SAMPLES; c.use_adaptive_sampling = True; c.adaptive_threshold = 0.006
 c.use_denoising = True; c.denoiser = 'OPENIMAGEDENOISE'
 c.max_bounces = 16; c.diffuse_bounces = 3; c.glossy_bounces = 8; c.transmission_bounces = 16; c.transparent_max_bounces = 16
-c.caustics_reflective = False; c.caustics_refractive = False; c.blur_glossy = 0.5
+c.caustics_reflective = False; c.caustics_refractive = False; c.blur_glossy = 0.5; c.sample_clamp_indirect = 5  # no blotches in the glass
 r.film_transparent = True; c.film_transparent_glass = True
 r.resolution_x = WIDTH; r.resolution_y = round(WIDTH / S['aspect']); r.resolution_percentage = 100
 scn.view_settings.view_transform = 'Filmic'; scn.view_settings.look = 'Medium High Contrast'  # Filmic keeps the foil yellow; AgX turns it peach
