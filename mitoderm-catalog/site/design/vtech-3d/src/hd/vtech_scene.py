@@ -16,7 +16,7 @@ SAMPLES = int(sys.argv[5]) if len(sys.argv) > 5 else 256
 POUCHES = [[3.5 + i * 0.1, -0.32 - i * 0.05, -0.85 + i * 0.2, 0.12, -0.62, -0.2 + i * 0.09, 0.88] for i in range(5)]
 KIT = dict(box=dict(p=(2.25, 0.55, -1.8), r=(-0.03, -0.32, 0.01), s=0.95), tray=dict(p=(2.3, -0.88, -0.45), r=(0.36, -0.36, 0), s=0.62), pouches=POUCHES)
 SHOTS = {
-    'v1-meet': dict(aspect=1.6, cam=(0, 0, 7), look=(0.9, 0, 0), exposure=-0.4, box=dict(p=(1.8, -0.05, 0.2), r=(0.06, -0.48, 0.0), s=1)),
+    'v1-meet': dict(aspect=1.6, cam=(0, 0, 7), look=(0.9, 0, 0), exposure=-0.8, box=dict(p=(1.8, -0.05, 0.2), r=(0.06, -0.48, 0.0), s=1)),
     'v6-kit': dict(aspect=1.6, cam=(0.4, 0.1, 6.6), look=(1.22, 0.15, 0), **KIT),  # closer than S1 (true-scale kit); group spans 0.54-0.95 of the width
     'kit-hd': dict(aspect=1400 / 1100, cam=(2.35, 0.35, 6.0), look=(2.35, -0.25, 0), **KIT),
 }
@@ -104,9 +104,9 @@ white = mat('white-plastic', **{'Base Color': (0.85, 0.85, 0.83, 1), 'Roughness'
 nozzle = mat('nozzle', **{'Base Color': (0.9, 0.9, 0.88, 1), 'Roughness': 0.35, 'Subsurface Weight': 0.4, 'Subsurface Scale': 0.01})[0]  # milky PP
 alu = mat('aluminium', **{'Base Color': (0.92, 0.92, 0.92, 1), 'Metallic': 1.0, 'Roughness': 0.3})[0]
 # amber glass up to the cap, as on the real vials; the serum deepens the orange of the body
-glass = mat('amber-glass', **{'Base Color': (1.0, 0.52, 0.2, 1), 'Transmission Weight': 1.0, 'Roughness': 0.015, 'IOR': 1.5})[0]
+glass = mat('amber-glass', **{'Base Color': (1.0, 0.6, 0.32, 1), 'Transmission Weight': 1.0, 'Roughness': 0.015, 'IOR': 1.5})[0]
 serum, nt, b = mat('serum', **{'Base Color': (1, 1, 1, 1), 'Transmission Weight': 1.0, 'Roughness': 0.0, 'IOR': 1.34})
-va = nt.nodes.new('ShaderNodeVolumeAbsorption'); va.inputs['Color'].default_value = (0.95, 0.42, 0.06, 1); va.inputs['Density'].default_value = 10
+va = nt.nodes.new('ShaderNodeVolumeAbsorption'); va.inputs['Color'].default_value = (0.95, 0.35, 0.08, 1); va.inputs['Density'].default_value = 4
 nt.links.new(va.outputs[0], nt.nodes['Material Output'].inputs['Volume'])
 label, nt, b = mat('label', **{'Base Color': (0.86, 0.86, 0.84, 1), 'Roughness': 0.45})
 mix, tr, lab = nt.nodes.new('ShaderNodeMixShader'), nt.nodes.new('ShaderNodeBsdfTransparent'), image(nt, 'label.png')
@@ -285,11 +285,11 @@ if 'box' in S: make_box(S['box']['p'], S['box']['r'], S['box']['s'])
 if 'tray' in S:
     make_tray(S['tray'])
     # backlight seen only through the glass (as in packshot photography), so the serum glows orange instead of going dark
-    bl = panel(srgb(0xffe2a6), 1.0, 2.3, -0.5, -1.3, 1.9, 0.6, -0.36)
+    bl = panel(srgb(0xffe2a6), 1.4, 2.3, -0.5, -1.3, 1.9, 0.6, -0.36)
     bl.visible_glossy = False; bl.visible_diffuse = False
 for a in S.get('pouches', []): make_pouch(a)
-if S.get('pouches'):  # low card under the camera: the front sachet mirrors light here instead of the dark void
-    panel(srgb(0xfff3e0), 1.6, -0.6, -3.4, 4.6, 4.0, 1.8, math.pi, rx=-0.5, soft=0.35)
+if S.get('pouches'):  # low wide card under and left of the camera: the sachets mirror light here instead of the dark void
+    panel(srgb(0xfff3e0), 1.6, -1.8, -3.0, 4.6, 6.4, 2.4, math.pi, rx=-0.5, soft=0.35)
 cam = obj('camera', bpy.data.cameras.new('camera')); cam.data.sensor_fit = 'VERTICAL'
 cam.data.lens = cam.data.sensor_height / (2 * math.tan(math.radians(35) / 2)); cam.matrix_basis = look_matrix(S['cam'], S['look'])
 cam.data.clip_start = 0.1; cam.data.clip_end = 80; scn.camera = cam

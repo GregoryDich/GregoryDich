@@ -41,7 +41,7 @@ def bolder(metal, rows, k, px=5):
 def wordmark(m):
     """Carton: re-set the traced "V-TECH SYSTEM" lockup as on the packshot. Letters closer (the name ends at 0.88 of the
     face instead of 0.91), the hyphen 1.6x longer, centred between V and T at 42 % of the cap height, SYSTEM from the E to
-    the H's right stem, TECH one weight bolder, SYSTEM's bars kept, the mini-V redrawn without the photo glint."""
+    the H's right stem, TECH and SYSTEM one weight bolder, the mini-V redrawn without the photo glint."""
     a = np.asarray(m).copy(); ink = (a[..., 2] < 128)
     out = np.zeros_like(ink); out[:, :340] = ink[:, :340]; out[:1360] = ink[:1360]; out[1510:] = ink[1510:]
     def put(x0, x1, nx, y0, y1): out[y0:y1, nx:nx + x1 - x0] |= ink[y0:y1, x0:x1]
@@ -50,7 +50,7 @@ def wordmark(m):
     for x0, x1 in ((429, 442), (485, 500), (543, 556), (600, 613), (659, 670), (714, 736)): put(x0, x1, round(470 + (x0 - 429) * 0.879), 1480, 1508)
     out[1481:1510] |= out[1480:1509].copy()   # SYSTEM: 1-px bars (T, E) one pixel taller, or the smoothing erases them
     img = Image.fromarray(np.where(out, 0, 255).astype(np.uint8), 'L')
-    bold = img.crop((340, 1385, 780, 1466)).filter(ImageFilter.MinFilter(3)); img.paste(bold, (340, 1385))
+    bold = img.crop((340, 1385, 780, 1512)).filter(ImageFilter.MinFilter(3)); img.paste(bold, (340, 1385))  # TECH and SYSTEM
     d = ImageDraw.Draw(img); d.rectangle([125, 1362, 210, 1460], fill=255)   # mini-V redrawn from its measured trace
     d.polygon([(134, 1381), (145, 1381), (166.5, 1436), (189, 1381), (199, 1381), (166.5, 1455)], fill=0)
     d.polygon([(156, 1369), (178, 1369), (166.5, 1392)], fill=0)
