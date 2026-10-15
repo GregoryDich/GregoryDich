@@ -13,11 +13,11 @@ SAMPLES = int(sys.argv[5]) if len(sys.argv) > 5 else 256
 # kit: the insert at 0.62 so a vial body is ~0.2 of the carton width, as in the packshot; the sachets fan out to the right
 # as in the storyboard, about the carton's width, clear of the last vial; the carton leans back a little so it does not
 # mirror the vials
-POUCHES = [[3.42 + i * 0.1, -0.37 - i * 0.05, -0.85 + i * 0.2, 0.12, -0.62, -0.2 + i * 0.09, 0.88] for i in range(5)]
-KIT = dict(box=dict(p=(2.25, 0.55, -1.8), r=(-0.03, -0.32, 0.01), s=0.95), tray=dict(p=(2.3, -0.82, -0.45), r=(0.36, -0.36, 0), s=0.62), pouches=POUCHES)
+POUCHES = [[3.5 + i * 0.1, -0.32 - i * 0.05, -0.85 + i * 0.2, 0.12, -0.62, -0.2 + i * 0.09, 0.88] for i in range(5)]
+KIT = dict(box=dict(p=(2.25, 0.55, -1.8), r=(-0.03, -0.32, 0.01), s=0.95), tray=dict(p=(2.3, -0.88, -0.45), r=(0.36, -0.36, 0), s=0.62), pouches=POUCHES)
 SHOTS = {
-    'v1-meet': dict(aspect=1.6, cam=(0, 0, 7), look=(0.9, 0, 0), box=dict(p=(1.8, -0.05, 0.2), r=(0.06, -0.48, 0.0), s=1)),
-    'v6-kit': dict(aspect=1.6, cam=(0.4, 0.1, 6.0), look=(1.6, -0.15, 0), **KIT),  # closer than S1: the kit is smaller now, true to scale
+    'v1-meet': dict(aspect=1.6, cam=(0, 0, 7), look=(0.9, 0, 0), exposure=-0.4, box=dict(p=(1.8, -0.05, 0.2), r=(0.06, -0.48, 0.0), s=1)),
+    'v6-kit': dict(aspect=1.6, cam=(0.4, 0.1, 6.6), look=(1.22, 0.15, 0), **KIT),  # closer than S1 (true-scale kit); group spans 0.54-0.95 of the width
     'kit-hd': dict(aspect=1400 / 1100, cam=(2.35, 0.35, 6.0), look=(2.35, -0.25, 0), **KIT),
 }
 S = SHOTS[SHOT]
@@ -82,16 +82,16 @@ def printed(name, key, layers):
     m, nt, b = mat(name)
     nt.links.new(image(nt, f'{key}-albedo.png').outputs['Color'], b.inputs['Base Color'])
     metal = image(nt, f'{key}-metal.png', True); nt.links.new(metal.outputs['Color'], b.inputs['Metallic'])
-    sp = nt.nodes.new('ShaderNodeMapRange'); sp.inputs['To Min'].default_value = 0.25; sp.inputs['To Max'].default_value = 0.5
+    sp = nt.nodes.new('ShaderNodeMapRange'); sp.inputs['To Min'].default_value = 0.05; sp.inputs['To Max'].default_value = 0.5  # ink barely reflects
     nt.links.new(metal.outputs['Color'], sp.inputs['Value']); nt.links.new(sp.outputs['Result'], b.inputs['Specular IOR Level'])
     nt.links.new(image(nt, f'{key}-rough.png', True).outputs['Color'], b.inputs['Roughness'])
     relief(nt, b, layers)
     return m
 
 
-GOLD = (0.87, 0.60, 0.21, 1)  # linear of the packshot foil (sRGB 0.94, 0.80, 0.50)
+GOLD = (0.87, 0.57, 0.18, 1)  # linear of the packshot foil (sRGB 0.94, 0.78, 0.46)
 # carton: a few broad vertical bows in the sleeve (crisp light/dark bands in the mirror) + a faint fine crinkle
-FOIL = (((1.0, 0.15, 1.0), 1.3, 0.0, 0.035),)  # broad bows only: any fine layer read as hammered metal
+FOIL = (((1.0, 0.15, 1.0), 1.3, 0.0, 0.035), ((1.0, 0.5, 1.0), 0.9, 0.0, 0.008))  # broad bows + a few soft wrinkles, nothing fine
 box_front = printed('box-front', 'box-front', FOIL)
 box_side = printed('box-side', 'box-side', FOIL)
 box_back, nt, b = mat('box-back', **{'Base Color': GOLD, 'Metallic': 1.0, 'Roughness': 0.06}); relief(nt, b, FOIL)
@@ -100,7 +100,8 @@ box_end = mat('box-end', **{'Base Color': (0.015, 0.015, 0.016, 1), 'Roughness':
 SACHET = (((1.4, 1.4, 1.4), 1.8, 0.0, 0.02), ((1, 1, 1), 26.0, 0.0, 0.0002))
 sachet_front = printed('sachet-front', 'sachet', SACHET)
 sachet_back, nt, b = mat('sachet-back', **{'Base Color': GOLD, 'Metallic': 1.0, 'Roughness': 0.12}); relief(nt, b, SACHET)
-white = mat('white-plastic', **{'Base Color': (0.85, 0.85, 0.83, 1), 'Roughness': 0.35, 'Coat Weight': 0.3})[0]
+white = mat('white-plastic', **{'Base Color': (0.85, 0.85, 0.83, 1), 'Roughness': 0.28, 'Coat Weight': 0.4, 'Coat Roughness': 0.1})[0]
+nozzle = mat('nozzle', **{'Base Color': (0.9, 0.9, 0.88, 1), 'Roughness': 0.35, 'Subsurface Weight': 0.4, 'Subsurface Scale': 0.01})[0]  # milky PP
 alu = mat('aluminium', **{'Base Color': (0.92, 0.92, 0.92, 1), 'Metallic': 1.0, 'Roughness': 0.3})[0]
 # amber glass up to the cap, as on the real vials; the serum deepens the orange of the body
 glass = mat('amber-glass', **{'Base Color': (1.0, 0.52, 0.2, 1), 'Transmission Weight': 1.0, 'Roughness': 0.015, 'IOR': 1.5})[0]
@@ -169,13 +170,14 @@ vial_meshes['label'] = to_mesh(bm, 'label', sharp=0)
 
 def make_vial(a, parent=root):
     g = obj('vial', parent=parent, p=a[:3], r=a[3:6], s=a[6])
-    obj('glass', vial_meshes['glass'], (glass,), g); obj('serum', vial_meshes['serum'], (serum,), g)
-    obj('label', vial_meshes['label'], (label,), g)
-    bevel(obj('crimp', vial_meshes['crimp'], (alu,), g), 0.006, 3); bevel(obj('top', vial_meshes['top'], (white,), g), 0.003, 2)
+    parts = [obj('glass', vial_meshes['glass'], (glass,), g), obj('serum', vial_meshes['serum'], (serum,), g),
+             obj('label', vial_meshes['label'], (label,), g), obj('crimp', vial_meshes['crimp'], (alu,), g), obj('top', vial_meshes['top'], (white,), g)]
+    bevel(parts[3], 0.006, 3); bevel(parts[4], 0.003, 2)
+    for o in parts: o.visible_glossy = False  # the carton and the sachets do not mirror the amber vials (copper sachets, ghost vials)
     return g
 
 # ---------- gel-mask sachet: gold foil pillow with the real print, flat sealed rim, white nozzle on the left ----------
-def pillow_mesh(w=1.0, h=0.58, depth=0.011, nx=120, ny=70):  # a flat sachet, only a slight puff in the middle
+def pillow_mesh(w=1.0, h=0.58, depth=0.018, nx=120, ny=70):  # a flat sachet, a slight puff in the middle
     bm = bmesh.new(); uv = bm.loops.layers.uv.new('UVMap'); F, B = {}, {}
     for i in range(nx + 1):
         for j in range(ny + 1):
@@ -202,8 +204,9 @@ CAP = lathe([(0, -0.04), (0.048, -0.04), (0.048, 0.04), (0, 0.04)], 48, 'cap')
 def make_pouch(a, parent=root):
     g = obj('pouch', parent=parent, p=a[:3], r=a[3:6], s=a[6])
     obj('pillow', PILLOW, (sachet_front, sachet_back), g)
-    obj('spout', SPOUT, (white,), g, p=(-0.54, 0, 0), r=(0, 0, math.pi / 2))
-    bevel(obj('cap', CAP, (white,), g, p=(-0.62, 0, 0), r=(0, 0, math.pi / 2)), 0.008, 2)
+    sp = obj('spout', SPOUT, (nozzle,), g, p=(-0.54, 0, 0), r=(0, 0, math.pi / 2))
+    cp = obj('cap', CAP, (nozzle,), g, p=(-0.62, 0, 0), r=(0, 0, math.pi / 2)); bevel(cp, 0.008, 2)
+    sp.visible_glossy = cp.visible_glossy = False  # no ghost nozzles mirrored in the next sachet
     return g
 
 # ---------- black insert: 5 vial wells (real recesses), the vials standing in them ----------
@@ -262,7 +265,7 @@ def area(name, color, power, pos, target, size):  # lamps light the scene but ar
 
 # near-white cards (the foil itself gives the gold), with a dark gap in front so the mirror shows bands, as in the packshot
 panel(srgb(0xffffff), 3.0, -4.5, 1.6, 1, 3, 3, math.pi / 2)
-panel(srgb(0xf3dcb0), 2.0, 4.8, 0.4, -0.5, 3, 4, -math.pi / 2)
+panel(srgb(0xf3dcb0), 2.0, 4.8, 0.4, -0.5, 1.2, 4, -math.pi / 2, soft=0.45)  # a streak, not a flat glow, on the side face
 panel(srgb(0xe8d6a8), 1.5, 0, 3.8, -2, 7, 1.2, 0, math.pi / 2)
 # the carton front mirrors x -3.6..-1.7 of this wall in S1 and x -2.4..-0.5 in the kit: light bars with narrow dark gaps,
 # so the foil shows bands as in the packshot while the print stays on light; tall enough for the print low on the carton
@@ -285,6 +288,8 @@ if 'tray' in S:
     bl = panel(srgb(0xffe2a6), 1.0, 2.3, -0.5, -1.3, 1.9, 0.6, -0.36)
     bl.visible_glossy = False; bl.visible_diffuse = False
 for a in S.get('pouches', []): make_pouch(a)
+if S.get('pouches'):  # low card under the camera: the front sachet mirrors light here instead of the dark void
+    panel(srgb(0xfff3e0), 1.6, -0.6, -3.4, 4.6, 4.0, 1.8, math.pi, rx=-0.5, soft=0.35)
 cam = obj('camera', bpy.data.cameras.new('camera')); cam.data.sensor_fit = 'VERTICAL'
 cam.data.lens = cam.data.sensor_height / (2 * math.tan(math.radians(35) / 2)); cam.matrix_basis = look_matrix(S['cam'], S['look'])
 cam.data.clip_start = 0.1; cam.data.clip_end = 80; scn.camera = cam
@@ -297,6 +302,7 @@ c.caustics_reflective = False; c.caustics_refractive = False; c.blur_glossy = 0.
 r.film_transparent = True; c.film_transparent_glass = True
 r.resolution_x = WIDTH; r.resolution_y = round(WIDTH / S['aspect']); r.resolution_percentage = 100
 scn.view_settings.view_transform = 'Filmic'; scn.view_settings.look = 'Medium High Contrast'  # Filmic keeps the foil yellow; AgX turns it peach
+scn.view_settings.exposure = S.get('exposure', 0)
 r.image_settings.file_format = 'PNG'; r.image_settings.color_mode = 'RGBA'; r.image_settings.color_depth = '16'
 r.filepath = OUT
 bpy.ops.render.render(write_still=True)
