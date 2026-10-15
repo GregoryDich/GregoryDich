@@ -1,24 +1,48 @@
-"""V-TECH SYSTEM path-traced in Blender Cycles (PLAN §8, stage 1: the HD sample).
-Same shots and poses as ../render-vtech.html. Everything is built in three.js coordinates (Y up) under a root empty
-turned 90° about X; Blender Euler 'ZYX' equals three.js 'XYZ'. Print maps come from prep_tex.py (albedo/metal/rough).
-usage: <python with bpy 4.2> vtech_scene.py <tex dir> <out.png> <v1-meet|v6-kit|kit-hd> [width=2880] [samples=256]
-The frame is rendered on a transparent film; compose.py lays it over layers/vt-bg-wide.jpg."""
+"""V-TECH SYSTEM path-traced in Blender Cycles (PLAN §8, stage 1: the HD series).
+Same shots and poses as ../render-vtech.html (story: site/story3d.json, stories[0]), with the kit at true scale.
+Everything is built in three.js coordinates (Y up) under a root empty turned 90° about X; Blender Euler 'ZYX' equals
+three.js 'XYZ'. Print maps come from prep_tex.py (albedo/metal/rough).
+usage: <python with bpy 4.2> vtech_scene.py <tex dir> <out.png> <shot> [width=2880] [samples=256] [part]
+shots: v1-meet v2-why v3-inside v4-feel v5-protocol v6-kit kit-hd (desktop), m1-meet m4-feel (phone 390x844).
+part (box|skin|tray|vials|drops|pouches) renders that layer alone, every other object a holdout, for the Figma layers.
+The frame is rendered on a transparent film; compose.py lays it over layers/vt-bg-wide.jpg (phone: m7-bg.jpg)."""
 import bpy, bmesh, math, sys
 from mathutils import Matrix, Vector
 
 TEX, OUT, SHOT = sys.argv[1:4]
 WIDTH = int(sys.argv[4]) if len(sys.argv) > 4 else 2880
 SAMPLES = int(sys.argv[5]) if len(sys.argv) > 5 else 256
+PART = sys.argv[6] if len(sys.argv) > 6 else None
 
 # kit: the insert at 0.62 so a vial body is ~0.2 of the carton width, as in the packshot; the sachets fan out to the right
 # as in the storyboard, about the carton's width, clear of the last vial; the carton leans back a little so it does not
 # mirror the vials
 POUCHES = [[3.5 + i * 0.1, -0.32 - i * 0.05, -0.85 + i * 0.2, 0.12, -0.62, -0.2 + i * 0.09, 0.88] for i in range(5)]
 KIT = dict(box=dict(p=(2.25, 0.55, -1.8), r=(-0.03, -0.32, 0.01), s=0.95), tray=dict(p=(2.3, -0.88, -0.45), r=(0.36, -0.36, 0), s=0.62), pouches=POUCHES)
+DESK = dict(aspect=1.6, cam=(0, 0, 7), look=(0.9, 0, 0), exposure=-0.8)
+PHONE = dict(aspect=390 / 844, fov=44, cam=(0, 0, 7), look=(0, 0.9, 0), exposure=-0.8)
 SHOTS = {
-    'v1-meet': dict(aspect=1.6, cam=(0, 0, 7), look=(0.9, 0, 0), exposure=-0.8, box=dict(p=(1.8, -0.05, 0.2), r=(0.06, -0.48, 0.0), s=1)),
+    'v1-meet': dict(DESK, box=dict(p=(1.8, -0.05, 0.2), r=(0.06, -0.48, 0.0), s=1)),
+    # S2: the carton stays behind in 3/4; below right a plane of abstract skin, microchannels flash in rows of gold points
+    'v2-why': dict(DESK, box=dict(p=(2.85, 0.55, -2.2), r=(0.04, -0.72, 0.02), s=0.9),
+                   skin=dict(p=(2.05, -1.2, 0.5), r=(-1.12, 0, 0.1), w=4.2, h=2.4, dots=1.0)),
+    # S3: the insert with the vials, the centre vial lifted towards the viewer, a clear drop with pearl spheres above it
+    'v3-inside': dict(DESK, box=dict(p=(3.15, 0.45, -2.4), r=(0.04, -0.42, 0.01), s=0.95),  # aside, so the drop is seen on the dark
+                      tray=dict(p=(2.2, -0.95, -0.3), r=(0.38, -0.36, 0), s=0.65, lift=2),
+                      vials=[[1.35, -0.62, 1.5, 0.02, -0.12, 0, 0.58]], drop=(1.35, -0.02, 1.5)),
+    # S4: sachet no. 1 in front, a thin wet gel film on part of the skin (relief smoothed under it, edge = before/after)
+    'v4-feel': dict(DESK, gain=1.15, box=dict(p=(3.3, 0.75, -3.0), r=(0.04, -0.5, 0.0), s=0.8),
+                    skin=dict(p=(2.0, -1.3, 0.6), r=(-1.18, 0, 0.08), w=4.4, h=2.4, dots=0.35, gel=True),
+                    pouches=[[2.15, 0.25, 1.05, 0.28, -0.32, 0.12, 1.0]]),
+    # S5: three stations on the gold line, right to left: skin disk with points, the vial with a drop above, the sachet
+    'v5-protocol': dict(DESK, gain=0.85, skin=dict(p=(3.25, -0.95, 0.4), r=(-1.05, 0, 0), w=1.25, h=1.25, dots=1.0, disk=True),
+                        vials=[[2.05, -1.0, 0.45, 0.04, -0.3, 0, 0.58]], drop=(2.05, -0.4, 0.45),
+                        pouches=[[0.95, -0.72, 0.5, 0.15, -0.35, 0.1, 0.88]], line=((0.3, -1.45, 0.3), (3.9, -1.45, 0.3))),
     'v6-kit': dict(aspect=1.6, cam=(0.4, 0.1, 6.6), look=(1.22, 0.15, 0), **KIT),  # closer than S1 (true-scale kit); group spans 0.54-0.95 of the width
     'kit-hd': dict(aspect=1400 / 1100, cam=(2.35, 0.35, 6.0), look=(2.35, -0.25, 0), **KIT),
+    'm1-meet': dict(PHONE, wall=(-3.5, 5.6), box=dict(p=(0.05, 2.55, 0), r=(0.06, -0.42, 0.04), s=0.62)),  # its front mirrors x≈-6, y≈5.6
+    'm4-feel': dict(PHONE, skin=dict(p=(0, 1.45, 0.3), r=(-0.78, 0, 0.05), w=3.0, h=1.6, dots=0.35, gel=True),
+                    pouches=[[0.05, 2.45, 0.9, 0.25, -0.3, 0.1, 0.7]]),
 }
 S = SHOTS[SHOT]
 
@@ -31,6 +55,11 @@ def obj(name, data=None, mats=(), parent=root, p=(0, 0, 0), r=(0, 0, 0), s=1):
     ob = bpy.data.objects.new(name, data); scn.collection.objects.link(ob)
     for m in mats: ob.data.materials.append(m)
     ob.parent = parent; ob.location = p; ob.rotation_mode = 'ZYX'; ob.rotation_euler = r; ob.scale = (s, s, s)
+    return ob
+
+
+def tag(ob, part):  # the Figma layer an object belongs to (box, skin, tray, vials, drops, pouches)
+    for o in [ob] + list(ob.children_recursive): o['part'] = part
     return ob
 
 
@@ -225,9 +254,125 @@ def make_tray(t):
     for v in bm.verts: v.co = Vector((v.co.x * 1.6, v.co.y * 0.05 + H / 2, v.co.z * 0.32))
     c = bpy.data.objects.new('bed', to_mesh(bm, 'bed', smooth=False, sharp=0)); cutters.objects.link(c); c.parent = g; c.location = (0, 0, 0.27); c.hide_render = True
     bo = slab.modifiers.new('wells', 'BOOLEAN'); bo.operation = 'DIFFERENCE'; bo.operand_type = 'COLLECTION'; bo.collection = cutters; bo.solver = 'EXACT'
+    tag(slab, 'tray')
     for i, jit in enumerate((0.05, -0.04, 0.02, -0.06, 0.04)):  # turned towards the camera, a little unevenly
-        make_vial((-0.78 + i * 0.39, H / 2 - 0.02, -0.2, 0, 0.09 + jit, 0, 0.9), g)
+        if t.get('lift') == i: continue   # this vial came out of its well (S3): the shot places it on its own
+        tag(make_vial((-0.78 + i * 0.39, H / 2 - 0.02, -0.2, 0, 0.09 + jit, 0, 0.9), g), 'vials')
     return g
+
+# ---------- shader math helpers ----------
+def fx(nt, op, a=None, b=None):
+    """Math node: a, b are sockets or numbers; returns the output socket."""
+    n = nt.nodes.new('ShaderNodeMath'); n.operation = op
+    for i, v in enumerate((a, b)):
+        if v is None: continue
+        if isinstance(v, (int, float)): n.inputs[i].default_value = v
+        else: nt.links.new(v, n.inputs[i])
+    return n.outputs[0]
+
+
+def step(nt, x, a, b):
+    """Smoothstep of x from a (0) to b (1); a > b gives the falling edge."""
+    n = nt.nodes.new('ShaderNodeMapRange'); n.interpolation_type = 'SMOOTHSTEP'; n.clamp = True
+    n.inputs['From Min'].default_value = a; n.inputs['From Max'].default_value = b; nt.links.new(x, n.inputs['Value'])
+    return n.outputs['Result']
+
+# ---------- abstract skin: warm dark micro-relief, microchannels as rows of gold points, optional wet gel film ----------
+def make_skin(k):
+    w, h = k['w'], k['h']
+    m, nt, b = mat('skin', **{'Roughness': 0.6, 'Subsurface Weight': 0.2, 'Subsurface Radius': (1.0, 0.45, 0.25), 'Subsurface Scale': 0.01,
+                              'Sheen Weight': 0.2, 'Sheen Tint': (1.0, 0.8, 0.5, 1), 'Sheen Roughness': 0.45,
+                              'Emission Color': (1.0, 0.66, 0.28, 1)})
+    out = nt.nodes['Material Output']; obc = nt.nodes.new('ShaderNodeTexCoord').outputs['Object']
+    so = nt.nodes.new('ShaderNodeSeparateXYZ'); nt.links.new(obc, so.inputs['Vector'])
+    nx, ny = fx(nt, 'MULTIPLY', so.outputs['X'], 2 / w), fx(nt, 'MULTIPLY', so.outputs['Y'], 2 / h)   # -1..1 across the plane
+    rr = fx(nt, 'SQRT', fx(nt, 'ADD', fx(nt, 'MULTIPLY', nx, nx), fx(nt, 'MULTIPLY', ny, ny)))
+    cr = nt.nodes.new('ShaderNodeValToRGB'); nt.links.new(rr, cr.inputs['Fac'])   # warm dark, lighter in the middle
+    cr.color_ramp.elements[0].color = (*(c * 0.45 for c in srgb(0x6b4430)), 1); cr.color_ramp.elements[1].color = (*(c * 0.45 for c in srgb(0x2a1a12)), 1)
+    vo = nt.nodes.new('ShaderNodeTexVoronoi'); vo.inputs['Scale'].default_value = 90; nt.links.new(obc, vo.inputs['Vector'])
+    pore = step(nt, vo.outputs['Distance'], 0.22, 0.0)                       # 1 in a pore
+    nz = nt.nodes.new('ShaderNodeTexNoise'); nz.inputs['Scale'].default_value = 14; nz.inputs['Detail'].default_value = 6
+    nt.links.new(obc, nz.inputs['Vector'])
+    # microchannels: a grid of points, every other row shifted half a step, each point a little brighter or dimmer
+    sp = 0.17; X, Y = fx(nt, 'DIVIDE', so.outputs['X'], sp), fx(nt, 'DIVIDE', so.outputs['Y'], sp)
+    row = fx(nt, 'FLOOR', Y); xs = fx(nt, 'ADD', X, fx(nt, 'MULTIPLY', fx(nt, 'MODULO', fx(nt, 'ADD', row, 100), 2), 0.5))
+    ddx, ddy = fx(nt, 'SUBTRACT', fx(nt, 'FRACT', xs), 0.5), fx(nt, 'SUBTRACT', fx(nt, 'FRACT', Y), 0.5)
+    d = fx(nt, 'SQRT', fx(nt, 'ADD', fx(nt, 'MULTIPLY', ddx, ddx), fx(nt, 'MULTIPLY', ddy, ddy)))
+    dot, halo = step(nt, d, 0.055, 0.012), step(nt, d, 0.2, 0.0)   # a small point and its soft glow
+    cxyz = nt.nodes.new('ShaderNodeCombineXYZ'); nt.links.new(fx(nt, 'FLOOR', xs), cxyz.inputs['X']); nt.links.new(row, cxyz.inputs['Y'])
+    wn = nt.nodes.new('ShaderNodeTexWhiteNoise'); wn.noise_dimensions = '3D'; nt.links.new(cxyz.outputs['Vector'], wn.inputs['Vector'])
+    glow = fx(nt, 'MULTIPLY', fx(nt, 'ADD', dot, fx(nt, 'MULTIPLY', halo, 0.12)), fx(nt, 'ADD', 0.55, fx(nt, 'MULTIPLY', wn.outputs['Value'], 0.45)))
+    nt.links.new(fx(nt, 'MULTIPLY', glow, 5.0 * k.get('dots', 0)), b.inputs['Emission Strength'])
+    height = fx(nt, 'ADD', fx(nt, 'ADD', fx(nt, 'MULTIPLY', pore, -0.5), fx(nt, 'MULTIPLY', nz.outputs['Fac'], 0.5)), fx(nt, 'MULTIPLY', dot, -0.6))
+    col = nt.nodes.new('ShaderNodeMixRGB'); col.blend_type = 'MULTIPLY'; nt.links.new(cr.outputs['Color'], col.inputs['Color1'])
+    nt.links.new(fx(nt, 'MULTIPLY', pore, 0.3), col.inputs['Fac']); col.inputs['Color2'].default_value = (0.55, 0.45, 0.4, 1)
+    if k.get('gel'):
+        # gel film over the part of the plane left of a wavy line: relief smoothed under it, a wet clear coat on top,
+        # a raised meniscus along the edge catches the light; outside the film the skin stays as it was (before / after)
+        nz2 = nt.nodes.new('ShaderNodeTexNoise'); nz2.inputs['Scale'].default_value = 1.6; nt.links.new(obc, nz2.inputs['Vector'])
+        edge = fx(nt, 'ADD', nx, fx(nt, 'MULTIPLY', fx(nt, 'SUBTRACT', nz2.outputs['Fac'], 0.5), 0.5))
+        G = step(nt, edge, 0.015, -0.015)   # a crisp film edge, so its meniscus catches a thin highlight
+        height = fx(nt, 'MULTIPLY', height, fx(nt, 'SUBTRACT', 1.0, fx(nt, 'MULTIPLY', G, 0.8)))
+        nt.links.new(fx(nt, 'MULTIPLY', fx(nt, 'MULTIPLY', glow, 5.0 * k.get('dots', 0)), fx(nt, 'SUBTRACT', 1.0, fx(nt, 'MULTIPLY', G, 0.7))),
+                     b.inputs['Emission Strength'])   # the channels under the gel have closed
+        b.inputs['Coat Roughness'].default_value = 0.01; b.inputs['Coat IOR'].default_value = 1.4
+        nt.links.new(G, b.inputs['Coat Weight'])
+        rip = nt.nodes.new('ShaderNodeTexNoise'); rip.inputs['Scale'].default_value = 9; rip.inputs['Detail'].default_value = 3
+        nt.links.new(obc, rip.inputs['Vector'])
+        wet = fx(nt, 'ADD', G, fx(nt, 'MULTIPLY', fx(nt, 'MULTIPLY', rip.outputs['Fac'], G), 0.35))   # film + slow wet ripples on it
+        cb = nt.nodes.new('ShaderNodeBump'); cb.inputs['Distance'].default_value = 0.006; nt.links.new(wet, cb.inputs['Height'])
+        nt.links.new(cb.outputs['Normal'], b.inputs['Coat Normal'])
+        dark = nt.nodes.new('ShaderNodeMixRGB'); dark.blend_type = 'MULTIPLY'; nt.links.new(col.outputs['Color'], dark.inputs['Color1'])
+        nt.links.new(G, dark.inputs['Fac']); dark.inputs['Color2'].default_value = (0.85, 0.72, 0.6, 1)   # wet skin: deeper, warmer
+        nt.links.new(dark.outputs['Color'], b.inputs['Base Color'])
+    else:
+        nt.links.new(col.outputs['Color'], b.inputs['Base Color'])
+    bp = nt.nodes.new('ShaderNodeBump'); bp.inputs['Distance'].default_value = 0.005; nt.links.new(height, bp.inputs['Height'])
+    nt.links.new(bp.outputs['Normal'], b.inputs['Normal'])
+    # soft edges so the plane melts into the smoke: a rounded rectangle, or a disk for the protocol station
+    alpha = step(nt, rr, 1.0, 0.84) if k.get('disk') else fx(nt, 'MULTIPLY', step(nt, fx(nt, 'ABSOLUTE', nx), 1.0, 0.6), step(nt, fx(nt, 'ABSOLUTE', ny), 1.0, 0.6))
+    mix = nt.nodes.new('ShaderNodeMixShader'); tr = nt.nodes.new('ShaderNodeBsdfTransparent')
+    nt.links.new(alpha, mix.inputs['Fac']); nt.links.new(tr.outputs[0], mix.inputs[1]); nt.links.new(b.outputs[0], mix.inputs[2])
+    nt.links.new(mix.outputs[0], out.inputs['Surface'])
+    bm = bmesh.new(); bmesh.ops.create_grid(bm, x_segments=1, y_segments=1, size=0.5)
+    for v in bm.verts: v.co = Vector((v.co.x * w, v.co.y * h, 0))
+    return obj('skin', to_mesh(bm, 'skin', sharp=0), (m,), p=k['p'], r=k['r'])
+
+# ---------- serum drop: a clear tear with pearl spheres inside (the scheme of synthetic exosomes) ----------
+def tear_mesh():
+    prof = []
+    for i in range(33):
+        a = math.pi * i / 32; rr, y = math.sin(a), -math.cos(a)
+        if y > 0: rr *= 1 - 0.55 * y; y *= 1.35
+        prof.append((0 if i in (0, 32) else rr, y))
+    return lathe(prof, 64, 'tear', sharp=0)
+
+
+TEAR = tear_mesh()
+bm = bmesh.new(); bmesh.ops.create_uvsphere(bm, u_segments=32, v_segments=16, radius=1.0); SPHERE = to_mesh(bm, 'sphere', sharp=0)
+drop_mat = mat('drop', **{'Base Color': (0.97, 0.98, 1.0, 1), 'Transmission Weight': 1.0, 'Roughness': 0.0, 'IOR': 1.33})[0]
+pearl_mat = mat('pearl', **{'Base Color': (0.92, 0.91, 0.96, 1), 'Roughness': 0.25, 'Coat Weight': 1.0, 'Sheen Weight': 0.5,
+                            'Thin Film Thickness': 420.0, 'Thin Film IOR': 1.6})[0]  # white pearls with an iridescent film
+
+
+def make_drop(at, size=0.1):
+    g = obj('drop', p=at)
+    obj('tear', TEAR, (drop_mat,), g, s=size)
+    seed = 3
+    def rnd():
+        nonlocal seed; seed = seed * 16807 % 2147483647; return seed / 2147483647
+    for i in range(9):
+        a, rr = rnd() * 6.28, rnd() * 0.55 * size
+        obj('pearl', SPHERE, (pearl_mat,), g, p=(math.cos(a) * rr, (-0.25 + rnd() * 0.85) * size, math.sin(a) * rr * 0.6), s=(0.08 + rnd() * 0.08) * size)
+    return tag(g, 'drops')
+
+
+def make_line(a, b_):  # the protocol's gold line
+    m, nt, _ = mat('line'); em = nt.nodes.new('ShaderNodeEmission')
+    em.inputs['Color'].default_value = (*srgb(0xc9a24b), 1); em.inputs['Strength'].default_value = 3.0
+    nt.links.new(em.outputs[0], nt.nodes['Material Output'].inputs['Surface'])
+    L = (Vector(b_) - Vector(a)).length; mid = (Vector(a) + Vector(b_)) / 2
+    return tag(obj('line', lathe([(0, -L / 2), (0.006, -L / 2), (0.006, L / 2), (0, L / 2)], 16, 'line'), (m,), p=tuple(mid), r=(0, 0, math.pi / 2)), 'skin')
 
 # ---------- light: dark room, white softbox left, warm gold right, gold strip above, warm fills in front ----------
 def panel(color, strength, x, y, z, w, h, ry, rx=0, soft=0.3):
@@ -265,15 +410,16 @@ def area(name, color, power, pos, target, size):  # lamps light the scene but ar
 
 
 # near-white cards (the foil itself gives the gold), with a dark gap in front so the mirror shows bands, as in the packshot
-panel(srgb(0xffffff), 3.0, -4.5, 1.6, 1, 3, 3, math.pi / 2)
+panel(srgb(0xffffff), 3.0, -4.5, 0.6, 1, 3, 6, math.pi / 2)  # tall: a carton turned far (S2) mirrors it down to its print
 panel(srgb(0xf3dcb0), 2.0, 4.8, 0.4, -0.5, 1.2, 4, -math.pi / 2, soft=0.45)  # a streak, not a flat glow, on the side face
 panel(srgb(0xe8d6a8), 1.5, 0, 3.8, -2, 7, 1.2, 0, math.pi / 2)
 # the carton front mirrors x -3.6..-1.7 of this wall in S1 and x -2.4..-0.5 in the kit: light bars with narrow dark gaps,
 # so the foil shows bands as in the packshot while the print stays on light; tall enough for the print low on the carton
+WX, WY = S.get('wall', (0, 0))  # a shot whose carton faces elsewhere (phone) moves the whole wall into its mirror
 for x, w, k in ((-3.45, 1.9, 1.5), (-1.85, 0.8, 1.6), (-0.9, 0.5, 1.6), (0.3, 1.0, 1.8)):
-    panel(srgb(0xfff3e0), k, x, 0.0, 5.6, w, 6.6, math.pi, soft=0.15)
+    panel(srgb(0xfff3e0), k, x + WX, WY, 5.6, w, 6.6, math.pi, soft=0.15)
 for x in (-3.0, -1.75):  # two narrow hot strips in front of the cards: the clipped white streaks of the real foil
-    panel(srgb(0xffffff), 9.0, x, 0.0, 5.5, 0.16, 6.6, math.pi, soft=0.4)
+    panel(srgb(0xffffff), 9.0, x + WX, WY, 5.5, 0.16, 6.6, math.pi, soft=0.4)
 panel(srgb(0xf3dcb0), 1.8, 5.0, 0.5, -3.8, 2, 5, -0.675)  # back-right strip: a gold edge on the carton's right side
 area('key', (1, 1, 1), 800, (4.5, 4.5, 4.5), (2.0, 0, 0), 2.5)  # upper right, where the smoke is brightest
 area('fill', srgb(0xfff3e0), 320, (-3, 2, 5), (1.5, 0, 0), 3.0)
@@ -282,17 +428,28 @@ world = bpy.data.worlds.new('room'); scn.world = world; world.use_nodes = True
 world.node_tree.nodes['Background'].inputs['Color'].default_value = (0.006, 0.005, 0.004, 1)
 
 # ---------- shot ----------
-if 'box' in S: make_box(S['box']['p'], S['box']['r'], S['box']['s'])
+def backlight(x, y, z, w, h, ry=0.0):  # seen only through the glass (as in packshot photography): the serum glows orange
+    bl = panel(srgb(0xffe2a6), 1.4, x, y, z, w, h, ry); bl.visible_glossy = False; bl.visible_diffuse = False
+
+
+if 'box' in S: tag(make_box(S['box']['p'], S['box']['r'], S['box']['s']), 'box')
 if 'tray' in S:
-    make_tray(S['tray'])
-    # backlight seen only through the glass (as in packshot photography), so the serum glows orange instead of going dark
-    bl = panel(srgb(0xffe2a6), 1.4, 2.3, -0.5, -1.3, 1.9, 0.6, -0.36)
-    bl.visible_glossy = False; bl.visible_diffuse = False
-for a in S.get('pouches', []): make_pouch(a)
-if S.get('pouches'):  # low wide card under and left of the camera: the sachets mirror light here instead of the dark void
+    tray = make_tray(S['tray'])
+    backlight(S['tray']['p'][0] + 0.1, S['tray']['p'][1] + 0.4, S['tray']['p'][2] - 0.9, 1.9, 0.6, -0.36)
+for a in S.get('vials', []):
+    tag(make_vial(a), 'vials'); backlight(a[0], a[1] + 0.25, a[2] - 0.7, 0.6, 0.5)
+if 'skin' in S: tag(make_skin(S['skin']), 'skin')
+if S.get('drop'): make_drop(S['drop'])
+if 'line' in S: make_line(*S['line'])
+for a in S.get('pouches', []): tag(make_pouch(a), 'pouches')
+if 'tray' in S and S.get('pouches'):  # kit: a low wide card under the camera, so the sachet fan mirrors light, not the dark void
+    # (not where gel is on the skin: its wet coat would mirror the card as a milky haze)
     panel(srgb(0xfff3e0), 1.6, -1.8, -3.0, 4.6, 6.4, 2.4, math.pi, rx=-0.5, soft=0.35)
+if PART:  # one Figma layer: the other parts stay in the scene for shadows and reflections but the camera does not see them
+    for o in scn.objects:
+        if o.get('part') and o['part'] != PART: o.visible_camera = False
 cam = obj('camera', bpy.data.cameras.new('camera')); cam.data.sensor_fit = 'VERTICAL'
-cam.data.lens = cam.data.sensor_height / (2 * math.tan(math.radians(35) / 2)); cam.matrix_basis = look_matrix(S['cam'], S['look'])
+cam.data.lens = cam.data.sensor_height / (2 * math.tan(math.radians(S.get('fov', 35)) / 2)); cam.matrix_basis = look_matrix(S['cam'], S['look'])
 cam.data.clip_start = 0.1; cam.data.clip_end = 80; scn.camera = cam
 
 r, c = scn.render, scn.cycles
