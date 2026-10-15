@@ -20,7 +20,8 @@
 }
 * { box-sizing: border-box; }
 html { background: var(--bg); }
-body { margin: 0; background: var(--bg); color: var(--cream); font: 300 clamp(15px, 1.15vw, 17px)/1.7 var(--body); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+body { margin: 0; background: var(--bg); color: var(--cream); font: 300 clamp(15px, 1.15vw, 17px)/1.7 var(--body); -webkit-font-smoothing: antialiased; overflow-x: clip;
+  font-feature-settings: "lnum" 1; }  /* lining figures everywhere: Cormorant's old-style figures read «1o%», «o1» */
 @media (max-width: 1391px) { body { font-weight: 400; } }  /* Hebrew at 16 px and below reads better at 400 */
 h1, h2, h3, h4 { margin: 0; font-family: var(--display); font-weight: 400; text-wrap: balance; }
 p { margin: 0; text-wrap: pretty; }
@@ -60,7 +61,7 @@ ul.plain, ol.plain { list-style: none; margin: 0; padding: 0; }
 main, .top, .foot, .dock, .bar { position: relative; z-index: 1; }
 
 /* header: logo and the price button; the section menu is the dock at the bottom, as on the reference */
-.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: rgba(10,10,11,.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hairline-cream); }  /* never text under the logo */
 .top .wrap { display: flex; align-items: center; justify-content: space-between; min-height: 76px; gap: 20px; }
 .top .logo img { height: 28px; width: auto; }
 .top .btn { min-height: 44px; padding-inline: 20px; font-size: 14px; background: rgba(10,10,11,.4); backdrop-filter: blur(8px); }
@@ -80,6 +81,7 @@ main, .top, .foot, .dock, .bar { position: relative; z-index: 1; }
 .hint i { display: block; width: 1px; height: 22px; background: var(--gold-soft); animation: bob 2s ease-in-out infinite; }
 @keyframes bob { 50% { transform: translateY(8px); } }
 .hero { position: relative; }
+.feel.sec { min-height: 0; padding-block: clamp(48px, 7vh, 80px); }  /* no 3D here: no empty smoke above and below */
 details { margin-top: 6px; border-top: 1px solid var(--hairline-cream); width: 100%; }
 details summary { cursor: pointer; padding: 16px 0; font: 400 16px/1 var(--body); color: var(--cream); list-style: none; display: flex; justify-content: space-between; min-height: 48px; align-items: center; }
 details summary::-webkit-details-marker { display: none; }
@@ -261,7 +263,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 
 /* phone: the objects take the upper part of the screen, the copy sits under them */
 @media (max-width: 760px) {
-  .top { background: rgba(10,10,11,.94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hairline-cream); }
+  .top { background: rgba(10,10,11,.94); }
   .still-fallback { background: radial-gradient(80% 40% at 50% 26%, rgba(111,183,186,.22), transparent 70%), var(--bg); }
   .still-fallback img { right: 50%; top: 30%; transform: translate(50%, -50%); width: min(58vw, 270px); }
   .chip.duo { display: inline-grid; justify-items: center; text-align: center; border-radius: 20px; }
@@ -277,13 +279,16 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   .head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(118px, 38%); column-gap: 14px; row-gap: 12px; align-items: center; justify-items: start; width: 100%; }
   .head > :not(.ph-slot) { grid-column: 1; }
   .head > .ph-slot { display: block; position: relative; grid-column: 2; grid-row: 1 / span 2; align-self: stretch; justify-self: stretch; min-height: 172px; }
-  .head.three > .ph-slot { grid-row: 1 / span 3; min-height: 184px; }
+  .head.three > .kicker { grid-column: 1 / -1; }  /* the hero eyebrow is one line over the carton and the name, never into the slot */
+  .head.three > .ph-slot { grid-row: 2 / span 2; min-height: 176px; }
   .head.tall > .ph-slot { min-height: 214px; }
+  .head > .kicker { align-self: end; }  /* the eyebrow sits on its heading, not halfway up the slot */
+  .head > h1, .head > h2, .head > .tag { align-self: start; }
   .ph-slot.wide { display: block; position: relative; width: calc(100% + 2 * var(--gutter) - 12px); margin-inline: calc(6px - var(--gutter)); height: min(92vw, 360px); }
   .ph-slot .ph-still { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity .6s var(--ease); }
   .gl-on .ph-slot .ph-still { opacity: 0; }
   .hero .cta { flex-wrap: nowrap; gap: 10px; }
-  .hero .cta .btn { min-height: 48px; padding-inline: 16px; font-size: 14px; }
+  .hero .cta .btn { min-height: 48px; padding-inline: 16px; font-size: 14px; white-space: nowrap; }
   .hero .chip { padding: 8px 14px; font-size: 14px; }
   .feel .shot { order: -1; justify-self: stretch; width: 100%; margin-bottom: 24px; border-radius: 20px; }
   .offer.sec, .spec-sec.sec { min-height: auto; align-items: start; padding-block: 48px 40px; }
@@ -313,6 +318,11 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 /* reveal as in Make (0.6 s, 20 px, once); without JS everything shows */
 .js .rv { opacity: 0; transform: translateY(20px); transition: opacity .6s var(--ease), transform .6s var(--ease); transition-delay: var(--d, 0s); }
 .js .rv.in { opacity: 1; transform: none; }
+@media (max-width: 380px) { .hero .cta { flex-direction: column; align-items: stretch; } }
+.kicker .sep { white-space: pre; }
+/* lining figures win over every `font` shorthand (which resets the numeric variant): Cormorant's old-style «5», «1o%» */
+*, *::before, *::after { font-variant-numeric: lining-nums !important; }
+
 @media (prefers-reduced-motion: reduce) {
   .js .rv { opacity: 1; transform: none; transition: none; }
   .hint i { animation: none; }
@@ -339,7 +349,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
     <div class="col">
       <div class="badges rv"><span class="mark-line"><bdi>{{line_mark}}</bdi></span><span class="badge">{{line_name}}</span><span class="badge pro">{{use_pro}}</span></div>
       <div class="head three">
-        <div class="kicker rv" style="--d:.06s">{{hero_eyebrow}}</div>
+        <div class="kicker rv" style="--d:.06s"><span>{{{hero_eyebrow}}}</span></div>
         <h1 class="rv" style="--d:.12s"><bdi>{{hero_h1}}</bdi></h1>
         <p class="tag rv" style="--d:.18s">{{hero_tag}}</p>
         <div class="ph-slot" aria-hidden="true"><img class="ph-still" src="__FALLBACK__" alt=""></div>
@@ -700,7 +710,8 @@ const root = document.documentElement;
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const phoneQ = window.matchMedia('(max-width: 760px)');
 let renderer;
-try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }); }
+// alpha: the build renders stills on a transparent ground (the page itself clears to opaque black)
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' }); }
 catch (e) { root.classList.add('nogl'); throw e; }
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -775,7 +786,7 @@ const dust = (() => {
 // ---- the product
 const loader = new THREE.TextureLoader();
 const tex = (src) => { const t = loader.load(src); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
-const front = tex('__BOX_FRONT__'), side = tex('__BOX_SIDE__'), sachetTex = tex('__SACHET__');
+const front = tex('__BOX_FRONT__'), frontSm = tex('__BOX_FRONT_SM__'), side = tex('__BOX_SIDE__'), sachetTex = tex('__SACHET__');
 const sideR = side.clone(); sideR.wrapS = THREE.RepeatWrapping; sideR.repeat.x = -1; sideR.needsUpdate = true;
 // colours of the plain faces are sampled from the print photos (front #60a7ac, sachet #5cc4d1); toneMapped false keeps
 // the print's hue exactly, the emissive copy of the print keeps it from going dark or changing as the box turns
@@ -789,19 +800,19 @@ const OFF = new THREE.MeshBasicMaterial({ visible: false }); OFF.userData.off = 
 
 // the carton: body without its top, a pale inner tray, and the lid on a hinge at the back top edge (with its tuck flap)
 // face order: +x, -x, +y, -y, +z (front), -z
-const box = new THREE.Group();
+const box = new THREE.Group(), frontMat = carton({ map: front, color: 0xffffff });
 box.add(new THREE.Mesh(new THREE.BoxGeometry(1.48, 2.0, 0.27), [
   carton({ map: sideR, color: 0xffffff }), carton({ map: side, color: 0xffffff }), OFF,
-  carton({ color: 0x5b9fa4 }), carton({ map: front, color: 0xffffff }), carton({ color: 0x5ea3a8 })
+  carton({ color: 0x5b9fa4 }), frontMat, carton({ color: 0x5ea3a8 })
 ]));
-box.add(new THREE.Mesh(new THREE.BoxGeometry(1.44, 1.96, 0.23), new THREE.MeshStandardMaterial({ color: 0xe9eeee, roughness: 0.8, side: THREE.BackSide, toneMapped: false })));
+box.add(new THREE.Mesh(new THREE.BoxGeometry(1.44, 1.96, 0.23), new THREE.MeshStandardMaterial({ color: shade(0xe9eeee), emissive: 0xe9eeee, emissiveIntensity: 0.75, roughness: 0.8, side: THREE.BackSide, toneMapped: false })));
 const hinge = new THREE.Group(); hinge.position.set(0, 1.0, -0.135); box.add(hinge);
 const lid = new THREE.Mesh(new THREE.BoxGeometry(1.48, 0.012, 0.27), carton({ color: 0x60a7ac })); lid.position.set(0, 0, 0.135); hinge.add(lid);
 const tuck = new THREE.Mesh(new THREE.BoxGeometry(1.44, 0.2, 0.01), carton({ color: 0x60a7ac })); tuck.position.set(0, -0.1, 0.235); tuck.rotation.x = 0.25; hinge.add(tuck);
 scene.add(box);
 
 // the sheet mask: a translucent sheet with eye, nose and mouth openings, curved like a face
-function maskTexture() {
+function maskTexture(plain) {
   const c = document.createElement('canvas'); c.width = 512; c.height = 660; const x = c.getContext('2d');
   const W = 512, H = 660;
   x.beginPath();
@@ -811,9 +822,9 @@ function maskTexture() {
   x.bezierCurveTo(W * .32, H * .98, W * .1, H * .8, W * .05, H * .52);
   x.bezierCurveTo(W * .01, H * .3, W * .1, H * .02, W * .5, H * .02);
   const g = x.createLinearGradient(0, 0, W, H);
-  g.addColorStop(0, 'rgba(252,252,251,.97)'); g.addColorStop(1, 'rgba(232,233,233,.93)');
-  x.fillStyle = g; x.fill();
-  for (let i = 0; i < 2600; i++) { x.fillStyle = 'rgba(255,255,255,' + (Math.random() * .05) + ')'; x.fillRect(Math.random() * W, Math.random() * H, 1.5, 1.5); }
+  g.addColorStop(0, '#fcfcfb'); g.addColorStop(1, '#ecedec');
+  x.fillStyle = plain ? '#ffffff' : g; x.fill();
+  if (!plain) for (let i = 0; i < 2600; i++) { x.fillStyle = 'rgba(255,255,255,' + (Math.random() * .05) + ')'; x.fillRect(Math.random() * W, Math.random() * H, 1.5, 1.5); }
   x.globalCompositeOperation = 'destination-out'; x.fillStyle = '#000';  // openings must be fully cut
   const hole = (cx, cy, rx, ry, rot) => { x.beginPath(); x.ellipse(cx, cy, rx, ry, rot, 0, Math.PI * 2); x.fill(); };
   hole(W * .32, H * .42, W * .11, H * .042, .08); hole(W * .68, H * .42, W * .11, H * .042, -.08);
@@ -832,12 +843,14 @@ const maskGeo = new THREE.PlaneGeometry(1.5, 1.94, 64, 80);
   }
   maskGeo.computeVertexNormals();
 }
-const maskMap = maskTexture();
-const maskMat = (color) => new THREE.MeshPhysicalMaterial({ map: maskMap, color: new THREE.Color(color).multiplyScalar(0.45), transparent: true, alphaTest: 0.02, side: THREE.DoubleSide, roughness: 0.3,
-  sheen: 0.5, sheenColor: new THREE.Color(0xffffff), emissive: color, emissiveMap: maskMap, emissiveIntensity: 0.6, depthWrite: false, toneMapped: false });
+const maskMap = maskTexture(false), maskPlain = maskTexture(true);
+// opaque sheets (the openings are cut by alphaTest), lit like the carton: the print colour itself plus a little neutral shade
+const maskMat = (color, map, matte) => new THREE.MeshPhysicalMaterial({ map, color: shade(color), alphaTest: 0.5, side: THREE.DoubleSide,
+  roughness: matte ? 0.6 : 0.35, specularIntensity: matte ? 0.2 : 1, sheen: matte ? 0 : 0.4, sheenColor: new THREE.Color(0xffffff),
+  emissive: color, emissiveMap: map, emissiveIntensity: TRUE, toneMapped: false });  // matte: white highlights would wash the blue out
 // the mask that leaves the box (becomes the white layer in the kit), and the blue layer that joins it there
-const mask = new THREE.Mesh(maskGeo, maskMat(0xf2f2f0)); mask.userData.alwaysT = true; scene.add(mask);
-const mask2 = new THREE.Mesh(maskGeo, maskMat(0x3a62b0)); mask2.userData.alwaysT = true; mask2.renderOrder = 1; scene.add(mask2);
+const mask = new THREE.Mesh(maskGeo, maskMat(0xf0f1f0, maskMap)); scene.add(mask);
+const mask2 = new THREE.Mesh(maskGeo, maskMat(0x3a62b0, maskPlain, true)); mask2.renderOrder = 1; scene.add(mask2);
 
 // five sachets: the real turquoise print on the front, turquoise foil behind
 const foil = new THREE.MeshPhysicalMaterial({ color: shade(0xffffff), map: sachetTex, metalness: 0.0, roughness: 0.5, clearcoat: 0.18, clearcoatRoughness: 0.35,
@@ -860,7 +873,7 @@ const AWAY = P(3.4, 1.6, -6, 0.1, -0.5, 0.08, 0.6, 0, { lid: 0 });
 const KITBOX = P(2.45, 0.8, -1.9, 0.06, -0.4, 0.03, 0.78, 1, { lid: 0 });
 const BOX = [
   P(1.75, -0.05, 0.2, 0.06, -0.55, 0.07, 1, 1, { lid: 0 }),          // d1 meet
-  P(1.75, -0.55, 0.3, 0.62, -0.58, 0.05, 1, 1, { lid: 1.95 }),       // d2 the lid opens, the mask's edge shows
+  P(1.75, -0.55, 0.3, 0.62, -0.58, 0.05, 1, 1, { lid: 2.45 }),       // d2 the lid opens (well back), the mask's edge shows
   P(1.75, -0.68, 0.1, 0.38, -0.5, 0.03, 0.92, 1, { lid: 2.2 }),      // d3 the mask is out (box kept clear of the dock)
   P(3.0, -0.3, -4.2, 0.25, -0.3, 0.08, 0.8, 0, { lid: 1.2 }),        // feel: recedes behind the photo
   KITBOX,                                                            // kit: the box behind the sachets
@@ -869,18 +882,18 @@ const BOX = [
 ];
 // the mask: inside the box (attached, att 1) until it rises out (render.html d3); in the kit the white layer and the
 // blue layer (owner 11/10: the second layer is blue) stand beside the box; gone after
-const OUT = P(1.55, 0.85, 0.55, -0.42, -0.42, 0.06, 0.8, 0.8, { att: 0, ly: 0.78, ls: 0.88 });
+const OUT = P(1.55, 0.85, 0.55, -0.42, -0.42, 0.06, 0.8, 1, { att: 0, ly: 0.78, ls: 0.88 });
 const MASK = [
   Object.assign({}, OUT, { o: 0, att: 1, ly: 0 }),
   Object.assign({}, OUT, { att: 1 }),
   OUT,
   P(2.6, 1.2, -2.5, -0.2, -0.6, 0.1, 0.6, 0, { att: 0, ly: 0.78, ls: 0.88 }),
-  P(3.72, 0.82, -0.7, 0.04, -0.42, -0.06, 0.5, 0.97, { att: 0, ly: 0.78, ls: 0.88 }),
+  P(3.72, 0.82, -0.7, 0.04, -0.42, -0.06, 0.5, 1, { att: 0, ly: 0.78, ls: 0.88 }),
   P(2.3, -1.25, -2.8, 0.1, -0.5, 0.1, 0.62, 0, { att: 0, ly: 0.78, ls: 0.88 })  // gone on the protocol: it must not show through the steps
 ];
 while (MASK.length < 9) MASK.push(MASK[5]);
 const BLUE_IN = P(2.45, 0.6, -2.0, 0, -0.5, 0, 0.45, 0), BLUE_OFF = P(2.3, -1.25, -2.8, 0.1, -0.5, 0.1, 0.6, 0);
-const MASK2 = [BLUE_IN, BLUE_IN, BLUE_IN, BLUE_IN, P(4.0, 0.56, -0.4, 0.04, -0.48, 0.05, 0.5, 0.92), BLUE_OFF, BLUE_OFF, BLUE_OFF, BLUE_OFF];
+const MASK2 = [BLUE_IN, BLUE_IN, BLUE_IN, BLUE_IN, P(4.0, 0.56, -0.4, 0.04, -0.48, 0.05, 0.5, 1), BLUE_OFF, BLUE_OFF, BLUE_OFF, BLUE_OFF];
 // sachets: in the box until the kit, then two rows in front of it, each turned to face the camera; back into the far box
 const face = (x, y, z, s, dz = 0) => [x, y, z, Math.atan(y / (7 - z)) * 0.9, -Math.atan(x / (7 - z)) + 0.08, dz, s];
 const KIT = [face(1.7, -1.0, 0.6, 0.71, 0.04), face(2.52, -1.04, 0.64, 0.71, -0.01), face(3.34, -1.0, 0.6, 0.71, -0.04),
@@ -901,7 +914,7 @@ const GLOW = [1, 1, 1, 1, 1, 1, 1, 0.68, 0.68];  // the smoke calms down under t
 // PFIT / PFITW = the height / width of the composition the slot holds. Blocks without a slot keep the neighbour's.
 const PB = [
   P(0, 0, 0.2, 0.06, -0.55, 0.07, 1, 1, { lid: 0 }),
-  P(0, -0.22, 0.3, 0.62, -0.58, 0.05, 1, 1, { lid: 1.95 }),
+  P(0, -0.22, 0.3, 0.62, -0.58, 0.05, 1, 1, { lid: 2.45 }),
   P(0, -0.82, 0.1, 0.38, -0.5, 0.03, 0.82, 1, { lid: 2.2 }),
   P(0, -0.82, -1.5, 0.25, -0.3, 0.08, 0.7, 0, { lid: 1.2 }),
   P(0, 0.8, -1.4, 0.06, -0.3, 0.03, 0.62, 1, { lid: 0 }),
@@ -909,14 +922,14 @@ const PB = [
   P(0, 0, -1, 0.1, -0.6, 0.08, 0.8, 0, { lid: 0 })
 ];
 while (PB.length < 9) PB.push(PB[6]);
-const POUT = P(-0.05, 0.74, 0.5, -0.42, -0.42, 0.06, 0.74, 0.85, { att: 0, ly: 0.78, ls: 0.88 });
+const POUT = P(-0.05, 0.74, 0.5, -0.42, -0.42, 0.06, 0.74, 1, { att: 0, ly: 0.78, ls: 0.88 });
 const PM = [Object.assign({}, POUT, { o: 0, att: 1, ly: 0 }), Object.assign({}, POUT, { att: 1 }), POUT,
   P(0, 0.6, -1.5, -0.2, -0.6, 0.1, 0.6, 0, { att: 0, ly: 0.78, ls: 0.88 }),
-  P(-1.12, 0.78, 0.2, 0.04, -0.2, -0.06, 0.48, 0.97, { att: 0, ly: 0.78, ls: 0.88 }),
+  P(-1.12, 0.78, 0.2, 0.04, -0.2, -0.06, 0.48, 1, { att: 0, ly: 0.78, ls: 0.88 }),
   P(0, 0, -1.5, 0.1, -0.5, 0.1, 0.5, 0, { att: 0, ly: 0.78, ls: 0.88 })];
 while (PM.length < 9) PM.push(PM[5]);
 const PBLUE_IN = P(0, 0.6, -1.5, 0, -0.5, 0, 0.4, 0), PBLUE_OFF = P(0, 0, -1.5, 0.1, -0.5, 0.1, 0.5, 0);
-const PM2 = [PBLUE_IN, PBLUE_IN, PBLUE_IN, PBLUE_IN, P(1.12, 0.72, 0.25, 0.04, -0.25, 0.05, 0.48, 0.92), PBLUE_OFF, PBLUE_OFF, PBLUE_OFF, PBLUE_OFF];
+const PM2 = [PBLUE_IN, PBLUE_IN, PBLUE_IN, PBLUE_IN, P(1.12, 0.72, 0.25, 0.04, -0.25, 0.05, 0.48, 1), PBLUE_OFF, PBLUE_OFF, PBLUE_OFF, PBLUE_OFF];
 const PK = [[-1.06, -0.86, 0.5, -0.05, 0.12, 0.04, 0.95], [0, -0.9, 0.55, -0.05, 0, -0.01, 0.95], [1.06, -0.86, 0.5, -0.05, -0.12, -0.04, 0.95],
             [-0.54, -0.12, -0.1, -0.03, 0.06, 0.03, 0.9], [0.54, -0.12, -0.1, -0.03, -0.06, -0.03, 0.9]];
 const PSACH = PK.map(a => {
@@ -930,7 +943,7 @@ const DESK = { BOX, MASK, MASK2, SACH, DROPC }, PHONE = { BOX: PB, MASK: PM, MAS
 
 const ease = t => t * t * (3 - 2 * t);
 function pose(track, s) {
-  const i = Math.max(0, Math.min(track.length - 1, Math.floor(s))), j = Math.min(track.length - 1, i + 1), t = ease(Math.max(0, Math.min(1, s - i)));
+  const i = Math.max(0, Math.min(track.length - 1, Math.floor(s))), j = Math.min(track.length - 1, i + 1), t = ease(Math.max(0, Math.min(1, (s - i - 0.15) / 0.7)));
   const a = track[i], b = track[j];
   if (typeof a === 'number') return a + (b - a) * t;
   const r = {};
@@ -945,7 +958,7 @@ const mats = (obj) => obj.userData.mats || (obj.userData.mats = (() => {
 })());
 // phone anchor: the slot on screen for stage s (blended between neighbours), px per composition unit, and its rect
 const SLOT = Array.from({ length: 9 }, (_, i) => document.querySelector(`[data-st="${i}"] .ph-slot`));
-const PH = { ax: 0, ay: 0, u: 60, r: [0, 0, 0, 0] };
+const PH = { ax: 0, ay: 0, u: 60, r: [0, 0, 0, 0], fade: 1 };
 function slotAt(i) {
   const el = SLOT[i]; if (!el) return null;
   const r = el.getBoundingClientRect(); if (!r.height) return null;
@@ -956,8 +969,9 @@ function phoneAnchor(s) {
   let a = slotAt(i), b = slotAt(j);
   if (!a && !b) return;  // between blocks without a slot the objects are faded out: keep the last anchor
   a = a || b; b = b || a;
-  PH.ax = a.ax + (b.ax - a.ax) * t; PH.ay = a.ay + (b.ay - a.ay) * t; PH.u = a.u + (b.u - a.u) * t;
-  PH.r = a.r.map((v, k) => v + (b.r[k] - v) * t);
+  const f = Math.max(0, Math.min(1, s - i)), two = a !== b, use = two && f >= 0.5 ? b : a;
+  PH.ax = use.ax; PH.ay = use.ay; PH.u = use.u; PH.r = use.r;
+  PH.fade = two ? ease(Math.min(1, Math.abs(1 - 2 * f) * 2.2)) : 1;
 }
 function toPhone(cx, cy, z) {  // a point of the slot composition → world at depth z; k = world units per composition unit
   const hh = (camera.position.z - z) * Math.tan(camera.fov * Math.PI / 360);
@@ -971,7 +985,7 @@ function place(obj, p, extra = {}) {
   obj.rotation.set(p.rx, p.ry + (extra.ry || 0), p.rz);
   obj.scale.setScalar(s);
   // only a fading object is drawn as transparent, so solid ones keep correct depth order
-  const o = p.o;
+  const o = phone ? p.o * PH.fade : p.o;
   mats(obj).forEach(m => { const want = obj.userData.alwaysT || o < 0.999; if (m.transparent !== want) { m.transparent = want; m.needsUpdate = true; } m.opacity = o; m.visible = o > 0.01; });
 }
 
@@ -1023,6 +1037,7 @@ function poseScene(s, t) {
     mL.compose(vA.set(0, mp.ly, 0), qA.identity(), sA.setScalar(mp.ls));
     m4.multiplyMatrices(box.matrixWorld, mL).decompose(vA, qA, sA);
     mask.position.lerp(vA, mp.att); mask.quaternion.slerp(qA, mp.att); mask.scale.lerp(sA, mp.att);
+    mask.scale.z *= 1 - 0.8 * mp.att;  // in the box the sheet lies flat (its face curve is deeper than the carton)
   }
   const m2p = pose(T.MASK2, s);
   place(mask2, m2p, { y: Math.sin(t * 0.7 + 2.2) * 0.035 });
@@ -1065,7 +1080,8 @@ function findSpot(p, copyTop, keepLast) {
   const mR = rectOf(mask), m2R = rectOf(mask2);
   obs.push(mR, m2R);
   const ax = (Math.min(mR[0], m2R[0]) + Math.max(mR[2], m2R[2])) / 2, ay = Math.min(mR[1], m2R[1]);  // top centre of the masks
-  const L = phone ? 12 : W / 2 + 16, R = W - 12, T = 88, B = phone ? Math.min(Hh - 80, copyTop - 14) : Hh - 100;
+  const wr = document.querySelector('main .wrap').getBoundingClientRect().right;  // the content's right edge (logo line)
+  const L = phone ? 12 : W / 2 + 16, R = Math.min(W - 12, wr), T = 88, B = phone ? Math.min(Hh - 80, copyTop - 14) : Hh - 100;
   const free = (x, y, w, h) => x >= L && x + w <= R && y >= T && y + h <= B &&
     obs.every(o => x > o[2] + 8 || x + w < o[0] - 8 || y > o[3] + 8 || y + h < o[1] - 8);
   if (keepLast && flPos) {
@@ -1091,6 +1107,30 @@ window.__objRects = () => [box, ...sachets, mask, mask2].filter(o => mats(o).som
 // visible sachet its screen rect, the band of its EXOCELL wordmark, depth and angle to the camera (the print must read)
 const bbox = pts => [Math.min(...pts.map(p => p[0])), Math.min(...pts.map(p => p[1])), Math.max(...pts.map(p => p[0])), Math.max(...pts.map(p => p[1]))];
 const proj = (o, pts, z) => pts.map(([a, b]) => { cv.set(a, b, z).applyMatrix4(o.matrixWorld).project(camera); return [(cv.x + 1) / 2 * W, (1 - cv.y) / 2 * Hh]; });
+// build hook: a still of the kit with this page's own light and materials on a transparent ground — the buy-card picture
+// ('kit': carton + 5 sachets) and the no-WebGL still ('still': the kit with the white and the blue mask). Returns a PNG URL.
+window.__renderStill = (what, w, h) => {
+  const keep = { phone, pr: renderer.getPixelRatio(), cam: camera.position.clone(), fov: camera.fov, aspect: camera.aspect };
+  phone = false; poseScene(4, 0);
+  bg.visible = dust.visible = drops.visible = false;
+  if (what === 'kit') { mask.visible = mask2.visible = false; }
+  renderer.setPixelRatio(1); renderer.setSize(w, h, false); renderer.setClearColor(0x000000, 0);
+  camera.fov = 30; camera.aspect = w / h; camera.position.set(what === 'kit' ? 2.5 : 2.75, 0.15, 7.2); camera.lookAt(camera.position.x, 0.15, 0); camera.updateProjectionMatrix();
+  renderer.render(scene, camera);
+  const url = renderer.domElement.toDataURL('image/png');
+  bg.visible = dust.visible = drops.visible = mask.visible = mask2.visible = true;
+  renderer.setClearColor(0x0a0a0b, 1); renderer.setPixelRatio(keep.pr); phone = keep.phone;
+  camera.fov = keep.fov; camera.position.copy(keep.cam); resize();
+  return url;
+};
+window.__maskState = () => [mask, mask2].map(m => ({ o: m.material.opacity, transparent: m.material.transparent, visible: m.material.visible && m.visible }));
+window.__maskPixel = (i) => {  // rendered colour of a mask's forehead (no openings there)
+  const m = i ? mask2 : mask; renderer.render(scene, camera); m.updateWorldMatrix(true, false);
+  const [[x, y]] = proj(m, [[0, 0.62]], 0.0), dpr = renderer.getPixelRatio(), g = renderer.getContext(), px = new Uint8Array(100);
+  g.readPixels(Math.round(x * dpr) - 2, Math.round((Hh - y) * dpr) - 2, 5, 5, g.RGBA, g.UNSIGNED_BYTE, px);
+  const med = k => { const v = []; for (let j = 0; j < 25; j++) v.push(px[j * 4 + k]); v.sort((p, q) => p - q); return v[12]; };
+  return { x, y, rgb: [med(0), med(1), med(2)] };
+};
 window.__frontPixel = () => {
   renderer.render(scene, camera);
   box.updateWorldMatrix(true, false);
@@ -1122,6 +1162,8 @@ function checkFit() {  // at this screen size, is there a free spot at the kit p
 function resize() {
   W = window.innerWidth; Hh = window.innerHeight;
   phone = phoneQ.matches;
+  const fm = phone ? frontSm : front;  // phone: the print pre-scaled to its size on screen, so thin letters stay readable
+  if (frontMat.map !== fm) { frontMat.map = fm; frontMat.emissiveMap = fm; frontMat.needsUpdate = true; }
   renderer.setSize(W, Hh, false);
   // narrower than 16:10 (tablets, small windows): widen the vertical view so the scene keeps its 16:10 framing and the
   // objects stay in the right half, clear of the copy
@@ -1173,6 +1215,8 @@ function frame(now) {
   }
 
   const c = pose(phone ? PDROP : DROPC, s);
+  const br = p.bp.o > 0.05 ? rectOf(box) : null;  // the carton on screen: drops keep off its face
+  const mr = [p.mp.o > 0.05 ? rectOf(mask) : null, p.m2p.o > 0.05 ? rectOf(mask2) : null].filter(Boolean);  // and off the masks
   let cx = c.x, cy = c.y, cs = c.s, unit = 1;
   if (phone) { const m = toPhone(c.x, c.y, c.z); cx = m.x; cy = m.y; unit = m.k; cs *= unit; }
   dropSeed.forEach((d, i) => {
@@ -1186,12 +1230,16 @@ function frame(now) {
       const px = (vA.x + 1) / 2 * W, py = (1 - vA.y) / 2 * Hh, r = PH.r;
       edge = ease(Math.max(0, Math.min(1, 1 - Math.hypot(Math.max(r[0] - px, 0, px - r[2]), Math.max(r[1] - py, 0, py - r[3])) / 18)));
     } else edge = ease(Math.max(0, Math.min(1, (vA.x + 0.06) / 0.16)));
+    for (const r of br ? [br, ...mr] : mr) {
+      const px = (vA.x + 1) / 2 * W, py = (1 - vA.y) / 2 * Hh;
+      edge *= ease(Math.max(0, Math.min(1, Math.hypot(Math.max(r[0] - px, 0, px - r[2]), Math.max(r[1] - py, 0, py - r[3])) / 14)));
+    }
     if (cap.on) {
       const px = (vA.x + 1) / 2 * W, py = (1 - vA.y) / 2 * Hh;
       const gx = Math.max(cap.r[0] - px, 0, px - cap.r[2]), gy = Math.max(cap.r[1] - py, 0, py - cap.r[3]);
       edge *= ease(Math.min(1, Math.hypot(gx, gy) / 46));
     }
-    const k = d.s * (phone ? 0.8 * unit : 1) * c.o * edge; sc.set(k, k * 1.08, k);  // drops fade by shrinking
+    const k = d.s * (phone ? 0.8 * unit * PH.fade : 1) * c.o * edge; sc.set(k, k * 1.08, k);  // drops fade by shrinking
     drops.setMatrixAt(i, m4.compose(v3, q, sc));
   });
   drops.instanceMatrix.needsUpdate = true;

@@ -3,7 +3,7 @@
 # Text comes only from reviewed sources: storyboard.he.json (board version of EXOCELL), product-pages.he.json
 # (catalogue details) and exocell-he-ui.json (UI strings). The build fails if any placeholder is left unfilled.
 import base64, html, io, json, os, re, sys, urllib.parse
-from PIL import Image
+from PIL import Image, ImageFilter
 
 # `python3 build-exocell.py` builds the still version (exocell-mask.html); `python3 build-exocell.py 3d` builds the
 # 3D scroll version (exocell-mask-3d.html) from exocell-3d-template.html with the same texts.
@@ -62,7 +62,7 @@ T = {
     'nav_why': nav[1], 'nav_inside': nav[2], 'nav_feel': nav[3], 'nav_protocol': nav[4], 'nav_kit': nav[5], 'nav_offer': nav[6],
     'cta_price': cta0[0], 'hero_more': cta0[1],
     'line_mark': ui['line_mark'], 'line_name': ui['line_name'], 'use_pro': ui['use_pro'],
-    'hero_eyebrow': d['eyebrow'], 'hero_h1': 'EXOCELL MASK', 'hero_tag': x['b0.title'].split(' – ', 1)[1],
+    'hero_h1': 'EXOCELL MASK', 'hero_tag': x['b0.title'].split(' – ', 1)[1],
     'hero_lead': x['b0.line'], 'scroll_hint': ui['scroll_hint'],
     'why_h2': x['b1.title'], 'why_p': x['b1.line'], 'why_kicker': labels(1)[0],
     'inside_h2': x['b2.title'], 'inside_p': x['b2.line'], 'inside_head': ui['inside_head'], 'inside_formula': x['b2.cta'],
@@ -80,6 +80,7 @@ if MODE == '3d':
     T['nav_meet'] = nav[0]  # the 3D version has a section dock with all seven blocks
     T['page_title'] = ui['page_title'].replace('EXOCELL MASK', 'EXOCELL MASK 3D', 1)  # tells the two samples apart
 RAW = {
+    'hero_eyebrow': '<span class="sep"> · </span>'.join(f'<span class="nw">{esc(t)}</span>' for t in d['eyebrow'].split(' · ')),
     'hero_chips': chips(labels(0), 'drop'),
     'why_chips': chips(labels(1)[1:], 'gold'),
     'inside_chips': chips(labels(2), 'drop'),
@@ -127,6 +128,10 @@ def jpeg_uri(path):
 
 if MODE == '3d':  # carton faces cut and straightened from the packshot (site/img/exocell-box-*.jpg)
     ASSETS['__BOX_FRONT__'] = jpeg_uri(os.path.join(SITE, 'img/exocell-box-front.jpg'))
+    _f = Image.open(os.path.join(SITE, 'img/exocell-box-front.jpg')).convert('RGB').resize((370, 500), Image.LANCZOS)
+    _f = _f.filter(ImageFilter.UnsharpMask(radius=1.2, percent=90, threshold=2))
+    _b = io.BytesIO(); _f.save(_b, 'JPEG', quality=90)
+    ASSETS['__BOX_FRONT_SM__'] = 'data:image/jpeg;base64,' + base64.b64encode(_b.getvalue()).decode()
     ASSETS['__BOX_SIDE__'] = jpeg_uri(os.path.join(SITE, 'img/exocell-box-side.jpg'))
 SCENES = {
     'S1': ('scenes/01-meet.jpg', ph('01', '#1f6b70')), 'S2': ('scenes/02-inside.jpg', ph('02', '#2a8a8e')),
@@ -147,6 +152,13 @@ def ltr_runs(s):
     return ''.join(out) + esc(s[pos:])
 
 
+def brand(s):
+    """Latin product and brand names in capitals, as everywhere in the edition; the Hebrew words are not touched."""
+    for a, b in (('Mitoderm', 'MITODERM'), ('V-Tech', 'V-TECH'), ('Exo-NAD', 'EXO-NAD'), ('Exocell', 'EXOCELL')):
+        s = s.replace(a, b)
+    return s
+
+
 def keep(s):
     """Escape a Hebrew line and keep each Latin name whole and in order: 'EXOCELL MASK' never breaks across lines,
     'BIOSPICULE™' keeps its ™ after the word, and a one-letter prefix stays with its name ('ו-Q10')."""
@@ -162,6 +174,13 @@ def fallback_still():
     """The still shown before the first 3D frame and without WebGL: the bright kit render with the two layers of the
     mask (white and blue) in front, from the layer renders in site/design/exocell-3d."""
     d3 = os.path.join(SITE, 'design/exocell-3d')
+    still = os.path.join(d3, 'still-hd.png')  # rendered from this page's own scene (true colours), see window.__renderStill
+    if os.path.exists(still):
+        c = Image.open(still).convert('RGBA')
+        c = c.resize((720, round(720 * c.height / c.width)), Image.LANCZOS)
+        buf = io.BytesIO()
+        c.save(buf, 'WEBP', quality=84, method=6)
+        return 'data:image/webp;base64,' + base64.b64encode(buf.getvalue()).decode()
     kit = Image.open(os.path.join(d3, 'kit-hd.png')).convert('RGBA')
     kit = kit.crop(kit.getbbox())
     masks = Image.open(os.path.join(d3, 'layers/d5-burst-mask.png')).convert('RGBA')
@@ -242,9 +261,9 @@ if MODE == '3d':
         'wa_display': site['whatsapp'], 'foot_access': site['footer_he']['accessibility'], 'foot_privacy': site['footer_he']['privacy'],
         'spec_empty': hook('spec.empty'),
         'phone_href': 'tel:' + tel, 'email_href': 'mailto:' + ui['email'] + '?subject=' + urllib.parse.quote('EXOCELL MASK'),
-        'card_title': d['s04'][1], 'card_qty': d['kit'][0][0], 'card_line': d['kit'][0][1] + ' — ' + d['kit'][0][2],
+        'card_title': d['s04'][1], 'card_qty': d['kit'][0][0], 'card_line': d['kit'][0][2],  # '5×' + the reviewed line (the noun alone before it repeated «מסכות — מסכות»)
         'card_double': dz['kit.double']['he'], 'card_net': net, 'card_actives_h': d['s03'][0], 'card_chip': hook('mask.use', x['b6.line']),
-        'spec_kicker': mkh('spec.kicker'), 'spec_h2': mkh('spec.title'),
+        'spec_kicker': mkh('spec.kicker'), 'spec_h2': brand(mkh('spec.title')),
         'spec_filter': mkh('spec.filter.profession'), 'spec_list': form['specialists']['title'],
         'spec_join_h': mkh('spec.join.title'), 'spec_join_cta': mkh('spec.join.cta'),
         'form_p1': ff['titleP1'], 'form_p2': ff['titleP2'].strip(), 'form_p3': ff['titleP3'], 'form_sub': ff['subtitle'],
@@ -256,7 +275,7 @@ if MODE == '3d':
     T['offer_p'] = hook('mask.use', T['offer_p'])
     chip_parts = labels(4)[3].split(' · ')                        # '+ DERMA RECOVERY CREAM' · 'הגנה מהשמש'
     RAW.update({
-        'spec_p': keep(mkh('tech.face.1.body')),
+        'spec_p': keep(brand(mkh('tech.face.1.body'))),
         'form_fail': keep(hook('form.error')),
         'hours': ''.join(f'<span>{esc(t)}</span>' for t in (f"{hrs['title']}: {hrs['workWeek']}", f"{hrs['friday']}: {hrs['fridayText']}",
                                                                f"{hrs['saturday']}: {hrs['closed']}")),
