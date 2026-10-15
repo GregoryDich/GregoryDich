@@ -103,15 +103,16 @@ sachet_back, nt, b = mat('sachet-back', **{'Base Color': GOLD, 'Metallic': 1.0, 
 white = mat('white-plastic', **{'Base Color': (0.85, 0.85, 0.83, 1), 'Roughness': 0.28, 'Coat Weight': 0.4, 'Coat Roughness': 0.1})[0]
 nozzle = mat('nozzle', **{'Base Color': (0.9, 0.9, 0.88, 1), 'Roughness': 0.35, 'Subsurface Weight': 0.4, 'Subsurface Scale': 0.01})[0]  # milky PP
 alu = mat('aluminium', **{'Base Color': (0.92, 0.92, 0.92, 1), 'Metallic': 1.0, 'Roughness': 0.3})[0]
-# amber glass up to the cap, as on the real vials; the serum deepens the orange of the body
-glass = mat('amber-glass', **{'Base Color': (1.0, 0.6, 0.32, 1), 'Transmission Weight': 1.0, 'Roughness': 0.015, 'IOR': 1.5})[0]
+# amber glass, seen at the shoulder and the base; the body is wrapped in the red-orange label as on the real vials
+glass = mat('amber-glass', **{'Base Color': (1.0, 0.55, 0.25, 1), 'Transmission Weight': 1.0, 'Roughness': 0.015, 'IOR': 1.5})[0]
 serum, nt, b = mat('serum', **{'Base Color': (1, 1, 1, 1), 'Transmission Weight': 1.0, 'Roughness': 0.0, 'IOR': 1.34})
-va = nt.nodes.new('ShaderNodeVolumeAbsorption'); va.inputs['Color'].default_value = (0.95, 0.35, 0.08, 1); va.inputs['Density'].default_value = 4
+va = nt.nodes.new('ShaderNodeVolumeAbsorption'); va.inputs['Color'].default_value = (0.95, 0.38, 0.06, 1); va.inputs['Density'].default_value = 7
 nt.links.new(va.outputs[0], nt.nodes['Material Output'].inputs['Volume'])
-label, nt, b = mat('label', **{'Base Color': (0.86, 0.86, 0.84, 1), 'Roughness': 0.45})
-mix, tr, lab = nt.nodes.new('ShaderNodeMixShader'), nt.nodes.new('ShaderNodeBsdfTransparent'), image(nt, 'label.png')
-nt.links.new(lab.outputs['Alpha'], mix.inputs['Fac']); nt.links.new(tr.outputs[0], mix.inputs[1]); nt.links.new(b.outputs[0], mix.inputs[2])
-nt.links.new(mix.outputs[0], nt.nodes['Material Output'].inputs['Surface'])
+# glossy red-orange label film (packshot: hue 20°, saturation 0.96, value 0.76) with the white print on it
+label, nt, b = mat('label', **{'Roughness': 0.3, 'Coat Weight': 0.5, 'Coat Roughness': 0.08})
+mix, lab = nt.nodes.new('ShaderNodeMixRGB'), image(nt, 'label.png')
+mix.inputs['Color1'].default_value = (0.45, 0.062, 0.002, 1); mix.inputs['Color2'].default_value = (0.83, 0.83, 0.81, 1)
+nt.links.new(lab.outputs['Alpha'], mix.inputs['Fac']); nt.links.new(mix.outputs['Color'], b.inputs['Base Color'])
 tray_mat, nt, b = mat('tray', **{'Base Color': (0.012, 0.012, 0.012, 1), 'Roughness': 0.3, 'Specular IOR Level': 0.5,
                                   'Coat Weight': 0.3, 'Coat Roughness': 0.15})  # glossy neutral black plastic
 relief(nt, b, (((1, 1, 1), 400.0, 2.0, 0.0004),))
@@ -159,7 +160,7 @@ vial_meshes = dict(glass=lathe(OUTER + INNER, name='glass', sharp=60), serum=lat
                    top=lathe([(0, 0.545), (0.122, 0.545), (0.132, 0.552), (0.135, 0.62), (0.13, 0.632), (0.12, 0.635), (0.12, 0.645),
                               (0.112, 0.652), (0, 0.652)], name='top'))
 bm = bmesh.new(); uvl = bm.loops.layers.uv.new('UVMap'); N = 128; ring = []
-for j, y in enumerate((0.06, 0.40)):  # open sleeve, u = 0 at the back; the print block (u = 0.5) faces the vial's +z
+for j, y in enumerate((0.035, 0.42)):  # label sleeve over the body, u = 0 at the back; the print block (u = 0.5) faces +z
     ring.append([bm.verts.new((0.1615 * math.sin(math.pi + 2 * math.pi * k / N), y, 0.1615 * math.cos(math.pi + 2 * math.pi * k / N))) for k in range(N + 1)])
 for k in range(N):
     f = bm.faces.new((ring[0][k], ring[0][k + 1], ring[1][k + 1], ring[1][k]))

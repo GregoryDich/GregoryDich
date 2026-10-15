@@ -74,10 +74,10 @@ foil('box-front', 3, 'vtech-box-front.png', 'vtech-box-front-mr.png', vm=(330, 2
 foil('box-side', 3, 'vtech-box-side.png')
 foil('sachet', 3, 'vtech-sachet-front.png', 'vtech-sachet-front-mr.png', blur=0.45, gold_rough=0.12, fix=fine_print, thin=((356, 394), (396, 432)))  # glossy foil; V-TECH and GEL MASK thickened  # light smoothing keeps the fine print
 
-def vial_label(W=4096, H=1376, SS=2):
-    """White print wrapped on the glass: u = 0 at the back, the block faces +z at u = 0.5; v spans y 0.06..0.40 of the vial."""
+def vial_label(W=4096, H=1555, SS=2):
+    """White print on the vial's label (alpha = ink): u = 0 at the back, the block faces +z at u = 0.5; v spans y 0.035..0.42."""
     im = Image.new('L', (W * SS, H * SS), 0); d = ImageDraw.Draw(im); px = 4040 * SS   # pixels per scene unit
-    Y = lambda y: (0.40 - y) * px; cx = W * SS / 2
+    Y = lambda y: (0.42 - y) * px; cx = W * SS / 2
     w, h, top = 0.085 * px, 0.088 * px, Y(0.375)  # the V mark as on the carton: slim open V, solid triangle raised above the arms
     P = lambda x, y: (cx + (x - 0.5) * w, top + y * h)
     d.polygon([P(0, 0), P(0.13, 0), P(0.5, 0.74), P(0.87, 0), P(1, 0), P(0.5, 1)], fill=255)
