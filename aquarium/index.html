@@ -35,6 +35,9 @@
 
 <!-- Список рыб (имена/описания/картинки). Если PNG нет — рисуются векторные рыбки. -->
 <script src="fish/manifest.js"></script>
+<!-- Сцена: геометрия рифа, свет, точки поведения (window.AQUARIUM_SCENE). Применяется
+     только к тому заднику, для которого написана (backdrop.src). -->
+<script src="scene/scene.js"></script>
 <script>
 "use strict";
 /* ============================================================
@@ -48,25 +51,128 @@
   const ctx = canvas.getContext("2d", { alpha: false });
   const hint = document.getElementById("hint");
 
-  const DPR = Math.min(window.devicePixelRatio || 1, 2);
-  let W = 0, H = 0, floorY = 0;
-  const sizeScale = () => clamp(W / 1300, 0.8, 2.8);   // размер рыб — доля ширины экрана (как в LMA2)
-  const HAS_FILTER = "filter" in ctx;
+  /* ---------- флаги URL ----------
+     ?wallpaper=1  режим обоев: без подсказки, курсора и управления (так грузит macOS-приложение)
+     ?test=1       детерминированный режим: от rAF симуляция НЕ идёт, кадр — только по window.__aq.step()
+     ?seed=N       один сидированный ГПСЧ вместо Math.random — воспроизводимые прогоны
+     ?debug=1      оверлей: RS, уровень качества, счётчики вызовов canvas, мс JS на кадр
+                   (?debug=2 — плюс геометрия сцены: линия пола, точки, источники пузырьков, safeX)
+     ?nofilter=1   HAS_FILTER = false (как в WebKit/WKWebView, где ctx.filter выключен)
+     ?nobg=1       задник не грузится — процедурный векторный риф (проверка фолбэка)
+     ?gov=0        регулятор качества выключен (замеры харнессом с синтетическим временем)   */
+  const PARAMS = new URLSearchParams(location.search);
+  const flag = (k) => PARAMS.has(k) && PARAMS.get(k) !== "0";
+  const WALLPAPER = flag("wallpaper") || window.__WALLPAPER === true;
+  const TEST = flag("test"), NOBG = flag("nobg"), GOV_ON = PARAMS.get("gov") !== "0";
+  const DEBUG = flag("debug") ? Math.max(1, parseInt(PARAMS.get("debug"), 10) || 1) : 0;
+  const COUNTING = TEST || DEBUG > 0;          // обёртки-счётчики canvas — только в этих режимах
+  // ctx.filter в WebKit выключен (SPEC F1) — в отгружаемом коде он не используется вовсе;
+  // флаг оставлен для проверок (кадры с ?nofilter=1 и без должны совпадать)
+  const HAS_FILTER = !flag("nofilter") && ("filter" in ctx);
   let paused = false;
 
   /* ---------- wallpaper / power mode (driven by the macOS app) ----------
-     ?wallpaper=1  -> hide hint + cursor, no keyboard/mouse controls.
      The app can throttle us for battery via:
        webView.evaluateJavaScript("aquariumSetPower('low')")   // 30 fps
        webView.evaluateJavaScript("aquariumSetPower('paused')")// stop drawing
        webView.evaluateJavaScript("aquariumSetPower('high')")  // 60 fps   */
-  const PARAMS = new URLSearchParams(location.search);
-  const WALLPAPER = PARAMS.has("wallpaper") || window.__WALLPAPER === true;
   let POWER = "high";
-  window.aquariumSetPower = (m) => { POWER = (m === "low" || m === "paused") ? m : "high"; };
+  window.aquariumSetPower = (m) => {
+    POWER = (m === "low" || m === "paused") ? m : "high";
+    lastShown = 0; govReset();                   // смена режима — замер интервалов заново
+  };
+
+  /* ---------- ЕДИНЫЙ ГПСЧ (mulberry32) ----------
+     Заменяет Math.random во всём движке. ?seed=N — воспроизводимо; без него — сид от часов. */
+  const SEED = PARAMS.has("seed")
+    ? (parseInt(PARAMS.get("seed"), 10) >>> 0)
+    : ((Date.now() ^ Math.floor(performance.now() * 1000)) >>> 0);
+  let rngState = SEED | 0;
+  function R() {
+    rngState = (rngState + 0x6D2B79F5) | 0;
+    let q = rngState;
+    q = Math.imul(q ^ (q >>> 15), q | 1);
+    q ^= q + Math.imul(q ^ (q >>> 7), q | 61);
+    return ((q ^ (q >>> 14)) >>> 0) / 4294967296;
+  }
+
+  /* ---------- счётчики вызовов canvas (только ?test=1 / ?debug=1; иначе — ноль накладных) ----------
+     Обёртки на прототипе: считают и главный холст, и все offscreen-холсты. Сброс — в начале кадра. */
+  const CNT = { drawImage: 0, setTransform: 0, gradients: 0, patterns: 0, save: 0, restore: 0, getImageData: 0, filter: 0 };
+  const CNT_KEYS = Object.keys(CNT);
+  if (COUNTING) {
+    const P = CanvasRenderingContext2D.prototype;
+    const wrap = (name, key) => {
+      const orig = P[name];
+      if (typeof orig !== "function") return;
+      P[name] = function () { CNT[key]++; return orig.apply(this, arguments); };
+    };
+    wrap("drawImage", "drawImage"); wrap("setTransform", "setTransform");
+    wrap("createLinearGradient", "gradients"); wrap("createRadialGradient", "gradients"); wrap("createConicGradient", "gradients");
+    wrap("createPattern", "patterns"); wrap("save", "save"); wrap("restore", "restore");
+    wrap("getImageData", "getImageData");
+    const fd = Object.getOwnPropertyDescriptor(P, "filter");   // любое включение ctx.filter — нарушение правил
+    if (fd && fd.set) Object.defineProperty(P, "filter", { configurable: true, enumerable: fd.enumerable, get: fd.get,
+      set(v) { if (v !== "none") CNT.filter++; fd.set.call(this, v); } });
+  }
+
+  /* ---------- плотность пикселей ----------
+     RS = min(DPR, √(8.3e6 / (W·H))) — буфер холста не больше ≈8.3 Мп на любом мониторе
+     (SPEC §2.4: 6K «как 3840» иначе дал бы 33 Мп на КАЖДЫЙ экран), × QUALITY.rsMul от регулятора.
+     Всё рисуется в CSS-пикселях: ctx.setTransform(RS, …). */
+  const MAX_BACKING_PX = 8.3e6;
+  let DPR = Math.min(window.devicePixelRatio || 1, 2);
+  let W = 0, H = 0, floorY = 0, RS = 1;
+  const sizeScale = () => clamp(W / 1300, 0.8, 2.8);   // размер рыб — доля ширины экрана (как в LMA2)
+
+  /* ---------- регулятор качества (меряет сам себя — целевого железа под рукой нет) ----------
+     p90 интервала показанных кадров > 1.25× цели 5 с подряд → ступень вниз:
+     частицы −50% → срезы рыб −30% → буфер каустики 0.5→0.35 → RS −15%.
+     30 с хороших кадров → ступень вверх (после «отскока» ожидание удваивается, до 10 мин).
+     Остальные этапы ЧИТАЮТ QUALITY.particles / fishSlices / causticScale / rsMul. */
+  const QUALITY_LEVELS = [
+    { particles: 1.0, fishSlices: 1.0, causticScale: 0.5,  rsMul: 1.0 },
+    { particles: 0.5, fishSlices: 1.0, causticScale: 0.5,  rsMul: 1.0 },
+    { particles: 0.5, fishSlices: 0.7, causticScale: 0.5,  rsMul: 1.0 },
+    { particles: 0.5, fishSlices: 0.7, causticScale: 0.35, rsMul: 1.0 },
+    { particles: 0.5, fishSlices: 0.7, causticScale: 0.35, rsMul: 0.85 },
+  ];
+  const QUALITY = Object.assign({ level: 0 }, QUALITY_LEVELS[0]);
+  function setQuality(level) {
+    level = clamp(level | 0, 0, QUALITY_LEVELS.length - 1);
+    const prevRs = QUALITY.rsMul;
+    Object.assign(QUALITY, QUALITY_LEVELS[level]);
+    QUALITY.level = level;
+    if (QUALITY.rsMul !== prevRs && W > 0) { applyBacking(); if (TEST) renderNow(); }
+  }
+  const GOV = { iv: new Float32Array(160), tmp: new Float32Array(160), n: 0, acc: 0,
+                bad: 0, good: 0, p90: 0, fps: 0, recover: 30, clock: 0, lastUp: -1e9 };   // clock — мс показанных кадров
+  function govReset() { GOV.n = 0; GOV.acc = 0; }
+  function govSample(ms) {
+    if (!(ms > 0) || ms > 500) return;           // паузы, скрытие, первый кадр — не в счёт
+    GOV.fps = GOV.fps ? GOV.fps * 0.95 + (1000 / ms) * 0.05 : 1000 / ms;
+    if (GOV.n < GOV.iv.length) GOV.iv[GOV.n++] = ms;
+    GOV.acc += ms; GOV.clock += ms;
+    if (GOV.acc < 1000) return;
+    // p90 за последнюю секунду: копия в заранее выделенный буфер, сортировка на месте
+    const n = GOV.n;
+    for (let i = 0; i < GOV.tmp.length; i++) GOV.tmp[i] = i < n ? GOV.iv[i] : Infinity;
+    GOV.tmp.sort();
+    GOV.p90 = GOV.tmp[Math.min(n - 1, Math.floor(n * 0.9))];
+    GOV.n = 0; GOV.acc = 0;
+    const target = POWER === "low" ? 1000 / 30 : 1000 / 60;
+    if (GOV.p90 > 1.25 * target) { GOV.bad++; GOV.good = 0; }
+    else { GOV.bad = 0; if (GOV.p90 <= 1.1 * target) GOV.good++; else GOV.good = 0; }
+    if (GOV.bad >= 5 && QUALITY.level < QUALITY_LEVELS.length - 1) {
+      if (GOV.clock - GOV.lastUp < 15000) GOV.recover = Math.min(GOV.recover * 2, 600);   // без «качелей»
+      setQuality(QUALITY.level + 1); GOV.bad = 0; GOV.good = 0;
+    } else if (GOV.good >= GOV.recover && QUALITY.level > 0) {
+      setQuality(QUALITY.level - 1); GOV.lastUp = GOV.clock; GOV.good = 0;
+    }
+  }
 
   /* ---------- math / color helpers ---------- */
-  const rand = (a, b) => a + Math.random() * (b - a);
+  const rand = (a, b) => a + R() * (b - a);
   const randInt = (a, b) => Math.floor(rand(a, b + 1));
   const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
   const TAU = Math.PI * 2;
@@ -90,82 +196,176 @@
   }
 
   /* ============================================================
-     РИФ В ДВА СЛОЯ (рендер Blender, см. blender/reef.py)
-       assets/reef_bg.jpg — задник: вода, дальний риф, песок;
-       assets/reef_fg.png — прозрачный передний план (ближние кораллы):
-                            дальние рыбы проплывают ЗА ним, самые близкие
-                            (depth >= FG_SPLIT) — перед ним.
-     Если картинок нет — рисуется процедурный риф.
+     ЗАДНИК + СЦЕНА
+       assets/reef_bg.jpg — фото рифового аквариума (цвет выправлен офлайн, этап A0);
+       scene/scene.js     — геометрия сцены (window.AQUARIUM_SCENE); применяется ТОЛЬКО
+                            к тому заднику, для которого написана (backdrop.src).
+     Если фото нет (или ?nobg=1) — рисуется процедурный риф.
+     Цветокоррекция и мягкость «запечены» в файлы: ctx.filter в WebKit выключен (SPEC F1),
+     поэтому на лету — только тождество.
      ============================================================ */
   const BG_CANDIDATES = [
     "assets/reef_bg.jpg", "assets/background.jpg", "assets/background.png",
     "assets/reef.jpg", "assets/reef.png", "assets/marine.jpg",
   ];
-  const FG_CANDIDATES = ["assets/reef_fg.png"];
-  const FG_SPLIT = 0.82;
-  let bgImg = null, bgReady = false, fgImg = null, fgReady = false;
-  // цветокоррекция под палитру LMA2 (глубже синий, сочнее кораллы) — ОДИН раз при
-  // загрузке в offscreen-canvas, а не фильтром на каждый кадр (дорого без GPU)
-  function graded(img) {
-    if (!HAS_FILTER) return img;
-    const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight;
-    const g = c.getContext("2d"); g.filter = "blur(0.5px) saturate(1.08) contrast(1.04)"; g.drawImage(img, 0, 0);   // мягкость «как с камеры»; цвет воды выправлен в самом файле
-    return c;
+  let bgImg = null, bgReady = false, bgSettled = false, bgSrc = null;
+
+  // встроенные умолчания (чужой задник или процедурный фолбэк): та же схема, без геометрии рифа
+  const DEFAULT_SCENE = {
+    version: 1,
+    backdrop: { src: null, w: 2560, h: 1355, zoom: 1.08, anchor: "bottom", safeX: [0.14, 0.86] },
+    camera: { horizonBy: 0.42, zNear: 1.0, depthPx: 0.31, fogSigma: 0.42 },
+    surface: { bandH: 0.075, mirrorRows: 0.14 },
+    depthGrid: null, floor: null,
+    light: { color: "#d6ecff",
+             sources: [{ bx: 0.34, byAbove: -0.35, streaks: 5, spread: 9 }, { bx: 0.70, byAbove: -0.35, streaks: 4, spread: 8 }],
+             caustics: { mask: null, strength: 0.32 } },
+    occluders: [], patches: [], props: [], spots: [], bubbles: [],
+  };
+  let SCENE = DEFAULT_SCENE, SCENE_FROM_FILE = false;
+  // сцена из файла — только для «своего» задника; недостающие разделы — из умолчаний
+  function sceneFor(src) {
+    const s = window.AQUARIUM_SCENE, d = DEFAULT_SCENE;
+    if (!src || !s || s.version !== 1 || !s.backdrop || s.backdrop.src !== src) return null;
+    const sec = (k) => Object.assign({}, d[k], s[k] || {});
+    const arr = (k) => (Array.isArray(s[k]) ? s[k] : []);
+    const g = s.depthGrid;
+    return Object.assign({}, d, s, {
+      backdrop: sec("backdrop"), camera: sec("camera"), surface: sec("surface"), light: sec("light"),
+      depthGrid: g && Array.isArray(g.z) && g.z.length === g.cols * g.rows ? g : null,
+      floor: Array.isArray(s.floor) && s.floor.length >= 2 ? s.floor : null,
+      occluders: arr("occluders"), patches: arr("patches"), props: arr("props"), spots: arr("spots"), bubbles: arr("bubbles"),
+    });
   }
-  // воздушная перспектива: дальние рыбы меньше, синее и мягче — варианты спрайта готовятся один раз
+  function useScene(src) {
+    const s = sceneFor(src);
+    SCENE = s || DEFAULT_SCENE; SCENE_FROM_FILE = !!s;
+  }
+  function loadBackdrop(i) {
+    if (NOBG || i >= BG_CANDIDATES.length) { bgSettled = true; assetsChanged(); return; }
+    const im = new Image();
+    im.onload = () => {
+      if (!(im.naturalWidth > 0)) { loadBackdrop(i + 1); return; }
+      bgImg = im; bgSrc = BG_CANDIDATES[i]; bgReady = true; bgSettled = true;
+      useScene(bgSrc); layoutBackdrop(); buildBandCache(); assetsChanged();
+    };
+    im.onerror = () => loadBackdrop(i + 1);
+    im.src = BG_CANDIDATES[i];
+  }
+
+  // воздушная перспектива: дальние рыбы меньше, синее и мягче — варианты спрайта готовятся один раз.
+  // Размытие БЕЗ ctx.filter: уменьшаем ещё в `soften` раз и растягиваем обратно (билинейный «блюр»).
   function makeLod(img) {
-    const v = (scale, tint, blur) => {
+    const iw = img.naturalWidth, ih = img.naturalHeight;
+    const v = (scale, tint, soften) => {
       const c = document.createElement("canvas");
-      c.width = Math.max(1, Math.round(img.naturalWidth * scale)); c.height = Math.max(1, Math.round(img.naturalHeight * scale));
-      const g = c.getContext("2d"); if (HAS_FILTER && blur) g.filter = `blur(${blur}px)`;
-      g.drawImage(img, 0, 0, c.width, c.height); g.filter = "none";
+      c.width = Math.max(1, Math.round(iw * scale)); c.height = Math.max(1, Math.round(ih * scale));
+      const g = c.getContext("2d");
+      g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
+      if (soften > 1) {
+        const s = document.createElement("canvas");
+        s.width = Math.max(1, Math.round(c.width / soften)); s.height = Math.max(1, Math.round(c.height / soften));
+        const sg = s.getContext("2d");
+        sg.imageSmoothingEnabled = true; sg.imageSmoothingQuality = "high";
+        sg.drawImage(img, 0, 0, s.width, s.height);
+        g.drawImage(s, 0, 0, c.width, c.height);
+      } else {
+        g.drawImage(img, 0, 0, c.width, c.height);
+      }
       g.globalCompositeOperation = "source-atop"; g.fillStyle = `rgba(40,100,180,${tint})`; g.fillRect(0, 0, c.width, c.height);
       return c;
     };
-    return [v(0.5, 0.38, 1.2), v(0.75, 0.18, 0.5), img];
+    return [v(0.5, 0.38, 2), v(0.75, 0.18, 1.5), img];
   }
-  (function loadBG(i) {
-    if (i >= BG_CANDIDATES.length) return;
-    const im = new Image();
-    im.onload = () => { bgImg = graded(im); bgReady = true; };
-    im.onerror = () => loadBG(i + 1);
-    im.src = BG_CANDIDATES[i];
-  })(0);
-  (function loadFG(i) {
-    if (i >= FG_CANDIDATES.length) return;
-    const im = new Image();
-    im.onload = () => { fgImg = graded(im); fgReady = true; };
-    im.onerror = () => loadFG(i + 1);
-    im.src = FG_CANDIDATES[i];
-  })(0);
+
+  /* ---------- проекция задника: bgMap(bx, by) → экран и обратно ----------
+     cover-fit × backdrop.zoom в полосу [bandH, H] (сверху — полоса поверхности воды),
+     якорь — низ кадра (песок всегда в кадре). ВСЁ, что привязано к рифу, ставится через
+     эти функции в долях ФОТО, а не долями экрана (SPEC F8). Преобразование раздельное:
+     bgX/bgY/bgBX/bgBY — без аллокаций; bgMap/bgUnmap пишут в out (по умолчанию общий MAP_OUT). */
+  const BGX = { iw: 2560, ih: 1355, sc: 1, dx: 0, dy: 0, dw: 0, dh: 0, bandH: 0,
+                sx: 0, sy: 0, sw: 1, sh: 1, x0: 0, y0: 0, x1: 0, y1: 0 };
+  function layoutBackdrop() {
+    const b = SCENE.backdrop;
+    const iw = bgImg ? bgImg.naturalWidth : (b.w || 2560), ih = bgImg ? bgImg.naturalHeight : (b.h || 1355);
+    // линия воды — по целому пикселю буфера: полоса и фото сходятся без шва
+    const bandH = Math.round(H * SCENE.surface.bandH * RS) / RS;
+    const ph = Math.max(1, H - bandH);
+    const sc = Math.max(W / iw, ph / ih) * (b.zoom || 1);
+    const dw = iw * sc, dh = ih * sc;
+    const dx = (W - dw) / 2;
+    const dy = b.anchor === "center" ? bandH + (ph - dh) / 2 : H - dh;
+    BGX.iw = iw; BGX.ih = ih; BGX.sc = sc; BGX.dx = dx; BGX.dy = dy; BGX.dw = dw; BGX.dh = dh; BGX.bandH = bandH;
+    // видимая часть: экран [0,W]×[bandH,H] → прямоугольник-источник (невидимое не рисуем)
+    const x0 = Math.max(0, dx), x1 = Math.min(W, dx + dw), y0 = Math.max(bandH, dy), y1 = Math.min(H, dy + dh);
+    BGX.x0 = x0; BGX.x1 = x1; BGX.y0 = y0; BGX.y1 = y1;
+    BGX.sx = clamp((x0 - dx) / sc, 0, iw); BGX.sy = clamp((y0 - dy) / sc, 0, ih);
+    BGX.sw = Math.max(1e-3, Math.min(iw - BGX.sx, (x1 - x0) / sc));
+    BGX.sh = Math.max(1e-3, Math.min(ih - BGX.sy, (y1 - y0) / sc));
+  }
+  const bgX = (bx) => BGX.dx + bx * BGX.dw;
+  const bgY = (by) => BGX.dy + by * BGX.dh;
+  const bgBX = (x) => (x - BGX.dx) / BGX.dw;
+  const bgBY = (y) => (y - BGX.dy) / BGX.dh;
+  const MAP_OUT = [0, 0];
+  function bgMap(bx, by, out) { out = out || MAP_OUT; out[0] = bgX(bx); out[1] = bgY(by); return out; }
+  function bgUnmap(x, y, out) { out = out || MAP_OUT; out[0] = bgBX(x); out[1] = bgBY(y); return out; }
+  function drawBackdrop() {
+    ctx.drawImage(bgImg, BGX.sx, BGX.sy, BGX.sw, BGX.sh, BGX.x0, BGX.y0, BGX.x1 - BGX.x0, BGX.y1 - BGX.y0);
+  }
+
+  /* ---------- полоса поверхности воды (статичная заглушка до этапа E1) ----------
+     Снизу поверхность — зеркало (полное внутреннее отражение): верхние mirrorRows фото от линии
+     воды, перевёрнутые, смягчённые проходом 1/8 вниз-вверх, ×0.55 и на 30% к #0d2a4a.
+     E1 оживит её (полосы со сдвигом, блики каустики, мениск). */
+  let bandCanvas = null;
+  function buildBandCache() {
+    const bh = BGX.bandH;
+    if (!bgImg || bh < 1 || W < 1) { bandCanvas = null; return; }
+    const ih = BGX.ih;
+    const sy = clamp((bh - BGX.dy) / BGX.sc, 0, ih - 1);          // строка фото на линии воды
+    const sh = Math.max(1, Math.min(ih - sy, SCENE.surface.mirrorRows * ih));
+    const tw = Math.max(8, Math.round(W / 8)), th = Math.max(2, Math.round(bh / 8));
+    const tiny = document.createElement("canvas"); tiny.width = tw; tiny.height = th;
+    const g = tiny.getContext("2d");
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
+    g.setTransform(1, 0, 0, -1, 0, th);                             // переворот по вертикали
+    g.drawImage(bgImg, BGX.sx, sy, BGX.sw, sh, 0, 0, tw, th);
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = "multiply"; g.fillStyle = "rgb(140,140,140)"; g.fillRect(0, 0, tw, th);   // ×0.55
+    g.globalCompositeOperation = "source-over"; g.fillStyle = "rgba(13,42,74,0.3)"; g.fillRect(0, 0, tw, th);
+    const c = bandCanvas || document.createElement("canvas");
+    c.width = Math.max(1, Math.ceil(W * RS / 2)); c.height = Math.max(1, Math.ceil(bh * RS / 2));
+    const cg = c.getContext("2d");
+    cg.imageSmoothingEnabled = true; cg.imageSmoothingQuality = "high";
+    cg.drawImage(tiny, 0, 0, c.width, c.height);
+    bandCanvas = c;
+  }
 
   // планктон — медленно дрейфующие светлые частицы: оживляют толщу воды над рендером
+  // (движение — в simulate(), здесь только рисование; доля частиц — QUALITY.particles)
   let plankton = [];
   function seedPlankton() {
     plankton = [];
     for (let i = 0; i < 70; i++) plankton.push({ x: rand(0, W), y: rand(0, H), r: rand(0.8, 2.2), vx: rand(-6, 6), vy: rand(-4, 2), ph: rand(0, TAU) });
   }
-  function drawPlankton(t, dt) {
+  function updatePlankton(t, dt) {
+    for (let i = 0; i < plankton.length; i++) {
+      const p = plankton[i];
+      p.x += p.vx * dt; p.y += p.vy * dt + Math.sin(t * 0.7 + p.ph) * 6 * dt;
+      if (p.x < -5) p.x = W + 5; else if (p.x > W + 5) p.x = -5;
+      if (p.y < -5) p.y = H + 5; else if (p.y > H + 5) p.y = -5;
+    }
+  }
+  function drawPlankton(t) {
     ctx.save(); ctx.fillStyle = "rgba(210,235,255,0.5)";
-    for (const p of plankton) {
-      if (!paused) {
-        p.x += p.vx * dt; p.y += p.vy * dt + Math.sin(t * 0.7 + p.ph) * 6 * dt;
-        if (p.x < -5) p.x = W + 5; else if (p.x > W + 5) p.x = -5;
-        if (p.y < -5) p.y = H + 5; else if (p.y > H + 5) p.y = -5;
-      }
+    const n = Math.round(plankton.length * QUALITY.particles);
+    for (let i = 0; i < n; i++) {
+      const p = plankton[i];
       ctx.globalAlpha = 0.2 + 0.25 * (0.5 + 0.5 * Math.sin(t * 1.3 + p.ph));
       ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, TAU); ctx.fill();
     }
     ctx.restore();
-  }
-
-  // BG_ZOOM: слегка «наезжаем» на риф, якорь — низ кадра (песок остаётся, пустая вода сверху уходит)
-  const BG_ZOOM = 1.12;
-  function drawCover(img) {
-    const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
-    const sc = Math.max(W / iw, H / ih) * BG_ZOOM;
-    const dw = iw * sc, dh = ih * sc;
-    ctx.drawImage(img, (W - dw) / 2, H - dh, dw, dh);
   }
 
   /* ============================================================
@@ -202,7 +402,7 @@
   function pickSpecies() {
     let total = 0;
     for (const s of SPECIES) total += s.weight;
-    let r = Math.random() * total;
+    let r = R() * total;
     for (const s of SPECIES) { r -= s.weight; if (r <= 0) return s; }
     return SPECIES[0];
   }
@@ -218,7 +418,8 @@
     for (const e of m.fish) {
       const rec = Object.assign({ count: 1, sizeMin: 70, sizeMax: 120, speedMin: 28, speedMax: 56 }, e);
       rec.img = null; rec.ready = false;
-      if (e.image) {
+      // виды с count: 0 не заселяются — их картинку и не запрашиваем (ноль упавших запросов)
+      if (e.image && rec.count > 0) {
         const im = new Image();
         im.onload = () => { if (im.naturalWidth > 0) { rec.img = im; rec.lod = makeLod(im); rec.ready = true; } };
         im.onerror = () => { rec.ready = false; rec.failed = true; };
@@ -233,7 +434,7 @@
     const list = activePacks();
     if (!list.length) return null;
     let total = 0; for (const p of list) total += p.count;
-    let r = Math.random() * total;
+    let r = R() * total;
     for (const p of list) { r -= p.count; if (r <= 0) return p; }
     return list[0];
   }
@@ -243,7 +444,7 @@
     opts = opts || {};
     const pack = opts.pack || (PACK.length && !opts.species ? pickPack() : null);
     const sp = opts.species || (pack && SP_BY_NAME[pack.fallback]) || pickSpecies();
-    let depth = opts.depth != null ? opts.depth : Math.random();
+    let depth = opts.depth != null ? opts.depth : R();
     let len;
     if (pack) {
       len = rand(pack.sizeMin, pack.sizeMax) * (0.7 + depth * 0.5) * sizeScale();
@@ -256,7 +457,7 @@
       sp, pack, len, depth,
       x: opts.x != null ? opts.x : rand(0, W),
       y: opts.y != null ? opts.y : rand(H * 0.12, floorY - len * 0.4),
-      facing: Math.random() < 0.5 ? 1 : -1,
+      facing: R() < 0.5 ? 1 : -1,
       base: (pack ? rand(pack.speedMin, pack.speedMax) * (0.7 + depth * 0.4) : rand(26, 58) * (0.6 + depth * 0.7)),
       vx: 0, vy: 0,
       drift: rand(-10, 10), driftTimer: rand(1.5, 4),
@@ -299,7 +500,9 @@
       desVx = f.facing * f.base * (1 + f.boost);
       desVy = f.drift;
     }
-    const topLim = H * 0.10, botLim = floorY - f.len * 0.32;
+    // в фото-режиме сверху полоса поверхности воды — рыба держится под ней
+    const top = bgReady ? BGX.bandH : 0;
+    const topLim = Math.max(H * 0.10, top + f.len * 0.45), botLim = floorY - f.len * 0.32;
     if (f.y < topLim) desVy += (topLim - f.y) * 1.6;
     if (f.y > botLim) desVy -= (f.y - botLim) * 1.6;
 
@@ -313,11 +516,12 @@
     const margin = f.len;
     if (f.x < -margin) { f.x = W + margin; f.y = rand(H * 0.14, floorY - f.len * 0.4); }
     else if (f.x > W + margin) { f.x = -margin; f.y = rand(H * 0.14, floorY - f.len * 0.4); }
-    f.y = clamp(f.y, H * 0.06, floorY - f.len * 0.28);
+    f.y = clamp(f.y, Math.max(H * 0.06, top + f.len * 0.25), floorY - f.len * 0.28);
   }
 
   // 2.5D PNG-рыба (нос вправо): тело идёт волной по вертикальным полосам,
-  // хвост виляет сильнее всего; + наклон по вертикали, bob, глубина, мягкая тень.
+  // хвост виляет сильнее всего; + наклон по вертикали, bob, глубина.
+  // (Висящая в воде «контактная» тень-градиент убрана: читалась как наклейка, SPEC F7.)
   function drawSpriteFish(f, t) {
     const img = f.pack.lod ? f.pack.lod[f.depth < 0.35 ? 0 : f.depth < 0.7 ? 1 : 2] : f.pack.img;
     const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
@@ -332,14 +536,9 @@
     ctx.rotate(tilt);
     ctx.globalAlpha = f.alpha;
 
-    // мягкая контактная тень — объём и глубина
-    const sh = ctx.createRadialGradient(0, h * 0.2, w * 0.05, 0, h * 0.2, w * 0.55);
-    sh.addColorStop(0, "rgba(0,25,45,0.14)"); sh.addColorStop(1, "rgba(0,25,45,0)");
-    ctx.fillStyle = sh; ctx.beginPath(); ctx.ellipse(0, h * 0.22, w * 0.55, h * 0.5, 0, 0, TAU); ctx.fill();
-
     // бегущая волна вдоль тела через вертикальные полосы
     // u=0 — хвост (слева), u=1 — нос (справа); амплитуда максимум у хвоста
-    const n = 22;
+    const n = Math.max(8, Math.round(22 * QUALITY.fishSlices));
     const amp = h * (0.03 + 0.05 * speedFrac);   // объёмные 3D-рыбы гнутся мягче
     const K = 5.0; // длина волны вдоль тела
     for (let i = 0; i < n; i++) {
@@ -568,7 +767,7 @@
     const rn = clamp(Math.round(W / 20), 30, 95);
     for (let i = 0; i < rn; i++)
       rubble.push({ x: rand(0, W), y: floorY - H * 0.03 + rand(0, (H - floorY) * 0.85),
-        r: rand(7, 18) * U(), color: cols[(Math.random() * cols.length) | 0], flat: 0.45 + Math.random() * 0.4 });
+        r: rand(7, 18) * U(), color: cols[(R() * cols.length) | 0], flat: 0.45 + R() * 0.4 });
     rubble.sort((a, b) => a.y - b.y); // back-to-front
     streamX = W * 0.72; // источник вертикального потока пузырьков (как в оригинале)
   }
@@ -905,19 +1104,25 @@
     ctx.restore();
   }
 
-  function drawRays(t) {
-    ctx.save(); ctx.globalCompositeOperation = "lighter";
-    const n = 5;
+  // лучи: ОДИН градиент на всё (строится в resize), каждый луч — сдвиг translate + globalAlpha;
+  // никаких новых градиентов и строк на кадр. alphaMul — общий множитель (фото-режим: 0.5)
+  let rayGrad = null;
+  function buildRays() {
+    rayGrad = ctx.createLinearGradient(0, 0, W * 0.18, H);
+    rayGrad.addColorStop(0, "rgba(195,238,255,1)"); rayGrad.addColorStop(0.7, "rgba(195,238,255,0)");
+  }
+  function drawRays(t, alphaMul) {
+    ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = rayGrad;
+    const n = 5, w = W * 0.10, skew = W * 0.18;
     for (let i = 0; i < n; i++) {
-      const baseX = (W / n) * (i + 0.5) + Math.sin(t * 0.06 + i) * 60, w = W * 0.10, skew = W * 0.18;
-      const a = 0.04 + 0.035 * (0.5 + 0.5 * Math.sin(t * 0.2 + i * 1.3));
-      const g = ctx.createLinearGradient(baseX, 0, baseX + skew, H);
-      g.addColorStop(0, `rgba(195,238,255,${a})`); g.addColorStop(0.7, "rgba(195,238,255,0)");
-      ctx.fillStyle = g;
+      const baseX = (W / n) * (i + 0.5) + Math.sin(t * 0.06 + i) * 60;
+      ctx.globalAlpha = alphaMul * (0.04 + 0.035 * (0.5 + 0.5 * Math.sin(t * 0.2 + i * 1.3)));
+      ctx.translate(baseX, 0);
       ctx.beginPath();
-      ctx.moveTo(baseX - w, 0); ctx.lineTo(baseX + w, 0);
-      ctx.lineTo(baseX + skew + w * 1.8, H); ctx.lineTo(baseX + skew - w * 1.8, H);
+      ctx.moveTo(-w, 0); ctx.lineTo(w, 0);
+      ctx.lineTo(skew + w * 1.8, H); ctx.lineTo(skew - w * 1.8, H);
       ctx.closePath(); ctx.fill();
+      ctx.translate(-baseX, 0);
     }
     ctx.restore();
   }
@@ -940,11 +1145,20 @@
     for (let i = 0; i < 46; i++) { const x = (i * 197.3) % W, y = floorY + 14 + ((i * 53.7) % (H - floorY - 16)); ctx.fillRect(x, y, 1.4, 1.4); }
   }
 
-  function drawVignette() {
-    const g = ctx.createRadialGradient(W * 0.5, H * 0.44, H * 0.30, W * 0.5, H * 0.5, H * 0.92);
-    g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(3,28,52,0.38)");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // виньетка — кэш в 1/4 разрешения (строится в resize), на кадр — один drawImage
+  let vignetteCanvas = null;
+  function buildVignette() {
+    const c = vignetteCanvas || document.createElement("canvas");
+    const vw = Math.max(16, Math.round(W / 4)), vh = Math.max(16, Math.round(H / 4));
+    c.width = vw; c.height = vh;
+    const g = c.getContext("2d");
+    g.setTransform(vw / W, 0, 0, vh / H, 0, 0);
+    const gr = g.createRadialGradient(W * 0.5, H * 0.44, H * 0.30, W * 0.5, H * 0.5, H * 0.92);
+    gr.addColorStop(0, "rgba(3,28,52,0)"); gr.addColorStop(1, "rgba(3,28,52,0.38)");
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    vignetteCanvas = c;
   }
+  function drawVignette() { ctx.drawImage(vignetteCanvas, 0, 0, W, H); }
 
   /* ============================================================
      ENTITY POOLS + RESIZE + LOOP
@@ -976,57 +1190,89 @@
     while (fishes.length > n) fishes.pop();
   }
 
+  // буфер холста и всё, что от него зависит (кэши) — без пересева сцены (зовёт и регулятор качества)
+  function applyBacking() {
+    RS = Math.min(DPR, Math.sqrt(MAX_BACKING_PX / Math.max(1, W * H))) * QUALITY.rsMul;
+    canvas.width = Math.max(1, Math.floor(W * RS)); canvas.height = Math.max(1, Math.floor(H * RS));
+    canvas.style.width = W + "px"; canvas.style.height = H + "px";
+    ctx.setTransform(RS, 0, 0, RS, 0, 0);
+    layoutBackdrop(); buildBandCache(); buildVignette(); buildRays();
+  }
   function resize() {
     W = window.innerWidth; H = window.innerHeight; floorY = H * 0.78;
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
     seedPlankton();
-    canvas.width = Math.floor(W * DPR); canvas.height = Math.floor(H * DPR);
-    canvas.style.width = W + "px"; canvas.style.height = H + "px";
-    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    applyBacking();
     buildScenery();
     for (const f of fishes) { f.x = clamp(f.x, 0, W); f.y = clamp(f.y, H * 0.08, floorY - f.len * 0.3); }
+    if (TEST) renderNow();
   }
 
-  let last = performance.now(), acc = 0;
-  function frame(now) {
-    requestAnimationFrame(frame);
-    let raw = (now - last) / 1000; last = now;
-    if (raw > 0.1) raw = 0.1;
-    // app told us the display is off/occluded, or the view is hidden -> stop work
-    if (POWER === "paused" || document.hidden) return;
-    // battery saver: coalesce to ~30 fps but keep motion time-correct
-    acc += raw;
-    const step = POWER === "low" ? 1 / 30 : 0;
-    if (acc < step) return;
-    const dt = Math.min(acc, 0.05);
-    acc = 0;
-    const t = now / 1000;
-
-    if (!paused) {
-      for (const f of fishes) updateFish(f, dt, t);
-      bubbleTimer -= dt;
-      if (bubbleTimer <= 0) { bubbles.push(makeBubble()); bubbleTimer = rand(0.12, 0.4); }
-      // непрерывный вертикальный поток пузырьков из одной точки рифа
-      streamTimer -= dt;
-      if (streamTimer <= 0) {
-        const b = makeBubble(streamX + rand(-9, 9), floorY - H * 0.02);
-        b.r = rand(2, 6); b.vy = rand(60, 100); b.wob = rand(0.8, 1.8);
-        bubbles.push(b);
-        streamTimer = rand(0.02, 0.06);
-      }
-      bubbles = bubbles.filter((b) => updateBubble(b, dt, t));
-      pellets = pellets.filter((p) => updatePellet(p, dt));
+  /* ---------- список отрисовки по глубине ----------
+     Один заранее выделенный массив слотов, сортировка вставками на месте (элементов — десятки,
+     устойчиво, без замыканий и временных массивов, как у Array.sort). Дальние (больший z) — первыми.
+     kind: RK_FISH; следующие этапы добавят пропсы, окклюдеры, качающиеся участки, колонну пузырьков. */
+  const RK_FISH = 1;
+  const RL_CAP = 512;
+  const RL = new Array(RL_CAP);
+  for (let i = 0; i < RL_CAP; i++) RL[i] = { z: 0, kind: 0, obj: null };
+  let rlN = 0;
+  function rlPush(z, kind, obj) {
+    if (rlN >= RL_CAP) return;
+    const it = RL[rlN++]; it.z = z; it.kind = kind; it.obj = obj;
+  }
+  function rlSort() {
+    for (let i = 1; i < rlN; i++) {
+      const it = RL[i], z = it.z;
+      let j = i - 1;
+      while (j >= 0 && RL[j].z < z) { RL[j + 1] = RL[j]; j--; }
+      RL[j + 1] = it;
     }
+  }
+  // S0: старая «глубина» 0..1 (1 = у стекла) → мировой z (1.0 = стекло … 2.6 = задняя стенка).
+  // E3 заменит настоящей перспективой (SPEC §3 «Projection»).
+  const fishZ = (f) => 2.6 - 1.6 * f.depth;
 
-    // ---- render ----
+  /* ---------- симуляция и кадр ----------
+     simT — часы симуляции (с): двигают и физику, и фазы анимаций (хвосты, лучи, планктон),
+     поэтому прогон по шагам детерминирован (?test=1&seed=N). */
+  let simT = 0;
+  function simulate(dt) {
+    simT += dt;
+    if (paused) return;
+    const t = simT;
+    for (let i = 0; i < fishes.length; i++) updateFish(fishes[i], dt, t);
+    updatePlankton(t, dt);
+    bubbleTimer -= dt;
+    if (bubbleTimer <= 0) { bubbles.push(makeBubble()); bubbleTimer = rand(0.12, 0.4); }
+    // непрерывный вертикальный поток пузырьков из одной точки рифа
+    streamTimer -= dt;
+    if (streamTimer <= 0) {
+      const b = makeBubble(streamX + rand(-9, 9), floorY - H * 0.02);
+      b.r = rand(2, 6); b.vy = rand(60, 100); b.wob = rand(0.8, 1.8);
+      bubbles.push(b);
+      streamTimer = rand(0.02, 0.06);
+    }
+    // уплотнение на месте вместо filter() — без новых массивов на кадр
+    let k = 0;
+    for (let i = 0; i < bubbles.length; i++) { const b = bubbles[i]; if (updateBubble(b, dt, t)) bubbles[k++] = b; }
+    bubbles.length = k;
+    k = 0;
+    for (let i = 0; i < pellets.length; i++) { const p = pellets[i]; if (updatePellet(p, dt)) pellets[k++] = p; }
+    pellets.length = k;
+  }
+
+  function render(t) {
     if (bgReady) {
-      drawCover(bgImg);
-      // рендер рифа уже освещён — поверх лишь живые лучи света
-      ctx.save(); ctx.globalAlpha = 0.5; drawRays(t); ctx.restore();
-      drawPlankton(t, dt);
+      drawBackdrop();
+      if (bandCanvas) ctx.drawImage(bandCanvas, 0, 0, W, BGX.bandH);
+      // фото рифа уже освещено — поверх лишь живые лучи света
+      drawRays(t, 0.5);
+      drawPlankton(t);
     } else {
       drawWater();
       drawSurface(t);
-      drawRays(t);
+      drawRays(t, 1);
       drawBackReef();
       drawSand();
       drawReefBase();
@@ -1035,14 +1281,173 @@
       drawReef(t);
     }
 
-    fishes.sort((a, b) => a.depth - b.depth);
-    // дальние рыбы — за передним планом рифа, самые близкие — перед ним
-    for (const f of fishes) if (!fgReady || f.depth < FG_SPLIT) drawFish(f, t);
-    if (fgReady) { drawCover(fgImg); for (const f of fishes) if (f.depth >= FG_SPLIT) drawFish(f, t); }
-    for (const p of pellets) drawPellet(p);
-    for (const b of bubbles) drawBubble(b);
+    rlN = 0;
+    for (let i = 0; i < fishes.length; i++) rlPush(fishZ(fishes[i]), RK_FISH, fishes[i]);
+    rlSort();
+    for (let i = 0; i < rlN; i++) {
+      const it = RL[i];
+      if (it.kind === RK_FISH) drawFish(it.obj, t);
+    }
+    for (let i = 0; i < pellets.length; i++) drawPellet(pellets[i]);
+    for (let i = 0; i < bubbles.length; i++) drawBubble(bubbles[i]);
     drawVignette();
   }
+
+  /* ---------- статистика кадра (только при COUNTING) ---------- */
+  const STAT_KEYS = CNT_KEYS.concat("jsMs");
+  const STAT = { frames: 0, total: 0, last: {}, sum: {}, max: {} };
+  for (const k of STAT_KEYS) { STAT.last[k] = 0; STAT.sum[k] = 0; STAT.max[k] = 0; }
+  function resetStats() { STAT.frames = 0; for (const k of STAT_KEYS) { STAT.sum[k] = 0; STAT.max[k] = 0; } }
+  function recordStats(ms) {
+    STAT.frames++; STAT.total++;
+    for (let i = 0; i < CNT_KEYS.length; i++) {
+      const k = CNT_KEYS[i], v = CNT[k];
+      STAT.last[k] = v; STAT.sum[k] += v; if (v > STAT.max[k]) STAT.max[k] = v;
+    }
+    STAT.last.jsMs = ms; STAT.sum.jsMs += ms; if (ms > STAT.max.jsMs) STAT.max.jsMs = ms;
+  }
+
+  // тело кадра: шаг симуляции + (по желанию) отрисовка; JS-время — performance.now() вокруг всего тела
+  function frameBody(dt, doRender) {
+    if (!doRender) { simulate(dt); return; }
+    let t0 = 0;
+    if (COUNTING) { for (let i = 0; i < CNT_KEYS.length; i++) CNT[CNT_KEYS[i]] = 0; t0 = performance.now(); }
+    simulate(dt);
+    render(simT);
+    if (COUNTING) recordStats(performance.now() - t0);
+    if (DEBUG) drawDebug();
+  }
+  // перерисовать текущее состояние без шага (тест-режим: resize, загрузка задника)
+  function renderNow() { if (W > 0 && vignetteCanvas) { render(simT); if (DEBUG) drawDebug(); } }
+  function assetsChanged() { if (TEST) renderNow(); }
+
+  /* ---------- отладочный оверлей (?debug=1; ?debug=2 — плюс геометрия сцены) ----------
+     Следующие этапы добавляют строки: DEBUG_HOOKS.push(() => "строка"). */
+  const DEBUG_HOOKS = [];
+  function drawDebug() {
+    const L = STAT.last, q = QUALITY;
+    ctx.save();
+    ctx.setTransform(RS, 0, 0, RS, 0, 0);
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+    if (DEBUG >= 2) drawDebugGeometry();
+    const lines = [
+      `RS ${RS.toFixed(3)}  css ${W}×${H}  буфер ${canvas.width}×${canvas.height} (${(canvas.width * canvas.height / 1e6).toFixed(2)} Мп)  dpr ${DPR}`,
+      `Q${q.level}  частицы ${q.particles}  срезы ${q.fishSlices}  каустика ${q.causticScale}  rs×${q.rsMul}  ` +
+        `p90 ${GOV.p90.toFixed(1)} мс  ${GOV.fps.toFixed(0)} к/с  power ${POWER}${TEST ? "  TEST" : ""}`,
+      `drawImage ${L.drawImage}  setTransform ${L.setTransform}  градиенты ${L.gradients}  паттерны ${L.patterns}  ` +
+        `save/restore ${L.save}/${L.restore}  getImageData ${L.getImageData}  filter ${L.filter}  JS ${L.jsMs.toFixed(2)} мс`,
+      `сцена: ${SCENE_FROM_FILE ? "scene.js" : "умолчания"}  задник: ${bgSrc || (NOBG ? "выкл (nobg)" : "нет")}  ` +
+        `рыб ${fishes.length}  пузырьков ${bubbles.length}  seed ${SEED}  t ${simT.toFixed(2)} с`,
+    ];
+    for (let i = 0; i < DEBUG_HOOKS.length; i++) { try { const s = DEBUG_HOOKS[i](); if (s) lines.push(s); } catch (e) { /* оверлей не роняет кадр */ } }
+    ctx.font = "12px ui-monospace, Menlo, Consolas, monospace";
+    ctx.textBaseline = "top";
+    let w = 0;
+    for (const s of lines) w = Math.max(w, ctx.measureText(s).width);
+    ctx.fillStyle = "rgba(0,10,20,0.66)"; ctx.fillRect(8, 8, w + 16, lines.length * 16 + 12);
+    ctx.fillStyle = "#cfe8ff";
+    for (let i = 0; i < lines.length; i++) ctx.fillText(lines[i], 16, 14 + i * 16);
+    ctx.restore();
+  }
+  function drawDebugGeometry() {
+    const S = SCENE;
+    ctx.lineWidth = 1.5;
+    // линия воды и горизонт (точка схода)
+    ctx.strokeStyle = "rgba(120,220,255,0.9)";
+    ctx.beginPath(); ctx.moveTo(0, BGX.bandH); ctx.lineTo(W, BGX.bandH); ctx.stroke();
+    const hy = bgY(S.camera.horizonBy);
+    ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.moveTo(0, hy); ctx.lineTo(W, hy); ctx.stroke();
+    // safeX — то, что видно на любом мониторе
+    ctx.strokeStyle = "rgba(255,230,80,0.9)";
+    for (const bx of S.backdrop.safeX || []) { const x = bgX(bx); ctx.beginPath(); ctx.moveTo(x, BGX.bandH); ctx.lineTo(x, H); ctx.stroke(); }
+    ctx.setLineDash([]);
+    // пол (линия контакта песка)
+    if (S.floor) {
+      ctx.strokeStyle = "rgba(255,120,60,0.95)"; ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < S.floor.length; i++) { const p = S.floor[i]; if (i) ctx.lineTo(bgX(p[0]), bgY(p[1])); else ctx.moveTo(bgX(p[0]), bgY(p[1])); }
+      ctx.stroke();
+    }
+    ctx.font = "11px ui-monospace, Menlo, Consolas, monospace"; ctx.textBaseline = "middle";
+    // точки поведения
+    for (const s of S.spots) {
+      const x = bgX(s.bx), y = bgY(s.by), r = (s.r || 0.03) * BGX.dw;
+      ctx.strokeStyle = "rgba(140,255,140,0.95)"; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke();
+      ctx.fillStyle = "#b6ffb6"; ctx.fillText(`${s.type}:${s.id} z${s.z}`, x + 4, y);
+    }
+    // источники пузырьков и света
+    for (const b of S.bubbles) {
+      const x = bgX(b.bx), y = bgY(b.by);
+      ctx.strokeStyle = "rgba(255,255,255,0.95)"; ctx.beginPath(); ctx.arc(x, y, 6, 0, TAU); ctx.stroke();
+      ctx.fillStyle = "#ffffff"; ctx.fillText(`${b.id} z${b.z}`, x + 9, y);
+    }
+    for (const l of (S.light && S.light.sources) || []) {
+      const x = bgX(l.bx);
+      ctx.fillStyle = "#fff6b0"; ctx.beginPath(); ctx.arc(x, BGX.bandH + 8, 5, 0, TAU); ctx.fill();
+    }
+  }
+
+  let last = performance.now(), acc = 0, lastShown = 0;
+  function frame(now) {
+    requestAnimationFrame(frame);
+    let raw = (now - last) / 1000; last = now;
+    if (raw > 0.1) raw = 0.1; else if (raw < 0) raw = 0;
+    // app told us the display is off/occluded, or the view is hidden -> stop work
+    if (POWER === "paused" || document.hidden) { lastShown = 0; return; }
+    // battery saver: coalesce to ~30 fps but keep motion time-correct
+    // (допуск 15%: дрожание vsync не должно ронять 30 к/с в 20)
+    acc += raw;
+    const step = POWER === "low" ? (1 / 30) * 0.85 : 0;
+    if (acc < step) return;
+    const dt = Math.min(acc, 0.05);
+    acc = 0;
+    if (lastShown && GOV_ON) govSample(now - lastShown);
+    lastShown = now;
+    frameBody(dt, true);
+  }
+
+  /* ---------- тестовый API: window.__aq ----------
+     step(dt, n, {render}) — n шагов по dt с; render: true (каждый шаг, по умолчанию) | false | "last".
+     setTime(t), render(), stats(), resetStats(), fish(), scene(), bgMap(bx,by), bgUnmap(x,y),
+     setQuality(level), ready(). Счётчики в stats() — только при ?test=1 или ?debug=1. */
+  window.__aq = {
+    version: 1, seed: SEED, test: TEST,
+    ready: () => bgSettled && PACK.every((p) => !(p.image && p.count > 0) || p.ready || p.failed),
+    step(dt, n, opts) {
+      dt = dt > 0 ? +dt : 1 / 30; n = n > 0 ? n | 0 : 1;
+      const mode = opts && opts.render !== undefined ? opts.render : true;
+      for (let i = 0; i < n; i++) frameBody(dt, mode === true || (mode === "last" && i === n - 1));
+      return simT;
+    },
+    setTime(t) { simT = +t || 0; return simT; },
+    render() { renderNow(); },
+    resetStats() { resetStats(); },
+    stats() {
+      const avg = {};
+      for (const k of STAT_KEYS) avg[k] = STAT.frames ? STAT.sum[k] / STAT.frames : 0;
+      return {
+        counting: COUNTING, frames: STAT.frames, total: STAT.total,
+        last: Object.assign({}, STAT.last), avg, max: Object.assign({}, STAT.max),
+        backing: { w: canvas.width, h: canvas.height, mp: canvas.width * canvas.height / 1e6 },
+        css: { w: W, h: H }, dpr: DPR, RS, quality: Object.assign({}, QUALITY),
+        governor: { p90: GOV.p90, fps: GOV.fps, bad: GOV.bad, good: GOV.good, recover: GOV.recover },
+        hasFilter: HAS_FILTER, photo: bgReady, sceneFromFile: SCENE_FROM_FILE, power: POWER,
+        fish: fishes.length, bubbles: bubbles.length, pellets: pellets.length, simT, seed: SEED,
+      };
+    },
+    fish() {
+      return fishes.map((f, i) => ({ i, id: f.pack ? f.pack.id : f.sp.name, x: f.x, y: f.y, z: fishZ(f), depth: f.depth,
+        len: f.len, facing: f.facing, vx: f.vx, vy: f.vy, alpha: f.alpha, sprite: !!(f.pack && f.pack.ready) }));
+    },
+    scene() {
+      return { fromFile: SCENE_FROM_FILE, backdrop: bgSrc, photo: bgReady, nobg: NOBG, bandH: BGX.bandH,
+        map: Object.assign({}, BGX), horizon: [bgX(0.5), bgY(SCENE.camera.horizonBy)],
+        visibleBX: [bgBX(0), bgBX(W)], visibleBY: [bgBY(BGX.bandH), bgBY(H)], scene: SCENE };
+    },
+    bgMap: (bx, by) => [bgX(bx), bgY(by)],
+    bgUnmap: (x, y) => [bgBX(x), bgBY(y)],
+    setQuality(level) { setQuality(level); return QUALITY.level; },
+  };
 
   /* ============================================================
      INPUT  (disabled in wallpaper mode — no menu/controls)
@@ -1061,7 +1466,7 @@
   }
 
   window.addEventListener("resize", resize);
-  document.addEventListener("visibilitychange", () => { last = performance.now(); });
+  document.addEventListener("visibilitychange", () => { last = performance.now(); lastShown = 0; govReset(); });
 
   if (WALLPAPER) {
     hint.style.display = "none";
@@ -1082,8 +1487,10 @@
   /* ---------- start ---------- */
   resize();
   seedTank(targetFishCount());
+  loadBackdrop(0);
   showHint();
-  requestAnimationFrame(frame);
+  // ?test=1: от rAF ничего не идёт — кадры только по window.__aq.step()
+  if (!TEST) requestAnimationFrame(frame);
 })();
 </script>
 </body>
