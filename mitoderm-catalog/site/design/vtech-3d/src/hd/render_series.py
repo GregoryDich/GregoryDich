@@ -22,9 +22,9 @@ for shot, parts in PARTS.items():
     if ONLY and shot not in ONLY: continue
     phone = shot.startswith('m'); width = 780 if phone else 2800 if shot == 'kit-hd' else 2880
     full = f'{OUT}/{shot}.png'; render(shot, full, width, 384)
-    if shot != 'kit-hd':   # the purchase card keeps its transparent ground
-        bg = f'{D}/m7-bg.jpg' if phone else f'{D}/layers/vt-bg-wide.jpg'
-        subprocess.run(['python3', f'{HERE}/compose.py', full, bg, f'{OUT}/{shot}.jpg', str(GAIN.get(shot, 1))], check=True, capture_output=True)
+    if shot != 'kit-hd':   # the purchase card keeps its transparent ground; a phone frame takes a portrait slice of the plume
+        subprocess.run(['python3', f'{HERE}/compose.py', full, f'{D}/layers/vt-bg-wide.jpg', f'{OUT}/{shot}.jpg', str(GAIN.get(shot, 1)),
+                        '0.74,0.5' if phone else '0.5,0.5'], check=True, capture_output=True)
     layers = {}
     for part in parts:
         f = f'{OUT}/{shot}-{part}.png'; render(shot, f, width, 256, part)
