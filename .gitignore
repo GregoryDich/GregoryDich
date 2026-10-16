@@ -1,0 +1,3 @@
+# Тестовый харнесс аквариума: зависимости и результаты прогонов (вне бандла .app)
+tools/aquarium-test/node_modules/
+tools/aquarium-test/out/
