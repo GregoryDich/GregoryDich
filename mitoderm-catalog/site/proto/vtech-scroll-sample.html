@@ -37,7 +37,7 @@ main, .top { position: relative; z-index: 2; }
 .top .btn { min-height: 42px; padding-inline: 18px; font-size: 14px; }
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .sec { min-height: 100svh; display: flex; align-items: center; padding-block: 72px; }
-.copy { width: min(540px, 100%); margin-inline-end: auto; display: grid; gap: 20px; }   /* RTL: the copy sits in the left half */
+.copy { width: min(540px, 100%); margin-inline-start: auto; display: grid; gap: 20px; }   /* RTL: start is the right, so the copy sits in the left half, clear of the 3D */
 .badges { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .mark-line { font: 500 12px/1 'Jost', var(--body); letter-spacing: .24em; color: var(--gold); }
 .badge { border-radius: 999px; padding: 4px 12px; font: 500 12px/1.4 var(--body); border: 1px solid var(--gold-faint); color: var(--gold-soft); }

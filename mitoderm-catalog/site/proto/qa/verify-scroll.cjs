@@ -40,8 +40,10 @@ const layout = async (p, tag) => {
   const r = await p.evaluate(() => {
     const hb = document.querySelector('.top').getBoundingClientRect().bottom, h1 = document.querySelector('h1').getBoundingClientRect();
     const offscreen = [...document.querySelectorAll('main *')].filter(e => { const b = e.getBoundingClientRect(); return b.width && (b.left < -1 || b.right > innerWidth + 1); }).map(e => e.tagName + '.' + e.className).slice(0, 5);
-    return { sw: document.documentElement.scrollWidth, iw: innerWidth, hb, h1top: h1.top, offscreen };
+    const copyRight = Math.max(...[...document.querySelectorAll('.copy')].map(c => c.getBoundingClientRect().right));
+    return { sw: document.documentElement.scrollWidth, iw: innerWidth, hb, h1top: h1.top, offscreen, copyRight };
   });
+  if (r.iw >= 900) ok(`${tag}: the copy stays in the left half, clear of the 3D`, r.copyRight <= r.iw * 0.53, `copy right edge ${r.copyRight.toFixed(0)} of ${r.iw}`);
   ok(`${tag}: no horizontal scroll`, r.sw <= r.iw, `${r.sw}/${r.iw}`);
   ok(`${tag}: nothing outside the screen`, !r.offscreen.length, r.offscreen.join(' '));
   ok(`${tag}: heading below the header`, r.h1top >= r.hb, `h1 ${r.h1top.toFixed(0)} header ${r.hb.toFixed(0)}`);
