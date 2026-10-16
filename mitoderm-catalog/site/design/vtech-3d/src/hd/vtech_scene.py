@@ -7,7 +7,7 @@ shots: v1-meet v2-why v3-inside v4-feel v5-protocol v6-kit kit-hd (desktop), m1-
 a transition frame is 'A>B@t' (t 0..1), e.g. 'v1-meet>v2-why@0.4' (render_seq.py renders the whole run).
 part (box|skin|tray|vials|drops|pouches) renders that layer alone, every other object a holdout, for the Figma layers.
 The frame is rendered on a transparent film; compose.py lays it over layers/vt-bg-wide.jpg (phone: a portrait slice of it)."""
-import bpy, bmesh, math, sys
+import bpy, bmesh, math, os, sys
 from mathutils import Euler, Matrix, Vector
 
 TEX, OUT, SHOT = sys.argv[1:4]
@@ -27,23 +27,27 @@ SHOTS = {
     # S2: the carton stays behind in 3/4, dimmed, turned so its front mirrors the banded front wall as in S1 (at -0.72
     # it mirrored the plain left card and read as matte cream card); below right a plane of abstract skin (right half
     # only, the copy keeps the left), microchannels flash in rows of gold points
-    'v2-why': dict(DESK, box=dict(p=(2.85, 0.55, -2.2), r=(0.04, -0.45, 0.02), s=0.9, dim=0.7),
+    'v2-why': dict(DESK, focus=(2.4, -1.2, 0.5), fstop=0.5, box=dict(p=(2.85, 0.55, -2.2), r=(0.04, -0.5, 0.02), s=0.9, dim=0.45),
                    skin=dict(p=(2.4, -1.2, 0.5), r=(-1.12, 0, 0.1), w=3.4, h=2.4, dots=1.0)),
     # S3: the insert with the vials, the centre vial lifted clear of the row towards the viewer, a clear drop with pearl
     # spheres above it
-    'v3-inside': dict(DESK, box=dict(p=(3.4, 0.45, -2.4), r=(0.04, -0.42, 0.01), s=0.95),  # aside, so the drop is seen on the dark
+    'v3-inside': dict(DESK, box=dict(p=(4.0, 0.6, -2.4), r=(0.04, -0.42, 0.01), s=0.95),  # aside, so the drop is seen on the dark
                       tray=dict(p=(2.2, -0.95, -0.3), r=(0.38, -0.36, 0), s=0.65, lift=2),
-                      vials=[[1.25, -0.3, 1.45, 0.02, -0.12, 0, 0.58]], drop=dict(p=(1.25, 0.36, 1.45), s=0.2)),
+                      vials=[[1.456, -0.728, 2.2, 0.02, -0.12, 0, 0.58]]),  # in front of the empty centre well; the drop is out for now
+                      # (the owner, 16/10: it looks unnatural; a drop of blue liquid with gold exosomes goes to a separate sample)
     # S4: sachet no. 1 in front, clear of the carton far behind; a thin wet gel film on part of the skin (relief smoothed
     # under it, edge = before/after)
-    'v4-feel': dict(DESK, gain=1.15, box=dict(p=(5.0, 1.4, -3.6), r=(0.1, -0.6, 0.0), s=0.8, dim=0.6),
+    'v4-feel': dict(DESK, gain=1.15, focus=(1.6, -0.7, 1.0), fstop=1.0,   # focus between the sachet and the gel
+                    box=dict(p=(5.0, 1.4, -3.6), r=(0.16, -0.56, 0.0), s=0.8, dim=0.4),  # its whole face mirrors the lit wall (no dark T)
                     skin=dict(p=(2.45, -1.3, 0.6), r=(-1.18, 0, 0.08), w=3.6, h=2.4, dots=0.35, gel=True),
                     pouches=[[1.6, -0.1, 1.4, 0.28, -0.32, 0.12, 0.9]]),
     # S5: three stations seated on the gold line (parallel to the screen), right to left: a skin puck with points, the
     # vial with a drop above, the sachet; z follows the line
-    'v5-protocol': dict(DESK, gain=0.85, skin=dict(p=(3.45, -1.06, 0.435), r=(-1.05, 0, 0), w=1.1, h=1.1, dots=1.0, disk=True),
-                        vials=[[2.3, -1.42, 0.287, 0.04, -0.3, 0, 0.58]], drop=dict(p=(2.3, -0.83, 0.287), s=0.15),
-                        pouches=[[1.2, -1.16, 0.146, 0.15, -0.35, 0.0, 0.88]], line=dict(c=(2.4, -1.45, 0.3), L=3.6)),
+    # (placed by projection: the line at y 620 of 900, x 770-1320 of 1440, the stations at 880 / 1045 / 1210; the puck
+    # stands tilted back 20° with its lowest, back rim on the rod, so its front rim stays above the line on screen)
+    'v5-protocol': dict(DESK, skin=dict(p=(3.112, -0.406, 0.645), r=(-0.35, 0, 0), w=0.75, h=0.75, dots=1.0, disk=True),
+                        vials=[[2.349, -0.786, 0.6, 0.04, -0.3, 0, 0.75]],
+                        pouches=[[1.586, -0.563, 0.537, 0.15, 0.0, 0.0, 0.8]], line=dict(c=(2.349, -0.792, 0.6), L=2.56)),
     'v6-kit': dict(aspect=1.6, cam=(0.4, 0.1, 6.6), look=(1.22, 0.15, 0), **KIT),  # closer than S1 (true-scale kit); group spans 0.54-0.95 of the width
     'kit-hd': dict(aspect=1400 / 1100, fov=29, cam=(3.05, 0.82, 6.0), look=(3.05, 0.22, 0), **KIT),  # centred, even margins
     'm1-meet': dict(PHONE, wall=(-3.5, 5.6), box=dict(p=(0.05, 2.4, 0), r=(0.06, -0.42, 0.04), s=0.85)),  # its front mirrors x≈-6, y≈5.6
@@ -64,6 +68,10 @@ def blend(A, B, t):
     e = ease(t); S = dict(B)
     S['cam'], S['look'] = lerp(A['cam'], B['cam'], e), lerp(A['look'], B['look'], e)
     S['exposure'] = A.get('exposure', 0) + (B.get('exposure', 0) - A.get('exposure', 0)) * e
+    if A.get('fstop') or B.get('fstop'):   # focus pull: aperture (1/f-stop) and focus point along the same ease
+        ap = (1 / A['fstop'] if A.get('fstop') else 0) * (1 - e) + (1 / B['fstop'] if B.get('fstop') else 0) * e
+        fa, fb = A.get('focus', A.get('box', {}).get('p', A['look'])), B.get('focus', B.get('box', {}).get('p', B['look']))
+        S['fstop'], S['focus'] = (1 / ap if ap > 0.02 else None), lerp(fa, fb, e)
     if 'box' in A and 'box' in B:
         S['box'] = dict(p=lerp(A['box']['p'], B['box']['p'], e), r=lerp(A['box']['r'], B['box']['r'], e),
                         s=A['box']['s'] + (B['box']['s'] - A['box']['s']) * e,
@@ -354,6 +362,7 @@ def make_skin(k):
     rr = fx(nt, 'SQRT', fx(nt, 'ADD', fx(nt, 'MULTIPLY', nx, nx), fx(nt, 'MULTIPLY', ny, ny)))
     cr = nt.nodes.new('ShaderNodeValToRGB'); nt.links.new(rr, cr.inputs['Fac'])   # warm dark, lighter in the middle
     cr.color_ramp.elements[0].color = (*(c * 0.45 for c in srgb(0x6b4430)), 1); cr.color_ramp.elements[1].color = (*(c * 0.45 for c in srgb(0x2a1a12)), 1)
+    if puck: cr.color_ramp.elements[1].color = (*(c * 0.36 for c in srgb(0x6b4430)), 1)   # a small sample: no dark edge (it read as a cookie)
     mot = nt.nodes.new('ShaderNodeValToRGB'); nt.links.new(noise(nt, obc, 2.2, 3), mot.inputs['Fac'])   # slow blotches
     mot.color_ramp.elements[0].position = 0.3; mot.color_ramp.elements[0].color = (0.72, 0.7, 0.68, 1); mot.color_ramp.elements[1].position = 0.7
     col0 = nt.nodes.new('ShaderNodeMixRGB'); col0.blend_type = 'MULTIPLY'; col0.inputs['Fac'].default_value = 1
@@ -362,9 +371,18 @@ def make_skin(k):
     wv = nt.nodes.new('ShaderNodeVectorMath'); wv.operation = 'MULTIPLY_ADD'; wv.inputs[1].default_value = (0.04, 0.04, 0.04)
     wnz = nt.nodes.new('ShaderNodeTexNoise'); wnz.inputs['Scale'].default_value = 6; nt.links.new(obc, wnz.inputs['Vector'])
     nt.links.new(wnz.outputs['Color'], wv.inputs[0]); nt.links.new(obc, wv.inputs[2]); warp = wv.outputs['Vector']
-    f1 = step(nt, voronoi(nt, warp, 16, 'DISTANCE_TO_EDGE', (1, 1.6, 1), 0.5).outputs['Distance'], 0.03, 0.0)
-    f2 = step(nt, voronoi(nt, warp, 40, 'DISTANCE_TO_EDGE', (1.5, 1, 1), -0.3).outputs['Distance'], 0.025, 0.0)
-    vp = voronoi(nt, obc, 55); pore = fx(nt, 'MULTIPLY', step(nt, vp.outputs['Distance'], 0.2, 0.0), step(nt, vp.outputs['Color'], 0.45, 0.55))
+    # the lines: a crosshatch of shallow grooves in two main directions (rhombuses, as on the back of a hand) and a fainter
+    # third, wavering and broken into short dashes; closed random cells (Voronoi edges) read as cracked mud or leather
+    def groove(scale, turn, width, mask_scale):
+        mp = nt.nodes.new('ShaderNodeMapping'); mp.inputs['Rotation'].default_value = (0, 0, turn); nt.links.new(warp, mp.inputs['Vector'])
+        wv = nt.nodes.new('ShaderNodeTexWave'); wv.wave_type = 'BANDS'; wv.bands_direction = 'X'; wv.wave_profile = 'SIN'
+        wv.inputs['Scale'].default_value = scale; wv.inputs['Distortion'].default_value = 3.0; wv.inputs['Detail'].default_value = 1.5
+        wv.inputs['Detail Scale'].default_value = 1.2; nt.links.new(mp.outputs['Vector'], wv.inputs['Vector'])
+        dash = fx(nt, 'MULTIPLY', step(nt, noise(nt, obc, mask_scale), 0.38, 0.62), step(nt, noise(nt, obc, mask_scale * 3.7), 0.3, 0.55))
+        return fx(nt, 'MULTIPLY', step(nt, wv.outputs['Fac'], width, 0.0), dash)
+    f1 = fx(nt, 'MAXIMUM', groove(22, 0.61, 0.12, 4.2), groove(22, -0.61, 0.12, 5.1))
+    f2 = groove(40, 1.57, 0.1, 6.3)
+    vp = voronoi(nt, obc, 32); pore = fx(nt, 'MULTIPLY', step(nt, vp.outputs['Distance'], 0.24, 0.0), step(nt, vp.outputs['Color'], 0.45, 0.55))
     pore2 = step(nt, voronoi(nt, obc, 130).outputs['Distance'], 0.25, 0.0)
     # microchannels: loose rows (every other row shifted half a step), each pit jittered, sized and lit at random
     sp = 0.17; X, Y = fx(nt, 'DIVIDE', so.outputs['X'], sp), fx(nt, 'DIVIDE', so.outputs['Y'], sp)
@@ -372,26 +390,29 @@ def make_skin(k):
     cxyz = nt.nodes.new('ShaderNodeCombineXYZ'); nt.links.new(fx(nt, 'FLOOR', xs), cxyz.inputs['X']); nt.links.new(row, cxyz.inputs['Y'])
     wn = nt.nodes.new('ShaderNodeTexWhiteNoise'); wn.noise_dimensions = '3D'; nt.links.new(cxyz.outputs['Vector'], wn.inputs['Vector'])
     rnd = nt.nodes.new('ShaderNodeSeparateColor'); nt.links.new(wn.outputs['Color'], rnd.inputs['Color'])
-    ddx = fx(nt, 'SUBTRACT', fx(nt, 'SUBTRACT', fx(nt, 'FRACT', xs), 0.5), fx(nt, 'MULTIPLY', fx(nt, 'SUBTRACT', rnd.outputs['Red'], 0.5), 0.36))
-    ddy = fx(nt, 'SUBTRACT', fx(nt, 'SUBTRACT', fx(nt, 'FRACT', Y), 0.5), fx(nt, 'MULTIPLY', fx(nt, 'SUBTRACT', rnd.outputs['Green'], 0.5), 0.36))
+    ddx = fx(nt, 'SUBTRACT', fx(nt, 'SUBTRACT', fx(nt, 'FRACT', xs), 0.5), fx(nt, 'MULTIPLY', fx(nt, 'SUBTRACT', rnd.outputs['Red'], 0.5), 0.5))
+    ddy = fx(nt, 'SUBTRACT', fx(nt, 'SUBTRACT', fx(nt, 'FRACT', Y), 0.5), fx(nt, 'MULTIPLY', fx(nt, 'SUBTRACT', rnd.outputs['Green'], 0.5), 0.5))
     d = fx(nt, 'DIVIDE', fx(nt, 'SQRT', fx(nt, 'ADD', fx(nt, 'MULTIPLY', ddx, ddx), fx(nt, 'MULTIPLY', ddy, ddy))),
            fx(nt, 'ADD', 0.75, fx(nt, 'MULTIPLY', rnd.outputs['Blue'], 0.5)))
-    keep = step(nt, wn.outputs['Value'], 0.08, 0.12)   # about one pit in ten is missing
-    pit, core = fx(nt, 'MULTIPLY', step(nt, d, 0.075, 0.02), keep), fx(nt, 'MULTIPLY', step(nt, d, 0.045, 0.008), keep)
+    pass_ = nt.nodes.new('ShaderNodeTexNoise'); pass_.inputs['Scale'].default_value = 0.35; nt.links.new(cxyz.outputs['Vector'], pass_.inputs['Vector'])
+    keep = fx(nt, 'MULTIPLY', step(nt, wn.outputs['Value'], 0.08, 0.12), step(nt, pass_.outputs['Fac'], 0.36, 0.42))   # gaps: single pits and short runs
+    pit, core = fx(nt, 'MULTIPLY', step(nt, d, 0.06, 0.015), keep), fx(nt, 'MULTIPLY', step(nt, d, 0.035, 0.006), keep)
     halo = fx(nt, 'MULTIPLY', step(nt, d, 0.2, 0.0), keep)
     rim = fx(nt, 'MULTIPLY', step(nt, fx(nt, 'ABSOLUTE', fx(nt, 'SUBTRACT', d, 0.1)), 0.035, 0.0), keep)   # the lip around a pit
-    bright = fx(nt, 'ADD', 0.45, fx(nt, 'MULTIPLY', fx(nt, 'FRACT', fx(nt, 'MULTIPLY', wn.outputs['Value'], 7.31)), 0.55))
-    glow = fx(nt, 'MULTIPLY', fx(nt, 'ADD', core, fx(nt, 'MULTIPLY', halo, 0.1)), bright)
+    bright = fx(nt, 'ADD', 0.3, fx(nt, 'MULTIPLY', fx(nt, 'FRACT', fx(nt, 'MULTIPLY', wn.outputs['Value'], 7.31)), 0.7))
+    glow = fx(nt, 'MULTIPLY', fx(nt, 'ADD', core, fx(nt, 'MULTIPLY', halo, 0.03)), bright)   # a pit lit from inside, not an LED
     if 'wave' in k:   # channels open in a wave across the plane; the front itself flashes
         front = -1.3 + 2.8 * k['wave']
         lit = step(nt, nx, front + 0.05, front - 0.3)
         flash = fx(nt, 'MULTIPLY', step(nt, fx(nt, 'ABSOLUTE', fx(nt, 'SUBTRACT', nx, front)), 0.25, 0.0), 1.5)
         glow = fx(nt, 'MULTIPLY', glow, fx(nt, 'ADD', lit, flash))
-    em = fx(nt, 'MULTIPLY', glow, 5.0 * k.get('dots', 0))
-    fine = add(nt, (f1, -0.35), (f2, -0.15), (pore, -0.5), (pore2, -0.25), (noise(nt, obc, 40, 3), 0.3), (pit, -0.9), (rim, 0.2))
+    em = fx(nt, 'MULTIPLY', glow, 8.0 * k.get('dots', 0))   # smaller cores: brighter, so the channels still flash
+    fine = add(nt, (f1, -0.15), (f2, -0.08), (pore, -0.5), (pore2, -0.25), (noise(nt, obc, 40, 3), 0.3)); pits = add(nt, (pit, -0.9), (rim, 0.2))
     col = nt.nodes.new('ShaderNodeMixRGB'); col.blend_type = 'MULTIPLY'; nt.links.new(col0.outputs['Color'], col.inputs['Color1'])
-    nt.links.new(add(nt, (pore, 0.3), (f1, 0.15)), col.inputs['Fac']); col.inputs['Color2'].default_value = (0.55, 0.45, 0.4, 1)
-    col = col.outputs['Color']
+    nt.links.new(add(nt, (pore, 0.3), (f1, 0.05)), col.inputs['Fac']); col.inputs['Color2'].default_value = (0.55, 0.45, 0.4, 1)
+    dk = nt.nodes.new('ShaderNodeMixRGB'); dk.blend_type = 'MULTIPLY'; nt.links.new(col.outputs['Color'], dk.inputs['Color1'])
+    dk.inputs['Color2'].default_value = (0.45, 0.4, 0.38, 1); nt.links.new(fx(nt, 'MULTIPLY', rim, 0.6), dk.inputs['Fac'])   # the dark lip of a pit
+    col = dk.outputs['Color']
     broad = nt.nodes.new('ShaderNodeBump'); broad.inputs['Distance'].default_value = 0.04; nt.links.new(noise(nt, obc, 1.3, 2), broad.inputs['Height'])
     if k.get('gel'):
         # a thin clear film over the part of the plane left of a wavy line (the owner: a thin wet glossy film with
@@ -399,24 +420,23 @@ def make_skin(k):
         # its relief, the channels closed; the film's own surface is smooth with a gentle swell, so a soft card gives
         # several soft highlights (a flat film gave one straight stripe and read as tape, a film on the full undulation
         # gave white blobs), and it rises at its edge in a rounded meniscus; outside it the skin stays as it was
-        edge = fx(nt, 'ADD', nx, fx(nt, 'MULTIPLY', fx(nt, 'SUBTRACT', noise(nt, obc, 1.6), 0.5), 0.5))
+        edge = add(nt, (nx, 1.0), (fx(nt, 'SUBTRACT', noise(nt, obc, 2.4, 2), 0.5), 0.55), (fx(nt, 'SUBTRACT', noise(nt, obc, 6), 0.5), 0.12))  # organic
         G, Gs = step(nt, edge, 0.015, -0.015), step(nt, edge, 0.04, -0.04)
         lip = step(nt, fx(nt, 'ABSOLUTE', edge), 0.04, 0.0)
-        fine = fx(nt, 'MULTIPLY', fine, fx(nt, 'SUBTRACT', 1.0, fx(nt, 'MULTIPLY', G, 0.6)))
-        em = fx(nt, 'MULTIPLY', em, fx(nt, 'SUBTRACT', 1.0, fx(nt, 'MULTIPLY', G, 0.92)))
-        b.inputs['Coat Roughness'].default_value = 0.02; b.inputs['Coat IOR'].default_value = 1.42; nt.links.new(G, b.inputs['Coat Weight'])
+        fine = fx(nt, 'MULTIPLY', fine, fx(nt, 'SUBTRACT', 1.0, fx(nt, 'MULTIPLY', G, 0.65)))   # the relief softened, still there
+        pits = fx(nt, 'MULTIPLY', pits, fx(nt, 'SUBTRACT', 1.0, G)); em = fx(nt, 'MULTIPLY', em, fx(nt, 'SUBTRACT', 1.0, G))   # channels closed
+        b.inputs['Coat Roughness'].default_value = 0.08; b.inputs['Coat IOR'].default_value = 1.42; nt.links.new(G, b.inputs['Coat Weight'])
+        swell = nt.nodes.new('ShaderNodeBump'); swell.inputs['Distance'].default_value = 0.015   # the film follows the skin's slow waves
+        nt.links.new(noise(nt, obc, 1.3, 2), swell.inputs['Height'])
         cb = nt.nodes.new('ShaderNodeBump'); cb.inputs['Distance'].default_value = 0.01
-        swell = nt.nodes.new('ShaderNodeBump'); swell.inputs['Distance'].default_value = 0.03; nt.links.new(noise(nt, obc, 1.8, 0), swell.inputs['Height'])
-        micro = nt.nodes.new('ShaderNodeBump'); micro.inputs['Distance'].default_value = 0.001; nt.links.new(noise(nt, obc, 30, 1), micro.inputs['Height'])
-        nt.links.new(swell.outputs['Normal'], micro.inputs['Normal'])
-        nt.links.new(add(nt, (Gs, 1.0), (lip, 0.6)), cb.inputs['Height']); nt.links.new(micro.outputs['Normal'], cb.inputs['Normal'])
+        nt.links.new(add(nt, (Gs, 1.0), (lip, 0.6)), cb.inputs['Height']); nt.links.new(swell.outputs['Normal'], cb.inputs['Normal'])
         nt.links.new(cb.outputs['Normal'], b.inputs['Coat Normal'])
-        warm = nt.nodes.new('ShaderNodeMixRGB'); nt.links.new(col, warm.inputs['Color1']); warm.inputs['Color2'].default_value = (0.2, 0.085, 0.035, 1)
-        nt.links.new(fx(nt, 'MULTIPLY', G, 0.1), warm.inputs['Fac']); col = warm.outputs['Color']
+        wet = nt.nodes.new('ShaderNodeMixRGB'); wet.blend_type = 'MULTIPLY'; nt.links.new(col, wet.inputs['Color1'])   # the same skin, ~10% deeper
+        wet.inputs['Color2'].default_value = (0.9, 0.88, 0.86, 1); nt.links.new(G, wet.inputs['Fac']); col = wet.outputs['Color']
         nt.links.new(fx(nt, 'ADD', 0.2, fx(nt, 'MULTIPLY', G, 0.3)), b.inputs['Subsurface Weight'])
     nt.links.new(col, b.inputs['Base Color']); nt.links.new(em, b.inputs['Emission Strength'])
     bp = nt.nodes.new('ShaderNodeBump'); bp.inputs['Distance'].default_value = 0.004
-    nt.links.new(fine, bp.inputs['Height']); nt.links.new(broad.outputs['Normal'], bp.inputs['Normal']); nt.links.new(bp.outputs['Normal'], b.inputs['Normal'])
+    nt.links.new(fx(nt, 'ADD', fine, pits), bp.inputs['Height']); nt.links.new(broad.outputs['Normal'], bp.inputs['Normal']); nt.links.new(bp.outputs['Normal'], b.inputs['Normal'])
     # a plane melts into the smoke at its soft edges (rounded rectangle); a puck is a solid object
     alpha = 1.0 if puck else fx(nt, 'MULTIPLY', step(nt, fx(nt, 'ABSOLUTE', nx), 1.0, 0.6), step(nt, fx(nt, 'ABSOLUTE', ny), 1.0, 0.6))
     alpha = fx(nt, 'MULTIPLY', alpha, k.get('alpha', 1.0))   # fade-in during a transition
@@ -425,14 +445,16 @@ def make_skin(k):
     nt.links.new(mix.outputs[0], out.inputs['Surface'])
     bm = bmesh.new()
     if puck:
-        t = 0.1; bmesh.ops.create_cone(bm, cap_ends=True, cap_tris=False, segments=128, radius1=w / 2, radius2=w / 2, depth=t)
+        t = 0.08; bmesh.ops.create_cone(bm, cap_ends=True, cap_tris=False, segments=128, radius1=w / 2, radius2=w / 2, depth=t)
         for v in bm.verts: v.co.z -= t / 2
         bm.normal_update()
         for f in bm.faces: f.material_index = 0 if f.normal.z > 0.9 else 1
         side, snt, sb = mat('skin-side', **{'Roughness': 0.5, 'Subsurface Weight': 0.3, 'Subsurface Radius': (1.0, 0.4, 0.2), 'Subsurface Scale': 0.01})
         sz = snt.nodes.new('ShaderNodeSeparateXYZ'); snt.links.new(snt.nodes.new('ShaderNodeTexCoord').outputs['Object'], sz.inputs['Vector'])
-        lay = snt.nodes.new('ShaderNodeMixRGB'); lay.inputs['Color1'].default_value = (0.09, 0.04, 0.02, 1); lay.inputs['Color2'].default_value = (0.055, 0.012, 0.007, 1)
-        snt.links.new(step(snt, sz.outputs['Z'], -0.018, -0.03), lay.inputs['Fac']); snt.links.new(lay.outputs['Color'], sb.inputs['Base Color'])
+        # the cut: a thin dark epidermis line on top, a lighter warm pink-beige dermis below, a slightly wavy boundary
+        lay = snt.nodes.new('ShaderNodeMixRGB'); lay.inputs['Color1'].default_value = (0.04, 0.017, 0.009, 1); lay.inputs['Color2'].default_value = (0.16, 0.07, 0.05, 1)
+        zw = add(snt, (sz.outputs['Z'], 1.0), (fx(snt, 'SUBTRACT', noise(snt, snt.nodes['Texture Coordinate'].outputs['Object'], 8), 0.5), 0.01))
+        snt.links.new(step(snt, zw, -0.008, -0.014), lay.inputs['Fac']); snt.links.new(lay.outputs['Color'], sb.inputs['Base Color'])
         ob = obj('skin', to_mesh(bm, 'skin', sharp=35), (m, side), p=k['p'], r=k['r']); bevel(ob, 0.006, 3)
         return ob
     bmesh.ops.create_grid(bm, x_segments=1, y_segments=1, size=0.5)
@@ -440,13 +462,10 @@ def make_skin(k):
     return obj('skin', to_mesh(bm, 'skin', sharp=0), (m,), p=k['p'], r=k['r'])
 
 # ---------- serum drop: a clear tear with pearl spheres inside (the scheme of synthetic exosomes) ----------
-def tear_mesh():
-    prof = []
-    for i in range(33):
-        a = math.pi * i / 32; rr, y = math.sin(a), -math.cos(a)
-        if y > 0: rr *= 1 - 0.55 * y; y *= 1.35
-        prof.append((0 if i in (0, 32) else rr, y))
-    return lathe(prof, 64, 'tear', sharp=0)
+def tear_mesh():  # the classic teardrop (r = sin t·sin(t/2)^1.5): round belly, concave flanks into a sharp tip; the old
+    # profile had straight flanks and read as a guitar pick. Height 2.6, widest radius 0.91, belly centre at y -0.55
+    prof = [(0 if i in (0, 48) else 1.3 * math.sin(math.pi * i / 48) * math.sin(math.pi * i / 96) ** 1.5, 1.3 * math.cos(math.pi * i / 48)) for i in range(49)]
+    return lathe(prof[::-1], 96, 'tear', sharp=0)
 
 
 TEAR = tear_mesh()
@@ -455,14 +474,14 @@ bm = bmesh.new(); bmesh.ops.create_uvsphere(bm, u_segments=32, v_segments=16, ra
 # (a refractive drop with caustics off left them black and read as chrome)
 drop_mat, nt, _ = mat('drop')
 fr, gl, tr, mx = (nt.nodes.new(t) for t in ('ShaderNodeFresnel', 'ShaderNodeBsdfGlossy', 'ShaderNodeBsdfTransparent', 'ShaderNodeMixShader'))
-fr.inputs['IOR'].default_value = 1.45; gl.inputs['Roughness'].default_value = 0.02
+fr.inputs['IOR'].default_value = 1.33; gl.inputs['Roughness'].default_value = 0.0
 rim, ad = nt.nodes.new('ShaderNodeEmission'), nt.nodes.new('ShaderNodeAddShader')   # the rim glows softly: clear water on the
-rim.inputs['Color'].default_value = (1.0, 0.88, 0.716, 1); rim.inputs['Strength'].default_value = 0.3   # dark, not a black outline
+rim.inputs['Color'].default_value = (1.0, 0.88, 0.716, 1); rim.inputs['Strength'].default_value = 0.1   # dark, not a black outline (more read as grey plastic)
 nt.links.new(gl.outputs[0], ad.inputs[0]); nt.links.new(rim.outputs[0], ad.inputs[1])
 nt.links.new(fr.outputs[0], mx.inputs['Fac']); nt.links.new(tr.outputs[0], mx.inputs[1]); nt.links.new(ad.outputs[0], mx.inputs[2])
 nt.links.new(mx.outputs[0], nt.nodes['Material Output'].inputs['Surface'])
-pearl_mat = mat('pearl', **{'Base Color': (0.92, 0.91, 0.96, 1), 'Roughness': 0.25, 'Coat Weight': 1.0, 'Sheen Weight': 0.5,
-                            'Thin Film Thickness': 420.0, 'Thin Film IOR': 1.6})[0]  # white pearls with an iridescent film
+pearl_mat = mat('pearl', **{'Base Color': (0.43, 0.41, 0.44, 1), 'Roughness': 0.12, 'Coat Weight': 1.0, 'Coat Roughness': 0.03, 'Sheen Weight': 0.3, 'Subsurface Weight': 0.3, 'Subsurface Scale': 0.003,
+                            'Thin Film Thickness': 380.0, 'Thin Film IOR': 1.5})[0]  # white pearls with an iridescent film
 
 
 def make_drop(at, size=0.1):
@@ -471,9 +490,9 @@ def make_drop(at, size=0.1):
     seed = 3
     def rnd():
         nonlocal seed; seed = seed * 16807 % 2147483647; return seed / 2147483647
-    for i in range(9):
-        a, rr = rnd() * 6.28, (0.2 + rnd() * 0.45) * size
-        obj('pearl', SPHERE, (pearl_mat,), g, p=(math.cos(a) * rr, (-0.45 + rnd() * 0.95) * size, math.sin(a) * rr * 0.6), s=(0.1 + rnd() * 0.08) * size)
+    for i in range(14):   # suspended through the whole belly (a golden spiral in a ball), mixed sizes, not settled on a floor
+        yy = 1 - 2 * (i + 0.5) / 14; rr = math.sqrt(1 - yy * yy) * 0.55 * (0.6 + 0.4 * rnd()); a = i * 2.39996
+        obj('pearl', SPHERE, (pearl_mat,), g, p=(math.cos(a) * rr * size, (-0.5 + 0.55 * yy) * size, math.sin(a) * rr * size), s=(0.06 + rnd() * 0.06) * size)
     for o in g.children: o.visible_glossy = False   # no chrome ghost of the drop in the foil
     return tag(g, 'drops')
 
@@ -549,7 +568,7 @@ def rake(k, skin):
     the lines, pores and pits without lighting anything else."""
     M = Euler(k['r'], 'ZYX').to_matrix(); n, ux, uy = (M @ Vector(a) for a in ((0, 0, 1), (1, 0, 0), (0, 1, 0)))
     e = math.radians(11); L = (math.cos(e) * (0.8 * ux + 0.6 * uy).normalized() + math.sin(e) * n).normalized()
-    li = area('rake', srgb(0xfff1dc), 270, tuple(Vector(k['p']) + L * (k['w'] + 5.0)), k['p'], 1.2)   # far: even across the plane
+    li = area('rake', srgb(0xffc78c), 180, tuple(Vector(k['p']) + L * (k['w'] + 5.0)), k['p'], 1.2)   # far: even across the plane
     li.visible_glossy = True; only_on(li, skin)
 
 
@@ -557,11 +576,22 @@ def gel_card(k, skin):
     """Wet glints on the film: a soft round spot on the mirror ray of the gel half, seen only in reflections and only
     by the skin (a large card gave a white sheet, a rectangle a white sticker) (a card the dry skin or the foil could see would put a milky haze on them)."""
     p = tuple(Vector(k['p']) + Euler(k['r'], 'ZYX').to_matrix() @ Vector((-0.25 * k['w'], 0, 0)))
-    card = card_at(srgb(0xfff3e0), 5.0, p, k['r'], 3.5, 1.1, 0.6, 0.85, True); card.visible_diffuse = False; only_on(card, skin)
+    card = card_at(srgb(0xfff3e0), 2.5, p, k['r'], 3.5, 1.1, 0.6, 0.85, True); card.visible_diffuse = False; only_on(card, skin)
 
 
-def fill_card(a, pouch):  # a sachet alone on a screen: a card on its mirror ray keeps the print on light, for it alone
-    only_on(card_at(srgb(0xfff3e0), 2.5, a[:3], a[3:6], 3.0, 1.8, 1.2, 0.4), *[o for o in pouch.children_recursive if o.type == 'MESH'])
+def drop_glint(d, drop):  # a small hot window up and to the left, for the drop alone: one crisp highlight on the
+    # water and a specular dot on each pearl (lit only by the room they read as foam balls)
+    p = Vector(d['p']); c = p + Vector((-1.6, 1.8, 2.2)).normalized() * 2.4
+    card = panel(srgb(0xffffff), 60.0, *c, 1.4, 0.9, 0, soft=0.3, round_=True); card.matrix_basis = look_matrix(tuple(c), tuple(p))  # specular is ~4%: hot
+    card.visible_diffuse = False; only_on(card, *drop.children)
+
+
+def fill_card(a, pouch):  # a sachet alone on a screen: a card on its mirror ray keeps the print on light, and a low warm
+    # card under it lights the lower bulge (it mirrored the black void: a dark band under GEL MASK), both for the sachet alone
+    meshes = [o for o in pouch.children_recursive if o.type == 'MESH']
+    only_on(card_at(srgb(0xfff3e0), 2.5, a[:3], a[3:6], 3.0, 1.8, 1.2, 0.4), *meshes)
+    c = Vector(a[:3]) + Vector((0, -2.2, 1.3)); low = panel(srgb(0xf3dcb0), 1.8, *c, 2.4, 1.0, 0, soft=0.45)
+    low.matrix_basis = look_matrix(tuple(c), tuple(a[:3])); only_on(low, *meshes)
 
 
 # near-white cards (the foil itself gives the gold), with a dark gap in front so the mirror shows bands, as in the packshot
@@ -584,24 +614,26 @@ world = bpy.data.worlds.new('room'); scn.world = world; world.use_nodes = True
 world.node_tree.nodes['Background'].inputs['Color'].default_value = (0.006, 0.005, 0.004, 1)
 
 # ---------- shot ----------
-def backlight(x, y, z, w, h, ry=0.0):  # seen only through the glass (as in packshot photography): the serum glows orange
-    bl = panel(srgb(0xffe2a6), 1.4, x, y, z, w, h, ry); bl.visible_glossy = False; bl.visible_diffuse = False
+def backlight(x, y, z, w, h, ry=0.0, k=1.4):  # seen only through the glass (as in packshot photography): the serum glows orange
+    bl = panel(srgb(0xffe2a6), k, x, y, z, w, h, ry); bl.visible_glossy = False; bl.visible_diffuse = False
 
 
 if 'box' in S: tag(make_box(S['box']['p'], S['box']['r'], S['box']['s']), 'box')
 if 'tray' in S:
     tray = make_tray(S['tray'])
-    backlight(S['tray']['p'][0] + 0.1, S['tray']['p'][1] + 0.4, S['tray']['p'][2] - 0.9, 1.9, 0.6, -0.36)
+    backlight(S['tray']['p'][0] + 0.1, S['tray']['p'][1] + 0.4, S['tray']['p'][2] - 0.9, 1.9, 0.9, -0.36, 2.2)   # shoulders glow as the lifted vial's
 for a in S.get('vials', []):
     tag(make_vial(a), 'vials'); backlight(a[0], a[1] + 0.25, a[2] - 0.7, 0.6, 0.5)
 if 'skin' in S:
     sk = tag(make_skin(S['skin']), 'skin'); rake(S['skin'], sk)
     if S['skin'].get('gel'): gel_card(S['skin'], sk)
-if S.get('drop'): make_drop(S['drop']['p'], S['drop']['s'])
+if S.get('drop'): drop_glint(S['drop'], make_drop(S['drop']['p'], S['drop']['s']))
 if 'line' in S: make_line(S['line']['c'], S['line']['L'])
 for a in S.get('pouches', []):
     pc = tag(make_pouch(a), 'pouches')
-    if 'tray' not in S: fill_card(a, pc)
+    if 'tray' not in S:   # a sachet alone: its own fill card, and not mirrored in the far carton (a dark T on the foil)
+        fill_card(a, pc)
+        for o in pc.children_recursive: o.visible_glossy = False
 if 'tray' in S and S.get('pouches'):  # kit: a low wide card under the camera, so the sachet fan mirrors light, not the dark void
     # (not where gel is on the skin: its wet coat would mirror the card as a milky haze)
     panel(srgb(0xfff3e0), 1.6, -1.8, -3.0, 4.6, 6.4, 2.4, math.pi, rx=-0.5, soft=0.35)
@@ -611,6 +643,8 @@ if PART:  # one Figma layer: the other parts stay in the scene for shadows and r
 cam = obj('camera', bpy.data.cameras.new('camera')); cam.data.sensor_fit = 'VERTICAL'
 cam.data.lens = cam.data.sensor_height / (2 * math.tan(math.radians(S.get('fov', 35)) / 2)); cam.matrix_basis = look_matrix(S['cam'], S['look'])
 cam.data.clip_start = 0.1; cam.data.clip_end = 80; scn.camera = cam
+if S.get('fstop'):   # a shallow focus puts the far carton behind the subject (S2 skin, S4 sachet and gel)
+    cam.data.dof.use_dof = True; cam.data.dof.aperture_fstop = S['fstop']; cam.data.dof.focus_distance = (Vector(S['focus']) - Vector(S['cam'])).length
 
 r, c = scn.render, scn.cycles
 r.engine = 'CYCLES'; c.device = 'CPU'; c.samples = SAMPLES; c.use_adaptive_sampling = True; c.adaptive_threshold = 0.006
@@ -619,6 +653,9 @@ c.max_bounces = 16; c.diffuse_bounces = 3; c.glossy_bounces = 8; c.transmission_
 c.caustics_reflective = False; c.caustics_refractive = False; c.blur_glossy = 0.5; c.sample_clamp_indirect = 5  # no blotches in the glass
 r.film_transparent = True; c.film_transparent_glass = True
 r.resolution_x = WIDTH; r.resolution_y = round(WIDTH / S['aspect']); r.resolution_percentage = 100
+if os.environ.get('VT_BORDER'):   # 'x0,y0,x1,y1' (fractions, y from the top): render only that region at full size, to judge details at 100%
+    x0, y0, x1, y1 = (float(v) for v in os.environ['VT_BORDER'].split(','))
+    r.use_border = r.use_crop_to_border = True; r.border_min_x, r.border_max_x, r.border_min_y, r.border_max_y = x0, x1, 1 - y1, 1 - y0
 scn.view_settings.view_transform = 'Filmic'; scn.view_settings.look = 'Medium High Contrast'  # Filmic keeps the foil yellow; AgX turns it peach
 scn.view_settings.exposure = S.get('exposure', 0)
 r.image_settings.file_format = 'PNG'; r.image_settings.color_mode = 'RGBA'; r.image_settings.color_depth = '16'
