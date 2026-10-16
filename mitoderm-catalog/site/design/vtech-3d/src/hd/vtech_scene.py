@@ -2,7 +2,8 @@
 Same shots and poses as ../render-vtech.html (story: site/story3d.json, stories[0]), with the kit at true scale.
 Everything is built in three.js coordinates (Y up) under a root empty turned 90° about X; Blender Euler 'ZYX' equals
 three.js 'XYZ'. Print maps come from prep_tex.py (albedo/metal/rough).
-usage: <python with bpy 4.2> vtech_scene.py <tex dir> <out.png> <shot> [width=2880] [samples=256] [part]
+usage: <python with bpy 4.2> vtech_scene.py <tex dir> <out.png|.webp> <shot> [width=2880] [samples=256] [part]
+   or: Blender -b --factory-startup -P vtech_scene.py -- <same arguments>   (VT_DEVICE=METAL: the GPU, see render_mac.sh)
 shots: v1-meet v2-why v3-inside v4-feel v5-protocol v6-kit kit-hd (desktop), m1-meet m4-feel (phone 390x844);
 a transition frame is 'A>B@t' (t 0..1), e.g. 'v1-meet>v2-why@0.4' (render_seq.py renders the whole run).
 part (box|skin|tray|vials|drops|pouches) renders that layer alone, every other object a holdout, for the Figma layers.
@@ -10,10 +11,11 @@ The frame is rendered on a transparent film; compose.py lays it over layers/vt-b
 import bpy, bmesh, math, os, sys
 from mathutils import Euler, Matrix, Vector
 
-TEX, OUT, SHOT = sys.argv[1:4]
-WIDTH = int(sys.argv[4]) if len(sys.argv) > 4 else 2880
-SAMPLES = int(sys.argv[5]) if len(sys.argv) > 5 else 256
-PART = sys.argv[6] if len(sys.argv) > 6 else None
+ARGS = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:]   # bpy module, or the Blender app: blender -b -P vtech_scene.py -- …
+TEX, OUT, SHOT = ARGS[0:3]
+WIDTH = int(ARGS[3]) if len(ARGS) > 3 else 2880
+SAMPLES = int(ARGS[4]) if len(ARGS) > 4 else 256
+PART = ARGS[5] if len(ARGS) > 5 else None
 
 # kit: the insert at 0.62 so a vial body is ~0.2 of the carton width, as in the packshot; the sachets fan out to the right
 # as in the storyboard, about the carton's width, clear of the last vial; the carton leans back a little so it does not
@@ -648,6 +650,10 @@ if S.get('fstop'):   # a shallow focus puts the far carton behind the subject (S
 
 r, c = scn.render, scn.cycles
 r.engine = 'CYCLES'; c.device = 'CPU'; c.samples = SAMPLES; c.use_adaptive_sampling = True; c.adaptive_threshold = 0.006
+if os.environ.get('VT_DEVICE'):   # a GPU backend, e.g. METAL on the owner's M4 Mac (render_mac.sh); the default is the CPU
+    pr = bpy.context.preferences.addons['cycles'].preferences; pr.compute_device_type = os.environ['VT_DEVICE']; pr.get_devices()
+    for d in pr.devices: d.use = d.type != 'CPU'
+    c.device = 'GPU'
 c.use_denoising = True; c.denoiser = 'OPENIMAGEDENOISE'
 c.max_bounces = 16; c.diffuse_bounces = 3; c.glossy_bounces = 8; c.transmission_bounces = 16; c.transparent_max_bounces = 16
 c.caustics_reflective = False; c.caustics_refractive = False; c.blur_glossy = 0.5; c.sample_clamp_indirect = 5  # no blotches in the glass
@@ -658,6 +664,9 @@ if os.environ.get('VT_BORDER'):   # 'x0,y0,x1,y1' (fractions, y from the top): r
     r.use_border = r.use_crop_to_border = True; r.border_min_x, r.border_max_x, r.border_min_y, r.border_max_y = x0, x1, 1 - y1, 1 - y0
 scn.view_settings.view_transform = 'Filmic'; scn.view_settings.look = 'Medium High Contrast'  # Filmic keeps the foil yellow; AgX turns it peach
 scn.view_settings.exposure = S.get('exposure', 0)
-r.image_settings.file_format = 'PNG'; r.image_settings.color_mode = 'RGBA'; r.image_settings.color_depth = '16'
+if OUT.endswith('.webp'):   # straight from Blender (the Mac has no PIL): 8-bit RGBA, VT_WEBP_Q 86 as the live page's frames, 100 = lossless
+    r.image_settings.file_format = 'WEBP'; r.image_settings.color_mode = 'RGBA'; r.image_settings.quality = int(os.environ.get('VT_WEBP_Q', 86))
+else:
+    r.image_settings.file_format = 'PNG'; r.image_settings.color_mode = 'RGBA'; r.image_settings.color_depth = '16'
 r.filepath = OUT
 bpy.ops.render.render(write_still=True)
