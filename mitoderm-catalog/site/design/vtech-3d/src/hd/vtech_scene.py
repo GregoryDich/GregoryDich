@@ -33,9 +33,9 @@ SHOTS = {
                    skin=dict(p=(2.4, -1.2, 0.5), r=(-1.12, 0, 0.1), w=3.4, h=2.4, dots=1.0)),
     # S3: the insert with the vials, the centre vial lifted clear of the row towards the viewer, a clear drop with pearl
     # spheres above it
-    'v3-inside': dict(DESK, box=dict(p=(4.0, 0.6, -2.4), r=(0.04, -0.42, 0.01), s=0.95),  # aside, so the drop is seen on the dark
+    'v3-inside': dict(DESK, box=dict(p=(4.0, 0.15, -2.4), r=(0.04, -0.42, 0.01), s=0.95, dim=0.65),   # its base behind the insert, quieter than the hero  # aside, so the drop is seen on the dark
                       tray=dict(p=(2.2, -0.95, -0.3), r=(0.38, -0.36, 0), s=0.65, lift=2),
-                      vials=[[1.456, -0.728, 2.2, 0.02, -0.12, 0, 0.58]]),  # in front of the empty centre well; the drop is out for now
+                      vials=[[1.46, -0.854, 1.0, 0.02, -0.12, 0, 0.58]]),  # front-left of the insert: the empty centre well shows; the drop is out for now
                       # (the owner, 16/10: it looks unnatural; a drop of blue liquid with gold exosomes goes to a separate sample)
     # S4: sachet no. 1 in front, clear of the carton far behind; a thin wet gel film on part of the skin (relief smoothed
     # under it, edge = before/after)
@@ -47,13 +47,13 @@ SHOTS = {
     # vial with a drop above, the sachet; z follows the line
     # (placed by projection: the line at y 620 of 900, x 770-1320 of 1440, the stations at 880 / 1045 / 1210; the puck
     # stands tilted back 20° with its lowest, back rim on the rod, so its front rim stays above the line on screen)
-    'v5-protocol': dict(DESK, skin=dict(p=(3.112, -0.406, 0.645), r=(-0.35, 0, 0), w=0.75, h=0.75, dots=1.0, disk=True),
-                        vials=[[2.349, -0.786, 0.6, 0.04, -0.3, 0, 0.75]],
-                        pouches=[[1.586, -0.563, 0.537, 0.15, 0.0, 0.0, 0.8]], line=dict(c=(2.349, -0.792, 0.6), L=2.56)),
+    'v5-protocol': dict(DESK, skin=dict(p=(3.112, -0.453, 0.662), r=(-0.35, 0, 0), w=0.65, h=0.65, dots=1.0, disk=True),
+                        vials=[[2.349, -0.786, 0.6, 0.04, -0.3, 0, 0.52]],
+                        pouches=[[1.702, -0.563, 0.552, 0.15, 0.0, 0.0, 0.8]], line=dict(c=(2.349, -0.792, 0.6), L=2.56)),
     'v6-kit': dict(aspect=1.6, cam=(0.4, 0.1, 6.6), look=(1.22, 0.15, 0), **KIT),  # closer than S1 (true-scale kit); group spans 0.54-0.95 of the width
     'kit-hd': dict(aspect=1400 / 1100, fov=29, cam=(3.05, 0.82, 6.0), look=(3.05, 0.22, 0), **KIT),  # centred, even margins
-    'm1-meet': dict(PHONE, wall=(-3.5, 5.6), box=dict(p=(0.05, 2.4, 0), r=(0.06, -0.42, 0.04), s=0.85)),  # its front mirrors x≈-6, y≈5.6
-    'm4-feel': dict(PHONE, skin=dict(p=(0, 1.45, 0.3), r=(-0.78, 0, 0.05), w=2.4, h=1.6, dots=0.35, gel=True),
+    'm1-meet': dict(PHONE, wall=(-3.5, 4.4), box=dict(p=(0.05, 2.4, 0), r=(0.06, -0.42, 0.04), s=0.85)),  # its front mirrors x≈-6, y≈5.6
+    'm4-feel': dict(PHONE, skin=dict(p=(0, 1.45, 0.3), r=(-0.78, 0, 0.05), w=2.4, h=1.6, dots=0.35, gel=True, edge=0.85, glint=(4.0, 0.5, 0.3)),
                     pouches=[[0.05, 2.45, 0.9, 0.25, -0.3, 0.1, 1.0]]),
 }
 
@@ -364,7 +364,9 @@ def make_skin(k):
     rr = fx(nt, 'SQRT', fx(nt, 'ADD', fx(nt, 'MULTIPLY', nx, nx), fx(nt, 'MULTIPLY', ny, ny)))
     cr = nt.nodes.new('ShaderNodeValToRGB'); nt.links.new(rr, cr.inputs['Fac'])   # warm dark, lighter in the middle
     cr.color_ramp.elements[0].color = (*(c * 0.45 for c in srgb(0x6b4430)), 1); cr.color_ramp.elements[1].color = (*(c * 0.45 for c in srgb(0x2a1a12)), 1)
-    if puck: cr.color_ramp.elements[1].color = (*(c * 0.36 for c in srgb(0x6b4430)), 1)   # a small sample: no dark edge (it read as a cookie)
+    if puck:   # a small sample, rosy beige-brown and even (terracotta with a dark edge read as a biscuit)
+        cr.color_ramp.elements[0].color = (0.066, 0.033, 0.022, 1); cr.color_ramp.elements[1].color = (0.056, 0.028, 0.019, 1)
+        b.inputs['Subsurface Weight'].default_value = 0.45; b.inputs['Subsurface Radius'].default_value = (1.0, 0.35, 0.2)
     mot = nt.nodes.new('ShaderNodeValToRGB'); nt.links.new(noise(nt, obc, 2.2, 3), mot.inputs['Fac'])   # slow blotches
     mot.color_ramp.elements[0].position = 0.3; mot.color_ramp.elements[0].color = (0.72, 0.7, 0.68, 1); mot.color_ramp.elements[1].position = 0.7
     col0 = nt.nodes.new('ShaderNodeMixRGB'); col0.blend_type = 'MULTIPLY'; col0.inputs['Fac'].default_value = 1
@@ -440,7 +442,8 @@ def make_skin(k):
     bp = nt.nodes.new('ShaderNodeBump'); bp.inputs['Distance'].default_value = 0.004
     nt.links.new(fx(nt, 'ADD', fine, pits), bp.inputs['Height']); nt.links.new(broad.outputs['Normal'], bp.inputs['Normal']); nt.links.new(bp.outputs['Normal'], b.inputs['Normal'])
     # a plane melts into the smoke at its soft edges (rounded rectangle); a puck is a solid object
-    alpha = 1.0 if puck else fx(nt, 'MULTIPLY', step(nt, fx(nt, 'ABSOLUTE', nx), 1.0, 0.6), step(nt, fx(nt, 'ABSOLUTE', ny), 1.0, 0.6))
+    e0 = k.get('edge', 0.6)   # where the soft edge starts (a small phone plane needs a crisper one)
+    alpha = 1.0 if puck else fx(nt, 'MULTIPLY', step(nt, fx(nt, 'ABSOLUTE', nx), 1.0, e0), step(nt, fx(nt, 'ABSOLUTE', ny), 1.0, e0))
     alpha = fx(nt, 'MULTIPLY', alpha, k.get('alpha', 1.0))   # fade-in during a transition
     mix = nt.nodes.new('ShaderNodeMixShader'); tr = nt.nodes.new('ShaderNodeBsdfTransparent')
     nt.links.new(alpha, mix.inputs['Fac']); nt.links.new(tr.outputs[0], mix.inputs[1]); nt.links.new(b.outputs[0], mix.inputs[2])
@@ -451,10 +454,10 @@ def make_skin(k):
         for v in bm.verts: v.co.z -= t / 2
         bm.normal_update()
         for f in bm.faces: f.material_index = 0 if f.normal.z > 0.9 else 1
-        side, snt, sb = mat('skin-side', **{'Roughness': 0.5, 'Subsurface Weight': 0.3, 'Subsurface Radius': (1.0, 0.4, 0.2), 'Subsurface Scale': 0.01})
+        side, snt, sb = mat('skin-side', **{'Roughness': 0.5, 'Subsurface Weight': 0.5, 'Subsurface Radius': (1.0, 0.4, 0.2), 'Subsurface Scale': 0.01})
         sz = snt.nodes.new('ShaderNodeSeparateXYZ'); snt.links.new(snt.nodes.new('ShaderNodeTexCoord').outputs['Object'], sz.inputs['Vector'])
         # the cut: a thin dark epidermis line on top, a lighter warm pink-beige dermis below, a slightly wavy boundary
-        lay = snt.nodes.new('ShaderNodeMixRGB'); lay.inputs['Color1'].default_value = (0.04, 0.017, 0.009, 1); lay.inputs['Color2'].default_value = (0.16, 0.07, 0.05, 1)
+        lay = snt.nodes.new('ShaderNodeMixRGB'); lay.inputs['Color1'].default_value = (0.13, 0.085, 0.065, 1); lay.inputs['Color2'].default_value = (0.2, 0.075, 0.065, 1)
         zw = add(snt, (sz.outputs['Z'], 1.0), (fx(snt, 'SUBTRACT', noise(snt, snt.nodes['Texture Coordinate'].outputs['Object'], 8), 0.5), 0.01))
         snt.links.new(step(snt, zw, -0.008, -0.014), lay.inputs['Fac']); snt.links.new(lay.outputs['Color'], sb.inputs['Base Color'])
         ob = obj('skin', to_mesh(bm, 'skin', sharp=35), (m, side), p=k['p'], r=k['r']); bevel(ob, 0.006, 3)
@@ -578,7 +581,7 @@ def gel_card(k, skin):
     """Wet glints on the film: a soft round spot on the mirror ray of the gel half, seen only in reflections and only
     by the skin (a large card gave a white sheet, a rectangle a white sticker) (a card the dry skin or the foil could see would put a milky haze on them)."""
     p = tuple(Vector(k['p']) + Euler(k['r'], 'ZYX').to_matrix() @ Vector((-0.25 * k['w'], 0, 0)))
-    card = card_at(srgb(0xfff3e0), 2.5, p, k['r'], 3.5, 1.1, 0.6, 0.85, True); card.visible_diffuse = False; only_on(card, skin)
+    gs, gw, gh = k.get('glint', (2.5, 1.1, 0.6)); card = card_at(srgb(0xffe8c8), gs, p, k['r'], 3.5, gw, gh, 0.85, True); card.visible_diffuse = False; only_on(card, skin)
 
 
 def drop_glint(d, drop):  # a small hot window up and to the left, for the drop alone: one crisp highlight on the
@@ -592,8 +595,9 @@ def fill_card(a, pouch):  # a sachet alone on a screen: a card on its mirror ray
     # card under it lights the lower bulge (it mirrored the black void: a dark band under GEL MASK), both for the sachet alone
     meshes = [o for o in pouch.children_recursive if o.type == 'MESH']
     only_on(card_at(srgb(0xfff3e0), 2.5, a[:3], a[3:6], 3.0, 1.8, 1.2, 0.4), *meshes)
-    c = Vector(a[:3]) + Vector((0, -2.2, 1.3)); low = panel(srgb(0xf3dcb0), 1.8, *c, 2.4, 1.0, 0, soft=0.45)
-    low.matrix_basis = look_matrix(tuple(c), tuple(a[:3])); only_on(low, *meshes)
+    for off, k, w, h in (((0, -2.2, 1.3), 1.6, 3.6, 2.0), ((0, 2.0, 1.6), 1.4, 3.0, 1.4)):   # under and above: no black frame in the bulge
+        c = Vector(a[:3]) + Vector(off); cd = panel(srgb(0xf3dcb0), k, *c, w, h, 0, soft=0.6)
+        cd.matrix_basis = look_matrix(tuple(c), tuple(a[:3])); only_on(cd, *meshes)
 
 
 # near-white cards (the foil itself gives the gold), with a dark gap in front so the mirror shows bands, as in the packshot
