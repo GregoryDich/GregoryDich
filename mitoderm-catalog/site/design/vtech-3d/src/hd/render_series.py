@@ -6,8 +6,8 @@ from PIL import Image
 
 BPY, TEX, OUT = sys.argv[1:4]; ONLY = sys.argv[4:]
 HERE = os.path.dirname(os.path.abspath(__file__)); D = os.path.dirname(os.path.dirname(HERE))   # site/design/vtech-3d
-PARTS = {'v1-meet': ['box'], 'v2-why': ['box', 'skin'], 'v3-inside': ['box', 'tray', 'vials'],   # no drop for now (the owner)
-         'v4-feel': ['box', 'skin', 'pouches'], 'v5-protocol': ['skin', 'vials', 'pouches'],
+PARTS = {'v1-meet': ['box'], 'v2-why': ['box', 'skin'], 'v3-inside': ['box', 'tray', 'vials', 'drops'],
+         'v4-feel': ['box', 'skin', 'pouches'], 'v5-protocol': ['skin', 'vials', 'drops', 'pouches'],
          'v6-kit': ['box', 'tray', 'vials', 'pouches'], 'kit-hd': [], 'm1-meet': [], 'm4-feel': []}
 GAIN = {'v4-feel': 1.3}   # smoke brightness per screen: S4 the brightest gold of the page (storyboard); S5 at the series level
 

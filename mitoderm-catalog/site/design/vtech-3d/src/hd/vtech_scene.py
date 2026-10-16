@@ -35,8 +35,8 @@ SHOTS = {
     # spheres above it
     'v3-inside': dict(DESK, box=dict(p=(4.0, 0.15, -2.4), r=(0.04, -0.42, 0.01), s=0.95, dim=0.65),   # its base behind the insert, quieter than the hero  # aside, so the drop is seen on the dark
                       tray=dict(p=(2.2, -0.95, -0.3), r=(0.38, -0.36, 0), s=0.65, lift=2),
-                      vials=[[1.46, -0.854, 1.0, 0.02, -0.12, 0, 0.58]]),  # front-left of the insert: the empty centre well shows; the drop is out for now
-                      # (the owner, 16/10: it looks unnatural; a drop of blue liquid with gold exosomes goes to a separate sample)
+                      vials=[[1.46, -0.854, 1.0, 0.02, -0.12, 0, 0.58]], drop=dict(p=(1.46, -0.052, 1.0), s=0.28)),  # front-left of the insert: the
+                      # empty centre well shows; the drop of blue liquid with gold exosomes above it (the owner's concept, 16/10)
     # S4: sachet no. 1 in front, clear of the carton far behind; a thin wet gel film on part of the skin (relief smoothed
     # under it, edge = before/after)
     'v4-feel': dict(DESK, gain=1.15, focus=(1.6, -0.7, 1.0), fstop=1.0,   # focus between the sachet and the gel
@@ -48,7 +48,7 @@ SHOTS = {
     # (placed by projection: the line at y 620 of 900, x 770-1320 of 1440, the stations at 880 / 1045 / 1210; the puck
     # stands tilted back 20° with its lowest, back rim on the rod, so its front rim stays above the line on screen)
     'v5-protocol': dict(DESK, skin=dict(p=(3.112, -0.453, 0.662), r=(-0.35, 0, 0), w=0.65, h=0.65, dots=1.0, disk=True),
-                        vials=[[2.349, -0.786, 0.6, 0.04, -0.3, 0, 0.52]],
+                        vials=[[2.349, -0.786, 0.6, 0.04, -0.3, 0, 0.52]], drop=dict(p=(2.349, -0.2, 0.6), s=0.15),
                         pouches=[[1.702, -0.563, 0.552, 0.15, 0.0, 0.0, 0.8]], line=dict(c=(2.349, -0.792, 0.6), L=2.56)),
     'v6-kit': dict(aspect=1.6, cam=(0.4, 0.1, 6.6), look=(1.22, 0.15, 0), **KIT),  # closer than S1 (true-scale kit); group spans 0.54-0.95 of the width
     'kit-hd': dict(aspect=1400 / 1100, fov=29, cam=(3.05, 0.82, 6.0), look=(3.05, 0.22, 0), **KIT),  # centred, even margins
@@ -485,6 +485,32 @@ rim.inputs['Color'].default_value = (1.0, 0.88, 0.716, 1); rim.inputs['Strength'
 nt.links.new(gl.outputs[0], ad.inputs[0]); nt.links.new(rim.outputs[0], ad.inputs[1])
 nt.links.new(fr.outputs[0], mx.inputs['Fac']); nt.links.new(tr.outputs[0], mx.inputs[1]); nt.links.new(ad.outputs[0], mx.inputs[2])
 nt.links.new(mx.outputs[0], nt.nodes['Material Output'].inputs['Surface'])
+# the owner's concept (16/10): blue liquid filled with gold exosomes (his sphere: rounded lobes; the cell picture: glowing rims)
+pv = nt.nodes.new('ShaderNodeVolumePrincipled'); pv.inputs['Color'].default_value = (0.02, 0.3, 0.7, 1); pv.inputs['Density'].default_value = 0.2
+pv.inputs['Absorption Color'].default_value = (0.05, 0.3, 0.75, 1); pv.inputs['Anisotropy'].default_value = 0.2
+_va = nt.nodes.new('ShaderNodeVolumeAbsorption'); _va.inputs['Color'].default_value = (0.08, 0.45, 0.85, 1); _va.inputs['Density'].default_value = 2.0
+_vadd = nt.nodes.new('ShaderNodeAddShader')
+pv.inputs['Emission Color'].default_value = (0.05, 0.45, 1.0, 1); pv.inputs['Emission Strength'].default_value = 0.25
+nt.links.new(pv.outputs[0], _vadd.inputs[0]); nt.links.new(_va.outputs[0], _vadd.inputs[1]); nt.links.new(_vadd.outputs[0], nt.nodes['Material Output'].inputs['Volume'])   # deep clear blue, not milky
+# a gold exosome: rounded lobes between soft grooves on warped coordinates, darker in the grooves, the rim glowing warm
+exo_mat, nt, b = mat('exosome', **{'Base Color': (0.85, 0.58, 0.22, 1), 'Metallic': 0.2, 'Roughness': 0.5, 'Specular IOR Level': 0.3, 'Emission Color': (1.0, 0.5, 0.12, 1)})
+_o = nt.nodes.new('ShaderNodeTexCoord').outputs['Object']
+_w = nt.nodes.new('ShaderNodeVectorMath'); _w.operation = 'MULTIPLY_ADD'; _w.inputs[1].default_value = (0.3, 0.3, 0.3)
+_n = nt.nodes.new('ShaderNodeTexNoise'); _n.inputs['Scale'].default_value = 1.6; nt.links.new(_o, _n.inputs['Vector'])
+nt.links.new(_n.outputs['Color'], _w.inputs[0]); nt.links.new(_o, _w.inputs[2])
+_v = nt.nodes.new('ShaderNodeTexVoronoi'); _v.feature = 'DISTANCE_TO_EDGE'; _v.inputs['Scale'].default_value = 1.9; nt.links.new(_w.outputs['Vector'], _v.inputs['Vector'])
+_mr = nt.nodes.new('ShaderNodeMapRange'); _mr.interpolation_type = 'SMOOTHSTEP'; _mr.inputs['From Min'].default_value = 0.0; _mr.inputs['From Max'].default_value = 0.38
+nt.links.new(_v.outputs['Distance'], _mr.inputs['Value'])   # 0 in a groove, rising to 1 on a lobe: rounded lobes
+_bp = nt.nodes.new('ShaderNodeBump'); _bp.inputs['Distance'].default_value = 0.016; nt.links.new(_mr.outputs['Result'], _bp.inputs['Height'])
+nt.links.new(_bp.outputs['Normal'], b.inputs['Normal'])
+_c = nt.nodes.new('ShaderNodeMixRGB'); _c.inputs['Color1'].default_value = (0.6, 0.38, 0.12, 1); _c.inputs['Color2'].default_value = (0.85, 0.58, 0.22, 1)
+nt.links.new(_mr.outputs['Result'], _c.inputs['Fac']); nt.links.new(_c.outputs['Color'], b.inputs['Base Color'])
+_lw = nt.nodes.new('ShaderNodeLayerWeight'); _lw.inputs['Blend'].default_value = 0.5
+_pw = nt.nodes.new('ShaderNodeMath'); _pw.operation = 'POWER'; _pw.inputs[1].default_value = 2.5; nt.links.new(_lw.outputs['Facing'], _pw.inputs[0])
+_es = nt.nodes.new('ShaderNodeMath'); _es.operation = 'MULTIPLY_ADD'; _es.inputs[1].default_value = 6.0; _es.inputs[2].default_value = 0.2
+nt.links.new(_pw.outputs[0], _es.inputs[0]); nt.links.new(_es.outputs[0], b.inputs['Emission Strength'])   # glows gold from inside, brighter at the rim
+bm = bmesh.new(); bmesh.ops.create_icosphere(bm, subdivisions=4, radius=1.0); EXO = to_mesh(bm, 'exo', sharp=0)
+LUMP = bpy.data.textures.new('lump', 'CLOUDS'); LUMP.noise_scale = 0.6
 pearl_mat = mat('pearl', **{'Base Color': (0.43, 0.41, 0.44, 1), 'Roughness': 0.12, 'Coat Weight': 1.0, 'Coat Roughness': 0.03, 'Sheen Weight': 0.3, 'Subsurface Weight': 0.3, 'Subsurface Scale': 0.003,
                             'Thin Film Thickness': 380.0, 'Thin Film IOR': 1.5})[0]  # white pearls with an iridescent film
 
@@ -495,9 +521,10 @@ def make_drop(at, size=0.1):
     seed = 3
     def rnd():
         nonlocal seed; seed = seed * 16807 % 2147483647; return seed / 2147483647
-    for i in range(14):   # suspended through the whole belly (a golden spiral in a ball), mixed sizes, not settled on a floor
-        yy = 1 - 2 * (i + 0.5) / 14; rr = math.sqrt(1 - yy * yy) * 0.55 * (0.6 + 0.4 * rnd()); a = i * 2.39996
-        obj('pearl', SPHERE, (pearl_mat,), g, p=(math.cos(a) * rr * size, (-0.5 + 0.55 * yy) * size, math.sin(a) * rr * size), s=(0.06 + rnd() * 0.06) * size)
+    for x, y, z, rad in ((0, -0.55, 0.1, 0.26), (-0.38, -0.75, -0.05, 0.17), (0.35, -0.35, -0.1, 0.19), (0.12, -0.95, 0.18, 0.14),
+                         (-0.25, -0.25, 0.2, 0.13), (0.3, -0.85, -0.2, 0.12), (0.0, 0.05, 0.0, 0.11)):
+        ex = obj('exosome', EXO, (exo_mat,), g, p=(x * size, y * size, z * size), r=(rnd() * 6.28, rnd() * 6.28, 0), s=rad * size)
+        d = ex.modifiers.new('lumps', 'DISPLACE'); d.texture = LUMP; d.strength = 0.08; d.texture_coords = 'LOCAL'
     for o in g.children: o.visible_glossy = False   # no chrome ghost of the drop in the foil
     return tag(g, 'drops')
 
@@ -588,7 +615,7 @@ def drop_glint(d, drop):  # a small hot window up and to the left, for the drop 
     # water and a specular dot on each pearl (lit only by the room they read as foam balls)
     p = Vector(d['p']); c = p + Vector((-1.6, 1.8, 2.2)).normalized() * 2.4
     card = panel(srgb(0xffffff), 60.0, *c, 1.4, 0.9, 0, soft=0.3, round_=True); card.matrix_basis = look_matrix(tuple(c), tuple(p))  # specular is ~4%: hot
-    card.visible_diffuse = False; only_on(card, *drop.children)
+    card.visible_diffuse = False; only_on(card, *[o for o in drop.children if o.name.startswith('tear')])   # the shell only: it blew an exosome to white
 
 
 def fill_card(a, pouch):  # a sachet alone on a screen: a card on its mirror ray keeps the print on light, and a low warm
