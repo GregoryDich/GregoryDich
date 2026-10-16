@@ -3,7 +3,8 @@ Same shots and poses as ../render-vtech.html (story: site/story3d.json, stories[
 Everything is built in three.js coordinates (Y up) under a root empty turned 90° about X; Blender Euler 'ZYX' equals
 three.js 'XYZ'. Print maps come from prep_tex.py (albedo/metal/rough).
 usage: <python with bpy 4.2> vtech_scene.py <tex dir> <out.png> <shot> [width=2880] [samples=256] [part]
-shots: v1-meet v2-why v3-inside v4-feel v5-protocol v6-kit kit-hd (desktop), m1-meet m4-feel (phone 390x844).
+shots: v1-meet v2-why v3-inside v4-feel v5-protocol v6-kit kit-hd (desktop), m1-meet m4-feel (phone 390x844);
+a transition frame is 'A>B@t' (t 0..1), e.g. 'v1-meet>v2-why@0.4' (render_seq.py renders the whole run).
 part (box|skin|tray|vials|drops|pouches) renders that layer alone, every other object a holdout, for the Figma layers.
 The frame is rendered on a transparent film; compose.py lays it over layers/vt-bg-wide.jpg (phone: m7-bg.jpg)."""
 import bpy, bmesh, math, sys
@@ -44,7 +45,36 @@ SHOTS = {
     'm4-feel': dict(PHONE, skin=dict(p=(0, 1.45, 0.3), r=(-0.78, 0, 0.05), w=3.0, h=1.6, dots=0.35, gel=True),
                     pouches=[[0.05, 2.45, 0.9, 0.25, -0.3, 0.1, 0.7]]),
 }
-S = SHOTS[SHOT]
+
+
+def ease(t): return t * t * (3 - 2 * t)
+def lerp(a, b, t): return tuple(x + (y - x) * t for x, y in zip(a, b))
+def clamp01(v): return min(1.0, max(0.0, v))
+
+
+def blend(A, B, t):
+    """The pose between two screens at t (0..1), for the scroll sequences: the carton and the camera move along a
+    smoothstep; a skin plane that only B has rises from below the frame at a grazing angle and fades in, then its
+    microchannels open in a wave (story3d S1→S2)."""
+    e = ease(t); S = dict(B)
+    S['cam'], S['look'] = lerp(A['cam'], B['cam'], e), lerp(A['look'], B['look'], e)
+    S['exposure'] = A.get('exposure', 0) + (B.get('exposure', 0) - A.get('exposure', 0)) * e
+    if 'box' in A and 'box' in B:
+        S['box'] = dict(p=lerp(A['box']['p'], B['box']['p'], e), r=lerp(A['box']['r'], B['box']['r'], e),
+                        s=A['box']['s'] + (B['box']['s'] - A['box']['s']) * e)
+    if 'skin' in B and 'skin' not in A:
+        k = dict(B['skin']); a = ease(clamp01((t - 0.2) / 0.6))
+        k['p'] = lerp((k['p'][0], k['p'][1] - 1.4, k['p'][2] + 0.4), k['p'], a)
+        k['r'] = lerp((k['r'][0] - 0.3, k['r'][1], k['r'][2]), k['r'], a)
+        k['alpha'], k['wave'] = a, clamp01((t - 0.55) / 0.45)
+        S['skin'] = k
+    return S
+
+
+if '>' in SHOT:   # 'v1-meet>v2-why@0.35': a frame of the transition
+    a, rest = SHOT.split('>'); b, t = rest.split('@'); S = blend(SHOTS[a], SHOTS[b], float(t))
+else:
+    S = SHOTS[SHOT]
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scn = bpy.context.scene
@@ -302,6 +332,11 @@ def make_skin(k):
     cxyz = nt.nodes.new('ShaderNodeCombineXYZ'); nt.links.new(fx(nt, 'FLOOR', xs), cxyz.inputs['X']); nt.links.new(row, cxyz.inputs['Y'])
     wn = nt.nodes.new('ShaderNodeTexWhiteNoise'); wn.noise_dimensions = '3D'; nt.links.new(cxyz.outputs['Vector'], wn.inputs['Vector'])
     glow = fx(nt, 'MULTIPLY', fx(nt, 'ADD', dot, fx(nt, 'MULTIPLY', halo, 0.12)), fx(nt, 'ADD', 0.55, fx(nt, 'MULTIPLY', wn.outputs['Value'], 0.45)))
+    if 'wave' in k:   # channels open in a wave across the plane; the front itself flashes
+        front = -1.3 + 2.8 * k['wave']
+        lit = step(nt, nx, front + 0.05, front - 0.3)
+        flash = fx(nt, 'MULTIPLY', step(nt, fx(nt, 'ABSOLUTE', fx(nt, 'SUBTRACT', nx, front)), 0.25, 0.0), 1.5)
+        glow = fx(nt, 'MULTIPLY', glow, fx(nt, 'ADD', lit, flash))
     nt.links.new(fx(nt, 'MULTIPLY', glow, 5.0 * k.get('dots', 0)), b.inputs['Emission Strength'])
     height = fx(nt, 'ADD', fx(nt, 'ADD', fx(nt, 'MULTIPLY', pore, -0.5), fx(nt, 'MULTIPLY', nz.outputs['Fac'], 0.5)), fx(nt, 'MULTIPLY', dot, -0.6))
     col = nt.nodes.new('ShaderNodeMixRGB'); col.blend_type = 'MULTIPLY'; nt.links.new(cr.outputs['Color'], col.inputs['Color1'])
@@ -331,6 +366,7 @@ def make_skin(k):
     nt.links.new(bp.outputs['Normal'], b.inputs['Normal'])
     # soft edges so the plane melts into the smoke: a rounded rectangle, or a disk for the protocol station
     alpha = step(nt, rr, 1.0, 0.84) if k.get('disk') else fx(nt, 'MULTIPLY', step(nt, fx(nt, 'ABSOLUTE', nx), 1.0, 0.6), step(nt, fx(nt, 'ABSOLUTE', ny), 1.0, 0.6))
+    alpha = fx(nt, 'MULTIPLY', alpha, k.get('alpha', 1.0))   # fade-in during a transition
     mix = nt.nodes.new('ShaderNodeMixShader'); tr = nt.nodes.new('ShaderNodeBsdfTransparent')
     nt.links.new(alpha, mix.inputs['Fac']); nt.links.new(tr.outputs[0], mix.inputs[1]); nt.links.new(b.outputs[0], mix.inputs[2])
     nt.links.new(mix.outputs[0], out.inputs['Surface'])
@@ -410,7 +446,7 @@ def area(name, color, power, pos, target, size):  # lamps light the scene but ar
 
 
 # near-white cards (the foil itself gives the gold), with a dark gap in front so the mirror shows bands, as in the packshot
-panel(srgb(0xffffff), 3.0, -4.5, 0.6, 1, 3, 6, math.pi / 2)  # tall: a carton turned far (S2) mirrors it down to its print
+panel(srgb(0xffffff), 3.0, -4.5, 0.6, 2.5, 6, 6, math.pi / 2)  # tall, and long towards the viewer: a carton turning from S1 to S2 never mirrors a dark gap
 panel(srgb(0xf3dcb0), 2.0, 4.8, 0.4, -0.5, 1.2, 4, -math.pi / 2, soft=0.45)  # a streak, not a flat glow, on the side face
 panel(srgb(0xe8d6a8), 1.5, 0, 3.8, -2, 7, 1.2, 0, math.pi / 2)
 # the carton front mirrors x -3.6..-1.7 of this wall in S1 and x -2.4..-0.5 in the kit: light bars with narrow dark gaps,
