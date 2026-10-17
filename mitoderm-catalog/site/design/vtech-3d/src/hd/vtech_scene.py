@@ -52,8 +52,10 @@ def sachet(sx, sy, d, w, r=(0.14, -0.28, 0.05)): return [*scr(sx, sy, d), *r, fi
 # The story (owner 17/10): one carton, nearly locked camera; it recedes, comes close, recedes, and the contents slide
 # out from behind it one by one — the ampoule (S3), the gel-mask sachet (S4), the pair (S5), then the rest of the kit
 # (S6, the picture of the single «מה באריזה» card). Nothing stands on anything; the exosome cells live on the page.
-KIT_VIALS = [vial(0.32 + 0.036 * i, 0.60 - 0.035 * math.sin(math.pi * i / 4), 6.2 - 0.08 * i, 0.16, (0.05, -0.12 - 0.05 * i, 0.03 - 0.015 * i)) for i in range(5)]
-KIT_SACHETS = [sachet(0.09 + 0.028 * i, 0.66 - 0.045 * i, 6.0 + 0.15 * i, 0.15, (0.24 - 0.02 * i, -0.46 + 0.05 * i, 0.2 - 0.07 * i)) for i in range(5)]
+# the kit as a triangle: the carton at the back with its print clear, the ampoules in an arc low on its right, the sachet
+# fan low on its left (the fan over the carton hid «V-TECH SYSTEM», and its first spout left the frame)
+KIT_VIALS = [vial(0.335 + 0.034 * i, 0.66 - 0.035 * math.sin(math.pi * i / 4), 6.2 - 0.08 * i, 0.17, (0.05, -0.12 - 0.05 * i, 0.03 - 0.015 * i)) for i in range(5)]
+KIT_SACHETS = [sachet(0.13 + 0.026 * i, 0.78 - 0.04 * i, 6.0 + 0.15 * i, 0.14, (0.24 - 0.02 * i, -0.46 + 0.05 * i, 0.2 - 0.07 * i)) for i in range(5)]
 SHOTS = {
     'v1-meet': dict(DESK, box=dict(p=(1.8, -0.05, 0.2), r=(0.06, -0.48, 0.0), s=1)),   # approved (16/10); mirrored as a whole
     # S2: the carton far and small, still gold, turned further (on the way a highlight crosses the foil)
@@ -440,9 +442,12 @@ if 'box' in S: tag(make_box(S['box']['p'], S['box']['r'], S['box']['s']), 'box')
 for a in S.get('vials', []):   # each floats; backlit from behind as in packshot photography, the amber glows through the clear serum
     v = tag(make_vial(a), 'vials'); k = a[6] / 0.58
     backlight(a[0], a[1] + 0.3 * k, a[2] - 0.7 * k, 0.6 * k, 0.55 * k)
-    c = Vector(a[:3]) + Vector((0, 1.3 * k, 0.5 * k)); top = panel(srgb(0xfff6ea), 4.0, *c, 0.9 * k, 0.9 * k, 0, soft=0.5, round_=True)
-    top.matrix_basis = look_matrix(tuple(c), tuple(Vector(a[:3]) + Vector((0, 0.45 * k, 0)))); top.visible_diffuse = False
-    only_on(top, *[o for o in v.children if o.name.startswith('cap')])   # the silver top mirrors a soft light above it, as in the photos
+    # the silver top mirrors a soft light above it, as in the photos: a disk lamp, not a card — a card linked to the cap
+    # alone is still a black blocker for every other mirror (in the kit 5 of them hid the carton's V in a dark band)
+    c = Vector(a[:3]) + Vector((0, 1.3 * k, 0.5 * k)); li = bpy.data.lights.new('top', 'AREA'); li.shape = 'DISK'
+    li.size = 0.9 * k; li.color = srgb(0xfff6ea); li.energy = 4.0 * math.pi * (0.45 * k) ** 2   # = the card's strength 4 over its area
+    top = obj('top', li); top.matrix_basis = look_matrix(tuple(c), tuple(Vector(a[:3]) + Vector((0, 0.45 * k, 0)))); top.visible_diffuse = False
+    only_on(top, *[o for o in v.children if o.name.startswith('cap')])
 SOLO = S.get('solo', float(len(S.get('pouches', [])) == 1))   # 1: a sachet alone on its screen, 0: the kit fan, between: S5→S6
 for a in S.get('pouches', []):
     pc = tag(make_pouch(a), 'pouches')
