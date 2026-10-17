@@ -217,18 +217,22 @@ def printed(name, key, layers, dim=1.0):
     metal = image(nt, f'{key}-metal.png', True); nt.links.new(metal.outputs['Color'], b.inputs['Metallic'])
     sp = nt.nodes.new('ShaderNodeMapRange'); sp.inputs['To Min'].default_value = 0.05; sp.inputs['To Max'].default_value = 0.5  # ink barely reflects
     nt.links.new(metal.outputs['Color'], sp.inputs['Value']); nt.links.new(sp.outputs['Result'], b.inputs['Specular IOR Level'])
-    nt.links.new(image(nt, f'{key}-rough.png', True).outputs['Color'], b.inputs['Roughness'])
+    # satin, not a mirror (owner 17/10: the sleeve is glossy dense paper): roughness at least SATIN softens the dark gaps of
+    # the reflection into gradients and keeps the highlights; 0.22 already reads as flat yellow card
+    rr = nt.nodes.new('ShaderNodeMath'); rr.operation = 'MAXIMUM'; rr.inputs[1].default_value = SATIN
+    nt.links.new(image(nt, f'{key}-rough.png', True).outputs['Color'], rr.inputs[0]); nt.links.new(rr.outputs[0], b.inputs['Roughness'])
     relief(nt, b, layers)
     return m
 
 
+SATIN = 0.12
 GOLD = (0.87, 0.57, 0.18, 1)  # linear of the packshot foil (sRGB 0.94, 0.78, 0.46)
 # carton: a few broad vertical bows in the sleeve (crisp light/dark bands in the mirror) + a faint fine crinkle
 FOIL = (((1.0, 0.15, 1.0), 1.3, 0.0, 0.035), ((1.0, 0.5, 1.0), 0.9, 0.0, 0.008))  # broad bows + a few soft wrinkles, nothing fine
 DIM = S.get('box', {}).get('dim', 1.0)
 box_front = printed('box-front', 'box-front', FOIL, DIM)
 box_side = printed('box-side', 'box-side', FOIL, DIM)
-box_back, nt, b = mat('box-back', **{'Base Color': tuple(c * DIM for c in GOLD[:3]) + (1,), 'Metallic': 1.0, 'Roughness': 0.06}); relief(nt, b, FOIL)
+box_back, nt, b = mat('box-back', **{'Base Color': tuple(c * DIM for c in GOLD[:3]) + (1,), 'Metallic': 1.0, 'Roughness': SATIN}); relief(nt, b, FOIL)
 box_end = mat('box-end', **{'Base Color': (0.015, 0.015, 0.016, 1), 'Roughness': 0.3, 'Specular IOR Level': 0.5})[0]
 # sachet: glossy foil with two or three soft dents and a fine crinkle, no stretched streaks
 SACHET = (((1.4, 1.4, 1.4), 1.8, 0.0, 0.02), ((1, 1, 1), 26.0, 0.0, 0.0002))
