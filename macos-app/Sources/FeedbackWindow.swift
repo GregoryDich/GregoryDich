@@ -44,7 +44,7 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
     var onClose: (() -> Void)?
 
     private static let rowWidth: CGFloat = 440
-    private static let autosaveName = "AQFeedback"
+    private static let autosaveName = "AQFeedback2"   // "AQFeedback" held 620-pt frames that cut the form
     private let config: FeedbackConfig
 
     // Form (scrolls)
@@ -72,6 +72,7 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
     private let diagText: NSTextView
 
     // Footer (always visible)
+    private let footer = NSStackView()
     private let consentBox = NSButton(checkboxWithTitle: "", target: nil, action: nil)
     private let consentLabel = NSTextField(wrappingLabelWithString: FBText.consent)
     private let privacyButton = NSButton(title: "", target: nil, action: nil)
@@ -87,6 +88,7 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
     private var collectingDiagnostics = false
     private var diagnosticsToken = 0
     private var diagTouched = false
+    private var diagAutoOn = false                  // switched ON by «Ошибка», not by the user
     private var diagExpanded = false
     private var snapshotJPEG: Data?
     private var snapshotInfo: FeedbackReport.Snapshot?
@@ -124,14 +126,34 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
         guard let win = window else { return }
         if !positioned {
             positioned = true
-            if !win.setFrameUsingName(FeedbackWindowController.autosaveName) { win.center() }
+            if !win.setFrameUsingName(FeedbackWindowController.autosaveName) {
+                fitToContent(win)                         // first open: the whole form, no hidden toggles
+                win.center()
+            }
             _ = win.setFrameAutosaveName(FeedbackWindowController.autosaveName)
         }
         relayout()
         // Accessory (menu-bar) app: activate explicitly, otherwise the window opens behind others.
+        // `activate()` exists only in the macOS 14 SDK (Swift 5.9+); `#available` alone does not
+        // stop an older SDK from failing to compile it.
+        #if compiler(>=5.9)
         if #available(macOS 14.0, *) { NSApp.activate() } else { NSApp.activate(ignoringOtherApps: true) }
+        #else
+        NSApp.activate(ignoringOtherApps: true)
+        #endif
         win.makeKeyAndOrderFront(nil)
         relayout()
+    }
+
+    /// Content height for the full form plus the footer, capped by the screen.
+    private func fitToContent(_ win: NSWindow) {
+        guard let content = win.contentView else { return }
+        content.layoutSubtreeIfNeeded()
+        // Same geometry as buildUI/relayout: form doc = fit + 32, 10 above the footer, 16 below it.
+        let need = ceil(form.fittingSize.height) + 32 + 10 + ceil(footer.fittingSize.height) + 16
+        let screenH = (win.screen ?? NSScreen.main)?.visibleFrame.height ?? 800
+        let height = max(win.contentMinSize.height, min(need, screenH - 60))
+        win.setContentSize(NSSize(width: 480, height: height))
     }
 
     func windowShouldClose(_ sender: NSWindow) -> Bool { !isSending }
@@ -174,6 +196,8 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
         win.title = FBText.windowTitlePrefix + appName
         win.isReleasedWhenClosed = false
         win.level = .normal
+        // Menu-bar app: open on the Space the user is on (and over a full-screen app), don't switch Spaces.
+        win.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
         win.contentMinSize = NSSize(width: 480, height: 460)
         win.contentMaxSize = NSSize(width: 480, height: 1600)
         win.autorecalculatesKeyViewLoop = true
@@ -329,7 +353,7 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
         sendButton.action = #selector(sendClicked)
         sendButton.keyEquivalent = "\r"                    // ⌘↩ sends; a plain Return types a newline
         sendButton.keyEquivalentModifierMask = [.command]
-        sendButton.toolTip = "⌘↩"
+        sendButton.toolTip = FBText.sendShortcut
         let buttons = NSStackView()
         buttons.orientation = .horizontal
         buttons.distribution = .gravityAreas
@@ -340,7 +364,6 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
         buttons.addView(sendButton, in: .trailing)
         pinWidth(buttons, w)
 
-        let footer = NSStackView()
         configureColumn(footer, [separator, consentRow, privacyButton, routeLabel, statusLabel, buttons], spacing: 10)
         footer.translatesAutoresizingMaskIntoConstraints = false
 
@@ -440,12 +463,19 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
 
     @objc private func categoryChanged() {
         fishGroup.isHidden = selectedCategory != .fishRequest
+        var autoOn = false
         if selectedCategory == .bug && !diagTouched && diagBox.state == .off {
             diagBox.state = .on
+            diagAutoOn = true
+            autoOn = true
             collectDiagnostics()
+        } else if selectedCategory != .bug && diagAutoOn && !diagTouched {
+            diagBox.state = .off                     // a mis-click on «Ошибка» leaves nothing attached
+            diagAutoOn = false
         }
         contentChanged()
         relayout()
+        if autoOn { formScroll.flashScrollers() }    // hint that the form continues below
     }
 
     @objc private func consentChanged() {
@@ -568,6 +598,23 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
         }
         marketingBox.isEnabled = canOptIn && !isSending
         marketingLabel.textColor = canOptIn ? .labelColor : .tertiaryLabelColor
+        marketingBox.toolTip = canOptIn ? nil : FBText.marketingNeedsEmail
+        marketingLabel.toolTip = marketingBox.toolTip
+
+        // "What will be sent" only while diagnostics are attached.
+        let diagOff = diagBox.state == .off
+        var diagLayout = false
+        if diagOff && diagExpanded {
+            diagExpanded = false
+            styleLink(diagDisclosure, FBText.diagShow)
+            diagScroll.isHidden = true
+            diagLayout = true
+        }
+        if diagDisclosure.isHidden != diagOff {
+            diagDisclosure.isHidden = diagOff
+            diagLayout = true
+        }
+        if diagLayout { relayout() }
 
         let limited = FeedbackRateLimit.isLimited
         setStatus(limited ? FBText.rateLimited : nil)
@@ -581,6 +628,12 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
             && emailOK && trimmedFish.count <= FBLimit.fishMax
             && consentBox.state == .on && !limited && !isSending
             && !capturingSnapshot && !diagnosticsBusy
+        // Why «Отправить» is greyed out (hover); the shortcut otherwise.
+        sendButton.toolTip = count < FBLimit.messageMin ? FBText.minLengthHint
+            : !emailOK ? FBText.emailError
+            : consentBox.state != .on ? FBText.needConsent
+            : limited ? FBText.rateLimited
+            : FBText.sendShortcut
         cancelButton.isEnabled = !isSending
     }
 
@@ -595,26 +648,33 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
 
     // MARK: - Draft
     @objc private func saveDraft() {
+        guard !finished else { return }               // handed off: a late timer must not bring it back
         FeedbackDraft.save(.init(category: selectedCategory?.rawValue ?? "", message: messageView.string,
                                  email: emailField.stringValue, fish: fishField.stringValue))
     }
 
     private func restoreDraft() {
-        if let d = FeedbackDraft.load() {
+        let draft = FeedbackDraft.load()
+        if let d = draft {
             if let c = FBCategory(rawValue: d.category) { categoryControl.selectedSegment = c.segment }
             messageView.string = String(d.message.prefix(FBLimit.messageMax))
             emailField.stringValue = d.email
             fishField.stringValue = String(d.fish.prefix(FBLimit.fishMax))
         }
-        if trimmedEmail.isEmpty, let last = FeedbackDraft.lastEmail { emailField.stringValue = last }
+        // Only a fresh form gets the last address: an e-mail the user cleared in a draft stays cleared.
+        if draft == nil, trimmedEmail.isEmpty, let last = FeedbackDraft.lastEmail { emailField.stringValue = last }
         fishGroup.isHidden = selectedCategory != .fishRequest
-        if selectedCategory == .bug { diagBox.state = .on }      // same auto-ON rule as a fresh choice
+        if selectedCategory == .bug {                             // same auto-ON rule as a fresh choice
+            diagBox.state = .on
+            diagAutoOn = true
+        }
         emailError.isHidden = emailOK
     }
 
     // MARK: - Diagnostics
     @objc private func diagToggled() {
         diagTouched = true
+        diagAutoOn = false
         if diagBox.state == .on { collectDiagnostics() }      // re-collect when switched ON
         validate()
     }
@@ -744,7 +804,7 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
         // 1. Always save locally first; delivery continues even if that fails.
         var saveError: String? = nil
         do { try FeedbackStore.save(report, jpeg: jpeg) } catch { saveError = error.localizedDescription }
-        if let email = report.email { FeedbackDraft.lastEmail = email }
+        FeedbackDraft.lastEmail = report.email          // a send without an e-mail forgets the last one
         // 2. Route: endpoint → mailto → clipboard.
         if let endpoint = config.endpoint {
             postRoute(report, jpeg: jpeg, endpoint: endpoint, saveError: saveError)
@@ -772,6 +832,7 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
                 d.lastError = nil
                 r.delivery = d
                 FeedbackStore.update(r)
+                self.markDone()
                 let info = r.email.map { FBText.sentReply($0) } ?? ""
                 self.showAlert(FBText.sentTitle, info: info, saveError: saveError, buttons: [FBText.done]) { _ in
                     self.finish()
@@ -780,8 +841,23 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
                 d.status = "pending"                  // the retry queue sends it later
                 d.lastError = String(reason.prefix(200))
                 r.delivery = d
-                FeedbackStore.update(r)
+                // Only promise «уйдёт автоматически» if the retry queue really has a file to send.
+                let persisted = saveError == nil && FeedbackStore.update(r)
                 let address = self.config.email
+                guard persisted else {                // like .rejected: window stays open, text intact
+                    let alternative = address == nil ? FBText.copy : FBText.sendByMail
+                    self.showAlert(FBText.pendingNotSaved, info: "", saveError: saveError,
+                                   buttons: [alternative, FBText.close], style: .warning) { index in
+                        guard index == 0 else { return }
+                        if let address = address {
+                            self.mailRoute(r, address: address, saveError: nil)     // error already shown
+                        } else {
+                            self.clipboardRoute(r, saveError: nil)
+                        }
+                    }
+                    return
+                }
+                self.markDone()
                 let buttons = address == nil ? [FBText.done] : [FBText.done, FBText.sendByMail]
                 self.showAlert(FBText.pendingTitle, info: "", saveError: saveError, buttons: buttons) { index in
                     if index == 1, let address = address {
@@ -820,14 +896,23 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
                                              attempts: (report.delivery?.attempts ?? 0) + 1,
                                              lastAttemptAt: FBDate.string(Date()))
         FeedbackStore.update(r)
+        markDone()                                    // handed off: quitting now must not bring it back as a draft
         var info = ""
         if r.snapshot != nil, let jpg = FeedbackStore.fileURL(id: r.id, ext: "jpg"),
            FileManager.default.fileExists(atPath: jpg.path) {
             NSWorkspace.shared.activateFileViewerSelecting([jpg])
             info = FBText.dragSnapshot(r.id)
         }
-        showAlert(FBText.mailOpened, info: info, saveError: saveError, buttons: [FBText.done]) { [weak self] _ in
-            self?.finish()
+        // Mail.app opens even without an account: always offer the clipboard as well.
+        let text = [info, FBText.mailFallback(address)].filter { !$0.isEmpty }.joined(separator: "\n\n")
+        showAlert(FBText.mailOpened, info: text, saveError: saveError,
+                  buttons: [FBText.done, FBText.copyText]) { [weak self] index in
+            guard let self = self else { return }
+            if index == 1 {
+                self.clipboardRoute(r, saveError: nil)    // copies, shows the address and the local copy
+            } else {
+                self.finish()
+            }
         }
     }
 
@@ -840,14 +925,21 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
                                              attempts: (report.delivery?.attempts ?? 0) + 1,
                                              lastAttemptAt: FBDate.string(Date()))
         FeedbackStore.update(r)
-        let json = saveError == nil ? FeedbackStore.fileURL(id: r.id, ext: "json") : nil
+        markDone()
+        func existing(_ ext: String) -> URL? {
+            FeedbackStore.fileURL(id: r.id, ext: ext).flatMap { FileManager.default.fileExists(atPath: $0.path) ? $0 : nil }
+        }
+        let json = existing("json")
+        let jpg = r.snapshot != nil ? existing("jpg") : nil
         var lines: [String] = []
         if let json = json { lines.append(FBText.copiedSaved((json.path as NSString).abbreviatingWithTildeInPath)) }
+        if jpg != nil { lines.append(FBText.attachSnapshot(r.id)) }    // the clipboard carries text only
         if let address = config.email { lines.append(FBText.developerAddress(address)) }
-        let buttons = json == nil ? [FBText.done] : [FBText.showInFinder, FBText.done]
+        let files = [json, jpg].compactMap { $0 }
+        let buttons = files.isEmpty ? [FBText.done] : [FBText.showInFinder, FBText.done]
         showAlert(FBText.copiedTitle, info: lines.joined(separator: "\n"), saveError: saveError,
                   buttons: buttons) { [weak self] index in
-            if index == 0, let json = json { NSWorkspace.shared.activateFileViewerSelecting([json]) }
+            if index == 0, !files.isEmpty { NSWorkspace.shared.activateFileViewerSelecting(files) }
             self?.finish()
         }
     }
@@ -862,11 +954,18 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
         validate()
     }
 
-    /// Sent, handed off or pending: clear the draft, count the send, close.
-    private func finish() {
+    /// Sent, handed off or pending: clear the draft and count the send, once — at hand-off, not when
+    /// the confirmation sheet is dismissed (the user may quit while Mail is in front).
+    private func markDone() {
+        guard !finished else { return }
         finished = true
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(saveDraft), object: nil)
         FeedbackDraft.clear()
         FeedbackRateLimit.record()
+    }
+
+    private func finish() {
+        markDone()
         window?.close()
     }
 
@@ -906,7 +1005,7 @@ final class FeedbackPanelWindow: NSWindow {
     private static let keys: [UInt16: String] = [7: "x", 8: "c", 9: "v", 0: "a", 6: "z", 13: "w"]
 
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
-        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        let flags = event.modifierFlags.intersection([.command, .shift, .option, .control])   // ignore Caps Lock, Fn
         guard event.type == .keyDown, flags == .command || flags == [.command, .shift] else {
             return super.performKeyEquivalent(with: event)
         }

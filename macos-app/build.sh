@@ -25,11 +25,24 @@ AQ="$CONTENTS/Resources/aquarium"
 rm -rf "$AQ/fish/render" "$AQ/assets/render" "$AQ/assets/alt" "$AQ/blender"
 find "$AQ" \( -name '*.md' -o -name 'README.txt' -o -name '.DS_Store' \) -type f -delete
 
-echo "▸ Компиляция Swift (Release)"
-swiftc -O \
-  -framework Cocoa -framework WebKit -framework ServiceManagement -framework IOKit \
-  Sources/*.swift \
-  -o "$CONTENTS/MacOS/$APP"
+# Минимальная macOS — та же, что LSMinimumSystemVersion в Info.plist (без -target swiftc берёт
+# версию и архитектуру Mac, на котором собирают: на macOS 15 получился бы бинарник только для 15+
+# и только arm64). Собираем arm64 + x86_64 и склеиваем в один универсальный файл.
+# Переопределить: MIN_MACOS=14.0 ARCHS="arm64" ./build.sh
+MIN_MACOS="${MIN_MACOS:-$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' Resources/Info.plist 2>/dev/null || echo 13.0)}"
+ARCHS="${ARCHS:-arm64 x86_64}"
+echo "▸ Компиляция Swift (Release, macOS $MIN_MACOS+, $ARCHS)"
+mkdir -p build/bin
+SLICES=()
+for A in $ARCHS; do
+  swiftc -O -target "$A-apple-macos$MIN_MACOS" \
+    -framework Cocoa -framework WebKit -framework ServiceManagement -framework IOKit \
+    Sources/*.swift \
+    -o "build/bin/$APP-$A"
+  SLICES+=("build/bin/$APP-$A")
+done
+lipo -create "${SLICES[@]}" -output "$CONTENTS/MacOS/$APP"
+rm -rf build/bin
 
 echo "✓ Готово: $OUT"
 

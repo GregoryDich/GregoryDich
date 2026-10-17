@@ -6,6 +6,12 @@
     <string>AquariumWallpaper</string>
     <key>CFBundleDisplayName</key>
     <string>Морской аквариум</string>
+    <!-- No .lproj folders yet: Russian is the app's own language; system menus (Cut/Copy/Paste,
+         spelling) follow the user's macOS language instead of falling back to English. -->
+    <key>CFBundleDevelopmentRegion</key>
+    <string>ru</string>
+    <key>CFBundleAllowMixedLocalizations</key>
+    <true/>
     <key>CFBundleIdentifier</key>
     <string>com.gregorydich.aquariumwallpaper</string>
     <key>CFBundleExecutable</key>

@@ -22,8 +22,9 @@ enum FBText {
     static let emailPlaceholder = "name@example.com"
     static let emailNote = "Только чтобы ответить на этот отзыв. Рассылок не будет без галочки ниже. Можно не указывать."
     static let emailError = "Проверьте адрес e-mail"
-    static let marketing = "Хочу в группу первых пользователей: присылайте на этот e-mail короткие опросы и новости о новых рыбках. Отписаться можно в любой момент."
-    static let marketingVersion = "fb-marketing-ru-1"
+    static let marketing = "Хочу в группу первых пользователей: присылайте на этот e-mail короткие опросы и новости о новых рыбках. Адрес храним, пока вы не отпишетесь; отписаться — ответить «отписаться» на любое письмо."
+    static let marketingVersion = "fb-marketing-ru-2"  // bump on any wording change
+    static let marketingNeedsEmail = "Сначала укажите e-mail выше"
 
     static let snapshotToggle = "Приложить снимок аквариума"
     static let snapshotTaking = "Делаем снимок…"
@@ -48,6 +49,8 @@ enum FBText {
     static let send = "Отправить"
     static let sending = "Отправляем…"
     static let rateLimited = "Слишком часто. Попробуйте через несколько минут."
+    static let needConsent = "Отметьте согласие ниже"
+    static let sendShortcut = "⌘↩"
 
     // Alerts
     static let sentTitle = "Спасибо! Отзыв отправлен."
@@ -55,13 +58,21 @@ enum FBText {
     static let pendingTitle = "Нет связи с сервером. Отзыв сохранён и уйдёт автоматически."
     static func rejectedTitle(_ code: Int) -> String { "Сервер не принял отзыв (код \(code))." }
     static let mailOpened = "Открылось письмо — проверьте его и нажмите «Отправить» в почте."
+    static func mailFallback(_ address: String) -> String {
+        "Если почта не открылась или просит настроить ящик, нажмите «Скопировать текст» и отправьте его на \(address) из своей почты."
+    }
+    static let pendingNotSaved = "Нет связи с сервером, а сохранить отзыв на этом Mac не удалось."
     static func dragSnapshot(_ id: String) -> String { "Перетащите снимок \(id).jpg из открытой папки в письмо." }
     static let copiedTitle = "Текст отзыва скопирован. Вставьте его (⌘V) в письмо или сообщение разработчику."
     static func copiedSaved(_ path: String) -> String { "Копия сохранена: \(path)" }
+    static func attachSnapshot(_ id: String) -> String {
+        "Снимок \(id).jpg приложите к сообщению — он рядом с копией («Показать в Finder»)."
+    }
     static func developerAddress(_ email: String) -> String { "Адрес разработчика: \(email)" }
     static func saveFailed(_ error: String) -> String { "Не удалось сохранить копию на этом Mac: \(error)" }
     static let sendByMail = "Отправить письмом"
     static let copy = "Скопировать"
+    static let copyText = "Скопировать текст"
     static let showInFinder = "Показать в Finder"
     static let done = "Готово"
     static let close = "Закрыть"
@@ -269,7 +280,8 @@ struct FeedbackReport: Codable {
         case consent, marketing, app, diagnostics, snapshot, delivery
     }
 
-    // Explicit nulls for the optional payload fields (as in the schema example); delivery only when set.
+    // Explicit nulls for the optional payload fields (as in the schema example); `marketing` and
+    // `delivery` only when set, so reports without an opt-in stay valid against the v1 schema.
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(schema, forKey: .schema)
@@ -281,7 +293,7 @@ struct FeedbackReport: Codable {
         try c.encode(email, forKey: .email)
         try c.encode(uiLanguage, forKey: .uiLanguage)
         try c.encode(consent, forKey: .consent)
-        try c.encode(marketing, forKey: .marketing)
+        try c.encodeIfPresent(marketing, forKey: .marketing)
         try c.encode(app, forKey: .app)
         try c.encode(diagnostics, forKey: .diagnostics)
         try c.encode(snapshot, forKey: .snapshot)
@@ -323,19 +335,28 @@ enum FeedbackStore {
         try write(try encodeLocal(report), to: dir.appendingPathComponent("\(report.id).json"))
     }
 
-    /// Rewrites `<id>.json` (delivery status changes). Errors are logged only.
-    static func update(_ report: FeedbackReport) {
+    /// Rewrites `<id>.json` (delivery status changes). Errors are logged; false when not written.
+    @discardableResult
+    static func update(_ report: FeedbackReport) -> Bool {
         do {
             let dir = try directory()
             try write(try encodeLocal(report), to: dir.appendingPathComponent("\(report.id).json"))
+            return true
         } catch {
             NSLog("Aquarium feedback: could not update report: \(error.localizedDescription)")
+            return false
         }
     }
 
     static func readFile(named name: String) -> Data? {
         guard isReportFileName(name), let dir = try? directory() else { return nil }
         return try? Data(contentsOf: dir.appendingPathComponent(name))
+    }
+
+    /// The current local copy of one report (small JSON; the snapshot lives in `<id>.jpg`).
+    static func load(id: String) -> FeedbackReport? {
+        guard let data = readFile(named: "\(id).json") else { return nil }
+        return try? JSONDecoder().decode(FeedbackReport.self, from: data)
     }
 
     /// All decodable reports (call off the main thread).
@@ -437,10 +458,16 @@ enum FeedbackDraft {
     }
     static func clear() { UserDefaults.standard.removeObject(forKey: key) }
 
+    /// Remembered after a send with an e-mail; a send without one forgets it.
     static var lastEmail: String? {
         get { UserDefaults.standard.string(forKey: lastEmailKey) }
         set {
-            if let v = newValue, FBValidate.isEmail(v) { UserDefaults.standard.set(v, forKey: lastEmailKey) }
+            let v = newValue?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if v.isEmpty {
+                UserDefaults.standard.removeObject(forKey: lastEmailKey)
+            } else if FBValidate.isEmail(v) {
+                UserDefaults.standard.set(v, forKey: lastEmailKey)
+            }
         }
     }
 }
@@ -488,18 +515,27 @@ enum FeedbackDelivery {
 
     private static let session = URLSession(configuration: .ephemeral)
     private static var retrying = false
+    /// Report ids with a POST under way (main thread only), so the retry queue never resends
+    /// a report the window is still posting.
+    private static var inFlight = Set<String>()
 
-    // MARK: POST
+    // MARK: POST (call on the main thread; the completion runs on the main thread)
     static func post(_ report: FeedbackReport, jpeg: Data?, to endpoint: URL,
                      completion: @escaping (PostOutcome) -> Void) {
+        let id = report.id
+        inFlight.insert(id)
+        let finish: (PostOutcome) -> Void = { outcome in
+            inFlight.remove(id)
+            completion(outcome)
+        }
         request(report, jpeg: jpeg, endpoint: endpoint) { status, data, error in
             if status == 413, jpeg != nil, report.snapshot != nil {
                 // Too large: resend once without the snapshot.
                 request(report, jpeg: nil, endpoint: endpoint) { s2, d2, e2 in
-                    completion(classify(status: s2, data: d2, error: e2))
+                    finish(classify(status: s2, data: d2, error: e2))
                 }
             } else {
-                completion(classify(status: status, data: data, error: error))
+                finish(classify(status: status, data: data, error: error))
             }
         }
     }
@@ -624,13 +660,23 @@ enum FeedbackDelivery {
             let queue = FeedbackStore.loadAll().filter {
                 $0.delivery?.route == FeedbackConfig.Route.endpoint.rawValue && $0.delivery?.status == "pending"
             }
-            DispatchQueue.main.async { retryNext(ArraySlice(queue), endpoint: endpoint) }
+            DispatchQueue.main.async {
+                retryNext(ArraySlice(queue.filter { !inFlight.contains($0.id) }), endpoint: endpoint)
+            }
         }
     }
 
     private static func retryNext(_ queue: ArraySlice<FeedbackReport>, endpoint: URL) {
-        guard var report = queue.first else { retrying = false; return }
+        guard let queued = queue.first else { retrying = false; return }
         let rest = queue.dropFirst()
+        // The list was read earlier: skip a report that is being posted now, and re-read the file,
+        // since the window may have sent it (or a previous pass updated it) in the meantime.
+        guard !inFlight.contains(queued.id), var report = FeedbackStore.load(id: queued.id),
+              report.delivery?.route == FeedbackConfig.Route.endpoint.rawValue,
+              report.delivery?.status == "pending" else {
+            retryNext(rest, endpoint: endpoint)
+            return
+        }
         var d = report.delivery ?? FeedbackReport.Delivery(route: FeedbackConfig.Route.endpoint.rawValue,
                                                            status: "pending", attempts: 0)
         let age = FBDate.date(report.createdAt).map { Date().timeIntervalSince($0) } ?? 0
