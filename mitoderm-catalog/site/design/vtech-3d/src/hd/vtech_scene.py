@@ -61,29 +61,90 @@ SHOTS = {
 def ease(t): return t * t * (3 - 2 * t)
 def lerp(a, b, t): return tuple(x + (y - x) * t for x, y in zip(a, b))
 def clamp01(v): return min(1.0, max(0.0, v))
+def win(t, w): return ease(clamp01((t - w[0]) / (w[1] - w[0])))   # 0 → 1 over the window w of the run
+def shift(p, d, k): return tuple(x + o * k for x, o in zip(p, d))
+
+
+def pose(a, b, e):  # a carton or an insert in both screens: position, turn, size and dimming along the ease
+    return dict(b, p=lerp(a['p'], b['p'], e), r=lerp(a['r'], b['r'], e), s=a['s'] + (b['s'] - a['s']) * e,
+                dim=a.get('dim', 1) + (b.get('dim', 1) - a.get('dim', 1)) * e)
+
+
+def well(t, i=2):  # vial no. i standing in its well of the insert t, as a free vial [x, y, z, rx, ry, rz, s] (make_tray)
+    M = Matrix.LocRotScale(Vector(t['p']), Euler(t['r'], 'ZYX'), Vector((t['s'],) * 3))
+    M = M @ Matrix.LocRotScale(Vector((-0.78 + i * 0.39, 0.06, -0.2)), Euler((0, 0.09 + 0.02, 0), 'ZYX'), Vector((0.9,) * 3))
+    loc, rot, sc = M.decompose(); return [*loc, *rot.to_euler('ZYX'), sc.x]
+
+
+UP, BELOW = (0, 0.6, -0.6), (0, -1.2, 0.3)   # a part leaving drifts up and back, with the page; one arriving rises from below
 
 
 def blend(A, B, t):
-    """The pose between two screens at t (0..1), for the scroll sequences: the carton and the camera move along a
-    smoothstep; a skin plane that only B has rises from below the frame at a grazing angle and fades in, then its
-    microchannels open in a wave (story3d S1→S2)."""
-    e = ease(t); S = dict(B)
+    """The pose between two screens at t (0..1), for the scroll sequences. What both screens have moves along a
+    smoothstep: camera, exposure, focus, the carton, sachets by index. A part only A has fades out in the first half
+    while drifting up and back; a part only B has rises from below and fades in later (opacity: 'a', read through
+    Object Info, see fadeable()); a skin that arrives opens its microchannels in a wave, a drop grows from nothing,
+    the protocol line draws itself from the right. A lone vial and an insert on the other screen: it rises out of its
+    well (S2→S3) or sinks into it (S5→S6). t = 0 and 1 are the key frames themselves."""
+    if t <= 0 or t >= 1: return dict(B if t >= 1 else A)
+    e = ease(t); S = {k: v for k, v in B.items() if k not in ('box', 'tray', 'vials', 'drop', 'skin', 'pouches', 'line', 'focus', 'fstop')}
     S['cam'], S['look'] = lerp(A['cam'], B['cam'], e), lerp(A['look'], B['look'], e)
     S['exposure'] = A.get('exposure', 0) + (B.get('exposure', 0) - A.get('exposure', 0)) * e
     if A.get('fstop') or B.get('fstop'):   # focus pull: aperture (1/f-stop) and focus point along the same ease
         ap = (1 / A['fstop'] if A.get('fstop') else 0) * (1 - e) + (1 / B['fstop'] if B.get('fstop') else 0) * e
         fa, fb = A.get('focus', A.get('box', {}).get('p', A['look'])), B.get('focus', B.get('box', {}).get('p', B['look']))
         S['fstop'], S['focus'] = (1 / ap if ap > 0.02 else None), lerp(fa, fb, e)
-    if 'box' in A and 'box' in B:
-        S['box'] = dict(p=lerp(A['box']['p'], B['box']['p'], e), r=lerp(A['box']['r'], B['box']['r'], e),
-                        s=A['box']['s'] + (B['box']['s'] - A['box']['s']) * e,
-                        dim=A['box'].get('dim', 1) + (B['box'].get('dim', 1) - A['box'].get('dim', 1)) * e)
-    if 'skin' in B and 'skin' not in A:
-        k = dict(B['skin']); a = ease(clamp01((t - 0.2) / 0.6))
-        k['p'] = lerp((k['p'][0], k['p'][1] - 1.4, k['p'][2] + 0.4), k['p'], a)
-        k['r'] = lerp((k['r'][0] - 0.3, k['r'][1], k['r'][2]), k['r'], a)
-        k['alpha'], k['wave'] = a, clamp01((t - 0.55) / 0.45)
-        S['skin'] = k
+    leaving = any(k in A and k not in B for k in ('box', 'tray', 'vials', 'drop', 'skin', 'pouches', 'line'))
+    IN = (0.35, 0.9) if leaving else (0.2, 0.8)   # arrivals wait for what leaves (S1→S2: the skin from 0.2, as approved)
+    o, i = win(t, (0.0, 0.5)), win(t, IN)
+    BACK = (0.8, 0.3, -2.0)   # the carton recedes into the dark, or comes out of it
+    if 'box' in A and 'box' in B: S['box'] = pose(A['box'], B['box'], e)
+    elif 'box' in A: S['box'] = dict(A['box'], p=shift(A['box']['p'], BACK, o), a=1 - o)
+    elif 'box' in B: S['box'] = dict(B['box'], p=shift(B['box']['p'], BACK, 1 - i), a=i)
+    if 'tray' in A and 'tray' in B: S['tray'] = pose(A['tray'], B['tray'], e)
+    elif 'tray' in A: S['tray'] = dict(A['tray'], p=shift(A['tray']['p'], UP, o), a=1 - o)
+    elif 'tray' in B: S['tray'] = dict(B['tray'], p=shift(B['tray']['p'], BELOW, 1 - i), a=i)
+    if 'skin' in A: S['skin_out'] = dict(A['skin'], p=shift(A['skin']['p'], UP, o), a=1 - o)
+    if 'skin' in B:   # rises from below the frame at a grazing angle, then the channels open
+        k = dict(B['skin']); a = i
+        k['p'], k['r'] = lerp(shift(k['p'], (0, -1.4, 0.4), 1), k['p'], a), lerp(shift(k['r'], (-0.3, 0, 0), 1), k['r'], a)
+        k['a'], k['wave'] = a, clamp01((t - IN[0] - 0.35) / (0.65 - IN[0])); S['skin'] = k
+    # vials outside the insert: [x, y, z, rx, ry, rz, s, opacity, backlight]
+    va, vb = A.get('vials', []), B.get('vials', [])
+    if va and vb: S['vials'] = [list(lerp(x, y, e)) for x, y in zip(va, vb)]
+    elif vb and 'tray' in B:   # S2→S3: comes in seated in its well, rises out of it to the viewer
+        r = win(t, (0.6, 0.92)); S['tray']['lift'] = 2; ta = S['tray'].get('a', 1)
+        S['vials'] = [list(lerp(well(S['tray']), vb[0], r)) + [ta, ta * r]]
+    elif va and 'tray' in B:   # S5→S6: sinks into its well while the insert comes in under it
+        r = win(t, (0.2, 1.0)); S['tray']['lift'] = 2
+        S['vials'] = [list(lerp(va[0], well(S['tray']), r)) + [1, 1 - r]]
+    elif va: S['vials'] = [list(shift(v[:3], UP, o)) + v[3:7] + [1 - o, 1 - o] for v in va]
+    elif vb: S['vials'] = [list(shift(v[:3], BELOW, 1 - i)) + v[3:7] + [i, i] for v in vb]
+    # the drop rides above its vial: grows from nothing once the vial is in place, shrinks first when leaving
+    da, db = A.get('drop'), B.get('drop')
+    def ride(d, v0):   # keep the drop over the vial it belongs to, wherever that vial is in this frame
+        return shift(d['p'], (S['vials'][0][j] - v0[j] for j in range(3)), 1) if S.get('vials') and v0 else d['p']
+    if da and db: S['drop'] = dict(db, p=lerp(da['p'], db['p'], e), s=da['s'] + (db['s'] - da['s']) * e)
+    elif db: g = win(t, (0.8, 1.0)); S['drop'] = dict(db, p=ride(db, vb[0] if vb else None), s=db['s'] * g, a=g)
+    elif da: g = 1 - win(t, (0.0, 0.3)); S['drop'] = dict(da, p=ride(da, va[0] if va else None), s=da['s'] * g, a=g)
+    if 'line' in B: S['line'] = dict(B['line'], grow=win(t, (IN[0] - 0.05, IN[1] - 0.1)))
+    elif 'line' in A: S['line'] = dict(A['line'], grow=1 - win(t, (0.0, 0.4)))
+    # sachets by index; extra ones arrive from the lower right one after another ([…, opacity])
+    pa, pb = A.get('pouches', []), B.get('pouches', [])
+    S['pouches'] = [list(lerp(x, y, e)) for x, y in zip(pa, pb)]
+    n = len(pb) - len(pa); L = IN[1] - IN[0]; d = 0.6 * L if n > 1 else L
+    for j, y in enumerate(pb[len(pa):]):
+        a = win(t, (IN[0] + (L - d) * j / max(1, n - 1), IN[0] + (L - d) * j / max(1, n - 1) + d))
+        S['pouches'].append(list(shift(y[:3], (0.6, -0.8, 0.3), 1 - a)) + y[3:7] + [a])
+    S['pouches'] += [list(shift(x[:3], UP, o)) + x[3:7] + [1 - o] for x in pa[len(pb):]]
+    # a lone sachet has its own fill cards, a kit fan its low card: the light crosses over as the screen changes
+    sa, sb = (float('tray' not in X) if X.get('pouches') else None for X in (A, B))
+    if sa is not None or sb is not None: S['solo'] = sb if sa is None else sa if sb is None else sa + (sb - sa) * e
+    for k in ('box', 'tray', 'skin', 'skin_out'):   # not built while unseen: no cost, no stray lamps
+        if k in S and S[k].get('a', 1) < 1e-3: del S[k]
+    for k in ('vials', 'pouches'):
+        S[k] = [v for v in S.get(k, []) if (v[7] if len(v) > 7 else 1) >= 1e-3]
+        if not S[k]: del S[k]
     return S
 
 
@@ -106,6 +167,11 @@ def obj(name, data=None, mats=(), parent=root, p=(0, 0, 0), r=(0, 0, 0), s=1):
 
 def tag(ob, part):  # the Figma layer an object belongs to (box, skin, tray, vials, drops, pouches)
     for o in [ob] + list(ob.children_recursive): o['part'] = part
+    return ob
+
+
+def fade(ob, a):  # a part's opacity during a transition (object colour alpha, read by fadeable())
+    for o in [ob] + list(ob.children_recursive): o.color[3] = a
     return ob
 
 
@@ -444,7 +510,7 @@ def make_skin(k):
     # a plane melts into the smoke at its soft edges (rounded rectangle); a puck is a solid object
     e0 = k.get('edge', 0.6)   # where the soft edge starts (a small phone plane needs a crisper one)
     alpha = 1.0 if puck else fx(nt, 'MULTIPLY', step(nt, fx(nt, 'ABSOLUTE', nx), 1.0, e0), step(nt, fx(nt, 'ABSOLUTE', ny), 1.0, e0))
-    alpha = fx(nt, 'MULTIPLY', alpha, k.get('alpha', 1.0))   # fade-in during a transition
+    alpha = fx(nt, 'MULTIPLY', alpha, 1.0)   # a socket, also for the solid puck (a transition fades the object: fade())
     mix = nt.nodes.new('ShaderNodeMixShader'); tr = nt.nodes.new('ShaderNodeBsdfTransparent')
     nt.links.new(alpha, mix.inputs['Fac']); nt.links.new(tr.outputs[0], mix.inputs[1]); nt.links.new(b.outputs[0], mix.inputs[2])
     nt.links.new(mix.outputs[0], out.inputs['Surface'])
@@ -529,12 +595,14 @@ def make_drop(at, size=0.1):
     return tag(g, 'drops')
 
 
-def make_line(c, L):  # the protocol's gold line, parallel to the screen (along the camera's x axis), centre c, length L
+def make_line(c, L, grow=1.0):  # the protocol's gold line, parallel to the screen (along the camera's x axis), centre c,
+    # length L; grow < 1 (a transition): only its right part, as it draws itself right to left like the stations
+    ax = look_matrix(S['cam'], S['look']).to_3x3() @ Vector((1, 0, 0)); c = tuple(Vector(c) + ax * (L / 2) * (1 - grow)); L *= grow
     m, nt, _ = mat('line'); em = nt.nodes.new('ShaderNodeEmission')
     em.inputs['Color'].default_value = (*srgb(0xc9a24b), 1); em.inputs['Strength'].default_value = 3.0
     nt.links.new(em.outputs[0], nt.nodes['Material Output'].inputs['Surface'])
     ob = obj('line', lathe([(0, -L / 2), (0.006, -L / 2), (0.006, L / 2), (0, L / 2)], 16, 'line'), (m,), p=c)
-    ob.rotation_mode = 'QUATERNION'; ob.rotation_quaternion = (look_matrix(S['cam'], S['look']).to_3x3() @ Vector((1, 0, 0))).to_track_quat('Y', 'Z')
+    ob.rotation_mode = 'QUATERNION'; ob.rotation_quaternion = ax.to_track_quat('Y', 'Z')
     return tag(ob, 'skin')
 
 # ---------- light: dark room, white softbox left, warm gold right, gold strip above, warm fills in front ----------
@@ -609,6 +677,7 @@ def gel_card(k, skin):
     by the skin (a large card gave a white sheet, a rectangle a white sticker) (a card the dry skin or the foil could see would put a milky haze on them)."""
     p = tuple(Vector(k['p']) + Euler(k['r'], 'ZYX').to_matrix() @ Vector((-0.25 * k['w'], 0, 0)))
     gs, gw, gh = k.get('glint', (2.5, 1.1, 0.6)); card = card_at(srgb(0xffe8c8), gs, p, k['r'], 3.5, gw, gh, 0.85, True); card.visible_diffuse = False; only_on(card, skin)
+    card.color[3] = k.get('a', 1)   # fades with its skin (fadeable(): a card dimmed by strength would stay a black blocker in reflections)
 
 
 def drop_glint(d, drop):  # a small hot window up and to the left, for the drop alone: one crisp highlight on the
@@ -616,15 +685,19 @@ def drop_glint(d, drop):  # a small hot window up and to the left, for the drop 
     p = Vector(d['p']); c = p + Vector((-1.6, 1.8, 2.2)).normalized() * 2.4
     card = panel(srgb(0xffffff), 60.0, *c, 1.4, 0.9, 0, soft=0.3, round_=True); card.matrix_basis = look_matrix(tuple(c), tuple(p))  # specular is ~4%: hot
     card.visible_diffuse = False; only_on(card, *[o for o in drop.children if o.name.startswith('tear')])   # the shell only: it blew an exosome to white
+    card.color[3] = d.get('a', 1)
 
 
-def fill_card(a, pouch):  # a sachet alone on a screen: a card on its mirror ray keeps the print on light, and a low warm
-    # card under it lights the lower bulge (it mirrored the black void: a dark band under GEL MASK), both for the sachet alone
+def fill_card(a, pouch, g=1.0):  # a sachet alone on a screen: a card on its mirror ray keeps the print on light, and a low warm
+    # card under it lights the lower bulge (it mirrored the black void: a dark band under GEL MASK), both for the sachet
+    # alone; g < 1 while a kit takes over (S5→S6): the cards turn transparent (fadeable()), not dark, or the fan
+    # mirrors black cards until the key frame and brightens at once
     meshes = [o for o in pouch.children_recursive if o.type == 'MESH']
-    only_on(card_at(srgb(0xfff3e0), 2.5, a[:3], a[3:6], 3.0, 1.8, 1.2, 0.4), *meshes)
+    cards = [card_at(srgb(0xfff3e0), 2.5, a[:3], a[3:6], 3.0, 1.8, 1.2, 0.4)]
     for off, k, w, h in (((0, -2.2, 1.3), 1.6, 3.6, 2.0), ((0, 2.0, 1.6), 1.4, 3.0, 1.4)):   # under and above: no black frame in the bulge
         c = Vector(a[:3]) + Vector(off); cd = panel(srgb(0xf3dcb0), k, *c, w, h, 0, soft=0.6)
-        cd.matrix_basis = look_matrix(tuple(c), tuple(a[:3])); only_on(cd, *meshes)
+        cd.matrix_basis = look_matrix(tuple(c), tuple(a[:3])); cards.append(cd)
+    for cd in cards: only_on(cd, *meshes); cd.color[3] = g
 
 
 # near-white cards (the foil itself gives the gold), with a dark gap in front so the mirror shows bands, as in the packshot
@@ -647,29 +720,44 @@ world = bpy.data.worlds.new('room'); scn.world = world; world.use_nodes = True
 world.node_tree.nodes['Background'].inputs['Color'].default_value = (0.006, 0.005, 0.004, 1)
 
 # ---------- shot ----------
-def backlight(x, y, z, w, h, ry=0.0, k=1.4):  # seen only through the glass (as in packshot photography): the serum glows orange
-    bl = panel(srgb(0xffe2a6), k, x, y, z, w, h, ry); bl.visible_glossy = False; bl.visible_diffuse = False
+def backlight(x, y, z, w, h, ry=0.0, k=1.4, a=1.0):  # seen only through the glass (as in packshot photography): the serum
+    # glows orange; a < 1 (a transition): the card turns transparent with its glass, it never blacks out the glass behind
+    bl = panel(srgb(0xffe2a6), k, x, y, z, w, h, ry); bl.visible_glossy = False; bl.visible_diffuse = False; bl.color[3] = a
 
 
-if 'box' in S: tag(make_box(S['box']['p'], S['box']['r'], S['box']['s']), 'box')
+if 'box' in S: fade(tag(make_box(S['box']['p'], S['box']['r'], S['box']['s']), 'box'), S['box'].get('a', 1))
 if 'tray' in S:
-    tray = make_tray(S['tray'])
-    backlight(S['tray']['p'][0] + 0.1, S['tray']['p'][1] + 0.4, S['tray']['p'][2] - 0.9, 1.9, 0.9, -0.36, 2.2)   # shoulders glow as the lifted vial's
-for a in S.get('vials', []):
-    tag(make_vial(a), 'vials'); backlight(a[0], a[1] + 0.25, a[2] - 0.7, 0.6, 0.5)
-if 'skin' in S:
-    sk = tag(make_skin(S['skin']), 'skin'); rake(S['skin'], sk)
-    if S['skin'].get('gel'): gel_card(S['skin'], sk)
-if S.get('drop'): drop_glint(S['drop'], make_drop(S['drop']['p'], S['drop']['s']))
-if 'line' in S: make_line(S['line']['c'], S['line']['L'])
+    tray = fade(make_tray(S['tray']), S['tray'].get('a', 1))
+    backlight(S['tray']['p'][0] + 0.1, S['tray']['p'][1] + 0.4, S['tray']['p'][2] - 0.9, 1.9, 0.9, -0.36, 2.2, S['tray'].get('a', 1))   # shoulders glow as the lifted vial's
+for a in S.get('vials', []):   # [pose…, opacity, backlight] in a transition
+    fade(tag(make_vial(a), 'vials'), a[7] if len(a) > 7 else 1); backlight(a[0], a[1] + 0.25, a[2] - 0.7, 0.6, 0.5, 1.4, a[8] if len(a) > 8 else 1)
+for k in [S[x] for x in ('skin', 'skin_out') if x in S]:   # skin_out: the skin of the screen being left
+    sk = fade(tag(make_skin(k), 'skin'), k.get('a', 1)); rake(k, sk)
+    if k.get('gel'): gel_card(k, sk)
+if S.get('drop') and S['drop']['s'] > 1e-3: drop_glint(S['drop'], make_drop(S['drop']['p'], S['drop']['s']))
+if 'line' in S and S['line'].get('grow', 1) > 0.01: make_line(S['line']['c'], S['line']['L'], S['line'].get('grow', 1))
+SOLO = S.get('solo', float('tray' not in S))   # 1: a sachet alone on its screen, 0: the kit fan, between: S5→S6
 for a in S.get('pouches', []):
-    pc = tag(make_pouch(a), 'pouches')
-    if 'tray' not in S:   # a sachet alone: its own fill card, and not mirrored in the far carton (a dark T on the foil)
-        fill_card(a, pc)
-        for o in pc.children_recursive: o.visible_glossy = False
-if 'tray' in S and S.get('pouches'):  # kit: a low wide card under the camera, so the sachet fan mirrors light, not the dark void
+    pc = fade(tag(make_pouch(a), 'pouches'), a[7] if len(a) > 7 else 1)
+    if SOLO > 0:   # a sachet alone: its own fill card, and not mirrored in the far carton (a dark T on the foil)
+        fill_card(a, pc, SOLO)
+        for o in pc.children_recursive: o.visible_glossy = o.visible_glossy and SOLO < 0.5   # the kit's mirroring returns halfway
+if S.get('pouches') and SOLO < 1:  # kit: a low wide card under the camera, so the sachet fan mirrors light, not the dark void
     # (not where gel is on the skin: its wet coat would mirror the card as a milky haze)
-    panel(srgb(0xfff3e0), 1.6, -1.8, -3.0, 4.6, 6.4, 2.4, math.pi, rx=-0.5, soft=0.35)
+    panel(srgb(0xfff3e0), 1.6, -1.8, -3.0, 4.6, 6.4, 2.4, math.pi, rx=-0.5, soft=0.35).color[3] = 1 - SOLO
+
+
+def fadeable():  # a transition frame: every surface mixes to transparent and every volume thins with its object's alpha
+    for m in bpy.data.materials:
+        nt = m.node_tree; out = nt.nodes['Material Output']; al = nt.nodes.new('ShaderNodeObjectInfo').outputs['Alpha']
+        for sock in (out.inputs['Surface'], out.inputs['Volume']):
+            if not sock.is_linked: continue
+            src = sock.links[0].from_socket; mx = nt.nodes.new('ShaderNodeMixShader'); nt.links.new(al, mx.inputs['Fac'])
+            if sock.name == 'Surface': nt.links.new(nt.nodes.new('ShaderNodeBsdfTransparent').outputs[0], mx.inputs[1])
+            nt.links.new(src, mx.inputs[2]); nt.links.new(mx.outputs[0], sock)   # a volume mixed with nothing: its density × alpha
+
+
+if '>' in SHOT: fadeable()
 if PART:  # one Figma layer: the other parts stay in the scene for shadows and reflections but the camera does not see them
     for o in scn.objects:
         if o.get('part') and o['part'] != PART: o.visible_camera = False
