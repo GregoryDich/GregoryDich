@@ -1,26 +1,28 @@
 <title>V-TECH SYSTEM Live</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Jost:wght@300;400;500&family=Frank+Ruhl+Libre:wght@400&family=Heebo:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap">
 <script>document.documentElement.lang = 'he'; document.documentElement.dir = 'rtl'; document.documentElement.classList.add('js');</script>
 <style>
 /* V-TECH SYSTEM, Hebrew live page on pre-rendered Blender frames, screen for screen as the approved Figma design (page
-   142:3): S1 meet → S6 kit play as one scroll story on a sticky canvas (five Cycles runs, the key frame held while
-   each screen is read), then the offer, the specialists and the related products without 3D. The copy keeps the left
-   half on wide screens. Phone: no sequence; the product is a small HD still beside each heading. Blocks (steps, kit
-   card, specialists, cards, lead form) as on the EXOCELL MASK page. A committed single dark look (black and gold). */
+   142:3) with the owner's edits of 17/10: S1 meet → S5 protocol → the offer play as one scroll story on a fixed canvas
+   (five Cycles runs, the key frame held while each screen is read; the last run lands the kit in the offer card),
+   then the specialists and the related products without 3D. The copy keeps the RIGHT half on wide screens, the 3D
+   the left. From S1 to S3 exosome cells float in depth around the product (asteroid-like parallax on a deep plate).
+   Phone: no sequence; the product is a small HD still beside each heading. Blocks (steps, kit card, specialists,
+   cards, lead form) as on the EXOCELL MASK page. A committed single dark look (black and gold). */
 :root {
   --bg: #0a0a0b; --ink: #111114; --charcoal: #1a1a1f;
   --cream: #f6f3ec; --text: rgba(246,243,236,.78); --text-soft: rgba(246,243,236,.84); --text-faint: rgba(246,243,236,.72);
   --gold: #c9a24b; --gold-soft: #d8bd7e; --gold-faint: rgba(201,162,75,.5); --gold-wash: rgba(201,162,75,.14);
   --hairline: rgba(201,162,75,.22); --hairline-cream: rgba(246,243,236,.1); --on-gold: #0a0a0b; --error: #f0a595;
-  --display: 'Cormorant Garamond', 'Frank Ruhl Libre', Georgia, serif; --he-display: 'Frank Ruhl Libre', Georgia, serif;
-  --body: 'Heebo', 'Jost', system-ui, sans-serif;
+  /* owner 17/10: Rubik in every role (Hebrew and Latin), no italics */
+  --display: 'Rubik', system-ui, sans-serif; --he-display: var(--display); --body: var(--display);
   --gutter: clamp(18px, 5vw, 72px); --maxw: 1200px; --ease: cubic-bezier(.22,1,.36,1);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html { background: var(--bg); }
-body { margin: 0; background: var(--bg); color: var(--cream); font: 300 clamp(15px, 1.15vw, 17px)/1.7 var(--body); -webkit-font-smoothing: antialiased; overflow-x: clip; }
-@media (max-width: 1391px) { body { font-weight: 400; } }   /* Hebrew at 16 px and below reads better at 400 */
+body { margin: 0; background: var(--bg); color: var(--cream); font: 300 clamp(15px, 1.15vw, 17px)/1.65 var(--body); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+@media (max-width: 1391px) { body { font-weight: 400; line-height: 1.6; } }   /* Hebrew at 16 px and below reads better at 400 */
 h1, h2, h3, h4 { margin: 0; font-weight: 400; text-wrap: balance; }
 p, ul, ol { margin: 0; }
 p { text-wrap: pretty; }
@@ -30,15 +32,25 @@ bdi { unicode-bidi: isolate; }
 [hidden] { display: none !important; }
 .nw { white-space: nowrap; }
 svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-*, *::before, *::after { font-variant-numeric: lining-nums !important; }   /* Cormorant's old-style «5», «1o%» */
+*, *::before, *::after { font-variant-numeric: lining-nums tabular-nums; font-style: normal; }
 .wrap { width: min(var(--maxw), 100% - 2 * var(--gutter)); margin-inline: auto; }
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
-/* far layer: the line's smoke; near layer: the Blender frames, faded out from the offer on */
-.bg { position: fixed; inset: -6vh -4vw; z-index: 0; background: url(img/bg.webp) center / cover no-repeat; will-change: transform; }
-#seq, .still { position: fixed; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none; }
-.still { object-fit: cover; }
+/* layers, back to front: the line's smoke and the deep plate (S2–S3), far cells, the Blender frames (faded out as the
+   offer arrives), near cells, the page */
+.bg, .plate { position: fixed; inset: -6vh -4vw; z-index: 0; background: url(img/bg.webp) center / cover no-repeat; will-change: transform; pointer-events: none; }
+.plate { background: var(--bg) center / cover no-repeat; opacity: 0; }
+#seq, .still, .cells { position: fixed; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none; }
+#seq { inset: auto; left: 0; top: 0; transform-origin: 0 0; }   /* sized and placed by the engine: its run's box of the cover-fitted frame */
 .js .still { display: none; }
+.still { overflow: hidden; }
+.still-f { position: absolute; left: 50%; top: 50%; width: max(100vw, 160vh); height: max(62.5vw, 100vh); transform: translate(-50%, -50%); }   /* the 16:10 frame, cover-fitted */
+.still-f img { position: absolute; max-width: none; }
+/* one composited layer per field, the sprites painted into it (a layer per sprite made every frame's commit slow) */
+.cells { overflow: hidden; contain: strict; will-change: transform; }
+.cells img { position: absolute; left: 0; top: 0; width: 256px; height: 256px; max-width: none; opacity: 0; visibility: hidden; }
+.cells i { position: absolute; left: 0; top: 0; width: 8px; height: 8px; border-radius: 50%; opacity: 0; visibility: hidden;
+  background: radial-gradient(circle, #fff1cf 0, rgba(232,196,120,.85) 30%, rgba(201,162,75,0) 70%); }
 main, .top, .foot, .dock, .bar { position: relative; z-index: 2; }
 
 .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: rgba(10,10,11,.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hairline-cream); }
@@ -52,18 +64,23 @@ main, .top, .foot, .dock, .bar { position: relative; z-index: 2; }
 .top .btn { min-height: 42px; padding-inline: 18px; font-size: 14px; }
 @media (max-width: 460px) { .top .btn { display: none; } }
 
-/* story screens: a screen each, the copy in the left half (RTL: start is the right), clear of the 3D */
+/* story screens: a screen each, the copy in the right half (RTL: the start side; margin-inline-end: auto keeps it
+   there), the 3D on the left */
 .sec { min-height: 100svh; display: flex; align-items: center; padding-block: 72px; }
-.copy { width: min(540px, 100%); margin-inline-start: auto; display: grid; gap: 20px; justify-items: start; }
+.copy { width: min(540px, 100%); margin-inline-end: auto; display: grid; gap: 20px; justify-items: start; }
+@media (min-width: 900px) { .copy { width: min(540px, calc(50% - 32px)); } }
+.legend { display: flex; align-items: center; gap: 10px; font: 400 13px/1.4 var(--body); color: var(--text-faint); }
+.legend .dot { position: relative; width: 16px; height: 16px; flex: none; border-radius: 50%; border: 1px solid rgba(196,176,236,.75);
+  background: radial-gradient(circle, #f3cf86 0, #b98a3c 34%, rgba(60,36,12,.9) 52%, rgba(150,130,200,.18) 60%); box-shadow: 0 0 8px rgba(201,162,75,.35); }
 .badges { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.mark-line { font: 500 12px/1 'Jost', var(--body); letter-spacing: .24em; color: var(--gold); }
+.mark-line { font: 500 12px/1 var(--body); letter-spacing: .24em; color: var(--gold); }
 .badge { border-radius: 999px; padding: 4px 12px; font: 500 12px/1.4 var(--body); border: 1px solid var(--gold-faint); color: var(--gold-soft); }
 .badge.pro { background: var(--gold); color: var(--on-gold); border-color: var(--gold); }
 .kicker { display: flex; align-items: center; gap: 14px; font: 500 13px/1.3 var(--body); letter-spacing: .02em; color: var(--gold); }
 .kicker.line::after { content: ""; width: 40px; height: 1px; background: rgba(201,162,75,.3); }
-h1 { font: 500 clamp(56px, 6.6vw, 96px)/.95 var(--display); letter-spacing: .01em; }
-h2 { font: 400 clamp(36px, 3.8vw, 54px)/1.1 var(--he-display); }
-.tag { font: 400 clamp(22px, 2.2vw, 30px)/1.3 var(--he-display); color: var(--gold-soft); }
+h1 { font: 500 clamp(48px, 5.8vw, 84px)/1 var(--display); letter-spacing: -.01em; }
+h2 { font: 500 clamp(30px, 3.2vw, 46px)/1.18 var(--he-display); letter-spacing: -.005em; }
+.tag { font: 400 clamp(20px, 1.9vw, 26px)/1.35 var(--he-display); color: var(--gold-soft); }
 .lead { color: var(--text); max-width: 480px; }
 .chips { display: flex; flex-wrap: wrap; gap: 10px; padding: 0; list-style: none; }
 .chips li { border: 1px solid var(--hairline-cream); border-radius: 999px; padding: 6px 14px; font: 400 15px/1.3 var(--body); color: var(--text); background: rgba(10,10,11,.45); }
@@ -87,29 +104,35 @@ details ul { padding: 0 0 18px; list-style: none; color: var(--text); display: g
 .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: clamp(120px, 24vh, 260px) 0 0; padding: 0; list-style: none; }
 .step { display: grid; gap: 12px; align-content: start; min-width: 0; padding: 30px; border-radius: 24px; background: rgba(26,26,31,.92); border: 1px solid var(--hairline-cream); }
 .step .n { font: 300 22px/1 var(--display); color: var(--gold); }
-.step h3 { font: 400 24px/1.2 var(--display); color: var(--cream); }
+.step h3 { font: 500 21px/1.25 var(--display); color: var(--cream); }
 .step p { color: var(--text-faint); font: 400 15px/1.6 var(--body); }
-/* S6: four facts */
-.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 28px; width: 100%; margin-top: 8px; }
-.fact { display: grid; gap: 8px; padding-top: 16px; border-top: 1px solid var(--hairline); min-width: 0; }
-.fact b { font: 400 clamp(28px, 3vw, 38px)/1.1 var(--display); color: var(--cream); }
-.fact span { font: 400 14px/1.4 var(--body); color: var(--text-faint); }
-/* S7: offer and the card "what's in the box" */
-.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; direction: ltr; align-items: center; }
-.split > * { direction: rtl; min-width: 0; }
-.offer .copy { margin: 0; }
+/* the offer: the copy on the right, the one card "what's in the box" on the left. With the story (desktop) the copy
+   arrives while the last run builds the kit and stays (sticky); the card rises after it and the 3D kit flies into the
+   card's picture. Phone order: heading → card → text → buttons → contacts. */
+.offer .wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: clamp(40px, 6vw, 96px); align-items: center; }
+.offer-copy { display: grid; gap: 20px; justify-items: start; min-width: 0; position: sticky; top: calc(72px + 5vh); }
 .offer .cta { flex-direction: column; align-items: flex-start; }
+.story .offer.sec { align-items: flex-start; }
+.story .offer .wrap { align-items: start; }
+.story .offer .kitcard { margin-top: 66vh; }   /* scroll room for the last run before the card covers the left half */
+@media (min-width: 900px) { .story #offer { scroll-margin-top: calc(-72px - 43vh); } }   /* the dock's «הצעה» lands where the kit has landed in the card */
 .contacts { display: grid; width: 100%; max-width: 420px; }
 .contacts a { display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 4px 2px; border-bottom: 1px solid var(--hairline-cream); color: var(--text-soft); text-decoration: none; font: 400 15px/1.3 var(--body); }
 .contacts svg { width: 20px; height: 20px; color: var(--gold); flex: none; }
-.kitcard { justify-self: end; width: min(100%, 540px); display: grid; gap: 14px; padding: 26px 30px 28px; border-radius: 28px; border: 1px solid var(--hairline); background: linear-gradient(160deg, rgba(28,27,31,.95), rgba(14,14,17,.95)); box-shadow: 0 30px 90px rgba(0,0,0,.5); }
+.offer .kitcard { justify-self: center; }
+.kitcard { width: min(100%, 540px); display: grid; gap: 14px; padding: 26px 30px 28px; border-radius: 28px; border: 1px solid var(--hairline); background: linear-gradient(160deg, rgba(28,27,31,.95), rgba(14,14,17,.95)); box-shadow: 0 30px 90px rgba(0,0,0,.5); }
 .kc-head { display: flex; align-items: center; gap: 14px; }
-.kc-head h3 { font: 400 28px/1.1 var(--he-display); color: var(--cream); }
+.kc-head h3 { font: 500 26px/1.2 var(--he-display); color: var(--cream); }
 .kc-head .badge { letter-spacing: .14em; font-size: 11px; }
-.kc-pic { width: 100%; height: clamp(160px, 26vh, 250px); object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,.55)); }
+.kc-pic, .kc-live { width: 100%; height: clamp(160px, 26vh, 250px); object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,.55)); }
+.kc-live { display: none; }
+.kitcard.live .kc-live { display: block; }   /* desktop with the story: the engine draws the last frame of the kit run here */
+.kitcard.live .kc-pic { display: none; }
 .kc-qty { display: flex; align-items: baseline; gap: 12px; color: var(--text-soft); font: 400 15px/1.45 var(--body); }
-.kc-qty b { font: 400 34px/1 var(--display); color: var(--gold-soft); flex: none; }
-.kitcard .chips { padding-top: 14px; border-top: 1px solid var(--hairline-cream); }
+.kc-qty b { font: 300 32px/1 var(--display); color: var(--gold-soft); flex: none; }
+.kc-facts { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding-top: 12px; border-top: 1px solid var(--hairline-cream); font: 400 14px/1.4 var(--body); color: var(--text-faint); }
+.kc-facts b { font: 400 18px/1 var(--display); color: var(--gold-soft); }
+.kc-facts i { font-style: normal; color: var(--gold-faint); }
 /* S8: specialists (public: a monogram and the city) */
 .spec-sec.sec { display: block; min-height: 0; padding-block: 80px 92px; }
 .spec-sec .wrap { display: grid; gap: 12px; justify-items: start; }
@@ -122,7 +145,7 @@ details ul { padding: 0 0 18px; list-style: none; color: var(--text); display: g
 .spec { display: flex; flex-direction: column; min-width: 0; border-radius: 22px; background: rgb(24,24,28); border: 1px solid var(--hairline); }
 .spec .av { width: 58px; height: 58px; margin: 22px 22px 0; border-radius: 50%; border: 1px solid var(--gold); display: grid; place-items: center; font: 400 28px/1 var(--he-display); color: var(--gold-soft); background: rgba(10,10,11,.6); }
 .spec .sb { display: grid; gap: 8px; justify-items: start; padding: 14px 22px 12px; }
-.spec h3 { display: flex; align-items: center; gap: 8px; font: 400 24px/1.2 var(--he-display); color: var(--gold-soft); }
+.spec h3 { display: flex; align-items: center; gap: 8px; font: 500 21px/1.25 var(--he-display); color: var(--gold-soft); }
 .spec h3 svg { width: 17px; height: 17px; color: var(--gold); flex: none; }
 .tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .tags span { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font: 400 13px/1.2 var(--body); border: 1px solid var(--gold-faint); color: var(--gold-soft); }
@@ -146,7 +169,7 @@ details ul { padding: 0 0 18px; list-style: none; color: var(--text); display: g
 .card:hover .pic img { transform: scale(1.05); }
 .card .body { padding: 24px; display: grid; gap: 8px; justify-items: start; }
 .card .badge.home { border-color: rgba(246,243,236,.3); color: var(--text-soft); }
-.card h3 { font: 500 22px/1.15 var(--display); color: var(--cream); }
+.card h3 { font: 500 20px/1.2 var(--display); color: var(--cream); }
 .card p { font: 400 14px/1.6 var(--body); color: var(--text-faint); }
 .card .go { margin-top: 6px; font: 400 13px/1 var(--body); color: var(--gold-soft); }
 .foot { border-top: 1px solid var(--hairline-cream); padding-block: 36px calc(36px + 72px); color: var(--text-faint); font: 400 13px/1.5 var(--body); background: var(--bg); }
@@ -160,7 +183,8 @@ details ul { padding: 0 0 18px; list-style: none; color: var(--text); display: g
 .dock a.on { background: var(--gold); color: var(--on-gold); }
 @media (max-width: 1000px) { .dock a { padding-inline: 10px; } }
 @media (max-width: 899px) { .dock { display: none; } }
-.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom, 0px)); background: rgba(10,10,11,.86); backdrop-filter: blur(12px); border-top: 1px solid var(--hairline); display: none; align-items: center; justify-content: space-between; gap: 12px; }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom, 0px)); background: rgba(10,10,11,.86); backdrop-filter: blur(12px); border-top: 1px solid var(--hairline); display: none; align-items: center; justify-content: space-between; gap: 12px; transition: transform .35s var(--ease), visibility .35s; }
+.bar.away { transform: translateY(110%); visibility: hidden; }   /* the offer has its own buttons: the bar steps aside there */
 .bar b { font: 500 13px/1.3 var(--body); min-width: 0; display: grid; }
 .bar b small { font: 400 13px/1.3 var(--body); color: var(--text-faint); }
 .bar .btn { min-height: 44px; padding-inline: 18px; flex: none; font-size: 14px; }
@@ -204,18 +228,41 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 .lead-panel img { width: min(100%, 420px); height: auto; filter: drop-shadow(0 26px 40px rgba(0,0,0,.55)); }
 .lead-panel p { font: 500 clamp(26px, 2.6vw, 34px)/1 var(--display); letter-spacing: .06em; }
 
-/* phone: no sequence; the product is a small HD still beside the heading */
+/* phone: the story plays in a stage under the header (smoke, plate and the 3D, the copy scrolls beneath it and the offer
+   pushes it away); without the story (no JS, reduced data) the product is a small HD still beside each heading */
 .head { display: contents; }
-.slot { display: none; }
+.slot, .ph-cells { display: none; }
 @media (max-width: 899px) {
-  #seq, .still { display: none !important; }
+  .still, .cells { display: none !important; }
+  html:not(.story) #seq, html:not(.story) .plate { display: none !important; }
+  html.story .bg, html.story .plate { inset: var(--stage-top, 60px) 0 auto 0; height: var(--stage-h, 46svh); z-index: 3;
+    transform: translate3d(0, calc(-1px * var(--push, 0)), 0) !important; }
+  html.story .bg::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 28px; background: linear-gradient(var(--bg), transparent); }
+  html.story #seq { z-index: 4; }
+  html.story .slot, html.story .ph-cells { display: none !important; }
+  html.story .head { grid-template-columns: minmax(0, 1fr); }
+  html.story #meet { padding-top: calc(var(--stage-h, 46svh) + 18px); }
+  /* the copy, then room in which the run plays in the stage, so the next heading arrives under its own key frame */
+  html.story #meet, html.story #why, html.story #inside, html.story #feel, html.story #protocol { min-height: 0; padding-bottom: 64svh; }
+  /* S3: three still cells around the ampoules (no moving field on a phone) */
+  #inside .head { position: relative; }
+  #inside .slot { position: relative; z-index: 1; }
+  .ph-cells { display: block; position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  .ph-cells img { position: absolute; height: auto; }
+  .ph-cells img:nth-child(1) { width: 15%; left: 29%; top: 2%; opacity: .7; }
+  .ph-cells img:nth-child(2) { width: 10%; left: -2%; top: 74%; opacity: .9; }
+  .ph-cells img:nth-child(3) { width: 7%; left: 37%; top: 60%; opacity: .75; }
   .sec { min-height: 0; padding-block: 34px 22px; }
   .head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(118px, 38%); align-items: center; gap: 14px; width: 100%; }
   .head > :not(.slot) { grid-column: 1; }
   .slot { display: block; grid-column: 2; grid-row: 1 / span 2; width: 100%; height: auto; }
   .slot.wide { grid-column: 1 / -1; grid-row: auto; margin-top: 6px; }   /* S5: the three stations on their line, a strip under the heading */
-  .split { grid-template-columns: 1fr; }
-  .kitcard { justify-self: stretch; padding: 22px 20px 24px; }
+  .offer .wrap { display: flex; flex-direction: column; align-items: flex-start; }
+  .offer-copy { display: contents; }
+  .offer-copy > * { margin: 0 0 20px; }
+  .offer-copy > .kicker { order: 1; } .offer-copy > h2 { order: 2; } .offer .kitcard { order: 3; }
+  .offer-copy > .lead { order: 4; } .offer-copy > .cta { order: 5; } .offer-copy > .contacts { order: 6; }
+  .offer .kitcard { align-self: stretch; width: 100%; margin: 4px 0 26px; padding: 22px 20px 24px; }
   .steps { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 80%; gap: 12px; margin: 28px calc(-1 * var(--gutter)) 0; padding: 0 var(--gutter) 6px;
     overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); scrollbar-width: none; overscroll-behavior-x: contain; }
   .steps::-webkit-scrollbar { display: none; }
@@ -246,8 +293,11 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 </style>
 
 <div class="bg" aria-hidden="true"></div>
-<img class="still" src="seq/v1-meet_v2-why_000.webp" alt="" aria-hidden="true" loading="lazy">   <!-- no JS only; hidden (so never fetched) with JS -->
+<div class="plate" aria-hidden="true"></div>
+<div class="still" aria-hidden="true"><div class="still-f"><img src="seq/480/v1-meet_v2-why_000.webp" alt="" loading="lazy" style="left:18.460%;top:20.670%;width:29.120%;height:61.660%"></div></div>   <!-- no JS only: the first key frame in its box; hidden (so never fetched) with JS -->
+<div class="cells back" aria-hidden="true"></div>
 <canvas id="seq" aria-hidden="true"></canvas>
+<div class="cells front" aria-hidden="true"></div>
 <header class="top"><div class="wrap">
   <a class="logo" href="#meet" aria-label="MITODERM"><img src="img/logo-mark.png" alt="MITODERM"></a>
   <a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20V-TECH%20SYSTEM" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a>
@@ -278,10 +328,12 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   <section id="inside" class="sec" data-st="2"><div class="wrap"><div class="copy">
     <p class="kicker line rv">מה בפנים</p>
     <div class="head">
-      <h2 class="rv" style="--d:.06s">בתוך כל טיפה</h2>
+      <h2 class="rv" style="--d:.06s">בתוך כל אמפולה</h2>
       <img class="slot" src="img/m3.webp" alt="" aria-hidden="true">
+      <span class="ph-cells" aria-hidden="true"><img src="img/cells/c01-2.webp" alt="" loading="lazy" decoding="async"><img src="img/cells/c04-1.webp" alt="" loading="lazy" decoding="async"><img src="img/cells/c07-1.webp" alt="" loading="lazy" decoding="async"></span>
     </div>
     <p class="lead rv" style="--d:.12s">אקסוזומים סינתטיים נושאים <bdi class="nw">PDRN 2%</bdi>, פפטידים ביומימטיים ותאי גזע של תפוח אל המקום שבו המחטים פתחו את הדרך.</p>
+    <p class="legend rv" style="--d:.15s"><span class="dot" aria-hidden="true"></span><span>אקסוזומים סינתטיים — המחשה</span></p>
     <p class="kicker rv" style="--d:.18s">רכיבים פעילים</p>
     <ul class="chips rv" style="--d:.24s"><li>תאי גזע של תפוח (<bdi class="nw">Malus domestica</bdi>)</li><li><bdi class="nw">PDRN 2%</bdi> · ‏20 מ״ג/מ״ל</li><li><bdi class="nw">Acetyl Decapeptide-3</bdi> · <bdi class="nw">Oligopeptide-20</bdi></li><li>אקסוזומים סינתטיים</li></ul>
     <details class="rv" style="--d:.3s"><summary>הפורמולה המלאה</summary><ul><li><bdi class="nw">PDRN 2%</bdi> (20 מ״ג/מ״ל), מתא גזע של סלמון</li><li>פפטידים ביומימטיים: <bdi class="nw">Acetyl Decapeptide-3</bdi> &amp; <bdi class="nw">Oligopeptide-20</bdi></li><li>תאי גזע של תפוח (<bdi class="nw">Malus domestica</bdi>)</li><li><bdi class="nw">PDRN 1%</bdi> במשקל מולקולרי נמוך – מסכת ג׳ל</li><li><bdi class="nw">Acetyl Heptapeptide-9</bdi> – נשא זהב קולואידי</li><li><bdi class="nw">Copper Tripeptide-1</bdi> – נחושת טריפפטיד</li><li>פוליסכריד מריר חלזון</li><li>חומצה היאלורונית ואלוורה</li></ul></details>
@@ -308,17 +360,8 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
     </div>
     <ol class="steps"><li class="step rv" style="--d:0.00s"><span class="n">01</span><h3><bdi class="nw">V-TECH SERUM</bdi></h3><p>יש ליישם את <bdi class="nw">V‑TECH Serum</bdi> באמצעות <bdi class="nw">MITOPEN</bdi>, מזופן או מכשור מקצועי מתאים אחר.</p></li><li class="step rv" style="--d:0.08s"><span class="n">02</span><h3><bdi class="nw">V-TECH GEL MASK</bdi></h3><p>לאחר סיום העבודה עם הסרום, יש למרוח <bdi class="nw">V‑TECH Gel Mask</bdi> על אותו אזור. יש לעסות בעדינות עד לספיגה מלאה. אין צורך בשטיפה.</p></li><li class="step rv" style="--d:0.16s"><span class="n">03</span><h3>לאחר הסרום</h3><p>מומלץ להניח מסכת <bdi class="nw">EXOCELL MASK</bdi> להחדרה של חומצה הילארונית, תמציות צמחים ואלוורה. בסיום <bdi class="nw">DERMA RECOVERY CREAM</bdi>. מקדם הגנה חובה.</p></li></ol>
   </div></section>
-  <section id="kit" class="sec" data-st="5"><div class="wrap"><div class="copy">
-    <p class="kicker line rv">ערכה ועובדות</p>
-    <div class="head">
-      <h2 class="rv" style="--d:.06s">מה באריזה</h2>
-      <img class="slot" src="img/m6.webp" alt="" aria-hidden="true">
-    </div>
-    <p class="lead rv" style="--d:.12s">5 אמפולות סרום של 5 מ״ל ו-5 שקיות מסכת ג׳ל של 5 מ״ל. סדרה מומלצת: 4–6 טיפולים, בהתאם למצב העור ולמטרת הטיפול.</p>
-    <div class="facts"><div class="fact rv" style="--d:0.00s"><b><bdi dir="ltr">5 × 5</bdi></b><span>אמפולות סרום של 5 מ״ל</span></div><div class="fact rv" style="--d:0.08s"><b><bdi dir="ltr">5 × 5</bdi></b><span>שקיות מסכת ג׳ל של 5 מ״ל</span></div><div class="fact rv" style="--d:0.16s"><b><bdi dir="ltr">4–6</bdi></b><span>טיפולים בסדרה</span></div><div class="fact rv" style="--d:0.24s"><b><bdi dir="ltr">14</bdi></b><span>יום בין טיפול לטיפול</span></div></div>
-  </div></div></section>
-  <section id="offer" class="sec offer" data-st="6"><div class="wrap split">
-    <div class="copy">
+  <section id="offer" class="sec offer" data-st="5"><div class="wrap">
+    <div class="offer-copy">
       <p class="kicker line rv">הצעה</p>
       <h2 class="rv" style="--d:.06s">הכניסו את <bdi class="nw">V-TECH</bdi> לקליניקה שלכם</h2>
       <p class="lead rv" style="--d:.12s">לשימוש מקצועי בלבד. פרוטוקולים והדרכה מבית מיטודרם; המומחה שלנו ייעץ לכם על תמחור לקליניקה שלכם.</p>
@@ -330,12 +373,14 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
     </div>
     <aside class="kitcard rv" style="--d:.1s" aria-labelledby="kitcard-h">
       <div class="kc-head"><h3 id="kitcard-h">מה באריזה</h3><span class="badge"><bdi>V-TECH FACE</bdi></span></div>
-      <img class="kc-pic" src="img/kit.webp" alt="V-TECH SYSTEM: 5 אמפולות סרום של 5 מ״ל ו-5 שקיות מסכת ג׳ל של 5 מ״ל" width="760" height="749" loading="lazy">
+      <canvas class="kc-live" role="img" aria-label="V-TECH SYSTEM: 5 אמפולות סרום של 5 מ״ל ו-5 שקיות מסכת ג׳ל של 5 מ״ל"></canvas>
+      <img class="kc-pic" src="img/kit.webp" alt="V-TECH SYSTEM: 5 אמפולות סרום של 5 מ״ל ו-5 שקיות מסכת ג׳ל של 5 מ״ל" width="226" height="228" loading="lazy">
       <p class="kc-qty"><b><bdi dir="ltr">5×</bdi></b><span>סרום — אמפולות של 5 מ״ל – אקסוזומים סינתטיים, <bdi class="nw">PDRN 2%</bdi>, פפטידים ביומימטיים, תאי גזע של תפוח.</span></p><p class="kc-qty"><b><bdi dir="ltr">5×</bdi></b><span>מסכת ג׳ל — שקיות של 5 מ״ל – <bdi class="nw">PDRN 1%</bdi>, פפטידים עם זהב קולואידי, נחושת, פוליסכריד מריר חלזון, חומצה היאלורונית ואלוורה.</span></p>
+      <p class="kc-facts"><span><b><bdi dir="ltr">4–6</bdi></b> טיפולים בסדרה</span><i aria-hidden="true">·</i><span><b><bdi dir="ltr">14</bdi></b> יום בין טיפול לטיפול</span></p>
       <ul class="chips gold"><li>היבואנית הבלעדית של <bdi class="nw">VM</bdi> בישראל</li><li>הדרכה ופרוטוקולים</li></ul>
     </aside>
   </div></section>
-  <section id="specialists" class="sec spec-sec" data-st="7" aria-labelledby="spec-h"><div class="wrap">
+  <section id="specialists" class="sec spec-sec" data-st="6" aria-labelledby="spec-h"><div class="wrap">
     <p class="kicker line rv">מצאו מומחה</p>
     <h2 class="rv" id="spec-h" style="--d:.06s">מומחי <bdi class="nw">MITODERM</bdi> מוסמכים</h2>
     <p class="lead rv" style="--d:.12s">פרוטוקול <bdi class="nw">V-TECH</bdi>, פילינג <bdi class="nw">EXO-NAD</bdi> ומסכת <bdi class="nw">EXOCELL</bdi> מבוצעים על ידי איש מקצוע.</p>
@@ -347,7 +392,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
       <div class="join"><span>אתם קוסמטיקאים?</span><a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20V-TECH%20SYSTEM" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">הגשת בקשה</a></div>
     </div>
   </div></section>
-  <section class="related" data-st="8"><div class="wrap">
+  <section class="related" data-st="7"><div class="wrap">
     <h2 class="rv">עוד מקו V-TECH FACE</h2>
     <div class="cards"><a class="card rv" style="--d:0.00s" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20EXOCELL%20MASK" target="_blank" rel="noopener"><div class="pic"><img src="img/exocell-mask.webp" alt="EXOCELL MASK" loading="lazy"></div><div class="body"><span class="badge pro">מקצועי</span><h3><bdi>EXOCELL MASK</bdi></h3><p>מסכת ביו-צלולוז מתקדמת – כמו עור שני</p><span class="go">לקבלת פרטים ←</span></div></a><a class="card rv" style="--d:0.08s" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20EXOTECH%20GEL" target="_blank" rel="noopener"><div class="pic"><img src="img/exotech-gel.webp" alt="EXOTECH GEL" loading="lazy"></div><div class="body"><span class="badge home">טיפוח ביתי</span><h3><bdi>EXOTECH GEL</bdi></h3><p>טיפול ביתי משלים לשיקום, לחות והתחדשות העור</p><span class="go">לקבלת פרטים ←</span></div></a></div>
     <h2 class="rv">משלימים את הטיפול</h2>
@@ -355,7 +400,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   </div></section>
 </main>
 <footer class="foot"><div class="wrap"><img src="img/logo.png" alt="MITODERM — Where Science Meets Beauty"><span>© 2026 מיטודרם – כשהמדע פוגש ביופי</span><span class="legal"><a href="#">הצהרת נגישות</a><a href="#">מדיניות פרטיות</a></span></div></footer>
-<nav class="dock" aria-label="ניווט בעמוד"><a href="#meet" data-i="0">הכירו</a><a href="#why" data-i="1">למה?</a><a href="#inside" data-i="2">מה בפנים</a><a href="#feel" data-i="3">הרגישו</a><a href="#protocol" data-i="4">פרוטוקול</a><a href="#kit" data-i="5">ערכה ועובדות</a><a href="#offer" data-i="6">הצעה</a><a href="#specialists" data-i="7">מומחים</a></nav>
+<nav class="dock" aria-label="ניווט בעמוד"><a href="#meet" data-i="0">הכירו</a><a href="#why" data-i="1">למה?</a><a href="#inside" data-i="2">מה בפנים</a><a href="#feel" data-i="3">הרגישו</a><a href="#protocol" data-i="4">פרוטוקול</a><a href="#offer" data-i="5">הצעה</a><a href="#specialists" data-i="6">מומחים</a></nav>
 <div class="bar"><b><bdi>V-TECH SYSTEM</bdi><small>ערכה מקצועית</small></b><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20V-TECH%20SYSTEM" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a></div>
 
 <!-- Lead form. This page is a static preview and cannot send data: the submit handler prevents the default and only
@@ -392,58 +437,417 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 
 <script>
 // Scroll story on pre-rendered Blender frames: between two neighbouring screens their run plays (frame = share of the
-// scroll from the first screen, once it has been read, to the next one); on a screen its key frame holds. From the
-// offer on the frames fade out and the smoke stays.
+// scroll from the first screen, once it has been read, to the next one); on a screen its key frame holds. The last run
+// builds the kit while the offer copy arrives; then the card rises and the 3D kit flies into its picture. Memory: only frames −4…+8 around the wanted one
+// (ahead = the scroll direction) and the runs' end frames stay decoded, every other bitmap is closed; a worker
+// fetches and decodes off the main thread (WebKit would decode on the main thread at drawImage) and keeps the
+// compressed files, so the whole story downloads once. Cells: a field of exosome sprites the camera flies through
+// from S1 to S3 (far ones behind the product, near ones in front of it but never over the copy or the S3 hero).
 (() => {
-  const RUNS = [["v1-meet", "v2-why"], ["v2-why", "v3-inside"], ["v3-inside", "v4-feel"], ["v4-feel", "v5-protocol"], ["v5-protocol", "v6-kit"]], N = 40, R = RUNS.length;
-  const src = (r, i) => `seq/${RUNS[r][0]}_${RUNS[r][1]}_${String(i).padStart(3, '0')}.webp`;
-  const canvas = document.getElementById('seq'), ctx = canvas.getContext('2d'), bg = document.querySelector('.bg');
-  const secs = ['meet', 'why', 'inside', 'feel', 'protocol', 'kit'].map(id => document.getElementById(id)), offer = document.getElementById('offer');
+  const CFG = {"runs":[{"a":"v1-meet","b":"v2-why","n":40,"box":[0.1846,0.2067,0.4758,0.8233]},{"a":"v2-why","b":"v3-inside","n":40,"box":[0.0367,0.0733,0.4237,0.8667]},{"a":"v3-inside","b":"v4-feel","n":40,"box":[0.0117,0.07,0.5133,0.8467]},{"a":"v4-feel","b":"v5-protocol","n":40,"box":[0,0.0733,0.5133,0.77]},{"a":"v5-protocol","b":"v6-kit","n":40,"box":[0,0.0567,0.5258,0.8767]}],"tiers":[480],"cells":["c01","c02","c03","c04","c05","c06","c07","c08","c09","c10"]};
+  const RUNS = CFG.runs, R = RUNS.length, NS = RUNS.map(r => r.n), TIERS = CFG.tiers.slice().sort((a, b) => a - b), SPRITES = CFG.cells;
+  const OFF = NS.map((n, k) => NS.slice(0, k).reduce((a, b) => a + b, 0)), TOTAL = OFF[R - 1] + NS[R - 1];
+  const BACK = 4, AHEAD = 8, FLIGHT = 4, WARM = 2;              // decode window and fetch concurrency
+  const HOLD0 = 0.04, HOLD = 0.15, READ = 0.85, END = 0.12;      // a screen holds its key frame until it has been read
+  const LAND0 = 0.85, LAND1 = 0.25;   // the last run ends as the offer card's top reaches 85% of the screen; the kit lands by 25%
+  const $ = id => document.getElementById(id), clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+  const canvas = $('seq'), ctx = canvas.getContext('2d');
+  const bg = document.querySelector('.bg'), plate = document.querySelector('.plate');
+  const card = document.querySelector('.kitcard'), cardCv = card && card.querySelector('.kc-live'), cardCtx = cardCv && cardCv.getContext('2d');
+  const secs = ['meet', 'why', 'inside', 'feel', 'protocol', 'offer'].map($);
   const phone = matchMedia('(max-width: 899px)'), calm = matchMedia('(prefers-reduced-motion: reduce)');
-  const frames = RUNS.map(() => []); let want = [0, 0], shown = null, queued = false;
-  const ready = im => im && im.complete && im.naturalWidth > 0;
-  function load(r, i) {
-    if (!frames[r][i]) { const im = new Image(); im.decoding = 'async'; im.onload = () => { if (r === want[0] && Math.abs(i - want[1]) <= 2) queue(); }; im.src = src(r, i); frames[r][i] = im; }
-    return frames[r][i];
+  const U = RUNS.reduce((u, r) => [Math.min(u[0], r.box[0]), Math.min(u[1], r.box[1]), Math.max(u[2], r.box[2]), Math.max(u[3], r.box[3])], [1, 1, 0, 0]);   // all runs' boxes
+  let stage = null, push = 0, lastPush = -1;   // phone: the stage rect under the header that the runs' union fits into
+  const nav = navigator, saveData = !!(nav.connection && nav.connection.saveData);
+  const capped = (nav.maxTouchPoints > 1 && /Macintosh/.test(nav.userAgent)) || (nav.deviceMemory > 0 && nav.deviceMemory <= 4);   // iPad, small RAM: ≤ 1600
+  const key = (r, i) => r * 1000 + i, rOf = k => Math.floor(k / 1000), iOf = k => k % 1000, gOf = k => OFF[rOf(k)] + iOf(k);
+  const kOfG = g => { let r = 0; while (r < R - 1 && g >= OFF[r + 1]) r++; return key(r, g - OFF[r]); };
+  const KIT = key(R - 1, NS[R - 1] - 1);
+  const ENDS = RUNS.flatMap((x, r) => [key(r, 0), key(r, NS[r] - 1)]);              // the runs' end frames, kept decoded
+  const SCREENS = RUNS.map((x, r) => key(r, 0)).concat(KIT);                        // reduced motion / Save-Data: these only
+  const ladder = n => { const o = [0, n - 1], q = [[0, n - 1]]; while (q.length) { const [a, b] = q.shift(), m = (a + b) >> 1; if (m > a && m < b) { o.push(m); q.push([a, m], [m, b]); } } for (let i = 0; i < n; i++) if (!o.includes(i)) o.push(i); return o; };
+  const LADDER = NS.map(ladder);                                                    // coarse to fine: 0, 39, 19, 9, 29, …
+
+  let mode = 'off', tier = 0, dpr = 1, W = 0, H = 0, cover = { x: 0, y: 0, w: 0, h: 0 }, geo = [], cardTop = 0, lastTf = '';
+  let want = key(0, 0), wantG = 0, dir = 1, lastY = -1, pos = 0, shown = -1, dirty = true, misses = 0, missAt = -1, want0 = -1;
+  let stride = 1, vel = 0, wantT = 0;   // scroll speed in frames per second → how sparse the window ahead is
+  let raf = 0, needPump = true, lastOp = -1, lastBg = '', lastPlate = -1, keep = new Set(), warmPlan = [], planFor = '';
+  const bm = new Map(), flight = new Map(), warmFlight = new Map(), pending = new Map(), warmed = new Set(), missing = new Set(), fails = new Map();
+  const peak = { n: 0, bytes: 0 }, stats = { n: 0, fetch: 0, decode: 0, maxDecode: 0 };   // stats: the worker's timings, for QA
+  const url = k => new URL(`seq/${tier}/${RUNS[rOf(k)].a}_${RUNS[rOf(k)].b}_${String(iOf(k)).padStart(3, '0')}.webp`, document.baseURI).href;
+
+  // decoding: an inline worker (fetch → blob, kept compressed → createImageBitmap, transferred); without one (old
+  // Safari, a CSP without blob: workers) <img> + decode() on the main thread
+  const WORKER = `const cache = new Map(), ctl = new Map(), ready = [], inprog = new Map(); let bytes = 0, busy = 0; const CAP = 64e6, DEC = 2;
+const abortErr = () => Object.assign(new Error('abort'), { name: 'AbortError' });
+function get(u, sig) {   // the compressed file: from the cache, or one fetch shared by every request for it
+  const b = cache.get(u); if (b) { cache.delete(u); cache.set(u, b); return Promise.resolve(b); }
+  let f = inprog.get(u);
+  if (!f) {
+    const c = new AbortController();
+    f = { c, refs: 0, p: fetch(u, { signal: c.signal }).then(r => { if (!r.ok) throw Object.assign(new Error('http'), { status: r.status }); return r.blob(); })
+      .then(b => { cache.set(u, b); bytes += b.size; for (const [k, x] of cache) { if (bytes <= CAP) break; if (k !== u) { cache.delete(k); bytes -= x.size; } } return b; })
+      .finally(() => inprog.delete(u)) };
+    inprog.set(u, f);
   }
-  const loadRun = r => { if (r >= 0 && r < R && !phone.matches) { load(r, 0); load(r, N - 1); for (let i = 1; i < N - 1; i++) load(r, i); } };   // a phone shows stills only
-  function nearest(r, i) {   // the closest loaded frame of the run; its key frames are shared with the neighbours
-    for (let d = 0; d < N; d++) for (const j of [i - d, i + d]) if (j >= 0 && j < N && ready(frames[r][j])) return [r, j];
-    if (i < N / 2 && r > 0 && ready(frames[r - 1][N - 1])) return [r - 1, N - 1];
-    if (r < R - 1 && ready(frames[r + 1][0])) return [r + 1, 0];
-    return null;
+  f.refs++;
+  return new Promise((res, rej) => {
+    const off = () => { if (--f.refs === 0) f.c.abort(); rej(abortErr()); };   // the last one out cancels the download
+    if (sig.aborted) return off();
+    sig.addEventListener('abort', off, { once: true });
+    f.p.then(b => { sig.removeEventListener('abort', off); f.refs--; res(b); }, e => { sig.removeEventListener('abort', off); f.refs--; rej(e); });
+  });
+}
+function next() {   // decode the most urgent fetched frame, two at a time, so a stop never waits behind a queue
+  while (busy < DEC && ready.length) {
+    ready.sort((a, b) => a.c.p - b.c.p); const j = ready.shift();
+    if (j.c.signal.aborted) { ctl.delete(j.id); postMessage({ id: j.id, err: 'abort' }); continue; }
+    busy++; const t1 = performance.now();
+    createImageBitmap(j.b, { premultiplyAlpha: 'premultiply', colorSpaceConversion: 'none' })   // sRGB frames: no conversion, ready to upload
+      .then(bmp => postMessage({ id: j.id, bmp, ft: j.ft, dt: performance.now() - t1 }, [bmp]), () => postMessage({ id: j.id, err: 'http' }))
+      .finally(() => { busy--; ctl.delete(j.id); next(); });
   }
-  function paint() {
-    queued = false; if (phone.matches) return;
-    const f = ready(frames[want[0]][want[1]]) ? want : nearest(want[0], want[1]);
-    if (!f || (shown && f[0] === shown[0] && f[1] === shown[1])) return;
-    const im = frames[f[0]][f[1]], W = canvas.width, H = canvas.height, s = Math.max(W / im.naturalWidth, H / im.naturalHeight);
-    const w = im.naturalWidth * s, h = im.naturalHeight * s;
-    ctx.clearRect(0, 0, W, H); ctx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); shown = f;
-  }
-  const queue = () => { if (!queued) { queued = true; requestAnimationFrame(paint); } };
-  function size() { const dpr = Math.min(2, devicePixelRatio || 1); canvas.width = Math.round(innerWidth * dpr); canvas.height = Math.round(innerHeight * dpr); shown = null; paint(); }
-  function position() {   // 0 … R: run index + its progress; a screen holds its key frame until it has been read
-    const h = innerHeight, y = scrollY; let pos = 0;
-    for (let k = 0; k < R; k++) {
-      const s = secs[k], a = s.offsetTop + Math.max(k ? 0.15 * h : 0.04 * h, s.offsetHeight - 0.85 * h), b = secs[k + 1].offsetTop - 0.12 * h;
-      if (y >= a) pos = k + Math.min(1, (y - a) / Math.max(1, b - a));
+}
+onmessage = async e => {
+  const m = e.data;
+  if (m.abort) { const c = ctl.get(m.abort); if (c) c.abort(); return; }
+  if (m.prio) { for (const [id, p, w] of m.prio) { const c = ctl.get(id); if (c) { c.p = p; if (w === 0) c.warm = false; } } next(); return; }   // w 0: a fetch now wanted decoded
+  const c = new AbortController(); c.warm = m.warm; c.p = m.p; ctl.set(m.id, c);
+  try {
+    const t0 = performance.now(), b = await get(m.url, c.signal), ft = performance.now() - t0;
+    if (c.warm) { ctl.delete(m.id); postMessage({ id: m.id, warm: 1 }); return; }
+    if (c.signal.aborted) throw abortErr();
+    ready.push({ id: m.id, b, c, ft }); next();
+  } catch (err) { ctl.delete(m.id); postMessage({ id: m.id, err: err.name === 'AbortError' ? 'abort' : err.status ? 'http' : 'net' }); }
+};`;
+  let worker = null, reqId = 0, okOnce = false;
+  try {
+    if (window.Worker && window.createImageBitmap && !window.__SEQ_NO_WORKER) {
+      worker = new Worker(URL.createObjectURL(new Blob([WORKER], { type: 'text/javascript' })));
+      worker.onmessage = e => done(e.data); worker.onerror = () => fallback();
     }
-    return pos;
+  } catch (e) { worker = null; }
+  function fallback() {   // the worker could not run or fetch here: everything again on the main thread
+    if (!worker) return; worker.terminate(); worker = null;
+    pending.clear(); flight.clear(); warmFlight.clear(); needPump = true; kick();
   }
-  function onScroll() {
-    let pos = position(); if (calm.matches) pos = Math.round(pos);   // reduced motion: the key frames only
-    const r = Math.min(R - 1, Math.floor(pos)), i = Math.round((pos - r) * (N - 1));
-    want = [r, i]; loadRun(r); if (pos - r > 0.3) loadRun(r + 1); if (pos - r < 0.3) loadRun(r - 1);
-    const fade = Math.min(1, Math.max(0, (scrollY - (offer.offsetTop - 0.9 * innerHeight)) / (0.5 * innerHeight)));
-    canvas.style.opacity = String(1 - fade);   // the offer has its own kit card: no 3D behind it
-    bg.style.transform = `translate3d(0, ${(-scrollY * 0.02).toFixed(1)}px, 0)`;
-    queue();
+  function request(k, warm, p = 0) {
+    const id = ++reqId, u = url(k); pending.set(id, { k, warm, t: tier }); (warm ? warmFlight : flight).set(k, id);
+    if (worker) { worker.postMessage({ id, url: u, warm, p }); return; }
+    const im = new Image(); im.decoding = 'async'; im.src = u;
+    if (warm) { im.onload = () => done({ id, warm: 1 }); im.onerror = () => done({ id, err: 'http' }); }
+    else im.decode().then(() => done({ id, img: im }), () => done({ id, err: 'http' }));
   }
-  loadRun(0);
-  addEventListener('scroll', onScroll, { passive: true }); addEventListener('resize', () => { size(); onScroll(); });
-  phone.addEventListener('change', () => { size(); onScroll(); }); size(); onScroll();
-  window.__seq = () => ({ run: want[0], want: want[1], shown, loaded: frames.map(f => f.filter(ready).length), N, R, opacity: +canvas.style.opacity });   // for the QA script
+  function cancel(id) { pending.delete(id); if (worker) worker.postMessage({ abort: id }); }
+  const release = e => { if (e.im.close) e.im.close(); else e.im.removeAttribute('src'); };
+  function done(m) {
+    const p = pending.get(m.id);
+    if (!p) { if (m.bmp) m.bmp.close(); return; }   // cancelled meanwhile
+    pending.delete(m.id); const map = p.warm ? warmFlight : flight; if (map.get(p.k) === m.id) map.delete(p.k);
+    needPump = true; kick();
+    if (p.t !== tier) { if (m.bmp) m.bmp.close(); return; }
+    if (m.err) {
+      if (m.err === 'net' && worker && !okOnce) { fallback(); return; }
+      if (m.err !== 'abort') { const f = (fails.get(p.k) || 0) + 1; fails.set(p.k, f); if (m.err === 'http' || f >= 3) missing.add(p.k); }
+      if (p.k === KIT && missing.has(KIT) && card) card.classList.remove('live');   // no kit frame: the card keeps its picture
+      return;
+    }
+    okOnce = true; warmed.add(p.k);
+    if (m.warm) { if (!p.warm && keep.has(p.k)) request(p.k, false); return; }   // upgraded too late: decode from the worker's cache
+    const im = m.bmp || m.img;
+    if (!keep.has(p.k)) { release({ im }); return; }   // scrolled away while it decoded
+    if (m.dt != null) { stats.n++; stats.fetch += m.ft; stats.decode += m.dt; stats.maxDecode = Math.max(stats.maxDecode, m.dt); }
+    const w = im.width || im.naturalWidth, h = im.height || im.naturalHeight, old = bm.get(p.k);
+    if (old) release(old);
+    bm.set(p.k, { im, w, h, bytes: w * h * 4 });
+    let n = 0, b = 0; for (const e of bm.values()) { n++; b += e.bytes; }
+    peak.n = Math.max(peak.n, n); peak.bytes = Math.max(peak.bytes, b);
+    if (p.k === KIT) drawCard();
+    if (p.k === want || shown < 0 || Math.abs(gOf(p.k) - wantG) < Math.abs(gOf(shown) - wantG)) dirty = true;
+  }
+
+  function desired() {   // the frames to keep decoded, most urgent first
+    const ends = (mode === 'full' ? ENDS : SCREENS).slice().sort((a, b) => Math.abs(gOf(a) - wantG) - Math.abs(gOf(b) - wantG));
+    const out = [want];   // then its two neighbours, then the two nearest end frames (a stop always has a key frame close by)
+    if (mode === 'full') for (const g of [wantG - dir, wantG + dir]) if (g >= 0 && g < TOTAL) out.push(kOfG(g));
+    out.push(...ends.slice(0, 2));
+    // ahead every stride-th frame on a fixed grid (a fast scroll: the targets stay put until passed, so they finish
+    // decoding instead of being dropped every step), behind every one
+    const g0 = dir > 0 ? Math.floor(wantG / stride) * stride : Math.ceil(wantG / stride) * stride;
+    if (mode === 'full') for (let d = 1; d <= AHEAD; d++) {
+      const a = g0 + d * stride * dir, b = wantG - d * dir;
+      if (a >= 0 && a < TOTAL) out.push(kOfG(a));
+      if (d <= BACK && b >= 0 && b < TOTAL) out.push(kOfG(b));
+    }
+    return [...new Set(out.concat(ends))];
+  }
+  function warmList() {   // the rest of the story, fetched (not decoded): this run, then the next ones in the scroll direction
+    const r = rOf(want), id = r + ':' + dir;
+    if (planFor !== id) {
+      const order = [r, r + dir, r - dir]; for (let d = 2; d < R; d++) order.push(r + d * dir, r - d * dir);
+      warmPlan = order.filter(x => x >= 0 && x < R).flatMap(x => LADDER[x].map(i => key(x, i))); planFor = id;
+    }
+    return warmPlan;
+  }
+  function pump() {
+    needPump = false;
+    if (mode === 'off' || document.hidden) return;
+    const D = desired(), r = rOf(want), rank = new Map(D.map((k, i) => [k, i])), prio = []; keep = new Set(D);
+    for (const [k, id] of flight) if (!keep.has(k)) { flight.delete(k); cancel(id); } else prio.push([id, rank.get(k)]);   // passed by: drop
+    for (const [k, id] of warmFlight) if (Math.abs(rOf(k) - r) >= 2) { warmFlight.delete(k); cancel(id); }   // runs two or more away
+    for (const [k, e] of bm) if (!keep.has(k) && k !== shown) { release(e); bm.delete(k); }
+    for (const [i, k] of D.entries()) {
+      if (worker && warmFlight.has(k)) {   // already on its way: decode it when it arrives
+        const id = warmFlight.get(k); warmFlight.delete(k); flight.set(k, id); pending.get(id).warm = false; prio.push([id, i, 0]); continue;
+      }
+      if (i < 3 && !bm.has(k) && !flight.has(k) && !missing.has(k) && flight.size + warmFlight.size >= FLIGHT) {   // the most urgent take a slot
+        let worst = null, wr = -1;
+        for (const [x, id] of warmFlight) { worst = [x, id, warmFlight]; wr = 1e9; break; }
+        if (!worst) for (const [x, id] of flight) if (rank.get(x) > wr && rank.get(x) > i) { wr = rank.get(x); worst = [x, id, flight]; }
+        if (worst) { worst[2].delete(worst[0]); cancel(worst[1]); }
+      }
+      if (flight.size + warmFlight.size >= FLIGHT) break;
+      if (!bm.has(k) && !flight.has(k) && !missing.has(k)) request(k, false, i);
+    }
+    if (worker && prio.length) worker.postMessage({ prio });   // the worker decodes in this order
+    if (mode === 'full') for (const k of warmList()) {
+      if (warmFlight.size >= WARM || flight.size + warmFlight.size >= FLIGHT) break;
+      if (!warmed.has(k) && !bm.has(k) && !flight.has(k) && !warmFlight.has(k) && !missing.has(k)) request(k, true);
+    }
+  }
+
+  function pick() {   // the wanted frame, or the nearest decoded one
+    if (bm.has(want)) return want;
+    let best = -1, bd = 1e9;
+    for (const k of bm.keys()) { const d = Math.abs(gOf(k) - wantG) + (rOf(k) === rOf(want) ? 0 : 0.5); if (d < bd) { bd = d; best = k; } }
+    return best;
+  }
+  let placed = '', shownBox = null;
+  const boxRect = r => { const b = RUNS[r].box; return { x: cover.x + b[0] * cover.w, y: cover.y + b[1] * cover.h, w: (b[2] - b[0]) * cover.w, h: (b[3] - b[1]) * cover.h }; };
+  function draw() {
+    if (mode === 'off') return;
+    const k = pick();
+    if (k !== want && want !== missAt) { misses++; missAt = want; }
+    if (k < 0 || (k === shown && !dirty)) return;
+    // the canvas is the frame's own size, drawn 1:1, and the compositor scales it into the run's box: no resampling on
+    // the main thread and never a viewport-sized (5K) backing store
+    const e = bm.get(k), B = boxRect(rOf(k)), id = B.w.toFixed(2) + 'x' + B.h.toFixed(2);
+    if (canvas.width !== e.w || canvas.height !== e.h) { canvas.width = e.w; canvas.height = e.h; } else ctx.clearRect(0, 0, e.w, e.h);
+    ctx.drawImage(e.im, 0, 0);
+    if (id !== placed) { canvas.style.width = B.w + 'px'; canvas.style.height = B.h + 'px'; placed = id; }
+    shownBox = B;
+    const was = shown; shown = k; dirty = false;
+    if (was >= 0 && was !== k && !keep.has(was) && bm.has(was)) { release(bm.get(was)); bm.delete(was); }
+  }
+
+  // the offer card: the last frame of the kit run, cropped to what it shows
+  let kitCrop = null;
+  function drawCard() {
+    const e = bm.get(KIT); if (!cardCtx || !e || !cardCv.width) return;
+    if (!kitCrop || kitCrop.im !== e.im) kitCrop = { im: e.im, r: alphaBox(e), w: e.w, h: e.h };
+    const [sx, sy, sw, sh] = kitCrop.r, cw = cardCv.width, ch = cardCv.height, s = Math.min(cw / sw, ch / sh), w = sw * s, h = sh * s;
+    cardCtx.clearRect(0, 0, cw, ch); cardCtx.imageSmoothingQuality = 'high';
+    cardCtx.drawImage(e.im, sx, sy, sw, sh, (cw - w) / 2, (ch - h) / 2, w, h);
+    card.classList.add('drawn');
+  }
+  function alphaBox(e) {
+    try {
+      const s = Math.min(1, 320 / e.w), w = Math.max(1, Math.round(e.w * s)), h = Math.max(1, Math.round(e.h * s));
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(e.im, 0, 0, w, h);
+      const d = x.getImageData(0, 0, w, h).data; let x0 = w, y0 = h, x1 = -1, y1 = -1;
+      for (let y = 0; y < h; y++) for (let i = 0; i < w; i++) if (d[(y * w + i) * 4 + 3] > 24) { if (i < x0) x0 = i; if (i > x1) x1 = i; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      if (x1 < 0) return [0, 0, e.w, e.h];
+      const p = 0.04 * Math.max(x1 - x0, y1 - y0);
+      x0 = Math.max(0, (x0 - p) / s); y0 = Math.max(0, (y0 - p) / s); x1 = Math.min(e.w, (x1 + 1 + p) / s); y1 = Math.min(e.h, (y1 + 1 + p) / s);
+      return [x0, y0, x1 - x0, y1 - y0];
+    } catch (err) { return [0, 0, e.w, e.h]; }
+  }
+
+  function pickTier() {
+    if (typeof window.__SEQ_TIER === 'number') return window.__SEQ_TIER;   // QA: force a tier
+    let list = TIERS;
+    if (capped) { const low = list.filter(t => t <= 1600); list = low.length ? low : [list[0]]; }
+    const need = cover.w * dpr;   // the frame's tier width that covers the drawn rect in device pixels (same for every box)
+    return list.find(t => t >= need) || list[list.length - 1];
+  }
+  function reset(m, t) {
+    for (const e of bm.values()) release(e); bm.clear();
+    for (const id of [...pending.keys()]) cancel(id); flight.clear(); warmFlight.clear();
+    warmed.clear(); missing.clear(); fails.clear(); planFor = ''; shown = -1; kitCrop = null; mode = m; tier = t;
+    document.documentElement.classList.toggle('story', m !== 'off');
+    if (card) { card.classList.toggle('live', m !== 'off' && !stage); if (m !== 'off' && !stage) card.classList.remove('rv'); }   // no reveal shift: the kit lands on it; phone: the card keeps its HD picture
+    ctx.clearRect(0, 0, canvas.width, canvas.height); needPump = true;
+  }
+  function measure() {
+    dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+    const s = Math.max(W / 16, H / 10); cover = { w: 16 * s, h: 10 * s, x: (W - 16 * s) / 2, y: (H - 10 * s) / 2 };
+    stage = null;
+    if (phone.matches) {   // the union of the runs' boxes fits the stage: the same scale for every run, so the motion carries on
+      const top = Math.round(document.querySelector('.top').getBoundingClientRect().bottom), sh = Math.round(0.46 * H);
+      const uw = U[2] - U[0], uh = U[3] - U[1], k = Math.min(0.98 * W / (uw * 16), 0.96 * sh / (uh * 10));
+      cover = { w: 16 * k, h: 10 * k }; cover.x = (W - uw * cover.w) / 2 - U[0] * cover.w; cover.y = top + (sh - uh * cover.h) / 2 - U[1] * cover.h;
+      stage = { top, h: sh }; document.documentElement.style.setProperty('--stage-top', top + 'px'); document.documentElement.style.setProperty('--stage-h', sh + 'px');
+    }
+    const m = !TIERS.length ? 'off' : calm.matches || saveData ? 'keys' : 'full', t = m === 'off' ? 0 : pickTier();
+    if (m !== mode || t !== tier) reset(m, t);
+    placed = '';
+    geo = secs.map(s => ({ top: s.offsetTop, h: s.offsetHeight, cont: s.querySelector('.wrap').getBoundingClientRect().bottom + scrollY - s.offsetTop }));
+    cardTop = card && m !== 'off' ? card.getBoundingClientRect().top + scrollY : geo[R].top + 0.3 * H;
+    if (cardCv && m !== 'off') {
+      const r = cardCv.getBoundingClientRect(), w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+      if (w && (cardCv.width !== w || cardCv.height !== h)) { cardCv.width = w; cardCv.height = h; drawCard(); }
+    }
+    if (cellEls) layoutCells();
+    dirty = true; needPump = true; kick();
+  }
+  function position(y) {   // 0 … R: run index + its progress
+    let p = 0;
+    const sb = stage ? stage.top + stage.h : 0;   // phone: a run plays once its copy has passed under the stage and ends as
+    for (let k = 0; k < R; k++) {                 // the next section reaches the stage's foot
+      const a = stage ? geo[k].top + geo[k].cont - sb + 0.02 * H : geo[k].top + Math.max(k ? HOLD * H : HOLD0 * H, geo[k].h - READ * H);
+      const b = stage ? geo[k + 1].top - sb : k === R - 1 ? cardTop - LAND0 * H : geo[k + 1].top - END * H;
+      if (y >= a) p = k + Math.min(1, (y - a) / Math.max(1, b - a));
+    }
+    return p;
+  }
+
+  // ---- exosome cells: [sprite, x, y (screen heights from the vanishing point), depth, size, front layer, drift in depth, spin]
+  const FIELD = [
+    [0, -0.42, -0.30, 3.0, 0.26, 0, 0, 30], [1, 0.16, 0.36, 3.9, 0.22, 0, 0, -40], [2, -0.78, 0.16, 4.6, 0.36, 0, 0, 25],
+    [3, 0.06, -0.42, 2.6, 0.24, 0, 4.0, -20],   // these two recede as the page scrolls
+    [5, 0.22, -0.16, 3.4, 0.18, 0, 2.2, -30],
+    [4, -0.24, 0.10, 6.6, 0.30, 0, 0, 35], [6, -0.62, -0.10, 7.4, 0.28, 0, 0, 20], [7, 0.18, 0.52, 5.4, 0.20, 0, 0, -25],
+    [8, -0.40, 0.34, 2.5, 0.30, 1, 0, 40], [9, -0.36, -0.44, 3.2, 0.24, 1, 0, -35], [2, 0.40, 0.46, 3.9, 0.20, 1, 0, 30],
+    [5, -0.62, 0.04, 4.6, 0.34, 1, 0, -20]];
+  const VP = [0.26, 0.52], ZC = 4.2, FAR = 9, FRONT_IN = [1.9, 2.7];
+  const HERO = [[2, [0.12, 0.25, 0.40, 0.85]]];   // [screen, viewport box]: no near cell over the S3 ampoules
+  let cellEls = null, cellsOn = false;
+  function buildCells() {
+    if (cellEls || !SPRITES.length || mode === 'off' || saveData || stage) return;   // phone: no field yet (the stage clips it)
+    const layers = [document.querySelector('.cells.back'), document.querySelector('.cells.front')];
+    plate.style.backgroundImage = 'url(img/plate.webp)';
+    cellEls = FIELD.map((f, n) => {
+      const id = SPRITES[f[0] % SPRITES.length], layer = layers[f[5]];
+      const imgs = [0, 1, 2].map(s => { const im = new Image(); im.decoding = 'async'; im.alt = ''; im.src = `img/cells/${id}-${s}.webp`; layer.appendChild(im); return im; });
+      const dust = [0, 1, 2, 3, 4].map(j => { const d = document.createElement('i'); layer.appendChild(d); return { el: d, a: n * 2.4 + j * 1.31, f: 0.35 + ((n * 7 + j * 3) % 5) / 8 }; });
+      return { f, imgs, dust, st: ['', '', ''], ph: n * 1.7 };
+    });
+  }
+  function layoutCells() { for (const c of cellEls) c.st = ['', '', '']; }
+  const set = (el, o, tf) => { el.style.opacity = o.toFixed(3); el.style.visibility = o > 0.004 ? 'visible' : 'hidden'; if (tf) el.style.transform = tf; };
+  function zoneCap(cx, cy, r, b, front) {   // r: the cell's disc (≈ 0.44 of its sprite)
+    let c = 1;
+    const over = clamp((cx + r - 0.5 * W) / (0.3 * r) + 1);   // 1 once the disc reaches the copy half; only faint bokeh may
+    if (over > 0) { const faint = b >= 1.4 ? (front ? 0.2 : 0.35) : 0; c = Math.min(c, 1 - over * (1 - faint)); }
+    if (front) for (const [at, bx] of HERO) {
+      const w = 1 - smooth(0.5, 0.95, Math.abs(pos - at)); if (w <= 0) continue;
+      const dx = Math.max(bx[0] * W - cx, 0, cx - bx[2] * W), dy = Math.max(bx[1] * H - cy, 0, cy - bx[3] * H);
+      c = Math.min(c, 1 - w * clamp((r - Math.hypot(dx, dy)) / (0.4 * r)));
+    }
+    return c;
+  }
+  function cells(t, y) {   // returns true while the field is on screen (it keeps drifting)
+    if (!cellEls) return false;
+    const o0 = smooth(0.08, 0.8, pos) * (pos < 3 ? 1 : 0), dis = smooth(2.1, 2.9, pos);
+    if (o0 <= 0 || dis >= 1) {
+      if (cellsOn) { for (const c of cellEls) { c.imgs.forEach(im => set(im, 0)); c.dust.forEach(d => set(d.el, 0)); c.st = ['', '', '']; } cellsOn = false; }
+      return false;
+    }
+    cellsOn = true;
+    const still = calm.matches, c01 = still ? 0.5 : clamp((y - geo[0].top) / Math.max(1, geo[3].top - geo[0].top));
+    const zc = c01 * ZC, focus = 3.0 - 0.9 * c01, tt = still ? 0 : t / 1000;
+    for (const c of cellEls) {
+      const [, x, yw, z, size, front, vz, spin] = c.f, d = z - zc + vz * c01;
+      let o = o0 * smooth(0.22, 0.5, d) * (1 - smooth(FAR - 2.5, FAR, d)) * (front ? 1 - smooth(FRONT_IN[0], FRONT_IN[1], d) : 1);
+      const k = 1 / Math.max(d, 0.05), D = size * k * H, dx = 0.012 * Math.sin(tt * 0.21 + c.ph), dy = 0.010 * Math.cos(tt * 0.17 + c.ph * 1.3);
+      const cx = VP[0] * W + (x + dx) * k * H, cy = VP[1] * H + (yw + dy) * k * H;
+      if (d <= 0.2 || cx + D / 2 < 0 || cx - D / 2 > W || cy + D / 2 < 0 || cy - D / 2 > H) o = 0;
+      const b = clamp(Math.abs(d - focus) * 0.85, 0, 2);
+      if (o > 0) o *= zoneCap(cx, cy, D * 0.44, b, front);
+      const oc = o * (1 - dis), tf = o > 0 ? `translate3d(${(cx - 128).toFixed(1)}px,${(cy - 128).toFixed(1)}px,0) scale(${(D / 256).toFixed(4)}) rotate(${(spin * c01 + tt * 2 + c.ph * 40).toFixed(1)}deg)` : '';
+      const wts = [clamp(1 - b), clamp(1 - Math.abs(b - 1)), clamp(b - 1)];
+      c.imgs.forEach((im, s) => { const v = oc * wts[s], st = v > 0.004 ? v.toFixed(3) + tf : '0'; if (st !== c.st[s]) { set(im, v, v > 0.004 ? tf : ''); c.st[s] = st; } });
+      const dO = o * Math.sin(Math.PI * dis) * 0.95;   // R3: the cells give way to gold dust
+      for (const p of c.dust) {
+        if (dO <= 0.004) { if (p.on) { set(p.el, 0); p.on = false; } continue; }
+        const rr = D / 2 * (0.2 + p.f * 1.4 * dis), px = cx + Math.cos(p.a) * rr, py = cy + Math.sin(p.a) * rr - dis * 0.04 * H, sc = 0.6 + D / 260;
+        set(p.el, dO * (0.6 + 0.4 * p.f), `translate3d(${(px - 4).toFixed(1)}px,${(py - 4).toFixed(1)}px,0) scale(${sc.toFixed(2)})`); p.on = true;
+      }
+    }
+    return !still;
+  }
+
+  function tick(t) {
+    raf = 0;
+    const y = scrollY;
+    if (y !== lastY) { if (lastY >= 0) dir = y > lastY ? 1 : -1; lastY = y; }
+    pos = position(y);
+    const p = mode === 'keys' ? Math.round(pos) : pos, r = Math.min(R - 1, Math.floor(p)), k = key(r, Math.round((p - r) * (NS[r] - 1)));
+    const now = performance.now();
+    if (k !== want) { vel = 0.6 * vel + 0.4 * Math.abs(gOf(k) - wantG) * 1000 / Math.max(16, now - wantT); wantT = now; want = k; wantG = gOf(k); needPump = true; }
+    else if (now - wantT > 120) vel *= 0.5;   // stopped
+    const rate = 2000 / (stats.n ? stats.decode / stats.n : 40), st = Math.max(1, Math.min(6, Math.round(vel / rate)));   // frames the worker decodes per second
+    if (st !== stride) { stride = st; needPump = true; }
+    if (needPump) pump();
+    draw();
+    land(y);
+    const tf = `translate3d(0, ${(-y * 0.02).toFixed(1)}px, 0)`;
+    if (tf !== lastBg) { bg.style.transform = tf; plate.style.transform = tf; lastBg = tf; }
+    const po = cellEls || (stage && SPRITES.length) ? smooth(0.05, 0.85, pos) * (1 - smooth(2.1, 2.9, pos)) : 0;   // phone: the plate without the field
+    if (Math.abs(po - lastPlate) > 0.002) { plate.style.opacity = po.toFixed(3); lastPlate = po; }
+    if (!cellEls && mode !== 'off' && (pos > 0.01 || shown >= 0)) buildCells();
+    if (cells(t, y) && !document.hidden) kick();
+  }
+  function kick() { if (!raf) raf = requestAnimationFrame(tick); }
+  function land(y) {   // the card rises: the 3D kit flies from its place in the frame into the card's picture, then hands over
+    const l = clamp((LAND0 * H - (cardTop - y)) / ((LAND0 - LAND1) * H)), e = l * l * (3 - 2 * l);
+    const swap = smooth(0.88, 1, l), op = mode === 'off' ? 0 : mode === 'keys' ? 1 - l : 1 - swap;
+    if (stage) {   // phone: no flight; the offer section pushes the stage (smoke, plate, 3D) up and away, the card shows the kit
+      push = clamp(stage.top + stage.h - (geo[R].top - y), 0, stage.top + stage.h + 40);
+      if (push !== lastPush) { document.documentElement.style.setProperty('--push', push.toFixed(1)); lastPush = push; }
+      const B = shownBox, tfp = B ? `translate3d(${B.x.toFixed(2)}px,${(B.y - push).toFixed(2)}px,0)` : '', o = mode === 'off' || push >= stage.top + stage.h + 40 ? 0 : 1;
+      if (tfp !== lastTf) { canvas.style.transform = tfp; canvas.style.zIndex = ''; lastTf = tfp; }
+      if (o !== lastOp) { canvas.style.opacity = String(o); canvas.style.visibility = o > 0 ? '' : 'hidden'; lastOp = o; }
+      if (cardCv && mode !== 'off') cardCv.style.opacity = '1';
+      return;
+    }
+    const B = shownBox; let tf = B ? `translate3d(${B.x.toFixed(2)}px,${B.y.toFixed(2)}px,0)` : '', fly = false;
+    if (mode === 'full' && l > 0 && op > 0 && shown === KIT && kitCrop && cardCv && B) {
+      const [sx, sy, sw, sh] = kitCrop.r, fx = B.w / kitCrop.w, fy = B.h / kitCrop.h, k = { x: sx * fx, y: sy * fy, w: sw * fx };   // the kit in the canvas
+      const c = cardCv.getBoundingClientRect(), s = Math.min(c.width / sw, c.height / sh);
+      const T = { x: c.left + (c.width - sw * s) / 2, y: c.top + (c.height - sh * s) / 2, w: sw * s };   // where the card draws it
+      const sc = 1 + (T.w / k.w - 1) * e, X = B.x + k.x + (T.x - B.x - k.x) * e, Y = B.y + k.y + (T.y - B.y - k.y) * e;
+      tf = `translate3d(${(X - k.x * sc).toFixed(2)}px,${(Y - k.y * sc).toFixed(2)}px,0) scale(${sc.toFixed(5)})`; fly = true;
+    }
+    if (tf !== lastTf) { canvas.style.transform = tf; canvas.style.zIndex = fly ? '3' : ''; lastTf = tf; }   // above the card while it flies
+    if (op !== lastOp) { canvas.style.opacity = String(op); canvas.style.visibility = op > 0 ? '' : 'hidden'; lastOp = op; }
+    if (cardCv && mode !== 'off') cardCv.style.opacity = String(mode === 'keys' ? l : swap);
+  }
+
+  document.addEventListener('visibilitychange', () => {   // hidden: keep only the frame on screen
+    if (document.hidden) {
+      for (const [k, e] of bm) if (k !== shown) { release(e); bm.delete(k); }
+      for (const id of [...pending.keys()]) cancel(id); flight.clear(); warmFlight.clear();
+    } else { needPump = true; kick(); }
+  });
+  addEventListener('scroll', kick, { passive: true });
+  addEventListener('resize', measure);
+  phone.addEventListener('change', measure); calm.addEventListener('change', measure);
+  if (window.ResizeObserver) new ResizeObserver(() => measure()).observe(document.querySelector('main'));
+  addEventListener('load', measure);
+  measure();
+  window.__seq = () => {   // for the QA script
+    let bytes = 0; for (const e of bm.values()) bytes += e.bytes;
+    return { run: rOf(want), want: iOf(want), g: rOf(want) + iOf(want) / (NS[rOf(want)] - 1), shown: shown < 0 ? null : [rOf(shown), iOf(shown)],
+      decoded: bm.size, decodedBytes: bytes, inflight: flight.size + warmFlight.size, misses, N: NS[rOf(want)], Ns: NS, R,
+      opacity: +canvas.style.opacity, tier, mode, worker: !!worker, win: BACK + AHEAD + 1, keys: (mode === 'full' ? ENDS : SCREENS).length,
+      peak: Object.assign({}, peak), warmed: warmed.size, fetchMs: stats.n ? +(stats.fetch / stats.n).toFixed(1) : 0,
+      decodeMs: stats.n ? +(stats.decode / stats.n).toFixed(1) : 0, maxDecodeMs: +stats.maxDecode.toFixed(1), missing: missing.size, pos,
+      cells: cellEls ? cellEls.length : 0, cellsVisible: cellEls ? cellEls.filter(c => c.imgs.some(im => im.style.visibility === 'visible')).length : 0,
+      card: card ? card.className : '' };
+  };
 })();
 
 // page: reveal on scroll, the dock, the specialists filter and the lead form
@@ -457,6 +861,8 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
     dock.forEach(function (a) { var on = +a.dataset.i === best; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current'); });
   }
   window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  var bar = document.querySelector('.bar'), offer = document.getElementById('offer');   // phone: the bar steps aside at the offer
+  if (bar && offer && 'IntersectionObserver' in window) new IntersectionObserver(function (es) { bar.classList.toggle('away', es[0].isIntersecting); }).observe(offer);
   var rv = document.querySelectorAll('.rv');
   if (reduce || !('IntersectionObserver' in window)) rv.forEach(function (el) { el.classList.add('in'); });
   else {

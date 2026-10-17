@@ -1,6 +1,7 @@
 {
   "_source": "Approved Hebrew copy of the V-TECH SYSTEM page, read (read-only) from Figma file KcOGIzO76mDODxjwIrkGyo, page 142:3, screens S1–S9 and M1/M7/M9 on 17/10/2026. Protocol without doses (the full protocol comes with the purchase), as approved. The specialists' names and phones on S8 are not copied: the public page shows a monogram and the city only.",
-  "nav": ["הכירו", "למה?", "מה בפנים", "הרגישו", "פרוטוקול", "ערכה ועובדות", "הצעה", "מומחים"],
+  "_owner_edits": "owner edits 17/10: copy column on the right half, 3D on the left; S3 title changed to «בתוך כל אמפולה» (the old title kept as s3.h2_was); the legend «אקסוזומים סינתטיים — המחשה» beside the floating exosome cells (approved 17/10); one «מה באריזה» block only: the S6 screen and its four tiles are removed, its facts 4–6 and 14 become one thin line in the offer card (s6 is kept as the source of that line and of the kit picture's alt text); navigation without «ערכה ועובדות» (7 items).",
+  "nav": ["הכירו", "למה?", "מה בפנים", "הרגישו", "פרוטוקול", "הצעה", "מומחים"],
   "cta_price": "לקבלת פרטים על מחירים",
   "s1": {"line_mark": "V-TECH FACE", "line_name": "התחדשות הפנים", "use_pro": "מקצועי", "eyebrow": "אקסוזומים סינתטיים · ערכה מקצועית",
          "h1": "V-TECH SYSTEM", "tag": "התחדשות עורית ברמת הדרמיס",
@@ -8,7 +9,7 @@
          "chips": ["אקסוזומים סינתטיים", "PDRN 2%", "ערכה מקצועית", "טכנולוגיה איטלקית"], "more": "גלו מה בפנים ↓"},
   "s2": {"h2": "מיקרונידלינג פותח את הדלת", "p": "המיקרו-תעלות זמניות. מה שתחדירו דרכן קובע את התוצאה.", "kicker": "אינדיקציות",
          "chips": ["עור עייף וחסר ברק", "קמטים וקמטוטים", "סימני פוסט אקנה", "אובדן אלסטיות"]},
-  "s3": {"h2": "בתוך כל טיפה", "p": "אקסוזומים סינתטיים נושאים PDRN 2%, פפטידים ביומימטיים ותאי גזע של תפוח אל המקום שבו המחטים פתחו את הדרך.",
+  "s3": {"h2": "בתוך כל אמפולה", "h2_was": "בתוך כל טיפה", "legend": "אקסוזומים סינתטיים — המחשה", "p": "אקסוזומים סינתטיים נושאים PDRN 2%, פפטידים ביומימטיים ותאי גזע של תפוח אל המקום שבו המחטים פתחו את הדרך.",
          "kicker": "רכיבים פעילים", "chips": ["תאי גזע של תפוח (Malus domestica)", "PDRN 2% · ‏20 מ״ג/מ״ל", "Acetyl Decapeptide-3 · Oligopeptide-20", "אקסוזומים סינתטיים"],
          "formula": "הפורמולה המלאה"},
   "s4": {"h2": "רואים כבר מהטיפול הראשון", "p": "לחות וזוהר לאחר הטיפול הראשון; המבנה, המרקם והצפיפות ממשיכים להשתפר לאורך הסדרה.",
