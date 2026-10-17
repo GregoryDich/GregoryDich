@@ -429,6 +429,34 @@ SPS/стилофора), 506270057, 1430578512 (краб-декоратор в �
   израильские «Цалуль»/EcoOcean или Coral Reef Alliance) — с публичным отчётом;
   проверить правила Apple и требования к рекламе «часть выручки — на благотворительность».
 
+## Доступы и инфраструктура (для работы агентов)
+Сверено с документацией облачных сред Claude Code (code.claude.com/docs/en/cloud-environments).
+Изменения сети применяются к уже идущей сессии примерно за минуту — новую начинать не нужно.
+Сам агент из облачной сессии эти настройки менять не может (нет такого инструмента/CLI),
+их меняет владелец в окне **Edit cloud environment** (стрелка рядом с названием сессии).
+
+1. **Atlas Cloud (Kling, GPT-image и др.)** — сейчас прокси отвечает 403 на `api.atlascloud.ai`.
+   - **Network access → Limited → Allowed domains** — две строки:
+     ```
+     atlascloud.ai
+     *.atlascloud.ai
+     ```
+     галочку **Allow package managers** оставить.
+   - **Network secrets → + Add secret** (ключ не попадёт внутрь сессии):
+     Secret type — **Bearer**; Name — `Atlas Cloud`; Allowed websites — `*.atlascloud.ai`;
+     Custom headers — Name `Authorization`, Prefix `Bearer`, Value — ключ из
+     atlascloud.ai/console/api-keys → **Add**. Затем **Save changes**.
+   - API: `https://api.atlascloud.ai/api/v1/model/prediction`, модели вида
+     `kwaivgi/kling-v3.0-std/image-to-video` (по руководству Atlas; уточнить по их API-справке).
+   - Если готовые видео отдаются с другого домена — прокси покажет его в отказах, добавим строкой.
+   - Ключ был отправлен в чат → после проекта перевыпустить его в консоли Atlas.
+2. **Mac владельца через Remote Control** — чтобы агент сам собирал приложение и мерил FPS:
+   в Терминале на Mac `cd ~/GregoryDich && claude remote-control` (нужен установленный
+   Claude Code), сессия появится в приложении Claude; облачная сессия до Mac сама не достаёт.
+3. **Аккаунты владельца**: Apple Developer (iOS/macOS), Google Play Console, AWS —
+   для подписи/нотаризации (R11), будущих iPhone/iPad/ТВ-версий и конвейера отзывов.
+4. **Почта отзывов (тест)**: `support@tonamorph.com` → пересылка владельцу.
+
 ## Цели и монетизация
 
 > Составлено по исследованию и перепроверке от 17.10.2026. Отвечает на вопрос о премиум-контенте, отложенный в разделе «Стоимость».
