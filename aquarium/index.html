@@ -1135,8 +1135,11 @@
     for (const b of list) {
       const prev = old.find((o) => o.id === b.id);
       BSRC.push({ id: b.id || "src", kind: Array.isArray(b.rate) ? "stone" : "burp", bx: +b.bx || 0.7, by: +b.by || 0.8, z: +b.z || 1.4,
-        rate: b.rate || [12, 25], sizes: b.sizes || [1.5, 7], every: b.every || [20, 45], count: b.count || [3, 8],
+        rate: b.rate || [12, 25], sizes: b.sizes || [1.5, 7], every: b.every || [20, 45], count: b.count || [3, 8], spread: b.spread > 0 ? +b.spread : 1.6,
         fallback: !!b.fallback, x: 0, y: 0, nextC: prev ? prev.nextC : 0.2, pend: 0, nextE: 0, nextBurp: prev ? prev.nextBurp : NaN, p1: 0, p2: 0,
+        // E4: «поры» распылителя — независимые потоки кластеров (одна пора даёт не больше ≈32 пузырьков/с:
+        // пузырьки кластера идут через 18–45 мс); поры разнесены по пластине на poreDx CSS px
+        pores: clamp((b.pores | 0) || 1, 1, 6), poreDx: +b.poreDx || 6, pC: new Float32Array(6), pE: new Float32Array(6), pN: new Uint8Array(6),
         ySplit: -1e9, bb: new Float32Array(12) });                     // E4: деление колонны и рамки частей
     }
     BSRC.push({ id: "loose", kind: "loose", z: 1.15, x: 0, y: 0, ySplit: -1e9, bb: new Float32Array(12) });      // пузырьки от корма (клик)
@@ -1180,13 +1183,16 @@
       const s = BSRC[si];
       if (s.kind === "stone") {
         const lam = s.rate[0] + (s.rate[1] - s.rate[0]) * (0.5 + 0.5 * (0.6 * Math.sin(0.21 * t + s.p1) + 0.4 * Math.sin(0.53 * t + s.p2)));
-        let guard = 0;
-        while (s.pend > 0 && t >= s.nextE && guard++ < 16) {
-          emitBubble(s, s.x + gauss() * 1.6 * ss, s.y, 0); s.pend--; s.nextE += 0.018 + 0.027 * R();
-        }
-        if (s.pend <= 0 && t >= s.nextC) {
-          const m = clamp(1 + Math.floor(-Math.log(Math.max(1e-6, R())) * 1.1), 1, 5);   // средний кластер ≈ 2
-          s.pend = m; s.nextE = t; s.nextC = t + -Math.log(Math.max(1e-6, 1 - R())) / lam;
+        for (let k = 0; k < s.pores; k++) {                             // каждая пора — свой кластерный Пуассон (λ/пор)
+          const px = s.x + (k - 0.5 * (s.pores - 1)) * s.poreDx * ss;
+          let guard = 0;
+          while (s.pN[k] > 0 && t >= s.pE[k] && guard++ < 16) {
+            emitBubble(s, px + gauss() * s.spread * ss, s.y, 0); s.pN[k]--; s.pE[k] += 0.018 + 0.027 * R();
+          }
+          if (s.pN[k] <= 0 && t >= s.pC[k]) {
+            const m = clamp(1 + Math.floor(-Math.log(Math.max(1e-6, R())) * 1.1), 1, 5);   // средний кластер ≈ 2
+            s.pN[k] = m; s.pE[k] = t; s.pC[k] = t + (-Math.log(Math.max(1e-6, 1 - R())) * s.pores) / lam;
+          }
         }
       } else if (s.kind === "burp") {
         if (!(s.nextBurp === s.nextBurp)) s.nextBurp = t + rand(s.every[0] * 0.3, s.every[1]);
@@ -3345,7 +3351,7 @@
   }
   function mkItem(kind, id, def, z) {
     return { kind, id, def, z, z0: z, ents: [], imgs: [null, null, null], coreE: null, core: null, ops: new Float32Array(SC_OPMAX * SC_OPF), nOps: 0,
-      x0: 0, y0: 0, x1: 0, y1: 0, iw: 1, ih: 1, cx: 0, cy: 0, pw: 0, ready: false, layer: kind !== "occ", shadow: null, ph: 0, front: false, box: null, sub: true, crab: false, prof: false,
+      x0: 0, y0: 0, x1: 0, y1: 0, iw: 1, ih: 1, cx: 0, cy: 0, pw: 0, ready: false, layer: kind !== "occ", shadow: null, ph: 0, front: false, box: null, sub: true, crab: false, prof: false, surf: false,
       grid: null, rx: 0, ry: 0, rw: 1, rh: 1, rm: 0, dyn: false };   // grid — сетка занятости альфы (scene.js), r* — прямоугольник картинки кадра и запас качания
   }
   // сцена из файла → предметы (на загрузку задника; без сцены — пусто)
@@ -3360,6 +3366,7 @@
       const it = mkItem("occ", o.id, o, +o.z || 1.3); it.ents = [scImg(o.src)]; SCN.items.push(it); SCN.occ.push(it);
       const pf = o.profile;
       it.prof = !!(pf && pf.step > 0 && Array.isArray(pf.topHi) && Array.isArray(pf.topLo) && pf.topHi.length === pf.topLo.length);
+      it.surf = it.prof && +o.zBack - it.z >= 0.3;          // «толстый» окклюдер (холм): глубина — по поверхности (occSurfZ)
     }
     for (const p of S.patches) {
       if (!p.sway) continue;
@@ -3402,11 +3409,53 @@
     for (let i = 0; i < it.ents.length; i++) it.imgs[i] = it.ents[i] && it.ents[i].ok ? it.ents[i].im : null;
     it.iw = it.imgs[0].naturalWidth; it.ih = it.imgs[0].naturalHeight;
     if (it.coreE) { if (!it.coreE.done) return false; it.core = it.coreE.ok ? it.coreE.im : null; }
+    if (it.kind === "occ" && !it.core) it.core = erodeAlpha(it.imgs[0], 2);   // вычитание — по альфе без «запаса» в воду
     it.sub = !it.dyn && !(it.kind === "patch" && !it.core);   // патч без сердцевины не вычитаем (поле воды дало бы ореол)
     if (it.kind === "prop" && !it.front && it.def.nest) { it.def.imgW = it.iw; it.def.imgH = it.ih; }
     if (it.crab && (!it.imgs[1] || !it.imgs[2])) { it.imgs[1] = null; it.imgs[2] = null; }
+    const tn = it.kind === "prop" && it.def.tint;
+    if (tn && Array.isArray(tn.rgb)) for (let i = 0; i < it.imgs.length; i++) if (it.imgs[i]) it.imgs[i] = tintImage(it.imgs[i], tn);
     it.ready = true;
     return true;
+  }
+  /* Альфа окклюдера «подрезанная» на k px картинки (сжатие силуэта только композитингом, без чтения пикселей):
+     a'(p) = a(p)·a(p ± k·x)·a(p ± k·y). У A2 альфа холма выходит на 2 px в однородную воду (точная склейка с
+     фото), а при ВЫЧИТАНИИ этот запас срезал бы рыбу за камнем на 2–5 device px раньше видимой кромки камня. */
+  function erodeAlpha(img, k) {
+    const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height, k2 = 2 * k;
+    // 1) поле k px вокруг — копии краёв самой картинки (у кромки кадра альфа не должна «съедаться»)
+    const p = document.createElement("canvas"); p.width = w + k2; p.height = h + k2;
+    const pg = p.getContext("2d");
+    for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) if (i !== 1 || j !== 1) pg.drawImage(img, i * k, j * k);
+    pg.clearRect(k, k, w, h); pg.drawImage(img, k, k);
+    // 2) произведение сдвинутых копий ('destination-in'): поле поглощает очистку за границей источника
+    const q = document.createElement("canvas"); q.width = w + k2; q.height = h + k2;
+    const qg = q.getContext("2d");
+    qg.drawImage(p, 0, 0);
+    qg.globalCompositeOperation = "destination-in";
+    qg.drawImage(p, k, 0); qg.drawImage(p, -k, 0); qg.drawImage(p, 0, k); qg.drawImage(p, 0, -k);
+    // 3) обратно в кадр картинки
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    c.getContext("2d").drawImage(q, k, k, w, h, 0, 0, w, h);
+    p.width = p.height = q.width = q.height = 1;            // временные холсты — отпустить память
+    return c;
+  }
+  /* Подкраска пропса один раз при загрузке (scene.js props[].tint {mode, rgb, a}) — только композитинг:
+       "multiply" — цвет × rgb (белое → rgb: белые щупальца актинии → персиковые, как в LMA2);
+       "color"    — тон и насыщенность rgb при той же яркости, с долей a (серо-оливковый краб → красно-бурый).
+     Альфа исходника сохраняется ('destination-in' им же). Картинка заменяется холстом того же размера. */
+  function tintImage(img, tn) {
+    const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    const g = c.getContext("2d"), a = clamp(tn.a != null ? +tn.a : 1, 0, 1), rgb = tn.rgb;
+    g.drawImage(img, 0, 0);
+    g.globalCompositeOperation = tn.mode === "color" ? "color" : "multiply";
+    g.globalAlpha = tn.mode === "color" ? a : 1;
+    const m = (v) => Math.round(tn.mode === "color" ? v : 255 + (v - 255) * a);
+    g.fillStyle = `rgb(${m(rgb[0])},${m(rgb[1])},${m(rgb[2])})`; g.fillRect(0, 0, w, h);
+    g.globalAlpha = 1; g.globalCompositeOperation = "destination-in"; g.drawImage(img, 0, 0);
+    g.globalCompositeOperation = "source-over";
+    return c;
   }
   const scSettled = () => scPending === 0;
   const gridOk = (g) => (Array.isArray(g) && g.length >= 2 && g.every((r) => typeof r === "string" && r.length === g.length) ? g : null);
@@ -3686,7 +3735,7 @@
         if (!o.ready || o.x1 < it.x0 || o.x0 > it.x1 || o.y1 < it.y0 || o.y0 > it.y1) continue;
         g.save(); g.setTransform(RS, 0, 0, RS, -RS * ox, -RS * oy); g.clip(SCN.clip);
         g.globalCompositeOperation = "destination-out"; g.globalAlpha = clamp(C.tuck * 1.5, 0, 1);
-        drawOps(g, o, false, RS, ox, oy);
+        drawOps(g, o, true, RS, ox, oy);
         g.restore();
       }
     }
@@ -3724,7 +3773,7 @@
   const DYN = [];
   for (let i = 0; i < DYN_CAP; i++) DYN.push({ z: 0, kind: 0, obj: null, part: 0, x0: 0, y0: 0, x1: 0, y1: 0, g: -1 });
   let dynN = 0;
-  const GRP_U = new Float32Array(64 * 4), GRP_M = [];       // рамки групп (по индексу в SCN.ord), члены группы (временный список)
+  const GRP_U = new Float32Array(64 * 4), GRP_Z = new Float32Array(64), GRP_M = [];   // рамки и глубины групп (по индексу в SCN.ord), члены группы (временный список)
   const GB = [];                                            // буферы групп: GB[s] = [чётный, нечётный]
   function pushDyn(z, kind, obj, part, x0, y0, x1, y1) {
     if (dynN >= DYN_CAP) return;
@@ -3756,6 +3805,35 @@
   const hitBox = (q, x0, y0, x1, y1) => x1 >= q.x0 && x0 <= q.x1 && y1 >= q.y0 && y0 <= q.y1 &&
     (!q.prof || y1 > occMinTopY(q, x0, x1)) && (!q.grid || gridHit(q, x0, y0, x1, y1));
   const hitItem = (d, q) => hitBox(q, d.x0, d.y0, d.x1, d.y1);
+  /* Глубина ПОВЕРХНОСТИ окклюдера под рамкой элемента (для холма: depthGrid под ним — поверхность самого
+     камня 1.06…1.45, а z холма 1.48 — лишь его дальняя верхушка). Наибольшее значение сетки по ячейкам
+     пересечения рамки с прямоугольником окклюдера, принадлежащим самому окклюдеру (z ячейки < середины между
+     z и zBack: вода 2.4/2.6, стена 2.05 и дальние кораллы 1.85 не в счёт). NaN — силуэт не задет.
+     Рыба глубже ВСЕЙ задетой поверхности — за камнем, даже если её z < z окклюдера: ровно так же E3
+     считает видимость (точки тела с z > depthGrid + 0.02 скрыты), и прячущаяся рыба на z ≈ 1.46 за
+     плечом холма (1.36–1.45) не вылезает поверх него. Не-прячущимся E3 и так держит z < поверхность − 0.05. */
+  function occSurfZ(q, x0, y0, x1, y1) {
+    const g = SCENE.depthGrid, d = q.def;
+    if (!g) return NaN;
+    const bx0 = Math.max(d.bx, bgBX(x0)), bx1 = Math.min(d.bx + d.bw, bgBX(x1)), by0 = Math.max(d.by, bgBY(y0)), by1 = Math.min(d.by + d.bh, bgBY(y1));
+    if (bx1 <= bx0 || by1 <= by0) return NaN;
+    const c0 = clamp(Math.floor(bx0 * g.cols), 0, g.cols - 1), c1 = clamp(Math.floor(bx1 * g.cols), 0, g.cols - 1);
+    const r0 = clamp(Math.floor(by0 * g.rows), 0, g.rows - 1), r1 = clamp(Math.floor(by1 * g.rows), 0, g.rows - 1);
+    const lim = 0.5 * (q.z + d.zBack);
+    let m = NaN;
+    for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
+      const z = g.z[r * g.cols + c];
+      if (z < lim && !(z <= m)) m = z;
+    }
+    return m;
+  }
+  // элемент кадра d — за предметом сцены q? (z дальше; для «толстого» окклюдера с профилем — и глубже его поверхности)
+  function behindItem(d, q) {
+    if (d.z > q.z) return true;
+    if (!q.surf || d.kind !== RK_FISH) return false;
+    const zs = occSurfZ(q, d.x0, d.y0, d.x1, d.y1);
+    return zs === zs && d.z > zs + 0.02;
+  }
   function gbuf(slot, par, pw, ph) {
     let e = slot[par];
     if (!e) e = slot[par] = { c: document.createElement("canvas"), g: null };
@@ -3822,20 +3900,22 @@
       // 1) самый дальний предмет перед элементом с пересечением рамок (ord — дальние первыми)
       for (let i = 0; i < dynN; i++) {
         const d = DYN[i];
-        for (let s = 0; s < ns; s++) { const q = S[s]; if (q.z < d.z && !(q.prof && d.kind === RK_BUBBLES) && hitItem(d, q)) { d.g = s; break; } }
+        for (let s = 0; s < ns; s++) { const q = S[s]; if (!(q.prof && d.kind === RK_BUBBLES) && behindItem(d, q) && hitItem(d, q)) { d.g = s; break; } }
       }
-      // 2) замыкание по группам от дальних к ближним: всё дальше предмета, что перекрывает членов (кроме более дальних групп)
+      // 2) замыкание по группам от дальних к ближним: всё дальше группы, что перекрывает членов (кроме более дальних групп).
+      //    Глубина группы GRP_Z = min(z предмета, z ближайшего члена) — член за поверхностью холма может быть ближе его z
       for (let s = 0; s < ns; s++) {
         const q = S[s], o = s * 4;
-        let n = 0, x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-        for (let i = 0; i < dynN; i++) { const d = DYN[i]; if (d.g !== s) continue; n++; if (d.x0 < x0) x0 = d.x0; if (d.y0 < y0) y0 = d.y0; if (d.x1 > x1) x1 = d.x1; if (d.y1 > y1) y1 = d.y1; }
+        let n = 0, x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, gz = q.z;
+        for (let i = 0; i < dynN; i++) { const d = DYN[i]; if (d.g !== s) continue; n++; if (d.z < gz) gz = d.z; if (d.x0 < x0) x0 = d.x0; if (d.y0 < y0) y0 = d.y0; if (d.x1 > x1) x1 = d.x1; if (d.y1 > y1) y1 = d.y1; }
         if (!n) { GRP_U[o + 2] = -1e9; continue; }
+        GRP_Z[s] = gz;
         let ch = true;
         while (ch) {
           ch = false;
           for (let i = 0; i < dynN; i++) {
             const d = DYN[i];
-            if (d.g === s || d.z <= q.z || (d.g >= 0 && d.g < s) || !hitRect(d, x0, y0, x1, y1)) continue;
+            if (d.g === s || d.z <= gz || (d.g >= 0 && d.g < s) || !hitRect(d, x0, y0, x1, y1)) continue;
             // перекрывает ли кого-то из членов (половины одной колонны пузырьков друг друга не тянут)
             let hit = false;
             for (let j = 0; j < dynN && !hit; j++) {
@@ -3852,7 +3932,7 @@
       }
       for (let s = 0; s < ns; s++) if (GRP_U[s * 4 + 2] > -1e8) {
         let n = 0; for (let i = 0; i < dynN; i++) if (DYN[i].g === s) n++;
-        if (n) { rlPush(S[s].z, RK_GROUP, null, s); groups++; members += n; } else GRP_U[s * 4 + 2] = -1e9;
+        if (n) { rlPush(GRP_Z[s], RK_GROUP, null, s); groups++; members += n; } else GRP_U[s * 4 + 2] = -1e9;
       }
     }
     for (let i = 0; i < dynN; i++) { const d = DYN[i]; if (d.g < 0 || d.g >= ns) rlPush(d.z, d.kind, d.obj, d.part); }
@@ -3891,9 +3971,10 @@
     for (let i = 0; i < GRP_M.length; i++) { const d = GRP_M[i]; drawDyn(d.kind, d.obj, d.part, t); }
     const dm1 = CNT.drawImage, tm1 = COUNTING ? performance.now() : 0;
     g.globalAlpha = 1; g.globalCompositeOperation = "destination-out";
+    const gz = GRP_Z[s];                                     // вычитаются сам предмет и всё, что ближе группы
     for (let k = 0; k < SCN.nOrd; k++) {
       const r = SCN.ord[k];
-      if (r.z > q.z || !hitBox(r, x0, y0, x1, y1)) continue;
+      if ((r !== q && r.z > gz) || !hitBox(r, x0, y0, x1, y1)) continue;
       drawOps(g, r, true, RS, ox, oy);
     }
     g.globalCompositeOperation = "source-over"; g.setTransform(1, 0, 0, 1, 0, 0);
@@ -3909,7 +3990,7 @@
       lg.globalCompositeOperation = "destination-out"; lg.globalAlpha = 1;
       for (let k = 0; k < SCN.nOrd; k++) {
         const r = SCN.ord[k];
-        if (r.z > q.z || !hitBox(r, x0, y0, x1, y1) || !llHits(r.x0, r.y0, r.x1, r.y1)) continue;
+        if ((r !== q && r.z > gz) || !hitBox(r, x0, y0, x1, y1) || !llHits(r.x0, r.y0, r.x1, r.y1)) continue;
         drawOps(lg, r, true, llQ, 0, 0);
       }
       lg.globalCompositeOperation = "source-over"; lg.setTransform(1, 0, 0, 1, 0, 0);
