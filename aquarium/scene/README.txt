@@ -1,5 +1,61 @@
 Сцена аквариума: scene.js (геометрия, свет, точки, пузырьки, реквизит) и вырезанный реквизит props/.
 
+ИСТОЧНИКИ И ЛИЦЕНЗИИ — СВОДКА (все медиа папки aquarium/), обновлено на этапе V5, 2026-10-17
+==========================================================================================
+Все снимки и видео — БЕСПЛАТНАЯ КОЛЛЕКЦИЯ Adobe Stock (Adobe Stock free collection), лицензированы под
+аккаунтом Adobe владельца репозитория 16–17.10.2026. Оригиналы в репозиторий не кладутся (папка aquarium/
+целиком копируется в .app) — здесь только готовые производные. Тип лицензии фото — стандартная лицензия
+бесплатной коллекции; у видео — проверить в License History (ROADMAP, раздел «Лицензия ассетов», R7/R8:
+до продажи нужен реестр «файл → сток ID → лицензия → дата → аккаунт», видео-задник — высокий риск «ассета
+как продукта»).
+
+  файл(ы) в aquarium/                                 сток ID      снимок / видео (Adobe Stock)
+  -----------------------------------------------------------------------------------------------------------
+  assets/reef_day.mp4, reef_night.mp4,                188049047    видео: риф Красного моря, статичная камера,
+        reef_day.jpg, reef_night.jpg (постеры)                     3840×2160, 28.16 с → петля 20.02 с, грейды
+                                                                   день/ночь (tools/aquarium-test/make_media.sh)
+  scene/mask_left/right/far.png, light_mask_video.png 188049047    маски, построенные по кадрам того же видео
+  assets/reef_bg.jpg (запасное фото, фото-сцена)      264961754    "Corals in a Marine Aquarium"
+  scene/occ_*.png, scene/patch_*.png, light_mask.png  264961754    кропы/маски того же фото (этап A2)
+  fish/clownfish, yellow_tang, powder_blue_tang,      177282746    "Set of tropical saltwater fishes on black
+        emperor_angelfish, flame_angel, anthias,                   background"
+        copperband, sergeant_major, striped_surgeon,
+        orange_spot_surgeon, coral_grouper, butterflyfish .png
+  fish/blue_tang.png                                  138368184    "The Real Nemo and Dory"
+  fish/pufferfish.png (на деле — спинорог-клоун)      647601394    "Clown Triggerfish swimming in aquarium"
+  fish/regal_angelfish.png                            1132472143   "Regal angelfish (Pygoplites diacanthus)…"
+  fish/moorish_idol.png                               317344814    "Zanclus cornutus fish on a white background"
+  fish/goldfish.png                                   892154672    "Oranda goldfish isolated on white background"
+  scene/props/anemone.png, anemone_front.png,         555478310    "Tube anemone / cylinder anemone, Cerianthus
+        anemone_front_crown.png                                    membranaceus"
+  scene/props/starfish.png                            275155162    "isolated starfish on a white background"
+  scene/props/crab*.png                               318496474    "Velvet crab in studio"
+  scene/props/tube_sponges.png                        413607513    "Colorful yellow tube sponge in caribbean sea"
+  scene/corals/gorgonian_pink.png, gorgonian_red.png  191997240    "Beautiful Sea Fan"
+  scene/corals/soft_tree_white.png, soft_orange.png   616540286    белый мягкий коралл + оранжево-розовый мягкий
+  scene/corals/finger_leather.png                     506270057    коралловая ферма (Sinularia)
+  scene/corals/carpet_mound.png                       733928665    Andaman soft/mushroom corals
+  scene/corals/tube_sponges_lilac.png                 824786923    лиловые трубчатые губки на рифе
+  scene/corals/stylophora.png                         180252895    Stylophora на чёрном
+  scene/corals/acropora_staghorn, acropora_corymbose, 157134933    публичный аквариум (естественный свет)
+        acropora_bush .png
+  НЕ в .app (исключены в macos-app/build.sh): assets/alt/reef_bg_sea_aquarium.jpg (источник в журнале не
+  записан), assets/render/, fish/render/ (процедурные Blender-рендеры), blender/.
+Указывать автора не требуется; сток не используется в иконке/логотипе. Подробности по каждому этапу — ниже.
+
+V5 (2026-10-17): доводка реквизита (офлайн, скрипты — tools/aquarium-test/art/, исходники — git 7716297)
+  • props/tube_sponges.png — переретушированы: охристо-жёлтые (тон ≈ 47°, насыщенность ≤ 0.5) вместо
+    «пластикового» лайма, свет сверху, тёмное основание, без зелёной каймы (деспилл, эрозия альфы 1 px).
+  • props/anemone_front_crown.png — НОВЫЙ передний слой венца из anemone.png: щупальца ниже линии диска в
+    эллипсе 0.42 × 0.17 вокруг гнезда, без яркого центра, α × 0.85; клоуны держатся между ним и задним слоем.
+  • ../fish/goldfish.png — вуаль (хвост и плавники) почти непрозрачная (α 247, растушёвка 4 px): на стыках
+    срезов тела не было светлых «швов».
+  • Звезда и краб — только данные scene.js: меньше дымки (0.18), свет 1.0 (каустика дна на них), звезда
+    тёплая красно-оранжевая (tint color).
+  • Видео-петли перекодированы (make_media.sh): радужная кайма у кромок кораллов по краям кадра убрана
+    размытием только хромы (справа σ 5, слева σ 3), ключевой кадр каждые 2 с.
+
+
 РЕКВИЗИТ (props/) — этап A1, 2026-10-16
 =======================================
 Все исходные снимки — бесплатная коллекция Adobe Stock (Adobe Stock free collection),

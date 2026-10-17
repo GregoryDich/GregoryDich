@@ -78,6 +78,14 @@ PREMIX="$("$PY" -I "$HERE/reef_grade.py" premix)"
 # Общая подготовка каждого входа: хрома исходника блочная (H.264 4:2:0 на плоской воде) —
 # мягкий билатеральный фильтр только по U/V; затем 4K -> 2560x1440 в 16 бит.
 PREP="bilateral=sigmaS=8:sigmaR=0.06:planes=6,zscale=w=$W:h=$H:f=spline36,format=yuv444p16le"
+# V5: радужная кайма (пурпур/циан/жёлтый) по вертикальным кромкам кораллов у краёв кадра — тонкий «звон» хромы
+# самого исходника (не сдвиг каналов: R/B к G совпадают ≤ 1 px), ночной LUT её усиливает. Только хрома (U/V),
+# только по краям кадра: справа (bx > 0.6, жёлтые ветвистые и розовые трубчатые) gblur σ 5, слева (bx < 0.3) σ 3.
+# Ночная кайма справа 0.54% → 0.005% пикселей; яркость и резкость не трогаются (глаз к хроме в 4–5 раз менее зорок).
+CFX_R=$((W * 6 / 10)); CFX_L=$((W * 3 / 10))
+prep() {   # $1 — суффикс меток (граф использует подготовку дважды: хвост и голова петли)
+  echo "$PREP,split=3[po$1][pr$1][pl$1];[pr$1]crop=w=$((W - CFX_R)):h=$H:x=$CFX_R:y=0,gblur=sigma=5:planes=6[cr$1];[pl$1]crop=w=$CFX_L:h=$H:x=0:y=0,gblur=sigma=3:planes=6[cl$1];[po$1][cr$1]overlay=x=$CFX_R:y=0:format=yuv444[pq$1];[pq$1][cl$1]overlay=x=0:y=0:format=yuv444,format=yuv444p16le"
+}
 # smoothstep-кроссфейд: P идёт 1 -> 0 (A = хвост, B = голова)
 XF="xfade=transition=custom:duration=$XDUR:offset=0:expr='A*(P*P*(3-2*P))+B*(1-P*P*(3-2*P))'"
 # BT.709 limited -> float RGB -> сжатие гаммы -> LUT -> BT.709 limited 4:2:0 с диффузией ошибки
@@ -88,7 +96,7 @@ grade_chain() {
 for TH in $THEMES; do
   echo "== $TH: LUT" >&2
   "$PY" -I "$HERE/reef_grade.py" cube "$TH" "$MEDIA/reef_$TH.cube" 65
-  GRAPH="[0:v]trim=end_frame=$F,setpts=PTS-STARTPTS,$PREP[a];[1:v]trim=end_frame=$L,setpts=PTS-STARTPTS,$PREP[b];[a][b]$XF,$(grade_chain "$TH")"
+  GRAPH="[0:v]trim=end_frame=$F,setpts=PTS-STARTPTS,$(prep A)[a];[1:v]trim=end_frame=$L,setpts=PTS-STARTPTS,$(prep B)[b];[a][b]$XF,$(grade_chain "$TH")"
 
   if [ -n "$STILLS" ]; then
     mkdir -p "$STILLS"
@@ -116,16 +124,16 @@ for TH in $THEMES; do
   if [ $DO_MP4 = 1 ]; then
     # двухпроходный ABR: предсказуемый размер (<= 25 МБ) при лучшем распределении битов;
     # x264 детерминирован при тех же входе и настройках.
-    # Один GOP на всю петлю (IDR только в кадре 0): при 9.4 Мбит/с каждый I-кадр заметно резче
-    # предыдущих P («пульс» текстуры каждые 5 с). Внутри петли пульсов нет, а последние 50 кадров
-    # (zones b=1.6) подтянуты по качеству к I-кадру — шов петли не «дышит».
-    # Петля перематывается только на 0 (video.loop), так что длинный GOP ничего не стоит.
+    # V5: закрытая GOP 2 с (keyint 60): смена темы перематывает новое видео к времени старого (alignVideo) —
+    # при одной GOP на петлю точная перемотка декодировала до 599 кадров 1440p (≈1–2 с), теперь ≤ 59.
+    # «Пульс» текстуры на I-кадрах (почему раньше была одна GOP) гасится ipratio 1.15 (I-кадр не резче P);
+    # последние 50 кадров (zones b=1.6) по-прежнему подтянуты к I-кадру 0 — шов петли не «дышит».
     echo "== $TH: H.264 ($MP4_RATE, 2 прохода)" >&2
     for PASS in 1 2; do
       if [ $PASS = 1 ]; then DST=(-f mp4 /dev/null); else DST=(-movflags +faststart -tag:v avc1 "$ASSETS/reef_$TH.mp4"); fi
       ffmpeg -v error -stats -y -i "$MASTER" -an -c:v libx264 -preset slow -tune film \
         -b:v "$MP4_RATE" -maxrate "$MAXRATE" -bufsize "$BUFSIZE" -pass $PASS -passlogfile "$MEDIA/.x264_$TH" \
-        -profile:v high -level:v 5.1 -x264-params "aq-mode=3:keyint=$L:min-keyint=$L:scenecut=0:zones=$((L - 50)),$((L - 1)),b=1.6" \
+        -profile:v high -level:v 5.1 -x264-params "aq-mode=3:keyint=60:min-keyint=60:scenecut=0:open-gop=0:ipratio=1.15:zones=$((L - 50)),$((L - 1)),b=1.6" \
         -pix_fmt yuv420p -r 30000/1001 -fps_mode cfr \
         -color_primaries bt709 -color_trc bt709 -colorspace bt709 -color_range tv \
         -map_metadata -1 "${DST[@]}"
