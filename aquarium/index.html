@@ -1892,7 +1892,7 @@
       // поведение
       state: ST.CRUISE, st: 0, stDur: 10, sub: 0, subT: 0, subDur: 0, n2: 0,
       tX: 0, tY: 0, tz: 1.3, tSet: false, spdT: 0.6, arrive: false, canTurn: true, turnK: 0.45, turnGapS: 1.4, far: false, fade: 1, farRun: null, litOn: false,
-      hShel: null, hPortal: null, hPeeked: false, hGain: 0, hCoral: null, cEx: 0, cEy: 0, czLo: 0, czHi: 9,
+      hShel: null, hPortal: null, hPeeked: false, hGain: 0, hCoral: null, hUntil: 0, cEx: 0, cEy: 0, czLo: 0, czHi: 9,
       turn: { on: false, p: 0, T: 0.5, s: 1, psi0: 0, v: 0 }, lastTurn: -9, turnGap: 1.1, turnDelayUntil: 0,
       allowBehind: false, near: false, spot: null, spot2: null, outX: 0, outY: 0,
       school: null, isLeader: false, slA: 0, slU: 0, slZ: 0, slP: 0,
@@ -2495,14 +2495,14 @@
         setTarget(f, bgX(s.bx), bgY(s.by), z); f.spdT = Math.min(f.cruise, 0.55);
       } else if (t - f.st > 30) { nextActivity(f, t); return; }
     } else if (f.sub === 11) {                            // вбок в просвет
-      if (distT(f) < 0.6 * L || t - f.subT > 14) { f.sub = 12; f.subT = t; f.n2 = 0; }
+      if (distT(f) < 0.6 * L || t - f.subT > 14) { f.sub = 12; f.subT = t; f.n2 = 0; f.hUntil = t + f.stDur; }   // в просвете — stDur с, сколько бы ни плыла
     } else if (f.sub === 12) {                            // стоит в просвете, чуть смещается
       f.spdT = 0.1; f.arrive = true; f.turnK = 1.0; f.turnGapS = 3.5;
       if (t - f.subT > 2.2 && R() < dt * 0.3) {
         const r = (s.r || 0.03) * BGX.dw;
         setTarget(f, bgX(s.bx) + rand(-0.5, 0.5) * r, bgY(s.by) + rand(-0.35, 0.35) * r, z + rand(-0.012, 0.012)); f.subT = t;
       }
-      if (t - f.st > f.stDur + 6) { f.sub = 13; f.subT = t; setTarget(f, f.cEx, f.cEy, z); f.spdT = Math.min(f.cruise, 0.6); f.arrive = false; }
+      if (t > f.hUntil) { f.sub = 13; f.subT = t; setTarget(f, f.cEx, f.cEy, z); f.spdT = Math.min(f.cruise, 0.6); f.arrive = false; }
     } else {                                              // наружу тем же боком
       if (distT(f) < 0.7 * L || t - f.subT > 14) { nextActivity(f, t); return; }
     }
@@ -3933,7 +3933,7 @@
     return c;
   }
   function buildItemThemes(it) {
-    it.timgs = null;
+    it.timgs = null; it.tset = null;
     const d = it.def;
     if (bgMode !== "video" || (it.kind !== "prop" && it.kind !== "coral") || !TP[0] || !TP[1]) return;
     // колония: грейд места — из scene.corals[].grade, флуоресценция — scene.corals[].night или каталог (night {glow, amt})
@@ -3942,14 +3942,35 @@
     const haze = gr.haze > 0 ? +gr.haze : 0, a = TP[0], b = TP[1];
     const gl = nt && Array.isArray(nt.glow) ? nt.glow : [0, 0, 0], ga = nt && nt.amt > 0 ? nt.amt * b.glowK : 0;
     const nm = [b.coralMul[0] + gl[0] * ga, b.coralMul[1] + gl[1] * ga, b.coralMul[2] + gl[2] * ga];
-    const day = [], night = [], k = itemDevScale(it);
-    for (let i = 0; i < it.imgs.length; i++) {
-      const im = it.imgs[i];
-      day.push(im ? themeVariant(im, shade, a.coralMul, a.fog, haze * a.hazeK, k) : null);
-      night.push(im ? themeVariant(im, shade, nm, b.fog, haze * b.hazeK, k) : null);
+    // V4b: варианты — ЛЕНИВО, по теме: при загрузке только нужная тема (вдвое меньше памяти и времени старта);
+    // вторая — за несколько кадров до перехода (themePrebuild) или в момент первой нужды; после перехода — отпускается
+    it.tset = { shade, haze, nm }; it.tk = itemDevScale(it); it.timgs = [null, null];
+    if (it.kind === "coral") it.core = it.imgs[0];
+    themeSet(it, TH.target);
+  }
+  function themeSet(it, i) {
+    const T = it.timgs;
+    if (!T) return null;
+    if (T[i]) return T[i];
+    const p = it.tset, a = TP[0], b = TP[1], out = [];
+    for (let j = 0; j < it.imgs.length; j++) {
+      const im = it.imgs[j];
+      out.push(im ? themeVariant(im, p.shade, i ? p.nm : a.coralMul, i ? b.fog : a.fog, p.haze * (i ? b.hazeK : a.hazeK), it.tk) : null);
     }
-    it.timgs = [day, night]; it.tk = k;
-    if (it.kind === "coral") it.core = day[0];               // альфа та же — вычитание берёт уменьшенную копию
+    T[i] = out;
+    if (it.kind === "coral") it.core = out[0];               // альфа та же — вычитание берёт уменьшенную копию
+    return out;
+  }
+  // на кадр — не больше одного недостающего набора нужной темы (смена темы: переход ждёт задник ≤ 3 с — успевает);
+  // по окончании перехода ненужная тема отпускается
+  function themePrebuild() {
+    const done = TH.p === TH.target, need = TH.target;
+    for (let i = 0; i < SCN.items.length; i++) {
+      const it = SCN.items[i], T = it.timgs;
+      if (!T || !it.ready) continue;
+      if (done && T[1 - need]) { T[1 - need] = null; if (it.kind === "coral" && T[need]) it.core = T[need][0]; }
+      if (!T[need]) { themeSet(it, need); return; }
+    }
   }
   /* V4b: масштаб вариантов темы под экран — не больше нужного буферу холста (×1.08 на качание и мип-запас) и не
      больше исходника; ступенями 1/16 (без пересборки на мелких изменениях). На большом экране / RS 2 — исходник. */
@@ -3965,8 +3986,8 @@
     const T = it.timgs, k = TH.k;
     if (!T) { drawOps(g, it, false, sc, ox, oy); return; }
     const a0 = g.globalAlpha;
-    if (k < 0.999) drawOps(g, it, false, sc, ox, oy, T[0]);
-    if (k > 0.001) { g.globalAlpha = a0 * (k < 0.999 ? k : 1); drawOps(g, it, false, sc, ox, oy, T[1]); g.globalAlpha = a0; }
+    if (k < 0.999) drawOps(g, it, false, sc, ox, oy, T[0] || themeSet(it, 0));
+    if (k > 0.001) { g.globalAlpha = a0 * (k < 0.999 ? k : 1); drawOps(g, it, false, sc, ox, oy, T[1] || themeSet(it, 1)); g.globalAlpha = a0; }
   }
   const scSettled = () => scPending === 0;
   const gridOk = (g) => (Array.isArray(g) && g.length >= 2 && g.every((r) => typeof r === "string" && r.length === g.length) ? g : null);
@@ -4290,11 +4311,21 @@
     SCN.on = false;
     if (!bgReady || !SCN.built || !SCN.items.length) return;
     let nl = 0, no = 0, nd = 0, nt = 0, kx0 = 1e9, ky0 = 1e9, kx1 = -1e9, ky1 = -1e9;
+    const lay = (LAYERS.xCoral ? 1 : 0) + (LAYERS.xProp ? 2 : 0) + (LAYERS.xReefC ? 4 : 0) + (LAYERS.caustics ? 8 : 0);
+    // передний риф — кэш на ≤ 20 Гц (см. drawReefLayer): позы его предметов «замирают» между пересборками
+    let due = !(RFC.ok && t >= RFC.t && t - RFC.t < 1 / REEF_HZ - 1e-6 && RFC.W === W && RFC.H === H && RFC.RS === RS && RFC.lay === lay &&
+      Math.abs(RFC.k - TH.k) < 0.03 && (RFC.k === TH.k || (TH.k > 0 && TH.k < 1)));
     for (let i = 0; i < SCN.items.length; i++) {
       const it = SCN.items[i];
       if (!itemReady(it)) continue;
-      if (it.timgs && Math.abs(itemDevScale(it) - it.tk) > 0.03) { buildItemThemes(it); RCC.ok = false; }   // ресайз: варианты под новый размер
-      poseItem(it, t);
+      if (it.timgs && Math.abs(itemDevScale(it) - it.tk) > 0.03) { buildItemThemes(it); RCC.ok = false; it.posed = false; }   // ресайз: варианты под новый размер
+      if (it.late && !it.posed) due = true;                 // новый предмет — пересобрать кэш сейчас
+    }
+    SCN.reefDue = due;
+    for (let i = 0; i < SCN.items.length; i++) {
+      const it = SCN.items[i];
+      if (!it.ready) continue;
+      if (!it.late || due) { poseItem(it, t); it.posed = true; }
       if (it.sub) SCN.ord[no++] = it;
       if (it.layer) SCN.layer[nl++] = it;
       if (it.dyn) SCN.dyn[nd++] = it;
@@ -4309,6 +4340,7 @@
     sortByZ(SCN.layer, nl); sortByZ(SCN.ord, no); sortByZ(SCN.late, nt);
     SCN.on = no + nl + nd + nt > 0;
     KP.on = nt > 0 && kx1 > kx0 && LAYERS.scene && LAYERS.caustics;
+    if (due) { RFC.lay = lay; RFC.k = TH.k; }
     KP.x0 = Math.max(0, kx0); KP.y0 = Math.max(0, ky0); KP.x1 = Math.min(W, kx1); KP.y1 = Math.min(H, ky1);
   }
   const CB = [null, null];                                 // буферы краба за фрагом (чёт/нечет)
@@ -4384,40 +4416,83 @@
     if (it.kind === "coral") return clamp((d.light != null ? +d.light : 0.8) * REEF_CAUS, 0, 1);
     return clamp((d.light != null ? +d.light : 0.75) * REEF_CAUS, 0, 1);
   }
+  /* Кэш переднего рифа (RFC): предметы слоя и их каустика собираются в отдельный холст (прозрачный фон, рамка слоя
+     на экране, по месту, два буфера) не чаще REEF_HZ = 20 Гц; в остальных кадрах — один drawImage 1:1. Качание
+     медленное (≤ ≈ 20 px/с) — шаг ≤ 1 px, глазу незаметно; позы предметов между пересборками заморожены (вычитание
+     рыб за колониями — по тем же позам). Тени (multiply по заднику, он живой) — каждый кадр прямо на холст.
+     В программном растре (и в CoreGraphics WebKit) многократная отрисовка крупных колоний со сдвигом полос и
+     'color-dodge' по полэкрана — главная цена слоя; кэш делит её на 2–3. */
+  const REEF_HZ = 20;
+  const RFC = { ok: false, t: -1e9, par: 0, W: 0, H: 0, RS: 0, lay: -1, k: -1, x: 0, y: 0, pw: 0, ph: 0 };
+  const RFB = [null, null];
   function drawReefLayer(t) {
     if (!SCN.on || !SCN.nLate || !LAYERS.scene) return;
     const d0 = CNT.drawImage;
+    let tuckAny = false;
     ctx.setTransform(RS, 0, 0, RS, 0, 0);
-    for (let i = 0; i < SCN.nLate; i++) {
+    for (let i = 0; i < SCN.nLate; i++) {                 // 1) тени — каждый кадр, прямо по заднику
       const it = SCN.late[i];
       if (it.x1 < 0 || it.x0 > W || it.y1 < 0 || it.y0 > H) continue;
       if (it.kind === "coral" ? !LAYERS.xCoral : !LAYERS.xProp) continue;
       const tucked = it.crab && CRAB.tuck + CRAB.shade > 0.01;
-      if (LAYERS.xShadow && propShadowSprite && !tucked) {
-        let s = it.shadow, w = it.pw, cx = it.cx, cy = it.cy;
-        if (!s && it.kind === "coral") s = it.def.shadow || CORAL_SHADOW;
-        if (s) {
-          const sw = (s.w || 0.75) * w, sh = (s.h || 0.2) * w;
-          cy += (s.dy || 0) * w; cx += (s.dx || 0) * w;
-          if (cy - sh / 2 < H && cx + sw / 2 > 0 && cx - sw / 2 < W) {
-            ctx.setTransform(RS, 0, 0, RS, 0, 0);
-            ctx.globalCompositeOperation = "multiply"; ctx.globalAlpha = clamp(s.a != null ? +s.a : 0.3, 0, 1);
-            ctx.drawImage(propShadowSprite, cx - sw / 2, cy - sh / 2, sw, sh);
-            ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
-          }
-        }
-      }
-      if (tucked) drawCrabTucked(it);
-      else drawItem(ctx, it, RS, 0, 0);
+      if (tucked) tuckAny = true;
+      if (LAYERS.xShadow && propShadowSprite && !tucked) drawReefShadow(it);
     }
-    ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
-    const tr0 = COUNTING ? performance.now() : 0;
-    if (KP.on && KP.ok && kpCan && LAYERS.caustics && LAYERS.xReefC) reefCaustics();
-    if (COUNTING) CNT.e4MsReefC += performance.now() - tr0;
+    if (tuckAny) {                                         // краб за фрагом (фото-сцена E4) — без кэша, как раньше
+      for (let i = 0; i < SCN.nLate; i++) {
+        const it = SCN.late[i];
+        if (it.x1 < 0 || it.x0 > W || it.y1 < 0 || it.y0 > H || (it.kind === "coral" ? !LAYERS.xCoral : !LAYERS.xProp)) continue;
+        if (it.crab && CRAB.tuck + CRAB.shade > 0.01) drawCrabTucked(it); else drawItem(ctx, it, RS, 0, 0);
+      }
+      ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+      if (KP.on && KP.ok && kpCan && LAYERS.caustics && LAYERS.xReefC) reefCaustics(ctx, 0, 0);
+      RFC.ok = false;
+      CNT.e4Scene += CNT.drawImage - d0;
+      return;
+    }
+    if (SCN.reefDue || !RFC.ok) {                          // 2) пересборка кэша
+      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+      for (let i = 0; i < SCN.nLate; i++) { const it = SCN.late[i]; if (it.x0 < x0) x0 = it.x0; if (it.y0 < y0) y0 = it.y0; if (it.x1 > x1) x1 = it.x1; if (it.y1 > y1) y1 = it.y1; }
+      const X0 = Math.max(0, Math.floor(x0 * RS)), Y0 = Math.max(0, Math.floor(y0 * RS)), X1 = Math.min(canvas.width, Math.ceil(x1 * RS)), Y1 = Math.min(canvas.height, Math.ceil(y1 * RS));
+      RFC.ok = false;
+      if (X1 > X0 && Y1 > Y0) {
+        const pw = X1 - X0, ph = Y1 - Y0, ox = X0 / RS, oy = Y0 / RS;
+        RFC.par ^= 1;
+        const e = gbuf(RFB, RFC.par, pw, ph), g = e.g;
+        for (let i = 0; i < SCN.nLate; i++) {
+          const it = SCN.late[i];
+          if (it.x1 < 0 || it.x0 > W || it.y1 < 0 || it.y0 > H || (it.kind === "coral" ? !LAYERS.xCoral : !LAYERS.xProp)) continue;
+          drawItem(g, it, RS, ox, oy);
+        }
+        g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
+        const tr0 = COUNTING ? performance.now() : 0;
+        if (KP.on && KP.ok && kpCan && LAYERS.caustics && LAYERS.xReefC) reefCaustics(g, ox, oy);
+        if (COUNTING) CNT.e4MsReefC += performance.now() - tr0;
+        g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
+        RFC.ok = true; RFC.t = t; RFC.W = W; RFC.H = H; RFC.RS = RS; RFC.x = ox; RFC.y = oy; RFC.pw = pw; RFC.ph = ph;
+      }
+    }
+    if (RFC.ok) {                                          // 3) кэш — на холст 1:1
+      ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(RFB[RFC.par].c, 0, 0, RFC.pw, RFC.ph, RFC.x, RFC.y, RFC.pw / RS, RFC.ph / RS);
+    }
     CNT.e4Scene += CNT.drawImage - d0;
   }
+  // тень предмета переднего рифа: контактная у реквизита, затенение основания у колонии (multiply-эллипс)
+  function drawReefShadow(it) {
+    let s = it.shadow;
+    if (!s && it.kind === "coral") s = it.def.shadow || CORAL_SHADOW;
+    if (!s) return;
+    const w = it.pw, sw = (s.w || 0.75) * w, sh = (s.h || 0.2) * w, cx = it.cx + (s.dx || 0) * w, cy = it.cy + (s.dy || 0) * w;
+    if (cy - sh / 2 >= H || cx + sw / 2 <= 0 || cx - sw / 2 >= W) return;
+    ctx.setTransform(RS, 0, 0, RS, 0, 0);
+    ctx.globalCompositeOperation = "multiply"; ctx.globalAlpha = clamp(s.a != null ? +s.a : 0.3, 0, 1);
+    ctx.drawImage(propShadowSprite, cx - sw / 2, cy - sh / 2, sw, sh);
+    ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+  }
   const CORAL_SHADOW = { w: 0.75, h: 0.2, a: 0.3 };
-  function reefCaustics() {
+  // каустика слоя на цель tg (главный холст — начало 0, 0; кэш слоя — начало tox, toy в CSS px)
+  function reefCaustics(tg, tox, toy) {
     const bh = BGX.bandH;
     const x0 = Math.max(0, KP.x0), y0 = Math.max(bh, KP.y0), x1 = Math.min(W, KP.x1), y1 = Math.min(H, KP.y1);
     const kx0 = Math.max(0, Math.floor(x0 * kS)), ky0 = Math.max(0, Math.floor((y0 - bh) * kS));
@@ -4436,7 +4511,7 @@
         if (it.kind === "coral" ? !LAYERS.xCoral : !LAYERS.xProp) continue;
         if (it.crab && CRAB.tuck + CRAB.shade > 0.01) continue;
         g.globalAlpha = itemLight(it) * (it.crab ? 1 - 0.8 * CRAB.shade : 1);
-        drawOps(g, it, false, kS, ox, oy, it.timgs ? it.timgs[0] : null);
+        drawOps(g, it, false, kS, ox, oy, it.timgs ? it.timgs[0] || it.timgs[1] : null);
         any = true;
       }
       if (any) {
@@ -4447,10 +4522,10 @@
       RCC.ok = any; RCC.kT = kT; RCC.kx0 = kx0; RCC.ky0 = ky0; RCC.pw = pw; RCC.ph = ph; RCC.n = SCN.nLate; RCC.lay = lay;
     }
     if (!RCC.ok) return;
-    ctx.setTransform(RS, 0, 0, RS, 0, 0);
-    ctx.globalCompositeOperation = "color-dodge"; ctx.globalAlpha = 1;
-    ctx.drawImage(RLB[RCC.par].c, 0, 0, pw, ph, ox, oy, pw / kS, ph / kS);
-    ctx.globalCompositeOperation = "source-over";
+    tg.setTransform(RS, 0, 0, RS, -RS * tox, -RS * toy);
+    tg.globalCompositeOperation = "color-dodge"; tg.globalAlpha = 1;
+    tg.drawImage(RLB[RCC.par].c, 0, 0, pw, ph, ox, oy, pw / kS, ph / kS);
+    tg.globalCompositeOperation = "source-over";
   }
   const RCC = { ok: false, kT: NaN, par: 0, kx0: 0, ky0: 0, pw: 0, ph: 0, n: 0, lay: 0 };
 
@@ -5212,6 +5287,7 @@
     themeCaches(false);                              // ступени перекраски кэшей темы (обычно — ничего)
     updateLight(t);
     SCN.frame++;
+    if (SCN.built) themePrebuild();                  // V4b: варианты предметов под тему — по одному набору на кадр
     poseScene(t);
     if (bgReady) {
       drawBackdrop();                                // кадр видео/постера (в переходе тем — оба)

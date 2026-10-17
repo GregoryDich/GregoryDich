@@ -237,3 +237,19 @@ node stats.js --q "bgvideo=webm" --out /tmp/x/stats.json                        
 `window.__aq` (V4a): `theme()` → `{mode, target, p, k (вес ночи), dark, bgMode, bgSrc, sources [{theme, poster, video, aligned,
 frame, t, playing, size}], tv}`; `setTheme('day'|'night'|'auto', instant)` (как `window.aquariumSetTheme`; `instant` — без
 перехода). `stats()` — плюс `bgMode` (`video`|`photo`|null), `theme`, `themeK`, `video` (состояния видео тем).
+
+## Этап V4b «живой передний риф, реквизит, поведение»: слои и API
+
+Колонии `scene.corals` (каталог `scene/corals/catalog.js`) и реквизит видео-сцены — «поздний» слой: после каустики
+задника, отсвета дна и теней рыб на песке, одним списком по глубине; мягкие кораллы и веера качаются полосами строк
+(основание прибито, кончики ≤ 3% высоты, 0.15–0.4 Гц + общее течение), каменистые неподвижны. Каустика слоя —
+свой буфер `Kp` (рисунок × след лучей, без маски и альбедо задника) через альфы предметов, `color-dodge`; пересборка
+с K (≤ 20 Гц). Рыба за колонией — в группе вычитания (сквозь крону/кружево видно); «замок» глубины — рыба, перекрывающая
+колонию (сетка `grid` 32×32 в scene.js), не меняет сторону её z (без «прыжков» сквозь крону).
+
+Слои (`__aq.layers({...})`, `?layers=-xCoral`): `xCoral` — колонии, `xReefC` — каустика переднего рифа (`xProp`,
+`xShadow`, `groups` — как в E4). Профиль `stats()`: `pReef` (мс слоя), `e4MsReefC` (мс каустики слоя).
+
+`window.__aq` (V4b): `corals()` → `[{id, z, ready, flip, ops, bb, rest, kind, themes}]`; `enter(fishId, what)` —
+`"coral"` (просвет в переднем рифе), `"hide"` (за колонну: сначала нырок в открытой воде), `"peek"`; `fish()[i]` —
+плюс `coral`, `cz [lo, hi]` (замок колоний), `allowBehind`, `shelter`. Бит режиссёра `nook` (`__aq.beat('nook')`).
