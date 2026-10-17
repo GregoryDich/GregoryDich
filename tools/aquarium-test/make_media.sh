@@ -126,14 +126,15 @@ for TH in $THEMES; do
     # x264 детерминирован при тех же входе и настройках.
     # V5: закрытая GOP 2 с (keyint 60): смена темы перематывает новое видео к времени старого (alignVideo) —
     # при одной GOP на петлю точная перемотка декодировала до 599 кадров 1440p (≈1–2 с), теперь ≤ 59.
-    # «Пульс» текстуры на I-кадрах (почему раньше была одна GOP) гасится ipratio 1.15 (I-кадр не резче P);
+    # «Пульс» текстуры на I-кадрах (почему раньше была одна GOP): mbtree=0 + ipratio 1.0 — I-кадр лишь на ≈1.9 дБ PSNR
+    # выше соседних P (с mbtree и ipratio 1.15 было +3.6 дБ; замер — psnr к мастеру на 180 кадрах);
     # последние 50 кадров (zones b=1.6) по-прежнему подтянуты к I-кадру 0 — шов петли не «дышит».
     echo "== $TH: H.264 ($MP4_RATE, 2 прохода)" >&2
     for PASS in 1 2; do
       if [ $PASS = 1 ]; then DST=(-f mp4 /dev/null); else DST=(-movflags +faststart -tag:v avc1 "$ASSETS/reef_$TH.mp4"); fi
       ffmpeg -v error -stats -y -i "$MASTER" -an -c:v libx264 -preset slow -tune film \
         -b:v "$MP4_RATE" -maxrate "$MAXRATE" -bufsize "$BUFSIZE" -pass $PASS -passlogfile "$MEDIA/.x264_$TH" \
-        -profile:v high -level:v 5.1 -x264-params "aq-mode=3:keyint=60:min-keyint=60:scenecut=0:open-gop=0:ipratio=1.15:zones=$((L - 50)),$((L - 1)),b=1.6" \
+        -profile:v high -level:v 5.1 -x264-params "aq-mode=3:mbtree=0:keyint=60:min-keyint=60:scenecut=0:open-gop=0:ipratio=1.0:zones=$((L - 50)),$((L - 1)),b=1.6" \
         -pix_fmt yuv420p -r 30000/1001 -fps_mode cfr \
         -color_primaries bt709 -color_trc bt709 -colorspace bt709 -color_range tv \
         -map_metadata -1 "${DST[@]}"
