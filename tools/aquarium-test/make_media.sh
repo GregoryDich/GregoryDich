@@ -115,13 +115,17 @@ for TH in $THEMES; do
 
   if [ $DO_MP4 = 1 ]; then
     # двухпроходный ABR: предсказуемый размер (<= 25 МБ) при лучшем распределении битов;
-    # x264 детерминирован при тех же входе и настройках
+    # x264 детерминирован при тех же входе и настройках.
+    # Один GOP на всю петлю (IDR только в кадре 0): при 9.4 Мбит/с каждый I-кадр заметно резче
+    # предыдущих P («пульс» текстуры каждые 5 с). Внутри петли пульсов нет, а последние 50 кадров
+    # (zones b=1.6) подтянуты по качеству к I-кадру — шов петли не «дышит».
+    # Петля перематывается только на 0 (video.loop), так что длинный GOP ничего не стоит.
     echo "== $TH: H.264 ($MP4_RATE, 2 прохода)" >&2
     for PASS in 1 2; do
       if [ $PASS = 1 ]; then DST=(-f mp4 /dev/null); else DST=(-movflags +faststart -tag:v avc1 "$ASSETS/reef_$TH.mp4"); fi
       ffmpeg -v error -stats -y -i "$MASTER" -an -c:v libx264 -preset slow -tune film \
         -b:v "$MP4_RATE" -maxrate "$MAXRATE" -bufsize "$BUFSIZE" -pass $PASS -passlogfile "$MEDIA/.x264_$TH" \
-        -profile:v high -level:v 5.1 -x264-params "aq-mode=3:keyint=150:min-keyint=30" \
+        -profile:v high -level:v 5.1 -x264-params "aq-mode=3:keyint=$L:min-keyint=$L:scenecut=0:zones=$((L - 50)),$((L - 1)),b=1.6" \
         -pix_fmt yuv420p -r 30000/1001 -fps_mode cfr \
         -color_primaries bt709 -color_trc bt709 -colorspace bt709 -color_range tv \
         -map_metadata -1 "${DST[@]}"
