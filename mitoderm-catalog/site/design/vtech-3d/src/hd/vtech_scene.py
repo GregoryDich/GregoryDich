@@ -75,7 +75,7 @@ SHOTS = {
 # the carton, is clear of its edge, and arrives
 TRANS = {
     ('v2-why', 'v3-inside'): dict(via=dict(box(0.30, 0.50, 5.2, 0.62), t=0.5), vials=[(1, 0.5, 0.68, 0.97)]),
-    ('v3-inside', 'v4-feel'): dict(pouches=[(-1, 0.1, 0.4, 0.85)]),
+    ('v3-inside', 'v4-feel'): dict(pouches=[(-1, 0.08, 0.32, 0.96)]),   # a long arrival: the big sachet swings in slowly
     ('v5-protocol', 'v6-kit'): dict(vials=[(-1, 0.18 + 0.13 * j, 0.30 + 0.13 * j, 0.52 + 0.13 * j) for j in range(4)],
                                     pouches=[(1, 0.25 + 0.13 * j, 0.37 + 0.13 * j, 0.59 + 0.13 * j) for j in range(4)]),
 }
