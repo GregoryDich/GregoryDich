@@ -39,6 +39,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             btn.image?.isTemplate = true
         }
         let menu = NSMenu()
+        menu.addItem(FeedbackCenter.shared.menuItem())   // «Написать отзыв…» (FeedbackWindow.swift)
+        menu.addItem(.separator())
         let login = NSMenuItem(title: "Запускать при входе", action: #selector(toggleLogin(_:)), keyEquivalent: "")
         login.target = self
         login.state = LoginItem.isEnabled ? .on : .off

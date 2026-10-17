@@ -226,14 +226,24 @@ enum Diagnostics {
 enum WallpaperProbe {
     /// Wallpaper web view on NSScreen.main (fallback: the first wallpaper web view).
     static func mainWebView() -> WKWebView? {
-        let desktop = Int(CGWindowLevelForKey(.desktopWindow))
-        let wallpapers = NSApp.windows.filter { $0.level.rawValue == desktop && $0.contentView is WKWebView }
+        // Wallpaper windows are the app's only click-through windows hosting a WKWebView.
+        let wallpapers: [(window: NSWindow, web: WKWebView)] = NSApp.windows.compactMap { w in
+            guard w.ignoresMouseEvents, let web = webView(in: w.contentView) else { return nil }
+            return (w, web)
+        }
         let mainID = NSScreen.main.flatMap { Diagnostics.displayID($0) }
-        let onMain = wallpapers.first { w in
-            guard let id = mainID, let s = w.screen else { return false }
+        let onMain = wallpapers.first { pair in
+            guard let id = mainID, let s = pair.window.screen else { return false }
             return Diagnostics.displayID(s) == id
         }
-        return (onMain ?? wallpapers.first)?.contentView as? WKWebView
+        return (onMain ?? wallpapers.first)?.web
+    }
+
+    private static func webView(in view: NSView?) -> WKWebView? {
+        guard let view = view else { return nil }
+        if let web = view as? WKWebView { return web }
+        for sub in view.subviews { if let web = sub as? WKWebView { return web } }
+        return nil
     }
 
     /// `takeSnapshot` at ≤ `maxWidthPt` points wide; the JPEG step limits the long side to 1600 px.

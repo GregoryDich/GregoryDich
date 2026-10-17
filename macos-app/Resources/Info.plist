@@ -24,5 +24,12 @@
     <true/>
     <key>NSSupportsAutomaticGraphicsSwitching</key>
     <true/>
+    <!-- Feedback window («Написать отзыв…»). Route: endpoint (https POST) → e-mail (mailto) → clipboard. -->
+    <key>AQFeedbackEndpoint</key>
+    <string></string>
+    <key>AQFeedbackEmail</key>
+    <string>support@tonamorph.com</string>
+    <key>AQPrivacyPolicyURL</key>
+    <string></string>
 </dict>
 </plist>
