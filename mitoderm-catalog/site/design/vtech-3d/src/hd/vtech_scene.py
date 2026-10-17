@@ -457,6 +457,9 @@ for a in S.get('pouches', []):
     pc = tag(make_pouch(a), 'pouches')
     if SOLO > 0:   # a sachet alone: its own fill card, and not mirrored in the far carton (a dark T on the foil)
         fill_card(a, pc, SOLO)
+    if SOLO < 1:   # the kit fan: a soft card on each sachet's mirror ray, NOT light-linked (linked cards black out each
+        # other's mirrors and the fan went dark); fades in with the kit (fadeable), no jump at the key frame
+        card_at(srgb(0xfff3e0), 1.6, a[:3], a[3:6], 3.0, 2.6, 1.4, 0.45).color[3] = 1 - SOLO
 if S.get('pouches') and SOLO < 1:  # kit: a low wide card under the camera, so the sachet fan mirrors light, not the dark void
     panel(srgb(0xfff3e0), 1.6, -1.8, -3.0, 4.6, 6.4, 2.4, math.pi, rx=-0.5, soft=0.35).color[3] = 1 - SOLO
 

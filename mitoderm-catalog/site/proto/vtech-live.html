@@ -374,7 +374,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
     <aside class="kitcard rv" style="--d:.1s" aria-labelledby="kitcard-h">
       <div class="kc-head"><h3 id="kitcard-h">מה באריזה</h3><span class="badge"><bdi>V-TECH FACE</bdi></span></div>
       <canvas class="kc-live" role="img" aria-label="V-TECH SYSTEM: 5 אמפולות סרום של 5 מ״ל ו-5 שקיות מסכת ג׳ל של 5 מ״ל"></canvas>
-      <img class="kc-pic" src="img/kit.webp" alt="V-TECH SYSTEM: 5 אמפולות סרום של 5 מ״ל ו-5 שקיות מסכת ג׳ל של 5 מ״ל" width="226" height="228" loading="lazy">
+      <img class="kc-pic" src="img/kit.webp" alt="V-TECH SYSTEM: 5 אמפולות סרום של 5 מ״ל ו-5 שקיות מסכת ג׳ל של 5 מ״ל" width="760" height="767" loading="lazy">
       <p class="kc-qty"><b><bdi dir="ltr">5×</bdi></b><span>סרום — אמפולות של 5 מ״ל – אקסוזומים סינתטיים, <bdi class="nw">PDRN 2%</bdi>, פפטידים ביומימטיים, תאי גזע של תפוח.</span></p><p class="kc-qty"><b><bdi dir="ltr">5×</bdi></b><span>מסכת ג׳ל — שקיות של 5 מ״ל – <bdi class="nw">PDRN 1%</bdi>, פפטידים עם זהב קולואידי, נחושת, פוליסכריד מריר חלזון, חומצה היאלורונית ואלוורה.</span></p>
       <p class="kc-facts"><span><b><bdi dir="ltr">4–6</bdi></b> טיפולים בסדרה</span><i aria-hidden="true">·</i><span><b><bdi dir="ltr">14</bdi></b> יום בין טיפול לטיפול</span></p>
       <ul class="chips gold"><li>היבואנית הבלעדית של <bdi class="nw">VM</bdi> בישראל</li><li>הדרכה ופרוטוקולים</li></ul>
@@ -444,7 +444,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 // compressed files, so the whole story downloads once. Cells: a field of exosome sprites the camera flies through
 // from S1 to S3 (far ones behind the product, near ones in front of it but never over the copy or the S3 hero).
 (() => {
-  const CFG = {"runs":[{"a":"v1-meet","b":"v2-why","n":40,"box":[0.1846,0.2067,0.4758,0.8233]},{"a":"v2-why","b":"v3-inside","n":40,"box":[0.0367,0.0733,0.4237,0.8667]},{"a":"v3-inside","b":"v4-feel","n":40,"box":[0.0117,0.07,0.5133,0.8467]},{"a":"v4-feel","b":"v5-protocol","n":40,"box":[0,0.0733,0.5133,0.77]},{"a":"v5-protocol","b":"v6-kit","n":40,"box":[0,0.0567,0.5258,0.8767]}],"tiers":[480],"cells":["c01","c02","c03","c04","c05","c06","c07","c08","c09","c10"]};
+  const CFG = {"runs":[{"a":"v1-meet","b":"v2-why","n":40,"box":[0.1846,0.2067,0.4758,0.8233]},{"a":"v2-why","b":"v3-inside","n":40,"box":[0.0367,0.0733,0.4237,0.8667]},{"a":"v3-inside","b":"v4-feel","n":40,"box":[0.0117,0.07,0.5133,0.8467]},{"a":"v4-feel","b":"v5-protocol","n":40,"box":[0.0013,0.0733,0.5133,0.77]},{"a":"v5-protocol","b":"v6-kit","n":40,"box":[0,0.0567,0.5258,0.8767]}],"tiers":[480],"cells":["c01","c02","c03","c04","c05","c06","c07","c08","c09","c10"]};
   const RUNS = CFG.runs, R = RUNS.length, NS = RUNS.map(r => r.n), TIERS = CFG.tiers.slice().sort((a, b) => a - b), SPRITES = CFG.cells;
   const OFF = NS.map((n, k) => NS.slice(0, k).reduce((a, b) => a + b, 0)), TOTAL = OFF[R - 1] + NS[R - 1];
   const BACK = 4, AHEAD = 8, FLIGHT = 4, WARM = 2;              // decode window and fetch concurrency
