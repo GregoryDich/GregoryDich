@@ -2769,8 +2769,8 @@
             homeOf(f);
             // по ходу — чаще (патрулирует венец туда-обратно, а не крутится на месте)
             const ahead = R() < 0.72 ? f.dir : -f.dir, ex = clamp((f.x - f.hx) / f.hrx, -1, 1);
-            // V5: патруль — по своей половине венца (центр слота 0.3·hrx = 0.35·nest.rx, размах ±0.55), пара — рядом, не стопкой
-            const c0 = 0.3 * f.hSide, lo = f.hSide ? c0 - 0.55 : -1, hi = f.hSide ? c0 + 0.55 : 1;
+            // V5: патруль — по своей половине венца (центр слота ±0.45·hrx ≈ ±0.5·nest.rx, размах ±0.5), пара — рядом, не стопкой
+            const c0 = 0.45 * f.hSide, lo = f.hSide ? c0 - 0.5 : -1, hi = f.hSide ? c0 + 0.5 : 1;
             const ux = clamp(ex + ahead * rand(0.35, 1.1), Math.max(-1, lo), Math.min(1, hi)), uy = rand(-1, 1) * Math.sqrt(Math.max(0, 1 - ux * ux));
             const zs = f.hSide ? (f.hSide < 0 ? rand(0.0, 0.008) : rand(0.012, 0.02)) : rand(-0.004, 0.022);
             setTarget(f, f.hx + ux * f.hrx, f.hy - 0.25 * f.hry + uy * f.hry, f.hz + zs);   // V4b: между слоями актинии и за акропорой у её трубки
@@ -2958,35 +2958,42 @@
         if (a.school && a.school === b.school) continue;
         const ma = !a.turn.on, mb = !b.turn.on;
         if (!ma && !mb) continue;
+        // рамки с упреждением (±0.3 длины, ±0.15 высоты): глубина начинает расходиться до касания
+        const ea = 0.3 * a.len, eb = 0.3 * b.len, fa0 = 0.15 * a.h, fb0 = 0.15 * b.h;
+        const jx = Math.min(a.maxX + ea, b.maxX + eb) - Math.max(a.minX - ea, b.minX - eb), jy = Math.min(a.maxY + fa0, b.maxY + fb0) - Math.max(a.minY - fa0, b.minY - fb0);
+        if (jx <= 0 || jy <= 0) continue;
+        const sa = (a.maxX - a.minX) * (a.maxY - a.minY), sb = (b.maxX - b.minX) * (b.maxY - b.minY), sm = Math.max(1, Math.min(sa, sb));
+        if ((jx * jy) / sm < 0.25) continue;
         const ix = Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX), iy = Math.min(a.maxY, b.maxY) - Math.max(a.minY, b.minY);
-        if (ix <= 0 || iy <= 0) continue;
-        const sa = (a.maxX - a.minX) * (a.maxY - a.minY), sb = (b.maxX - b.minX) * (b.maxY - b.minY);
-        const ov = (ix * iy) / Math.max(1, Math.min(sa, sb));
-        if (ov < 0.25) continue;
+        const ov = ix > 0 && iy > 0 ? (ix * iy) / sm : 0;
         const home = a.state === ST.HOME && b.state === ST.HOME;
+        if (home && ov < 0.12) continue;
         const g = home ? 0 : clamp((0.35 * Math.max(a.L0, b.L0)) / D, 0.11, 0.2);
         const adz = Math.abs(b.z - a.z);
         if (adz >= g && !home) continue;                 // одна явно перед другой — перекрытие на экране естественно
-        const def = home ? 1 : 1 - adz / g;              // недостача зазора 0…1
-        // глубина
+        let def = home ? 1 : 1 - adz / g;                // недостача зазора 0…1
+        // глубина (≤ 0.22 z/с на рыбу — как заметный уход вглубь, не скачок)
         if (!home) {
           const fa = b.z >= a.z ? b : a, fb = fa === a ? b : a;   // fa — дальняя
-          let need = (g - adz) * Math.min(1, 0.9 * dt);
-          const ra = fa.turn.on ? 0 : Math.max(0, zRoomHi(fa) - fa.z), rb = fb.turn.on ? 0 : Math.max(0, fb.z - zRoomLo(fb));
+          const need = (g - adz) * Math.min(1, 2.2 * dt), vmax = 0.22 * dt;
+          const ra = fa.turn.on ? 0 : Math.min(vmax, Math.max(0, zRoomHi(fa) - fa.z)), rb = fb.turn.on ? 0 : Math.min(vmax, Math.max(0, fb.z - zRoomLo(fb)));
           let da = Math.min(ra, 0.75 * need), db = Math.min(rb, need - da);
           if (db < need - da) da = Math.min(ra, need - db);
           fa.z += da; fb.z -= db;
           if (da > 0 && fa.tz < fa.z) fa.tz = Math.min(fa.z, zRoomHi(fa));   // цель не тянет назад, к соседке
           if (db > 0 && fb.tz > fb.z) fb.tz = fb.z;
+          if (da + db < 0.5 * need) def = 1;            // по глубине некуда — расходятся по экрану в полную силу
         }
-        // экран: вдоль меньшего перекрытия; у пары в доме — только вбок
-        const s = 0.45 * Math.min(1, dt) * def, wa = ma ? (mb ? 0.5 : 1) : 0, wb = 1 - wa;
-        if (home || ix < 0.6 * iy) {
-          const sg = a.x <= b.x ? -1 : 1, m = s * ix;
-          a.X += sg * m * wa * a.z; b.X -= sg * m * wb * b.z;
-        } else {
-          const sg = a.y <= b.y ? -1 : 1, m = s * iy;
-          a.Y += sg * m * wa * a.z; b.Y -= sg * m * wb * b.z;
+        // экран — только при настоящем перекрытии: вдоль меньшего перекрытия; у пары в доме — только вбок
+        if (ov >= 0.2) {
+          const s = (home ? 1.2 : 0.6) * Math.min(1, dt) * def, wa = ma ? (mb ? 0.5 : 1) : 0, wb = 1 - wa;
+          if (home || ix < 0.6 * iy) {
+            const sg = a.x <= b.x ? -1 : 1, m = s * ix;
+            a.X += sg * m * wa * a.z; b.X -= sg * m * wb * b.z;
+          } else {
+            const sg = a.y <= b.y ? -1 : 1, m = s * iy;
+            a.Y += sg * m * wa * a.z; b.Y -= sg * m * wb * b.z;
+          }
         }
         if (!a.colM) { a.colM = true; COL_MOVED[nm++] = a; }
         if (!b.colM) { b.colM = true; COL_MOVED[nm++] = b; }
@@ -3088,7 +3095,7 @@
     f.dir = R() < 0.5 ? -1 : 1; f.yaw = 0; f.pitch = 0; f.vy = 0; f.turn.on = false;
     if (f.habit === "home") {
       homeOf(f);
-      f.z = f.hz; f.X = worldX(f.hx + (0.3 * f.hSide + rand(-0.2, 0.2) * (f.hSide ? 1 : 2.5)) * f.hrx, f.z); f.Y = worldY(f.hy - 0.3 * f.hry, f.z);
+      f.z = f.hz; f.X = worldX(f.hx + (0.45 * f.hSide + rand(-0.2, 0.2) * (f.hSide ? 1 : 2.5)) * f.hrx, f.z); f.Y = worldY(f.hy - 0.3 * f.hry, f.z);
       f.v = 0.3 * f.L0; setState(f, ST.HOME, t);
     } else {
       // V5: стартовая точка — не в теле уже расставленной рыбы (до 8 попыток)
