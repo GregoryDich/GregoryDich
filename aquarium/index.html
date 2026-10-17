@@ -4928,7 +4928,7 @@
   });
   DEBUG_HOOKS.push(() => {                          // V4a: тема и задник
     const src = (n) => { const S = BGS[n]; return `${n}: постер ${["—", "…", "ок", "нет"][S.pState]} видео ${["—", "…", "ок", "нет"][S.vState]}` +
-      (S.vid ? ` t ${S.vid.currentTime.toFixed(2)}${S.vid.paused ? " пауза" : ""}${S.aligned === true ? "" : " выравн."}` : ""); };
+      (S.vid ? ` t ${S.vid.currentTime.toFixed(2)}${VTEST ? " кадр " + S.frame : (S.vid.paused ? " пауза" : "") + (S.aligned === true ? "" : " выравн.")}` : ""); };
     return `тема: ${TH.mode} → ${THEMES[TH.target]}  вес ночи ${TH.k.toFixed(2)}  задник: ${bgMode || "процедурный"}` +
       (bgMode === "video" ? `  |  ${src("day")}  |  ${src("night")}` : "");
   });
