@@ -20,7 +20,14 @@
        cruiseBL  — [min, max] — крейсерская скорость в длинах тела в секунду;
        turnTime  — длительность разворота, с (0.35 мелкие … 0.8 групер);
        school    — { size, spacingBL } — стая (ведущий и ведомые);
-       home      — id реквизита-дома из scene.js (актиния рыб-клоунов).
+       home      — id реквизита-дома из scene.js (актиния рыб-клоунов);
+       veil      — (этап V2) вуалевые плавники: { tail, lag, beat } — tail — доля длины тела сзади, которая
+                   «вуаль» (мягкий плавник, гнётся сильнее тела), lag — во сколько раз медленнее бежит волна
+                   по вуали (плавник «струится» с запаздыванием), beat — множитель частоты биения хвоста
+                   (< 1 — неторопливо). Без поля — обычный хвост.
+     V2 (видео-задник): каньон теперь настоящей глубины до 2.6 — у крейсеров и стай zRange до 2.5
+     (уплывают вглубь каньона и за дальний риф), у прячущихся (регал, огненный ангел) — до 2.05
+     (укрытия за кромками колонн на z ≈ 1.95–2.0), рыба-бабочка выклёвывает и на дне каньона (до 2.1).
    ============================================================ */
 window.FISH_MANIFEST = {
   facing: "right",
@@ -39,7 +46,7 @@ window.FISH_MANIFEST = {
       description: "Ярко-синее тело с чёрным «палитра»-узором и жёлтым хвостом. «Дори». Плавно скользит в толще воды.",
       image: "fish/blue_tang.png",
       sizeMin: 110, sizeMax: 150, speedMin: 34, speedMax: 60, count: 2, fallback: "regal",
-      habit: "cruise", traits: { shy: 0.2, territorial: 0.1, darty: 0.3 }, zone: [0.08, 0.7], zRange: [1.0, 2.3], cruiseBL: [0.6, 1.0], turnTime: 0.5,
+      habit: "cruise", traits: { shy: 0.2, territorial: 0.1, darty: 0.3 }, zone: [0.08, 0.7], zRange: [1.0, 2.5], cruiseBL: [0.6, 1.0], turnTime: 0.5,
     },
     {
       id: "yellow_tang",
@@ -63,7 +70,7 @@ window.FISH_MANIFEST = {
       description: "Тёмный, с крупными белыми пятнами на брюхе и жёлтым «седлом» в леопардовую крапинку на спине, жёлтые губы. Звезда оригинального LMA2 — величаво плывёт в центре кадра.",
       image: "fish/pufferfish.png",
       sizeMin: 150, sizeMax: 200, speedMin: 22, speedMax: 38, count: 1, fallback: "puffer",
-      habit: "cruise", traits: { shy: 0.1, territorial: 0.4, darty: 0.1 }, zone: [0.15, 0.8], zRange: [1.05, 2.2], cruiseBL: [0.4, 0.75], turnTime: 0.65,
+      habit: "cruise", traits: { shy: 0.1, territorial: 0.4, darty: 0.1 }, zone: [0.15, 0.8], zRange: [1.05, 2.5], cruiseBL: [0.4, 0.75], turnTime: 0.65,
     },
     {
       id: "royal_gramma",
@@ -87,7 +94,7 @@ window.FISH_MANIFEST = {
       description: "Вертикальные оранжево-белые полосы в синей окантовке, синяя «грудь». Очень нарядный.",
       image: "fish/regal_angelfish.png",
       sizeMin: 105, sizeMax: 145, speedMin: 30, speedMax: 50, count: 1, fallback: "yellowtang",
-      habit: "hide", traits: { shy: 0.8, territorial: 0.2, darty: 0.2 }, zone: [0.3, 0.9], zRange: [1.05, 1.9], cruiseBL: [0.4, 0.8], turnTime: 0.55,
+      habit: "hide", traits: { shy: 0.8, territorial: 0.2, darty: 0.2 }, zone: [0.3, 0.9], zRange: [1.05, 2.05], cruiseBL: [0.4, 0.8], turnTime: 0.55,
     },
     {
       id: "mandarinfish",
@@ -111,7 +118,7 @@ window.FISH_MANIFEST = {
       description: "Ярко-красно-оранжевый с тёмными вертикальными штрихами и сине-чёрной каймой плавников.",
       image: "fish/flame_angel.png",
       sizeMin: 60, sizeMax: 90, speedMin: 30, speedMax: 52, count: 1, fallback: "coralfish",
-      habit: "hide", traits: { shy: 0.9, territorial: 0.3, darty: 0.6 }, zone: [0.4, 0.95], zRange: [1.05, 1.9], cruiseBL: [0.5, 1.0], turnTime: 0.4,
+      habit: "hide", traits: { shy: 0.9, territorial: 0.3, darty: 0.6 }, zone: [0.4, 0.95], zRange: [1.05, 2.05], cruiseBL: [0.5, 1.0], turnTime: 0.4,
     },
     {
       id: "moorish_idol",
@@ -119,7 +126,7 @@ window.FISH_MANIFEST = {
       description: "Чёрно-бело-жёлтые широкие полосы и длинный нитевидный спинной плавник. «Жабр» из «Немо».",
       image: "fish/moorish_idol.png",
       sizeMin: 110, sizeMax: 150, speedMin: 30, speedMax: 50, count: 1, fallback: "damsel",
-      habit: "cruise", traits: { shy: 0.2, territorial: 0.1, darty: 0.1 }, zone: [0.08, 0.65], zRange: [1.0, 2.3], cruiseBL: [0.5, 0.85], turnTime: 0.6,
+      habit: "cruise", traits: { shy: 0.2, territorial: 0.1, darty: 0.1 }, zone: [0.08, 0.65], zRange: [1.0, 2.5], cruiseBL: [0.5, 0.85], turnTime: 0.6,
     },
     {
       id: "bicolor_angel",
@@ -143,7 +150,7 @@ window.FISH_MANIFEST = {
       description: "Розово-оранжевая стайная рыбка с лировидным хвостом. Держится группой в толще воды над рифом.",
       image: "fish/anthias.png",
       sizeMin: 66, sizeMax: 90, speedMin: 34, speedMax: 58, count: 6, fallback: "coralfish",
-      habit: "shoal", traits: { shy: 0.3, territorial: 0.1, darty: 0.5 }, zone: [0.08, 0.6], zRange: [1.0, 2.3], cruiseBL: [0.6, 1.1], turnTime: 0.35, school: { size: 6, spacingBL: 1.25 },
+      habit: "shoal", traits: { shy: 0.3, territorial: 0.1, darty: 0.5 }, zone: [0.08, 0.6], zRange: [1.0, 2.5], cruiseBL: [0.6, 1.1], turnTime: 0.35, school: { size: 6, spacingBL: 1.25 },
     },
     {
       id: "copperband",
@@ -186,12 +193,21 @@ window.FISH_MANIFEST = {
       habit: "lurk", traits: { shy: 0.4, territorial: 0.6, darty: 0.1 }, zone: [0.6, 0.95], zRange: [1.05, 1.5], cruiseBL: [0.3, 0.55], turnTime: 0.8,
     },
     {
+      id: "goldfish",
+      name: "Золотая рыбка-оранда (Carassius auratus)",
+      description: "Оранжево-белая оранда с «шапочкой» на голове и длинными вуалевыми плавниками. Плывёт спокойно и величаво в средней воде, вуаль хвоста и плавников мягко струится за ней.",
+      image: "fish/goldfish.png",
+      sizeMin: 115, sizeMax: 150, speedMin: 18, speedMax: 32, count: 1, fallback: "coralfish",
+      habit: "cruise", traits: { shy: 0.15, territorial: 0.0, darty: 0.0 }, zone: [0.25, 0.65], zRange: [1.05, 2.2], cruiseBL: [0.3, 0.55], turnTime: 0.8,
+      veil: { tail: 0.45, lag: 1.8, beat: 0.6 },
+    },
+    {
       id: "butterflyfish",
       name: "Рыба-бабочка (Chaetodon)",
       description: "Золотистая с тонкими косыми линиями и чёрной полосой через глаз. Порхает над кораллами.",
       image: "fish/butterflyfish.png",
       sizeMin: 90, sizeMax: 120, speedMin: 28, speedMax: 48, count: 1, fallback: "coralfish",
-      habit: "pick", traits: { shy: 0.3, territorial: 0.2, darty: 0.2 }, zone: [0.3, 0.9], zRange: [1.0, 1.7], cruiseBL: [0.4, 0.75], turnTime: 0.45,
+      habit: "pick", traits: { shy: 0.3, territorial: 0.2, darty: 0.2 }, zone: [0.3, 0.9], zRange: [1.0, 2.1], cruiseBL: [0.4, 0.75], turnTime: 0.45,
     },
   ],
 };
