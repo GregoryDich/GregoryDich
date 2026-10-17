@@ -685,7 +685,7 @@
 
   // слои — для гейтов (__aq.layers) и отладки (?layers=-rays,-caustics)
   const LAYERS = { caustics: true, rays: true, bubbles: true, particles: true, glow: true, shadows: true, fishlight: true,
-                  scene: true, groups: true, xShadow: true, xPatch: true, xProp: true, xCoral: true };   // V4b: xCoral — колонии переднего рифа   // E4: слой сцены (патчи/пропсы) и группы вычитания — для гейтов и отладки
+                  scene: true, groups: true, xShadow: true, xPatch: true, xProp: true, xCoral: true, xReefC: true };   // V4b: xCoral — колонии переднего рифа   // E4: слой сцены (патчи/пропсы) и группы вычитания — для гейтов и отладки
   if (PARAMS.has("layers")) for (const s of PARAMS.get("layers").split(",")) {
     const k = s.replace(/^[-+ ]/, ""); if (k in LAYERS) LAYERS[k] = s[0] !== "-";
   }
@@ -3874,13 +3874,15 @@
               это то же самое, что множитель coralMul + glow·amt — одним multiply), дымка к ночной дымке.
      В переходе предмет рисуется обоими вариантами (ночной поверх с α = k). Фото-сцена — без вариантов:
      ночь там — общий multiply кадра после слоя сцены. */
-  function themeVariant(img, shade, mul, fog, haze) {
-    const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+  function themeVariant(img, shade, mul, fog, haze, k) {
+    const w0 = img.naturalWidth || img.width, h0 = img.naturalHeight || img.height;
+    const s = k > 0 && k < 1 ? k : 1, w = Math.max(1, Math.round(w0 * s)), h = Math.max(1, Math.round(h0 * s));
     const c = document.createElement("canvas"); c.width = w; c.height = h;
     const g = c.getContext("2d"), m = (j) => Math.round(clamp(255 * shade[j] * mul[j], 0, 255));
-    g.drawImage(img, 0, 0);
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
+    g.drawImage(img, 0, 0, w, h);
     g.globalCompositeOperation = "multiply"; g.fillStyle = `rgb(${m(0)},${m(1)},${m(2)})`; g.fillRect(0, 0, w, h);
-    g.globalCompositeOperation = "destination-in"; g.drawImage(img, 0, 0);          // альфа исходника
+    g.globalCompositeOperation = "destination-in"; g.drawImage(img, 0, 0, w, h);    // альфа исходника
     if (haze > 0.003) {
       g.globalCompositeOperation = "source-atop"; g.globalAlpha = clamp(haze, 0, 1);
       g.fillStyle = `rgb(${Math.round(fog[0])},${Math.round(fog[1])},${Math.round(fog[2])})`; g.fillRect(0, 0, w, h);
@@ -3899,13 +3901,23 @@
     const haze = gr.haze > 0 ? +gr.haze : 0, a = TP[0], b = TP[1];
     const gl = nt && Array.isArray(nt.glow) ? nt.glow : [0, 0, 0], ga = nt && nt.amt > 0 ? nt.amt * b.glowK : 0;
     const nm = [b.coralMul[0] + gl[0] * ga, b.coralMul[1] + gl[1] * ga, b.coralMul[2] + gl[2] * ga];
-    const day = [], night = [];
+    const day = [], night = [], k = itemDevScale(it);
     for (let i = 0; i < it.imgs.length; i++) {
       const im = it.imgs[i];
-      day.push(im ? themeVariant(im, shade, a.coralMul, a.fog, haze * a.hazeK) : null);
-      night.push(im ? themeVariant(im, shade, nm, b.fog, haze * b.hazeK) : null);
+      day.push(im ? themeVariant(im, shade, a.coralMul, a.fog, haze * a.hazeK, k) : null);
+      night.push(im ? themeVariant(im, shade, nm, b.fog, haze * b.hazeK, k) : null);
     }
-    it.timgs = [day, night];
+    it.timgs = [day, night]; it.tk = k;
+    if (it.kind === "coral") it.core = day[0];               // альфа та же — вычитание берёт уменьшенную копию
+  }
+  /* V4b: масштаб вариантов темы под экран — не больше нужного буферу холста (×1.08 на качание и мип-запас) и не
+     больше исходника; ступенями 1/16 (без пересборки на мелких изменениях). На большом экране / RS 2 — исходник. */
+  function itemDevScale(it) {
+    let dev = 0;
+    if (it.kind === "coral") dev = clamp(+it.def.scale || 0.3, 0.02, 2) * BGX.dh * RS * 1.08 / it.ih;
+    else if (it.kind === "prop") dev = (it.def.bw || 0.1) * BGX.dw * RS * (it.crab ? 1.25 : 1.08) / it.iw;
+    if (!(dev > 0) || BGX.dh < 1) return 1;
+    return Math.min(1, Math.ceil(dev * 16) / 16);
   }
   // предмет на контекст g — вариантом темы (в переходе — оба, ночной поверх с весом k)
   function drawItem(g, it, sc, ox, oy) {
@@ -3926,13 +3938,17 @@
   }
   // проиграть операции на контекст g: масштаб sc (device px на CSS px), начало (ox, oy) в CSS px;
   // useCore — альфа «сердцевины» вместо полной картинки (патчи при вычитании)
+  // (V4b: варианты темы могут быть уменьшены под экран — k = их ширина / ширина исходника; координаты операций —
+  //  в px исходника)
   function drawOps(g, it, useCore, sc, ox, oy, set) {
     const q = it.ops, imgs = set || it.imgs;
     for (let i = 0; i < it.nOps; i++) {
       const o = i * SC_OPF, im = useCore && it.core ? it.core : imgs[q[o]];
       if (!im) continue;
+      const k = (im.naturalWidth || im.width) / it.iw;
       g.setTransform(sc * q[o + 5], sc * q[o + 6], sc * q[o + 7], sc * q[o + 8], sc * (q[o + 9] - ox), sc * (q[o + 10] - oy));
-      g.drawImage(im, q[o + 1], q[o + 2], q[o + 3], q[o + 4], q[o + 1], q[o + 2], q[o + 3], q[o + 4]);
+      if (k > 0.999 && k < 1.001) g.drawImage(im, q[o + 1], q[o + 2], q[o + 3], q[o + 4], q[o + 1], q[o + 2], q[o + 3], q[o + 4]);
+      else g.drawImage(im, q[o + 1] * k, q[o + 2] * k, q[o + 3] * k, q[o + 4] * k, q[o + 1], q[o + 2], q[o + 3], q[o + 4]);
     }
   }
   function swayD(v, A, wt, k, ph, cur, Cn) {
@@ -4236,6 +4252,7 @@
     for (let i = 0; i < SCN.items.length; i++) {
       const it = SCN.items[i];
       if (!itemReady(it)) continue;
+      if (it.timgs && Math.abs(itemDevScale(it) - it.tk) > 0.03) { buildItemThemes(it); RCC.ok = false; }   // ресайз: варианты под новый размер
       poseItem(it, t);
       if (it.sub) SCN.ord[no++] = it;
       if (it.layer) SCN.layer[nl++] = it;
@@ -4354,7 +4371,7 @@
     }
     ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
     const tr0 = COUNTING ? performance.now() : 0;
-    if (KP.on && KP.ok && kpCan && LAYERS.caustics) reefCaustics();
+    if (KP.on && KP.ok && kpCan && LAYERS.caustics && LAYERS.xReefC) reefCaustics();
     if (COUNTING) CNT.e4MsReefC += performance.now() - tr0;
     CNT.e4Scene += CNT.drawImage - d0;
   }
@@ -4365,26 +4382,36 @@
     const kx0 = Math.max(0, Math.floor(x0 * kS)), ky0 = Math.max(0, Math.floor((y0 - bh) * kS));
     const kx1 = Math.min(kW, Math.ceil(x1 * kS)), ky1 = Math.min(kH, Math.ceil((y1 - bh) * kS)), pw = kx1 - kx0, ph = ky1 - ky0;
     if (pw < 1 || ph < 1) return;
-    const e = gbuf(RLB, SCN.frame & 1, pw, ph), g = e.g, ox = kx0 / kS, oy = ky0 / kS + bh;
-    let any = false;
-    for (let i = 0; i < SCN.nLate; i++) {                   // альфы × сила света, дальние первыми (ближние сверху)
-      const it = SCN.late[i];
-      if (it.x1 < x0 || it.x0 > x1 || it.y1 < y0 || it.y0 > y1) continue;
-      if (it.kind === "coral" ? !LAYERS.xCoral : !LAYERS.xProp) continue;
-      if (it.crab && CRAB.tuck + CRAB.shade > 0.01) continue;
-      g.globalAlpha = itemLight(it) * (it.crab ? 1 - 0.8 * CRAB.shade : 1);
-      drawOps(g, it, false, kS, ox, oy);
-      any = true;
+    const ox = kx0 / kS, oy = ky0 / kS + bh, lay = (LAYERS.xCoral ? 1 : 0) + (LAYERS.xProp ? 2 : 0);
+    // черновик пересобирается вместе с рисунком Kp (≤ 20 Гц): между пересборками колонии качаются на доли
+    // пикселя — маска бликов та же; на кадр остаётся одно наложение 'color-dodge' (по два буфера — без copy-on-write)
+    if (!RCC.ok || RCC.kT !== kT || RCC.kx0 !== kx0 || RCC.ky0 !== ky0 || RCC.pw !== pw || RCC.ph !== ph || RCC.n !== SCN.nLate || RCC.lay !== lay) {
+      RCC.par ^= 1;
+      const e = gbuf(RLB, RCC.par, pw, ph), g = e.g;
+      let any = false;
+      for (let i = 0; i < SCN.nLate; i++) {                 // альфы × сила света, дальние первыми (ближние сверху)
+        const it = SCN.late[i];
+        if (it.x1 < x0 || it.x0 > x1 || it.y1 < y0 || it.y0 > y1) continue;
+        if (it.kind === "coral" ? !LAYERS.xCoral : !LAYERS.xProp) continue;
+        if (it.crab && CRAB.tuck + CRAB.shade > 0.01) continue;
+        g.globalAlpha = itemLight(it) * (it.crab ? 1 - 0.8 * CRAB.shade : 1);
+        drawOps(g, it, false, kS, ox, oy, it.timgs ? it.timgs[0] : null);
+        any = true;
+      }
+      if (any) {
+        g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-in";
+        g.drawImage(kpCan, kx0, ky0, pw, ph, 0, 0, pw, ph);
+        g.globalCompositeOperation = "source-over";
+      }
+      RCC.ok = any; RCC.kT = kT; RCC.kx0 = kx0; RCC.ky0 = ky0; RCC.pw = pw; RCC.ph = ph; RCC.n = SCN.nLate; RCC.lay = lay;
     }
-    if (!any) return;
-    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-in";
-    g.drawImage(kpCan, kx0, ky0, pw, ph, 0, 0, pw, ph);
-    g.globalCompositeOperation = "source-over";
+    if (!RCC.ok) return;
     ctx.setTransform(RS, 0, 0, RS, 0, 0);
     ctx.globalCompositeOperation = "color-dodge"; ctx.globalAlpha = 1;
-    ctx.drawImage(e.c, 0, 0, pw, ph, ox, oy, pw / kS, ph / kS);
+    ctx.drawImage(RLB[RCC.par].c, 0, 0, pw, ph, ox, oy, pw / kS, ph / kS);
     ctx.globalCompositeOperation = "source-over";
   }
+  const RCC = { ok: false, kT: NaN, par: 0, kx0: 0, ky0: 0, pw: 0, ph: 0, n: 0, lay: 0 };
 
   /* ---------- динамика кадра и группы вычитания ---------- */
   const DYN_CAP = 400;
