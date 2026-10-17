@@ -30,16 +30,17 @@ def moved(mask, a, b, dv):   # the carton ink of rows a..b (fractions), moved up
 
 
 vm, vt = s(moved(ink, 0.096, 0.148, 0.027)), s(moved(ink, 0.671, 0.739, 0.017))
-cols = slice(round(0.17 * W), round(0.24 * W)); r0, r1 = band(0.671, 0.716)   # the triangle over V-TECH's V: the run above
-rows = ink[r0:r1, cols].any(1); tri_end = r0 + int(np.argmin(rows[np.argmax(rows):]) + np.argmax(rows))   # the first gap
-tri = np.zeros_like(ink); tri[r0:tri_end, cols] = ink[r0:tri_end, cols]; tri = s(moved(tri, 0.66, 0.72, 0.017))
-gloss = np.asarray(Image.fromarray((win * 255).astype(np.uint8)).resize((LW, LH), Image.LANCZOS)
-                   .filter(ImageFilter.MaxFilter(25)).filter(ImageFilter.GaussianBlur(2))).astype(float) / 255
-GREY, GOLD = np.array([0.42, 0.42, 0.43]), np.array([0.87, 0.66, 0.25])
+cols = slice(round(0.17 * W), round(0.24 * W)); r0, r1 = band(0.671, 0.716)   # V-TECH's V mark with its triangle: gold
+tri = np.zeros_like(ink); tri[r0:r1, cols] = ink[r0:r1, cols]; tri = s(moved(tri, 0.66, 0.72, 0.017))
+fill = Image.fromarray((win * 255).astype(np.uint8)).resize((LW, LH), Image.LANCZOS).filter(ImageFilter.MaxFilter(25))
+ring = np.clip(np.asarray(fill.filter(ImageFilter.MaxFilter(5))).astype(float) - np.asarray(fill.filter(ImageFilter.MinFilter(5))).astype(float), 0, 255)
+gloss = np.asarray(Image.fromarray(ring.astype(np.uint8)).filter(ImageFilter.GaussianBlur(1))).astype(float) / 255   # the photos: the V
+# and its triangle are a thin varnished outline on the matte lid, not a filled shape
+GREY, GOLD = np.array([0.70, 0.70, 0.70]), np.array([0.87, 0.66, 0.25])   # «VM» and «V-TECH SYSTEM» white-grey (photos)
 grey = np.clip(vm + vt - tri, 0, 1)
 alb = alb * (1 - grey[..., None]) + GREY * grey[..., None]; rough = rough * (1 - grey) + 0.42 * grey
 alb = alb * (1 - tri[..., None]) + GOLD * tri[..., None]; metal = np.maximum(metal, tri); rough = rough * (1 - tri) + 0.25 * tri
-rough = rough * (1 - gloss) + 0.1 * gloss   # spot-UV varnish: the same black, a mirror finish
+rough = rough * (1 - gloss) + 0.1 * gloss; alb = alb * (1 - gloss[..., None]) + 0.05 * gloss[..., None]   # the varnished outline
 
 # the small print (photo: the lid's lower third), centred, white then grey; positions as fractions from the top
 txt = Image.new('L', (LW, LH), 0); d = ImageDraw.Draw(txt)

@@ -61,7 +61,8 @@ ZI, ZP, KL, KP = 0.02, -0.09, 0.67, 1.15   # the insert's top, the sachet pocket
 VSLOTS = [(0.26 * MX, -0.46), (-0.26 * MX, -0.46), (0.26 * MX, -0.76), (-0.26 * MX, -0.76), (0.0, -0.96)]   # [0] gets the S5 ampoule
 def tray_pt(bx, q): return tuple(Vector(bx['p']) + Euler(bx['r'], 'ZYX').to_matrix() @ (Vector(q) * bx['s']))
 def tray_rot(bx, rl): return tuple((Euler(bx['r'], 'ZYX').to_matrix() @ Euler(rl, 'ZYX').to_matrix()).to_euler('ZYX'))
-def in_tray_vial(bx, x, y): return [*tray_pt(bx, (x, y, ZI + 0.075 - VIAL_H * KL)), *tray_rot(bx, (math.pi / 2, 0, 0)), KL * bx['s']]
+def in_tray_vial(bx, x, y): return [*tray_pt(bx, (x, y, ZI + 0.13 - VIAL_H * KL)),   # the dark glass shows above the foam (photos)
+                                      *tray_rot(bx, (math.pi / 2, 0, 0)), KL * bx['s']]
 def in_tray_pouch(bx, i): return [*tray_pt(bx, (0, 0.30, ZP + 0.03 + 0.022 * i)), *tray_rot(bx, (0, 0, -math.pi / 2 * MX)), KP * bx['s']]
 # S6 as the photo: sleeve | tray | lid side by side in the air in the left half, leaning back a little
 TRAY = box(0.265, 0.47, 7.5, 0.56, tilt=0.18)
@@ -406,8 +407,9 @@ def windowed(m):   # the sleeve's V and triangle: a die-cut window, see-through 
 def make_kit_box(S):
     """S['box'] is the tray's pose, S['kit'] the sleeve's and the lid's; the contents are S['vials'] and S['pouches']."""
     paper = lambda n: mat(n, **{'Base Color': (0.80, 0.78, 0.74, 1), 'Roughness': 0.7})[0]   # the sleeve's inside, white board
-    black = mat('box-black', **{'Base Color': (0.018, 0.018, 0.02, 1), 'Roughness': 0.55, 'Specular IOR Level': 0.4})[0]
-    insert = mat('insert', **{'Base Color': (0.012, 0.012, 0.013, 1), 'Roughness': 0.8, 'Specular IOR Level': 0.3})[0]
+    black = mat('box-black', **{'Base Color': (0.010, 0.013, 0.026, 1), 'Roughness': 0.55, 'Specular IOR Level': 0.4})[0]   # navy-black board (photos)
+    insert, nt, b = mat('insert', **{'Base Color': (0.010, 0.010, 0.011, 1), 'Roughness': 0.95, 'Specular IOR Level': 0.25})   # open-cell foam
+    relief(nt, b, (((1, 1, 1), 900.0, 2.0, 0.002),))
     hole = mat('hole', **{'Base Color': (0.003, 0.003, 0.003, 1), 'Roughness': 0.95, 'Specular IOR Level': 0.1})[0]
     ribbon = mat('ribbon', **{'Base Color': (0.03, 0.03, 0.032, 1), 'Roughness': 0.28, 'Specular IOR Level': 0.5})[0]
     lid, nt, b = mat('lid', **{'Specular IOR Level': 0.5})   # matte black, grey ink, a spot-gloss V (prep_kit.py)
