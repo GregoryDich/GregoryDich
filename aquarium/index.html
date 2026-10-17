@@ -2706,6 +2706,7 @@
         if (f.hCoral) { thinkCoral(f, dt, t); break; }     // V4b: просвет в переднем рифе (не за колонной)
         const P = f.hPortal, S = f.hShel;
         if (!P || !S) { f.allowBehind = false; nextActivity(f, t); return; }
+        f.turnK = f.sub === 5 ? 1.1 : f.sub === 0 ? 0.45 : f.turnK;   // V4b: нырок в открытой воде — длинными галсами; в каньоне — коротко
         if (f.sub === 0) {                              // к порталу снаружи, на его глубине
           const dScr = Math.hypot(projX(f.tX, f.tz) - f.x, projY(f.tY, f.tz) - f.y);
           if (dScr < 0.7 * f.len) {
@@ -3935,8 +3936,8 @@
     it.timgs = null;
     const d = it.def;
     if (bgMode !== "video" || (it.kind !== "prop" && it.kind !== "coral") || !TP[0] || !TP[1]) return;
-    // колония: грейд места — из scene.corals[].grade, флуоресценция — из каталога (night {glow, amt})
-    const gr = d.grade || {}, nt = it.kind === "coral" ? (it.cat && it.cat.night) || null : d.night || null, sh = gr.shade;
+    // колония: грейд места — из scene.corals[].grade, флуоресценция — scene.corals[].night или каталог (night {glow, amt})
+    const gr = d.grade || {}, nt = d.night || (it.kind === "coral" ? (it.cat && it.cat.night) || null : null), sh = gr.shade;
     const shade = Array.isArray(sh) ? [+sh[0], +sh[1], +sh[2]] : [sh > 0 ? +sh : 1, sh > 0 ? +sh : 1, sh > 0 ? +sh : 1];
     const haze = gr.haze > 0 ? +gr.haze : 0, a = TP[0], b = TP[1];
     const gl = nt && Array.isArray(nt.glow) ? nt.glow : [0, 0, 0], ga = nt && nt.amt > 0 ? nt.amt * b.glowK : 0;
