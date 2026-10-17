@@ -3,6 +3,8 @@
 //   node clip.js --out clip.mp4 [--frames 150 --dt 1/30 --warm 30 --fps 30 --w 1920 --h 1200 --seed 1]
 //                [--gif clip.gif --gifw 960 --giffps 15] [--clip x,y,w,h] [--keep framesDir] [--q ...] [--http]
 //                [--format png|jpeg] (jpeg q95 — кадры заметно быстрее; png — без потерь, по умолчанию)
+//                [--eval "js"] — выполнить в странице после прогрева (E3: __aq.beat(id), __aq.feed())
+//                [--at "120:js;450:js"] — выполнить js перед кадром с этим номером (E4: сценарий длинного клипа)
 'use strict';
 const fs = require('fs');
 const os = require('os');
@@ -23,9 +25,13 @@ const L = require('./lib');
     errors = cap.errors; warnings = cap.warnings;
     await L.gotoReady(page, env.url);
     if (o.warm > 0) await page.evaluate((dt, n) => window.__aq.step(dt, n, { render: 'last' }), o.dt, o.warm | 0);
+    if (o.eval) await page.evaluate(String(o.eval));   // напр. --eval "__aq.beat('shoalSweep')" — бит режиссёра в начале клипа
     const clip = L.clipOpt(o);
+    const at = {};
+    if (o.at) for (const part of String(o.at).split(';')) { const k = part.indexOf(':'); if (k > 0) at[+part.slice(0, k)] = part.slice(k + 1); }
     const t0 = Date.now();
     for (let i = 0; i < (o.frames | 0); i++) {
+      if (at[i]) await page.evaluate(at[i]);
       await page.evaluate((dt) => { window.__aq.step(dt, 1); return new Promise((r) => requestAnimationFrame(() => r())); }, o.dt);
       await page.screenshot({ path: path.join(dir, `f_${String(i).padStart(5, '0')}.${ext}`), clip, optimizeForSpeed: true,
         ...(ext === 'jpg' ? { type: 'jpeg', quality: 95 } : {}) });
