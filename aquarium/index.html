@@ -599,10 +599,11 @@
     // light — лучи/блики; fog — дымка рыб вдали (цвет толщи); fishLit — × силы света лучей на рыбах;
     // glow — × отсвета дна; vignette [r, g, b, a] — края кадра; particle/bubble — цвет взвеси и бликов пузырьков;
     // coralMul/glowK/hazeK — реквизит и колонии ночью (см. scene.js themes)
-    day:   { water: "#2dcfec", fog: "#178a9e", light: "#fff4dc", caustics: 0.34, rays: 1.0, particles: 1.0, fishLit: 1.3, glow: 1.0,
+    // raysReach — × длины затухания лучей в текстуре темы (V5: днём лучи доходят до дна и светят на рыб и кораллы)
+    day:   { water: "#2dcfec", fog: "#178a9e", light: "#fff4dc", caustics: 0.34, rays: 1.35, raysReach: 1.7, particles: 1.0, fishLit: 1.3, glow: 1.0,
              vignette: [0, 38, 52, 0.24], particle: [242, 246, 232], bubble: [236, 248, 250], fogMin: 0,
              coralMul: [1, 1, 1], coralNear: [1, 1, 1], glowK: 0, hazeK: 1.0, fishMul: [1, 1, 1] },
-    night: { water: "#0d52b3", fog: "#062e68", light: "#9fb8ff", caustics: 0.16, rays: 0.55, particles: 0.7, fishLit: 0.85, glow: 0.75,
+    night: { water: "#0d52b3", fog: "#062e68", light: "#9fb8ff", caustics: 0.16, rays: 0.55, raysReach: 1.0, particles: 0.7, fishLit: 0.85, glow: 0.75,
              vignette: [1, 6, 34, 0.42], particle: [170, 196, 255], bubble: [184, 208, 255], fogMin: 0.08,
              coralMul: [0.30, 0.42, 0.95], coralNear: [0.66, 0.75, 0.82], glowK: 0.6, hazeK: 0.8, fishMul: [0.76, 0.80, 1.0] },
   };
@@ -630,7 +631,7 @@
       for (const k in s) if (s[k] != null) o[k] = s[k];
       for (const k of ["water", "fog", "light"]) o[k] = rgbOf(o[k], hexToRgb(d[k]));
       for (const k of ["vignette", "particle", "bubble", "coralMul", "coralNear", "fishMul"]) o[k] = Array.isArray(o[k]) ? o[k].map(Number) : d[k].slice();
-      for (const k of ["caustics", "rays", "particles", "fishLit", "glow", "glowK", "hazeK", "fogMin"]) o[k] = +o[k] >= 0 ? +o[k] : d[k];
+      for (const k of ["caustics", "rays", "raysReach", "particles", "fishLit", "glow", "glowK", "hazeK", "fogMin"]) o[k] = +o[k] >= 0 ? +o[k] : d[k];
       TP[i] = o;
     }
     // фото-сцена и чужой задник: свет днём — цвет светодиодов сцены (как было), ночью — тема
@@ -702,9 +703,16 @@
     if (lightBuilt) { buildBubbleSprites(); buildParticleSprites(); }
     lfT = NaN;                                        // поле света рыб — пересобрать
   }
+  // V5: варианты предметов новой темы готовы (их строит themePrebuild — по набору за кадр)
+  function themeItemsReady(i) {
+    for (let j = 0; j < SCN.items.length; j++) { const it = SCN.items[j]; if (it.timgs && it.ready && !it.timgs[i]) return false; }
+    return true;
+  }
   function themeStep(dt) {
     if (TH.p === TH.target) return;
-    if (!TEST && !themeSourceReady(TH.target) && performance.now() - TH.reqAt < 3000) return;   // ждём задник темы ≤ 3 с (по часам)
+    // ждём задник темы и варианты предметов (V5: иначе первый кадр перехода строил все недостающие наборы разом —
+    // рывок 150–600 мс) не дольше 3 с (по часам)
+    if (!TEST && (!themeSourceReady(TH.target) || !themeItemsReady(TH.target)) && performance.now() - TH.reqAt < 3000) return;
     const d = dt / TH.dur;
     TH.p = TH.target > TH.p ? Math.min(TH.target, TH.p + d) : Math.max(TH.target, TH.p - d);
     TH.k = TH.p * TH.p * (3 - 2 * TH.p);
@@ -873,8 +881,10 @@
   // набор текстур луча (тело и «нити») — 64×512, RGB = цвет света rgb, альфа = яркость; не зависит от
   // размера экрана — кэш по цвету и reach
   const STEX_CACHE = {};
-  function buildStreakTextures(rgb) {
-    const key = rgb.map(Math.round).join(",") + "|" + ST_REACH.toFixed(3);
+  // V5: reachK — длина затухания текстуры темы × reachK (день «Мальдивы» — лучи до дна: 1.7; ночь — 1)
+  function buildStreakTextures(rgb, reachK) {
+    const RR = clamp(ST_REACH * (reachK > 0 ? reachK : 1), 0.3, 5), PK = profPeak(RR);
+    const key = rgb.map(Math.round).join(",") + "|" + RR.toFixed(3);
     if (STEX_CACHE[key]) return STEX_CACHE[key];
     const w = 64, h = 512, rnd = srand(5151);
     const mk = () => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
@@ -891,7 +901,7 @@
     const R1 = Math.round(rgb[0] + (255 - rgb[0]) * 0.6), G1 = Math.round(rgb[1] + (255 - rgb[1]) * 0.6), B1 = Math.round(rgb[2] + (255 - rgb[2]) * 0.6);
     for (let v = 0; v < h; v++) {
       const sv = ((v + 0.5) / h) * ST_LEN;
-      const prof = ((1 - Math.exp(-sv / 0.05)) * Math.exp(-sv / ST_REACH)) / ST_PEAK;
+      const prof = ((1 - Math.exp(-sv / 0.05)) * Math.exp(-sv / RR)) / PK;
       const sig = 0.18 * (0.62 + 0.38 * (v + 0.5) / h);
       for (let u = 0; u < w; u++) {
         const fu = (u + 0.5) / w - 0.5, q = fu / sig, env = Math.exp(-0.5 * q * q);
@@ -912,7 +922,7 @@
     return (STEX_CACHE[key] = { body, fil: fils });
   }
   function buildThemeStreaks() {
-    STEX[0] = buildStreakTextures(TP[0].light); STEX[1] = buildStreakTextures(TP[1].light);
+    STEX[0] = buildStreakTextures(TP[0].light, TP[0].raysReach); STEX[1] = buildStreakTextures(TP[1].light, TP[1].raysReach);
     streakTex = STEX[0].body;                        // поле света рыб берёт только альфу — годится любая тема
   }
   function drawStreaks(t) {
@@ -1252,12 +1262,20 @@
     g.globalCompositeOperation = "source-over";
     KP.ok = true;
   }
+  /* V5 (P1.5): пересборки по 15–20 Гц (K + карта света / кэш переднего рифа / поле света рыб) срабатывали от общих
+     часов в одном кадре (+21–26% к его цене). Теперь у каждой — свой кадр по модулю 3 (SCN.frame); пропущенная ждёт
+     свой кадр, но не дольше двух своих периодов. В тесте — без разнесения (детерминизм и прежние снимки). */
+  const STAGGER = !TEST;
+  function heavyWait(slot, t, last, hz) {
+    return STAGGER && last === last && t >= last && t - last < 2 / hz && SCN.frame % 3 !== slot;
+  }
   function updateCaustics(t) {
     if (!patA || !patB) return false;
     if (Math.abs(kS - RS * QUALITY.causticScale) > 1e-6) buildKBuffer();     // регулятор сменил долю буфера
     // K пересчитывается не чаще CAUS.hz (20 Гц): рисунок плывёт ≈10 px/с — шаг ≈0.5 px, глазу незаметно,
     // а растр буфера — самая дорогая часть света. Между пересчётами K просто накладывается снова.
     if (kT === kT && t >= kT && t - kT < 1 / CAUS.hz - 1e-6) return true;
+    if (heavyWait(0, t, kT, CAUS.hz)) return true;             // V5 (P1.5): тяжёлые пересборки — в разных кадрах
     kT = t;
     updateLightMap(t);
     const g = kCtx, bh = BGX.bandH;
@@ -2021,7 +2039,8 @@
     // разворачиваются единицы рыб, поэтому бюджет почти не меняется (отступление от потолка L_dev/36 SPEC 4.5)
     if (tr.on) { n = clamp(Math.round((Ldev / 14) * QUALITY.fishSlices), 10, SL_MAX); for (let i = 0; i <= n; i++) ub[i] = i / n; }
     else {
-      const nt = clamp(n - 2, 4, 10);                    // голова 60% — 2 среза, хвост 40% — nt
+      // голова 60% — 2 среза, хвост 40% — nt (V5: у вуали — 8…12: волна по длинному плавнику без «жёстких полос»)
+      const nt = P && P.veil ? clamp(n - 2, 8, 12) : clamp(n - 2, 4, 10);
       n = nt + 2;
       for (let i = 0; i <= nt; i++) ub[i] = (0.4 * i) / nt;
       ub[nt + 1] = 0.7; ub[nt + 2] = 1;
@@ -2175,10 +2194,13 @@
     const zA = Math.max(0.6, f.z + vz0), xA = projX(f.X + vx0, zA), yA = projY(f.Y + f.vy, zA);
     let zCap = Math.min(zNow, boxReefZ(xA, yA, L / zA, hz / zA, behind) - 0.06);
     if (f.state === ST.HOME && f.sub === 0) zCap = Math.max(zCap, f.hz + 0.03);   // в венце актинии
-    let tz = clamp(f.tz + f.avZ, zLo(f), f.near ? 1.4 : Math.max(f.zMax, f.allowBehind ? 2.0 : 0));
+    const nest = f.state === ST.HOME && f.sub === 0;
+    let tz = clamp(f.tz + (nest ? 0 : f.avZ), zLo(f), f.near ? 1.4 : Math.max(f.zMax, f.allowBehind ? 2.0 : 0));
     if (tz > zCap) tz = Math.max(zLo(f), zCap);
     if (tz < f.czLo) tz = f.czLo; else if (tz > f.czHi) tz = f.czHi;   // V4b: замок колоний переднего рифа
-    const yMin = worldY(waterTop() + (0.55 * hz) / f.z + 3, f.z), yMax = CAM.floorW - 0.38 * hz - 0.02 * L;
+    // V5: в венце актинии — ниже «пола» камеры: актиния стоит у нижней кромки кадра, ниже плоскости дна на её
+    // глубине, и клоуны висели НАД венцом, а не в нём
+    const yMin = worldY(waterTop() + (0.55 * hz) / f.z + 3, f.z), yMax = nest ? Math.max(CAM.floorW - 0.38 * hz - 0.02 * L, worldY(f.hy + 0.9 * f.hry, f.z)) : CAM.floorW - 0.38 * hz - 0.02 * L;
     const tY = clamp(f.tY + f.avY, yMin, Math.max(yMin, yMax));
     if (f.z > zNow + 0.004 && !(f.state === ST.HOME && f.sub === 0)) { f.z -= Math.min(0.35 * dt, f.z - zNow); f.viol += dt; }
     if (f.z < zLo(f) - 0.004) f.z += Math.min(0.3 * dt, zLo(f) - f.z);
@@ -2347,6 +2369,18 @@
     for (let i = 0; i < fishes.length; i++) { const g = fishes[i]; if (g !== self && g.spot === sp && (g.state === ST.GRAZE || g.state === ST.PICK || g.state === ST.LURK)) n++; }
     return n;
   }
+  // V5: точка (экран x, y, глубина z) занята — рядом цель пасущейся/стоящей рыбы (рамки тел перекрылись бы)
+  function spotTaken(f, x, y, z) {
+    const len = f.L0 / z, h = bodyH(f) / z;
+    for (let i = 0; i < fishes.length; i++) {
+      const g = fishes[i];
+      if (g === f || isOff(g) || !(g.state === ST.GRAZE || g.state === ST.PICK || g.state === ST.LURK || g.state === ST.HOVER)) continue;
+      if (Math.abs(g.tz - z) > 0.15) continue;
+      const gx = projX(g.tX, g.tz), gy = projY(g.tY, g.tz), gl = g.L0 / g.tz, gh = bodyH(g) / g.tz;
+      if (Math.abs(gx - x) < 0.6 * (len + gl) && Math.abs(gy - y) < 0.7 * (h + gh)) return true;
+    }
+    return false;
+  }
   // любой камень в зоне вида на досягаемой глубине (риф перед телом ≤ zMax) — пастись можно не только у точек сцены
   function rockPoint(f) {
     if (!bgReady || !SCENE.depthGrid) return false;
@@ -2357,6 +2391,7 @@
       if (zr < f.zMin + 0.03 || zr > f.zMax) continue;
       const z = spotZ(f, x, y, zr);
       if (z < zr - 0.06) continue;                      // рядом камень ближе — тело не помещается у поверхности
+      if (spotTaken(f, x, y, z)) continue;              // V5: у этого камня уже кто-то пасётся — другой камень
       PK.x = x; PK.y = y; PK.z = z; return true;
     }
     return false;
@@ -2852,18 +2887,20 @@
       case ST.HOME: {
         if (!f.tSet || f.n2 === 0) { homeOf(f); f.n2 = 1; f.subT = t - 1; f.sub = 0; f.subDur = 0; }
         if (f.sub === 0) {
-          f.turnK = 0.9; f.turnGapS = 2.8;
+          f.turnK = 0.55; f.turnGapS = 2.0;              // V5: разворот раньше — не уплывает из венца на корпус
           // в венце: новая точка каждые 0.6–2.2 с, иногда короткий рывок
           if (t - f.subT > f.subDur) {
             homeOf(f);
             // по ходу — чаще (патрулирует венец туда-обратно, а не крутится на месте)
             const ahead = R() < 0.72 ? f.dir : -f.dir, ex = clamp((f.x - f.hx) / f.hrx, -1, 1);
-            // V5: патруль — по своей половине венца (центр слота ±max(0.45·hrx, 0.55·L0), размах ±0.45·hrx, не ближе 0.2·L0 к середине): пара рядом, не стопкой
-            const c0 = f.hSide * Math.max(0.45, (0.55 * f.L0) / f.hrx), gIn = (0.2 * f.L0) / f.hrx;
-            const lo = f.hSide > 0 ? Math.max(gIn, c0 - 0.45) : f.hSide < 0 ? c0 - 0.45 : -1, hi = f.hSide < 0 ? Math.min(-gIn, c0 + 0.45) : f.hSide > 0 ? c0 + 0.45 : 1;
-            const ux = clamp(ex + ahead * rand(0.35, 1.1), Math.max(-1, lo), Math.min(1, hi)), uy = rand(-1, 1) * Math.sqrt(Math.max(0, 1 - ux * ux));
-            const zs = f.hSide ? (f.hSide < 0 ? rand(0.0, 0.008) : rand(0.012, 0.02)) : rand(-0.004, 0.022);
-            setTarget(f, f.hx + ux * f.hrx, f.hy - 0.25 * f.hry + uy * f.hry, f.hz + zs);   // V4b: между слоями актинии и за акропорой у её трубки
+            // V5: патруль — по своему слоту венца (левый ≈ −max(0.28·hrx, 0.4·L0), правый ≈ +max(0.5·hrx, 0.62·L0), не ближе 0.15·L0 к середине): пара рядом, не стопкой
+            // слоты сдвинуты вправо: венец этой актинии гуще справа (передние щупальца — от 0.2 до 0.92 ширины картинки)
+            const c0 = f.hSide < 0 ? -Math.max(0.28, (0.4 * f.L0) / f.hrx) : f.hSide > 0 ? Math.max(0.5, (0.62 * f.L0) / f.hrx) : 0, gIn = (0.15 * f.L0) / f.hrx;
+            const lo = f.hSide > 0 ? Math.max(gIn, c0 - 0.4) : f.hSide < 0 ? c0 - 0.35 : -1, hi = f.hSide < 0 ? Math.min(-gIn, c0 + 0.35) : f.hSide > 0 ? c0 + 0.4 : 1;
+            const ux = clamp(ex + ahead * rand(0.35, 1.1), Math.max(-1, lo), Math.min(1.2, hi));
+            const uy = clamp(rand(-1, 1) * Math.sqrt(Math.max(0, 1 - Math.min(1, ux * ux))) + (f.hSide < 0 ? -0.15 : 0), -1, 1);   // левый чуть выше
+            const zs = f.hSide ? (f.hSide < 0 ? rand(0.008, 0.013) : rand(0.016, 0.022)) : rand(0.008, 0.022);   // V5: за передним венцом (z−0.03), перед задним (z+0.03)
+            setTarget(f, f.hx + ux * f.hrx, f.hy - 0.2 * f.hry + uy * 0.6 * f.hry, f.hz + zs);   // V5: у диска — в щупальцах венца   // V4b: между слоями актинии и за акропорой у её трубки
             f.subT = t; f.subDur = rand(1.0, 2.8); f.spdT = rand(0.35, 0.85); f.arrive = true;
             if (R() < 0.18 * f.tr.darty) f.dart = rand(0.15, 0.3);
             if (t - f.lastExcursion > rand(25, 60) && R() < 0.5) {      // вылазка на 1.5–2.5 длины
@@ -2873,8 +2910,9 @@
               setTarget(f, clamp(PK.x, 0.05 * W, 0.95 * W), Math.min(PK.y, f.hy - 0.5 * f.hry), PK.z); f.spdT = f.cruise; f.arrive = true;
             }
           }
-          // между слоями актинии: z ± 0.025 от её z
-          if (f.dart <= 0) f.z += clamp(f.hz - f.z, -0.025, 0.025) * Math.min(1, dt * 3) * (Math.abs(f.z - f.hz) > 0.025 ? 1 : 0);
+          // между слоями актинии (V5: строго за передним венцом z−0.03 и перед задним слоем z+0.03)
+          if (f.z < f.hz + 0.006) f.z = Math.min(f.hz + 0.006, f.z + 0.08 * dt + 0.5 * (f.hz + 0.006 - f.z) * Math.min(1, dt * 3));
+          else if (f.z > f.hz + 0.026) f.z = Math.max(f.hz + 0.026, f.z - 0.08 * dt - 0.5 * (f.z - f.hz - 0.026) * Math.min(1, dt * 3));
         } else {
           if (distT(f) < 0.6 * L || t - f.subT > 9) { f.sub = 0; f.subDur = 0; f.subT = t - 10; }
         }
@@ -3036,7 +3074,7 @@
     return z;
   }
   function zRoomLo(f) {
-    if (f.state === ST.HOME && f.sub === 0) return f.hz - 0.004;
+    if (f.state === ST.HOME && f.sub === 0) return f.hz + 0.006;
     return Math.max(f.czLo, zLo(f));
   }
   function collideFish(dt) {
@@ -3195,7 +3233,7 @@
     f.dir = R() < 0.5 ? -1 : 1; f.yaw = 0; f.pitch = 0; f.vy = 0; f.turn.on = false;
     if (f.habit === "home") {
       homeOf(f);
-      f.z = f.hz; f.X = worldX(f.hx + f.hSide * Math.max(0.45 * f.hrx, 0.55 * f.L0) + rand(-0.2, 0.2) * (f.hSide ? 1 : 2.5) * f.hrx, f.z); f.Y = worldY(f.hy - 0.3 * f.hry, f.z);
+      f.z = f.hz; f.X = worldX(f.hx + (f.hSide < 0 ? -Math.max(0.28 * f.hrx, 0.4 * f.L0) : f.hSide > 0 ? Math.max(0.5 * f.hrx, 0.62 * f.L0) : 0) + rand(-0.2, 0.2) * (f.hSide ? 1 : 2.5) * f.hrx, f.z); f.Y = worldY(f.hy - 0.3 * f.hry, f.z);
       f.v = 0.3 * f.L0; setState(f, ST.HOME, t);
     } else {
       // V5: стартовая точка — не в теле уже расставленной рыбы (до 8 попыток)
@@ -3626,6 +3664,7 @@
 
   function updateLightField(t) {
     if (!streakTex || (lfT === lfT && t >= lfT && t - lfT < 1 / 15 - 1e-6)) return;
+    if (heavyWait(2, t, lfT, 15)) return;                      // V5 (P1.5)
     lfT = t;
     const g = lfCtx, q = lfQ;
     g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
@@ -3996,7 +4035,7 @@
     for (const p of s.patches || []) { scImg(p.src); scImg(p.core); }
     for (const p of s.props || []) {
       if (p.parts) { scImg(p.parts.body); for (const c of p.parts.claws || []) scImg(c.src); } else scImg(p.src);
-      if (p.layers) scImg(p.layers.front);
+      if (p.layers) { scImg(p.layers.front); if (p.layers.crown) scImg(p.layers.crown); }
     }
     for (const c of s.corals || []) { const k = coralCat(c.coral); if (k) scImg(k.image); }
   }
@@ -4048,13 +4087,19 @@
       SCN.items.push(back);
       if (a.type === "star") SCN.star = back;
       if (two) {
-        const fr = mkItem("prop", p.id + ":front", p, z - 0.03);
-        fr.ents = [scImg(p.layers.front)]; fr.ph = back.ph; fr.front = true;
-        // передний слой — не в слое задника, а в списке на своём z (как рыба): всё, что за ним (клоуны), рисуется
+        // передние слои — не в слое задника, а в списке на своём z (как рыба): всё, что за ними (клоуны), рисуется
         // раньше — без буфера. Тонкие свисающие щупальца над тёмным основанием: затемнение ячеек и 'dodge'
         // каустики там почти гасят друг друга — разницы с задним слоем не видно.
-        fr.layer = false; fr.sub = false; fr.dyn = true; fr.box = Array.isArray(p.layers.frontBox) ? p.layers.frontBox : null; fr.grid = gridOk(p.layers.frontGrid);
-        SCN.items.push(fr);
+        // V5: layers.crown — передние щупальца венца вокруг диска (клоуны «в» актинии, а не перед всей кроной)
+        const LY = [["front", "frontBox", "frontGrid"], ["crown", "crownBox", "crownGrid"]];
+        for (let q = 0; q < LY.length; q++) {
+          const src = p.layers[LY[q][0]];
+          if (!src) continue;
+          const fr = mkItem("prop", p.id + ":" + LY[q][0], p, z - 0.03);
+          fr.ents = [scImg(src)]; fr.ph = back.ph; fr.front = true;
+          fr.layer = false; fr.sub = false; fr.dyn = true; fr.box = Array.isArray(p.layers[LY[q][1]]) ? p.layers[LY[q][1]] : null; fr.grid = gridOk(p.layers[LY[q][2]]);
+          SCN.items.push(fr);
+        }
       }
     }
     // V4b: передний риф — колонии каталога (scene.corals, видео-сцена). Они и реквизит видео-сцены — «поздний» слой:
@@ -4220,8 +4265,15 @@
     const T = it.timgs, k = TH.k;
     if (!T) { drawOps(g, it, false, sc, ox, oy); return; }
     const a0 = g.globalAlpha;
-    if (k < 0.999) drawOps(g, it, false, sc, ox, oy, T[0] || themeSet(it, 0));
-    if (k > 0.001) { g.globalAlpha = a0 * (k < 0.999 ? k : 1); drawOps(g, it, false, sc, ox, oy, T[1] || themeSet(it, 1)); g.globalAlpha = a0; }
+    // V5: в реальном времени недостающий набор не строится синхронно посреди перехода (его достроит themePrebuild),
+    // кроме случая, когда нет ни одного; пока — рисуется имеющийся вариант
+    let A = k < 0.999 ? T[0] : null, B = k > 0.001 ? T[1] : null;
+    if (k < 0.999 && !A && (TEST || !(B || T[1]))) A = themeSet(it, 0);
+    if (k > 0.001 && !B && (TEST || !(A || T[0]))) B = themeSet(it, 1);
+    if (k < 0.999 && !A) { drawOps(g, it, false, sc, ox, oy, B || T[1]); return; }
+    if (k > 0.001 && !B) { drawOps(g, it, false, sc, ox, oy, A || T[0]); return; }
+    if (A) drawOps(g, it, false, sc, ox, oy, A);
+    if (B) { g.globalAlpha = a0 * (k < 0.999 ? k : 1); drawOps(g, it, false, sc, ox, oy, B); g.globalAlpha = a0; }
   }
   const scSettled = () => scPending === 0;
   const gridOk = (g) => (Array.isArray(g) && g.length >= 2 && g.every((r) => typeof r === "string" && r.length === g.length) ? g : null);
@@ -4547,12 +4599,14 @@
     let nl = 0, no = 0, nd = 0, nt = 0, kx0 = 1e9, ky0 = 1e9, kx1 = -1e9, ky1 = -1e9;
     const lay = (LAYERS.xCoral ? 1 : 0) + (LAYERS.xProp ? 2 : 0) + (LAYERS.xReefC ? 4 : 0) + (LAYERS.caustics ? 8 : 0);
     // передний риф — кэш на ≤ 20 Гц (см. drawReefLayer): позы его предметов «замирают» между пересборками
-    let due = !(RFC.ok && t >= RFC.t && t - RFC.t < 1 / REEF_HZ - 1e-6 && RFC.W === W && RFC.H === H && RFC.RS === RS && RFC.lay === lay &&
-      Math.abs(RFC.k - TH.k) < 0.03 && (RFC.k === TH.k || (TH.k > 0 && TH.k < 1)));
+    const same = RFC.ok && RFC.W === W && RFC.H === H && RFC.RS === RS && RFC.lay === lay && Math.abs(RFC.k - TH.k) < 0.03 && (RFC.k === TH.k || (TH.k > 0 && TH.k < 1));
+    let due = !(same && t >= RFC.t && t - RFC.t < 1 / REEF_HZ - 1e-6);
+    if (due && same && heavyWait(1, t, RFC.t, REEF_HZ)) due = false;   // V5 (P1.5): не в кадре пересборки K
     for (let i = 0; i < SCN.items.length; i++) {
       const it = SCN.items[i];
       if (!itemReady(it)) continue;
-      if (it.timgs && Math.abs(itemDevScale(it) - it.tk) > 0.03) { buildItemThemes(it); RCC.ok = false; it.posed = false; }   // ресайз: варианты под новый размер
+      // ресайз: варианты под новый размер — только когда нужно КРУПНЕЕ (меньший экран/буфер рисует те же с уменьшением)
+      if (it.timgs && itemDevScale(it) > it.tk + 0.03) { buildItemThemes(it); RCC.ok = false; it.posed = false; }
       if (it.late && !it.posed) due = true;                 // новый предмет — пересобрать кэш сейчас
     }
     SCN.reefDue = due;
@@ -5418,12 +5472,22 @@
   // виньетка — кэши в 1/4 разрешения по темам (строятся в resize и при смене сцены), на кадр — один
   // drawImage (в переходе тем — два, с весами); цвет и сила — TP[i].vignette [r, g, b, a]
   let vignetteCanvas = null;
-  const VIG = [null, null];
+  /* V5 (P1.6): виньетка — CSS-слоем: два холста ¼ разрешения поверх #tank с прозрачностью 1−k и k (то же обычное
+     наложение, что drawImage с α), без полноэкранного прохода по буферу холста в каждом кадре. ?vigcss=0 — старый путь. */
+  const VIG = [null, null], VIG_CSS = PARAMS.get("vigcss") !== "0", VIG_OP = [-1, -1];
   function buildVignette() {
     const vw = Math.max(16, Math.round(W / 4)), vh = Math.max(16, Math.round(H / 4));
     if (!TP[0]) themeParams();
     for (let i = 0; i < 2; i++) {
-      const c = VIG[i] || document.createElement("canvas"), v = TP[i].vignette;
+      let c = VIG[i];
+      if (!c) {
+        c = document.createElement("canvas");
+        if (VIG_CSS) {
+          c.style.cssText = "position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:1;opacity:0";
+          canvas.parentNode.insertBefore(c, canvas.nextSibling);
+        }
+      }
+      const v = TP[i].vignette;
       c.width = vw; c.height = vh;
       const g = c.getContext("2d");
       g.setTransform(vw / W, 0, 0, vh / H, 0, 0);
@@ -5439,6 +5503,12 @@
   function drawVignette() {
     if (VIG.scene !== SCENE || VIG.w !== W || VIG.h !== H) buildVignette();   // сцена (темы) сменилась
     const k = TH.k;                                   // затемнение краёв — смесь двух виньеток
+    if (VIG_CSS) {
+      const o0 = Math.round((k < 0.999 ? (k > 0.001 ? 1 - k : 1) : 0) * 64) / 64, o1 = Math.round((k > 0.001 ? (k < 0.999 ? k : 1) : 0) * 64) / 64;
+      if (o0 !== VIG_OP[0]) { VIG_OP[0] = o0; VIG[0].style.opacity = String(o0); }
+      if (o1 !== VIG_OP[1]) { VIG_OP[1] = o1; VIG[1].style.opacity = String(o1); }
+      return;
+    }
     if (k < 0.999) { ctx.globalAlpha = k > 0.001 ? 1 - k : 1; ctx.drawImage(VIG[0], 0, 0, W, H); }
     if (k > 0.001) { ctx.globalAlpha = k < 0.999 ? k : 1; ctx.drawImage(VIG[1], 0, 0, W, H); }
     ctx.globalAlpha = 1;
