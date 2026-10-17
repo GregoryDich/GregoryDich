@@ -18,7 +18,12 @@ echo "▸ Info.plist"
 cp Resources/Info.plist "$CONTENTS/Info.plist"
 
 echo "▸ Встраиваю аквариум (HTML + рыбы)"
+# Только то, что движок грузит: без старых рендеров (render/), запасных фонов (alt/), скриптов Blender
+# и документации (*.md, README.txt — лицензии и заметки остаются в репозитории, не в .app).
 cp -R ../aquarium "$CONTENTS/Resources/aquarium"
+AQ="$CONTENTS/Resources/aquarium"
+rm -rf "$AQ/fish/render" "$AQ/assets/render" "$AQ/assets/alt" "$AQ/blender"
+find "$AQ" \( -name '*.md' -o -name 'README.txt' -o -name '.DS_Store' \) -type f -delete
 
 echo "▸ Компиляция Swift (Release)"
 swiftc -O \

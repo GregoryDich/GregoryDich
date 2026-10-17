@@ -7,16 +7,21 @@ import ServiceManagement
 /// click-through window (hosting the aquarium WebView) on every screen, and
 /// throttles rendering for battery/sleep. No pause/settings UI by design.
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var windows: [WallpaperWindow] = []
+    /// One window per display, keyed by CGDirectDisplayID (stable across resolution/arrangement
+    /// changes and wake), so a screen-parameter change never reloads the aquarium needlessly.
+    private var windows: [CGDirectDisplayID: WallpaperWindow] = [:]
     private var statusItem: NSStatusItem!
     private var powerSource: CFRunLoopSource?
+    private var powerMode = "high"
+    private var displaysAsleep = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
-        rebuildWindows()
+        powerMode = PowerInfo.isOnBattery ? "low" : "high"
+        screensChanged()
 
         NotificationCenter.default.addObserver(
-            self, selector: #selector(rebuildWindows),
+            self, selector: #selector(screensChanged),
             name: NSApplication.didChangeScreenParametersNotification, object: nil)
 
         let ws = NSWorkspace.shared.notificationCenter
@@ -45,12 +50,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.menu = menu
     }
 
-    // MARK: Wallpaper windows (one per screen)
-    @objc private func rebuildWindows() {
-        windows.forEach { $0.close() }
-        windows = NSScreen.screens.map { WallpaperWindow(screen: $0) }
-        windows.forEach { $0.show() }
-        applyPowerState()
+    // MARK: Wallpaper windows (one per display)
+    /// macOS posts didChangeScreenParameters for resolution/arrangement changes, display
+    /// re-enumeration on wake and often for Dock/visible-frame changes. Previously every post closed
+    /// all windows and reloaded every page (poster → video → fish re-placed → caches rebuilt, briefly
+    /// two 1440p decoders per screen): the owner's "the app seems to restart". Now: diff by display ID —
+    /// keep and only resize existing windows, create windows for new displays, close removed ones.
+    private static func displayID(of screen: NSScreen) -> CGDirectDisplayID? {
+        (screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
+    }
+
+    @objc private func screensChanged() {
+        var seen = Set<CGDirectDisplayID>()
+        var kept = 0, added = 0
+        for screen in NSScreen.screens {
+            guard let id = AppDelegate.displayID(of: screen), !seen.contains(id) else { continue }
+            seen.insert(id)
+            if let w = windows[id] {
+                w.update(screen: screen)
+                kept += 1
+            } else {
+                let w = WallpaperWindow(screen: screen, displayID: id, power: currentMode())
+                windows[id] = w
+                w.show()
+                added += 1
+            }
+        }
+        var removed = 0
+        for (id, w) in windows where !seen.contains(id) {
+            w.close()
+            windows[id] = nil
+            removed += 1
+        }
+        NSLog("Aquarium: screens changed — kept \(kept), added \(added), removed \(removed)")
     }
 
     // MARK: Power / sleep — optimisation for a 24/7 laptop wallpaper
@@ -69,12 +101,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    @objc private func displaySleep() { windows.forEach { $0.setPower("paused") } }
-    @objc private func displayWake()  { applyPowerState() }
+    @objc private func displaySleep() {
+        displaysAsleep = true
+        windows.values.forEach { $0.setPower("paused") }
+    }
+    @objc private func displayWake() {
+        displaysAsleep = false
+        applyPowerState()
+    }
+
+    private func currentMode() -> String { displaysAsleep ? "paused" : powerMode }
 
     private func applyPowerState() {
-        let mode = PowerInfo.isOnBattery ? "low" : "high"   // 30 fps on battery, 60 on power
-        windows.forEach { $0.setPower(mode) }
+        powerMode = PowerInfo.isOnBattery ? "low" : "high"   // 30 fps on battery, 60 on power
+        let mode = currentMode()
+        windows.values.forEach { $0.setPower(mode) }        // no-op unless the mode really changed
     }
 
     // MARK: Menu actions

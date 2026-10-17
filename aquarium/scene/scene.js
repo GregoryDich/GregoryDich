@@ -81,7 +81,7 @@ window.AQUARIUM_SCENE = {
     day:   { water: "#2dcfec", fog: "#178a9e", light: "#fff4dc", caustics: 0.34, rays: 1.0, particles: 1.0,
              coralMul: [1, 1, 1], glowK: 0, hazeK: 1.0 },
     night: { water: "#0d52b3", fog: "#062e68", light: "#9fb8ff", caustics: 0.16, rays: 0.55, particles: 0.7,
-             coralMul: [0.30, 0.42, 0.95], coralNear: [0.66, 0.75, 0.82], glowK: 0.6, hazeK: 0.8, fishMul: [0.70, 0.80, 1.0] },
+             coralMul: [0.30, 0.42, 0.95], coralNear: [0.66, 0.75, 0.82], glowK: 0.6, hazeK: 0.8, fishMul: [0.76, 0.80, 1.0] },
   },
 
   // ГЛУБИНА видимой поверхности рифа по ячейкам (строки сверху вниз, 48 × 27 = 1296 значений; ячейка
