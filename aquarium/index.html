@@ -38,6 +38,8 @@
 <!-- Сцена: геометрия рифа, свет, точки поведения (window.AQUARIUM_SCENE). Применяется
      только к тому заднику, для которого написана (backdrop.src). -->
 <script src="scene/scene.js"></script>
+<!-- Библиотека колоний переднего рифа (этап V3): window.CORAL_CATALOG — сцена ссылается на них по id. -->
+<script src="scene/corals/catalog.js"></script>
 <script>
 "use strict";
 /* ============================================================
@@ -111,7 +113,7 @@
                 e3Fish: 0, e3Fog: 0, e3Lit: 0, e3Food: 0,       // e3* — drawImage рыб (всё / из них дымка / свет) и корма
                 e4Scene: 0, e4Group: 0,                         // e4* — слой сцены (патчи, тени, пропсы) / накладные групп вычитания
                 e4MsMembers: 0, e4MsSub: 0, e4MsComp: 0, e4MsLL: 0, e4MsList: 0, e4MsLLC: 0, e4MsBuf: 0,
-                pBack: 0, pScene: 0, pCaus: 0, pBand: 0, pList: 0, pLight: 0, pTail: 0 };   // мс по стадиям render (профиль)   // мс (профиль, только счёт): члены / вычитание / сложение групп, стирание света, список, сложение света
+                pBack: 0, pScene: 0, pCaus: 0, pReef: 0, pBand: 0, pList: 0, pLight: 0, pTail: 0 };   // мс по стадиям render (профиль)   // мс (профиль, только счёт): члены / вычитание / сложение групп, стирание света, список, сложение света
   const CNT_KEYS = Object.keys(CNT);
   if (COUNTING) {
     const P = CanvasRenderingContext2D.prototype;
@@ -683,7 +685,7 @@
 
   // слои — для гейтов (__aq.layers) и отладки (?layers=-rays,-caustics)
   const LAYERS = { caustics: true, rays: true, bubbles: true, particles: true, glow: true, shadows: true, fishlight: true,
-                  scene: true, groups: true, xShadow: true, xPatch: true, xProp: true };   // E4: слой сцены (патчи/пропсы) и группы вычитания — для гейтов и отладки
+                  scene: true, groups: true, xShadow: true, xPatch: true, xProp: true, xCoral: true };   // V4b: xCoral — колонии переднего рифа   // E4: слой сцены (патчи/пропсы) и группы вычитания — для гейтов и отладки
   if (PARAMS.has("layers")) for (const s of PARAMS.get("layers").split(",")) {
     const k = s.replace(/^[-+ ]/, ""); if (k in LAYERS) LAYERS[k] = s[0] !== "-";
   }
@@ -1162,13 +1164,43 @@
     for (let i = 1; i < 3; i++) SAND_C[i] = SAND_Y[i] - (q[i] * (SAND_Y[i] - SAND_C[i - 1])) / q[i - 1];
   }
   // заливка K плиткой pat: экран x = sc·(u + px), y = q·sc·(v + py) + cy; строки экрана [ya, yb)
-  function fillCausticRows(g, pat, sc, px, py, q, cy, ya, yb, op) {
+  // (V4b: xa/xb — необязательный диапазон столбцов экрана, для буфера переднего рифа Kp)
+  function fillCausticRows(g, pat, sc, px, py, q, cy, ya, yb, op, xa, xb) {
     const bh = BGX.bandH, a = kS * sc, d = kS * q * sc, e = kS * sc * px, f = kS * (q * sc * py + cy - bh);
     const ka = Math.max(0, (ya - bh) * kS), kb = Math.min(kH, (yb - bh) * kS);
-    if (kb <= ka) return;
+    const kx0 = xa != null ? clamp(xa * kS, 0, kW) : 0, kx1 = xb != null ? clamp(xb * kS, 0, kW) : kW;
+    if (kb <= ka || kx1 <= kx0) return;
     g.setTransform(a, 0, 0, d, e, f);
     g.globalCompositeOperation = op; g.fillStyle = pat;
-    g.fillRect(-e / a, (ka - f) / d, kW / a, (kb - ka) / d);
+    g.fillRect((kx0 - e) / a, (ka - f) / d, (kx1 - kx0) / a, (kb - ka) / d);
+  }
+  /* V4b: «сырой» рисунок каустики для ПЕРЕДНЕГО РИФА видео-сцены (колонии и реквизит рисуются ПОСЛЕ общего
+     прохода каустики, поверх задника — см. «ПЕРЕДНИЙ РИФ»): Kp = (A ⊓ B, без сжатия песка — колонии стоят, а не
+     лежат) × след лучей lmCan (цвет и сила света темы) — без маски и альбедо ЗАДНИКА: они про то, что за
+     колонией. Только в прямоугольнике переднего рифа KP (рамка его предметов в кадре + запас), вместе с K
+     (≤ 20 Гц). Свои паттерны (кэш на буфер), заливка — прямо плиткой (без чтения K: copy-on-write). */
+  const KP = { on: false, x0: 0, y0: 0, x1: 0, y1: 0, ok: false };
+  let kpCan = null, kpCtx = null, kpA = null, kpB = null;
+  function updateKp() {
+    if (!kpCan) kpCan = document.createElement("canvas");
+    if (kpCan.width !== kW || kpCan.height !== kH || !kpCtx) {
+      kpCan.width = kW; kpCan.height = kH;
+      kpCtx = kpCan.getContext("2d", { alpha: false }); kpCtx.imageSmoothingEnabled = true;
+      kpA = ctCanA ? kpCtx.createPattern(ctCanA, "repeat") : null; kpB = ctCanB ? kpCtx.createPattern(ctCanB, "repeat") : null;
+    }
+    if (!kpA || !kpB || !lmCan) return;
+    const bh = BGX.bandH, g = kpCtx;
+    const xa = Math.max(0, KP.x0 - 4), xb = Math.min(W, KP.x1 + 4), ya = Math.max(bh, KP.y0 - 4), yb = Math.min(H, KP.y1 + 4);
+    if (xb <= xa || yb <= ya) return;
+    fillCausticRows(g, kpA, CAUS.scA, CPOS[0], CPOS[1], 1, 0, ya, yb, "source-over", xa, xb);
+    fillCausticRows(g, kpB, CAUS.scB, CPOS[2], CPOS[3], 1, 0, ya, yb, "darken", xa, xb);
+    const x0 = Math.floor(xa * kS), y0 = Math.floor((ya - bh) * kS), x1 = Math.min(kW, Math.ceil(xb * kS)), y1 = Math.min(kH, Math.ceil((yb - bh) * kS));
+    const sx = lmCan.width / kW, sy = lmCan.height / kH;
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1;
+    g.globalCompositeOperation = "multiply";
+    g.drawImage(lmCan, x0 * sx, y0 * sy, (x1 - x0) * sx, (y1 - y0) * sy, x0, y0, x1 - x0, y1 - y0);
+    g.globalCompositeOperation = "source-over";
+    KP.ok = true;
   }
   function updateCaustics(t) {
     if (!patA || !patB) return false;
@@ -1183,6 +1215,7 @@
     const yRock = sandPath ? Math.min(H, floorBotY + 4) : H;      // ниже линии пола — только песок (клип ниже)
     fillCausticRows(g, patA, CAUS.scA, CPOS[0], CPOS[1], 1, 0, bh, yRock, "source-over");
     fillCausticRows(g, patB, CAUS.scB, CPOS[2], CPOS[3], 1, 0, bh, yRock, "darken");
+    if (KP.on && KP.y1 > KP.y0 && KP.x1 > KP.x0) updateKp();      // V4b: рисунок для переднего рифа (свой буфер)
     if (sandPath) {
       g.save();
       g.setTransform(1, 0, 0, 1, 0, 0); g.clip(sandPath);
@@ -1859,7 +1892,7 @@
       // поведение
       state: ST.CRUISE, st: 0, stDur: 10, sub: 0, subT: 0, subDur: 0, n2: 0,
       tX: 0, tY: 0, tz: 1.3, tSet: false, spdT: 0.6, arrive: false, canTurn: true, turnK: 0.45, turnGapS: 1.4, far: false, fade: 1, farRun: null, litOn: false,
-      hShel: null, hPortal: null, hPeeked: false, hGain: 0,
+      hShel: null, hPortal: null, hPeeked: false, hGain: 0, hCoral: null, cEx: 0, cEy: 0, czLo: 0, czHi: 9,
       turn: { on: false, p: 0, T: 0.5, s: 1, psi0: 0, v: 0 }, lastTurn: -9, turnGap: 1.1, turnDelayUntil: 0,
       allowBehind: false, near: false, spot: null, spot2: null, outX: 0, outY: 0,
       school: null, isLeader: false, slA: 0, slU: 0, slZ: 0, slP: 0,
@@ -1874,6 +1907,7 @@
       litMax: 0, flashAny: false, cosHead: 1, facing: 1, depth: 0.5, alpha: 1,
     };
     f.turnGap = 1.4 + 0.8 * (1 - tr.darty);
+    f.beatK = pack && pack.veil && +pack.veil.beat > 0 ? clamp(+pack.veil.beat, 0.3, 1) : 1;
     return f;
   }
   const bodyH = (f) => f.L0 * f.ar;                     // высота тела (мир, px при z = 1)
@@ -1907,6 +1941,9 @@
     const yawR = f.yaw + f.yawB;
     const psiB = tr.on ? tr.psi0 : (f.dir > 0 ? yawR : Math.PI - yawR);
     const sT = tr.on ? tr.s : 0, pT = tr.p, A = f.tA, tp = f.tp;
+    // V4b: вуаль (manifest veil — золотая рыбка-оранда): задняя доля tail тела — мягкий плавник, по нему бежит
+    // своя волна с запаздыванием lag (фаза растёт к кончику) — плавник «струится» вслед за хвостом
+    const V = P && P.veil, vt = V ? clamp(+V.tail || 0.4, 0.1, 0.6) : 0, vl = V ? 2.2 * clamp(+V.lag || 1.5, 1, 3) : 0;
     const cph = Math.cos(f.pitch), sph = Math.sin(f.pitch);
     // от носа назад (смещения относительно носа, мир; Zp — px глубины)
     const px = f.px, py = f.py, pz = f.pz, cps = f.cps;
@@ -1919,6 +1956,7 @@
       if (sT) { tt = turnTheta(uc, pT); th += sT * tt; }
       if (uc < 0.4) { const e = (0.4 - uc) / 0.4; th += A * e * Math.sqrt(e) * Math.sin(tp + 3 * uc); }   // огибающая e^1.5: гнётся весь стебель хвоста
       else th -= 0.06 * A * Math.sin(tp + 3 * uc);       // лёгкая отдача головы
+      if (vt && uc < vt) { const e = (vt - uc) / vt; th += 0.24 * e * e * Math.sin(tp - vl * e - 0.6); }
       let c = Math.cos(th); const s = Math.sin(th);
       if (c > -0.15 && c < 0.15) c = c < 0 ? -0.15 : 0.15;   // ни один срез не встаёт ребром
       cps[k] = c;
@@ -2050,6 +2088,7 @@
     if (f.state === ST.HOME && f.sub === 0) zCap = Math.max(zCap, f.hz + 0.03);   // в венце актинии
     let tz = clamp(f.tz + f.avZ, zLo(f), f.near ? 1.4 : Math.max(f.zMax, f.allowBehind ? 2.0 : 0));
     if (tz > zCap) tz = Math.max(zLo(f), zCap);
+    if (tz < f.czLo) tz = f.czLo; else if (tz > f.czHi) tz = f.czHi;   // V4b: замок колоний переднего рифа
     const yMin = worldY(waterTop() + (0.55 * hz) / f.z + 3, f.z), yMax = CAM.floorW - 0.38 * hz - 0.02 * L;
     const tY = clamp(f.tY + f.avY, yMin, Math.max(yMin, yMax));
     if (f.z > zNow + 0.004 && !(f.state === ST.HOME && f.sub === 0)) { f.z -= Math.min(0.35 * dt, f.z - zNow); f.viol += dt; }
@@ -2091,6 +2130,7 @@
     f.X += (f.dir * f.v * Math.cos(f.yaw) + currentVX(t, f.x) * 0.35 * slow * f.z) * dt;
     f.z += ((f.v * Math.sin(f.yaw)) / D) * dt;
     f.Y += f.vy * dt;
+    coralClampZ(f);
   }
 
   /* ---------- разворот: изгиб, ведомый головой (SPEC 4.5) ----------
@@ -2126,6 +2166,7 @@
     f.z += (Math.sin(psi) * tr.v * dt) / CAM.D;
     f.Y += f.vy * dt; f.vy *= Math.exp(-dt / 0.5);
     f.pitch *= Math.exp(-dt / 0.3);
+    coralClampZ(f);                                      // дуга разворота не проводит рыбу сквозь колонию
     if (tr.p >= 1) {
       tr.on = false; tr.p = 0;
       const psi1 = tr.psi0 + tr.s * Math.PI, c = Math.cos(psi1), s = Math.sin(psi1);
@@ -2141,6 +2182,7 @@
     f.allowBehind = false; f.pitchBias = 0; f.yawBias = 0; f.arrive = false; f.canTurn = true; f.turnK = 0.45; f.turnGapS = 1.4;
     if (s !== ST.CRUISE) { f.far = false; f.fade = 1; }
     f.spot = null; f.spot2 = null; f.tSet = false; f.spdT = f.cruise; f.other = null; f.flake = null; f.leaving = false;
+    f.hCoral = null;
   }
   const hiddenFrac = (f) => f.hiddenT / Math.max(60, f.aliveT);
   // может ли рыба уплыть за край кадра (крейсеры, стая; не территориальные и не домоседы; бюджет скрытого времени)
@@ -2171,11 +2213,12 @@
     const r = R(), h = f.habit;
     if (h === "home") { setState(f, ST.HOME, t); return; }
     if (h === "shoal" && f.school) { setState(f, ST.SHOAL, t, rand(14, 30)); return; }
-    if (h === "graze") { if (r < 0.5) enterGraze(f, t, ST.GRAZE); else if (r < 0.85) enterCruise(f, t); else enterHover(f, t); return; }
-    if (h === "pick") { if (r < 0.55) enterGraze(f, t, ST.PICK); else if (r < 0.88) enterCruise(f, t); else enterHover(f, t); return; }
-    if (h === "hide") { if (r < 0.32 && enterHide(f, t)) return; if (r < 0.55) { enterGraze(f, t, ST.GRAZE); return; } enterCruise(f, t); return; }
+    // V4b: просветы переднего рифа (enterCoral) — у видов, перечисленных в точках «coral» сцены
+    if (h === "graze") { if (r < 0.1 && enterCoral(f, t)) return; if (r < 0.5) enterGraze(f, t, ST.GRAZE); else if (r < 0.85) enterCruise(f, t); else enterHover(f, t); return; }
+    if (h === "pick") { if (r < 0.16 && enterCoral(f, t)) return; if (r < 0.55) enterGraze(f, t, ST.PICK); else if (r < 0.88) enterCruise(f, t); else enterHover(f, t); return; }
+    if (h === "hide") { if (r < 0.2 && enterCoral(f, t)) return; if (r < 0.4 && enterHide(f, t)) return; if (r < 0.62) { enterGraze(f, t, ST.GRAZE); return; } enterCruise(f, t); return; }
     if (h === "lurk") { if (r < 0.6) enterLurk(f, t); else enterCruise(f, t, true); return; }
-    if (h === "hover") { if (r < 0.35) enterHover(f, t); else enterCruise(f, t); return; }
+    if (h === "hover") { if (r < 0.2 && enterCoral(f, t)) return; if (r < 0.35) enterHover(f, t); else enterCruise(f, t); return; }
     if (r < 0.14) enterHover(f, t); else if (r < 0.22 && f.tr.territorial < 0.7) enterGraze(f, t, ST.GRAZE); else enterCruise(f, t);
   }
 
@@ -2334,6 +2377,94 @@
     setTarget(f, x - f.outX * 1.1 * d, y - f.outY * 0.6 * d, z);
     f.arrive = true; f.spdT = Math.min(f.cruise, 0.6); f.sub = 0;
     return true;
+  }
+
+  /* ---------- V4b: передний риф — «замок» глубины и прятки среди колоний ----------
+     Колония — плоский силуэт на своей z (scene.corals). Рыба, которая ПЕРЕКРЫВАЕТ колонию (сетка альфы в позе
+     покоя + запас качания), не пересекает её z: перед колонией — остаётся перед, за ней — за; иначе в момент
+     пересечения она «прыгала» бы сквозь крону (порядок рисования меняется мгновенно). Сменить сторону можно
+     только сбоку, вне силуэта — поэтому в просвет между колониями рыба заходит сначала на свою глубину рядом
+     с колонией, а потом вбок за неё. → f.czLo / f.czHi (на шаг; поза покоя — от отрисовки не зависит). */
+  const CZ_GAP = 0.015;
+  function coralLock(f) {
+    f.czLo = 0; f.czHi = 9;
+    const cs = SCN.corals;
+    if (!cs.length || !bgReady || f.far) return;
+    const zl = zLo(f);
+    for (let i = 0; i < cs.length; i++) {
+      const c = cs[i];
+      if (!c.ready && !itemReady(c)) continue;
+      if (!coralHit(c, f.minX, f.minY, f.maxX, f.maxY)) continue;
+      if (f.z <= c.z && c.z - CZ_GAP >= zl + 0.004) { if (c.z - CZ_GAP < f.czHi) f.czHi = c.z - CZ_GAP; }
+      else if (c.z + CZ_GAP > f.czLo) f.czLo = c.z + CZ_GAP;
+    }
+    if (f.czLo > f.czHi) f.czHi = 9;
+  }
+  function coralClampZ(f) {
+    if (f.z > f.czHi) f.z = f.czHi; else if (f.z < f.czLo) f.z = f.czLo;
+  }
+  function coralById(id) { const cs = SCN.corals; for (let i = 0; i < cs.length; i++) if (cs[i].id === id) return cs[i]; return null; }
+  /* прятки В переднем рифе (scene.spots type "coral", between — колонии вокруг просвета): подплыть сбоку на
+     глубину просвета (вне силуэта ближних колоний) → вбок в просвет → постоять 6–14 с, чуть смещаясь
+     (сквозь крону/кружево видно рыбу — она за ближней колонией и перед дальней) → наружу тем же боком. */
+  function coralEntry(f, s) {
+    let x0 = 1e9, x1 = -1e9, z = s.z;
+    const bt = Array.isArray(s.between) ? s.between : [];
+    for (let k = 0; k < bt.length; k++) {
+      const c = coralById(bt[k]);
+      if (!c || !c.ready || c.z >= z) continue;            // впереди просвета — эту надо обойти сбоку
+      const r = coralRest(c);
+      if (r.x0 < x0) x0 = r.x0; if (r.x1 > x1) x1 = r.x1;
+    }
+    const sx = bgX(s.bx), sy = bgY(s.by), len = f.L0 / z;
+    if (x1 < x0) { PK.x = sx; PK.y = sy; PK.z = z; return true; }
+    const left = x0 - 0.75 * len, right = x1 + 0.75 * len;
+    const okL = left > 0.04 * W, okR = right < 0.96 * W;
+    if (!okL && !okR) return false;
+    PK.x = okL && (!okR || Math.abs(f.x - left) < Math.abs(f.x - right)) ? left : right;
+    PK.y = sy; PK.z = z;
+    return reefZ(PK.x, PK.y, false) - 0.07 > z;
+  }
+  function enterCoral(f, t) {
+    if (!SCN.corals.length || !f.pack) return false;
+    const sp = SCENE.spots || [];
+    let best = null, bq = 1e9;
+    for (let i = 0; i < sp.length; i++) {
+      const s = sp[i];
+      if (s.type !== "coral" || !s.species || s.species.indexOf(f.pack.id) < 0) continue;
+      if (s.z < f.zMin - 0.02 || s.z > f.zMax + 0.05 || bgX(s.bx) < 0.04 * W || bgX(s.bx) > 0.96 * W) continue;
+      let n = 0;
+      for (let j = 0; j < fishes.length; j++) if (fishes[j] !== f && fishes[j].hCoral === s) n++;
+      const q = n * 10 + R() * 3;
+      if (q < bq) { bq = q; best = s; }
+    }
+    if (!best || bq >= 10 || !coralEntry(f, best)) return false;
+    setState(f, ST.HIDE, t, rand(6, 14));
+    f.hCoral = best; f.sub = 10; f.subT = t;
+    f.cEx = PK.x; f.cEy = PK.y;                            // точка входа/выхода (экран)
+    setTarget(f, PK.x, PK.y, PK.z); f.arrive = true; f.spdT = f.cruise;
+    return true;
+  }
+  function thinkCoral(f, dt, t) {
+    const s = f.hCoral, z = s.z, L = f.L0;
+    if (f.sub === 10) {                                   // к точке входа сбоку, на глубине просвета
+      const near = Math.hypot(projX(f.tX, f.tz) - f.x, projY(f.tY, f.tz) - f.y) < 0.8 * f.len;
+      if (near && Math.abs(f.z - z) < 0.035) {
+        f.sub = 11; f.subT = t;
+        setTarget(f, bgX(s.bx), bgY(s.by), z); f.spdT = Math.min(f.cruise, 0.55);
+      } else if (t - f.st > 30) { nextActivity(f, t); return; }
+    } else if (f.sub === 11) {                            // вбок в просвет
+      if (distT(f) < 0.6 * L || t - f.subT > 14) { f.sub = 12; f.subT = t; f.n2 = 0; }
+    } else if (f.sub === 12) {                            // стоит в просвете, чуть смещается
+      f.spdT = 0.1; f.arrive = true; f.turnK = 1.0; f.turnGapS = 3.5;
+      if (t - f.subT > 2.2 && R() < dt * 0.3) {
+        const r = (s.r || 0.03) * BGX.dw;
+        setTarget(f, bgX(s.bx) + rand(-0.5, 0.5) * r, bgY(s.by) + rand(-0.35, 0.35) * r, z + rand(-0.012, 0.012)); f.subT = t;
+      }
+      if (t - f.st > f.stDur + 6) { f.sub = 13; f.subT = t; setTarget(f, f.cEx, f.cEy, z); f.spdT = Math.min(f.cruise, 0.6); f.arrive = false; }
+    } else {                                              // наружу тем же боком
+      if (distT(f) < 0.7 * L || t - f.subT > 14) { nextActivity(f, t); return; }
+    }
   }
 
   // HOME (клоуны): эллипс венца актинии (scene props[home].nest, иначе spot «home»), z ± 0.025
@@ -2531,6 +2662,7 @@
         break;
       }
       case ST.HIDE: {
+        if (f.hCoral) { thinkCoral(f, dt, t); break; }     // V4b: просвет в переднем рифе (не за колонной)
         const P = f.hPortal, S = f.hShel;
         if (!P || !S) { f.allowBehind = false; nextActivity(f, t); return; }
         if (f.sub === 0) {                              // к порталу снаружи, на его глубине
@@ -2587,13 +2719,13 @@
             // по ходу — чаще (патрулирует венец туда-обратно, а не крутится на месте)
             const ahead = R() < 0.72 ? f.dir : -f.dir, ex = clamp((f.x - f.hx) / f.hrx, -1, 1);
             const ux = clamp(ex + ahead * rand(0.35, 1.1), -1, 1), uy = rand(-1, 1) * Math.sqrt(Math.max(0, 1 - ux * ux));
-            setTarget(f, f.hx + ux * f.hrx, f.hy - 0.25 * f.hry + uy * f.hry, f.hz + rand(-0.02, 0.02));
+            setTarget(f, f.hx + ux * f.hrx, f.hy - 0.25 * f.hry + uy * f.hry, f.hz + rand(-0.004, 0.022));   // V4b: между слоями актинии и за акропорой у её трубки
             f.subT = t; f.subDur = rand(1.0, 2.8); f.spdT = rand(0.35, 0.85); f.arrive = true;
             if (R() < 0.18 * f.tr.darty) f.dart = rand(0.15, 0.3);
             if (t - f.lastExcursion > rand(25, 60) && R() < 0.5) {      // вылазка на 1.5–2.5 длины
               f.lastExcursion = t; f.sub = 1; f.subT = t;
               const side = R() < 0.5 ? -1 : 1;
-              pickPoint(f, f.hx + side * 1.2 * f.len, f.hx + side * 2.6 * f.len, 0.45, 0.8, Math.max(1.0, f.hz - 0.06), f.hz + 0.15, false);
+              pickPoint(f, f.hx + side * 1.2 * f.len, f.hx + side * 2.6 * f.len, 0.45, 0.8, Math.max(1.0, f.hz - 0.004), f.hz + 0.15, false);
               setTarget(f, clamp(PK.x, 0.05 * W, 0.95 * W), Math.min(PK.y, f.hy - 0.5 * f.hry), PK.z); f.spdT = f.cruise; f.arrive = true;
             }
           }
@@ -2757,6 +2889,7 @@
           if (k) { if (f.state === ST.HIDE || f.state === ST.PEEK) f.allowBehind = false; setState(f, ST.FEED, t, 60); f.flake = k; f.near = false; }
         }
       }
+      coralLock(f);                                  // V4b: глубина у колоний переднего рифа (по прошлой раскладке тела)
       think(f, dt, t);
       if (isOff(f)) continue;
       // клевок: 0 → 0.1 BL за 0.12 с → назад за 0.25 с
@@ -2778,7 +2911,7 @@
       const vv = f.turn.on ? f.turn.v : Math.hypot(f.v, f.vy);
       const sBL = vv / f.L0;
       f.speedBL = sBL;
-      f.tp += TAU * (1.2 + 1.8 * Math.min(sBL, 2.5)) * dt;
+      f.tp += TAU * (1.2 + 1.8 * Math.min(sBL, 2.5)) * f.beatK * dt;   // вуаль — неторопливее (veil.beat)
       if (f.tp > 6283.185307179586) f.tp -= 6283.185307179586;
       const Aw = (f.turn.on ? 0.55 : 1) * (0.16 + 0.44 * smooth01(0.05, 1.0, sBL));
       f.tA += (Aw - f.tA) * (1 - Math.exp(-dt / 0.35));
@@ -2825,6 +2958,7 @@
     { id: "chase", cd: 180, major: true, w: 0.8 },
     { id: "crab", cd: 60, major: false, w: 0.7 },
     { id: "burp", cd: 30, major: false, w: 0.7 },
+    { id: "nook", cd: 50, major: false, w: 0.8 },        // V4b: рыба заходит в просвет переднего рифа (сквозь крону)
   ];
   function logBeat(id, t, who) {
     DIRECTOR.log.push({ t: +t.toFixed(2), id, fish: who || null });
@@ -2909,6 +3043,14 @@
       case "crab":
         if (!STORY_HOOKS.crab || !STORY_HOOKS.crab(t)) return 0;
         logBeat(b.id, t); return 0;
+      case "nook": {                // V4b: заметная рыба прячется в просвет переднего рифа (видна сквозь крону/кружево)
+        if (!SCN.corals.length) return 0;
+        for (const g of fishes) {
+          if (busy(g) || !g.visible || g.school || g.habit === "home" || g.habit === "lurk") continue;
+          if (enterCoral(g, t)) { logBeat(b.id, t, g.pack ? g.pack.id : null); return 0; }
+        }
+        return 0;
+      }
       case "burp": {
         const ids = [];
         for (const s of BSRC) if (s.kind === "burp") ids.push(s.id);
@@ -3561,7 +3703,8 @@
   const SC_IMG = {};                                     // src → { im, ok, done } (предзагрузка общая)
   let scPending = 0;
   const SCN = { on: false, items: [], layer: [], nLayer: 0, ord: [], nOrd: 0, occ: [], dyn: [], nDyn: 0, crab: null, star: null, built: false,
-                frame: 0, groups: 0, members: 0 };
+                frame: 0, groups: 0, members: 0,
+                late: [], nLate: 0, corals: [] };   // V4b: передний риф (видео-сцена) — колонии и реквизит ПОСЛЕ каустики задника
   function scImg(src) {
     if (!src || typeof src !== "string") return null;
     let e = SC_IMG[src];
@@ -3584,6 +3727,14 @@
       if (p.parts) { scImg(p.parts.body); for (const c of p.parts.claws || []) scImg(c.src); } else scImg(p.src);
       if (p.layers) scImg(p.layers.front);
     }
+    for (const c of s.corals || []) { const k = coralCat(c.coral); if (k) scImg(k.image); }
+  }
+  // колония каталога V3 (scene/corals/catalog.js → window.CORAL_CATALOG) по id; null — нет каталога/колонии
+  function coralCat(id) {
+    const C = window.CORAL_CATALOG;
+    if (!Array.isArray(C)) return null;
+    for (let i = 0; i < C.length; i++) if (C[i] && C[i].id === id && typeof C[i].image === "string") return C[i];
+    return null;
   }
   function mkItem(kind, id, def, z) {
     return { kind, id, def, z, z0: z, ents: [], imgs: [null, null, null], coreE: null, core: null, ops: new Float32Array(SC_OPMAX * SC_OPF), nOps: 0,
@@ -3593,6 +3744,7 @@
   // сцена из файла → предметы (на загрузку задника; без сцены — пусто)
   function buildSceneItems() {
     SCN.items = []; SCN.layer = []; SCN.ord = []; SCN.occ = []; SCN.dyn = []; SCN.nDyn = 0; SCN.crab = null; SCN.star = null; SCN.on = false;
+    SCN.late = []; SCN.nLate = 0; SCN.corals = []; KP.on = false;
     STORY_HOOKS.crab = null;
     if (!bgReady || !SCENE_FROM_FILE) return;
     preloadScene();
@@ -3634,7 +3786,25 @@
         SCN.items.push(fr);
       }
     }
-    for (const it of SCN.items) if (it.layer) SCN.layer.push(it);
+    // V4b: передний риф — колонии каталога (scene.corals, видео-сцена). Они и реквизит видео-сцены — «поздний» слой:
+    // рисуются ПОСЛЕ каустики задника, одним списком по глубине (губки перед стволом «дерева», акропора перед
+    // трубкой актинии), со своим проходом каустики (Kp × альфа предмета, см. drawReefLayer)
+    const late = bgMode === "video";
+    for (let i = 0; i < (S.corals || []).length; i++) {
+      const c = S.corals[i], k = coralCat(c.coral);
+      if (!k) continue;
+      const it = mkItem("coral", c.coral, c, +c.z || 1.1);
+      it.cat = k; it.ents = [scImg(k.image)]; it.flip = !!c.flip; it.ph = i * 1.37;
+      it.grid = gridOk(c.grid); it.box = Array.isArray(c.box) ? c.box : null;
+      it.swing = (k.kind === "soft" || k.kind === "fan") && k.sway && +k.sway.amp > 0;
+      SCN.items.push(it); SCN.corals.push(it);
+    }
+    for (const it of SCN.items) {
+      it.late = late && (it.kind === "prop" || it.kind === "coral") && it.layer;
+      if (it.kind === "coral") it.late = true;
+      if (it.late) it.layer = false;
+      if (it.layer) SCN.layer.push(it);
+    }
     SCN.built = true;
   }
   // картинки предмета готовы? (+ размеры; актинии — imgW/imgH для гнезда клоунов E3)
@@ -3648,6 +3818,7 @@
     // вычитание — по альфе без «запаса» в воду: вырезке фото (A2, альфа выходит в воду на 2 px) — подрезанная копия;
     // маске видео (V2, kind "mask") — она сама: её кромка уже по самому рифу (матирование), 1–2 px мягкая
     if (it.kind === "occ" && !it.core) it.core = it.def.kind === "mask" ? it.imgs[0] : erodeAlpha(it.imgs[0], 2);
+    if (it.kind === "coral") it.core = it.imgs[0];          // колония вычитается своей альфой (кружево веера — насквозь)
     it.sub = !it.dyn && !(it.kind === "patch" && !it.core);   // патч без сердцевины не вычитаем (поле воды дало бы ореол)
     if (it.kind === "prop" && !it.front && it.def.nest) { it.def.imgW = it.iw; it.def.imgH = it.ih; }
     if (it.crab && (!it.imgs[1] || !it.imgs[2])) { it.imgs[1] = null; it.imgs[2] = null; }
@@ -3721,8 +3892,9 @@
   function buildItemThemes(it) {
     it.timgs = null;
     const d = it.def;
-    if (bgMode !== "video" || it.kind !== "prop" || !TP[0] || !TP[1]) return;
-    const gr = d.grade || {}, nt = d.night || null, sh = gr.shade;
+    if (bgMode !== "video" || (it.kind !== "prop" && it.kind !== "coral") || !TP[0] || !TP[1]) return;
+    // колония: грейд места — из scene.corals[].grade, флуоресценция — из каталога (night {glow, amt})
+    const gr = d.grade || {}, nt = it.kind === "coral" ? (it.cat && it.cat.night) || null : d.night || null, sh = gr.shade;
     const shade = Array.isArray(sh) ? [+sh[0], +sh[1], +sh[2]] : [sh > 0 ? +sh : 1, sh > 0 ? +sh : 1, sh > 0 ? +sh : 1];
     const haze = gr.haze > 0 ? +gr.haze : 0, a = TP[0], b = TP[1];
     const gl = nt && Array.isArray(nt.glow) ? nt.glow : [0, 0, 0], ga = nt && nt.amt > 0 ? nt.amt * b.glowK : 0;
@@ -3770,8 +3942,9 @@
   /* полосы качания вдоль оси (axisY — строки, смещение по x; иначе столбцы, смещение по y).
      Прямоугольник на экране (X0, Y0, PW, PH), картинка iw×ih; cTip/cBase — экранные координаты кончиков
      и линии закрепления по оси (кончики — со стороны меньших координат); br — сжатие к основанию. */
-  function swayOps(it, n0, axisY, X0, Y0, PW, PH, iw, ih, cTip, cBase, A, wt, k, ph, cur, Cn, br, nb) {
+  function swayOps(it, n0, axisY, X0, Y0, PW, PH, iw, ih, cTip, cBase, A, wt, k, ph, cur, Cn, br, nb, fl) {
     const L = axisY ? ih : iw, P = axisY ? PH : PW, O = axisY ? Y0 : X0, s = L / P;
+    const ax = fl ? -PW / iw : PW / iw, ex = fl ? X0 + PW : X0;   // V4b: зеркально по x (колонии flip; только axisY)
     const rT = clamp((cTip - O) * s, 0, L), rB = clamp((cBase - O) * s, rT, L), span = Math.max(1e-6, rB - rT);
     let n = n0, m = 0;
     const seg = (ra, rb, last) => {                        // одна полоса [ra, rb] (исходные px вдоль оси)
@@ -3782,7 +3955,7 @@
       const ca2 = ca < cBase ? cBase - (cBase - ca) * (1 - br) : ca, cb2 = cb < cBase ? cBase - (cBase - cb) * (1 - br) : cb;
       const re = last ? rb : Math.min(L, rb + 1);           // перекрытие в 1 исходный px — без шва между полосами
       const sh = (db - da) / (rb - ra), sc2 = (cb2 - ca2) / (rb - ra);
-      if (axisY) opSet(it, n++, 0, 0, ra, iw, re - ra, PW / iw, 0, sh, sc2, X0 + da - sh * ra, ca2 - sc2 * ra);
+      if (axisY) opSet(it, n++, 0, 0, ra, iw, re - ra, ax, 0, sh, sc2, ex + da - sh * ra, ca2 - sc2 * ra);
       else opSet(it, n++, 0, ra, 0, re - ra, ih, sc2, sh, 0, PH / ih, ca2 - sc2 * ra, Y0 + da - sh * ra);
       const am = Math.max(Math.abs(da), Math.abs(db)); if (am > m) m = am;
     };
@@ -3811,6 +3984,7 @@
       swayOps(it, 0, axisY, X0, Y0, PW, PH, it.iw, it.ih, cT, cB, A, wt, s.k || 1, s.phase || 0, s.current || 0, curN(t, X0 + PW / 2), br, s.amp >= 0.02 ? 6 : 4);
       return;
     }
+    if (it.kind === "coral") { poseCoral(it, t); return; }
     // пропсы: низ-центр картинки → bgMap(bx, byBottom); ширина bw·dw (краб — × z0/z, он ходит вглубь)
     const a = d.anim || { type: "none" };
     if (it.crab) { poseCrab(it, t); return; }
@@ -3835,6 +4009,69 @@
       it.x0 = Math.max(it.x0, X0 + b[0] * w - m); it.x1 = Math.min(it.x1, X0 + b[2] * w + m);
       it.y0 = Math.max(it.y0, Y0 + b[1] * h - 2); it.y1 = Math.min(it.y1, Y0 + b[3] * h + 2);
     }
+  }
+
+  /* ---------- V4b: колония переднего рифа ----------
+     Якорь — base [u, v] каталога (точка основания в долях картинки) → (bgX(bx), bgY(byBase)); высота на экране
+     scale·dh (доля высоты КАДРА видео), ширина — по пропорции; flip — зеркально (u → 1 − u).
+     Мягкие кораллы и веера («soft», «fan») качаются полосами строк со сдвигом (как патчи A2): нижняя доля pin
+     неподвижна (основание прибито), смещение растёт к кончикам до amp·высоты (amp ≤ 3%), своя частота
+     0.15–0.4 Гц (period каталога в [2.5, 6.6] с), фаза — своя у каждой колонии (catalog.phase + swayPhase), плюс
+     ОБЩЕЕ течение currentAt (доля 0.4, у веера-плоскости 0.5): весь риф клонится вместе, с задержкой вдоль кадра.
+     Каменистые и губки («hard», «sponge») неподвижны — одна операция. */
+  function coralGeom(it, out) {
+    const d = it.def, K = it.cat, PH = clamp(+d.scale || +K.size || 0.3, 0.02, 2) * BGX.dh, PW = (PH * it.iw) / it.ih;
+    const b = Array.isArray(K.base) ? K.base : (K.sway && K.sway.pivot) || [0.5, 1], u = it.flip ? 1 - b[0] : b[0];
+    out[0] = bgX(d.bx) - u * PW; out[1] = bgY(d.byBase) - b[1] * PH; out[2] = PW; out[3] = PH;
+    return out;
+  }
+  const CG = [0, 0, 0, 0];
+  function coralAmp(it) { return it.swing ? clamp(+it.cat.sway.amp, 0, 0.03) : 0; }
+  function poseCoral(it, t) {
+    const d = it.def, K = it.cat;
+    coralGeom(it, CG);
+    const X0 = CG[0], Y0 = CG[1], PW = CG[2], PH = CG[3];
+    it.cx = bgX(d.bx); it.cy = bgY(d.byBase); it.pw = PW;
+    if (it.swing) {
+      const sw = K.sway, amp = coralAmp(it), per = clamp(+sw.period || 5, 2.5, 6.6), pin = clamp(sw.pin != null ? +sw.pin : 0.25, 0, 0.9);
+      const fan = K.kind === "fan", ph = (+sw.phase || 0) + (+d.swayPhase || 0);
+      swayOps(it, 0, true, X0, Y0, PW, PH, it.iw, it.ih, Y0, Y0 + (1 - pin) * PH, amp * PH, (TAU * t) / per, fan ? 0.8 : 1.3, ph,
+        fan ? 0.5 : 0.4, curN(t, it.cx), 0, amp >= 0.02 ? 7 : 5, it.flip);
+    } else {
+      opSet(it, 0, 0, 0, 0, it.iw, it.ih, it.flip ? -PW / it.iw : PW / it.iw, 0, 0, PH / it.ih, it.flip ? X0 + PW : X0, Y0); it.nOps = 1;
+      it.x0 = X0; it.y0 = Y0; it.x1 = X0 + PW; it.y1 = Y0 + PH; it.rx = X0; it.ry = Y0; it.rw = PW; it.rh = PH; it.rm = 1;
+    }
+    if (it.box) {                                          // рамка альфы (доли кадра, уже с учётом flip — scene.js)
+      const m = it.rm, q = it.box;
+      it.x0 = Math.max(it.x0, X0 + q[0] * PW - m); it.x1 = Math.min(it.x1, X0 + q[2] * PW + m);
+      it.y0 = Math.max(it.y0, Y0 + q[1] * PH - 2); it.y1 = Math.min(it.y1, Y0 + q[3] * PH + 2);
+    }
+  }
+  /* поза ПОКОЯ колонии (без качания) с запасом на качание — для симуляции рыб («замок» глубины у колоний,
+     coralLock): не зависит от того, рисовался ли кадр (детерминизм: still и clip ведут рыб одинаково).
+     Кэш по раскладке задника (ресайз). */
+  function coralRest(it) {
+    if (it.restKey === BGX.dw + BGX.dh * 7.3 + BGX.dx * 0.37 + BGX.dy * 1.9 && it.rest) return it.rest;
+    coralGeom(it, CG);
+    const X0 = CG[0], Y0 = CG[1], PW = CG[2], PH = CG[3], m = coralAmp(it) * PH * 1.15 + 2, q = it.box;
+    const r = it.rest || (it.rest = { x0: 0, y0: 0, x1: 0, y1: 0, rx: 0, ry: 0, rw: 1, rh: 1, rm: 0 });
+    r.rx = X0; r.ry = Y0; r.rw = PW; r.rh = PH; r.rm = m;
+    r.x0 = X0 - m; r.x1 = X0 + PW + m; r.y0 = Y0; r.y1 = Y0 + PH;
+    if (q) { r.x0 = Math.max(r.x0, X0 + q[0] * PW - m); r.x1 = Math.min(r.x1, X0 + q[2] * PW + m); r.y0 = Math.max(r.y0, Y0 + q[1] * PH - 2); r.y1 = Math.min(r.y1, Y0 + q[3] * PH + 2); }
+    it.restKey = BGX.dw + BGX.dh * 7.3 + BGX.dx * 0.37 + BGX.dy * 1.9;
+    return r;
+  }
+  // перекрывает ли рамка (x0..y1) колонию в покое: прямоугольник + занятая ячейка сетки альфы (с запасом)
+  function coralHit(it, x0, y0, x1, y1) {
+    const r = coralRest(it);
+    if (x1 < r.x0 || x0 > r.x1 || y1 < r.y0 || y0 > r.y1) return false;
+    const g = it.grid;
+    if (!g) return true;
+    const G = g.length, m = r.rm;
+    const c0 = Math.max(0, Math.floor(((x0 - m - r.rx) / r.rw) * G)), c1 = Math.min(G - 1, Math.floor(((x1 + m - r.rx) / r.rw) * G));
+    const r0 = Math.max(0, Math.floor(((y0 - m - r.ry) / r.rh) * G)), r1 = Math.min(G - 1, Math.floor(((y1 + m - r.ry) / r.rh) * G));
+    for (let j = r0; j <= r1; j++) { const row = g[j]; for (let i = c0; i <= c1; i++) if (row.charCodeAt(i) === 35) return true; }
+    return false;
   }
 
   /* ---------- краб: поведение (симуляция) и поза (части) ----------
@@ -3995,7 +4232,7 @@
   function poseScene(t) {
     SCN.on = false;
     if (!bgReady || !SCN.built || !SCN.items.length) return;
-    let nl = 0, no = 0, nd = 0;
+    let nl = 0, no = 0, nd = 0, nt = 0, kx0 = 1e9, ky0 = 1e9, kx1 = -1e9, ky1 = -1e9;
     for (let i = 0; i < SCN.items.length; i++) {
       const it = SCN.items[i];
       if (!itemReady(it)) continue;
@@ -4003,10 +4240,18 @@
       if (it.sub) SCN.ord[no++] = it;
       if (it.layer) SCN.layer[nl++] = it;
       if (it.dyn) SCN.dyn[nd++] = it;
+      if (it.late) {
+        SCN.late[nt++] = it;
+        if (it.x1 > 0 && it.x0 < W && it.y1 > 0 && it.y0 < H) {   // рамка переднего рифа в кадре — для буфера Kp
+          if (it.x0 < kx0) kx0 = it.x0; if (it.y0 < ky0) ky0 = it.y0; if (it.x1 > kx1) kx1 = it.x1; if (it.y1 > ky1) ky1 = it.y1;
+        }
+      }
     }
-    SCN.nLayer = nl; SCN.nOrd = no; SCN.ord.length = no; SCN.nDyn = nd;
-    sortByZ(SCN.layer, nl); sortByZ(SCN.ord, no);
-    SCN.on = no + nl + nd > 0;
+    SCN.nLayer = nl; SCN.nOrd = no; SCN.ord.length = no; SCN.nDyn = nd; SCN.nLate = nt; SCN.late.length = nt;
+    sortByZ(SCN.layer, nl); sortByZ(SCN.ord, no); sortByZ(SCN.late, nt);
+    SCN.on = no + nl + nd + nt > 0;
+    KP.on = nt > 0 && kx1 > kx0 && LAYERS.scene && LAYERS.caustics;
+    KP.x0 = Math.max(0, kx0); KP.y0 = Math.max(0, ky0); KP.x1 = Math.min(W, kx1); KP.y1 = Math.min(H, ky1);
   }
   const CB = [null, null];                                 // буферы краба за фрагом (чёт/нечет)
   /* Краб за фрагом (retreat.behind): краб — пиксели слоя задника, окклюдеры не рисуются, поэтому его часть
@@ -4061,6 +4306,82 @@
     }
     ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
     CNT.e4Scene += CNT.drawImage - d0;
+  }
+
+  /* ---------- V4b: ПЕРЕДНИЙ РИФ видео-сцены — «поздний» слой ----------
+     Колонии (scene.corals) и реквизит — ПОСЛЕ каустики задника, отсвета дна и теней рыб на песке, одним списком
+     по глубине (дальние первыми), до списка рыб (рыба за колонией — в группе вычитания, как за колонной):
+       1) тени: контактная тень реквизита (как в E4) и затенение у основания колонии — мягкий multiply-эллипс
+          (scene.corals[].shadow {w, h, a} в ширинах колонии; по умолчанию 0.75 × 0.2, α 0.3): колония сидит на
+          рифе, а не висит наклейкой; основание за кадром — от эллипса видна лишь верхняя кромка;
+       2) предмет — вариантом темы (день: грейд места + дымка; ночь: LED-синий × флуоресценция; в переходе — оба);
+       3) каустика — ОДИН проход на весь слой: в черновик (доля RS буфера K) — альфы предметов по глубине с силой
+          света предмета (corals[].light, у реквизита light или 0.75), 'source-in' рисунок Kp (те же плитки и ход,
+          что на песке, × след лучей темы), на холст 'color-dodge' ≈ c·(1 + K): блики берут цвет самой колонии,
+          в солнечном луче — ярче, ночью (сила темы 0.16) — слабо. Пиксели холста не читаются. */
+  const RLB = [null, null];
+  const REEF_CAUS = 1.0;                                    // общий множитель каустики переднего рифа
+  function itemLight(it) {
+    const d = it.def;
+    if (it.kind === "coral") return clamp((d.light != null ? +d.light : 0.8) * REEF_CAUS, 0, 1);
+    return clamp((d.light != null ? +d.light : 0.75) * REEF_CAUS, 0, 1);
+  }
+  function drawReefLayer(t) {
+    if (!SCN.on || !SCN.nLate || !LAYERS.scene) return;
+    const d0 = CNT.drawImage;
+    ctx.setTransform(RS, 0, 0, RS, 0, 0);
+    for (let i = 0; i < SCN.nLate; i++) {
+      const it = SCN.late[i];
+      if (it.x1 < 0 || it.x0 > W || it.y1 < 0 || it.y0 > H) continue;
+      if (it.kind === "coral" ? !LAYERS.xCoral : !LAYERS.xProp) continue;
+      const tucked = it.crab && CRAB.tuck + CRAB.shade > 0.01;
+      if (LAYERS.xShadow && propShadowSprite && !tucked) {
+        let s = it.shadow, w = it.pw, cx = it.cx, cy = it.cy;
+        if (!s && it.kind === "coral") s = it.def.shadow || CORAL_SHADOW;
+        if (s) {
+          const sw = (s.w || 0.75) * w, sh = (s.h || 0.2) * w;
+          cy += (s.dy || 0) * w; cx += (s.dx || 0) * w;
+          if (cy - sh / 2 < H && cx + sw / 2 > 0 && cx - sw / 2 < W) {
+            ctx.setTransform(RS, 0, 0, RS, 0, 0);
+            ctx.globalCompositeOperation = "multiply"; ctx.globalAlpha = clamp(s.a != null ? +s.a : 0.3, 0, 1);
+            ctx.drawImage(propShadowSprite, cx - sw / 2, cy - sh / 2, sw, sh);
+            ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+          }
+        }
+      }
+      if (tucked) drawCrabTucked(it);
+      else drawItem(ctx, it, RS, 0, 0);
+    }
+    ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+    if (KP.on && KP.ok && kpCan && LAYERS.caustics) reefCaustics();
+    CNT.e4Scene += CNT.drawImage - d0;
+  }
+  const CORAL_SHADOW = { w: 0.75, h: 0.2, a: 0.3 };
+  function reefCaustics() {
+    const bh = BGX.bandH;
+    const x0 = Math.max(0, KP.x0), y0 = Math.max(bh, KP.y0), x1 = Math.min(W, KP.x1), y1 = Math.min(H, KP.y1);
+    const kx0 = Math.max(0, Math.floor(x0 * kS)), ky0 = Math.max(0, Math.floor((y0 - bh) * kS));
+    const kx1 = Math.min(kW, Math.ceil(x1 * kS)), ky1 = Math.min(kH, Math.ceil((y1 - bh) * kS)), pw = kx1 - kx0, ph = ky1 - ky0;
+    if (pw < 1 || ph < 1) return;
+    const e = gbuf(RLB, SCN.frame & 1, pw, ph), g = e.g, ox = kx0 / kS, oy = ky0 / kS + bh;
+    let any = false;
+    for (let i = 0; i < SCN.nLate; i++) {                   // альфы × сила света, дальние первыми (ближние сверху)
+      const it = SCN.late[i];
+      if (it.x1 < x0 || it.x0 > x1 || it.y1 < y0 || it.y0 > y1) continue;
+      if (it.kind === "coral" ? !LAYERS.xCoral : !LAYERS.xProp) continue;
+      if (it.crab && CRAB.tuck + CRAB.shade > 0.01) continue;
+      g.globalAlpha = itemLight(it) * (it.crab ? 1 - 0.8 * CRAB.shade : 1);
+      drawOps(g, it, false, kS, ox, oy);
+      any = true;
+    }
+    if (!any) return;
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-in";
+    g.drawImage(kpCan, kx0, ky0, pw, ph, 0, 0, pw, ph);
+    g.globalCompositeOperation = "source-over";
+    ctx.setTransform(RS, 0, 0, RS, 0, 0);
+    ctx.globalCompositeOperation = "color-dodge"; ctx.globalAlpha = 1;
+    ctx.drawImage(e.c, 0, 0, pw, ph, ox, oy, pw / kS, ph / kS);
+    ctx.globalCompositeOperation = "source-over";
   }
 
   /* ---------- динамика кадра и группы вычитания ---------- */
@@ -4300,7 +4621,7 @@
     ctx.font = "11px ui-monospace, Menlo, Consolas, monospace"; ctx.textBaseline = "top"; ctx.lineWidth = 1.5;
     for (let i = 0; i < SCN.nOrd; i++) {
       const it = SCN.ord[i];
-      ctx.strokeStyle = it.kind === "occ" ? "rgba(255,90,90,0.95)" : it.kind === "patch" ? "rgba(90,200,255,0.95)" : "rgba(255,170,255,0.95)";
+      ctx.strokeStyle = it.kind === "occ" ? "rgba(255,90,90,0.95)" : it.kind === "patch" ? "rgba(90,200,255,0.95)" : it.kind === "coral" ? "rgba(120,255,200,0.95)" : "rgba(255,170,255,0.95)";
       ctx.setLineDash(it.kind === "occ" ? [8, 4] : []);
       ctx.strokeRect(it.x0, it.y0, it.x1 - it.x0, it.y1 - it.y0);
       ctx.fillStyle = ctx.strokeStyle; ctx.fillText(`${it.kind}:${it.id} z${it.z.toFixed(2)}${it.core ? " core" : ""}`, it.x0 + 3, it.y0 + 3);
@@ -4832,6 +5153,8 @@
       prof("pCaus");
       if (LAYERS.glow) drawFloorGlow();
       if (LAYERS.shadows) drawFishShadows();
+      drawReefLayer(t);                              // V4b: передний риф (колонии + реквизит видео-сцены) со своей каустикой
+      prof("pReef");
     } else {
       drawWater();                                   // процедурный риф: без полосы поверхности, свет сверху
       drawBackReef();
@@ -5086,7 +5409,8 @@
         turning: f.turn.on, turnP: f.turn.p, turnT: f.turn.T, speedBL: f.speedBL, visible: f.visible, visFrac: f.visFrac,
         onScreen: f.onScreen, widthFrac: f.widthFrac, bbox: [f.minX, f.minY, f.maxX, f.maxY], near: !!f.near, leaving: !!f.leaving,
         school: f.school ? (f.isLeader ? "leader" : "follower") : null, target: [projX(f.tX, f.tz), projY(f.tY, f.tz), f.tz],
-        depth: f.depth, alpha: f.alpha, sprite: !!(f.pack && f.pack.ready), slices: f.n, litMax: f.litMax, hiddenT: f.hiddenT, aliveT: f.aliveT, viol: f.viol }));
+        depth: f.depth, alpha: f.alpha, sprite: !!(f.pack && f.pack.ready), slices: f.n, litMax: f.litMax, hiddenT: f.hiddenT, aliveT: f.aliveT, viol: f.viol,
+        coral: f.hCoral ? f.hCoral.id : null, cz: [f.czLo, f.czHi], allowBehind: f.allowBehind, shelter: f.hShel ? f.hShel.id : null }));
     },
     // E3: компактный снимок для 10-минутной симуляции (харнесс sim.js): по 14 чисел на рыбу
     fishGeom() {
@@ -5161,6 +5485,19 @@
         o.push({ item: SCN.ord[s].id, z: SCN.ord[s].z, rect: [GRP_U[k], GRP_U[k + 1], GRP_U[k + 2], GRP_U[k + 3]], members: m });
       }
       return o;
+    },
+    // V4b: колонии переднего рифа (поза кадра, покой, z) и принудительное поведение рыбы вида id (тесты, кадры-доказательства):
+    // what — "coral" (просвет в переднем рифе), "hide" (за колонну), "peek" (выглянуть; рыба уже за колонной)
+    corals() { return SCN.corals.map((c) => { const r = c.ready ? coralRest(c) : null; return { id: c.id, z: c.z, ready: c.ready, flip: c.flip, ops: c.nOps,
+      bb: [c.x0, c.y0, c.x1, c.y1], rest: r ? [r.x0, r.y0, r.x1, r.y1] : null, kind: c.cat.kind, themes: !!c.timgs }; }); },
+    enter(id, what) {
+      for (const f of fishes) {
+        if (!f.pack || f.pack.id !== id || isOff(f)) continue;
+        if (what === "coral") return enterCoral(f, simT);
+        if (what === "hide") return enterHide(f, simT);
+        if (what === "peek") return f.state === ST.HIDE && !f.hCoral ? enterPeek(f, simT) : false;
+      }
+      return false;
     },
     crab() { const C = CRAB; return C.it ? { st: C.st, bx: C.bx, by: C.by, z: C.z, shade: C.shade, tuck: C.tuck, legs: C.legs, pick: C.pk.on, shuffles: C.shuffles, retreats: C.retreats } : null; },
     crabBeat() { return crabBeat(simT); },
