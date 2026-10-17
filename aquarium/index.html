@@ -3452,7 +3452,7 @@
      остаток (≈ 8 вызовов на рыбу), но не больше 10 рыб; берутся самые освещённые (litMax·len) */
   const LIT_TMP = new Float32Array(64);
   const FISH_DI_BUDGET = 395;
-  let litCut = 0;
+  let litCut = 0, fishTight = false;
   function updateLitCut() {
     let n = 0, base = 0;
     for (let i = 0; i < fishes.length; i++) {
@@ -3467,6 +3467,9 @@
       LIT_TMP[j] = v;
     }
     const maxLit = clamp(Math.floor((FISH_DI_BUDGET - base) / 7), 0, 7);    // ≈ 4 своих + стирание ближними
+    // V4b: в видео-сцене рыбы глубже (каньон до 2.5, дымка сильнее) — в тяжёлых кадрах (кормёжка, много разворотов)
+    // сами тела с дымкой выходили за бюджет: дымка на развороте — парами срезов (ровный тон воды), тень изгиба — реже
+    fishTight = base > FISH_DI_BUDGET - 25;
     litCut = n > maxLit ? (maxLit > 0 ? LIT_TMP[maxLit - 1] : 1e9) : 0;
     for (let i = 0; i < fishes.length; i++) {
       const f = fishes[i];
@@ -3487,14 +3490,14 @@
     const d1 = CNT.drawImage;
     if (fa >= 0.08) {                                    // ровный тон воды — вне разворота хватает пар срезов хвоста
       ctx.globalAlpha = fa * fd;
-      if (f.turn.on) drawSlices(ctx, f, P.fog, P.fog.width / P.w0, RS, OX, OY); else drawLitPairs(ctx, f, P.fog, P.fog.width / P.w0, RS, OX, OY);
+      if (f.turn.on && !fishTight) drawSlices(ctx, f, P.fog, P.fog.width / P.w0, RS, OX, OY); else drawLitPairs(ctx, f, P.fog, P.fog.width / P.w0, RS, OX, OY);
     }
     // разворот: бок, ушедший «ребром», темнее (тень изгиба тела) — сглаживает складку и сжатую текстуру
     if (f.turn.on) {
       const tf = f.tf, ub = f.ub, w0 = P.w0, h0 = P.h0, Fg = P.fog, ms = Fg.width / w0;
       for (let k = 0; k < f.n; k++) {
         const c = Math.abs(f.cps[k]), a = 0.42 * (1 - c) * (1 - c) * fd;
-        if (a < 0.03) continue;
+        if (a < (fishTight ? 0.09 : 0.03)) continue;
         const o = k * 6;
         ctx.setTransform(RS * tf[o], RS * tf[o + 1], RS * tf[o + 2], RS * tf[o + 3], RS * (tf[o + 4] - OX), RS * (tf[o + 5] - OY));
         ctx.globalAlpha = a;
@@ -3948,10 +3951,12 @@
     if (it.kind === "coral") it.core = it.imgs[0];
     themeSet(it, TH.target);
   }
+  const BUILD_MS = { themes: 0, nThemes: 0, items: 0 };       // замер (тесты): время сборки вариантов тем
   function themeSet(it, i) {
     const T = it.timgs;
     if (!T) return null;
     if (T[i]) return T[i];
+    const tb = performance.now();
     const p = it.tset, a = TP[0], b = TP[1], out = [];
     for (let j = 0; j < it.imgs.length; j++) {
       const im = it.imgs[j];
@@ -3959,6 +3964,7 @@
     }
     T[i] = out;
     if (it.kind === "coral") it.core = out[0];               // альфа та же — вычитание берёт уменьшенную копию
+    BUILD_MS.themes += performance.now() - tb; BUILD_MS.nThemes++;
     return out;
   }
   // на кадр — не больше одного недостающего набора нужной темы (смена темы: переход ждёт задник ≤ 3 с — успевает);
@@ -5634,6 +5640,9 @@
     },
     // V4b: колонии переднего рифа (поза кадра, покой, z) и принудительное поведение рыбы вида id (тесты, кадры-доказательства):
     // what — "coral" (просвет в переднем рифе), "hide" (за колонну), "peek" (выглянуть; рыба уже за колонной)
+    buildMs() { return Object.assign({}, BUILD_MS); },
+    readyParts() { return { bg: bgSettled, mask: maskSettled, scene: scSettled(), video: videoSettled(), posters: bgMode !== "video" || !TEST || (BGS.day.pState >= 2 && BGS.night.pState >= 2),
+      fish: PACK.every((p) => !(p.image && p.count > 0) || p.ready || p.failed), pending: scPending }; },
     corals() { return SCN.corals.map((c) => { const r = c.ready ? coralRest(c) : null; return { id: c.id, z: c.z, ready: c.ready, flip: c.flip, ops: c.nOps,
       bb: [c.x0, c.y0, c.x1, c.y1], rest: r ? [r.x0, r.y0, r.x1, r.y1] : null, kind: c.cat.kind, themes: !!c.timgs }; }); },
     enter(id, what) {
