@@ -43,7 +43,7 @@ render() {   # <out.webp> <shot> <width> <samples> [part]; a finished file is ke
 # the story of 17/10, S1→S6; each run renders only the region its 3D crosses (boxes from the 480 px draft, ingest_seq.py
 # --boxes: x0,y0,x1,y1 of the frame, y from the top), about a third of the frame, so the M4 spends its time on the 3D only
 RUNS="v1-meet:v2-why:0.185,0.207,0.476,0.823 v2-why:v3-inside:0.037,0.073,0.424,0.867 v3-inside:v4-feel:0.012,0.070,0.513,0.847
-v4-feel:v5-protocol:0.000,0.073,0.513,0.770 v5-protocol:v6-kit:0.000,0.057,0.517,0.763"
+v4-feel:v5-protocol:0.000,0.073,0.513,0.770 v5-protocol:v6-kit:0.000,0.057,0.526,0.877"
 echo "3/3 Переходы для живой страницы: 5 × 40 кадров (первый кадр дольше: видеокарта готовит шейдеры)…"
 export VT_WEBP_Q=90
 n=0

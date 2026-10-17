@@ -68,7 +68,7 @@ SHOTS = {
                     pouches=[sachet(0.30, 0.57, 4.4, 0.36)], focus=scr(0.30, 0.57, 4.4), fstop=1.4),
     # S5: the pair, read right to left as the steps: the ampoule (01) next to the copy, the sachet (02) outside
     'v5-protocol': dict(DESK, box=box(0.27, 0.30, 10.0, 0.36, dim=0.55), vials=[vial(0.39, 0.50, 5.5, 0.30)],
-                        pouches=[sachet(0.15, 0.55, 5.5, 0.22)], focus=scr(0.27, 0.52, 5.5), fstop=2.5),
+                        pouches=[sachet(0.19, 0.55, 5.5, 0.22)], focus=scr(0.27, 0.52, 5.5), fstop=2.5),
     # S6: the kit, closed carton at the back, 5 ampoules in an arc and 5 sachets in a fan, all in the air
     'v6-kit': dict(DESK, box=box(0.24, 0.36, 7.5, 0.50), vials=KIT_VIALS, pouches=KIT_SACHETS),
 }
