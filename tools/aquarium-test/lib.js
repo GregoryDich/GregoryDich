@@ -95,7 +95,12 @@ function captureErrors(page) {
     if (m.type() === 'error') errors.push('console.error: ' + m.text());
     else if (m.type() === 'warn' || m.type() === 'warning') warnings.push('console.warn: ' + m.text());
   });
-  page.on('requestfailed', (r) => errors.push('requestfailed: ' + r.url() + ' ' + ((r.failure() && r.failure().errorText) || '')));
+  page.on('requestfailed', (r) => {
+    const why = (r.failure() && r.failure().errorText) || '';
+    // <video>: Chromium отменяет первый запрос медиа и перезапрашивает его кусками — это не ошибка
+    if (why === 'net::ERR_ABORTED' && /\.(mp4|webm|mov)(\?|#|$)/i.test(r.url())) { warnings.push('media request restarted: ' + r.url()); return; }
+    errors.push('requestfailed: ' + r.url() + ' ' + why);
+  });
   page.on('response', (r) => { if (r.status() >= 400) errors.push(`http ${r.status()}: ${r.url()}`); });
   return { errors, warnings };
 }
@@ -117,7 +122,7 @@ async function gotoReady(page, url, timeout = 30000) {
 async function stepFrames(page, dt, n, render = true) {
   return page.evaluate(async (dt, n, render) => {
     for (let i = 0; i < n; i++) {
-      window.__aq.step(dt, 1, { render });
+      await window.__aq.step(dt, 1, { render });     // тест с видео (?bgvideo=…) — step возвращает Promise
       await new Promise((r) => requestAnimationFrame(() => r()));
     }
     return window.__aq.stats();

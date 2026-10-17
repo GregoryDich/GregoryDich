@@ -24,7 +24,7 @@ const L = require('./lib');
     const { page, cap } = await L.newPage(env);
     errors = cap.errors; warnings = cap.warnings;
     await L.gotoReady(page, env.url);
-    if (o.warm > 0) await page.evaluate((dt, n) => window.__aq.step(dt, n, { render: 'last' }), o.dt, o.warm | 0);
+    if (o.warm > 0) await page.evaluate(async (dt, n) => { await window.__aq.step(dt, n, { render: 'last' }); }, o.dt, o.warm | 0);
     if (o.eval) await page.evaluate(String(o.eval));   // напр. --eval "__aq.beat('shoalSweep')" — бит режиссёра в начале клипа
     const clip = L.clipOpt(o);
     const at = {};
@@ -32,7 +32,7 @@ const L = require('./lib');
     const t0 = Date.now();
     for (let i = 0; i < (o.frames | 0); i++) {
       if (at[i]) await page.evaluate(at[i]);
-      await page.evaluate((dt) => { window.__aq.step(dt, 1); return new Promise((r) => requestAnimationFrame(() => r())); }, o.dt);
+      await page.evaluate(async (dt) => { await window.__aq.step(dt, 1); return new Promise((r) => requestAnimationFrame(() => r())); }, o.dt);
       await page.screenshot({ path: path.join(dir, `f_${String(i).padStart(5, '0')}.${ext}`), clip, optimizeForSpeed: true,
         ...(ext === 'jpg' ? { type: 'jpeg', quality: 95 } : {}) });
       if (i % 30 === 29) process.stderr.write(`  frame ${i + 1}/${o.frames} (${((Date.now() - t0) / 1000).toFixed(0)} s)\n`);

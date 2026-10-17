@@ -13,6 +13,10 @@ final class WallpaperWindow {
         let flag = WKUserScript(source: "window.__WALLPAPER = true;",
                                 injectionTime: .atDocumentStart, forMainFrameOnly: true)
         config.userContentController.addUserScript(flag)
+        // The backdrop is a muted, looping <video> of a real reef: let it start without a click
+        // (wallpaper windows never receive user input). allowsInlineMediaPlayback is iOS-only;
+        // on macOS video always plays inline.
+        config.mediaTypesRequiringUserActionForPlayback = []
 
         webView = WKWebView(frame: screen.frame, configuration: config)
         webView.autoresizingMask = [.width, .height]

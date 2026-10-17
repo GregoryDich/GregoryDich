@@ -13,7 +13,7 @@ const L = require('./lib');
     const { page, cap } = await L.newPage(env);
     await L.gotoReady(page, env.url);
     // быстрый прогон без отрисовки, последний шаг — с отрисовкой
-    await page.evaluate((dt, n) => window.__aq.step(dt, n, { render: 'last' }), o.dt, Math.max(1, o.steps | 0));
+    await page.evaluate(async (dt, n) => { await window.__aq.step(dt, n, { render: 'last' }); }, o.dt, Math.max(1, o.steps | 0));
     await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r())));
     const out = path.resolve(o.out); L.ensureDir(path.dirname(out));
     await page.screenshot({ path: out, clip: L.clipOpt(o) });

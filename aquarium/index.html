@@ -63,7 +63,10 @@
                    (?debug=2 — плюс геометрия сцены: линия пола, точки, источники пузырьков, safeX)
      ?nofilter=1   HAS_FILTER = false (как в WebKit/WKWebView, где ctx.filter выключен)
      ?nobg=1       задник не грузится — процедурный векторный риф (проверка фолбэка)
-     ?gov=0        регулятор качества выключен (замеры харнессом с синтетическим временем)   */
+     ?gov=0        регулятор качества выключен (замеры харнессом с синтетическим временем)
+     ?theme=day|night  тема принудительно (иначе — по оформлению macOS, см. «ТЕМЫ»)
+     ?bgvideo=0    без видео-задника (только постер); в тесте: ?bgvideo=webm|intra — тестовые копии из
+                   tools/aquarium-test/media (вне бандла), ?bgvideo=mp4 — отгружаемые MP4 (см. «ЗАДНИК»)   */
   const PARAMS = new URLSearchParams(location.search);
   const flag = (k) => PARAMS.has(k) && PARAMS.get(k) !== "0";
   const WALLPAPER = flag("wallpaper") || window.__WALLPAPER === true;
@@ -84,6 +87,7 @@
   window.aquariumSetPower = (m) => {
     POWER = (m === "low" || m === "paused") ? m : "high";
     lastShown = 0; govReset();                   // смена режима — замер интервалов заново
+    syncVideos();                                // 'paused' — видео-задник тоже на паузу (и обратно)
   };
 
   /* ---------- ЕДИНЫЙ ГПСЧ (mulberry32) ----------
@@ -205,89 +209,289 @@
   }
 
   /* ============================================================
-     ЗАДНИК + СЦЕНА
-       assets/reef_bg.jpg — фото рифового аквариума (цвет выправлен офлайн, этап A0);
-       scene/scene.js     — геометрия сцены (window.AQUARIUM_SCENE); применяется ТОЛЬКО
-                            к тому заднику, для которого написана (backdrop.src).
-     Если фото нет (или ?nobg=1) — рисуется процедурный риф.
-     Цветокоррекция и мягкость «запечены» в файлы: ctx.filter в WebKit выключен (SPEC F1),
-     поэтому на лету — только тождество.
+     ЗАДНИК + СЦЕНА + ТЕМЫ (этап V4a)
+       Основной задник — бесшовная петля НАСТОЯЩЕГО рифа (видео 2560×1440, 600 кадров = 20.02 с,
+       scene/scene.js v2, этапы V1/V2): две версии — ДЕНЬ («Мальдивы») и НОЧЬ (королевский синий LED),
+       кадр в кадр одинаковые. Запасные пути — каждый, только если предыдущий не загрузился:
+         видео темы → постер темы (кадр 0 той же петли, та же сцена) → фото assets/reef_bg.jpg
+         (сцена AQUARIUM_SCENE_PHOTO) → процедурный риф (и ?nobg=1).
+       Видео — <video muted loop playsinline preload="auto"> (крошечный элемент ПОД холстом: WebKit не
+       останавливает «невидимое» видео), каждый кадр — drawImage тем же преобразованием, что и фото
+       (cover-fit × zoom на весь экран, лишняя высота уходит вверх на долю anchorY). Декодируется только
+       видео активной темы; второе грузится лениво на смене темы и освобождается после перехода.
+       Пауза движка / скрытие страницы / POWER 'paused' — видео на паузе. file:// + видео «пачкает»
+       холст так же, как фото: getImageData нельзя нигде (его и нет).
+     ТЕСТ-РЕЖИМ (?test=1) детерминирован:
+       • по умолчанию — ПОСТЕРЫ (кадр 0 обеих тем, грузятся сразу): синхронно, step() как прежде;
+       • ?bgvideo=webm | intra (тестовые копии 1920×1080 из ../tools/aquarium-test/media — вне бандла; intra —
+         все кадры ключевые, быстрая перемотка) или ?bgvideo=mp4 (отгружаемые MP4): видео не играет, перед каждым
+         РИСУЕМЫМ шагом перематывается на кадр
+         floor(simT·fps) mod frames; __aq.step тогда возвращает Promise (ждёт 'seeked') — харнесс ждёт его.
+       ?bgvideo=0 — без видео и вне теста (только постер).
+     Полосы поверхности воды НЕТ ни в одной сцене (владелец: «лишнее напоминание об аквариуме»):
+     кадр — на весь экран, свет просто льётся сверху (лучи начинаются у верхней кромки).
      ============================================================ */
   const BG_CANDIDATES = [
     "assets/reef_bg.jpg", "assets/background.jpg", "assets/background.png",
     "assets/reef.jpg", "assets/reef.png", "assets/marine.jpg",
   ];
   let bgImg = null, bgReady = false, bgSettled = false, bgSrc = null;
+  let bgMode = null;                                  // "video" — сцена v2 (видео/постеры тем) | "photo" | null — процедурный риф
+  const BGVIDEO = PARAMS.has("bgvideo") ? String(PARAMS.get("bgvideo")) : "";
+  const VTEST = TEST && (BGVIDEO === "webm" || BGVIDEO === "intra" || BGVIDEO === "mp4" || BGVIDEO === "1");   // тест на настоящих кадрах видео
+  const VID_ALLOWED = !NOBG && BGVIDEO !== "0" && (!TEST || VTEST);
+  const THEMES = ["day", "night"];
 
   // встроенные умолчания (чужой задник или процедурный фолбэк): та же схема, без геометрии рифа
   const DEFAULT_SCENE = {
     version: 1,
     backdrop: { src: null, w: 2560, h: 1355, zoom: 1.08, anchor: "bottom", safeX: [0.14, 0.86] },
-    camera: { horizonBy: 0.42, zNear: 1.0, depthPx: 0.31, fogSigma: 0.42 },
-    surface: { bandH: 0.075, mirrorRows: 0.14 },
+    camera: { horizonBy: 0.42, horizonBx: 0.5, floorBy: 0.975, zNear: 1.0, depthPx: 0.31, fogSigma: 0.42 },
+    surface: { bandH: 0, mirrorRows: 0 },              // полосы поверхности нет
+    themes: null,
     depthGrid: null, floor: null,
     light: { color: "#d6ecff",
              sources: [{ bx: 0.34, byAbove: -0.35, streaks: 5, spread: 9 }, { bx: 0.70, byAbove: -0.35, streaks: 4, spread: 8 }],
              caustics: { mask: null, strength: 0.32 } },
-    occluders: [], patches: [], props: [], spots: [], bubbles: [],
+    occluders: [], patches: [], corals: [], props: [], spots: [], lanes: [], bubbles: [],
   };
   let SCENE = DEFAULT_SCENE, SCENE_FROM_FILE = false;
-  // сцена из файла — только для «своего» задника; недостающие разделы — из умолчаний
+  // какие файлы задника «свои» для сцены: src и (сцена v2) видео/постеры обеих тем
+  function sceneSrcs(s) {
+    const b = s.backdrop || {}, o = [b.src];
+    for (let i = 0; i < THEMES.length; i++) { const e = b[THEMES[i]]; if (e) o.push(e.src, e.poster); }
+    return o;
+  }
+  // сцена из файла — только для «своего» задника (основная v2 или запасная фото-сцена v1); недостающее — из умолчаний
   function sceneFor(src) {
-    const s = window.AQUARIUM_SCENE, d = DEFAULT_SCENE;
-    if (!src || !s || s.version !== 1 || !s.backdrop || s.backdrop.src !== src) return null;
+    if (!src) return null;
+    const list = [window.AQUARIUM_SCENE, window.AQUARIUM_SCENE_PHOTO];
+    for (let i = 0; i < list.length; i++) {
+      const s = list[i];
+      if (s && (s.version === 1 || s.version === 2) && s.backdrop && sceneSrcs(s).indexOf(src) >= 0) return normScene(s);
+    }
+    return null;
+  }
+  function normScene(s) {
+    const d = DEFAULT_SCENE;
     const sec = (k) => Object.assign({}, d[k], s[k] || {});
     const arr = (k) => (Array.isArray(s[k]) ? s[k] : []);
     const g = s.depthGrid;
+    // окклюдеры v2 — альфа-маски (поле mask) поверх живого кадра: та же схема, что вырезки фото (src)
+    const occ = arr("occluders").map((o) => (o && !o.src && typeof o.mask === "string" ? Object.assign({}, o, { src: o.mask }) : o));
     return Object.assign({}, d, s, {
-      backdrop: sec("backdrop"), camera: sec("camera"), surface: sec("surface"), light: sec("light"),
+      backdrop: sec("backdrop"), camera: sec("camera"), surface: { bandH: 0, mirrorRows: 0 }, light: sec("light"),
       depthGrid: g && Array.isArray(g.z) && g.z.length === g.cols * g.rows ? g : null,
       floor: Array.isArray(s.floor) && s.floor.length >= 2 ? s.floor : null,
-      occluders: arr("occluders"), patches: arr("patches"), props: arr("props"), spots: arr("spots"), bubbles: arr("bubbles"),
+      occluders: occ, patches: arr("patches"), corals: arr("corals"), props: arr("props"), spots: arr("spots"),
+      lanes: arr("lanes"), bubbles: arr("bubbles"),
     });
   }
   function useScene(src) {
     const s = sceneFor(src);
     SCENE = s || DEFAULT_SCENE; SCENE_FROM_FILE = !!s;
+    themeParams();
   }
-  function loadBackdrop(i) {
-    if (NOBG || i >= BG_CANDIDATES.length) { bgSettled = true; assetsChanged(); return; }
+  // основная сцена — видео (v2, обе темы с постерами)? иначе null
+  function videoScene() {
+    const s = window.AQUARIUM_SCENE, b = s && s.backdrop;
+    return s && s.version === 2 && b && b.type === "video" && b.day && b.night && b.day.poster && b.night.poster ? s : null;
+  }
+
+  /* ---------- источники задника по темам ----------
+     pState / vState: 0 — нет, 1 — грузится, 2 — готово, 3 — не удалось. lit — альбедо темы для каустики
+     (¼ экрана, buildMask). frame — кадр видео, на который оно перемотано (тест-режим с видео). */
+  const BGS = {};
+  for (let i = 0; i < THEMES.length; i++) BGS[THEMES[i]] = { name: THEMES[i], poster: null, pState: 0, pCbs: [], vid: null, vState: 0,
+    vw: 0, vh: 0, aligned: false, lead: 0.35, tries: 0, retryAt: 0, frame: -1, lit: null, litCtx: null, litSrc: null };
+  function loadPoster(name, cb) {
+    const S = BGS[name], vs = videoScene();
+    if (!vs) { if (cb) cb(false); return; }
+    if (S.pState >= 2) { if (cb) cb(S.pState === 2); return; }
+    if (cb) S.pCbs.push(cb);
+    if (S.pState === 1) return;
+    S.pState = 1;
+    const im = new Image();
+    im.onload = () => { S.pState = im.naturalWidth > 0 ? 2 : 3; S.poster = S.pState === 2 ? im : null; posterDone(S); };
+    im.onerror = () => { S.pState = 3; posterDone(S); };
+    im.src = vs.backdrop[name].poster;
+  }
+  function posterDone(S) {
+    const c = S.pCbs; S.pCbs = [];
+    for (let i = 0; i < c.length; i++) c[i](S.pState === 2);
+    if (bgReady && bgMode === "video" && S.pState === 2 && S.litSrc !== S.poster && W > 0) buildMask();   // альбедо этой темы для каустики
+    assetsChanged();
+  }
+  function loadBackdrop() {
+    if (NOBG) { bgSettled = true; assetsChanged(); return; }
+    const vs = videoScene();
+    if (!vs) { loadPhoto(0); return; }
+    bgMode = "video";
+    const first = THEMES[TH.target], other = THEMES[1 - TH.target];
+    loadPoster(first, (ok) => {
+      if (ok) { applyBackdrop(BGS[first].poster, vs.backdrop[first].poster); return; }
+      loadPoster(other, (ok2) => {                    // постера активной темы нет — постер второй (свет — своей темы)
+        if (ok2) applyBackdrop(BGS[other].poster, vs.backdrop[other].poster);
+        else { bgMode = null; loadPhoto(0); }         // нет и его — фото
+      });
+    });
+    if (TEST) loadPoster(other);                      // тест: обе темы сразу — смена темы без ожидания загрузки
+  }
+  function loadPhoto(i) {
+    if (i >= BG_CANDIDATES.length) { bgMode = null; bgSettled = true; assetsChanged(); return; }
     const im = new Image();
     im.onload = () => {
-      if (!(im.naturalWidth > 0)) { loadBackdrop(i + 1); return; }
-      bgImg = im; bgSrc = BG_CANDIDATES[i]; bgReady = true; bgSettled = true;
-      useScene(bgSrc); layoutBackdrop(); layoutCamera(); buildBandCache(); buildBubbleSources(); buildLightCaches(); loadLightMask(); buildDeepRuns();
-      buildSceneItems();                             // E4: пропсы, окклюдеры, патчи этой сцены (картинки уже грузятся)
-      // сцена (риф, песок, точки) появилась: рыбы ещё не показаны — расставить заново по настоящей геометрии
-      if (fishes.length && simT < 2) { for (const f of fishes) if (!(f.school && !f.isLeader)) placeInitial(f, simT); for (const sc of SCHOOLS) for (const m of sc.members) if (m !== sc.leader) { placeSlot(m, sc.leader); layoutFish(m); } }
-      assetsChanged();
+      if (!(im.naturalWidth > 0)) { loadPhoto(i + 1); return; }
+      bgMode = "photo"; applyBackdrop(im, BG_CANDIDATES[i]);
     };
-    im.onerror = () => loadBackdrop(i + 1);
+    im.onerror = () => loadPhoto(i + 1);
     im.src = BG_CANDIDATES[i];
   }
+  function applyBackdrop(im, src) {
+    bgImg = im; bgSrc = src; bgReady = true; bgSettled = true;
+    useScene(src); themeMix(); layoutBackdrop(); layoutCamera(); buildBubbleSources(); buildLightCaches(); loadLightMask(); buildDeepRuns();
+    buildSceneItems();                             // E4: пропсы, окклюдеры, патчи этой сцены (картинки уже грузятся)
+    // сцена (риф, песок, точки) появилась: рыбы ещё не показаны — расставить заново по настоящей геометрии
+    if (fishes.length && simT < 2) { for (const f of fishes) if (!(f.school && !f.isLeader)) placeInitial(f, simT); for (const sc of SCHOOLS) for (const m of sc.members) if (m !== sc.leader) { placeSlot(m, sc.leader); layoutFish(m); } }
+    syncVideos();
+    assetsChanged();
+  }
 
-  // мипы, дымка и подсветка спрайтов рыб — bakeFish() в разделе «РЫБЫ» (этап E3)
+  /* ---------- видео тем ---------- */
+  let vidBox = null;
+  function videoUrl(name) {
+    // только тест, вне бандла: webm — копии VP9 этапа V1; intra — H.264 1920×1080 «все кадры ключевые» (перемотка
+    // на соседний кадр — один кадр декода: клипы и stats.js в разы быстрее)
+    if (VTEST && BGVIDEO === "webm") return "../tools/aquarium-test/media/reef_" + name + ".webm";
+    if (VTEST && BGVIDEO === "intra") return "../tools/aquarium-test/media/reef_" + name + "_i.mp4";
+    return videoScene().backdrop[name].src;
+  }
+  function ensureVideo(name) {
+    const S = BGS[name];
+    if (!VID_ALLOWED || bgMode !== "video" || S.vid || S.vState === 3 || !videoScene()) return;
+    if (!vidBox) {
+      vidBox = document.createElement("div");
+      vidBox.style.cssText = "position:fixed;left:0;top:0;width:2px;height:2px;overflow:hidden;z-index:-1;pointer-events:none";
+      document.body.appendChild(vidBox);
+    }
+    const v = document.createElement("video");
+    v.muted = true; v.defaultMuted = true; v.loop = !TEST; v.playsInline = true; v.preload = "auto"; v.autoplay = false;
+    v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("webkit-playsinline", "");
+    try { v.disableRemotePlayback = true; v.disablePictureInPicture = true; } catch (e) { /* не везде есть */ }
+    v.style.cssText = "display:block;width:2px;height:2px";
+    S.vid = v; S.vState = 1; S.aligned = false; S.tries = 0; S.frame = -1;
+    v.addEventListener("loadeddata", () => {
+      if (S.vid !== v) return;
+      S.vState = 2; S.vw = v.videoWidth || 0; S.vh = v.videoHeight || 0;
+      syncVideos(); assetsChanged();
+    });
+    v.addEventListener("error", () => { if (S.vid !== v) return; releaseVideo(name); S.vState = 3; assetsChanged(); });
+    v.src = videoUrl(name);
+    vidBox.appendChild(v);
+  }
+  function releaseVideo(name) {
+    const S = BGS[name], v = S.vid;
+    if (!v) return;
+    S.vid = null; S.vState = 0; S.aligned = false; S.frame = -1;
+    try { v.pause(); v.removeAttribute("src"); v.load(); } catch (e) { /* уже освобождено */ }
+    if (v.parentNode) v.parentNode.removeChild(v);
+  }
+  // нужна ли тема сейчас: она — цель или ещё видна в переходе
+  const themeNeeded = (i) => TH.target === i || (i === 1 ? TH.k > 0 : TH.k < 1);
+  const VDUR = () => { const b = SCENE.backdrop; return b.duration > 0 ? +b.duration : 20.02; };
+  /* Каждый кадр (и на смене питания, видимости, темы): загрузить/освободить видео тем, play/pause.
+     Новое видео при переходе выравнивается по времени со старым (перемотка с упреждением на время
+     перемотки; один повтор) — иначе во время перехода двоились бы рыбки самого видео. */
+  function syncVideos() {
+    if (bgMode !== "video" || !VID_ALLOWED || VTEST) return;
+    const run = !paused && POWER !== "paused" && !document.hidden, now = performance.now();
+    for (let i = 0; i < THEMES.length; i++) {
+      const name = THEMES[i], S = BGS[name];
+      if (!themeNeeded(i)) { if (S.vid) releaseVideo(name); continue; }
+      if (S.pState === 0) loadPoster(name);
+      ensureVideo(name);
+      const v = S.vid;
+      if (!v || S.vState !== 2) continue;
+      if (S.aligned !== true) { alignVideo(S, BGS[THEMES[1 - i]]); continue; }   // пока выравнивается — стоит
+      if (run && v.paused && now >= S.retryAt) {
+        const p = v.play();
+        if (p && p.catch) p.catch(() => { S.retryAt = performance.now() + 2000; });    // автозапуск запрещён — постер/кадр стоит, повтор через 2 с
+      } else if (!run && !v.paused) v.pause();
+    }
+  }
+  function alignVideo(S, O) {
+    const v = S.vid, o = O.vid;
+    if (S.aligned === "seeking") return;
+    if (!o || O.vState !== 2 || o.paused || !(o.readyState >= 2)) { S.aligned = true; return; }   // не с кем выравнивать
+    const dur = VDUR(), t0 = performance.now();
+    S.aligned = "seeking";
+    const done = () => {
+      v.removeEventListener("seeked", done);
+      if (S.vid !== v) return;
+      const took = (performance.now() - t0) / 1000;
+      let d = (v.currentTime - o.currentTime) % dur;
+      if (d > dur / 2) d -= dur; else if (d < -dur / 2) d += dur;
+      S.lead = clamp(S.lead + (took - S.lead) + 0.04, 0.05, 4);
+      S.aligned = Math.abs(d) > 0.12 && S.tries++ < 1 ? false : true;           // промах — ещё одна попытка с новым упреждением
+      syncVideos();
+    };
+    v.addEventListener("seeked", done);
+    v.currentTime = (o.currentTime + S.lead) % dur;
+  }
+  // тест-режим с видео: перемотать нужные видео на кадр момента t (Promise)
+  const vFps = () => { const b = SCENE.backdrop; return b.fps > 0 ? +b.fps : 30000 / 1001; };
+  const vFrames = () => { const b = SCENE.backdrop; return b.frames > 0 ? b.frames | 0 : Math.round(VDUR() * vFps()); };
+  function waitVideoData(S) {
+    return new Promise((res) => {
+      if (!S.vid || S.vState !== 1) { res(); return; }
+      const v = S.vid, to = setTimeout(fin, 60000);
+      function fin() { clearTimeout(to); v.removeEventListener("loadeddata", fin); v.removeEventListener("error", fin); res(); }
+      v.addEventListener("loadeddata", fin); v.addEventListener("error", fin);
+    });
+  }
+  function seekFrame(S, fi) {
+    return new Promise((res) => {
+      const v = S.vid;
+      if (!v || S.vState !== 2) { res(); return; }
+      const tt = (fi + 0.5) / vFps();
+      if (S.frame === fi && !v.seeking) { res(); return; }
+      const to = setTimeout(fin, 60000);
+      function fin() { clearTimeout(to); v.removeEventListener("seeked", fin); S.frame = fi; res(); }
+      v.addEventListener("seeked", fin);
+      v.currentTime = tt;
+    });
+  }
+  async function seekVideosTo(t) {
+    const fi = Math.floor(t * vFps() + 1e-6) % vFrames();
+    for (let i = 0; i < THEMES.length; i++) {
+      const name = THEMES[i], S = BGS[name];
+      if (!themeNeeded(i)) { if (S.vid) releaseVideo(name); continue; }
+      ensureVideo(name);
+      await waitVideoData(S);
+      await seekFrame(S, fi);
+    }
+  }
+  const videoSettled = () => !VTEST || bgMode !== "video" || BGS[THEMES[TH.target]].vState !== 1;
 
   /* ---------- проекция задника: bgMap(bx, by) → экран и обратно ----------
-     cover-fit × backdrop.zoom в полосу [bandH, H] (сверху — полоса поверхности воды),
-     якорь — низ кадра (песок всегда в кадре). ВСЁ, что привязано к рифу, ставится через
-     эти функции в долях ФОТО, а не долями экрана (SPEC F8). Преобразование раздельное:
-     bgX/bgY/bgBX/bgBY — без аллокаций; bgMap/bgUnmap пишут в out (по умолчанию общий MAP_OUT). */
+     cover-fit × backdrop.zoom на ВЕСЬ экран (полосы поверхности нет); по горизонтали — по центру, лишняя
+     высота уходит вверх на долю anchorY (0 — прижать к верху, 0.5 — центр, 1 — низ; у фото anchor
+     "bottom" = 1: песок всегда в кадре). ВСЁ, что привязано к рифу, ставится через эти функции в долях
+     КАДРА задника, а не долями экрана (SPEC F8). Преобразование раздельное: bgX/bgY/bgBX/bgBY — без
+     аллокаций; bgMap/bgUnmap пишут в out (по умолчанию общий MAP_OUT). bandH — всегда 0 (для API). */
   const BGX = { iw: 2560, ih: 1355, sc: 1, dx: 0, dy: 0, dw: 0, dh: 0, bandH: 0,
                 sx: 0, sy: 0, sw: 1, sh: 1, x0: 0, y0: 0, x1: 0, y1: 0 };
   function layoutBackdrop() {
     const b = SCENE.backdrop;
-    const iw = bgImg ? bgImg.naturalWidth : (b.w || 2560), ih = bgImg ? bgImg.naturalHeight : (b.h || 1355);
-    // линия воды — по целому пикселю буфера: полоса и фото сходятся без шва
-    const bandH = Math.round(H * SCENE.surface.bandH * RS) / RS;
-    const ph = Math.max(1, H - bandH);
-    const sc = Math.max(W / iw, ph / ih) * (b.zoom || 1);
+    const photo = bgMode === "photo" && bgImg;
+    const iw = photo ? bgImg.naturalWidth : (b.w || 2560), ih = photo ? bgImg.naturalHeight : (b.h || 1355);
+    const sc = Math.max(W / iw, H / ih) * (b.zoom || 1);
     const dw = iw * sc, dh = ih * sc;
-    const dx = (W - dw) / 2;
-    const dy = b.anchor === "center" ? bandH + (ph - dh) / 2 : H - dh;
-    BGX.iw = iw; BGX.ih = ih; BGX.sc = sc; BGX.dx = dx; BGX.dy = dy; BGX.dw = dw; BGX.dh = dh; BGX.bandH = bandH;
-    // видимая часть: экран [0,W]×[bandH,H] → прямоугольник-источник (невидимое не рисуем)
-    const x0 = Math.max(0, dx), x1 = Math.min(W, dx + dw), y0 = Math.max(bandH, dy), y1 = Math.min(H, dy + dh);
+    const ay = b.anchorY != null ? clamp(+b.anchorY, 0, 1) : b.anchor === "center" ? 0.5 : b.anchor === "top" ? 0 : 1;
+    const dx = (W - dw) / 2, dy = (H - dh) * ay;
+    BGX.iw = iw; BGX.ih = ih; BGX.sc = sc; BGX.dx = dx; BGX.dy = dy; BGX.dw = dw; BGX.dh = dh; BGX.bandH = 0;
+    // видимая часть: экран [0,W]×[0,H] → прямоугольник-источник (невидимое не рисуем)
+    const x0 = Math.max(0, dx), x1 = Math.min(W, dx + dw), y0 = Math.max(0, dy), y1 = Math.min(H, dy + dh);
     BGX.x0 = x0; BGX.x1 = x1; BGX.y0 = y0; BGX.y1 = y1;
     BGX.sx = clamp((x0 - dx) / sc, 0, iw); BGX.sy = clamp((y0 - dy) / sc, 0, ih);
     BGX.sw = Math.max(1e-3, Math.min(iw - BGX.sx, (x1 - x0) / sc));
@@ -300,20 +504,173 @@
   const MAP_OUT = [0, 0];
   function bgMap(bx, by, out) { out = out || MAP_OUT; out[0] = bgX(bx); out[1] = bgY(by); return out; }
   function bgUnmap(x, y, out) { out = out || MAP_OUT; out[0] = bgBX(x); out[1] = bgBY(y); return out; }
+  // что рисовать за тему: кадр видео (если есть данные и, в тесте, перемотано), иначе постер
+  function bgSource(S) {
+    const v = S.vid;
+    if (v && S.vState === 2 && v.readyState >= 2 && S.vw > 0 && (!VTEST || S.frame >= 0)) return v;
+    return S.pState === 2 ? S.poster : null;
+  }
+  // источник любого размера (MP4 2560, тестовая WebM 1920, постер) — тем же прямоугольником кадра
+  function drawBgSource(g, im, a) {
+    const nw = im === bgImg && bgMode === "photo" ? BGX.iw : (im.videoWidth || im.naturalWidth || im.width), k = nw / BGX.iw;
+    g.globalAlpha = a;
+    g.drawImage(im, BGX.sx * k, BGX.sy * k, BGX.sw * k, BGX.sh * k, BGX.x0, BGX.y0, BGX.x1 - BGX.x0, BGX.y1 - BGX.y0);
+    g.globalAlpha = 1;
+  }
+  // ночь без своего задника (фото, процедурный риф, не загрузился ночной постер) — ночь «светом»:
+  // multiply в королевский синий с весом ночи
+  function nightTint(k) {
+    if (k <= 0.002) return;
+    ctx.globalCompositeOperation = "multiply"; ctx.globalAlpha = k; ctx.fillStyle = NIGHT_TINT;
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+  }
+  const NIGHT_TINT = "rgb(58,92,196)";
   function drawBackdrop() {
-    ctx.drawImage(bgImg, BGX.sx, BGX.sy, BGX.sw, BGX.sh, BGX.x0, BGX.y0, BGX.x1 - BGX.x0, BGX.y1 - BGX.y0);
+    const k = TH.k;
+    if (bgMode !== "video") { drawBgSource(ctx, bgImg, 1); return; }   // фото: ночь — после слоя сцены (render)
+    const a = k < 0.999 ? bgSource(BGS.day) : null, b = k > 0.001 ? bgSource(BGS.night) : null;
+    if (a) {
+      drawBgSource(ctx, a, 1);
+      if (b) drawBgSource(ctx, b, k);                 // переход: ночь поверх дня с весом k
+      else nightTint(k);
+    } else if (b) drawBgSource(ctx, b, 1);
+    else {                                            // у нужной темы нет ничего — любой готовый кадр
+      const c = bgSource(BGS.day) || bgSource(BGS.night) || bgImg;
+      if (c) { drawBgSource(ctx, c, 1); if (c === BGS.day.poster || c === BGS.day.vid) nightTint(k); }
+    }
   }
 
   /* ============================================================
-     СВЕТ И ВОДА — этап E1 (SPEC 4.1 поверхность, 4.2 лучи, 4.3 каустика, 4.9 пузырьки, 4.11 частицы)
+     ТЕМЫ: ДЕНЬ («Мальдивы») и НОЧЬ (королевский синий LED)
+       Выбор: ?theme=day|night — принудительно; иначе — оформление macOS: matchMedia('(prefers-color-scheme:
+       dark)') со слушателем смены (WKWebView следует системе); window.aquariumSetTheme('day'|'night'|'auto').
+       Переход ≈3 с: TH.p идёт линейно к цели (0 — день, 1 — ночь) по часам симуляции, вес ночи
+       TH.k = smoothstep(p). Пока идёт переход, рисуются ОБА задника (ночной поверх дневного с α = k), лучи,
+       отсвет дна, виньетка и реквизит — обоими вариантами с весами, а числа света (цвет, сила каустики и
+       лучей, свет на рыбах) — смесью тем (TV). Кэши, которые проще перекрасить, чем держать вдвоём (дымка и
+       подсветка спрайтов рыб, частицы, пузырьки), перекрашиваются ступенями по 1/8 веса (themeCaches).
+       В реальном времени переход ждёт задник новой темы (видео выровнено по времени со старым) не дольше
+       3 с; в тесте не ждёт (детерминизм) — шаг сам дожидается кадров.
+       Параметры — scene.themes (цвета замерены по видео, V1/V2) поверх умолчаний движка THEME_DEF.
+     ============================================================ */
+  const THEME_DEF = {
+    // light — лучи/блики; fog — дымка рыб вдали (цвет толщи); fishLit — × силы света лучей на рыбах;
+    // glow — × отсвета дна; vignette [r, g, b, a] — края кадра; particle/bubble — цвет взвеси и бликов пузырьков;
+    // coralMul/glowK/hazeK — реквизит и колонии ночью (см. scene.js themes)
+    day:   { water: "#2dcfec", fog: "#178a9e", light: "#fff4dc", caustics: 0.34, rays: 1.0, particles: 1.0, fishLit: 1.3, glow: 1.0,
+             vignette: [0, 38, 52, 0.24], particle: [242, 246, 232], bubble: [236, 248, 250], fogMin: 0,
+             coralMul: [1, 1, 1], glowK: 0, hazeK: 1.0 },
+    night: { water: "#0d52b3", fog: "#062e68", light: "#9fb8ff", caustics: 0.16, rays: 0.55, particles: 0.7, fishLit: 0.85, glow: 0.75,
+             vignette: [1, 6, 34, 0.42], particle: [170, 196, 255], bubble: [184, 208, 255], fogMin: 0.15,
+             coralMul: [0.30, 0.42, 0.95], glowK: 0.4, hazeK: 0.8 },
+  };
+  const TH = { mode: "auto", target: 0, p: 0, k: 0, kC: -1, dur: 3, reqAt: 0, mq: null };   // reqAt — performance.now() запроса смены
+  const TP = [null, null];                            // параметры тем (числа, цвета — массивы rgb)
+  const TV = { light: [255, 244, 220], fog: [23, 138, 158], water: [45, 207, 236], caustics: 0.34, rays: 1, particles: 1, fishLit: 1.3,
+               glow: 1, vignette: [0, 38, 52, 0.24], particle: [242, 246, 232], bubble: [236, 248, 250], coralMul: [1, 1, 1], glowK: 0, hazeK: 1, fogMin: 0 };
+  let TV_FOG = "rgb(23,138,158)", TV_PART = "rgb(242,246,232)", TV_LIT15 = "rgba(255,244,220,0.15)";   // строки цветов — ступенями (themeCaches)
+  const rgbOf = (v, d) => (Array.isArray(v) && v.length >= 3 ? [+v[0], +v[1], +v[2]] : typeof v === "string" && /^#[0-9a-f]{3,6}$/i.test(v) ? hexToRgb(v) : d.slice());
+  function themeParams() {
+    const st = SCENE.themes || {};
+    for (let i = 0; i < THEMES.length; i++) {
+      const d = THEME_DEF[THEMES[i]], s = st[THEMES[i]] || {}, o = {};
+      for (const k in d) o[k] = d[k];
+      for (const k in s) if (s[k] != null) o[k] = s[k];
+      for (const k of ["water", "fog", "light"]) o[k] = rgbOf(o[k], hexToRgb(d[k]));
+      for (const k of ["vignette", "particle", "bubble", "coralMul"]) o[k] = Array.isArray(o[k]) ? o[k].map(Number) : d[k].slice();
+      for (const k of ["caustics", "rays", "particles", "fishLit", "glow", "glowK", "hazeK", "fogMin"]) o[k] = +o[k] >= 0 ? +o[k] : d[k];
+      TP[i] = o;
+    }
+    // фото-сцена и чужой задник: свет днём — цвет светодиодов сцены (как было), ночью — тема
+    if (!SCENE.themes && SCENE.light && typeof SCENE.light.color === "string") TP[0].light = rgbOf(SCENE.light.color, TP[0].light);
+    TH.kC = -1;
+  }
+  // смесь тем по весу ночи TH.k → TV (без аллокаций)
+  function themeMix() {
+    if (!TP[0]) themeParams();
+    const a = TP[0], b = TP[1], k = TH.k, m = (x, y) => x + (y - x) * k;
+    for (let j = 0; j < 3; j++) {
+      TV.light[j] = m(a.light[j], b.light[j]); TV.fog[j] = m(a.fog[j], b.fog[j]); TV.water[j] = m(a.water[j], b.water[j]);
+      TV.particle[j] = m(a.particle[j], b.particle[j]); TV.bubble[j] = m(a.bubble[j], b.bubble[j]); TV.coralMul[j] = m(a.coralMul[j], b.coralMul[j]);
+    }
+    for (let j = 0; j < 4; j++) TV.vignette[j] = m(a.vignette[j], b.vignette[j]);
+    TV.caustics = m(a.caustics, b.caustics); TV.rays = m(a.rays, b.rays); TV.particles = m(a.particles, b.particles);
+    TV.fishLit = m(a.fishLit, b.fishLit); TV.glow = m(a.glow, b.glow); TV.glowK = m(a.glowK, b.glowK); TV.hazeK = m(a.hazeK, b.hazeK);
+    TV.fogMin = m(a.fogMin, b.fogMin);
+    CAUS.strength = TV.caustics;
+  }
+  const THEME_Q = PARAMS.get("theme");
+  function systemDark() { try { return !!(TH.mq && TH.mq.matches); } catch (e) { return false; } }
+  const themeTargetFor = (mode) => (mode === "night" ? 1 : mode === "day" ? 0 : systemDark() ? 1 : 0);
+  function setThemeMode(m, instant) {
+    TH.mode = m === "day" || m === "night" ? m : "auto";
+    const t = themeTargetFor(TH.mode);
+    if (t !== TH.target) {
+      TH.target = t; TH.reqAt = performance.now();
+      if (bgMode === "video") loadPoster(THEMES[t]);
+    }
+    if (instant) { TH.p = TH.target; TH.k = TH.target; themeMix(); themeInvalidate(); }
+    syncVideos();
+    return THEMES[TH.target];
+  }
+  // мгновенная смена темы при том же simT: сбросить кэши, привязанные ко времени (лучи, карта света, K, поле света рыб)
+  function themeInvalidate() { lightT = NaN; lmT = NaN; kT = NaN; lfT = NaN; }
+  window.aquariumSetTheme = (m) => setThemeMode(m, false);
+  // начальная тема — без перехода
+  try {
+    if (window.matchMedia) {
+      TH.mq = window.matchMedia("(prefers-color-scheme: dark)");
+      const onSys = () => { if (TH.mode === "auto") setThemeMode("auto", false); };
+      if (TH.mq.addEventListener) TH.mq.addEventListener("change", onSys); else if (TH.mq.addListener) TH.mq.addListener(onSys);
+    }
+  } catch (e) { TH.mq = null; }
+  TH.mode = THEME_Q === "day" || THEME_Q === "night" ? THEME_Q : "auto";
+  TH.target = themeTargetFor(TH.mode); TH.p = TH.k = TH.target;
+  // готов ли задник темы i (в реальном времени переход его ждёт, ≤ 3 с)
+  function themeSourceReady(i) {
+    if (bgMode !== "video") return true;
+    const S = BGS[THEMES[i]];
+    if (S.pState === 1 || S.pState === 0) return false;
+    if (!VID_ALLOWED || S.vState === 3) return true;
+    return S.vState === 2 && S.aligned === true;
+  }
+  /* Кэши, которые перекрашиваются (а не рисуются вдвоём): дымка и подсветка спрайтов рыб, частицы, пузырьки.
+     Ступенями по 1/8 веса ночи (8 перекрасок за переход, каждая — доли мс) и точно на концах перехода.
+     Зовёт render() в начале кадра. */
+  function themeCaches(force) {
+    const k = TH.k;
+    if (!force && TH.kC >= 0 && (k === TH.kC || (Math.abs(k - TH.kC) < 0.125 && k > 0 && k < 1))) return;
+    TH.kC = k;
+    const c = (v) => Math.round(clamp(v, 0, 255));
+    TV_FOG = `rgb(${c(TV.fog[0])},${c(TV.fog[1])},${c(TV.fog[2])})`;
+    TV_PART = `rgb(${c(TV.particle[0])},${c(TV.particle[1])},${c(TV.particle[2])})`;
+    TV_LIT15 = `rgba(${c(TV.light[0])},${c(TV.light[1])},${c(TV.light[2])},0.15)`;
+    for (let i = 0; i < PACK.length; i++) { const r = PACK[i]; if (r.ready && r.fog) { tintFog(r); tintLit(r); } }
+    if (lightBuilt) { buildBubbleSprites(); buildParticleSprites(); }
+    lfT = NaN;                                        // поле света рыб — пересобрать
+  }
+  function themeStep(dt) {
+    if (TH.p === TH.target) return;
+    if (!TEST && !themeSourceReady(TH.target) && performance.now() - TH.reqAt < 3000) return;   // ждём задник темы ≤ 3 с (по часам)
+    const d = dt / TH.dur;
+    TH.p = TH.target > TH.p ? Math.min(TH.target, TH.p + d) : Math.max(TH.target, TH.p - d);
+    TH.k = TH.p * TH.p * (3 - 2 * TH.p);
+    themeMix();
+  }
+
+  /* ============================================================
+     СВЕТ И ВОДА — этап E1 (SPEC 4.2 лучи, 4.3 каустика, 4.9 пузырьки, 4.11 частицы); V4a — солнце и темы
        • общее течение C(t, x) — одно на весь бак: частицы и пузырьки (E1), кораллы и рыбы (E3/E4);
-       • лучи светодиодов — веер полос от scene.light.sources, текстура из ImageData, 'screen';
+       • лучи — веер полос от scene.light.sources, текстура из ImageData, 'screen'; источник kind "sun"
+         (сцена видео): наклон веера tilt, затухание reach·H (солнце достаёт до дна), ширина width;
+         текстуры — по одной на тему (цвет света), в переходе рисуются обе с весами;
        • lightAt(x, y) — аналитическая яркость тех же лучей: ею светятся частицы, пузырьки, рыбы (E4);
        • каустика — плитки A/B (фотонный сплат по периодическому высотному полю, считаются в JS,
          Float32-копии для causticAt); буфер K = A ⊓ B ('darken') × карта света (след лучей × маска);
          на холст — 'color-dodge': bg/(1−K) ≈ bg·(1+K) — белый песок вспыхивает, тёмный камень почти
          не меняется, вне маски K = 0 → ровно ноль изменений;
-       • полоса поверхности — отражение полосами со сдвигом, горизонтальные блики, мениск, кольца;
+       • полосы поверхности воды НЕТ (V4a): ни отражения, ни мениска, ни колец — свет льётся сверху;
        • пузырьки — колонна от распылителя (кластерный Пуассон), логнормальные размеры, быстрый
          подъём, зигзаг/спираль у крупных, спрайты с френелевским ободком; редкие «отрыжки» из камня;
        • частицы — ~90 мягких точек в 3 слоях параллакса, дрейф общим течением, блеск только в лучах.
@@ -322,10 +679,10 @@
      ноль новых градиентов/паттернов/массивов.
      ============================================================ */
   const smooth01 = (a, b, x) => { const u = clamp((x - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); };
-  let LIGHT_RGB = [214, 236, 255];                 // цвет светодиодов (scene.light.color)
+  // цвет света — по теме: TV.light (смесь тем, раздел «ТЕМЫ»)
 
   // слои — для гейтов (__aq.layers) и отладки (?layers=-rays,-caustics)
-  const LAYERS = { caustics: true, rays: true, band: true, bubbles: true, particles: true, glow: true, shadows: true, fishlight: true, reflections: true,
+  const LAYERS = { caustics: true, rays: true, bubbles: true, particles: true, glow: true, shadows: true, fishlight: true,
                   scene: true, groups: true, xShadow: true, xPatch: true, xProp: true };   // E4: слой сцены (патчи/пропсы) и группы вычитания — для гейтов и отладки
   if (PARAMS.has("layers")) for (const s of PARAMS.get("layers").split(",")) {
     const k = s.replace(/^[-+ ]/, ""); if (k in LAYERS) LAYERS[k] = s[0] !== "-";
@@ -384,37 +741,49 @@
     return a + (b - a) * fy;
   }
 
-  /* ---------- лучи светодиодов (SPEC 4.2) ----------
-     У источника (bx, byAbove < 0 — над фото) веер из `streaks` полос, разброс ±spread°, ширина 1.5–6% W.
-     Полоса — текстура 64×512: гаусс поперёк (σ = 0.18 ширины, к низу шире в 1.6 раза) ×
-     (1−e^{−s/0.05H})·e^{−s/0.6H} вдоль × лёгкий шум; плюс текстура тонких «нитей», которые медленно
-     гуляют поперёк луча и мерцают. На полосу: setTransform + drawImage ×2, 'screen'.
+  /* ---------- лучи (SPEC 4.2; V4a — солнце) ----------
+     У источника (bx, byAbove < 0 — над кадром) веер из `streaks` полос: углы tilt ± spread° (tilt — наклон
+     всего веера, + — низ вправо), ширина width [мин, макс] долей W (по умолчанию 1.5–6%). Источник
+     kind "sun" (сцена видео) — далеко вверху: полосы почти параллельны, шире и мягче, затухают на reach·H
+     (солнце достаёт до дна; у светодиодов фото было 0.6). Полоса — текстура 64×512: гаусс поперёк
+     (σ = 0.18 ширины, к низу шире в 1.6 раза) × (1−e^{−s/0.05H})·e^{−s/(reach·H)} вдоль × лёгкий шум;
+     плюс текстура тонких «нитей», которые медленно гуляют поперёк луча и мерцают. На полосу:
+     setTransform + drawImage ×2, 'screen'. Текстур — по набору на тему (цвет света дня и ночи), в переходе
+     рисуются оба набора с весами (1 − k, k). Сила — × TV.rays (ночь тусклее).
      Покачивание ±1.5° (0.03–0.08 Гц), «дыхание» α = a0·(0.75 + 0.25·шум 0.3–0.8 Гц).
      Состояние кадра — в STV (Float32Array), lightAt() читает ровно его: нарисованное = освещающее. */
   const ST_MAX = 16, ST_F = 8;                     // x0, y0, ux, uy, wpx, len, I, Ifil
   const STV = new Float32Array(ST_MAX * ST_F);
-  let STREAKS = [], stN = 0, lightT = NaN, streakTex = null, filTex = null;
+  let STREAKS = [], stN = 0, lightT = NaN, streakTex = null, ST_REACH = 0.6, ST_PEAK = 0.745;
+  const STEX = [null, null];                        // наборы текстур {body, fil} дня и ночи
   const ST_LEN = 1.03;                              // длина полосы ≈ 1.03 H (текстура запечена под неё)
-  const LIGHT_NORM = 1 / (0.14 * 0.745);            // самый яркий луч в максимуме ≈ 1
+  let LIGHT_NORM = 1 / (0.14 * 0.745);              // самый яркий луч в максимуме ≈ 1 (днём)
+  // максимум продольного профиля (1−e^{−s/0.05})·e^{−s/R} — нормировка текстуры и lightAt
+  function profPeak(R) { let m = 0; for (let s = 0.002; s < 1.2; s += 0.002) { const v = (1 - Math.exp(-s / 0.05)) * Math.exp(-s / R); if (v > m) m = v; } return m; }
   function buildStreaks() {
     STREAKS = []; lightT = NaN;
     const L = SCENE.light || {}, srcs = Array.isArray(L.sources) ? L.sources : [];
-    if (typeof L.color === "string" && /^#[0-9a-f]{3,6}$/i.test(L.color)) LIGHT_RGB = hexToRgb(L.color);
     const rnd = srand(91337);
+    let reach = 0;                                   // одна текстура на все полосы — по самому дальнобойному источнику
+    for (let si = 0; si < srcs.length; si++) if (srcs[si].reach > 0) reach = Math.max(reach, +srcs[si].reach);
+    ST_REACH = reach > 0 ? clamp(reach, 0.3, 3) : 0.6;
+    ST_PEAK = profPeak(ST_REACH); LIGHT_NORM = 1 / (0.14 * ST_PEAK);
     for (let si = 0; si < srcs.length; si++) {
-      const s = srcs[si], n = clamp((s.streaks | 0) || 4, 1, 8), spread = (s.spread || 8) * Math.PI / 180;
-      // широкий мягкий конус под светодиодом (свет «входит» в воду), без нитей — первым, под полосами
-      if (STREAKS.length < ST_MAX) STREAKS.push({ bx: s.bx, by: s.byAbove != null ? s.byAbove : -0.35, ang0: (rnd() - 0.5) * 0.02,
-        wf: 0.17, a0: 0.05, swF: 0.02 + 0.02 * rnd(), swP: rnd() * TAU, b1F: 0.2 + 0.2 * rnd(), b1P: rnd() * TAU,
+      const s = srcs[si], n = clamp((s.streaks | 0) || 4, 1, 8), spread = (s.spread || 8) * DEG, tilt = (+s.tilt || 0) * DEG, sun = s.kind === "sun";
+      const wr = Array.isArray(s.width) && s.width.length === 2 ? [+s.width[0], +s.width[1]] : [0.015, 0.06];
+      const by = s.byAbove != null ? s.byAbove : -0.35;
+      // широкий мягкий конус (свет «входит» в воду), без нитей — первым, под полосами
+      if (STREAKS.length < ST_MAX) STREAKS.push({ bx: s.bx, by, tilt, ang0: tilt + (rnd() - 0.5) * 0.02,
+        wf: sun ? 0.26 : 0.17, a0: sun ? 0.045 : 0.05, swF: 0.02 + 0.02 * rnd(), swP: rnd() * TAU, b1F: 0.2 + 0.2 * rnd(), b1P: rnd() * TAU,
         b2F: 0.3 + 0.3 * rnd(), b2P: rnd() * TAU, fF: 0.05, fP: 0, fA: 0, fl1: 1, fl2: 1, cone: true });
       for (let k = 0; k < n && STREAKS.length < ST_MAX; k++) {
         const f = n > 1 ? (k / (n - 1)) * 2 - 1 : 0;
-        STREAKS.push({ bx: s.bx, by: s.byAbove != null ? s.byAbove : -0.35,
-          ang0: f * spread + (rnd() - 0.5) * spread * 0.3,
-          wf: 0.015 + 0.045 * Math.pow(rnd(), 1.3),
+        STREAKS.push({ bx: s.bx, by, tilt,
+          ang0: tilt + f * spread + (rnd() - 0.5) * spread * 0.3,
+          wf: wr[0] + (wr[1] - wr[0]) * Math.pow(rnd(), 1.3),
           a0: (0.08 + 0.06 * rnd()) * (1 - 0.3 * Math.abs(f)),
-          swF: 0.03 + 0.05 * rnd(), swP: rnd() * TAU,
-          b1F: 0.3 + 0.5 * rnd(), b1P: rnd() * TAU, b2F: 0.3 + 0.5 * rnd(), b2P: rnd() * TAU,
+          swF: (sun ? 0.02 : 0.03) + 0.05 * rnd(), swP: rnd() * TAU,
+          b1F: (sun ? 0.15 : 0.3) + 0.5 * rnd(), b1P: rnd() * TAU, b2F: 0.3 + 0.5 * rnd(), b2P: rnd() * TAU,
           fF: 0.05 + 0.09 * rnd(), fP: rnd() * TAU, fA: 0.55 + 0.45 * rnd(), fl1: 0.6 + 0.9 * rnd(), fl2: 1.1 + 1.2 * rnd() });
       }
     }
@@ -422,7 +791,7 @@
   function updateLight(t) {
     if (t === lightT && stN === STREAKS.length) return;
     lightT = t; stN = STREAKS.length;
-    const yIn = BGX.bandH * 0.45;                    // лучи рождаются у поверхности, в нижней половине полосы
+    const yIn = 0, kr = TV.rays;                     // лучи начинаются у верхней кромки кадра
     for (let k = 0; k < stN; k++) {
       const s = STREAKS[k], o = k * ST_F;
       const sx = bgX(s.bx), sy = Math.min(bgY(s.by), yIn - 0.2 * H);
@@ -430,14 +799,14 @@
       const ux = Math.sin(ang), uy = Math.cos(ang);
       const br = 0.75 + 0.25 * (0.6 * Math.sin(TAU * s.b1F * t + s.b1P) + 0.4 * Math.sin(TAU * s.b2F * t + s.b2P));
       STV[o] = sx + ux * ((yIn - sy) / uy); STV[o + 1] = yIn; STV[o + 2] = ux; STV[o + 3] = uy;
-      STV[o + 4] = s.wf * W; STV[o + 5] = (ST_LEN * H) / uy; STV[o + 6] = s.a0 * br;
-      STV[o + 7] = s.a0 * s.fA * (0.55 + 0.45 * Math.sin(TAU * s.fl1 * 0.37 * t + s.fP) * Math.sin(TAU * s.fl2 * 0.29 * t + 1.7 * s.fP));
+      STV[o + 4] = s.wf * W; STV[o + 5] = (ST_LEN * H) / uy; STV[o + 6] = s.a0 * br * kr;
+      STV[o + 7] = s.a0 * kr * s.fA * (0.55 + 0.45 * Math.sin(TAU * s.fl1 * 0.37 * t + s.fP) * Math.sin(TAU * s.fl2 * 0.29 * t + 1.7 * s.fP));
     }
   }
-  // яркость лучей в точке экрана (CSS px), ≈0…1+ (сумма полос). Дёшево: ≤16 экспонент.
+  // яркость лучей в точке экрана (CSS px), ≈0…1+ (сумма полос; ночью × TV.rays). Дёшево: ≤16 экспонент.
   function lightAt(x, y) {
     let sum = 0;
-    const h5 = 0.05 * H, h6 = 0.6 * H;
+    const h5 = 0.05 * H, h6 = ST_REACH * H;
     for (let k = 0; k < stN; k++) {
       const o = k * ST_F, dx = x - STV[o], dy = y - STV[o + 1], ux = STV[o + 2], uy = STV[o + 3];
       const s = dx * ux + dy * uy;
@@ -449,8 +818,12 @@
     }
     return sum * LIGHT_NORM;
   }
-  // текстура полосы (тело луча) и текстура «нитей» — 64×512, RGB = цвет света, альфа = яркость
-  function buildStreakTextures() {
+  // набор текстур луча (тело и «нити») — 64×512, RGB = цвет света rgb, альфа = яркость; не зависит от
+  // размера экрана — кэш по цвету и reach
+  const STEX_CACHE = {};
+  function buildStreakTextures(rgb) {
+    const key = rgb.map(Math.round).join(",") + "|" + ST_REACH.toFixed(3);
+    if (STEX_CACHE[key]) return STEX_CACHE[key];
     const w = 64, h = 512, rnd = srand(5151);
     const mk = () => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
     const nz = new Float32Array(h);                  // лёгкий продольный шум
@@ -462,10 +835,11 @@
     const body = mk(), fils = mk();
     const gb = body.getContext("2d"), gf = fils.getContext("2d");
     const db = gb.createImageData(w, h), df = gf.createImageData(w, h);
-    const R0 = LIGHT_RGB[0], G0 = LIGHT_RGB[1], B0 = LIGHT_RGB[2];
+    const R0 = Math.round(rgb[0]), G0 = Math.round(rgb[1]), B0 = Math.round(rgb[2]);
+    const R1 = Math.round(rgb[0] + (255 - rgb[0]) * 0.6), G1 = Math.round(rgb[1] + (255 - rgb[1]) * 0.6), B1 = Math.round(rgb[2] + (255 - rgb[2]) * 0.6);
     for (let v = 0; v < h; v++) {
       const sv = ((v + 0.5) / h) * ST_LEN;
-      const prof = ((1 - Math.exp(-sv / 0.05)) * Math.exp(-sv / 0.6)) / 0.745;
+      const prof = ((1 - Math.exp(-sv / 0.05)) * Math.exp(-sv / ST_REACH)) / ST_PEAK;
       const sig = 0.18 * (0.62 + 0.38 * (v + 0.5) / h);
       for (let u = 0; u < w; u++) {
         const fu = (u + 0.5) / w - 0.5, q = fu / sig, env = Math.exp(-0.5 * q * q);
@@ -478,16 +852,20 @@
         db.data[i4] = R0; db.data[i4 + 1] = G0; db.data[i4 + 2] = B0;
         db.data[i4 + 3] = Math.round(clamp(env * prof * nz[v], 0, 1) * 255);
         const q2 = fu / (sig * 0.8), env2 = Math.exp(-0.5 * q2 * q2);
-        df.data[i4] = 235; df.data[i4 + 1] = 246; df.data[i4 + 2] = 255;
+        df.data[i4] = R1; df.data[i4 + 1] = G1; df.data[i4 + 2] = B1;
         df.data[i4 + 3] = Math.round(clamp(fsum * env2 * prof, 0, 1) * 255);
       }
     }
     gb.putImageData(db, 0, 0); gf.putImageData(df, 0, 0);
-    streakTex = body; filTex = fils;
+    return (STEX_CACHE[key] = { body, fil: fils });
+  }
+  function buildThemeStreaks() {
+    STEX[0] = buildStreakTextures(TP[0].light); STEX[1] = buildStreakTextures(TP[1].light);
+    streakTex = STEX[0].body;                        // поле света рыб берёт только альфу — годится любая тема
   }
   function drawStreaks(t) {
-    if (!streakTex || !stN) return;
-    const d0 = CNT.drawImage, mul = bgReady ? 1 : 1.35;
+    if (!STEX[0] || !stN) return;
+    const d0 = CNT.drawImage, mul = bgReady ? 1 : 1.35, wN = TH.k, wD = 1 - wN;
     ctx.globalCompositeOperation = "screen";
     for (let k = 0; k < stN; k++) {
       const o = k * ST_F, ux = STV[o + 2], uy = STV[o + 3], wpx = STV[o + 4], len = STV[o + 5];
@@ -495,14 +873,15 @@
       const a = (nx * wpx) / 64, b = (ny * wpx) / 64, c = (ux * len) / 512, d = (uy * len) / 512;
       const e = STV[o] - (nx * wpx) / 2, f = STV[o + 1] - (ny * wpx) / 2;
       ctx.setTransform(RS * a, RS * b, RS * c, RS * d, RS * e, RS * f);
-      ctx.globalAlpha = clamp(STV[o + 6] * mul, 0, 1);
-      ctx.drawImage(streakTex, 0, 0);
+      const al = clamp(STV[o + 6] * mul, 0, 1);
+      if (wD > 0.003) { ctx.globalAlpha = al * wD; ctx.drawImage(STEX[0].body, 0, 0); }
+      if (wN > 0.003) { ctx.globalAlpha = al * wN; ctx.drawImage(STEX[1].body, 0, 0); }
       const s = STREAKS[k], off = 0.16 * wpx * Math.sin(TAU * s.fF * t + s.fP);   // нити гуляют поперёк луча
       const fa = STV[o + 7] * mul;
       if (fa > 0.004 && s.wf > 0.024 && !s.cone) {
         ctx.setTransform(RS * a, RS * b, RS * c, RS * d, RS * (e + nx * off), RS * (f + ny * off));
-        ctx.globalAlpha = clamp(fa, 0, 1);
-        ctx.drawImage(filTex, 0, 0);
+        if (wD > 0.003) { ctx.globalAlpha = clamp(fa, 0, 1) * wD; ctx.drawImage(STEX[0].fil, 0, 0); }
+        if (wN > 0.003) { ctx.globalAlpha = clamp(fa, 0, 1) * wN; ctx.drawImage(STEX[1].fil, 0, 0); }
       }
     }
     ctx.setTransform(RS, 0, 0, RS, 0, 0);
@@ -676,20 +1055,43 @@
       }
       g.putImageData(id, 0, 0); dg.putImageData(idk, 0, 0);
     }
-    // освещаемость = маска × альбедо самого фото (цветное): нити ярко ложатся на светлый песок и
+    // освещаемость = маска × альбедо самого кадра (цветное): нити ярко ложатся на светлый песок и
     // камень и почти не видны на тёмной воде/тени — так, как это делает настоящий свет. Только
-    // композитинг (фото рисуется в холст, пиксели не читаются никогда).
-    if (!litCan) litCan = document.createElement("canvas");
-    litCan.width = mw; litCan.height = mh;
-    const lg = litCan.getContext("2d", { alpha: false });
-    lg.globalCompositeOperation = "copy"; lg.drawImage(maskCan, 0, 0);
-    if (bgImg && bgReady) {
-      lg.globalCompositeOperation = "multiply"; lg.imageSmoothingEnabled = true; lg.imageSmoothingQuality = "high";
-      lg.setTransform(mw / W, 0, 0, mh / (H - bh), 0, (-bh * mh) / (H - bh));
-      lg.drawImage(bgImg, BGX.sx, BGX.sy, BGX.sw, BGX.sh, BGX.x0, BGX.y0, BGX.x1 - BGX.x0, BGX.y1 - BGX.y0);
-      lg.setTransform(1, 0, 0, 1, 0, 0);
-    }
-    lg.globalCompositeOperation = "source-over";
+    // композитинг (кадр рисуется в холст, пиксели не читаются никогда). Альбедо — своё у каждой темы
+    // (постер дня/ночи: ночью песок синий — и блики синеватые); в переходе карта света смешивает оба.
+    const litOf = (S, im) => {
+      if (!S.lit) { S.lit = document.createElement("canvas"); S.litCtx = null; }
+      S.lit.width = mw; S.lit.height = mh;
+      const lg = S.litCtx || (S.litCtx = S.lit.getContext("2d", { alpha: false }));
+      lg.setTransform(1, 0, 0, 1, 0, 0); lg.globalAlpha = 1;
+      if (im && bgMode === "video") {
+        // солнце (сцена видео): альбедо «приподнято» — screen кадра с самим собой, 1 − (1 − a)²: средне-светлый
+        // песок и верхушки кораллов ловят каустику почти как белые (днём сетка на песке яркая), тёмное — по-прежнему ≈ 0
+        lg.imageSmoothingEnabled = true; lg.imageSmoothingQuality = "high";
+        lg.setTransform(mw / W, 0, 0, mh / (H - bh), 0, (-bh * mh) / (H - bh));
+        lg.fillStyle = "#000"; lg.fillRect(-W, -H, 3 * W, 3 * H);
+        drawBgSource(lg, im, 1);
+        lg.globalCompositeOperation = "screen"; drawBgSource(lg, im, 1);
+        lg.setTransform(1, 0, 0, 1, 0, 0);
+        lg.globalCompositeOperation = "multiply"; lg.drawImage(maskCan, 0, 0);
+      } else {
+        lg.globalCompositeOperation = "copy"; lg.drawImage(maskCan, 0, 0);
+        if (im) {
+          lg.globalCompositeOperation = "multiply"; lg.imageSmoothingEnabled = true; lg.imageSmoothingQuality = "high";
+          lg.setTransform(mw / W, 0, 0, mh / (H - bh), 0, (-bh * mh) / (H - bh));
+          drawBgSource(lg, im, 1);
+          lg.setTransform(1, 0, 0, 1, 0, 0);
+        }
+      }
+      lg.globalCompositeOperation = "source-over";
+      S.litSrc = im;                                  // из какого кадра построено (постер темы приедет позже — пересобрать)
+    };
+    const pd = BGS.day, pn = BGS.night;
+    if (bgMode === "video") {
+      litOf(pd, pd.pState === 2 ? pd.poster : bgImg);
+      if (pn.pState === 2) litOf(pn, pn.poster); else pn.lit = null;
+    } else { litOf(pd, bgReady ? bgImg : null); pn.lit = null; }
+    litCan = pd.lit;
     if (mapCan && (mapCan.width !== mw || mapCan.height !== mh)) { mapCan.width = mw; mapCan.height = mh; }
     lmT = NaN; kT = NaN;                                           // карту света и K пересобрать
   }
@@ -718,19 +1120,22 @@
     lmT = t;
     const lw = lmCan.width, lh = lmCan.height, d = lmImg.data, bh = BGX.bandH;
     const g = CAUS.gain * (CAUS.strength / 0.32);
+    const lm = Math.max(TV.light[0], TV.light[1], TV.light[2]), lr = TV.light[0] / lm, lgn = TV.light[1] / lm, lb = TV.light[2] / lm;
     for (let j = 0; j < lh; j++) {
       const y = bh + ((j + 0.5) * (H - bh)) / lh;
       for (let i = 0; i < lw; i++) {
-        const v = Math.round(clamp(g * footAt(((i + 0.5) * W) / lw, y), 0, 0.92) * 255), p = (j * lw + i) * 4;
-        d[p] = v; d[p + 1] = v; d[p + 2] = v; d[p + 3] = 255;
+        const v = clamp(g * footAt(((i + 0.5) * W) / lw, y), 0, 0.95) * 255, p = (j * lw + i) * 4;
+        d[p] = Math.round(v * lr); d[p + 1] = Math.round(v * lgn); d[p + 2] = Math.round(v * lb); d[p + 3] = 255;   // в цвет света темы
       }
     }
     lmCtx.putImageData(lmImg, 0, 0);
-    const d0 = CNT.drawImage;
-    mapCtx.globalCompositeOperation = "source-over";
-    mapCtx.drawImage(lmCan, 0, 0, mapCan.width, mapCan.height);
+    const d0 = CNT.drawImage, ln = BGS.night.lit, k = TH.k;
+    // альбедо темы (в переходе — смесь дня и ночи) × след лучей
+    mapCtx.globalCompositeOperation = "source-over"; mapCtx.globalAlpha = 1;
+    if (k < 0.999 || !ln) mapCtx.drawImage(litCan, 0, 0, mapCan.width, mapCan.height);
+    if (ln && k > 0.001) { mapCtx.globalAlpha = k < 0.999 ? k : 1; mapCtx.drawImage(ln, 0, 0, mapCan.width, mapCan.height); mapCtx.globalAlpha = 1; }
     mapCtx.globalCompositeOperation = "multiply";
-    mapCtx.drawImage(litCan, 0, 0, mapCan.width, mapCan.height);
+    mapCtx.drawImage(lmCan, 0, 0, mapCan.width, mapCan.height);
     mapCtx.globalCompositeOperation = "source-over";
     e1Count("e1Light", d0);
   }
@@ -871,45 +1276,60 @@
   }
 
   /* ---------- отсвет на дне у подножия лучей (SPEC 4.3 «bounce») ----------
-     Мягкое пятно чуть над песком под центром каждого источника, 'screen', α ≈ 0.07·дыхание. */
+     Мягкое пятно чуть над песком там, где луч встречает дно, 'screen', α ≈ 0.07·дыхание × TV.glow.
+     Светодиоды фото — под центральной полосой каждого источника; солнце (kind "sun") — под каждой полосой,
+     которая падает на ВИДИМЫЙ песок (дно каньона), слабее. Спрайт — по теме (цвет света), в переходе оба. */
+  const glowSpr = [null, null];
   let glowSprite = null;
-  const GLOW_SRC = [];                                   // индексы центральных полос источников
-  function buildGlowSprite() {
+  const GLOW_SRC = [], GLOW_A = [];                      // индексы полос с отсветом и их доля
+  function mkGlowSprite(rgb) {
     const w = 128, h = 64, c = document.createElement("canvas"); c.width = w; c.height = h;
     const g = c.getContext("2d"), id = g.createImageData(w, h), d = id.data;
     for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
       const x = (i + 0.5) / w * 2 - 1, y = (j + 0.5) / h * 2 - 1, r2 = x * x + y * y;
       const a = r2 >= 1 ? 0 : Math.pow(1 - r2, 2.2), p = (j * w + i) * 4;
-      d[p] = LIGHT_RGB[0]; d[p + 1] = LIGHT_RGB[1]; d[p + 2] = LIGHT_RGB[2]; d[p + 3] = Math.round(a * 255);
+      d[p] = Math.round(rgb[0]); d[p + 1] = Math.round(rgb[1]); d[p + 2] = Math.round(rgb[2]); d[p + 3] = Math.round(a * 255);
     }
     g.putImageData(id, 0, 0);
-    glowSprite = c;
-    GLOW_SRC.length = 0;
-    // центральная полоса каждого источника: ближайшая к нулевому углу
-    let best = -1, bestA = 9, lastBx = null;
-    for (let k = 0; k <= STREAKS.length; k++) {
-      const s = STREAKS[k];
-      if (k === STREAKS.length || (lastBx !== null && s.bx !== lastBx)) { if (best >= 0) GLOW_SRC.push(best); best = -1; bestA = 9; }
-      if (k === STREAKS.length) break;
-      lastBx = s.bx;
-      if (!s.cone && Math.abs(s.ang0) < bestA) { bestA = Math.abs(s.ang0); best = k; }
+    return c;
+  }
+  function buildGlowSprite() {
+    glowSpr[0] = mkGlowSprite(TP[0].light); glowSpr[1] = mkGlowSprite(TP[1].light); glowSprite = glowSpr[0];
+    GLOW_SRC.length = 0; GLOW_A.length = 0;
+    const srcs = (SCENE.light && SCENE.light.sources) || [];
+    // полосы идут группами по источникам (конус + веер); солнце — все полосы веера, светодиоды — центральная
+    let k = 0;
+    for (let si = 0; si < srcs.length && k < STREAKS.length; si++) {
+      const n = 1 + clamp((srcs[si].streaks | 0) || 4, 1, 8), end = Math.min(STREAKS.length, k + n), sun = srcs[si].kind === "sun";
+      let best = -1, bestA = 9;
+      for (let j = k; j < end; j++) {
+        const s = STREAKS[j];
+        if (s.cone) continue;
+        if (sun) { GLOW_SRC.push(j); GLOW_A.push(0.45); continue; }
+        if (Math.abs(s.ang0 - s.tilt) < bestA) { bestA = Math.abs(s.ang0 - s.tilt); best = j; }
+      }
+      if (best >= 0) { GLOW_SRC.push(best); GLOW_A.push(1); }
+      k = end;
     }
   }
   function drawFloorGlow() {
-    if (!glowSprite) return;
-    const d0 = CNT.drawImage;
+    if (!glowSpr[0]) return;
+    const d0 = CNT.drawImage, wN = TH.k, wD = 1 - wN;
     ctx.globalCompositeOperation = "screen";
     for (let i = 0; i < GLOW_SRC.length; i++) {
       const o = GLOW_SRC[i] * ST_F, ux = STV[o + 2], uy = STV[o + 3];
       let x = STV[o] + (ux / uy) * (H * 0.9 - STV[o + 1]);
       const yf = floorYAt(x); x = STV[o] + (ux / uy) * (yf - STV[o + 1]);
-      const gw = 0.26 * W, gh = 0.075 * H;
-      ctx.globalAlpha = clamp(0.5 * STV[o + 6], 0, 0.12);
-      ctx.drawImage(glowSprite, x - gw / 2, floorYAt(x) - gh * 0.62, gw, gh);
+      const y2 = floorYAt(x);
+      if (y2 > H + 0.02 * H || x < -0.2 * W || x > 1.2 * W) continue;   // луч падает за кадр / не на видимый песок
+      const gw = 0.26 * W, gh = 0.075 * H, a = clamp(0.5 * STV[o + 6], 0, 0.12) * GLOW_A[i] * TV.glow;
+      if (wD > 0.003) { ctx.globalAlpha = a * wD; ctx.drawImage(glowSpr[0], x - gw / 2, y2 - gh * 0.62, gw, gh); }
+      if (wN > 0.003) { ctx.globalAlpha = a * wN; ctx.drawImage(glowSpr[1], x - gw / 2, y2 - gh * 0.62, gw, gh); }
     }
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
     e1Count("e1Light", d0);
   }
+
   // мягкая тень рыбы на дне (≤ 1 drawImage на рыбу у песка, α ≤ 0.22, 'multiply'). E3 позовёт со своим z.
   let shadowSprite = null;
   function buildShadowSprite() {
@@ -931,185 +1351,6 @@
   }
   // drawFishShadows — в разделе «РЫБЫ» (этап E3): по настоящему z и плоскости песка
 
-  /* ---------- полоса поверхности воды (SPEC 4.1) ----------
-     Снизу поверхность — зеркало (полное внутреннее отражение): верхние mirrorRows фото от линии воды,
-     перевёрнутые, смягчённые проходом 1/5 вниз-вверх (1/8 из SPEC смазывала отражение — рябь не читалась),
-     ×0.62 и на 28% к #0d2a4a (кэш M, ½ RS, с полями по BAND_MX по бокам). На кадр:
-       • M — 14 горизонтальными полосами со сдвигом dx = 3·sin(0.9t + 0.25y) + 1.5·sin(1.7t − 0.6y)
-         (y — номер полосы ×1.6; у стекла, вверху, рябь крупнее) и вертикальным дрожанием источника;
-       • пятна света под светодиодами: мягкий эллипс 'screen', мерцает (видно, где свет входит в воду);
-       • блики: буфер bk (½ RS) = (A ⊓ B)² со сжатием по вертикали 0.25 (горизонтальные искры, прокрутка ×2)
-         × форма (сильнее у линии воды и под светодиодами), 'lighter';
-       • мениск: яркая линия 1.5–2 px на bandH (α 0.35–0.55, мерцает, яркость гуляет вдоль) и слабая
-         тёмная под ней — две копии кэша, плывущие навстречу;
-       • кольца лопнувших пузырьков (0.2 с). */
-  const BAND_STRIPS = 14, BAND_MX = 14;
-  let bandCanvas = null, bkCan = null, bkCtx = null, bk2Can = null, bk2Ctx = null, bkS = 0, gsCan = null, menCan = null, ringSprite = null;
-  let bkPatA = null, bkPatB = null;
-  function buildBandCache() {
-    const bh = BGX.bandH;
-    if (!bgImg || bh < 1 || W < 1) { bandCanvas = null; return; }
-    const ih = BGX.ih, iw = BGX.iw, mx = BAND_MX;
-    const sy = clamp((bh - BGX.dy) / BGX.sc, 0, ih - 1);          // строка фото на линии воды
-    const sh = Math.max(1, Math.min(ih - sy, SCENE.surface.mirrorRows * ih));
-    const sx0 = clamp((-mx - BGX.dx) / BGX.sc, 0, iw - 1), sx1 = clamp((W + mx - BGX.dx) / BGX.sc, sx0 + 1, iw);
-    const tw = Math.max(8, Math.round((W + 2 * mx) / 5)), th = Math.max(2, Math.round(bh / 5));
-    const tiny = document.createElement("canvas"); tiny.width = tw; tiny.height = th;
-    const g = tiny.getContext("2d");
-    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
-    g.setTransform(1, 0, 0, -1, 0, th);                             // переворот по вертикали
-    g.drawImage(bgImg, sx0, sy, sx1 - sx0, sh, 0, 0, tw, th);
-    g.setTransform(1, 0, 0, 1, 0, 0);
-    g.globalCompositeOperation = "multiply"; g.fillStyle = "rgb(158,158,158)"; g.fillRect(0, 0, tw, th);   // ×0.62
-    g.globalCompositeOperation = "source-over"; g.fillStyle = "rgba(13,42,74,0.28)"; g.fillRect(0, 0, tw, th);
-    const c = bandCanvas || document.createElement("canvas");
-    c.width = Math.max(1, Math.ceil(((W + 2 * mx) * RS) / 2)); c.height = Math.max(1, Math.ceil((bh * RS) / 2));
-    const cg = c.getContext("2d");
-    cg.imageSmoothingEnabled = true; cg.imageSmoothingQuality = "high";
-    cg.drawImage(tiny, 0, 0, c.width, c.height);
-    bandCanvas = c;
-  }
-  function buildBandFx() {
-    const bh = BGX.bandH;
-    if (bh < 1 || W < 1) { bkCan = null; return; }
-    bkS = RS / 2;
-    if (!bkCan) bkCan = document.createElement("canvas");
-    bkCan.width = Math.max(4, Math.ceil(W * bkS)); bkCan.height = Math.max(2, Math.ceil(bh * bkS));
-    bkCtx = bkCan.getContext("2d", { alpha: false });
-    if (!bk2Can) bk2Can = document.createElement("canvas");             // копия для квадрата (холст сам в себя не рисуем)
-    bk2Can.width = bkCan.width; bk2Can.height = bkCan.height;
-    bk2Ctx = bk2Can.getContext("2d", { alpha: false });
-    bkPatA = ctCanA ? bkCtx.createPattern(ctCanA, "repeat") : null;
-    bkPatB = ctCanB ? bkCtx.createPattern(ctCanB, "repeat") : null;
-    // форма бликов: сильнее у линии воды и под светодиодами (статично; лучи качаются едва-едва)
-    const gw = Math.max(8, Math.ceil(W / 4)), gh = Math.max(2, Math.ceil(bh / 4));
-    if (!gsCan) gsCan = document.createElement("canvas");
-    gsCan.width = gw; gsCan.height = gh;
-    const g = gsCan.getContext("2d"), id = g.createImageData(gw, gh), d = id.data;
-    const srcs = (SCENE.light && SCENE.light.sources) || [], sig = 0.1 * W;
-    for (let i = 0; i < gw; i++) {
-      const x = ((i + 0.5) * W) / gw;
-      let hx = 0;
-      for (let k = 0; k < srcs.length; k++) { const dx = x - bgX(srcs[k].bx); hx += Math.exp((-0.5 * dx * dx) / (sig * sig)); }
-      hx = 0.22 + 0.78 * Math.min(1, hx);
-      for (let j = 0; j < gh; j++) {
-        const v = (j + 0.5) / gh, p = (j * gw + i) * 4, m = hx * (0.22 + 0.78 * Math.pow(v, 1.6));
-        d[p] = Math.round(LIGHT_RGB[0] * m); d[p + 1] = Math.round(LIGHT_RGB[1] * m); d[p + 2] = Math.round(LIGHT_RGB[2] * m); d[p + 3] = 255;
-      }
-    }
-    g.putImageData(id, 0, 0);
-    // мениск: 10 CSS px высотой (линия воды — на 5 px), яркость вдоль — гладкий шум
-    const mw = Math.max(8, Math.ceil((W + 2 * BAND_MX) * RS)), mh = Math.max(4, Math.ceil(10 * RS));
-    if (!menCan) menCan = document.createElement("canvas");
-    menCan.width = mw; menCan.height = mh;
-    const mg = menCan.getContext("2d"), md = mg.createImageData(mw, mh), dd = md.data, rnd = srand(777);
-    const ph = [rnd() * TAU, rnd() * TAU, rnd() * TAU, rnd() * TAU];
-    for (let i = 0; i < mw; i++) {
-      const x = i / RS;
-      const n = 0.8 + 0.12 * Math.sin(x * 0.011 + ph[0]) + 0.08 * Math.sin(x * 0.037 + ph[1]) + 0.06 * Math.sin(x * 0.093 + ph[2]) + 0.04 * Math.sin(x * 0.21 + ph[3]);
-      for (let j = 0; j < mh; j++) {
-        const y = (j + 0.5) / RS - 5;                 // 0 — линия воды
-        const core = Math.exp(-0.5 * Math.pow((y + 0.35) / 0.55, 2));        // ≈1.6 px
-        const halo = 0.35 * Math.exp(-0.5 * Math.pow((y + 1.2) / 1.6, 2));
-        const dark = y > 0.6 ? 0.55 * Math.exp(-0.5 * Math.pow((y - 1.7) / 0.8, 2)) : 0;
-        const bright = clamp((core + halo) * n, 0, 1), p = (j * mw + i) * 4;
-        const a = Math.max(bright, dark);
-        const k = a > 0 ? bright / a : 0;
-        dd[p] = Math.round(8 + (238 - 8) * k); dd[p + 1] = Math.round(26 + (248 - 26) * k); dd[p + 2] = Math.round(40 + (255 - 40) * k);
-        dd[p + 3] = Math.round(a * 255);
-      }
-    }
-    mg.putImageData(md, 0, 0);
-    // кольцо лопнувшего пузырька: эллипс 3:1 (поверхность видна под скользящим углом)
-    if (!ringSprite) {
-      const rw = 64, rh = 22, rc = document.createElement("canvas"); rc.width = rw; rc.height = rh;
-      const rg = rc.getContext("2d"), rid = rg.createImageData(rw, rh), r = rid.data;
-      for (let j = 0; j < rh; j++) for (let i = 0; i < rw; i++) {
-        const x = ((i + 0.5) / rw) * 2 - 1, y = ((j + 0.5) / rh) * 2 - 1, rr = Math.sqrt(x * x + y * y), p = (j * rw + i) * 4;
-        const a = Math.exp(-0.5 * Math.pow((rr - 0.78) / 0.1, 2)) * (rr < 1 ? 1 : 0) + 0.25 * Math.exp(-0.5 * Math.pow(rr / 0.35, 2));
-        r[p] = 236; r[p + 1] = 246; r[p + 2] = 255; r[p + 3] = Math.round(clamp(a, 0, 1) * 255);
-      }
-      rg.putImageData(rid, 0, 0);
-      ringSprite = rc;
-    }
-  }
-  // кольца лопнувших пузырьков: пул без аллокаций
-  const RING_CAP = 32;
-  const RINGS = new Float32Array(RING_CAP * 3);        // x, t0, w
-  let ringHead = 0;
-  for (let i = 0; i < RING_CAP; i++) RINGS[i * 3 + 1] = -1e9;
-  function spawnRing(x, w) { const o = ringHead * 3; RINGS[o] = x; RINGS[o + 1] = simT; RINGS[o + 2] = w; ringHead = (ringHead + 1) % RING_CAP; }
-  function drawSurfaceBand(t) {
-    const bh = BGX.bandH;
-    if (!bandCanvas || bh < 1) return;
-    const d0 = CNT.drawImage;
-    const bRS = bandCanvas.width / (W + 2 * BAND_MX), n = BAND_STRIPS, sh = bh / n, ss = clamp(W / 1600, 0.8, 2);
-    for (let i = 0; i < n; i++) {
-      const y = Math.round(i * sh * RS) / RS, y2 = i === n - 1 ? bh : Math.round((i + 1) * sh * RS) / RS;
-      const v = (i + 0.5) / n, yy = i * 1.6, amp = (1.2 - 0.55 * v) * ss;
-      const dx = clamp(amp * (3 * Math.sin(0.9 * t + 0.25 * yy) + 1.5 * Math.sin(1.7 * t - 0.6 * yy)), 1 - BAND_MX, BAND_MX - 1);
-      const dy = 0.35 * sh * Math.sin(1.3 * t + 0.9 * i) * (1.1 - 0.6 * v);
-      const sy = clamp((y + dy) * bRS, 0, bandCanvas.height - (y2 - y) * bRS);
-      ctx.drawImage(bandCanvas, (BAND_MX - dx) * bRS, sy, W * bRS, (y2 - y) * bRS, 0, y, W, y2 - y);
-    }
-    // горизонтальные блики (каустика на поверхности, вид снизу под скользящим углом)
-    if (bkCan && bkPatA && bkPatB) {
-      causticPos(t, 2.1);
-      const g = bkCtx, q = CAUS.glintSquash, bw = bkCan.width, bhh = bkCan.height;
-      for (let p = 0; p < 2; p++) {
-        const sc = p ? CAUS.scB : CAUS.scA, px = CPOS[p * 2], py = CPOS[p * 2 + 1];
-        const a = bkS * sc, d = bkS * q * sc, e = bkS * sc * px, f = bkS * q * sc * py;
-        g.setTransform(a, 0, 0, d, e, f);
-        g.globalCompositeOperation = p ? "darken" : "source-over"; g.fillStyle = p ? bkPatB : bkPatA;
-        g.fillRect(-e / a, -f / d, bw / a, bhh / d);
-      }
-      g.setTransform(1, 0, 0, 1, 0, 0);
-      bk2Ctx.drawImage(bkCan, 0, 0);
-      g.globalCompositeOperation = "multiply";
-      g.drawImage(bk2Can, 0, 0);                                    // квадрат: искры острее, фон темнее
-      g.drawImage(gsCan, 0, 0, bw, bhh);
-      g.globalCompositeOperation = "source-over";
-      // пятна света там, где светодиоды над водой (под бликами)
-      if (glowSprite) {
-        ctx.globalCompositeOperation = "screen";
-        for (let i = 0; i < GLOW_SRC.length; i++) {
-          const o = GLOW_SRC[i] * ST_F, s = STREAKS[GLOW_SRC[i]];
-          const x = STV[o] - (STV[o + 2] / STV[o + 3]) * (STV[o + 1] - bh * 0.6), gw = 0.24 * W, gh = 1.5 * bh;
-          ctx.globalAlpha = clamp(0.16 + 0.07 * Math.sin(1.9 * t + s.b1P) + 0.05 * Math.sin(3.7 * t + s.b2P), 0, 1);
-          ctx.drawImage(glowSprite, x - gw / 2, bh * 0.62 - gh / 2, gw, gh);
-        }
-      }
-      ctx.globalCompositeOperation = "lighter";
-      ctx.globalAlpha = 0.85 + 0.15 * Math.sin(0.7 * t);
-      ctx.drawImage(bkCan, 0, 0, bw, bhh, 0, 0, bw / bkS, bhh / bkS);
-    }
-    // кольца лопнувших пузырьков (в счёт пузырьков, не света)
-    e1Count("e1Light", d0);
-    const d1 = CNT.drawImage;
-    ctx.globalCompositeOperation = "lighter";
-    for (let i = 0; i < RING_CAP; i++) {
-      const o = i * 3, age = t - RINGS[o + 1];
-      if (age < 0 || age > 0.26) continue;
-      const k = age / 0.26, w = RINGS[o + 2] * (0.6 + 2.2 * k), h = w * 0.34;
-      ctx.globalAlpha = 0.6 * (1 - k) * (1 - k);
-      ctx.drawImage(ringSprite, RINGS[o] - w / 2, bh - 1.2 - h / 2, w, h);
-    }
-    e1Count("e1Bubbles", d1);
-    const d2 = CNT.drawImage;
-    // мениск — две копии, плывущие навстречу, мерцание α 0.35…0.55 суммарно
-    ctx.globalCompositeOperation = "source-over";
-    if (menCan) {
-      const mw = menCan.width / RS;
-      const o1 = BAND_MX * 0.8 * Math.sin(0.31 * t), o2 = -BAND_MX * 0.8 * Math.sin(0.23 * t + 1);
-      ctx.globalAlpha = 0.25 + 0.06 * Math.sin(2.3 * t) + 0.03 * Math.sin(5.1 * t + 0.4);
-      ctx.drawImage(menCan, -BAND_MX + o1, bh - 5, mw, 10);
-      ctx.globalAlpha = 0.21 + 0.06 * Math.sin(3.1 * t + 1) + 0.03 * Math.sin(6.3 * t + 2);
-      ctx.drawImage(menCan, -BAND_MX + o2, bh - 5, mw, 10);
-    }
-    ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
-    e1Count("e1Light", d2);
-  }
-
   /* ---------- пузырьки (SPEC 4.9) ----------
      Источники — scene.bubbles (доли задника): распылитель { rate:[12,25], sizes:[1.5,7] } — кластерный
      Пуассон: rate — кластеров/с (по 1–5 пузырьков через 18–45 мс, в среднем ≈1.6; интенсивность медленно
@@ -1119,8 +1360,9 @@
      (крупные быстрее) набирается за ~0.2 с (τ = 0.07 с). Крупнее 3 px — зигзаг/спираль 4–8 Гц с
      амплитудой 1–2 r и сплющивание 0.85 с колебанием. Течение сносит, турбулентность разводит колонну.
      Спрайты 16/32/64 px (ImageData): френелевский ободок, прозрачный центр, блик сверху-слева,
-     тёмный край и затемнённый низ ободка; α растёт с lightAt (искрятся в луче). Лопаются на линии воды
-     кольцом. Каждый источник — элемент списка отрисовки со своим z (рыбы заплывают перед/за колонну).
+     тёмный край и затемнённый низ ободка, ободок — в цвет света темы (перекрашиваются ступенями перехода);
+     α растёт с lightAt (искрятся в луче). Поверхности в кадре нет (V4a) — уходят за верхнюю кромку.
+     Каждый источник — элемент списка отрисовки со своим z (рыбы заплывают перед/за колонну).
      Никакого случайного рождения по всему дну. */
   const BB_CAP = 220;
   const BUB = [];
@@ -1203,7 +1445,7 @@
         }
       }
     }
-    const top = bgReady ? BGX.bandH : 0, kv = 1 - Math.exp(-dt / 0.07), kx = 1 - Math.exp(-dt / 0.35), sdt = Math.sqrt(dt);
+    const kv = 1 - Math.exp(-dt / 0.07), kx = 1 - Math.exp(-dt / 0.35), sdt = Math.sqrt(dt);
     let k = 0;
     for (let i = 0; i < bubN; i++) {
       const b = BUB[i];
@@ -1213,11 +1455,8 @@
       b.turb += gauss() * 26 * ss * sdt - b.turb * (dt / 0.9);          // турбулентность следа: колонна расходится конусом
       b.vx += (currentVX(t, b.x) * 0.55 + b.turb - b.vx) * kx;
       b.x += b.vx * dt; b.y += b.vy * dt;
-      if (b.y <= top + b.r * 0.4) {                                     // дошёл до поверхности — лопнул
-        if (bgReady) spawnRing(b.x + b.wA * Math.sin(TAU * b.wF * b.age + b.wP), b.r * 3.2);
-        continue;
-      }
-      if (b.x < -40 || b.x > W + 40) continue;
+      // поверхности в кадре нет: пузырёк просто уходит за верхнюю кромку (целиком), без вспышки
+      if (b.y < -3 * b.r - b.wA || b.x < -40 || b.x > W + 40) continue;
       BUB[i] = BUB[k]; BUB[k++] = b;
     }
     bubN = k;
@@ -1235,7 +1474,7 @@
         const dark = smooth01(1 - w * 1.3, 1 - w * 0.2, rho);                    // тёмный самый край
         const lowr = Math.pow(clamp(y, 0, 1), 1.3) * smooth01(0.5, 0.85, rho);  // низ ободка темнее
         let a = Math.max(body0 + 0.25 * rho * rho * rho, ring * (0.85 - 0.35 * lowr));
-        let r = 226, gg = 240, bb = 252;
+        let r = TV.bubble[0], gg = TV.bubble[1], bb = TV.bubble[2];          // ободок — в цвет света темы
         const lw = 0.55 * lowr; r += (70 - r) * lw; gg += (100 - gg) * lw; bb += (125 - bb) * lw;
         r += (25 - r) * dark; gg += (45 - gg) * dark; bb += (62 - bb) * dark;
         a = a * (1 - dark) + 0.5 * dark;
@@ -1288,7 +1527,7 @@
   const PT_PAR = [0.45, 0.75, 1.25], PT_GLINT = [0.55, 0.7, 0.45];
   let dotSprite = null, softSprite = null;
   function seedParticles() {
-    const ss = sizeScale(), top = BGX.bandH || H * 0.075;
+    const ss = sizeScale(), top = 0;
     for (let i = 0; i < PT_N; i++) {
       const m = i % 9, L = m < 4 ? 0 : m < 7 ? 1 : 2;                 // 40 / 30 / 20, вперемешку — половина сохраняет состав
       PTL[i] = L; PTX[i] = rand(0, W); PTY[i] = rand(top, H);
@@ -1325,7 +1564,8 @@
       const g = c.getContext("2d"), id = g.createImageData(px, px), d = id.data;
       for (let j = 0; j < px; j++) for (let i = 0; i < px; i++) {
         const x = (i + 0.5) / px * 2 - 1, y = (j + 0.5) / px * 2 - 1, r2 = x * x + y * y, p = (j * px + i) * 4;
-        d[p] = 226; d[p + 1] = 238; d[p + 2] = 240; d[p + 3] = Math.round(clamp(Math.exp(-r2 / (2 * sig * sig)) * (1 - r2), 0, 1) * 255);
+        d[p] = Math.round(TV.particle[0]); d[p + 1] = Math.round(TV.particle[1]); d[p + 2] = Math.round(TV.particle[2]);   // цвет темы
+        d[p + 3] = Math.round(clamp(Math.exp(-r2 / (2 * sig * sig)) * (1 - r2), 0, 1) * 255);
       }
       g.putImageData(id, 0, 0);
       return c;
@@ -1334,10 +1574,10 @@
   }
   function drawParticles(t, near) {
     if (!dotSprite || !LAYERS.particles) return;
-    const d0 = CNT.drawImage, n = Math.round(PT_N * QUALITY.particles);
+    const d0 = CNT.drawImage, n = Math.min(PT_N, Math.round(PT_N * QUALITY.particles * TV.particles));
     if (t !== ptLightT) { ptLightT = t; for (let i = 0; i < n; i++) PTLI[i] = lightAt(PTX[i], PTY[i]); }
     if (!near) {                                       // вне лучей — заливки путей по вёдрам
-      ctx.fillStyle = "rgb(226,238,240)";
+      ctx.fillStyle = TV_PART;
       for (let b = 0; b < 4; b++) {
         ctx.beginPath();
         let any = false;
@@ -1373,9 +1613,9 @@
     }
     const sc = 1.45 * clamp(W / 1700, 0.85, 2.2);
     CAUS.scA = sc; CAUS.scB = sc * 1.137;
-    const L = SCENE.light || {};
-    CAUS.strength = L.caustics && L.caustics.strength > 0 ? +L.caustics.strength : 0.32;
-    buildStreaks(); buildStreakTextures(); updateLight(simT); buildGlowSprite();
+    // сила каустики — по теме (TV.caustics: scene.themes или, у фото-сцены, light.caustics.strength днём)
+    themeMix();
+    buildStreaks(); buildThemeStreaks(); lightT = NaN; updateLight(simT); buildGlowSprite();
     buildFloorLut();
     buildMask();
     if (!lmCan) { lmCan = document.createElement("canvas"); }
@@ -1386,7 +1626,6 @@
     mapCtx = mapCan.getContext("2d", { alpha: false }); mapCtx.imageSmoothingEnabled = true;
     lmT = NaN;
     buildKBuffer();
-    buildBandFx();
     layoutBubbleSources();
   }
 
@@ -1426,7 +1665,7 @@
   const DEG = Math.PI / 180;
   const YAW_MAX = 30 * DEG, PITCH_MAX = 15 * DEG, PITCH_DOWN = 25 * DEG, DZ_MAX = 0.12;
   const Z_GLASS = 1.0, Z_NEAR = 0.86;                  // стекло; ближний проход режиссёра — до 0.86
-  const FOG_RGB = "#123d6b", FISH_MIP_CAP = 800, SL_MAX = 18, U_PIV = 0.6;
+  const FISH_MIP_CAP = 800, SL_MAX = 18, U_PIV = 0.6;   // цвет дымки — по теме (TV_FOG, раздел «ТЕМЫ»)
   const FISH_LIT_A = 0.55;                             // предел подсветки лучом (SPEC 4.4)
   const ST = { CRUISE: "CRUISE", GRAZE: "GRAZE", PICK: "PICK", HOVER: "HOVER", HIDE: "HIDE", PEEK: "PEEK",
                HOME: "HOME", SHOAL: "SHOAL", LURK: "LURK", CHASE: "CHASE", FLEE: "FLEE", FEED: "FEED", OFF: "OFFSTAGE" };
@@ -1436,20 +1675,21 @@
   const CAM = { cx: 0, hy: 0, D: 1, fogK: 0.42, floorW: 0 };
   function layoutCamera() {
     const c = SCENE.camera || {};
-    CAM.cx = bgX(0.5); CAM.hy = bgY(c.horizonBy != null ? c.horizonBy : 0.42);
+    CAM.cx = bgX(c.horizonBx != null ? +c.horizonBx : 0.5); CAM.hy = bgY(c.horizonBy != null ? c.horizonBy : 0.42);
     CAM.D = Math.max(1, (c.depthPx || 0.31) * W);
     CAM.fogK = c.fogSigma > 0 ? c.fogSigma : 0.42;
-    // песок — плоскость камеры через by = 0.975 у стекла (z = 1): тот же пол, что в depthGrid A2;
-    // процедурный риф — через floorY
-    CAM.floorW = bgReady ? bgY(0.975) : floorY + 4;
+    // дно — плоскость камеры, пересекающая стекло (z = 1) на by = camera.floorBy (видео: 1.243 — ниже кадра,
+    // камера висит над дном; фото: 0.975 — тот же пол, что в depthGrid A2); процедурный риф — через floorY
+    CAM.floorW = bgReady ? bgY(c.floorBy != null ? +c.floorBy : 0.975) : floorY + 4;
   }
   const projX = (X, z) => CAM.cx + (X - CAM.cx) / z;
   const projY = (Y, z) => CAM.hy + (Y - CAM.hy) / z;
   const worldX = (x, z) => CAM.cx + (x - CAM.cx) * z;
   const worldY = (y, z) => CAM.hy + (y - CAM.hy) * z;
   const sandYAt = (z) => projY(CAM.floorW, z);         // экранная линия плоскости песка на глубине z
-  const waterTop = () => (bgReady ? BGX.bandH : H * 0.06);
-  const fogAlpha = (z) => (z <= 1 ? 0 : 0.85 * (1 - Math.exp(-CAM.fogK * (z - 1))));
+  const waterTop = () => (bgReady ? 0 : H * 0.06);       // поверхности в кадре нет — вода до верхней кромки
+  // дымка по z; ночью — ещё и «окружающий» свет LED (TV.fogMin): даже у стекла рыба чуть в синеве, а не в дневных цветах
+  const fogAlpha = (z) => Math.max(TV.fogMin, z <= 1 ? 0 : 0.85 * (1 - Math.exp(-CAM.fogK * (z - 1))));
 
   /* ---------- глубина рифа под точкой экрана ----------
      depthGrid (A2) — поверхность рифа вдоль луча зрения. behind = true (рыба прячется): внутри
@@ -1544,15 +1784,32 @@
     };
     const m0 = down(img, w0, h0), m1 = down(m0, Math.round(w0 / 2), Math.round(h0 / 2)), m2 = down(m1, Math.round(w0 / 4), Math.round(h0 / 4));
     const fog = down(m1, m1.width, m1.height), fg = fog.getContext("2d");
-    fg.globalCompositeOperation = "source-in"; fg.fillStyle = FOG_RGB; fg.fillRect(0, 0, fog.width, fog.height);
-    const lit = down(m1, m1.width, m1.height), lg = lit.getContext("2d");
-    const gr = lg.createLinearGradient(0, 0, 0, lit.height);       // один раз при запекании
-    gr.addColorStop(0.18, "rgba(0,0,0,1)"); gr.addColorStop(0.82, "rgba(0,0,0,0.35)");
-    lg.globalCompositeOperation = "destination-in"; lg.fillStyle = gr; lg.fillRect(0, 0, lit.width, lit.height);
-    lg.globalCompositeOperation = "source-atop";
-    lg.fillStyle = `rgba(${LIGHT_RGB[0]},${LIGHT_RGB[1]},${LIGHT_RGB[2]},0.15)`; lg.fillRect(0, 0, lit.width, lit.height);
-    rec.mips = [m0, m1, m2]; rec.w0 = w0; rec.h0 = h0; rec.fog = fog; rec.lit = lit; rec.ar = ih / iw;
+    fg.globalCompositeOperation = "source-in"; fg.fillStyle = TV_FOG; fg.fillRect(0, 0, fog.width, fog.height);
+    // основа света — спрайт × вертикальный градиент альфы (спина 1 → брюхо 0.35); градиент — один на все
+    // виды, в единичных координатах (масштаб — преобразованием): перекраска по теме без новых градиентов
+    const litB = down(m1, m1.width, m1.height), bg = litB.getContext("2d");
+    if (!LIT_GRAD) { LIT_GRAD = bg.createLinearGradient(0, 0, 0, 1); LIT_GRAD.addColorStop(0.18, "rgba(0,0,0,1)"); LIT_GRAD.addColorStop(0.82, "rgba(0,0,0,0.35)"); }
+    bg.globalCompositeOperation = "destination-in"; bg.fillStyle = LIT_GRAD;
+    bg.setTransform(1, 0, 0, litB.height, 0, 0); bg.fillRect(0, 0, litB.width, 1); bg.setTransform(1, 0, 0, 1, 0, 0);
+    bg.globalCompositeOperation = "source-over";
+    const lit = mk(litB.width, litB.height);
+    rec.mips = [m0, m1, m2]; rec.w0 = w0; rec.h0 = h0; rec.fog = fog; rec.lit = lit; rec.litB = litB; rec.ar = ih / iw;
     rec.img = m0;
+    tintLit(rec);
+  }
+  let LIT_GRAD = null;
+  // подсветка вида в цвет света темы: основа + 'source-atop' 15% света (перекраска ступенями перехода)
+  function tintLit(rec) {
+    const g = rec.lit.getContext("2d");
+    g.globalCompositeOperation = "copy"; g.globalAlpha = 1; g.drawImage(rec.litB, 0, 0);
+    g.globalCompositeOperation = "source-atop"; g.fillStyle = TV_LIT15; g.fillRect(0, 0, rec.lit.width, rec.lit.height);
+    g.globalCompositeOperation = "source-over";
+  }
+  // дымка вида — в цвет дымки темы ('source-in' сохраняет силуэт)
+  function tintFog(rec) {
+    const g = rec.fog.getContext("2d");
+    g.globalCompositeOperation = "source-in"; g.fillStyle = TV_FOG; g.fillRect(0, 0, rec.fog.width, rec.fog.height);
+    g.globalCompositeOperation = "source-over";
   }
   const PACK = [];
   (function buildPack() {
@@ -2859,7 +3116,10 @@
     if (!e.g) e.g = e.c.getContext("2d");
     const g = e.g;
     g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
-    if (e.dirty) { g.clearRect(e.x0, e.y0, e.x1 - e.x0, e.y1 - e.y0); e.dirty = false; }
+    // V4a: слой очищается ЦЕЛИКОМ (полная очистка холста дешёвая — содержимое просто отбрасывается): очистка
+    // только по рамкам групп оставляла «хвосты» — срезы рыб, нарисованные за рамкой (вырожденная раскладка в
+    // кадрах загрузки), всплывали потом прямоугольником света (недетерминированно, по порядку загрузки)
+    if (e.dirty) { g.clearRect(0, 0, e.c.width, e.c.height); e.dirty = false; }
     llCan = e.c; llCtx = g;
     llX0 = 1e9; llY0 = 1e9; llX1 = -1e9; llY1 = -1e9; llN = 0;
     updateLightField(t);
@@ -2942,7 +3202,7 @@
     }
     g.globalCompositeOperation = "source-over";
     ctx.setTransform(RS, 0, 0, RS, 0, 0);
-    ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = FISH_LIT_A;
+    ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = clamp(FISH_LIT_A * TV.fishLit, 0, 1);   // днём солнце ярче, ночью LED мягче
     for (let r = 0; r < llRN; r++) {
       const o = r * 4, px0 = LL_RECT[o], py0 = LL_RECT[o + 1], pw = LL_RECT[o + 2] - px0, ph = LL_RECT[o + 3] - py0;
       if (pw < 1 || ph < 1) continue;
@@ -3199,30 +3459,6 @@
     e1Count("e1Light", d0);
     CNT.e3Fish += CNT.drawImage - d0;
   }
-  /* отражение у поверхности (SPEC 4.1, «по желанию»): рыба в 0.18H под полосой — перевёрнутая,
-     тусклая (α ≤ 0.25), цельным спрайтом, обрезана полосой; 1 drawImage на рыбу */
-  function drawFishReflections() {
-    const bh = BGX.bandH;
-    if (!bgReady || bh < 4) return;
-    let any = false;
-    const d0 = CNT.drawImage;
-    for (let i = 0; i < fishes.length; i++) {
-      const f = fishes[i];
-      if (!f.visible || !(f.pack && f.pack.ready)) continue;
-      const gap = f.minY - bh;
-      if (gap > 0.18 * H) continue;
-      if (!any) { ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, bh); ctx.clip(); any = true; }
-      const P = f.pack, L = f.len, h = f.h, mip = P.mips[2].width >= L * RS ? P.mips[2] : P.mips[1];
-      const sx = Math.abs(f.cosHead) < 0.15 ? (f.cosHead < 0 ? -0.15 : 0.15) : f.cosHead;
-      const yR = 2 * bh - f.y;
-      ctx.setTransform(RS * sx * (L / mip.width), 0, 0, -RS * (h / mip.height), RS * (f.x - sx * L * (U_PIV - 0.5)), RS * yR);
-      ctx.globalAlpha = 0.25 * (1 - clamp(gap / (0.18 * H), 0, 1)) * (1 - fogAlpha(f.z));
-      ctx.drawImage(mip, -mip.width / 2, -mip.height / 2);
-    }
-    if (any) { ctx.restore(); ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.globalAlpha = 1; }
-    CNT.e3Fish += CNT.drawImage - d0;
-  }
-
   /* ---------- заселение, число рыб, ресайз ---------- */
   function seedTank(n) {
     fishes = [];
@@ -3340,9 +3576,9 @@
   }
   // предзагрузка вместе с задником (сцена применится, только если задник — её, см. sceneFor)
   function preloadScene() {
-    const s = window.AQUARIUM_SCENE;
-    if (NOBG || !s || s.version !== 1) return;
-    for (const o of s.occluders || []) scImg(o.src);
+    const s = SCENE_FROM_FILE ? SCENE : videoScene();      // до загрузки задника — основная (видео) сцена
+    if (NOBG || !s || !(s.version === 1 || s.version === 2)) return;
+    for (const o of s.occluders || []) scImg(o.src || o.mask);
     for (const p of s.patches || []) { scImg(p.src); scImg(p.core); }
     for (const p of s.props || []) {
       if (p.parts) { scImg(p.parts.body); for (const c of p.parts.claws || []) scImg(c.src); } else scImg(p.src);
@@ -3409,12 +3645,15 @@
     for (let i = 0; i < it.ents.length; i++) it.imgs[i] = it.ents[i] && it.ents[i].ok ? it.ents[i].im : null;
     it.iw = it.imgs[0].naturalWidth; it.ih = it.imgs[0].naturalHeight;
     if (it.coreE) { if (!it.coreE.done) return false; it.core = it.coreE.ok ? it.coreE.im : null; }
-    if (it.kind === "occ" && !it.core) it.core = erodeAlpha(it.imgs[0], 2);   // вычитание — по альфе без «запаса» в воду
+    // вычитание — по альфе без «запаса» в воду: вырезке фото (A2, альфа выходит в воду на 2 px) — подрезанная копия;
+    // маске видео (V2, kind "mask") — она сама: её кромка уже по самому рифу (матирование), 1–2 px мягкая
+    if (it.kind === "occ" && !it.core) it.core = it.def.kind === "mask" ? it.imgs[0] : erodeAlpha(it.imgs[0], 2);
     it.sub = !it.dyn && !(it.kind === "patch" && !it.core);   // патч без сердцевины не вычитаем (поле воды дало бы ореол)
     if (it.kind === "prop" && !it.front && it.def.nest) { it.def.imgW = it.iw; it.def.imgH = it.ih; }
     if (it.crab && (!it.imgs[1] || !it.imgs[2])) { it.imgs[1] = null; it.imgs[2] = null; }
     const tn = it.kind === "prop" && it.def.tint;
     if (tn && Array.isArray(tn.rgb)) for (let i = 0; i < it.imgs.length; i++) if (it.imgs[i]) it.imgs[i] = tintImage(it.imgs[i], tn);
+    buildItemThemes(it);
     it.ready = true;
     return true;
   }
@@ -3457,6 +3696,53 @@
     g.globalCompositeOperation = "source-over";
     return c;
   }
+  /* V4a: реквизит видео-сцены под тему (scene.js props[].grade {shade, haze}, night {glow, amt}; themes.*) —
+     два варианта картинок на предмет, один раз при загрузке, только композитингом:
+       день — × shade, затем дымка к цвету дымки дня (source-atop, haze·hazeK);
+       ночь — × shade·(coralMul + glow·amt·glowK) (LED-синий + флуоресценция: 'lighter' копии, тонированной glow,
+              это то же самое, что множитель coralMul + glow·amt — одним multiply), дымка к ночной дымке.
+     В переходе предмет рисуется обоими вариантами (ночной поверх с α = k). Фото-сцена — без вариантов:
+     ночь там — общий multiply кадра после слоя сцены. */
+  function themeVariant(img, shade, mul, fog, haze) {
+    const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    const g = c.getContext("2d"), m = (j) => Math.round(clamp(255 * shade[j] * mul[j], 0, 255));
+    g.drawImage(img, 0, 0);
+    g.globalCompositeOperation = "multiply"; g.fillStyle = `rgb(${m(0)},${m(1)},${m(2)})`; g.fillRect(0, 0, w, h);
+    g.globalCompositeOperation = "destination-in"; g.drawImage(img, 0, 0);          // альфа исходника
+    if (haze > 0.003) {
+      g.globalCompositeOperation = "source-atop"; g.globalAlpha = clamp(haze, 0, 1);
+      g.fillStyle = `rgb(${Math.round(fog[0])},${Math.round(fog[1])},${Math.round(fog[2])})`; g.fillRect(0, 0, w, h);
+      g.globalAlpha = 1;
+    }
+    g.globalCompositeOperation = "source-over";
+    return c;
+  }
+  function buildItemThemes(it) {
+    it.timgs = null;
+    const d = it.def;
+    if (bgMode !== "video" || it.kind !== "prop" || !TP[0] || !TP[1]) return;
+    const gr = d.grade || {}, nt = d.night || null, sh = gr.shade;
+    const shade = Array.isArray(sh) ? [+sh[0], +sh[1], +sh[2]] : [sh > 0 ? +sh : 1, sh > 0 ? +sh : 1, sh > 0 ? +sh : 1];
+    const haze = gr.haze > 0 ? +gr.haze : 0, a = TP[0], b = TP[1];
+    const gl = nt && Array.isArray(nt.glow) ? nt.glow : [0, 0, 0], ga = nt && nt.amt > 0 ? nt.amt * b.glowK : 0;
+    const nm = [b.coralMul[0] + gl[0] * ga, b.coralMul[1] + gl[1] * ga, b.coralMul[2] + gl[2] * ga];
+    const day = [], night = [];
+    for (let i = 0; i < it.imgs.length; i++) {
+      const im = it.imgs[i];
+      day.push(im ? themeVariant(im, shade, a.coralMul, a.fog, haze * a.hazeK) : null);
+      night.push(im ? themeVariant(im, shade, nm, b.fog, haze * b.hazeK) : null);
+    }
+    it.timgs = [day, night];
+  }
+  // предмет на контекст g — вариантом темы (в переходе — оба, ночной поверх с весом k)
+  function drawItem(g, it, sc, ox, oy) {
+    const T = it.timgs, k = TH.k;
+    if (!T) { drawOps(g, it, false, sc, ox, oy); return; }
+    const a0 = g.globalAlpha;
+    if (k < 0.999) drawOps(g, it, false, sc, ox, oy, T[0]);
+    if (k > 0.001) { g.globalAlpha = a0 * (k < 0.999 ? k : 1); drawOps(g, it, false, sc, ox, oy, T[1]); g.globalAlpha = a0; }
+  }
   const scSettled = () => scPending === 0;
   const gridOk = (g) => (Array.isArray(g) && g.length >= 2 && g.every((r) => typeof r === "string" && r.length === g.length) ? g : null);
 
@@ -3468,10 +3754,10 @@
   }
   // проиграть операции на контекст g: масштаб sc (device px на CSS px), начало (ox, oy) в CSS px;
   // useCore — альфа «сердцевины» вместо полной картинки (патчи при вычитании)
-  function drawOps(g, it, useCore, sc, ox, oy) {
-    const q = it.ops;
+  function drawOps(g, it, useCore, sc, ox, oy, set) {
+    const q = it.ops, imgs = set || it.imgs;
     for (let i = 0; i < it.nOps; i++) {
-      const o = i * SC_OPF, im = useCore && it.core ? it.core : it.imgs[q[o]];
+      const o = i * SC_OPF, im = useCore && it.core ? it.core : imgs[q[o]];
       if (!im) continue;
       g.setTransform(sc * q[o + 5], sc * q[o + 6], sc * q[o + 7], sc * q[o + 8], sc * (q[o + 9] - ox), sc * (q[o + 10] - oy));
       g.drawImage(im, q[o + 1], q[o + 2], q[o + 3], q[o + 4], q[o + 1], q[o + 2], q[o + 3], q[o + 4]);
@@ -3559,7 +3845,8 @@
   const CRAB = { it: null, bx: 0.4, by: 0.968, z: 1, st: CR_IDLE, t0: 0, dur: 0, fx: 0, fy: 0, tx: 0, ty: 0, after: CR_IDLE,
     nextShuf: 0, nextPick: 0, nextRet: 0, hideUntil: 0, moving: false, segEnd: 0, chain: 0, chainAt: 0, legs: 0, shade: 0, tuck: 0,
     pk: { on: false, t0: 0, dur: 1, side: 0, peak: 0, n: 2 }, bob: 0, shuffles: 0, retreats: 0, lastRet: -1e9, hideOcc: [] };
-  const crabZ = (by) => (0.975 - SCENE.camera.horizonBy) / Math.max(0.02, by - SCENE.camera.horizonBy);
+  // z краба — по плоскости дна камеры: z = (floorBy − horizonBy)/(by − horizonBy)
+  const crabZ = (by) => ((SCENE.camera.floorBy != null ? +SCENE.camera.floorBy : 0.975) - SCENE.camera.horizonBy) / Math.max(0.02, by - SCENE.camera.horizonBy);
   function crabInit(it) {
     const a = it.def.anim, C = CRAB;
     C.it = it; C.bx = it.def.bx; C.by = it.def.byBottom; C.home = it.def.byBottom; C.z = crabZ(C.by); C.st = CR_IDLE;
@@ -3737,7 +4024,7 @@
       g.setTransform(RS, 0, 0, RS, -RS * ox, -RS * oy); g.globalAlpha = clamp((s.a || 0.35) * (1 - 0.6 * C.shade), 0, 1);
       g.drawImage(propShadowSprite, scx - sw / 2, scy - sh / 2, sw, sh); g.globalAlpha = 1;
     }
-    drawOps(g, it, false, RS, ox, oy);
+    drawItem(g, it, RS, ox, oy);
     if (C.tuck > 0.005) {
       g.globalCompositeOperation = "destination-out"; g.globalAlpha = clamp(C.tuck, 0, 1);
       for (let i = 0; i < C.hideOcc.length; i++) {
@@ -3770,7 +4057,7 @@
         ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
       }
       if (tucked) drawCrabTucked(it);
-      else drawOps(ctx, it, false, RS, 0, 0);
+      else drawItem(ctx, it, RS, 0, 0);
     }
     ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
     CNT.e4Scene += CNT.drawImage - d0;
@@ -3949,7 +4236,7 @@
   function drawDyn(kind, obj, part, t) {
     if (kind === RK_PROP) {                                 // предмет сцены на своём z (передний слой актинии)
       const d0 = CNT.drawImage;
-      drawOps(ctx, obj, false, RS, OX, OY); baseT();
+      drawItem(ctx, obj, RS, OX, OY); baseT();
       if (llOn && llHits(obj.x0, obj.y0, obj.x1, obj.y1)) {  // свет рыб под ним — стереть
         llCtx.globalCompositeOperation = "destination-out"; drawOps(llCtx, obj, false, llQ, 0, 0);
         llCtx.globalCompositeOperation = "source-over"; llCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -4408,27 +4695,6 @@
     ctx.fillStyle = hz; ctx.fillRect(0, floorY - H * 0.18, W, H * 0.18);
   }
 
-  // bright caustic band just under the water surface (as in the original)
-  function drawSurface(t) {
-    const bandH = H * 0.13;
-    const g = ctx.createLinearGradient(0, 0, 0, bandH);
-    g.addColorStop(0, "rgba(205,244,255,0.24)"); g.addColorStop(1, "rgba(205,244,255,0)");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, bandH);
-    ctx.save();
-    ctx.globalCompositeOperation = "lighter";
-    ctx.strokeStyle = "rgba(225,250,255,0.10)"; ctx.lineWidth = 2;
-    for (let i = 0; i < 4; i++) {
-      ctx.beginPath();
-      const yb = bandH * 0.28 + i * 7;
-      for (let x = 0; x <= W; x += 24) {
-        const y = yb + Math.sin(x * 0.02 + t * 0.8 + i) * 4 + Math.sin(x * 0.05 - t * 1.1) * 2;
-        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
   // лучи — полосы светодиодов этапа E1 (drawStreaks): и для фото, и для процедурного рифа
 
   function drawSand() {
@@ -4449,20 +4715,34 @@
     for (let i = 0; i < 46; i++) { const x = (i * 197.3) % W, y = floorY + 14 + ((i * 53.7) % (H - floorY - 16)); ctx.fillRect(x, y, 1.4, 1.4); }
   }
 
-  // виньетка — кэш в 1/4 разрешения (строится в resize), на кадр — один drawImage
+  // виньетка — кэши в 1/4 разрешения по темам (строятся в resize и при смене сцены), на кадр — один
+  // drawImage (в переходе тем — два, с весами); цвет и сила — TP[i].vignette [r, g, b, a]
   let vignetteCanvas = null;
+  const VIG = [null, null];
   function buildVignette() {
-    const c = vignetteCanvas || document.createElement("canvas");
     const vw = Math.max(16, Math.round(W / 4)), vh = Math.max(16, Math.round(H / 4));
-    c.width = vw; c.height = vh;
-    const g = c.getContext("2d");
-    g.setTransform(vw / W, 0, 0, vh / H, 0, 0);
-    const gr = g.createRadialGradient(W * 0.5, H * 0.44, H * 0.30, W * 0.5, H * 0.5, H * 0.92);
-    gr.addColorStop(0, "rgba(3,28,52,0)"); gr.addColorStop(1, "rgba(3,28,52,0.38)");
-    g.fillStyle = gr; g.fillRect(0, 0, W, H);
-    vignetteCanvas = c;
+    if (!TP[0]) themeParams();
+    for (let i = 0; i < 2; i++) {
+      const c = VIG[i] || document.createElement("canvas"), v = TP[i].vignette;
+      c.width = vw; c.height = vh;
+      const g = c.getContext("2d");
+      g.setTransform(vw / W, 0, 0, vh / H, 0, 0);
+      const gr = g.createRadialGradient(W * 0.5, H * 0.44, H * 0.30, W * 0.5, H * 0.5, H * 0.92);
+      const col = `${Math.round(v[0])},${Math.round(v[1])},${Math.round(v[2])}`;
+      gr.addColorStop(0, `rgba(${col},0)`); gr.addColorStop(1, `rgba(${col},${clamp(v[3], 0, 1)})`);
+      g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      VIG[i] = c;
+    }
+    vignetteCanvas = VIG[0];
+    VIG.w = W; VIG.h = H; VIG.scene = SCENE;
   }
-  function drawVignette() { ctx.drawImage(vignetteCanvas, 0, 0, W, H); }
+  function drawVignette() {
+    if (VIG.scene !== SCENE || VIG.w !== W || VIG.h !== H) buildVignette();   // сцена (темы) сменилась
+    const k = TH.k;                                   // затемнение краёв — смесь двух виньеток
+    if (k < 0.999) { ctx.globalAlpha = k > 0.001 ? 1 - k : 1; ctx.drawImage(VIG[0], 0, 0, W, H); }
+    if (k > 0.001) { ctx.globalAlpha = k < 0.999 ? k : 1; ctx.drawImage(VIG[1], 0, 0, W, H); }
+    ctx.globalAlpha = 1;
+  }
 
   /* ============================================================
      ENTITY POOLS + RESIZE + LOOP
@@ -4476,7 +4756,7 @@
     canvas.width = Math.max(1, Math.floor(W * RS)); canvas.height = Math.max(1, Math.floor(H * RS));
     canvas.style.width = W + "px"; canvas.style.height = H + "px";
     ctx.setTransform(RS, 0, 0, RS, 0, 0);
-    layoutBackdrop(); layoutCamera(); buildBandCache(); buildVignette(); buildLightCaches(); buildFishLight(); buildDeepRuns();
+    layoutBackdrop(); layoutCamera(); buildVignette(); buildLightCaches(); buildFishLight(); buildDeepRuns();
   }
   function resize() {
     const oW = W, oH = H, oSS = W > 0 ? sizeScale() : 1;
@@ -4516,11 +4796,12 @@
   /* ---------- симуляция и кадр ----------
      simT — часы симуляции (с): двигают и физику, и фазы анимаций (хвосты, лучи, планктон),
      поэтому прогон по шагам детерминирован (?test=1&seed=N). */
-  let simT = 0;
+  let simT = 0, stepQ = Promise.resolve();          // stepQ — очередь шагов теста с видео (__aq.step)
   function simulate(dt) {
     simT += dt;
     if (paused) return;
     const t = simT;
+    themeStep(dt);                                   // переход между темами (вес ночи TH.k)
     updateLight(t);                                  // лучи этого момента (lightAt доступен симуляции)
     updateCrab(t, dt);                               // краб: стоит/ковыряет, перебежки, уход в тень (E4)
     updateFishAll(dt, t);                            // режиссёр, кормушка, поведение, курс, геометрия тел (E3)
@@ -4537,27 +4818,22 @@
   const prof = (k) => { if (COUNTING) { const n = performance.now(); CNT[k] += n - profT; profT = n; } };
   function render(t) {
     if (COUNTING) profT = performance.now();
+    themeCaches(false);                              // ступени перекраски кэшей темы (обычно — ничего)
     updateLight(t);
     SCN.frame++;
     poseScene(t);
     if (bgReady) {
-      drawBackdrop();
+      drawBackdrop();                                // кадр видео/постера (в переходе тем — оба)
       prof("pBack");
       drawSceneLayer(t);                             // до каустики: свет ложится на предметы, как на фото
+      if (bgMode === "photo") nightTint(TH.k);       // фото-сцена ночью — общий multiply кадра с её патчами и реквизитом
       prof("pScene");
       if (LAYERS.caustics) drawCaustics(t);
       prof("pCaus");
       if (LAYERS.glow) drawFloorGlow();
       if (LAYERS.shadows) drawFishShadows();
-      if (LAYERS.band) drawSurfaceBand(t);
-      else if (bandCanvas) {
-        const bRS = bandCanvas.width / (W + 2 * BAND_MX);
-        ctx.drawImage(bandCanvas, BAND_MX * bRS, 0, W * bRS, bandCanvas.height, 0, 0, W, BGX.bandH);
-      }
-      if (LAYERS.reflections) drawFishReflections();
     } else {
-      drawWater();
-      drawSurface(t);
+      drawWater();                                   // процедурный риф: без полосы поверхности, свет сверху
       drawBackReef();
       drawSand();
       if (LAYERS.caustics) drawCaustics(t);          // процедурный риф: каустика только на песке
@@ -4565,6 +4841,7 @@
       drawRubble();
       drawKelp(t);
       drawReef(t);
+      nightTint(TH.k);                               // ночь — королевский синий поверх
     }
     drawParticles(t, false);
     prof("pBand");
@@ -4607,14 +4884,23 @@
   }
 
   // тело кадра: шаг симуляции + (по желанию) отрисовка; JS-время — performance.now() вокруг всего тела
-  function frameBody(dt, doRender) {
-    if (!doRender) { simulate(dt); return; }
+  // (тест с видео: между шагом и отрисовкой ждём перемотку видео — она в JS-время кадра не входит)
+  let fbMs = 0;
+  function frameSim(dt) {
     let t0 = 0;
     if (COUNTING) { for (let i = 0; i < CNT_KEYS.length; i++) CNT[CNT_KEYS[i]] = 0; t0 = performance.now(); }
     simulate(dt);
+    if (COUNTING) fbMs = performance.now() - t0;
+  }
+  function frameDraw() {
+    const t0 = COUNTING ? performance.now() : 0;
     render(simT);
-    if (COUNTING) recordStats(performance.now() - t0);
+    if (COUNTING) recordStats(fbMs + performance.now() - t0);
     if (DEBUG) drawDebug();
+  }
+  function frameBody(dt, doRender) {
+    if (!doRender) { simulate(dt); return; }
+    frameSim(dt); frameDraw();
   }
   // перерисовать текущее состояние без шага (тест-режим: resize, загрузка задника)
   function renderNow() { if (W > 0 && vignetteCanvas) { render(simT); if (DEBUG) drawDebug(); } }
@@ -4639,6 +4925,12 @@
     const C = CRAB, st = ["стоит", "перебежка", "идёт", "в тени"][C.st] || "?";
     return `сцена E4: предметов ${SCN.nOrd}/${SCN.items.length} (слой ${SCN.nLayer})  групп вычитания ${SCN.groups} (элементов ${SCN.members})  ` +
       `drawImage слой/группы ${CNT.e4Scene}/${CNT.e4Group}` + (C.it ? `  |  краб: ${st} bx ${C.bx.toFixed(3)} by ${C.by.toFixed(3)} z ${C.z.toFixed(2)} тень ${C.shade.toFixed(2)}` : "");
+  });
+  DEBUG_HOOKS.push(() => {                          // V4a: тема и задник
+    const src = (n) => { const S = BGS[n]; return `${n}: постер ${["—", "…", "ок", "нет"][S.pState]} видео ${["—", "…", "ок", "нет"][S.vState]}` +
+      (S.vid ? ` t ${S.vid.currentTime.toFixed(2)}${S.vid.paused ? " пауза" : ""}${S.aligned === true ? "" : " выравн."}` : ""); };
+    return `тема: ${TH.mode} → ${THEMES[TH.target]}  вес ночи ${TH.k.toFixed(2)}  задник: ${bgMode || "процедурный"}` +
+      (bgMode === "video" ? `  |  ${src("day")}  |  ${src("night")}` : "");
   });
   function drawDebug() {
     const L = STAT.last, q = QUALITY;
@@ -4669,9 +4961,8 @@
   function drawDebugGeometry() {
     const S = SCENE;
     ctx.lineWidth = 1.5;
-    // линия воды и горизонт (точка схода)
+    // горизонт (точка схода; линии воды нет — поверхности в кадре нет)
     ctx.strokeStyle = "rgba(120,220,255,0.9)";
-    ctx.beginPath(); ctx.moveTo(0, BGX.bandH); ctx.lineTo(W, BGX.bandH); ctx.stroke();
     const hy = bgY(S.camera.horizonBy);
     ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.moveTo(0, hy); ctx.lineTo(W, hy); ctx.stroke();
     // safeX — то, что видно на любом мониторе
@@ -4720,7 +5011,7 @@
     let raw = (now - last) / 1000; last = now;
     if (raw > 0.1) raw = 0.1; else if (raw < 0) raw = 0;
     // app told us the display is off/occluded, or the view is hidden -> stop work
-    if (POWER === "paused" || document.hidden) { lastShown = 0; return; }
+    if (POWER === "paused" || document.hidden) { lastShown = 0; syncVideos(); return; }
     // battery saver: coalesce to ~30 fps but keep motion time-correct
     // (допуск 15%: дрожание vsync не должно ронять 30 к/с в 20)
     acc += raw;
@@ -4730,6 +5021,7 @@
     acc = 0;
     if (lastShown && GOV_ON) govSample(now - lastShown);
     lastShown = now;
+    syncVideos();                                    // видео тем: загрузка/освобождение, play/pause (дёшево)
     frameBody(dt, true);
   }
 
@@ -4739,13 +5031,36 @@
      setQuality(level), ready(). Счётчики в stats() — только при ?test=1 или ?debug=1. */
   window.__aq = {
     version: 1, seed: SEED, test: TEST,
-    ready: () => bgSettled && maskSettled && scSettled() && PACK.every((p) => !(p.image && p.count > 0) || p.ready || p.failed),
+    ready: () => bgSettled && maskSettled && scSettled() && videoSettled() && (bgMode !== "video" || !TEST || (BGS.day.pState >= 2 && BGS.night.pState >= 2)) &&
+      PACK.every((p) => !(p.image && p.count > 0) || p.ready || p.failed),
+    // тест с видео (?bgvideo=webm|mp4) и отрисовкой — Promise: перед каждым рисуемым шагом видео перематывается
+    // на кадр simT (детерминированно); вызовы выстраиваются в очередь. Иначе — синхронно, возвращает simT.
     step(dt, n, opts) {
       dt = dt > 0 ? +dt : 1 / 30; n = n > 0 ? n | 0 : 1;
       const mode = opts && opts.render !== undefined ? opts.render : true;
-      for (let i = 0; i < n; i++) frameBody(dt, mode === true || (mode === "last" && i === n - 1));
-      return simT;
+      if (!VTEST || bgMode !== "video" || mode === false) {
+        for (let i = 0; i < n; i++) frameBody(dt, mode === true || (mode === "last" && i === n - 1));
+        return simT;
+      }
+      const run = async () => {
+        for (let i = 0; i < n; i++) {
+          if (!(mode === true || (mode === "last" && i === n - 1))) { frameBody(dt, false); continue; }
+          frameSim(dt);
+          await seekVideosTo(simT);
+          frameDraw();
+        }
+        return simT;
+      };
+      const p = stepQ.then(run, run);
+      stepQ = p.catch(() => {});                     // упавший шаг не останавливает очередь
+      return p;
     },
+    // темы: setTheme('day'|'night'|'auto', instant) — как aquariumSetTheme, instant — без перехода (тесты)
+    setTheme(m, instant) { const r = setThemeMode(m, !!instant); if (VTEST && instant) return seekVideosTo(simT).then(() => { renderNow(); return r; }); if (TEST && instant) renderNow(); return r; },
+    theme() { return { mode: TH.mode, target: THEMES[TH.target], p: TH.p, k: TH.k, dark: systemDark(), bgMode, bgSrc,
+      sources: THEMES.map((n) => { const S = BGS[n]; return { theme: n, poster: S.pState, video: S.vState, aligned: S.aligned, frame: S.frame,
+        t: S.vid ? S.vid.currentTime : null, playing: S.vid ? !S.vid.paused : false, size: [S.vw, S.vh] }; }),
+      tv: JSON.parse(JSON.stringify(TV)) }; },
     setTime(t) { simT = +t || 0; return simT; },
     render() { renderNow(); },
     resetStats() { resetStats(); },
@@ -4759,6 +5074,7 @@
         css: { w: W, h: H }, dpr: DPR, RS, quality: Object.assign({}, QUALITY),
         governor: { p90: GOV.p90, fps: GOV.fps, bad: GOV.bad, good: GOV.good, recover: GOV.recover },
         hasFilter: HAS_FILTER, photo: bgReady, sceneFromFile: SCENE_FROM_FILE, power: POWER,
+        bgMode, theme: THEMES[TH.target], themeK: TH.k, video: bgMode === "video" ? THEMES.map((n) => BGS[n].vState) : null,
         fish: fishes.length, bubbles: bubN, flakes: flkN, simT, seed: SEED,
         particles: Math.round(PT_N * QUALITY.particles), layers: Object.assign({}, LAYERS),
         light: { streaks: stN, kBuffer: [kW, kH], kScale: kS, mask: maskImg ? "png" : "procedural" },
@@ -4875,7 +5191,7 @@
   }
 
   window.addEventListener("resize", resize);
-  document.addEventListener("visibilitychange", () => { last = performance.now(); lastShown = 0; govReset(); });
+  document.addEventListener("visibilitychange", () => { last = performance.now(); lastShown = 0; govReset(); syncVideos(); });
 
   if (WALLPAPER) {
     hint.style.display = "none";
@@ -4900,7 +5216,7 @@
   buildBubbleSources();
   seedTank(targetFishCount());
   FEEDER.nextAuto = rand(150, 270);                   // первая автокормёжка (обои) — через 2.5–4.5 мин, дальше раз в 6–10
-  loadBackdrop(0);
+  loadBackdrop();                                     // видео-сцена (постер темы → видео) | фото | процедурный риф
   showHint();
   // ?test=1: от rAF ничего не идёт — кадры только по window.__aq.step()
   if (!TEST) requestAnimationFrame(frame);

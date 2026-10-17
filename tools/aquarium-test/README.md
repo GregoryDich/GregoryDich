@@ -209,3 +209,31 @@ node gates_v2.js --out /tmp/x/gates_v2.json [--cases "1512x982@2,…"] [--times 
 Скрипты сборки масок, глубины, маски каустики, превью переднего рифа и генерации `scene.js` — `scene_v2/`
 (порядок — `scene_v2/README.md`). `requestfailed … .mp4 net::ERR_ABORTED` — нормальная отмена первого запроса
 `<video>` (перезапрос диапазонами), гейт её не считает ошибкой.
+
+## Этап V4a «видео-задник, темы, свет, маски»: флаги и API
+
+Флаги движка (вдобавок к таблице выше):
+
+| Флаг | Что делает |
+|---|---|
+| `?theme=day\|night` | тема принудительно (иначе — `prefers-color-scheme` системы; в headless — день) |
+| `?bgvideo=webm` | только с `?test=1`: задник — тестовые копии VP9 `tools/aquarium-test/media/reef_{day,night}.webm` (1920×1080, вне бандла; пересборка — `make_media.sh … --no-mp4`) |
+| `?bgvideo=intra` | только с `?test=1`: `media/reef_{day,night}_i.mp4` — H.264 1920×1080, ВСЕ кадры ключевые (перемотка на соседний кадр — один декод: клипы и `stats.js` быстрые). Сборка: `ffmpeg -i ../../aquarium/assets/reef_day.mp4 -vf scale=1920:1080:flags=lanczos -c:v libx264 -preset veryfast -crf 18 -g 1 -keyint_min 1 -sc_threshold 0 -pix_fmt yuv420p -an media/reef_day_i.mp4` (≈110 МБ, не в git) |
+| `?bgvideo=mp4` | только с `?test=1`: отгружаемые MP4 (один ключевой кадр — перемотка дорогая: годится для кадров, не для клипов) |
+| `?bgvideo=0` | без видео и вне теста (постер) |
+
+Тест-режим без `bgvideo` рисует ПОСТЕРЫ (кадр 0 петли) — синхронно, все прежние скрипты работают как раньше.
+С `bgvideo` видео стоит на паузе и перед каждым рисуемым шагом перематывается на кадр `floor(simT·29.97) mod 600`;
+тогда `__aq.step()` возвращает Promise — `still.js`, `clip.js`, `stats.js` (через `L.stepFrames`) его ждут (`await`).
+Время перемотки в `jsMs` не входит. `requestfailed … .webm net::ERR_ABORTED` харнесс пишет в warnings (перезапрос медиа).
+
+```sh
+node still.js --out /tmp/x/day.png --steps 300 --q "bgvideo=webm"                 # день, кадр видео t = 10 с
+node still.js --out /tmp/x/night.png --steps 300 --q "bgvideo=mp4&theme=night"    # ночь, отгружаемый MP4
+node clip.js --out /tmp/x/fade.mp4 --frames 150 --format jpeg --q "bgvideo=webm" --at "15:__aq.setTheme('night')"
+node stats.js --q "bgvideo=webm" --out /tmp/x/stats.json                          # 360 перемоток — ≈5–8 мин
+```
+
+`window.__aq` (V4a): `theme()` → `{mode, target, p, k (вес ночи), dark, bgMode, bgSrc, sources [{theme, poster, video, aligned,
+frame, t, playing, size}], tv}`; `setTheme('day'|'night'|'auto', instant)` (как `window.aquariumSetTheme`; `instant` — без
+перехода). `stats()` — плюс `bgMode` (`video`|`photo`|null), `theme`, `themeK`, `video` (состояния видео тем).
