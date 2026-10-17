@@ -1,15 +1,18 @@
 // P1.1: HUD, снимок диагностики, зонд производительности, бюджет второго экрана, метки загрузки и видео-журнал.
-//   node perf.js [--w 960 --h 600 --dpr 2 --abdpr 1 --seed 1] [--out perf.json] [--shots DIR] [--full] [--no-live] [--no-ab]
+//   node perf.js [--w 960 --h 600 --dpr 2] [--abw 1512 --abh 982 --abdpr 2] [--seed 1] [--out perf.json] [--shots DIR] [--full]
+//                [--no-live] [--no-ab] [--configs asBefore,noRays]   (--configs — только эти конфигурации во второй части; отладка)
 // Две части (обе без ?test=1 — как в приложении):
 //  1) «живая» (настоящий rAF и видео MP4): window.__AQ_BOOT как у приложения → HUD с запуска; aquariumPerfSnapshot()
 //     (валидный JSON < 6 КБ, нужные поля, метка загрузки); оборот петли видео (перемотка к концу → событие vloop с
 //     длительностью перемотки и пропуском кадров по rVFC); сторож видео (currentTime «застыл» → пересоздание и
 //     продолжение с того же времени, событие vstall); aquariumSetBudget({mp: 2, fps: 30}) и сброс; короткий зонд
 //     (--full — полный ≈45 с) на настоящих кадрах: все конфигурации, после — всё как было.
-//  2) «A/B» (rAF подменён, синтетические 16.67 мс, ?bgvideo=0, simT = 5 до постера — детерминированно): страница A —
-//     прогрев, короткий зонд, ещё кадры; страница B (дважды) — столько же кадров без зонда. Кадр A против B — в пределах
-//     шума B против B (тот же движок, те же шаги), состояние после зонда (слои, бюджет, RS, буфер, ритм, разнесение
-//     кэшей, регулятор) — как до него.
+//  2) «после зонда — как было» (rAF подменён, синтетические 16.67 мс, ?bgvideo=0): прогрев, симуляция на паузе
+//     (__aq.pause — рыбы стоят, кадры рисуются), кадр «с нуля» в момент T0 (__aq.invalidate + render), короткий зонд
+//     (все 11 конфигураций рисуются, часы идут), снова T0 и кадр «с нуля»: кадры совпадают, состояние (слои, бюджет, RS,
+//     буфер, ритм, разнесение кэшей, регулятор) — как до зонда; потом симуляция идёт дальше.
+//     Сравнивать с отдельной страницей без зонда нельзя: поведение рыб читает позы кораллов из кэша рифа, и другой
+//     ритм его пересборок во время зонда уводит траектории (хаос, а не «след» зонда).
 // Печатает JSON {live, ab, gates, allPass}; код 2, если гейт не прошёл или были ошибки страницы.
 'use strict';
 const fs = require('fs');
@@ -17,7 +20,7 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 const L = require('./lib');
 
-const o = L.parseArgs(process.argv.slice(2), { w: 960, h: 600, dpr: 2, abdpr: 1, seed: 1 });
+const o = L.parseArgs(process.argv.slice(2), { w: 960, h: 600, dpr: 2, abw: 1512, abh: 982, abdpr: 2, seed: 1 });
 const SHOTS = L.ensureDir(path.resolve(String(o.shots || path.join(__dirname, 'out', 'perf'))));
 
 // приложение: document-start WKUserScript (WallpaperWindow.bootSource)
@@ -117,34 +120,47 @@ async function livePart(env) {
   return r;
 }
 
-async function abPage(env, { probe, k0, k1, k2, shot }) {
+// одна страница: прогрев → симуляция на паузе → кадр A0 «с нуля» в момент T0 → короткий зонд (кадры рисуются во всех
+// конфигурациях, часы идут) → снова T0 → кадр A1 «с нуля»; A0 и A1 должны совпасть (зонд ничего не оставил), состояние — тоже
+async function restorePage(env, { k0, shot0, shot1 }) {
   const { page, cap } = await L.newPage(env, { inject: { fn: injectMock } });
   await page.goto(env.url, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__aq && window.__aq.ready(), { timeout: 60000, polling: 100 });
-  const res = await page.evaluate(async (probe, k0, k1, k2) => {
-    let now = performance.now(), frames = 0;
-    const pump = async (n) => { for (let i = 0; i < n; i++) { now += 1000 / 60; const cb = window.__bench.cb; window.__bench.cb = null; cb(now); frames++; if (i % 8 === 7) await 0; } };
-    await pump(k0);
-    const s0 = window.__aq.perfState();
-    let out = null, n1 = 0;
-    if (probe) {
-      let done = null;
-      window.aquariumPerfProbe({ warmMs: 100, measureMs: 200 }).then((r) => { done = r; });
-      while (!done && n1 < 5000) { await pump(1); n1++; await 0; await 0; }
-      out = done;
-    } else { await pump(k1); n1 = k1; }
-    const s1 = window.__aq.perfState();
-    await pump(k2);
-    return { s0, s1, probe: out, n1, frames, simT: window.__aq.stats().simT };
-  }, probe, k0, k1, k2);
-  await page.screenshot({ path: shot });
-  res.errors = cap.errors;
+  await page.evaluate(() => { window.__now = performance.now(); window.__pump = async (n) => { for (let i = 0; i < n; i++) { window.__now += 1000 / 60; const cb = window.__bench.cb; window.__bench.cb = null; cb(window.__now); if (i % 8 === 7) await 0; } }; });
+  const pre = await page.evaluate(async (k0) => {
+    await window.__pump(k0);
+    // одна пересборка буфера заранее: первая после запуска меняет каустику на ≤ 22/255 (так и в HEAD — ступень регулятора
+    // RS ×0.85 туда и обратно); эталон — состояние «после пересборки», как и после зонда
+    const lv = window.__aq.perfState().level;
+    window.__aq.setQuality(4); await window.__pump(4); window.__aq.setQuality(lv); await window.__pump(4);
+    window.__aq.pause(true);
+    await window.__pump(3);
+    const T0 = window.__aq.stats().simT;
+    window.__aq.invalidate(); window.__aq.render();
+    return { T0, state: window.__aq.perfState() };
+  }, k0);
+  await page.screenshot({ path: shot0 });
+  const mid = await page.evaluate(async (T0, configs) => {
+    let done = null, n = 0;
+    window.aquariumPerfProbe({ warmMs: 100, measureMs: 200, configs }).then((r) => { done = r; });
+    while (!done && n < 5000) { await window.__pump(1); n++; await 0; await 0; }
+    const state = window.__aq.perfState();
+    window.__aq.setTime(T0); window.__aq.invalidate(); window.__aq.render();
+    return { probe: done, frames: n, state };
+  }, pre.T0, o.configs ? String(o.configs).split(',') : undefined);
+  await page.screenshot({ path: shot1 });
+  const post = await page.evaluate(async () => {           // дальше живёт как обычно
+    window.__aq.pause(false);
+    const f0 = window.__aq.perfState().frames;
+    await window.__pump(30);
+    return { framesAfter: window.__aq.perfState().frames - f0, snapBytes: JSON.stringify(window.aquariumPerfSnapshot()).length };
+  });
   await page.close();
-  return res;
+  return { T0: pre.T0, before: pre.state, after: mid.state, probe: mid.probe, probeFrames: mid.frames, post, errors: cap.errors };
 }
 
 (async () => {
-  const out = { viewport: { w: o.w, h: o.h, dpr: o.dpr, abDpr: o.abdpr }, gates: {} };
+  const out = { viewport: { live: [o.w, o.h, o.dpr], restore: [o.abw, o.abh, o.abdpr] }, gates: {} };
   const G = out.gates;
   // 1) живая часть
   if (o.live !== false) {
@@ -171,24 +187,21 @@ async function abPage(env, { probe, k0, k1, k2, shot }) {
       G.probeLiveRestores = !!(p && JSON.stringify(Object.assign({}, p.s0, { frames: 0 })) === JSON.stringify(Object.assign({}, p.s1, { frames: 0 })));
     } finally { await L.finish(env); }
   }
-  // 2) A/B: зонд не оставляет следов
+  // 2) зонд не оставляет следов: тот же момент «с нуля» до и после зонда
   if (o.ab !== false) {
-    const env = await L.openEngine(Object.assign({}, o, { dpr: o.abdpr, q: 'bgvideo=0' + (o.q ? '&' + o.q : '') }), { test: false });
+    const env = await L.openEngine(Object.assign({}, o, { w: o.abw, h: o.abh, dpr: o.abdpr, q: 'bgvideo=0' + (o.q ? '&' + o.q : '') }), { test: false });
     try {
-      const k0 = 60, k2 = 45;
-      const A = await abPage(env, { probe: true, k0, k1: 0, k2, shot: path.join(SHOTS, 'ab_probe.png') });
-      const B1 = await abPage(env, { probe: false, k0, k1: A.n1, k2, shot: path.join(SHOTS, 'ab_plain1.png') });
-      const B2 = await abPage(env, { probe: false, k0, k1: A.n1, k2, shot: path.join(SHOTS, 'ab_plain2.png') });
-      const dAB = imgDiff(path.join(SHOTS, 'ab_probe.png'), path.join(SHOTS, 'ab_plain1.png'));
-      const dBB = imgDiff(path.join(SHOTS, 'ab_plain1.png'), path.join(SHOTS, 'ab_plain2.png'));
-      out.ab = { probe: A.probe, framesProbe: A.n1, simT: [A.simT, B1.simT, B2.simT], stateBefore: A.s0, stateAfter: A.s1, diffProbeVsPlain: dAB, diffPlainVsPlain: dBB,
-        errors: [].concat(A.errors, B1.errors, B2.errors) };
-      G.abNoErrors = out.ab.errors.length === 0;
-      G.abAllConfigs = !!(A.probe && !A.probe.aborted && A.probe.configs.length === 11);
-      G.abStateRestored = JSON.stringify(Object.assign({}, A.s0, { frames: 0 })) === JSON.stringify(Object.assign({}, A.s1, { frames: 0 }));
-      G.abSameSimT = A.simT === B1.simT;
-      // кадр после зонда — как без зонда, в пределах шума двух одинаковых прогонов (и не хуже 40 дБ)
-      G.abFrameWithinNoise = dAB.psnr === Infinity || (dAB.psnr >= Math.min(40, dBB.psnr === Infinity ? 40 : dBB.psnr - 3));
+      const s0 = path.join(SHOTS, 'restore_before.png'), s1 = path.join(SHOTS, 'restore_after.png');
+      const R = await restorePage(env, { k0: 60, shot0: s0, shot1: s1 });
+      const d = imgDiff(s0, s1);
+      out.ab = Object.assign(R, { diff: d });
+      G.abNoErrors = R.errors.length === 0;
+      G.abAllConfigs = !!(R.probe && !R.probe.aborted && R.probe.configs.length === (o.configs ? String(o.configs).split(',').length : 11) && R.probe.configs.every((c) => c.frames > 0));
+      G.abStateRestored = JSON.stringify(Object.assign({}, R.before, { frames: 0 })) === JSON.stringify(Object.assign({}, R.after, { frames: 0 }));
+      // тот же кадр: допуск — шум самого метода (скачок часов назад: лучи/частицы чуть иначе; без зонда ≈ 1000 px, ≤ 4/255)
+      G.abFrameIdentical = d.differ === 0 || d.psnr >= 60;
+      G.abRunsAfter = R.post.framesAfter >= 28;              // первый интервал после зонда не считается
+      G.abRsExercised = R.probe ? new Set(R.probe.configs.map((c) => c.rs)).size > 1 : false;   // зонд менял буфер и вернул его
     } finally { await L.finish(env); }
   }
   out.allPass = Object.values(G).every(Boolean);

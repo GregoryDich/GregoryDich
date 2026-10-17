@@ -262,12 +262,16 @@
     } catch (e) { return "?"; }
   })();
   const r1 = (x) => Math.round((+x || 0) * 10) / 10, r2 = (x) => Math.round((+x || 0) * 100) / 100, r3 = (x) => Math.round((+x || 0) * 1000) / 1000;
-  const EV_MERGE = { long: 1, vgap: 1 };             // частые события подряд (≤ 10 с) — одной записью
+  const EV_MERGE = { long: 1, vgap: 1 };             // частые события (среди 4 последних, ≤ 10 с) — одной записью: n, t2, max ms
   function perfEvent(e, d) {
     const P = PERF, t = r1(performance.now() / 1000), L = P.ev.length;
-    if (EV_MERGE[e] && P.en) {
-      const p = P.ev[(P.ei + L - 1) % L];
-      if (p && p.e === e && t - (p.t2 || p.t) < 10) { p.n = (p.n || 1) + 1; p.t2 = t; if (d && d.ms > p.ms) p.ms = d.ms; return; }
+    if (EV_MERGE[e]) {
+      for (let j = 1; j <= Math.min(4, P.en); j++) {
+        const p = P.ev[(P.ei + L - j) % L];
+        if (p.e !== e || (d && p.th !== d.th) || t - (p.t2 || p.t) >= 10) continue;
+        p.n = (p.n || 1) + 1; p.t2 = t; if (d && d.ms > p.ms) p.ms = d.ms;
+        return;
+      }
     }
     const o = { t, e };
     if (d) for (const k in d) o[k] = d[k];
@@ -478,7 +482,10 @@
     PROBE.warm = ms(opts.warmMs, 1000); PROBE.meas = ms(opts.measureMs, 3000);
     const want = Array.isArray(opts.configs) ? opts.configs : null;
     PROBE.list = want ? PROBE_CONFIGS.filter((c) => want.indexOf(c.name) >= 0) : PROBE_CONFIGS.slice();
-    PROBE.saved = { layers: Object.assign({}, LAYERS), stagger: STAGGER };
+    // масштаб вариантов кораллов и реквизита: «как было» (RS 2) их укрупнит — после зонда вернуть прежние
+    const tks = [];
+    for (let i = 0; i < SCN.items.length; i++) { const it = SCN.items[i]; if (it.timgs) tks.push(it, it.tk); }
+    PROBE.saved = { layers: Object.assign({}, LAYERS), stagger: STAGGER, tks };
     PROBE.res = []; PROBE.k = 0; PROBE.phase = 0; PROBE.acc = 0; PROBE.n = 0; PROBE.t0 = performance.now(); PROBE.on = true;
     PROBE.promise = new Promise((res) => { PROBE.resolve = res; });
     const p = PROBE.promise;
@@ -507,6 +514,11 @@
     if (P.timer) { clearTimeout(P.timer); P.timer = 0; }
     P.on = false;
     probeApply(null);                                // слои, бюджет, ритм, разнесение кэшей — как было
+    const tks = P.saved.tks;                         // варианты предметов, укрупнённые зондом, — прежнего масштаба
+    for (let i = 0; i < tks.length; i += 2) {
+      const it = tks[i];
+      if (it.timgs && it.tk !== tks[i + 1] && SCN.items.indexOf(it) >= 0) { buildItemThemes(it, tks[i + 1]); RCC.ok = false; RFC.ok = false; it.posed = false; }
+    }
     lastShown = 0; govReset();
     const out = { v: 1, configs: P.res, warmMs: P.warm, measureMs: P.meas, tookMs: Math.round(performance.now() - P.t0), aborted: why || null,
       level: QUALITY.level, power: POWER, fpsTarget: fpsTarget(), vsyncMs: r2(vsyncEst()), css: [W, H], dpr: DPR,
@@ -650,7 +662,7 @@
     vErrN: 0, vErrAt: 0, vRetryAt: 0, wdT: -1, wdAt: 0,
     // P1.1 / restart-investigation: сторож (срабатывания, время продолжения), к/с видео и пропуски по rVFC, петли
     wdN: 0, resumeT: -1, rvfc: false, rvLast: 0, lastMt: 0, rvT0: 0, rvN0: 0, vfps: 0, gapMax: 0,
-    loopN: 0, loopAt: 0, loopSeek: -1, loopGap: -1, loopPend: false };
+    loopN: 0, loopAt: 0, loopSeek: -1, loopGap: -1, loopPend: false, ownSeek: false };
   // V5: ошибка видео — не навсегда (сбой GPU/медиа-процесса после сна, ошибка декода): повтор через 5 с, 30 с,
   // 2 мин, дальше раз в 10 мин; «файла нет» (код 4) — не больше двух повторов, потом остаётся постер
   const VID_BACKOFF = [5, 30, 120, 600];
@@ -742,7 +754,7 @@
       S.vState = 2; S.vw = v.videoWidth || 0; S.vh = v.videoHeight || 0;
       if (S.resumeT >= 0) {                          // сторож пересоздал видео — дальше с того места, где оно встало
         const rt = S.resumeT; S.resumeT = -1;
-        try { if (rt > 0 && rt < (v.duration > 0 && isFinite(v.duration) ? v.duration : VDUR()) - 0.05) v.currentTime = rt; } catch (e) { /* нет перемотки */ }
+        try { if (rt > 0 && rt < (v.duration > 0 && isFinite(v.duration) ? v.duration : VDUR()) - 0.05) { S.ownSeek = true; v.currentTime = rt; } } catch (e) { /* нет перемотки */ }
       }
       if (!VTEST) vWatch(S, v);
       syncVideos(); assetsChanged();
@@ -762,11 +774,11 @@
      показанных кадров вокруг неё по requestVideoFrameCallback (Safari 15.4+); там же к/с видео и пропуски > 150 мс.
      Без rVFC — время по timeupdate, петля — по seeked. Колбэк один на видео (без аллокаций на кадр). */
   function vWatch(S, v) {
-    const dur = () => (v.duration > 0 && isFinite(v.duration) ? v.duration : VDUR());
     const loopEv = () => { perfEvent("vloop", { th: S.name, seekMs: S.loopSeek >= 0 ? r1(S.loopSeek) : null, gapMs: S.rvfc ? r1(S.loopGap) : null }); S.loopSeek = -1; };
-    v.addEventListener("seeking", () => {
+    v.addEventListener("seeking", () => {          // перемотка к началу, которую начали не мы (выравнивание, сторож), — петля
       if (S.vid !== v) return;
-      S.loopAt = S.aligned !== "seeking" && S.lastMt > dur() - 0.6 && v.currentTime < 0.6 ? performance.now() : 0;
+      S.loopAt = !S.ownSeek && v.currentTime < 0.6 ? performance.now() : 0;
+      S.ownSeek = false;
     });
     v.addEventListener("seeked", () => {
       if (S.vid !== v || !S.loopAt) return;
@@ -858,6 +870,7 @@
       syncVideos();
     };
     v.addEventListener("seeked", done);
+    S.ownSeek = true;
     v.currentTime = (o.currentTime + S.lead) % dur;
   }
   // тест-режим с видео: перемотать нужные видео на кадр момента t (Promise)
@@ -4591,7 +4604,7 @@
     g.globalCompositeOperation = "source-over";
     return c;
   }
-  function buildItemThemes(it) {
+  function buildItemThemes(it, tk) {                       // tk — масштаб вариантов (зонд P1.1 возвращает прежний)
     it.timgs = null; it.tset = null;
     const d = it.def;
     if (bgMode !== "video" || (it.kind !== "prop" && it.kind !== "coral") || !TP[0] || !TP[1]) return;
@@ -4604,7 +4617,7 @@
     const nm = [zm[0] + gl[0] * ga, zm[1] + gl[1] * ga, zm[2] + gl[2] * ga];
     // V4b: варианты — ЛЕНИВО, по теме: при загрузке только нужная тема (вдвое меньше памяти и времени старта);
     // вторая — за несколько кадров до перехода (themePrebuild) или в момент первой нужды; после перехода — отпускается
-    it.tset = { shade, haze, nm }; it.tk = itemDevScale(it); it.timgs = [null, null];
+    it.tset = { shade, haze, nm }; it.tk = tk > 0 ? tk : itemDevScale(it); it.timgs = [null, null];
     if (it.kind === "coral") it.core = it.imgs[0];
     themeSet(it, TH.target);
   }
@@ -6356,6 +6369,9 @@
         stagger: STAGGER, paced: !PERF.noPace, noVidCap: NOVIDCAP, probing: PROBE.on, level: QUALITY.level, fpsTarget: fpsTarget(),
         appBudget: APP_BUDGET, appFps: APP_FPS, hud: PERF.hudOn, frames: PERF.frames };
     },
+    // тесты (perf.js): симуляция на паузе (кадры рисуются, рыбы стоят) и сброс кэшей по времени и буферов — кадр «с нуля»
+    pause(on) { paused = !!on; return paused; },
+    invalidate() { themeInvalidate(); dropBuffers(); return true; },
     // E1: свет и вода — для гейтов и следующих этапов
     layers(o) { if (o) for (const k in o) if (k in LAYERS) LAYERS[k] = !!o[k]; return Object.assign({}, LAYERS); },
     lightAt(x, y) { updateLight(simT); return lightAt(x, y); },
