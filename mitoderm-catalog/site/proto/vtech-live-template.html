@@ -126,6 +126,12 @@ details ul { padding: 0 0 18px; list-style: none; color: var(--text); display: g
 .kc-head .badge { letter-spacing: .14em; font-size: 11px; }
 .kc-pic, .kc-live { width: 100%; height: clamp(160px, 26vh, 250px); object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,.55)); }
 .kc-live { display: none; }
+.kc-fig { margin: 0; display: grid; justify-items: center; }
+.kc-call { display: flex; align-items: baseline; gap: 6px; font: 400 13px/1.2 var(--body); color: var(--gold-soft); position: relative; }
+.kc-call b { font: 500 15px/1 var(--display); color: var(--gold); }
+.kc-call::after { content: ''; position: absolute; left: 50%; width: 1px; height: 16px; background: var(--gold-faint); }
+.kc-call.top { margin-bottom: 18px; } .kc-call.top::after { top: calc(100% + 2px); }   /* down to the sachets at the far end */
+.kc-call.bot { margin-top: 18px; } .kc-call.bot::after { bottom: calc(100% + 2px); }   /* up to the ampoules */
 .kitcard.live .kc-live { display: block; }   /* desktop with the story: the engine draws the last frame of the kit run here */
 .kitcard.live .kc-pic { display: none; }
 .kc-qty { display: flex; align-items: baseline; gap: 12px; color: var(--text-soft); font: 400 15px/1.45 var(--body); }
@@ -373,8 +379,12 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
     </div>
     <aside class="kitcard rv" style="--d:.1s" aria-labelledby="kitcard-h">
       <div class="kc-head"><h3 id="kitcard-h">{{s7_card_title}}</h3><span class="badge"><bdi>{{line_mark}}</bdi></span></div>
-      <canvas class="kc-live" role="img" aria-label="{{kit_alt}}"></canvas>
-      <img class="kc-pic" src="img/kit.webp" alt="{{kit_alt}}" {{{kit_size}}} loading="lazy">
+      <figure class="kc-fig">   <!-- owner 17/10: the box as in his photo, with what is in it named around it -->
+        <p class="kc-call top" aria-hidden="true"><b><bdi dir="ltr">5×</bdi></b>{{{kit_call_top}}}</p>
+        <canvas class="kc-live" role="img" aria-label="{{kit_alt}}"></canvas>
+        <img class="kc-pic" src="img/kit.webp" alt="{{kit_alt}}" {{{kit_size}}} loading="lazy">
+        <p class="kc-call bot" aria-hidden="true"><b><bdi dir="ltr">5×</bdi></b>{{{kit_call_bot}}}</p>
+      </figure>
       {{{s7_card_lines}}}
       {{{s7_card_facts}}}
       <ul class="chips gold">{{{s7_card_chips}}}</ul>

@@ -258,6 +258,10 @@ async function synthRun(browser, tag, assert) {
     ok(`phone ${w}: frames fetched, not the whole story at once`, seqReq > 0, `${seqReq} requests`);
     ok(`phone ${w}: the offer pushes the stage away`, gone.o === 0 && gone.push > 0, `canvas opacity ${gone.o}, push ${gone.push}px`);
     const order = await p.evaluate(() => ['#offer h2', '#offer .kitcard', '#offer .lead', '#offer .cta', '#offer .contacts'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top + scrollY)));
+    const calls = await p.evaluate(() => { const c = document.querySelector('#offer .kitcard').getBoundingClientRect(), pic = document.querySelector('#offer .kc-pic, #offer .kitcard.live .kc-live');
+      const pr = [...document.querySelectorAll('#offer .kc-pic, #offer .kc-live')].map(e => e.getBoundingClientRect()).find(r => r.height > 0);
+      return [...document.querySelectorAll('#offer .kc-call')].map(e => { const r = e.getBoundingClientRect(); return { t: e.textContent.trim(), in: r.left >= c.left && r.right <= c.right, top: r.bottom <= pr.top + 1, bot: r.top >= pr.bottom - 1 }; }); });
+    ok(`phone ${w}: the kit's callouts name what is in it, above and below the picture`, calls.length === 2 && calls[0].in && calls[1].in && calls[0].top && calls[1].bot && /5×/.test(calls[0].t) && /5×/.test(calls[1].t), JSON.stringify(calls.map(c => c.t)));
     ok(`phone ${w}: offer reads heading → card → text → buttons → contacts`, order.every((v, i) => !i || v > order[i - 1]), order.join(' < '));
     const cover = await p.evaluate(async () => {   // the card's foot at the bottom of the screen: the bar is not over it
       const c = document.querySelector('#offer .kitcard'); scrollTo(0, c.getBoundingClientRect().bottom + scrollY - innerHeight + 8);

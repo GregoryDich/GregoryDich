@@ -29,7 +29,7 @@ B="$W/mnt/Blender.app/Contents/MacOS/Blender"
 
 echo "2/3 Скачиваю сцену и текстуры печати…"
 curl -fsSL -o vtech_scene.py "$RAW/vtech_scene.py"
-for t in box-front-albedo box-front-metal box-front-rough box-side-albedo box-side-metal box-side-rough label sachet-albedo sachet-metal sachet-rough; do
+for t in box-front-albedo box-front-metal box-front-rough box-side-albedo box-side-metal box-side-rough label sachet-albedo sachet-metal sachet-rough sleeve-window lid-albedo lid-rough lid-metal; do
   curl -fsSL -o "tex/$t.png" "$RAW/tex/$t.png"
 done
 
@@ -43,7 +43,7 @@ render() {   # <out.webp> <shot> <width> <samples> [part]; a finished file is ke
 # the story of 17/10, S1→S6; each run renders only the region its 3D crosses (boxes from the 480 px draft, ingest_seq.py
 # --boxes: x0,y0,x1,y1 of the frame, y from the top), about a third of the frame, so the M4 spends its time on the 3D only
 RUNS="v1-meet:v2-why:0.185,0.207,0.476,0.823 v2-why:v3-inside:0.037,0.073,0.424,0.867 v3-inside:v4-feel:0.012,0.070,0.513,0.847
-v4-feel:v5-protocol:0.000,0.073,0.513,0.770 v5-protocol:v6-kit:0.000,0.057,0.526,0.877"
+v4-feel:v5-protocol:0.000,0.073,0.513,0.770 v5-protocol:v6-kit:0.000,0.000,0.532,0.843"
 echo "3/3 Переходы для живой страницы: 5 × 40 кадров (первый кадр дольше: видеокарта готовит шейдеры)…"
 export VT_WEBP_Q=90
 n=0

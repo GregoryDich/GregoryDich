@@ -94,6 +94,7 @@ RAW = {
     's5_steps': ''.join(f'<li class="step rv" style="--d:{i * .08:.2f}s"><span class="n">0{i + 1}</span><h3>{keep(t)}</h3><p>{keep(p)}</p></li>'
                         for i, (t, p) in enumerate(s5['steps'])),
     's7_h2': keep(s7['h2']),
+    'kit_call_top': esc(s7['card_lines'][1][1].split(' — ')[0]), 'kit_call_bot': esc(s7['card_lines'][0][1].split(' — ')[0]),   # «מסכת ג׳ל» over the sachets, «סרום» under the ampoules
     's7_card_lines': ''.join(f'<p class="kc-qty"><b><bdi dir="ltr">{esc(q)}</bdi></b><span>{keep(t)}</span></p>' for q, t in s7['card_lines']),
     # one thin line from the approved S6 facts: «4–6 טיפולים בסדרה · 14 יום בין טיפול לטיפול»
     's7_card_facts': '<p class="kc-facts">' + '<i aria-hidden="true">·</i>'.join(

@@ -52,10 +52,20 @@ def sachet(sx, sy, d, w, r=(0.14, -0.28, 0.05)): return [*scr(sx, sy, d), *r, fi
 # The story (owner 17/10): one carton, nearly locked camera; it recedes, comes close, recedes, and the contents slide
 # out from behind it one by one — the ampoule (S3), the gel-mask sachet (S4), the pair (S5), then the rest of the kit
 # (S6, the picture of the single «מה באריזה» card). Nothing stands on anything; the exosome cells live on the page.
-# the kit as a triangle: the carton at the back with its print clear, the ampoules in an arc low on its right, the sachet
-# fan low on its left (the fan over the carton hid «V-TECH SYSTEM», and its first spout left the frame)
-KIT_VIALS = [vial(0.335 + 0.034 * i, 0.66 - 0.035 * math.sin(math.pi * i / 4), 6.2 - 0.08 * i, 0.17, (0.05, -0.12 - 0.05 * i, 0.03 - 0.015 * i)) for i in range(5)]
-KIT_SACHETS = [sachet(0.13 + 0.026 * i, 0.78 - 0.04 * i, 6.0 + 0.15 * i, 0.14, (0.24 - 0.02 * i, -0.46 + 0.05 * i, 0.2 - 0.07 * i)) for i in range(5)]
+# the opened box of the owner's photo (17/10): a gold sleeve (the V a die-cut window) over a black book box; in its tray 5
+# gel-mask sachets lie stacked spout up in a pocket at the far end and 5 ampoules stand cap up in 2-2-1 holes. Box units:
+# the carton is 0.95 x 2.31 x 0.40; the sleeve 1 mm, 0.922 of the height (the black box shows at both ends)
+MX = -1 if MIRROR else 1   # the screen's right in the box's own x
+SLEEVE_T, WI, HI, DI, LID_T = 0.009, 0.464, 1.155, 0.189, 0.018
+ZI, ZP, KL, KP = 0.02, -0.09, 0.67, 1.15   # the insert's top, the sachet pocket's floor; ampoule and sachet scale in the box
+VSLOTS = [(0.26 * MX, -0.46), (-0.26 * MX, -0.46), (0.26 * MX, -0.76), (-0.26 * MX, -0.76), (0.0, -0.96)]   # [0] gets the S5 ampoule
+def tray_pt(bx, q): return tuple(Vector(bx['p']) + Euler(bx['r'], 'ZYX').to_matrix() @ (Vector(q) * bx['s']))
+def tray_rot(bx, rl): return tuple((Euler(bx['r'], 'ZYX').to_matrix() @ Euler(rl, 'ZYX').to_matrix()).to_euler('ZYX'))
+def in_tray_vial(bx, x, y): return [*tray_pt(bx, (x, y, ZI + 0.075 - VIAL_H * KL)), *tray_rot(bx, (math.pi / 2, 0, 0)), KL * bx['s']]
+def in_tray_pouch(bx, i): return [*tray_pt(bx, (0, 0.30, ZP + 0.03 + 0.022 * i)), *tray_rot(bx, (0, 0, -math.pi / 2 * MX)), KP * bx['s']]
+# S6 as the photo: sleeve | tray | lid side by side in the air in the left half, leaning back a little
+TRAY = box(0.265, 0.47, 7.5, 0.56, tilt=0.18)
+SLEEVE, LID = dict(box(0.108, 0.47, 7.5, 0.56, tilt=0.18), s=TRAY['s']), dict(box(0.422, 0.47, 7.5, 0.56, tilt=0.18), s=TRAY['s'])
 SHOTS = {
     'v1-meet': dict(DESK, box=dict(p=(1.8, -0.05, 0.2), r=(0.06, -0.48, 0.0), s=1)),   # approved (16/10); mirrored as a whole
     # S2: the carton far and small, still gold, turned further (on the way a highlight crosses the foil)
@@ -69,8 +79,9 @@ SHOTS = {
     # S5: the pair, read right to left as the steps: the ampoule (01) next to the copy, the sachet (02) outside
     'v5-protocol': dict(DESK, box=box(0.27, 0.30, 10.0, 0.36, dim=0.55), vials=[vial(0.39, 0.50, 5.5, 0.30)],
                         pouches=[sachet(0.19, 0.55, 5.5, 0.22)], focus=scr(0.27, 0.52, 5.5), fstop=2.5),
-    # S6: the kit, closed carton at the back, 5 ampoules in an arc and 5 sachets in a fan, all in the air
-    'v6-kit': dict(DESK, box=box(0.24, 0.36, 7.5, 0.50), vials=KIT_VIALS, pouches=KIT_SACHETS),
+    # S6: the opened box as in the owner's photo, 5 ampoules and 5 sachets in it
+    'v6-kit': dict(DESK, box=TRAY, kit=dict(sleeve=SLEEVE, lid=LID), vials=[in_tray_vial(TRAY, *q) for q in VSLOTS],
+                   pouches=[in_tray_pouch(TRAY, 4 - i) for i in range(5)]),
 }
 # per run: the carton's closest point on the way (via), and how each new item comes out: (side, start, clear, end) —
 # side ±1 along the carton's own x (+1 is the outer edge, away from the copy), the run fractions where it starts behind
@@ -78,8 +89,7 @@ SHOTS = {
 TRANS = {
     ('v2-why', 'v3-inside'): dict(via=dict(box(0.30, 0.50, 5.2, 0.62), t=0.5), vials=[(1, 0.5, 0.68, 0.97)]),
     ('v3-inside', 'v4-feel'): dict(pouches=[(-1, 0.08, 0.32, 0.96)]),   # a long arrival: the big sachet swings in slowly
-    ('v5-protocol', 'v6-kit'): dict(vials=[(-1, 0.18 + 0.13 * j, 0.30 + 0.13 * j, 0.52 + 0.13 * j) for j in range(4)],
-                                    pouches=[(1, 0.25 + 0.13 * j, 0.37 + 0.13 * j, 0.59 + 0.13 * j) for j in range(4)]),
+    ('v5-protocol', 'v6-kit'): dict(open=True),   # opened(): the box opens, the pair lands in it
 }
 
 
@@ -119,6 +129,7 @@ def blend(ka, kb, t):
         ap = (1 / A['fstop'] if A.get('fstop') else 0) * (1 - e) + (1 / B['fstop'] if B.get('fstop') else 0) * e
         fa, fb = A.get('focus', A['box']['p']), B.get('focus', B['box']['p'])
         S['fstop'], S['focus'] = (1 / ap if ap > 0.02 else None), lerp(fa, fb, e)
+    if T.get('open'): return opened(A, B, t, S)
     V = T.get('via')
     if V: S['box'] = pose(A['box'], V, ease(t / V['t'])) if t < V['t'] else pose(V, B['box'], ease((t - V['t']) / (1 - V['t'])))
     else: S['box'] = pose(A['box'], B['box'], e)
@@ -131,6 +142,26 @@ def blend(ka, kb, t):
         if out: S[kind] = out
     sa, sb = (float(len(X['pouches']) == 1) if X.get('pouches') else None for X in (A, B))
     if sa is not None or sb is not None: S['solo'] = sb if sa is None else sa if sb is None else sa + (sb - sa) * e
+    return S
+
+
+def opened(A, B, t, S):
+    """R5: the closed carton comes to its place, the sleeve slides up off it and settles on the left, the lid lifts
+    towards the viewer and goes right; meanwhile the ampoule and the sachet that floated through S3–S5 shrink to their
+    real size and hover in front of their places, then set straight in: 5 and 5, the box as in the owner's photo."""
+    bx = pose(A['box'], B['box'], win(t, (0.0, 0.32))); S['box'] = bx
+    sl = dict(bx, p=tray_pt(bx, (0, 2.3 * win(t, (0.16, 0.38)), 0)))
+    ld = dict(bx, p=tray_pt(bx, (0, 0, 0.6 * win(t, (0.42, 0.58)))))   # clear of the caps, under the hovering pair
+    S['kit'] = dict(sleeve=pose(sl, B['kit']['sleeve'], win(t, (0.36, 0.68))), lid=pose(ld, B['kit']['lid'], win(t, (0.52, 0.78))))
+    n = Euler(bx['r'], 'ZYX').to_matrix() @ Vector((0, 0, bx['s']))   # out of the tray, one box unit
+
+    def dock(a, final, lift):   # to a hover `lift` in front of its place (half turned), then straight in
+        hov = list(final); hov[:3] = Vector(final[:3]) + n * lift; hov[3:6] = lerp(a[3:6], final[3:6], 0.55)
+        return list(lerp(lerp(a, hov, win(t, (0.04, 0.40))), final, win(t, (0.70, 0.95))))
+    inside = t >= 0.42   # the other four of each are in the box from the moment the lid lifts (out of sight before)
+    S['vials'] = [dock(A['vials'][0], in_tray_vial(bx, *VSLOTS[0]), 1.6)] + ([in_tray_vial(bx, *q) for q in VSLOTS[1:]] if inside else [])
+    S['pouches'] = [dock(A['pouches'][0], in_tray_pouch(bx, 4), 1.05)] + ([in_tray_pouch(bx, i) for i in (3, 2, 1, 0)] if inside else [])
+    S['solo'] = 1 - win(t, (0.25, 0.42))   # the lone sachet's linked cards are gone before the stack appears
     return S
 
 
@@ -347,6 +378,65 @@ def make_pouch(a, parent=root):
     for o in g.children: o.visible_glossy = False  # the foil of the carton (and of the next sachet) never mirrors a sachet's dark back
     return g
 
+# ---------- the opened box (owner's photo 17/10): sleeve, tray with its insert, lid; each with its own pose ----------
+FACE_UV = {   # the carton's UV for any face of a block in its local space: the print lands where it does on the carton
+    'z': lambda c: ((c.x + 0.475) / 0.95, (c.y + 1.155) / 2.31), 'x+': lambda c: ((0.2 - c.z) / 0.4, (c.y + 1.155) / 2.31),
+    'x-': lambda c: ((c.z + 0.2) / 0.4, (c.y + 1.155) / 2.31), 'y': lambda c: ((c.x + 0.475) / 0.95, (c.z + 0.2) / 0.4)}
+
+
+def cuboid(name, b, faces, default=0):   # a block x0, x1, y0, y1, z0, z1; faces: {'z+': material index, …}
+    bm = bmesh.new(); bmesh.ops.create_cube(bm, size=1.0); uv = bm.loops.layers.uv.new('UVMap'); x0, x1, y0, y1, z0, z1 = b
+    for v in bm.verts: v.co = Vector((x0 if v.co.x < 0 else x1, y0 if v.co.y < 0 else y1, z0 if v.co.z < 0 else z1))
+    bm.normal_update()
+    for f in bm.faces:
+        ax = max(range(3), key=lambda i: abs(f.normal[i])); key = 'xyz'[ax] + ('+' if f.normal[ax] > 0 else '-')
+        f.material_index = faces.get(key, default); fn = FACE_UV.get(key, FACE_UV.get(key[0]))
+        for loop in f.loops: loop[uv].uv = fn(loop.vert.co)
+    return to_mesh(bm, name, smooth=False, sharp=0)
+
+
+def windowed(m):   # the sleeve's V and triangle: a die-cut window, see-through in both faces of its front
+    nt = m.node_tree; out = nt.nodes['Material Output']; src = out.inputs['Surface'].links[0].from_socket
+    mx, tr = nt.nodes.new('ShaderNodeMixShader'), nt.nodes.new('ShaderNodeBsdfTransparent')
+    nt.links.new(image(nt, 'sleeve-window.png', True).outputs['Color'], mx.inputs['Fac'])
+    nt.links.new(src, mx.inputs[1]); nt.links.new(tr.outputs[0], mx.inputs[2]); nt.links.new(mx.outputs[0], out.inputs['Surface'])
+    return m
+
+
+def make_kit_box(S):
+    """S['box'] is the tray's pose, S['kit'] the sleeve's and the lid's; the contents are S['vials'] and S['pouches']."""
+    paper = lambda n: mat(n, **{'Base Color': (0.80, 0.78, 0.74, 1), 'Roughness': 0.7})[0]   # the sleeve's inside, white board
+    black = mat('box-black', **{'Base Color': (0.018, 0.018, 0.02, 1), 'Roughness': 0.55, 'Specular IOR Level': 0.4})[0]
+    insert = mat('insert', **{'Base Color': (0.012, 0.012, 0.013, 1), 'Roughness': 0.8, 'Specular IOR Level': 0.3})[0]
+    hole = mat('hole', **{'Base Color': (0.003, 0.003, 0.003, 1), 'Roughness': 0.95, 'Specular IOR Level': 0.1})[0]
+    ribbon = mat('ribbon', **{'Base Color': (0.03, 0.03, 0.032, 1), 'Roughness': 0.28, 'Specular IOR Level': 0.5})[0]
+    lid, nt, b = mat('lid', **{'Specular IOR Level': 0.5})   # matte black, grey ink, a spot-gloss V (prep_kit.py)
+    alb = image(nt, 'lid-albedo.png').outputs['Color']
+    if DIM != 1:
+        dm = nt.nodes.new('ShaderNodeMixRGB'); dm.blend_type = 'MULTIPLY'; dm.inputs['Fac'].default_value = 1
+        dm.inputs['Color2'].default_value = (DIM, DIM, DIM, 1); nt.links.new(alb, dm.inputs['Color1']); alb = dm.outputs['Color']
+    nt.links.new(alb, b.inputs['Base Color']); nt.links.new(image(nt, 'lid-rough.png', True).outputs['Color'], b.inputs['Roughness'])
+    nt.links.new(image(nt, 'lid-metal.png', True).outputs['Color'], b.inputs['Metallic']); relief(nt, b, (((1, 1, 1), 60.0, 0.0, 0.0004),))
+    W, D, Hs, t = 0.475, 0.2, 1.065, SLEEVE_T
+    sp = S['kit']['sleeve']; g = obj('sleeve', p=sp['p'], r=sp['r'], s=sp['s'])
+    mats = (windowed(printed('sleeve-front', 'box-front', FOIL, DIM)), windowed(paper('paper-win')), paper('paper'), box_side, box_back)
+    for name, bb, faces in (('sl-front', (-W, W, -Hs, Hs, D - t, D), {'z+': 0, 'z-': 1}), ('sl-back', (-W, W, -Hs, Hs, -D, -D + t), {'z-': 4}),
+                            ('sl-right', (W - t, W, -Hs, Hs, -D + t, D - t), {'x+': 3}), ('sl-left', (-W, -W + t, -Hs, Hs, -D + t, D - t), {'x-': 3})):
+        obj(name, cuboid(name, bb, faces, 2), mats, g)
+    tag(g, 'box')
+    bp = S['box']; tr = obj('tray', p=bp['p'], r=bp['r'], s=bp['s']); w, z0, top = 0.02, -DI + 0.018, DI - LID_T
+    for i, (*bb, mi) in enumerate([(-WI, WI, -HI, HI, -DI, z0, 0), (-WI, -WI + w, -HI, HI, z0, top, 0), (WI - w, WI, -HI, HI, z0, top, 0),
+                                    (-WI + w, WI - w, HI - w, HI, z0, top, 0), (-WI + w, WI - w, -HI, -HI + w, z0, top, 0),
+                                    (-WI + w, WI - w, -HI + w, -0.30, z0, ZI, 1), (-WI + w, WI - w, -0.30, HI - w, z0, ZP, 1),   # insert, pocket
+                                    (-0.05, 0.05, -0.47, -0.30, ZI, ZI + 0.004, 2)]):   # the ribbon under the sachets
+        obj(f'tray{i}', cuboid(f'tray{i}', bb, {}, mi), (black, insert, ribbon), tr)
+    ring = bmesh.new(); bmesh.ops.create_circle(ring, cap_ends=True, segments=64, radius=0.125); ring = to_mesh(ring, 'hole', sharp=0)
+    for x, y in VSLOTS: obj('hole', ring, (hole,), tr, p=(x, y, ZI + 0.001))
+    tag(tr, 'box')
+    lp = S['kit']['lid']; lg = obj('lid', p=lp['p'], r=lp['r'], s=lp['s'])
+    obj('lid-panel', cuboid('lid-panel', (-WI, WI, -HI, HI, DI - LID_T, DI), {'z+': 0}, 1), (lid, black), lg); tag(lg, 'box')
+
+
 # ---------- light: dark room, white softbox left, warm gold right, gold strip above, warm fills in front ----------
 def panel(color, strength, x, y, z, w, h, ry, rx=0, soft=0.3, round_=False):
     """Softbox card seen only in reflections: even light, the outer `soft` part of each half-side fades out
@@ -442,9 +532,16 @@ def backlight(x, y, z, w, h, ry=0.0, k=1.4, a=1.0):  # seen only through the gla
     bl = panel(srgb(0xffe2a6), k, x, y, z, w, h, ry); bl.visible_glossy = False; bl.visible_diffuse = False; bl.color[3] = a
 
 
-if 'box' in S: tag(make_box(S['box']['p'], S['box']['r'], S['box']['s']), 'box')
+if 'kit' in S: make_kit_box(S)
+elif 'box' in S: tag(make_box(S['box']['p'], S['box']['r'], S['box']['s']), 'box')
 for a in S.get('vials', []):   # each floats; backlit from behind as in packshot photography, the amber glows through the clear serum
-    v = tag(make_vial(a), 'vials'); k = a[6] / 0.58
+    v = tag(make_vial(a), 'vials'); k = a[6] / 0.58; ax = Euler(a[3:6], 'ZYX').to_matrix() @ Vector((0, 1, 0))
+    if abs(ax.y) < 0.7:   # an ampoule in the box, cap towards the viewer: only the cap shows, its light on the axis
+        top_c = Vector(a[:3]) + ax * VIAL_H * a[6]; c = top_c + ax * 1.0 * k + Vector((0, 0.35 * k, 0))
+        li = bpy.data.lights.new('top', 'AREA'); li.shape = 'DISK'; li.size = 0.9 * k; li.color = srgb(0xfff6ea)
+        li.energy = 4.0 * math.pi * (0.45 * k) ** 2; top = obj('top', li); top.matrix_basis = look_matrix(tuple(c), tuple(top_c))
+        top.visible_diffuse = False; top.visible_camera = False; only_on(top, *[o for o in v.children if o.name.startswith('cap')])
+        continue
     backlight(a[0], a[1] + 0.3 * k, a[2] - 0.7 * k, 0.6 * k, 0.55 * k)
     # the silver top mirrors a soft light above it, as in the photos: a disk lamp, not a card — a card linked to the cap
     # alone is still a black blocker for every other mirror (in the kit 5 of them hid the carton's V in a dark band)
