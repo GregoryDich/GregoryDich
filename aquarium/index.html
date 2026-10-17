@@ -112,7 +112,7 @@
                 e1Light: 0, e1Bubbles: 0, e1Particles: 0,      // e1* — drawImage разделов света/воды (этап E1)
                 e3Fish: 0, e3Fog: 0, e3Lit: 0, e3Food: 0,       // e3* — drawImage рыб (всё / из них дымка / свет) и корма
                 e4Scene: 0, e4Group: 0,                         // e4* — слой сцены (патчи, тени, пропсы) / накладные групп вычитания
-                e4MsMembers: 0, e4MsSub: 0, e4MsComp: 0, e4MsLL: 0, e4MsList: 0, e4MsLLC: 0, e4MsBuf: 0,
+                e4MsMembers: 0, e4MsSub: 0, e4MsComp: 0, e4MsLL: 0, e4MsList: 0, e4MsLLC: 0, e4MsBuf: 0, e4MsReefC: 0,
                 pBack: 0, pScene: 0, pCaus: 0, pReef: 0, pBand: 0, pList: 0, pLight: 0, pTail: 0 };   // мс по стадиям render (профиль)   // мс (профиль, только счёт): члены / вычитание / сложение групп, стирание света, список, сложение света
   const CNT_KEYS = Object.keys(CNT);
   if (COUNTING) {
@@ -4353,7 +4353,9 @@
       else drawItem(ctx, it, RS, 0, 0);
     }
     ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+    const tr0 = COUNTING ? performance.now() : 0;
     if (KP.on && KP.ok && kpCan && LAYERS.caustics) reefCaustics();
+    if (COUNTING) CNT.e4MsReefC += performance.now() - tr0;
     CNT.e4Scene += CNT.drawImage - d0;
   }
   const CORAL_SHADOW = { w: 0.75, h: 0.2, a: 0.3 };
