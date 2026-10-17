@@ -5,12 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>🐠 Морской аквариум</title>
 <style>
+  /* V5: страница тёмная с первого мгновения (и ночью, и днём), холст проявляется за 0.4 с, когда есть
+     настоящий кадр — без белой/голубой вспышки и без процедурного рифа до прихода постера */
   html, body {
     margin: 0; padding: 0; height: 100%; overflow: hidden;
-    background: #0a4f7e;
-    background: radial-gradient(120% 90% at 50% 0%, #5cb6e0 0%, #2a86bd 30%, #18639b 65%, #0c4a78 100%);
+    background: #02101c;
   }
-  #tank { display: block; width: 100vw; height: 100vh; cursor: default; }
+  @media (prefers-color-scheme: dark) { html, body { background: #010818; } }
+  #tank { display: block; width: 100vw; height: 100vh; cursor: default; opacity: 0; transition: opacity 0.4s ease-out; }
+  #tank.on { opacity: 1; }
   body.hide-cursor #tank { cursor: none; }
   #hint {
     position: fixed; left: 18px; bottom: 16px; margin: 0; padding: 9px 14px;
@@ -73,6 +76,7 @@
   const flag = (k) => PARAMS.has(k) && PARAMS.get(k) !== "0";
   const WALLPAPER = flag("wallpaper") || window.__WALLPAPER === true;
   const TEST = flag("test"), NOBG = flag("nobg"), GOV_ON = PARAMS.get("gov") !== "0";
+  if (TEST) canvas.style.transition = "none";      // тест: кадр виден сразу (снимки не ловят проявление)
   const DEBUG = flag("debug") ? Math.max(1, parseInt(PARAMS.get("debug"), 10) || 1) : 0;
   const COUNTING = TEST || DEBUG > 0;          // обёртки-счётчики canvas — только в этих режимах
   // ctx.filter в WebKit выключен (SPEC F1) — в отгружаемом коде он не используется вовсе;
@@ -85,9 +89,15 @@
        webView.evaluateJavaScript("aquariumSetPower('low')")   // 30 fps
        webView.evaluateJavaScript("aquariumSetPower('paused')")// stop drawing
        webView.evaluateJavaScript("aquariumSetPower('high')")  // 60 fps   */
-  let POWER = "high";
+  const normPower = (m) => (m === "low" || m === "paused") ? m : "high";
+  // V5: приложение передаёт режим ещё до загрузки страницы (WKUserScript: window.__AQ_POWER) — первый кадр
+  // уже в нужном режиме (вызов evaluateJavaScript до загрузки терялся: на батарее шло 60 к/с)
+  let POWER = normPower(window.__AQ_POWER);
   window.aquariumSetPower = (m) => {
-    POWER = (m === "low" || m === "paused") ? m : "high";
+    m = normPower(m);
+    if (m === POWER) return;                     // тот же режим — не сбрасывать замер регулятора
+    POWER = m;
+    if (m !== "paused") budgetChanged();         // бюджет пикселей зависит от питания (P1.3)
     lastShown = 0; govReset();                   // смена режима — замер интервалов заново
     syncVideos();                                // 'paused' — видео-задник тоже на паузу (и обратно)
   };
@@ -132,13 +142,20 @@
   }
 
   /* ---------- плотность пикселей ----------
-     RS = min(DPR, √(8.3e6 / (W·H))) — буфер холста не больше ≈8.3 Мп на любом мониторе
-     (SPEC §2.4: 6K «как 3840» иначе дал бы 33 Мп на КАЖДЫЙ экран), × QUALITY.rsMul от регулятора.
+     V5 (P1.3): бюджет пикселей вместо потолка 8.3 Мп. Кадр упирается в заливку (≈4–5 полноэкранных проходов
+     с режимами смешивания), а видео-задник — 2560×1440 = 3.7 Мп: буфер больше видео только множит заливку.
+       RS = min(DPR, √(бюджет / (W·H)), max(1, 1.1 / BGX.sc)) × QUALITY.rsMul, округление до 1/16;
+       бюджет: от сети ('high') 3.7 Мп, на батарее ('low') 2.4 Мп; ?budget=Мп — вручную (тест, A/B);
+       третий член — не больше 1.1 device px на пиксель видео (не ниже 1).
      Всё рисуется в CSS-пикселях: ctx.setTransform(RS, …). */
   const MAX_BACKING_PX = 8.3e6;
+  const BUDGET_Q = PARAMS.has("budget") ? Math.min(8.3, Math.max(0.5, parseFloat(PARAMS.get("budget")) || 3.7)) * 1e6 : 0;
+  const pixelBudget = () => BUDGET_Q || (POWER === "low" ? 2.4e6 : 3.7e6);
   let DPR = Math.min(window.devicePixelRatio || 1, 2);
   let W = 0, H = 0, floorY = 0, RS = 1;
-  const sizeScale = () => clamp(W / 1300, 0.8, 2.8);   // размер рыб — доля ширины экрана (как в LMA2)
+  // размер рыб: в видео-сцене — от масштаба задника (рыба той же величины относительно настоящего рифа на любом
+  // соотношении сторон: на 3440×1440 было на ≈30% крупнее, чем на 4:3); иначе — доля ширины экрана (как в LMA2)
+  const sizeScale = () => (bgReady && bgMode === "video" ? clamp(BGX.sc * 1.75, 0.6, 3) : clamp(W / 1300, 0.8, 2.8));
 
   /* ---------- регулятор качества (меряет сам себя — целевого железа под рукой нет) ----------
      p90 интервала показанных кадров > 1.25× цели 5 с подряд → ступень вниз:
@@ -305,7 +322,11 @@
      (¼ экрана, buildMask). frame — кадр видео, на который оно перемотано (тест-режим с видео). */
   const BGS = {};
   for (let i = 0; i < THEMES.length; i++) BGS[THEMES[i]] = { name: THEMES[i], poster: null, pState: 0, pCbs: [], vid: null, vState: 0,
-    vw: 0, vh: 0, aligned: false, lead: 0.35, tries: 0, retryAt: 0, frame: -1, lit: null, litCtx: null, litSrc: null };
+    vw: 0, vh: 0, aligned: false, lead: 0.35, tries: 0, retryAt: 0, frame: -1, lit: null, litCtx: null, litSrc: null,
+    vErrN: 0, vErrAt: 0, vRetryAt: 0, wdT: -1, wdAt: 0 };
+  // V5: ошибка видео — не навсегда (сбой GPU/медиа-процесса после сна, ошибка декода): повтор через 5 с, 30 с,
+  // 2 мин, дальше раз в 10 мин; «файла нет» (код 4) — не больше двух повторов, потом остаётся постер
+  const VID_BACKOFF = [5, 30, 120, 600];
   function loadPoster(name, cb) {
     const S = BGS[name], vs = videoScene();
     if (!vs) { if (cb) cb(false); return; }
@@ -350,8 +371,13 @@
     im.src = BG_CANDIDATES[i];
   }
   function applyBackdrop(im, src) {
+    const oSS = W > 0 ? sizeScale() : 1;
     bgImg = im; bgSrc = src; bgReady = true; bgSettled = true;
-    useScene(src); themeMix(); layoutBackdrop(); layoutCamera(); buildBubbleSources(); buildLightCaches(); loadLightMask(); buildDeepRuns();
+    useScene(src); themeMix(); layoutBackdrop();
+    // V5: масштаб буфера и размер рыб зависят от масштаба задника (P1.3, «рыбы относительно рифа»)
+    if (W > 0 && Math.abs(backingRS() - RS) > 1e-6) applyBacking();
+    if (W > 0 && fishes.length && Math.abs(sizeScale() / oSS - 1) > 0.005) rescaleFish(W, H, oSS);
+    layoutCamera(); buildBubbleSources(); buildLightCaches(); loadLightMask(); buildDeepRuns();
     buildSceneItems();                             // E4: пропсы, окклюдеры, патчи этой сцены (картинки уже грузятся)
     // сцена (риф, песок, точки) появилась: рыбы ещё не показаны — расставить заново по настоящей геометрии
     if (fishes.length && simT < 2) { for (const f of fishes) if (!(f.school && !f.isLeader)) placeInitial(f, simT); for (const sc of SCHOOLS) for (const m of sc.members) if (m !== sc.leader) { placeSlot(m, sc.leader); layoutFish(m); } }
@@ -370,6 +396,7 @@
   }
   function ensureVideo(name) {
     const S = BGS[name];
+    if (S.vState === 3 && !VTEST && S.vRetryAt > 0 && performance.now() >= S.vRetryAt) { S.vState = 0; S.vRetryAt = 0; }
     if (!VID_ALLOWED || bgMode !== "video" || S.vid || S.vState === 3 || !videoScene()) return;
     if (!vidBox) {
       vidBox = document.createElement("div");
@@ -387,7 +414,13 @@
       S.vState = 2; S.vw = v.videoWidth || 0; S.vh = v.videoHeight || 0;
       syncVideos(); assetsChanged();
     });
-    v.addEventListener("error", () => { if (S.vid !== v) return; releaseVideo(name); S.vState = 3; assetsChanged(); });
+    v.addEventListener("error", () => {
+      if (S.vid !== v) return;
+      const code = v.error ? v.error.code : 0, now = performance.now();
+      releaseVideo(name); S.vState = 3; S.vErrN++; S.vErrAt = now;
+      S.vRetryAt = code === 4 && S.vErrN > 2 ? 0 : now + 1000 * VID_BACKOFF[Math.min(S.vErrN - 1, VID_BACKOFF.length - 1)];
+      assetsChanged();
+    });
     v.src = videoUrl(name);
     vidBox.appendChild(v);
   }
@@ -415,6 +448,12 @@
       const v = S.vid;
       if (!v || S.vState !== 2) continue;
       if (S.aligned !== true) { alignVideo(S, BGS[THEMES[1 - i]]); continue; }   // пока выравнивается — стоит
+      // V5: сторож — видео «играет», данные есть, а время не идёт > 2 с (застрял декодер) → пересоздать
+      if (run && !v.paused && v.readyState >= 2 && !v.seeking) {
+        const ct = v.currentTime;
+        if (ct !== S.wdT) { S.wdT = ct; S.wdAt = now; }
+        else if (now - S.wdAt > 2000) { releaseVideo(name); S.wdT = -1; continue; }
+      } else S.wdAt = now;
       if (run && v.paused && now >= S.retryAt) {
         const p = v.play();
         if (p && p.catch) p.catch(() => { S.retryAt = performance.now() + 2000; });    // автозапуск запрещён — постер/кадр стоит, повтор через 2 с
@@ -562,15 +601,25 @@
     // coralMul/glowK/hazeK — реквизит и колонии ночью (см. scene.js themes)
     day:   { water: "#2dcfec", fog: "#178a9e", light: "#fff4dc", caustics: 0.34, rays: 1.0, particles: 1.0, fishLit: 1.3, glow: 1.0,
              vignette: [0, 38, 52, 0.24], particle: [242, 246, 232], bubble: [236, 248, 250], fogMin: 0,
-             coralMul: [1, 1, 1], glowK: 0, hazeK: 1.0 },
+             coralMul: [1, 1, 1], coralNear: [1, 1, 1], glowK: 0, hazeK: 1.0, fishMul: [1, 1, 1] },
     night: { water: "#0d52b3", fog: "#062e68", light: "#9fb8ff", caustics: 0.16, rays: 0.55, particles: 0.7, fishLit: 0.85, glow: 0.75,
-             vignette: [1, 6, 34, 0.42], particle: [170, 196, 255], bubble: [184, 208, 255], fogMin: 0.15,
-             coralMul: [0.30, 0.42, 0.95], glowK: 0.4, hazeK: 0.8 },
+             vignette: [1, 6, 34, 0.42], particle: [170, 196, 255], bubble: [184, 208, 255], fogMin: 0.08,
+             coralMul: [0.30, 0.42, 0.95], coralNear: [0.66, 0.75, 0.82], glowK: 0.6, hazeK: 0.8, fishMul: [0.70, 0.80, 1.0] },
   };
+  /* V5: ночной множитель реквизита и колоний — по глубине предмета: у стекла (z ≤ 1.05) — как ночной грейд
+     самого видео у ближних кораллов (≈ 0.66/0.75/0.82 дня: тёплые, не фиолетовые), к z ≥ 1.75 — LED-синий
+     coralMul. Раньше ближние колонии красились в синий ×(0.30, 0.42, 0.95), а видео-кораллы рядом оставались
+     тёплыми — «вырезки под чужим светом». LED-характер — через флуоресценцию (glowK 0.6, насыщенные glow). */
+  function nightMulAt(z, out) {
+    const b = TP[1], t = clamp((z - 1.05) / 0.7, 0, 1);
+    for (let j = 0; j < 3; j++) out[j] = b.coralNear[j] + (b.coralMul[j] - b.coralNear[j]) * t;
+    return out;
+  }
   const TH = { mode: "auto", target: 0, p: 0, k: 0, kC: -1, dur: 3, reqAt: 0, mq: null };   // reqAt — performance.now() запроса смены
   const TP = [null, null];                            // параметры тем (числа, цвета — массивы rgb)
   const TV = { light: [255, 244, 220], fog: [23, 138, 158], water: [45, 207, 236], caustics: 0.34, rays: 1, particles: 1, fishLit: 1.3,
-               glow: 1, vignette: [0, 38, 52, 0.24], particle: [242, 246, 232], bubble: [236, 248, 250], coralMul: [1, 1, 1], glowK: 0, hazeK: 1, fogMin: 0 };
+               glow: 1, vignette: [0, 38, 52, 0.24], particle: [242, 246, 232], bubble: [236, 248, 250], coralMul: [1, 1, 1], glowK: 0, hazeK: 1, fogMin: 0,
+               fishMul: [1, 1, 1] };
   let TV_FOG = "rgb(23,138,158)", TV_PART = "rgb(242,246,232)", TV_LIT15 = "rgba(255,244,220,0.15)";   // строки цветов — ступенями (themeCaches)
   const rgbOf = (v, d) => (Array.isArray(v) && v.length >= 3 ? [+v[0], +v[1], +v[2]] : typeof v === "string" && /^#[0-9a-f]{3,6}$/i.test(v) ? hexToRgb(v) : d.slice());
   function themeParams() {
@@ -580,7 +629,7 @@
       for (const k in d) o[k] = d[k];
       for (const k in s) if (s[k] != null) o[k] = s[k];
       for (const k of ["water", "fog", "light"]) o[k] = rgbOf(o[k], hexToRgb(d[k]));
-      for (const k of ["vignette", "particle", "bubble", "coralMul"]) o[k] = Array.isArray(o[k]) ? o[k].map(Number) : d[k].slice();
+      for (const k of ["vignette", "particle", "bubble", "coralMul", "coralNear", "fishMul"]) o[k] = Array.isArray(o[k]) ? o[k].map(Number) : d[k].slice();
       for (const k of ["caustics", "rays", "particles", "fishLit", "glow", "glowK", "hazeK", "fogMin"]) o[k] = +o[k] >= 0 ? +o[k] : d[k];
       TP[i] = o;
     }
@@ -595,6 +644,7 @@
     for (let j = 0; j < 3; j++) {
       TV.light[j] = m(a.light[j], b.light[j]); TV.fog[j] = m(a.fog[j], b.fog[j]); TV.water[j] = m(a.water[j], b.water[j]);
       TV.particle[j] = m(a.particle[j], b.particle[j]); TV.bubble[j] = m(a.bubble[j], b.bubble[j]); TV.coralMul[j] = m(a.coralMul[j], b.coralMul[j]);
+      TV.fishMul[j] = m(a.fishMul[j], b.fishMul[j]);
     }
     for (let j = 0; j < 4; j++) TV.vignette[j] = m(a.vignette[j], b.vignette[j]);
     TV.caustics = m(a.caustics, b.caustics); TV.rays = m(a.rays, b.rays); TV.particles = m(a.particles, b.particles);
@@ -1816,6 +1866,9 @@
       return c;
     };
     const m0 = down(img, w0, h0), m1 = down(m0, Math.round(w0 / 2), Math.round(h0 / 2)), m2 = down(m1, Math.round(w0 / 4), Math.round(h0 / 4));
+    // V5 (R1m «рыбы наклеены»): лёгкая мягкость в каждом мипе — копия через ½ размера поверх с α 0.6
+    // (≈0.5–1 device px при отрисовке; без ctx.filter): фото-рыбы были заметно резче мягкого видео вокруг
+    softenMip(m0, mk); softenMip(m1, mk); softenMip(m2, mk);
     const fog = down(m1, m1.width, m1.height), fg = fog.getContext("2d");
     fg.globalCompositeOperation = "source-in"; fg.fillStyle = TV_FOG; fg.fillRect(0, 0, fog.width, fog.height);
     // основа света — спрайт × вертикальный градиент альфы (спина 1 → брюхо 0.35); градиент — один на все
@@ -1826,9 +1879,45 @@
     bg.setTransform(1, 0, 0, litB.height, 0, 0); bg.fillRect(0, 0, litB.width, 1); bg.setTransform(1, 0, 0, 1, 0, 0);
     bg.globalCompositeOperation = "source-over";
     const lit = mk(litB.width, litB.height);
-    rec.mips = [m0, m1, m2]; rec.w0 = w0; rec.h0 = h0; rec.fog = fog; rec.lit = lit; rec.litB = litB; rec.ar = ih / iw;
+    rec.base = [m0, m1, m2]; rec.mips = rec.base; rec.tm = null; rec.tq = 0;
+    rec.w0 = w0; rec.h0 = h0; rec.fog = fog; rec.lit = lit; rec.litB = litB; rec.ar = ih / iw;
     rec.img = m0;
     tintLit(rec);
+  }
+  function softenMip(c, mk) {
+    const w = c.width, h = c.height;
+    if (w < 16 || h < 8) return;
+    const t = mk(Math.round(w / 2), Math.round(h / 2)), tg = t.getContext("2d");
+    tg.imageSmoothingEnabled = true; tg.imageSmoothingQuality = "high"; tg.drawImage(c, 0, 0, t.width, t.height);
+    const g = c.getContext("2d");
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
+    g.globalAlpha = 0.6; g.drawImage(t, 0, 0, w, h); g.globalAlpha = 1;
+    t.width = t.height = 1;
+  }
+  /* V5: ночной свет на рыбах — multiply мипов в TV.fishMul (ночь ≈ 0.70/0.80/1.0: белое становится голубым, тёплые
+     цвета гаснут, как у видео). Раньше ночью рыбы получали только дымку (fogMin) — белые части светились «днём».
+     Копии мипов перекрашиваются ступенями по 1/8 веса ночи, по одному виду за кадр (без пиков в переходе; в тесте —
+     все сразу); днём рисуется база, копии отпускаются. */
+  function fishTintStep(maxN) {
+    const q = Math.round(TH.k * 8) / 8;
+    let n = 0;
+    for (let i = 0; i < PACK.length && n < maxN; i++) {
+      const r = PACK[i];
+      if (!r.ready || !r.base || r.tq === q) continue;
+      n++; r.tq = q;
+      if (q <= 0 || !TP[1]) { r.mips = r.base; if (r.tm) { for (const c of r.tm) c.width = c.height = 1; r.tm = null; } continue; }
+      const a = TP[0].fishMul, b = TP[1].fishMul, col = (j) => Math.round(clamp(255 * (a[j] + (b[j] - a[j]) * q), 0, 255));
+      if (!r.tm) r.tm = r.base.map((c) => { const d = document.createElement("canvas"); d.width = c.width; d.height = c.height; return d; });
+      const fill = `rgb(${col(0)},${col(1)},${col(2)})`;
+      for (let j = 0; j < r.base.length; j++) {
+        const c = r.tm[j], g = c.getContext("2d"), src = r.base[j];
+        g.globalCompositeOperation = "copy"; g.drawImage(src, 0, 0);
+        g.globalCompositeOperation = "multiply"; g.fillStyle = fill; g.fillRect(0, 0, c.width, c.height);
+        g.globalCompositeOperation = "destination-in"; g.drawImage(src, 0, 0);
+        g.globalCompositeOperation = "source-over";
+      }
+      r.mips = r.tm;
+    }
   }
   let LIT_GRAD = null;
   // подсветка вида в цвет света темы: основа + 'source-atop' 15% света (перекраска ступенями перехода)
@@ -3617,7 +3706,7 @@
   function drawSpriteFish(f, t) {
     const P = f.pack, d0 = CNT.drawImage;
     // мип по экранному размеру: наименьший ≥ L_dev·k (k = 1 у стекла, 0.8 вдали; ближний проход — мягче)
-    const Ldev = f.len * RS, kq = f.near && f.z < 0.97 ? 0.6 : f.z < 1.25 ? 1 : 0.8;
+    const Ldev = f.len * RS, kq = f.near && f.z < 0.97 ? 0.6 : f.z < 1.15 ? 0.9 : 0.62;   // V5: дальше 1.15 — мип грубее (мягче, как вода)
     let mip = P.mips[0];
     for (let m = P.mips.length - 1; m >= 0; m--) if (P.mips[m].width >= Ldev * kq) { mip = P.mips[m]; break; }
     const fd = f.fade;                                   // дальний проход: проявление/таяние в дымке
@@ -4082,7 +4171,8 @@
     const shade = Array.isArray(sh) ? [+sh[0], +sh[1], +sh[2]] : [sh > 0 ? +sh : 1, sh > 0 ? +sh : 1, sh > 0 ? +sh : 1];
     const haze = gr.haze > 0 ? +gr.haze : 0, a = TP[0], b = TP[1];
     const gl = nt && Array.isArray(nt.glow) ? nt.glow : [0, 0, 0], ga = nt && nt.amt > 0 ? nt.amt * b.glowK : 0;
-    const nm = [b.coralMul[0] + gl[0] * ga, b.coralMul[1] + gl[1] * ga, b.coralMul[2] + gl[2] * ga];
+    const zm = nightMulAt(+it.z || 1.1, [0, 0, 0]);       // V5: ночь по глубине предмета (см. nightMulAt)
+    const nm = [zm[0] + gl[0] * ga, zm[1] + gl[1] * ga, zm[2] + gl[2] * ga];
     // V4b: варианты — ЛЕНИВО, по теме: при загрузке только нужная тема (вдвое меньше памяти и времени старта);
     // вторая — за несколько кадров до перехода (themePrebuild) или в момент первой нужды; после перехода — отпускается
     it.tset = { shade, haze, nm }; it.tk = itemDevScale(it); it.timgs = [null, null];
@@ -5361,12 +5451,33 @@
   const targetFishCount = () => clamp(Math.round((W * H) / 100000), 8, 22);
 
   // буфер холста и всё, что от него зависит (кэши) — без пересева сцены (зовёт и регулятор качества)
+  function backingRS() {
+    layoutBackdrop();
+    const r = Math.min(DPR, Math.sqrt(Math.min(MAX_BACKING_PX, pixelBudget()) / Math.max(1, W * H)), Math.max(1, 1.1 / Math.max(1e-3, BGX.sc)));
+    return Math.max(0.25, Math.floor(r * QUALITY.rsMul * 16) / 16);
+  }
   function applyBacking() {
-    RS = Math.min(DPR, Math.sqrt(MAX_BACKING_PX / Math.max(1, W * H))) * QUALITY.rsMul;
+    RS = backingRS();
     canvas.width = Math.max(1, Math.floor(W * RS)); canvas.height = Math.max(1, Math.floor(H * RS));
     canvas.style.width = W + "px"; canvas.style.height = H + "px";
     ctx.setTransform(RS, 0, 0, RS, 0, 0);
     layoutBackdrop(); layoutCamera(); buildVignette(); buildLightCaches(); buildFishLight(); buildDeepRuns();
+  }
+  // V5: событие resize — CSS-размер сразу (браузер растянет старый буфер), дорогая пересборка (буфер, кэши
+  // света, риф, рыбы) — один раз через 150 мс после последнего события (перетаскивание окна, смена режима
+  // дисплея давали десятки пересборок по сотни мс). В тесте — сразу (харнесс ждёт кадр нужного размера).
+  let resizeTimer = 0;
+  function onResize() {
+    if (TEST) { resize(); return; }
+    canvas.style.width = window.innerWidth + "px"; canvas.style.height = window.innerHeight + "px";
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { resizeTimer = 0; resize(); }, 150);
+  }
+  // смена бюджета пикселей (питание): буфер пересобирается не сразу и не чаще раза в 3 с
+  let budgetTimer = 0;
+  function budgetChanged() {
+    if (TEST || W <= 0 || budgetTimer) return;
+    budgetTimer = setTimeout(() => { budgetTimer = 0; if (Math.abs(backingRS() - RS) > 1e-6) applyBacking(); }, 3000);
   }
   function resize() {
     const oW = W, oH = H, oSS = W > 0 ? sizeScale() : 1;
@@ -5426,9 +5537,21 @@
      лучи ('screen') → виньетка */
   let profT = 0;
   const prof = (k) => { if (COUNTING) { const n = performance.now(); CNT[k] += n - profT; profT = n; } };
+  // V5: холст проявляется (CSS opacity 0 → 1 за 0.4 с) после первого настоящего кадра; в тесте — сразу
+  let revealed = false;
+  function reveal() { if (!revealed) { revealed = true; canvas.classList.add("on"); } }
   function render(t) {
+    if (!bgSettled) {
+      // V5: задник ещё грузится — тёмная вода без рифа и рыб (процедурный риф — только при настоящем отказе
+      // задника: bgSettled && !bgReady). Раньше при каждом запуске мелькал «мультяшный» риф до постера.
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = "#02101c"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
+    reveal();
     if (COUNTING) profT = performance.now();
     themeCaches(false);                              // ступени перекраски кэшей темы (обычно — ничего)
+    fishTintStep(TEST ? 99 : 1);                     // V5: ночной свет на рыбах (по виду за кадр)
     updateLight(t);
     SCN.frame++;
     if (SCN.built) themePrebuild();                  // V4b: варианты предметов под тему — по одному набору на кадр
@@ -5502,7 +5625,10 @@
   function frameSim(dt) {
     let t0 = 0;
     if (COUNTING) { for (let i = 0; i < CNT_KEYS.length; i++) CNT[CNT_KEYS[i]] = 0; t0 = performance.now(); }
-    simulate(dt);
+    // V5 (P1.4): длинный кадр (до 0.1 с) — подшагами не длиннее 1/30 с: рыбы не «притормаживают» на провалах,
+    // а поведение и столкновения не прыгают на крупном шаге
+    const n = Math.max(1, Math.ceil(dt * 30 - 1e-6)), sub = dt / n;
+    for (let i = 0; i < n; i++) simulate(sub);
     if (COUNTING) fbMs = performance.now() - t0;
   }
   function frameDraw() {
@@ -5512,7 +5638,7 @@
     if (DEBUG) drawDebug();
   }
   function frameBody(dt, doRender) {
-    if (!doRender) { simulate(dt); return; }
+    if (!doRender) { const n = Math.max(1, Math.ceil(dt * 30 - 1e-6)); for (let i = 0; i < n; i++) simulate(dt / n); return; }
     frameSim(dt); frameDraw();
   }
   // перерисовать текущее состояние без шага (тест-режим: resize, загрузка задника)
@@ -5622,15 +5748,18 @@
   function frame(now) {
     requestAnimationFrame(frame);
     let raw = (now - last) / 1000; last = now;
-    if (raw > 0.1) raw = 0.1; else if (raw < 0) raw = 0;
+    if (raw > 0.25) raw = 0.25; else if (raw < 0) raw = 0;
     // app told us the display is off/occluded, or the view is hidden -> stop work
-    if (POWER === "paused" || document.hidden) { lastShown = 0; syncVideos(); return; }
-    // battery saver: coalesce to ~30 fps but keep motion time-correct
-    // (допуск 15%: дрожание vsync не должно ронять 30 к/с в 20)
+    if (POWER === "paused" || document.hidden) { lastShown = 0; acc = 0; syncVideos(); return; }
+    // V5: пока задник не определился (постер грузится) — ни симуляции, ни отрисовки: холст ещё прозрачен
+    if (!bgSettled) { acc = 0; return; }
+    // V5 (P1.4): 'high' — не чаще 60 к/с (ProMotion 120 Гц — каждый второй vsync), 'low' — ≈30 к/с;
+    // допуск 15%: дрожание vsync не должно ронять 60 в 30 и 30 в 20. Время движения — честное (dt ≤ 0.1 с,
+    // подшаги ≤ 1/30 с в frameSim)
     acc += raw;
-    const step = POWER === "low" ? (1 / 30) * 0.85 : 0;
+    const step = POWER === "low" ? (1 / 30) * 0.85 : (1 / 60) * 0.85;
     if (acc < step) return;
-    const dt = Math.min(acc, 0.05);
+    const dt = Math.min(acc, 0.1);
     acc = 0;
     if (lastShown && GOV_ON) govSample(now - lastShown);
     lastShown = now;
@@ -5821,7 +5950,7 @@
     idleTimer = setTimeout(() => { hint.classList.add("faded"); document.body.classList.add("hide-cursor"); }, 3500);
   }
 
-  window.addEventListener("resize", resize);
+  window.addEventListener("resize", onResize);
   document.addEventListener("visibilitychange", () => { last = performance.now(); lastShown = 0; govReset(); syncVideos(); });
 
   if (WALLPAPER) {
