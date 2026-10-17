@@ -1,0 +1,527 @@
+<title>V-TECH SYSTEM Live</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Jost:wght@300;400;500&family=Frank+Ruhl+Libre:wght@400&family=Heebo:wght@300;400;500&display=swap">
+<script>document.documentElement.lang = 'he'; document.documentElement.dir = 'rtl'; document.documentElement.classList.add('js');</script>
+<style>
+/* V-TECH SYSTEM, Hebrew live page on pre-rendered Blender frames, screen for screen as the approved Figma design (page
+   142:3): S1 meet → S6 kit play as one scroll story on a sticky canvas (five Cycles runs, the key frame held while
+   each screen is read), then the offer, the specialists and the related products without 3D. The copy keeps the left
+   half on wide screens. Phone: no sequence; the product is a small HD still beside each heading. Blocks (steps, kit
+   card, specialists, cards, lead form) as on the EXOCELL MASK page. A committed single dark look (black and gold). */
+:root {
+  --bg: #0a0a0b; --ink: #111114; --charcoal: #1a1a1f;
+  --cream: #f6f3ec; --text: rgba(246,243,236,.78); --text-soft: rgba(246,243,236,.84); --text-faint: rgba(246,243,236,.72);
+  --gold: #c9a24b; --gold-soft: #d8bd7e; --gold-faint: rgba(201,162,75,.5); --gold-wash: rgba(201,162,75,.14);
+  --hairline: rgba(201,162,75,.22); --hairline-cream: rgba(246,243,236,.1); --on-gold: #0a0a0b; --error: #f0a595;
+  --display: 'Cormorant Garamond', 'Frank Ruhl Libre', Georgia, serif; --he-display: 'Frank Ruhl Libre', Georgia, serif;
+  --body: 'Heebo', 'Jost', system-ui, sans-serif;
+  --gutter: clamp(18px, 5vw, 72px); --maxw: 1200px; --ease: cubic-bezier(.22,1,.36,1);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--cream); font: 300 clamp(15px, 1.15vw, 17px)/1.7 var(--body); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+@media (max-width: 1391px) { body { font-weight: 400; } }   /* Hebrew at 16 px and below reads better at 400 */
+h1, h2, h3, h4 { margin: 0; font-weight: 400; text-wrap: balance; }
+p, ul, ol { margin: 0; }
+p { text-wrap: pretty; }
+a { color: inherit; }
+img { max-width: 100%; display: block; }
+bdi { unicode-bidi: isolate; }
+[hidden] { display: none !important; }
+.nw { white-space: nowrap; }
+svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+*, *::before, *::after { font-variant-numeric: lining-nums !important; }   /* Cormorant's old-style «5», «1o%» */
+.wrap { width: min(var(--maxw), 100% - 2 * var(--gutter)); margin-inline: auto; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* far layer: the line's smoke; near layer: the Blender frames, faded out from the offer on */
+.bg { position: fixed; inset: -6vh -4vw; z-index: 0; background: url(img/bg.webp) center / cover no-repeat; will-change: transform; }
+#seq, .still { position: fixed; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none; }
+.still { object-fit: cover; }
+.js .still { display: none; }
+main, .top, .foot, .dock, .bar { position: relative; z-index: 2; }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: rgba(10,10,11,.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hairline-cream); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; min-height: 72px; gap: 20px; }
+.top .logo img { height: 26px; width: auto; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 50px; padding: 0 28px; border-radius: 999px; font: 500 15px/1.2 var(--body); text-align: center; text-decoration: none; cursor: pointer; border: 1px solid transparent; white-space: nowrap; transition: transform .3s var(--ease), background-color .3s, color .3s; }
+.btn:hover { transform: scale(1.03); }
+.btn.primary { background: var(--gold); color: var(--on-gold); }
+.btn.ghost { border-color: var(--gold); color: var(--gold); background: transparent; }
+.btn.ghost:hover { background: var(--gold); color: var(--on-gold); }
+.top .btn { min-height: 42px; padding-inline: 18px; font-size: 14px; }
+@media (max-width: 460px) { .top .btn { display: none; } }
+
+/* story screens: a screen each, the copy in the left half (RTL: start is the right), clear of the 3D */
+.sec { min-height: 100svh; display: flex; align-items: center; padding-block: 72px; }
+.copy { width: min(540px, 100%); margin-inline-start: auto; display: grid; gap: 20px; justify-items: start; }
+.badges { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.mark-line { font: 500 12px/1 'Jost', var(--body); letter-spacing: .24em; color: var(--gold); }
+.badge { border-radius: 999px; padding: 4px 12px; font: 500 12px/1.4 var(--body); border: 1px solid var(--gold-faint); color: var(--gold-soft); }
+.badge.pro { background: var(--gold); color: var(--on-gold); border-color: var(--gold); }
+.kicker { display: flex; align-items: center; gap: 14px; font: 500 13px/1.3 var(--body); letter-spacing: .02em; color: var(--gold); }
+.kicker.line::after { content: ""; width: 40px; height: 1px; background: rgba(201,162,75,.3); }
+h1 { font: 500 clamp(56px, 6.6vw, 96px)/.95 var(--display); letter-spacing: .01em; }
+h2 { font: 400 clamp(36px, 3.8vw, 54px)/1.1 var(--he-display); }
+.tag { font: 400 clamp(22px, 2.2vw, 30px)/1.3 var(--he-display); color: var(--gold-soft); }
+.lead { color: var(--text); max-width: 480px; }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; padding: 0; list-style: none; }
+.chips li { border: 1px solid var(--hairline-cream); border-radius: 999px; padding: 6px 14px; font: 400 15px/1.3 var(--body); color: var(--text); background: rgba(10,10,11,.45); }
+.chips.gold li { border-color: var(--gold-faint); color: var(--gold-soft); }
+.cta { display: flex; flex-wrap: wrap; gap: 14px; }
+.note { font: 400 14px/1.5 var(--body); color: var(--text-faint); }
+.pill { padding: 10px 18px; border: 1px solid var(--gold-faint); border-radius: 22px; font: 400 15px/1.5 var(--body); color: var(--gold-soft); background: rgba(10,10,11,.45); max-width: 540px; }
+details { width: 100%; border-top: 1px solid var(--hairline-cream); }
+details summary { cursor: pointer; padding: 16px 0; font: 400 16px/1 var(--body); color: var(--cream); list-style: none; display: flex; justify-content: space-between; min-height: 48px; align-items: center; }
+details summary::-webkit-details-marker { display: none; }
+details summary::after { content: "+"; color: var(--gold); }
+details[open] summary::after { content: "–"; }
+details ul { padding: 0 0 18px; list-style: none; color: var(--text); display: grid; gap: 6px; }
+/* S4: the four sensations as pins */
+.pins { display: grid; gap: 10px; justify-items: start; padding: 0; list-style: none; }
+.pins li { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid var(--gold-faint); border-radius: 999px; background: rgba(10,10,11,.55); backdrop-filter: blur(8px); font: 400 14px/1.2 var(--body); color: var(--cream); }
+.pins li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px rgba(201,162,75,.22); }
+/* S5: three steps along the bottom, 01 on the right */
+.protocol.sec { display: block; }
+.protocol .copy { margin-block: 12px 0; }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: clamp(120px, 24vh, 260px) 0 0; padding: 0; list-style: none; }
+.step { display: grid; gap: 12px; align-content: start; min-width: 0; padding: 30px; border-radius: 24px; background: rgba(26,26,31,.92); border: 1px solid var(--hairline-cream); }
+.step .n { font: 300 22px/1 var(--display); color: var(--gold); }
+.step h3 { font: 400 24px/1.2 var(--display); color: var(--cream); }
+.step p { color: var(--text-faint); font: 400 15px/1.6 var(--body); }
+/* S6: four facts */
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 28px; width: 100%; margin-top: 8px; }
+.fact { display: grid; gap: 8px; padding-top: 16px; border-top: 1px solid var(--hairline); min-width: 0; }
+.fact b { font: 400 clamp(28px, 3vw, 38px)/1.1 var(--display); color: var(--cream); }
+.fact span { font: 400 14px/1.4 var(--body); color: var(--text-faint); }
+/* S7: offer and the card "what's in the box" */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; direction: ltr; align-items: center; }
+.split > * { direction: rtl; min-width: 0; }
+.offer .copy { margin: 0; }
+.offer .cta { flex-direction: column; align-items: flex-start; }
+.contacts { display: grid; width: 100%; max-width: 420px; }
+.contacts a { display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 4px 2px; border-bottom: 1px solid var(--hairline-cream); color: var(--text-soft); text-decoration: none; font: 400 15px/1.3 var(--body); }
+.contacts svg { width: 20px; height: 20px; color: var(--gold); flex: none; }
+.kitcard { justify-self: end; width: min(100%, 540px); display: grid; gap: 14px; padding: 26px 30px 28px; border-radius: 28px; border: 1px solid var(--hairline); background: linear-gradient(160deg, rgba(28,27,31,.95), rgba(14,14,17,.95)); box-shadow: 0 30px 90px rgba(0,0,0,.5); }
+.kc-head { display: flex; align-items: center; gap: 14px; }
+.kc-head h3 { font: 400 28px/1.1 var(--he-display); color: var(--cream); }
+.kc-head .badge { letter-spacing: .14em; font-size: 11px; }
+.kc-pic { width: 100%; height: clamp(160px, 26vh, 250px); object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,.55)); }
+.kc-qty { display: flex; align-items: baseline; gap: 12px; color: var(--text-soft); font: 400 15px/1.45 var(--body); }
+.kc-qty b { font: 400 34px/1 var(--display); color: var(--gold-soft); flex: none; }
+.kitcard .chips { padding-top: 14px; border-top: 1px solid var(--hairline-cream); }
+/* S8: specialists (public: a monogram and the city) */
+.spec-sec.sec { display: block; min-height: 0; padding-block: 80px 92px; }
+.spec-sec .wrap { display: grid; gap: 12px; justify-items: start; }
+.spec-sec .wrap > * { max-width: 100%; }
+.filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 8px; }
+.filter .lbl { font: 400 14px/1 var(--body); color: var(--text-faint); margin-inline-end: 4px; }
+.fchip { min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(246,243,236,.2); background: rgba(10,10,11,.45); color: var(--text-soft); font: 400 14px/1 var(--body); cursor: pointer; }
+.fchip[aria-pressed="true"] { border-color: var(--gold); color: var(--gold-soft); background: rgba(201,162,75,.16); }
+.specs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; width: 100%; margin-top: 6px; }
+.spec { display: flex; flex-direction: column; min-width: 0; border-radius: 22px; background: rgb(24,24,28); border: 1px solid var(--hairline); }
+.spec .av { width: 58px; height: 58px; margin: 22px 22px 0; border-radius: 50%; border: 1px solid var(--gold); display: grid; place-items: center; font: 400 28px/1 var(--he-display); color: var(--gold-soft); background: rgba(10,10,11,.6); }
+.spec .sb { display: grid; gap: 8px; justify-items: start; padding: 14px 22px 12px; }
+.spec h3 { display: flex; align-items: center; gap: 8px; font: 400 24px/1.2 var(--he-display); color: var(--gold-soft); }
+.spec h3 svg { width: 17px; height: 17px; color: var(--gold); flex: none; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tags span { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font: 400 13px/1.2 var(--body); border: 1px solid var(--gold-faint); color: var(--gold-soft); }
+.tags svg { width: 15px; height: 15px; }
+.book { justify-self: stretch; display: flex; align-items: center; gap: 8px; min-height: 46px; padding-top: 6px; border-top: 1px solid var(--hairline-cream); color: var(--gold); text-decoration: none; font: 400 15px/1 var(--body); }
+.spec-empty { color: var(--text-soft); font: 400 15px/1.5 var(--body); }
+.spec-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px 28px; width: 100%; margin-top: 10px; }
+.join { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.join span { font: 400 24px/1.2 var(--he-display); color: var(--cream); }
+/* S9: related products */
+.related { padding-block: clamp(56px, 7vw, 96px) clamp(72px, 7vw, 104px); background: linear-gradient(to bottom, transparent, var(--ink) 18%); }
+.related h2 { font: 400 clamp(26px, 3vw, 36px)/1.15 var(--he-display); }
+.related h2 + .cards { margin-top: 28px; }
+.related .cards + h2 { margin-top: 64px; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+@media (max-width: 960px) { .cards, .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .cards, .specs { grid-template-columns: 1fr; } }
+.card { display: flex; flex-direction: column; overflow: hidden; border-radius: 24px; background: var(--charcoal); border: 1px solid var(--gold-wash); text-decoration: none; min-width: 0; }
+.card .pic { position: relative; height: 248px; }
+.card .pic img { position: absolute; inset: 20px 10% 24px; width: 80%; height: calc(100% - 44px); object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 16px 18px rgba(0,0,0,.45)); transition: transform .5s var(--ease); transform-origin: 50% 100%; }
+.card:hover .pic img { transform: scale(1.05); }
+.card .body { padding: 24px; display: grid; gap: 8px; justify-items: start; }
+.card .badge.home { border-color: rgba(246,243,236,.3); color: var(--text-soft); }
+.card h3 { font: 500 22px/1.15 var(--display); color: var(--cream); }
+.card p { font: 400 14px/1.6 var(--body); color: var(--text-faint); }
+.card .go { margin-top: 6px; font: 400 13px/1 var(--body); color: var(--gold-soft); }
+.foot { border-top: 1px solid var(--hairline-cream); padding-block: 36px calc(36px + 72px); color: var(--text-faint); font: 400 13px/1.5 var(--body); background: var(--bg); }
+.foot .wrap { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; align-items: center; }
+.foot img { height: 44px; width: auto; opacity: .9; }
+.legal { display: flex; flex-wrap: wrap; gap: 4px 22px; }
+.legal a { display: inline-flex; align-items: center; min-height: 44px; color: var(--text-soft); text-decoration: none; }
+/* section dock at the bottom, the active screen lit (Figma) */
+.dock { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 25; display: flex; gap: 4px; padding: 5px; border-radius: 999px; background: rgba(10,10,11,.66); backdrop-filter: blur(12px); border: 1px solid var(--hairline-cream); max-width: calc(100vw - 24px); }
+.dock a { padding: 13px 16px; border-radius: 999px; font: 400 13px/1 var(--body); color: var(--text-faint); text-decoration: none; white-space: nowrap; transition: background-color .3s, color .3s; }
+.dock a.on { background: var(--gold); color: var(--on-gold); }
+@media (max-width: 1000px) { .dock a { padding-inline: 10px; } }
+@media (max-width: 899px) { .dock { display: none; } }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom, 0px)); background: rgba(10,10,11,.86); backdrop-filter: blur(12px); border-top: 1px solid var(--hairline); display: none; align-items: center; justify-content: space-between; gap: 12px; }
+.bar b { font: 500 13px/1.3 var(--body); min-width: 0; display: grid; }
+.bar b small { font: 400 13px/1.3 var(--body); color: var(--text-faint); }
+.bar .btn { min-height: 44px; padding-inline: 18px; flex: none; font-size: 14px; }
+
+/* lead form (the blocks of the mitoderm.com form, in this design) */
+html.form-open { overflow: hidden; }
+dialog.lead { padding: 0; border: 0; background: transparent; color: var(--cream); width: min(1000px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); overflow: visible; }
+dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px); }
+.lead-in { position: relative; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); max-height: calc(100dvh - 32px); border-radius: 28px; overflow: hidden; border: 1px solid var(--hairline); background: #111114; box-shadow: 0 40px 120px rgba(0,0,0,.65); }
+.lead-x { position: absolute; z-index: 3; top: 14px; inset-inline-end: 14px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(246,243,236,.24); background: rgba(10,10,11,.55); color: var(--cream); display: grid; place-items: center; cursor: pointer; }
+.lead-x svg { width: 20px; height: 20px; }
+.lead-form { display: grid; align-content: center; padding: 48px 44px 34px; overflow-y: auto; }
+.lead-form h2 { font: 400 clamp(28px, 3vw, 38px)/1.12 var(--he-display); }
+.lead-form h2 .g, .lead-done .g { color: var(--gold-soft); }
+.lead-form .sub { margin-top: 10px; color: var(--text-soft); font: 400 15px/1.5 var(--body); }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 26px; }
+.f { display: grid; min-width: 0; }
+.f input { width: 100%; min-height: 52px; padding: 0 18px; border-radius: 14px; border: 1px solid rgba(246,243,236,.2); background: rgba(246,243,236,.05); color: var(--cream); font: 400 16px/1.2 var(--body); text-align: right; }
+.f input::placeholder { color: rgba(246,243,236,.62); }
+.f input[aria-invalid="true"] { border-color: var(--error); }
+.err { margin: 6px 4px 0; font: 400 13px/1.35 var(--body); color: var(--error); }
+.err:empty { display: none; }
+.consent { display: flex; align-items: center; gap: 12px; min-height: 44px; margin-top: 14px; font: 400 14px/1.4 var(--body); color: var(--text-soft); cursor: pointer; }
+.consent input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--gold); cursor: pointer; }
+.consent input[aria-invalid="true"] { outline: 2px solid var(--error); outline-offset: 2px; }
+.submit { width: 100%; margin-top: 14px; min-height: 54px; }
+.submit i { display: none; width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(201,162,75,.3); border-top-color: var(--gold); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.busy .fields, .busy .consent { opacity: .4; pointer-events: none; }
+.busy .submit { background: transparent; border-color: var(--gold); color: var(--gold); cursor: progress; transform: none; }
+.busy .submit i { display: block; }
+.privacy { display: flex; align-items: center; gap: 8px; margin-top: 14px; font: 400 13px/1.4 var(--body); color: var(--text-faint); }
+.privacy svg { width: 16px; height: 16px; flex: none; color: var(--gold); }
+.lead-fail { margin-top: 14px; }
+.fail-msg { margin-bottom: 10px; font: 400 15px/1.45 var(--body); color: var(--error); }
+.lead-fail .btn { width: 100%; }
+.lead-done { display: grid; gap: 18px; justify-items: start; align-content: center; min-height: 100%; outline: none; }
+.lead-done h2 { font: 400 clamp(32px, 3.6vw, 44px)/1.1 var(--he-display); }
+.lead-done .mob { display: none; font: 400 30px/1.1 var(--he-display); }
+.lead-panel { position: relative; display: grid; place-items: center; align-content: center; gap: 18px; padding: 56px 36px; background: url(img/bg.webp) 70% 50% / cover no-repeat, var(--bg); min-height: 560px; }
+.lead-panel img { width: min(100%, 420px); height: auto; filter: drop-shadow(0 26px 40px rgba(0,0,0,.55)); }
+.lead-panel p { font: 500 clamp(26px, 2.6vw, 34px)/1 var(--display); letter-spacing: .06em; }
+
+/* phone: no sequence; the product is a small HD still beside the heading */
+.head { display: contents; }
+.slot { display: none; }
+@media (max-width: 899px) {
+  #seq, .still { display: none !important; }
+  .sec { min-height: 0; padding-block: 34px 22px; }
+  .head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(118px, 38%); align-items: center; gap: 14px; width: 100%; }
+  .head > :not(.slot) { grid-column: 1; }
+  .slot { display: block; grid-column: 2; grid-row: 1 / span 2; width: 100%; height: auto; }
+  .slot.wide { grid-column: 1 / -1; grid-row: auto; margin-top: 6px; }   /* S5: the three stations on their line, a strip under the heading */
+  .split { grid-template-columns: 1fr; }
+  .kitcard { justify-self: stretch; padding: 22px 20px 24px; }
+  .steps { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 80%; gap: 12px; margin: 28px calc(-1 * var(--gutter)) 0; padding: 0 var(--gutter) 6px;
+    overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); scrollbar-width: none; overscroll-behavior-x: contain; }
+  .steps::-webkit-scrollbar { display: none; }
+  .step { scroll-snap-align: start; padding: 24px 22px; }
+  .spec-sec.sec { padding-block: 48px 40px; }
+  .spec-foot { flex-direction: column; align-items: stretch; }
+  .spec-foot .btn { width: 100%; white-space: normal; }
+  .related { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .bar { display: flex; }
+  dialog.lead { width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; }
+  .lead-in { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: 100dvh; max-height: 100dvh; border-radius: 0; border: 0; }
+  .lead-panel { order: -1; min-height: 0; grid-auto-flow: column; justify-content: center; gap: 14px; padding: 18px 64px 16px; }
+  .lead-panel img { width: auto; height: 104px; }
+  .lead-panel p { font-size: 22px; }
+  .lead-form { align-content: start; padding: 28px 20px 32px; }
+  .fields { grid-template-columns: 1fr; gap: 12px; margin-top: 22px; }
+  .lead-done .mob { display: block; }
+}
+@media (max-width: 380px) { .cta { flex-direction: column; align-items: stretch; } }
+/* reveal (0.6 s, 20 px, once); without JS everything shows */
+.js .rv { opacity: 0; transform: translateY(20px); transition: opacity .6s var(--ease), transform .6s var(--ease); transition-delay: var(--d, 0s); }
+.js .rv.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .js .rv { opacity: 1; transform: none; transition: none; }
+  .btn:hover, .card:hover .pic img { transform: none; }
+  .submit i { animation-duration: 2.4s; }
+}
+</style>
+
+<div class="bg" aria-hidden="true"></div>
+<img class="still" src="seq/v1-meet_v2-why_000.webp" alt="" aria-hidden="true">
+<canvas id="seq" aria-hidden="true"></canvas>
+<header class="top"><div class="wrap">
+  <a class="logo" href="#meet" aria-label="MITODERM"><img src="img/logo-mark.png" alt="MITODERM"></a>
+  <a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20V-TECH%20SYSTEM" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a>
+</div></header>
+<main>
+  <section id="meet" class="sec" data-st="0"><div class="wrap"><div class="copy">
+    <div class="badges rv"><span class="mark-line"><bdi>V-TECH FACE</bdi></span><span class="badge">התחדשות הפנים</span><span class="badge pro">מקצועי</span></div>
+    <p class="kicker rv" style="--d:.06s">אקסוזומים סינתטיים · ערכה מקצועית</p>
+    <div class="head">
+      <h1 class="rv" style="--d:.12s"><bdi>V-TECH SYSTEM</bdi></h1>
+      <p class="tag rv" style="--d:.18s">התחדשות עורית ברמת הדרמיס</p>
+      <img class="slot" src="img/m1.webp" alt="" aria-hidden="true">
+    </div>
+    <p class="lead rv" style="--d:.24s">ערכה מקצועית מאיטליה המבוססת על אקסוזומים סינתטיים: אמפולות סרום ומסכת ג׳ל ללא שטיפה לפרוטוקולי המיקרונידלינג שלכם.</p>
+    <ul class="chips rv" style="--d:.3s"><li>אקסוזומים סינתטיים</li><li><bdi class="nw">PDRN 2%</bdi></li><li>ערכה מקצועית</li><li>טכנולוגיה איטלקית</li></ul>
+    <div class="cta rv" style="--d:.36s"><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20V-TECH%20SYSTEM" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a><a class="btn ghost" href="#inside">גלו מה בפנים ↓</a></div>
+  </div></div></section>
+  <section id="why" class="sec" data-st="1"><div class="wrap"><div class="copy">
+    <p class="kicker line rv">למה?</p>
+    <div class="head">
+      <h2 class="rv" style="--d:.06s">מיקרונידלינג פותח את הדלת</h2>
+      <img class="slot" src="img/m2.webp" alt="" aria-hidden="true">
+    </div>
+    <p class="lead rv" style="--d:.12s">המיקרו-תעלות זמניות. מה שתחדירו דרכן קובע את התוצאה.</p>
+    <p class="kicker rv" style="--d:.18s">אינדיקציות</p>
+    <ul class="chips gold rv" style="--d:.24s"><li>עור עייף וחסר ברק</li><li>קמטים וקמטוטים</li><li>סימני פוסט אקנה</li><li>אובדן אלסטיות</li></ul>
+  </div></div></section>
+  <section id="inside" class="sec" data-st="2"><div class="wrap"><div class="copy">
+    <p class="kicker line rv">מה בפנים</p>
+    <div class="head">
+      <h2 class="rv" style="--d:.06s">בתוך כל טיפה</h2>
+      <img class="slot" src="img/m3.webp" alt="" aria-hidden="true">
+    </div>
+    <p class="lead rv" style="--d:.12s">אקסוזומים סינתטיים נושאים <bdi class="nw">PDRN 2%</bdi>, פפטידים ביומימטיים ותאי גזע של תפוח אל המקום שבו המחטים פתחו את הדרך.</p>
+    <p class="kicker rv" style="--d:.18s">רכיבים פעילים</p>
+    <ul class="chips rv" style="--d:.24s"><li>תאי גזע של תפוח (<bdi class="nw">Malus domestica</bdi>)</li><li><bdi class="nw">PDRN 2%</bdi> · ‏20 מ״ג/מ״ל</li><li><bdi class="nw">Acetyl Decapeptide-3</bdi> · <bdi class="nw">Oligopeptide-20</bdi></li><li>אקסוזומים סינתטיים</li></ul>
+    <details class="rv" style="--d:.3s"><summary>הפורמולה המלאה</summary><ul><li><bdi class="nw">PDRN 2%</bdi> (20 מ״ג/מ״ל), מתא גזע של סלמון</li><li>פפטידים ביומימטיים: <bdi class="nw">Acetyl Decapeptide-3</bdi> &amp; <bdi class="nw">Oligopeptide-20</bdi></li><li>תאי גזע של תפוח (<bdi class="nw">Malus domestica</bdi>)</li><li><bdi class="nw">PDRN 1%</bdi> במשקל מולקולרי נמוך – מסכת ג׳ל</li><li><bdi class="nw">Acetyl Heptapeptide-9</bdi> – נשא זהב קולואידי</li><li><bdi class="nw">Copper Tripeptide-1</bdi> – נחושת טריפפטיד</li><li>פוליסכריד מריר חלזון</li><li>חומצה היאלורונית ואלוורה</li></ul></details>
+  </div></div></section>
+  <section id="feel" class="sec" data-st="3"><div class="wrap"><div class="copy">
+    <p class="kicker line rv">הרגישו</p>
+    <div class="head">
+      <h2 class="rv" style="--d:.06s">רואים כבר מהטיפול הראשון</h2>
+      <img class="slot" src="img/m4.webp" alt="" aria-hidden="true">
+    </div>
+    <p class="lead rv" style="--d:.12s">לחות וזוהר לאחר הטיפול הראשון; המבנה, המרקם והצפיפות ממשיכים להשתפר לאורך הסדרה.</p>
+    <ul class="pins rv" style="--d:.18s"><li>לחות וזוהר</li><li>מבנה וצפיפות</li><li>מיצוק ואלסטיות</li><li>גוון אחיד</li></ul>
+  </div></div></section>
+  <section id="protocol" class="sec protocol" data-st="4"><div class="wrap">
+    <div class="copy">
+      <p class="kicker line rv">פרוטוקול</p>
+      <div class="head">
+        <h2 class="rv" style="--d:.06s">שלושה שלבים, כל שבועיים</h2>
+        <img class="slot wide" src="img/m5.webp" alt="" aria-hidden="true">
+      </div>
+      <p class="lead rv" style="--d:.12s">טיפול אחד בכל 14 יום. סדרה מומלצת: 4–6 טיפולים, בהתאם למצב העור ולמטרת הטיפול.</p>
+      <p class="pill rv" style="--d:.18s">בשילוב <bdi class="nw">BIOSPICULE™ MICRO BOOST 10%</bdi>: סדרה של 3–4 טיפולים, במרווח של 4 שבועות בין טיפול לטיפול.</p>
+      <p class="note rv" style="--d:.24s">הפרוטוקול המלא, כולל מינונים, מגיע יחד עם הרכישה.</p>
+    </div>
+    <ol class="steps"><li class="step rv" style="--d:0.00s"><span class="n">01</span><h3><bdi class="nw">V-TECH SERUM</bdi></h3><p>יש ליישם את <bdi class="nw">V‑TECH Serum</bdi> באמצעות <bdi class="nw">MITOPEN</bdi>, מזופן או מכשור מקצועי מתאים אחר.</p></li><li class="step rv" style="--d:0.08s"><span class="n">02</span><h3><bdi class="nw">V-TECH GEL MASK</bdi></h3><p>לאחר סיום העבודה עם הסרום, יש למרוח <bdi class="nw">V‑TECH Gel Mask</bdi> על אותו אזור. יש לעסות בעדינות עד לספיגה מלאה. אין צורך בשטיפה.</p></li><li class="step rv" style="--d:0.16s"><span class="n">03</span><h3>לאחר הסרום</h3><p>מומלץ להניח מסכת <bdi class="nw">EXOCELL MASK</bdi> להחדרה של חומצה הילארונית, תמציות צמחים ואלוורה. בסיום <bdi class="nw">DERMA RECOVERY CREAM</bdi>. מקדם הגנה חובה.</p></li></ol>
+  </div></section>
+  <section id="kit" class="sec" data-st="5"><div class="wrap"><div class="copy">
+    <p class="kicker line rv">ערכה ועובדות</p>
+    <div class="head">
+      <h2 class="rv" style="--d:.06s">מה באריזה</h2>
+      <img class="slot" src="img/m6.webp" alt="" aria-hidden="true">
+    </div>
+    <p class="lead rv" style="--d:.12s">5 אמפולות סרום של 5 מ״ל ו-5 שקיות מסכת ג׳ל של 5 מ״ל. סדרה מומלצת: 4–6 טיפולים, בהתאם למצב העור ולמטרת הטיפול.</p>
+    <div class="facts"><div class="fact rv" style="--d:0.00s"><b><bdi dir="ltr">5 × 5</bdi></b><span>אמפולות סרום של 5 מ״ל</span></div><div class="fact rv" style="--d:0.08s"><b><bdi dir="ltr">5 × 5</bdi></b><span>שקיות מסכת ג׳ל של 5 מ״ל</span></div><div class="fact rv" style="--d:0.16s"><b><bdi dir="ltr">4–6</bdi></b><span>טיפולים בסדרה</span></div><div class="fact rv" style="--d:0.24s"><b><bdi dir="ltr">14</bdi></b><span>יום בין טיפול לטיפול</span></div></div>
+  </div></div></section>
+  <section id="offer" class="sec offer" data-st="6"><div class="wrap split">
+    <div class="copy">
+      <p class="kicker line rv">הצעה</p>
+      <h2 class="rv" style="--d:.06s">הכניסו את <bdi class="nw">V-TECH</bdi> לקליניקה שלכם</h2>
+      <p class="lead rv" style="--d:.12s">לשימוש מקצועי בלבד. פרוטוקולים והדרכה מבית מיטודרם; המומחה שלנו ייעץ לכם על תמחור לקליניקה שלכם.</p>
+      <div class="cta rv" style="--d:.18s"><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20V-TECH%20SYSTEM" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a><a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20V-TECH%20SYSTEM" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לתיאום הדרכה</a></div>
+      <div class="contacts rv" style="--d:.24s">
+        <a href="tel:+972543262182"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span>לכל הפרטים: <bdi dir="ltr">054-326-2182</bdi></span></a>
+        <a href="mailto:info@mitoderm.com?subject=V-TECH%20SYSTEM"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg><span>דוא״ל: <bdi dir="ltr">info@mitoderm.com</bdi></span></a>
+      </div>
+    </div>
+    <aside class="kitcard rv" style="--d:.1s" aria-labelledby="kitcard-h">
+      <div class="kc-head"><h3 id="kitcard-h">מה באריזה</h3><span class="badge"><bdi>V-TECH FACE</bdi></span></div>
+      <img class="kc-pic" src="img/kit.webp" alt="V-TECH SYSTEM: 5 אמפולות סרום של 5 מ״ל ו-5 שקיות מסכת ג׳ל של 5 מ״ל" width="760" height="749" loading="lazy">
+      <p class="kc-qty"><b><bdi dir="ltr">5×</bdi></b><span>סרום — אמפולות של 5 מ״ל – אקסוזומים סינתטיים, <bdi class="nw">PDRN 2%</bdi>, פפטידים ביומימטיים, תאי גזע של תפוח.</span></p><p class="kc-qty"><b><bdi dir="ltr">5×</bdi></b><span>מסכת ג׳ל — שקיות של 5 מ״ל – <bdi class="nw">PDRN 1%</bdi>, פפטידים עם זהב קולואידי, נחושת, פוליסכריד מריר חלזון, חומצה היאלורונית ואלוורה.</span></p>
+      <ul class="chips gold"><li>היבואנית הבלעדית של <bdi class="nw">VM</bdi> בישראל</li><li>הדרכה ופרוטוקולים</li></ul>
+    </aside>
+  </div></section>
+  <section id="specialists" class="sec spec-sec" data-st="7" aria-labelledby="spec-h"><div class="wrap">
+    <p class="kicker line rv">מצאו מומחה</p>
+    <h2 class="rv" id="spec-h" style="--d:.06s">מומחי <bdi class="nw">MITODERM</bdi> מוסמכים</h2>
+    <p class="lead rv" style="--d:.12s">פרוטוקול <bdi class="nw">V-TECH</bdi>, פילינג <bdi class="nw">EXO-NAD</bdi> ומסכת <bdi class="nw">EXOCELL</bdi> מבוצעים על ידי איש מקצוע.</p>
+    <div class="filter rv" style="--d:.18s" role="group" aria-labelledby="spec-f"><span class="lbl" id="spec-f">מקצוע</span><button type="button" class="fchip" data-tag="*" aria-pressed="false">הכל</button><button type="button" class="fchip" data-tag="פנים" aria-pressed="true">פנים</button><button type="button" class="fchip" data-tag="קרקפת" aria-pressed="false">קרקפת</button><button type="button" class="fchip" data-tag="טריכולוג/ית" aria-pressed="false">טריכולוג/ית</button></div>
+    <div class="specs" aria-live="polite"><article class="spec rv" style="--d:0.00s" data-tags="פנים"><div class="av" aria-hidden="true">ל</div><div class="sb"><h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>לוד</span></h3><div class="tags"><span>פנים</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.8"/></svg>מוסמך/ת</span></div><a class="book" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20V-TECH%20SYSTEM" data-lead aria-haspopup="dialog">קביעת ייעוץ <span aria-hidden="true">↗</span></a></div></article><article class="spec rv" style="--d:0.08s" data-tags="פנים"><div class="av" aria-hidden="true">ק</div><div class="sb"><h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>קרית אתא</span></h3><div class="tags"><span>פנים</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.8"/></svg>מוסמך/ת</span></div><a class="book" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20V-TECH%20SYSTEM" data-lead aria-haspopup="dialog">קביעת ייעוץ <span aria-hidden="true">↗</span></a></div></article><article class="spec rv" style="--d:0.16s" data-tags="פנים"><div class="av" aria-hidden="true">כ</div><div class="sb"><h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>כרמיאל</span></h3><div class="tags"><span>פנים</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.8"/></svg>מוסמך/ת</span></div><a class="book" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20V-TECH%20SYSTEM" data-lead aria-haspopup="dialog">קביעת ייעוץ <span aria-hidden="true">↗</span></a></div></article></div>
+    <p class="spec-empty" role="status" hidden>עדיין אין מומחים מוסמכים בקטגוריה זו – ראו את הרשימה המלאה.</p>
+    <div class="spec-foot rv">
+      <a class="btn primary" href="https://www.mitoderm.com/he" target="_blank" rel="noopener">רשימת קוסמטיקאיות וקליניקות מוסמכות</a>
+      <div class="join"><span>אתם קוסמטיקאים?</span><a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20V-TECH%20SYSTEM" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">הגשת בקשה</a></div>
+    </div>
+  </div></section>
+  <section class="related" data-st="8"><div class="wrap">
+    <h2 class="rv">עוד מקו V-TECH FACE</h2>
+    <div class="cards"><a class="card rv" style="--d:0.00s" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20EXOCELL%20MASK" target="_blank" rel="noopener"><div class="pic"><img src="img/exocell-mask.webp" alt="EXOCELL MASK" loading="lazy"></div><div class="body"><span class="badge pro">מקצועי</span><h3><bdi>EXOCELL MASK</bdi></h3><p>מסכת ביו-צלולוז מתקדמת – כמו עור שני</p><span class="go">לקבלת פרטים ←</span></div></a><a class="card rv" style="--d:0.08s" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20EXOTECH%20GEL" target="_blank" rel="noopener"><div class="pic"><img src="img/exotech-gel.webp" alt="EXOTECH GEL" loading="lazy"></div><div class="body"><span class="badge home">טיפוח ביתי</span><h3><bdi>EXOTECH GEL</bdi></h3><p>טיפול ביתי משלים לשיקום, לחות והתחדשות העור</p><span class="go">לקבלת פרטים ←</span></div></a></div>
+    <h2 class="rv">משלימים את הטיפול</h2>
+    <div class="cards"><a class="card rv" style="--d:0.00s" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20MITOPEN" target="_blank" rel="noopener"><div class="pic"><img src="img/mitopen.webp" alt="MITOPEN" loading="lazy"></div><div class="body"><span class="badge pro">מקצועי</span><h3><bdi>MITOPEN</bdi></h3><p>עט מיקרונידלינג מקצועי ואלחוטי</p><span class="go">לקבלת פרטים ←</span></div></a><a class="card rv" style="--d:0.08s" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20MICRO%20BOOST%2010%25" target="_blank" rel="noopener"><div class="pic"><img src="img/micro-boost-10.webp" alt="MICRO BOOST 10%" loading="lazy"></div><div class="body"><span class="badge pro">מקצועי</span><h3><bdi>MICRO BOOST 10%</bdi></h3><p>הסרום המקצועי והמרוכז ביותר בסדרת <bdi class="nw">BIOSPICULE™</bdi></p><span class="go">לקבלת פרטים ←</span></div></a><a class="card rv" style="--d:0.16s" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20DERMA%20RECOVERY%20CREAM" target="_blank" rel="noopener"><div class="pic"><img src="img/derma-recovery.webp" alt="DERMA RECOVERY CREAM" loading="lazy"></div><div class="body"><span class="badge home">טיפוח ביתי</span><h3><bdi>DERMA RECOVERY CREAM</bdi></h3><p>קרם משקם להרגעה ולתמיכה במחסום העור</p><span class="go">לקבלת פרטים ←</span></div></a></div>
+  </div></section>
+</main>
+<footer class="foot"><div class="wrap"><img src="img/logo.png" alt="MITODERM — Where Science Meets Beauty"><span>© 2026 מיטודרם – כשהמדע פוגש ביופי</span><span class="legal"><a href="#">הצהרת נגישות</a><a href="#">מדיניות פרטיות</a></span></div></footer>
+<nav class="dock" aria-label="ניווט בעמוד"><a href="#meet" data-i="0">הכירו</a><a href="#why" data-i="1">למה?</a><a href="#inside" data-i="2">מה בפנים</a><a href="#feel" data-i="3">הרגישו</a><a href="#protocol" data-i="4">פרוטוקול</a><a href="#kit" data-i="5">ערכה ועובדות</a><a href="#offer" data-i="6">הצעה</a><a href="#specialists" data-i="7">מומחים</a></nav>
+<div class="bar"><b><bdi>V-TECH SYSTEM</bdi><small>ערכה מקצועית</small></b><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20V-TECH%20SYSTEM" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a></div>
+
+<!-- Lead form. This page is a static preview and cannot send data: the submit handler prevents the default and only
+     simulates the request. In production the form POSTs JSON {name, phone, email, profession, source: 'V-TECH SYSTEM page'}
+     to data-endpoint (/api/leads), as mitoderm.com does. -->
+<dialog class="lead" id="lead" aria-labelledby="lead-h">
+  <div class="lead-in">
+    <button type="button" class="lead-x" data-close aria-label="סגירה"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <form class="lead-form" novalidate data-endpoint="/api/leads">
+      <div class="lead-body">
+        <h2 id="lead-h">לקבלת פתרונות <span class="g">מותאמים</span> לקליניקה שלך</h2>
+        <p class="sub">השאר הודעה ונציגנו יצרו עמך קשר</p>
+        <div class="fields">
+          <div class="f"><input name="name" type="text" autocomplete="name" placeholder="שם ושם משפחה" aria-label="שם ושם משפחה" aria-describedby="e-name" required><p class="err" id="e-name"></p></div>
+          <div class="f"><input name="profession" type="text" autocomplete="organization-title" placeholder="מקצוע" aria-label="מקצוע" aria-describedby="e-profession" required><p class="err" id="e-profession"></p></div>
+          <div class="f"><input name="email" type="email" dir="ltr" autocomplete="email" inputmode="email" placeholder="אימייל" aria-label="אימייל" aria-describedby="e-email" required><p class="err" id="e-email"></p></div>
+          <div class="f"><input name="phone" type="tel" dir="ltr" autocomplete="tel" inputmode="tel" placeholder="טלפון" aria-label="טלפון" aria-describedby="e-phone" required><p class="err" id="e-phone"></p></div>
+        </div>
+        <label class="consent"><input type="checkbox" name="consent" aria-describedby="e-consent" required><span>אני מסכים/ה לתנאי מיטודרם בע״מ*</span></label><p class="err" id="e-consent"></p>
+        <button class="btn primary submit" type="submit"><span>בקשה לשיחה חוזרת</span><i aria-hidden="true"></i></button>
+        <p class="privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>המידע שתמסור משמש את חברת מיטודרם בע&quot;מ בלבד *</span></p>
+        <div class="lead-fail" role="alert" hidden><p class="fail-msg">הטופס לא נשלח. נסו שוב או כתבו לנו <span class="nw">ב-<bdi>WhatsApp</bdi></span>.</p><a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20V-TECH%20SYSTEM" target="_blank" rel="noopener"><bdi dir="ltr">WhatsApp</bdi></a></div>
+      </div>
+      <div class="lead-done" role="status" tabindex="-1" hidden>
+        <p class="mob">איזה כיף!</p>
+        <h2>הטופס נשלח <span class="g">בהצלחה</span></h2>
+        <button type="button" class="btn ghost" data-close>למידע נוסף</button>
+      </div>
+    </form>
+    <div class="lead-panel" aria-hidden="true"><img src="img/kit.webp" alt=""><p><bdi>V-TECH SYSTEM</bdi></p></div>
+  </div>
+</dialog>
+<script type="application/json" id="lead-errors">{"name_length": "השם חייב להכיל לפחות 3 תווים", "name_required": "שם הוא שדה חובה", "email_required": "אימייל הוא שדה חובה", "email_invalid": "אימייל לא תקין", "phone_required": "מספר הטלפון הוא שדה חובה", "phone_length": "מספר הטלפון חייב להכיל לפחות 10 תווים", "profession_length": "שם המקצוע חייב להיות באורך של לפחות 3 תווים", "profession_required": "שם המקצוע נדרש", "consent_required": "יש לאשר את התנאים"}</script>
+
+<script>
+// Scroll story on pre-rendered Blender frames: between two neighbouring screens their run plays (frame = share of the
+// scroll from the first screen, once it has been read, to the next one); on a screen its key frame holds. From the
+// offer on the frames fade out and the smoke stays.
+(() => {
+  const RUNS = [["v1-meet", "v2-why"], ["v2-why", "v3-inside"], ["v3-inside", "v4-feel"], ["v4-feel", "v5-protocol"], ["v5-protocol", "v6-kit"]], N = 40, R = RUNS.length;
+  const src = (r, i) => `seq/${RUNS[r][0]}_${RUNS[r][1]}_${String(i).padStart(3, '0')}.webp`;
+  const canvas = document.getElementById('seq'), ctx = canvas.getContext('2d'), bg = document.querySelector('.bg');
+  const secs = ['meet', 'why', 'inside', 'feel', 'protocol', 'kit'].map(id => document.getElementById(id)), offer = document.getElementById('offer');
+  const phone = matchMedia('(max-width: 899px)'), calm = matchMedia('(prefers-reduced-motion: reduce)');
+  const frames = RUNS.map(() => []); let want = [0, 0], shown = null, queued = false;
+  const ready = im => im && im.complete && im.naturalWidth > 0;
+  function load(r, i) {
+    if (!frames[r][i]) { const im = new Image(); im.decoding = 'async'; im.onload = () => { if (r === want[0] && Math.abs(i - want[1]) <= 2) queue(); }; im.src = src(r, i); frames[r][i] = im; }
+    return frames[r][i];
+  }
+  const loadRun = r => { if (r >= 0 && r < R && !phone.matches) { load(r, 0); load(r, N - 1); for (let i = 1; i < N - 1; i++) load(r, i); } };   // a phone shows stills only
+  function nearest(r, i) {   // the closest loaded frame of the run; its key frames are shared with the neighbours
+    for (let d = 0; d < N; d++) for (const j of [i - d, i + d]) if (j >= 0 && j < N && ready(frames[r][j])) return [r, j];
+    if (i < N / 2 && r > 0 && ready(frames[r - 1][N - 1])) return [r - 1, N - 1];
+    if (r < R - 1 && ready(frames[r + 1][0])) return [r + 1, 0];
+    return null;
+  }
+  function paint() {
+    queued = false; if (phone.matches) return;
+    const f = ready(frames[want[0]][want[1]]) ? want : nearest(want[0], want[1]);
+    if (!f || (shown && f[0] === shown[0] && f[1] === shown[1])) return;
+    const im = frames[f[0]][f[1]], W = canvas.width, H = canvas.height, s = Math.max(W / im.naturalWidth, H / im.naturalHeight);
+    const w = im.naturalWidth * s, h = im.naturalHeight * s;
+    ctx.clearRect(0, 0, W, H); ctx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h); shown = f;
+  }
+  const queue = () => { if (!queued) { queued = true; requestAnimationFrame(paint); } };
+  function size() { const dpr = Math.min(2, devicePixelRatio || 1); canvas.width = Math.round(innerWidth * dpr); canvas.height = Math.round(innerHeight * dpr); shown = null; paint(); }
+  function position() {   // 0 … R: run index + its progress; a screen holds its key frame until it has been read
+    const h = innerHeight, y = scrollY; let pos = 0;
+    for (let k = 0; k < R; k++) {
+      const s = secs[k], a = s.offsetTop + Math.max(k ? 0.15 * h : 0.04 * h, s.offsetHeight - 0.85 * h), b = secs[k + 1].offsetTop - 0.12 * h;
+      if (y >= a) pos = k + Math.min(1, (y - a) / Math.max(1, b - a));
+    }
+    return pos;
+  }
+  function onScroll() {
+    let pos = position(); if (calm.matches) pos = Math.round(pos);   // reduced motion: the key frames only
+    const r = Math.min(R - 1, Math.floor(pos)), i = Math.round((pos - r) * (N - 1));
+    want = [r, i]; loadRun(r); if (pos - r > 0.3) loadRun(r + 1); if (pos - r < 0.3) loadRun(r - 1);
+    const fade = Math.min(1, Math.max(0, (scrollY - (offer.offsetTop - 0.9 * innerHeight)) / (0.5 * innerHeight)));
+    canvas.style.opacity = String(1 - fade);   // the offer has its own kit card: no 3D behind it
+    bg.style.transform = `translate3d(0, ${(-scrollY * 0.02).toFixed(1)}px, 0)`;
+    queue();
+  }
+  loadRun(0);
+  addEventListener('scroll', onScroll, { passive: true }); addEventListener('resize', () => { size(); onScroll(); });
+  phone.addEventListener('change', () => { size(); onScroll(); }); size(); onScroll();
+  window.__seq = () => ({ run: want[0], want: want[1], shown, loaded: frames.map(f => f.filter(ready).length), N, R, opacity: +canvas.style.opacity });   // for the QA script
+})();
+
+// page: reveal on scroll, the dock, the specialists filter and the lead form
+(function () {
+  var root = document.documentElement, reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var secs = Array.prototype.slice.call(document.querySelectorAll('[data-st]')), dock = Array.prototype.slice.call(document.querySelectorAll('.dock a'));
+  function onScroll() {
+    var mid = window.innerHeight / 2, best = 0;
+    secs.forEach(function (s) { if (s.getBoundingClientRect().top <= mid) best = +s.dataset.st; });
+    best = Math.min(best, dock.length - 1);
+    dock.forEach(function (a) { var on = +a.dataset.i === best; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current'); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  var rv = document.querySelectorAll('.rv');
+  if (reduce || !('IntersectionObserver' in window)) rv.forEach(function (el) { el.classList.add('in'); });
+  else {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -80px 0px' });
+    rv.forEach(function (el) { io.observe(el); });
+  }
+  var chips = Array.prototype.slice.call(document.querySelectorAll('.fchip')), cards = Array.prototype.slice.call(document.querySelectorAll('.spec'));
+  function filter(tag) {
+    chips.forEach(function (c) { c.setAttribute('aria-pressed', String(c.dataset.tag === tag)); });
+    cards.forEach(function (c) { c.hidden = !(tag === '*' || c.dataset.tags.split('|').indexOf(tag) >= 0); });
+    document.querySelector('.spec-empty').hidden = cards.some(function (c) { return !c.hidden; });
+  }
+  chips.forEach(function (c) { c.addEventListener('click', function () { filter(c.dataset.tag); }); });
+
+  var dlg = document.getElementById('lead');
+  if (!dlg || typeof dlg.showModal !== 'function') return;   // no dialog support: the buttons stay WhatsApp links
+  var form = dlg.querySelector('form'), body = dlg.querySelector('.lead-body'), done = dlg.querySelector('.lead-done');
+  var fail = dlg.querySelector('.lead-fail'), submit = form.querySelector('.submit'), consent = form.elements.consent;
+  var ERR = JSON.parse(document.getElementById('lead-errors').textContent), NAMES = ['name', 'profession', 'email', 'phone'];
+  var opener = null, tried = false, sending = false;
+  function phoneOk(v) { var d = v.replace(/[\s\-().]/g, ''); return /^0\d{8,9}$/.test(d) || /^\+972[1-9]\d{7,8}$/.test(d); }
+  function check(name) {
+    var el = form.elements[name], v = el.value.trim(), msg = '';
+    if (name === 'name') msg = !v ? ERR.name_required : v.length < 3 ? ERR.name_length : '';
+    if (name === 'profession') msg = !v ? ERR.profession_required : v.length < 3 ? ERR.profession_length : '';
+    if (name === 'email') msg = !v ? ERR.email_required : !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) ? ERR.email_invalid : '';
+    if (name === 'phone') msg = !v ? ERR.phone_required : !phoneOk(v) ? ERR.phone_length : '';
+    el.setAttribute('aria-invalid', String(!!msg)); document.getElementById('e-' + name).textContent = msg;
+    return !msg;
+  }
+  function checkConsent() {
+    consent.setAttribute('aria-invalid', String(!consent.checked));
+    document.getElementById('e-consent').textContent = consent.checked ? '' : ERR.consent_required;
+    return consent.checked;
+  }
+  NAMES.forEach(function (n) { form.elements[n].addEventListener('input', function () { if (tried) check(n); }); });
+  consent.addEventListener('change', function () { if (tried) checkConsent(); });
+  function setBusy(on) {
+    sending = on; form.classList.toggle('busy', on); submit.disabled = on; consent.disabled = on;
+    if (on) form.setAttribute('aria-busy', 'true'); else form.removeAttribute('aria-busy');
+    NAMES.forEach(function (n) { form.elements[n].readOnly = on; });
+  }
+  function sendLead(payload) {   // preview: waits 1.2 s and succeeds (window.__leadFail = true shows the error state)
+    return new Promise(function (resolve, reject) { setTimeout(function () { if (window.__leadFail) reject(new Error('preview')); else resolve(payload); }, 1200); });
+  }
+  form.addEventListener('submit', function (e) {
+    e.preventDefault(); if (sending) return; tried = true;
+    var ok = NAMES.map(check).every(Boolean); ok = checkConsent() && ok;
+    if (!ok) { var bad = form.querySelector('[aria-invalid="true"]'); if (bad) bad.focus(); return; }
+    var payload = { name: form.elements.name.value.trim(), phone: form.elements.phone.value.trim(), email: form.elements.email.value.trim(), profession: form.elements.profession.value.trim(), source: 'V-TECH SYSTEM page' };
+    fail.hidden = true; setBusy(true);
+    sendLead(payload).then(function () { setBusy(false); body.hidden = true; done.hidden = false; done.focus(); }, function () { setBusy(false); fail.hidden = false; });
+  });
+  function reset() {
+    form.reset(); tried = false; body.hidden = false; done.hidden = true; fail.hidden = true;
+    NAMES.forEach(function (n) { form.elements[n].removeAttribute('aria-invalid'); document.getElementById('e-' + n).textContent = ''; });
+    consent.removeAttribute('aria-invalid'); document.getElementById('e-consent').textContent = '';
+  }
+  function open(e) { e.preventDefault(); opener = e.currentTarget; if (!done.hidden) reset(); dlg.showModal(); root.classList.add('form-open'); form.elements.name.focus(); }
+  function finish() { if (!root.classList.contains('form-open')) return; root.classList.remove('form-open'); if (opener) opener.focus(); }
+  function close() { if (dlg.open) dlg.close(); finish(); }
+  document.querySelectorAll('[data-lead]').forEach(function (a) { a.addEventListener('click', open); });
+  dlg.querySelectorAll('[data-close]').forEach(function (b) { b.addEventListener('click', close); });
+  dlg.addEventListener('click', function (e) { if (e.target === dlg) close(); });
+  dlg.addEventListener('cancel', function (e) { e.preventDefault(); close(); });
+  dlg.addEventListener('close', finish);
+})();
+</script>
