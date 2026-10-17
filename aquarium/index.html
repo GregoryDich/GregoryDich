@@ -1897,7 +1897,7 @@
       allowBehind: false, near: false, spot: null, spot2: null, outX: 0, outY: 0,
       school: null, isLeader: false, slA: 0, slU: 0, slZ: 0, slP: 0,
       dart: 0, peck: -1, peckOff: 0, nextPeck: 0, other: null, flake: null, feedAt: 0,
-      offUntil: 0, lastOff: -99, hiddenT: 0, aliveT: 0, avY: 0, avZ: 0, viol: 0, lastExcursion: 0,
+      offUntil: 0, lastOff: -99, hiddenT: 0, aliveT: 0, avY: 0, avZ: 0, pX: 0, pY: 0, pZ: 0, colM: false, hSide: 0, viol: 0, lastExcursion: 0,
       hx: 0, hy: 0, hz: 1.1, hrx: 1, hry: 1, nextFeedLook: 0,
       // геометрия кадра (layoutFish)
       n: 0, ub: new Float32Array(SL_MAX + 1), px: new Float32Array(SL_MAX + 1), py: new Float32Array(SL_MAX + 1),
@@ -2276,10 +2276,12 @@
     setState(f, kind, t, rand(7, 15));
     const list = spotsOf(kind === ST.PICK ? "pick" : "graze", f);
     let sp = null, best = 1e9;
-    for (let i = 0; i < list.length; i++) { const q = spotLoad(list[i], f) * 10 + R() * 3; if (q < best) { best = q; sp = list[i]; } }
+    // V5: точка — на одного (занятая не делится); из свободных — ближняя (с долей случая)
+    for (let i = 0; i < list.length; i++) { const q = spotLoad(list[i], f) * 10 + (2 * Math.abs(bgX(list[i].bx) - f.x)) / W + R() * 1.2; if (q < best) { best = q; sp = list[i]; } }
     if (sp && (best >= 10 || R() < 0.35) && rockPoint(f)) {      // точка занята — или просто другой камень
       setTarget(f, PK.x, PK.y, PK.z); f.arrive = true; f.spdT = f.cruise; return;
     }
+    if (sp && best >= 10) { enterCruise(f, t, true); return; }   // все точки заняты, камня рядом нет — поплавать
     if (sp) {
       f.spot = sp;
       const r = (sp.r || 0.03) * BGX.dw;
@@ -2297,7 +2299,11 @@
   // LURK (групер): стоит у норы, изредка короткий круг рядом
   function enterLurk(f, t) {
     setState(f, ST.LURK, t, rand(14, 30));
-    const sp = pickOne(spotsOf("perch", f));
+    // V5: нора — свободная (у одной норы не стоят двое), ближняя
+    const ps = spotsOf("perch", f);
+    let sp = null, bq = 1e9;
+    for (let i = 0; i < ps.length; i++) { const q = spotLoad(ps[i], f) * 10 + (2 * Math.abs(bgX(ps[i].bx) - f.x)) / W + R(); if (q < bq) { bq = q; sp = ps[i]; } }
+    if (sp && bq >= 10) { enterCruise(f, t, true); return; }
     f.spot = sp;
     if (sp) setTarget(f, bgX(sp.bx), bgY(sp.by), spotZ(f, bgX(sp.bx), bgY(sp.by), sp.z));
     else { pickPoint(f, 0.2 * W, 0.8 * W, 0.7, 0.95, f.zMin, f.zMax, false); setTarget(f, PK.x, PK.y, PK.z); }
@@ -2511,6 +2517,10 @@
   // HOME (клоуны): эллипс венца актинии (scene props[home].nest, иначе spot «home»), z ± 0.025
   function homeOf(f) {
     const id = f.pack && f.pack.home;
+    // V5: у каждого жильца дома своя половина венца (слот ±0.35·nest.rx): пара не стоит стопкой
+    let idx = 0, cnt = 0;
+    for (let i = 0; i < fishes.length; i++) { const g = fishes[i]; if (g.habit !== "home" || g.pack !== f.pack) continue; if (g === f) idx = cnt; cnt++; }
+    f.hSide = cnt > 1 ? (idx % 2 ? 1 : -1) : 0;
     const pr = SCENE.props || [];
     for (let i = 0; i < pr.length && bgReady; i++) {
       const p = pr[i];
@@ -2759,8 +2769,11 @@
             homeOf(f);
             // по ходу — чаще (патрулирует венец туда-обратно, а не крутится на месте)
             const ahead = R() < 0.72 ? f.dir : -f.dir, ex = clamp((f.x - f.hx) / f.hrx, -1, 1);
-            const ux = clamp(ex + ahead * rand(0.35, 1.1), -1, 1), uy = rand(-1, 1) * Math.sqrt(Math.max(0, 1 - ux * ux));
-            setTarget(f, f.hx + ux * f.hrx, f.hy - 0.25 * f.hry + uy * f.hry, f.hz + rand(-0.004, 0.022));   // V4b: между слоями актинии и за акропорой у её трубки
+            // V5: патруль — по своей половине венца (центр слота 0.3·hrx = 0.35·nest.rx, размах ±0.55), пара — рядом, не стопкой
+            const c0 = 0.3 * f.hSide, lo = f.hSide ? c0 - 0.55 : -1, hi = f.hSide ? c0 + 0.55 : 1;
+            const ux = clamp(ex + ahead * rand(0.35, 1.1), Math.max(-1, lo), Math.min(1, hi)), uy = rand(-1, 1) * Math.sqrt(Math.max(0, 1 - ux * ux));
+            const zs = f.hSide ? (f.hSide < 0 ? rand(0.0, 0.008) : rand(0.012, 0.02)) : rand(-0.004, 0.022);
+            setTarget(f, f.hx + ux * f.hrx, f.hy - 0.25 * f.hry + uy * f.hry, f.hz + zs);   // V4b: между слоями актинии и за акропорой у её трубки
             f.subT = t; f.subDur = rand(1.0, 2.8); f.spdT = rand(0.35, 0.85); f.arrive = true;
             if (R() < 0.18 * f.tr.darty) f.dart = rand(0.15, 0.3);
             if (t - f.lastExcursion > rand(25, 60) && R() < 0.5) {      // вылазка на 1.5–2.5 длины
@@ -2862,10 +2875,24 @@
     return true;
   }
 
-  /* ---------- разведение (O(n²), ≤ 24 рыб): по высоте и глубине, не по X ---------- */
-  function separateFish() {
+  /* ---------- разведение (O(n²), ≤ 24 рыб): по высоте и глубине (X — только пара в одном доме) ----------
+     V5 (R1m «рыбы пересекаются»): радиус разных видов — 1.0 средней длины (было 0.85: толчок начинался, когда
+     тела уже вошли друг в друга); пара, чьи экранные рамки перекрыты > 20% на близкой глубине, расходится
+     по глубине — дальняя уходит в дымку (+0.18·k), ближняя чуть к стеклу (−0.06·k) — и по высоте. Поправки
+     целей av* не обнуляются каждый шаг, а тянутся (нарастают за ~0.25 с, спадают за ~1.5 с): разошедшаяся
+     пара не съезжается обратно на следующем шаге. */
+  const AV_ATT = 0.25, AV_REL = 1.5;
+  // доля перекрытия экранных рамок (по прошлой раскладке тел) от меньшей рамки
+  function boxOv(a, b) {
+    const ix = Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX), iy = Math.min(a.maxY, b.maxY) - Math.max(a.minY, b.minY);
+    if (ix <= 0 || iy <= 0) return 0;
+    const sa = (a.maxX - a.minX) * (a.maxY - a.minY), sb = (b.maxX - b.minX) * (b.maxY - b.minY);
+    return (ix * iy) / Math.max(1, Math.min(sa, sb));
+  }
+  function avLag(cur, tgt, dt) { return cur + (tgt - cur) * (1 - Math.exp(-dt / (Math.abs(tgt) > Math.abs(cur) ? AV_ATT : AV_REL))); }
+  function separateFish(dt) {
     const n = fishes.length, D = CAM.D;
-    for (let i = 0; i < n; i++) { fishes[i].avY = 0; fishes[i].avZ = 0; fishes[i].avX = 0; }
+    for (let i = 0; i < n; i++) { const f = fishes[i]; f.pX = 0; f.pY = 0; f.pZ = 0; }
     for (let i = 0; i < n; i++) {
       const a = fishes[i];
       if (isOff(a)) continue;
@@ -2873,25 +2900,105 @@
         const b = fishes[j];
         if (isOff(b)) continue;
         const same = a.school && a.school === b.school;
-        const r = 0.5 * (a.L0 + b.L0) * (same ? 0.6 : 0.85);
+        const r = 0.5 * (a.L0 + b.L0) * (same ? 0.6 : 1.0);
         const dX = b.X - a.X, dY = b.Y - a.Y, dZ = (b.z - a.z) * D;
         const d2 = dX * dX + dY * dY + dZ * dZ;
-        if (d2 >= r * r) continue;
-        const d = Math.sqrt(d2) + 1e-3, k = (r - d) / r;
+        const ov = same ? 0 : boxOv(a, b), scr = ov > 0.2 && Math.abs(dZ) < r;
+        if (d2 >= r * r && !scr) continue;
+        const d = Math.sqrt(d2) + 1e-3, k = d < r ? (r - d) / r : 0;
         let ny = dY / d, nz = dZ / d;
         if (Math.abs(ny) + Math.abs(nz) < 0.3) { ny = (i & 1) ? 0.6 : -0.6; nz = 0.3; }
         const py = k * 0.7 * r * ny, pz = (k * 0.7 * r * nz) / D;
-        a.avY -= py; b.avY += py; a.avZ -= pz; b.avZ += pz;
+        a.pY -= py; b.pY += py; a.pZ -= pz; b.pZ += pz;
+        const home = a.state === ST.HOME && b.state === ST.HOME;
         // пара в одном доме (клоуны): ещё и вбок — держатся рядом, но не стопкой
-        if (a.state === ST.HOME && b.state === ST.HOME) { const px = k * 0.8 * r * (dX >= 0 ? 1 : -1); a.avX -= px; b.avX += px; }
+        if (home) { const px = Math.max(k, ov) * 0.8 * r * (dX >= 0 ? 1 : -1); a.pX -= px; b.pX += px; }
+        else if (scr) {
+          // рамки перекрыты на близкой глубине: дальняя — назад, в дымку (меньше и бледнее), ближняя — к стеклу
+          const kk = Math.max(k, Math.min(1, ov)), fa = a.z >= b.z ? a : b, fb = fa === a ? b : a;
+          fa.pZ += 0.18 * kk; fb.pZ -= 0.06 * kk;
+          const vy = 0.5 * kk * (bodyH(a) + bodyH(b)) * (a.y <= b.y ? 1 : -1);   // верхняя — выше, нижняя — ниже
+          a.pY -= 0.5 * vy; b.pY += 0.5 * vy;
+        }
       }
     }
+    for (let i = 0; i < n; i++) {
+      const f = fishes[i];
+      f.avX = avLag(f.avX, f.pX, dt); f.avY = avLag(f.avY, f.pY, dt); f.avZ = avLag(f.avZ, f.pZ, dt);
+    }
+  }
+
+  /* ---------- V5: мягкое столкновение — по положению, не через курс ----------
+     Курс меняет глубину только рысканием × скоростью: зависшая, пасущаяся или стоящая у норы рыба (v ≈ 0.1 L/с)
+     расходилась бы секундами, и тела висели друг в друге. Здесь пара видимых рыб (не одна стая), чьи экранные
+     рамки перекрыты > 25% при |Δz| меньше зазора g = 0.35·L/D (0.11…0.2), раздвигается напрямую: по глубине к
+     зазору g (дальняя берёт 3/4, если есть место до рифа/колонии, иначе ближняя к стеклу) и по экрану вдоль
+     меньшего перекрытия (обычно по высоте) — ≈45% перекрытия в секунду. Рыба на развороте не двигается (её
+     двигает соседка); пара в одном доме (клоуны) — только вбок и в пределах венца. После — пересчёт раскладки. */
+  const COL_MOVED = [];
+  function zRoomHi(f) {
+    if (f.state === ST.HOME && f.sub === 0) return f.hz + 0.022;
+    let z = Math.min(f.czHi, f.near ? 1.4 : f.zMax + 0.12);
+    if (!f.allowBehind) z = Math.min(z, boxReefZ(f.x, f.y, f.len, f.h, false) - 0.06);
+    return z;
+  }
+  function zRoomLo(f) {
+    if (f.state === ST.HOME && f.sub === 0) return f.hz - 0.004;
+    return Math.max(f.czLo, zLo(f));
+  }
+  function collideFish(dt) {
+    const n = fishes.length, D = CAM.D;
+    let nm = 0;
+    for (let i = 0; i < n; i++) {
+      const a = fishes[i];
+      if (isOff(a) || a.far || !a.onScreen) continue;
+      for (let j = i + 1; j < n; j++) {
+        const b = fishes[j];
+        if (isOff(b) || b.far || !b.onScreen) continue;
+        if (a.school && a.school === b.school) continue;
+        const ma = !a.turn.on, mb = !b.turn.on;
+        if (!ma && !mb) continue;
+        const ix = Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX), iy = Math.min(a.maxY, b.maxY) - Math.max(a.minY, b.minY);
+        if (ix <= 0 || iy <= 0) continue;
+        const sa = (a.maxX - a.minX) * (a.maxY - a.minY), sb = (b.maxX - b.minX) * (b.maxY - b.minY);
+        const ov = (ix * iy) / Math.max(1, Math.min(sa, sb));
+        if (ov < 0.25) continue;
+        const home = a.state === ST.HOME && b.state === ST.HOME;
+        const g = home ? 0 : clamp((0.35 * Math.max(a.L0, b.L0)) / D, 0.11, 0.2);
+        const adz = Math.abs(b.z - a.z);
+        if (adz >= g && !home) continue;                 // одна явно перед другой — перекрытие на экране естественно
+        const def = home ? 1 : 1 - adz / g;              // недостача зазора 0…1
+        // глубина
+        if (!home) {
+          const fa = b.z >= a.z ? b : a, fb = fa === a ? b : a;   // fa — дальняя
+          let need = (g - adz) * Math.min(1, 0.9 * dt);
+          const ra = fa.turn.on ? 0 : Math.max(0, zRoomHi(fa) - fa.z), rb = fb.turn.on ? 0 : Math.max(0, fb.z - zRoomLo(fb));
+          let da = Math.min(ra, 0.75 * need), db = Math.min(rb, need - da);
+          if (db < need - da) da = Math.min(ra, need - db);
+          fa.z += da; fb.z -= db;
+          if (da > 0 && fa.tz < fa.z) fa.tz = Math.min(fa.z, zRoomHi(fa));   // цель не тянет назад, к соседке
+          if (db > 0 && fb.tz > fb.z) fb.tz = fb.z;
+        }
+        // экран: вдоль меньшего перекрытия; у пары в доме — только вбок
+        const s = 0.45 * Math.min(1, dt) * def, wa = ma ? (mb ? 0.5 : 1) : 0, wb = 1 - wa;
+        if (home || ix < 0.6 * iy) {
+          const sg = a.x <= b.x ? -1 : 1, m = s * ix;
+          a.X += sg * m * wa * a.z; b.X -= sg * m * wb * b.z;
+        } else {
+          const sg = a.y <= b.y ? -1 : 1, m = s * iy;
+          a.Y += sg * m * wa * a.z; b.Y -= sg * m * wb * b.z;
+        }
+        if (!a.colM) { a.colM = true; COL_MOVED[nm++] = a; }
+        if (!b.colM) { b.colM = true; COL_MOVED[nm++] = b; }
+      }
+    }
+    for (let i = 0; i < nm; i++) { const f = COL_MOVED[i]; f.colM = false; coralClampZ(f); layoutFish(f); COL_MOVED[i] = null; }
   }
 
   /* ---------- шаг всех рыб ---------- */
   function updateFishAll(dt, t) {
     directorStep(t, dt);
-    separateFish();
+    separateFish(dt);
     const anyFood = flkN > 0;
     if (anyFood) for (let i = 0; i < fishes.length; i++) { const f = fishes[i]; if (f.state === ST.FEED && f.flake && f.flake.on) f.flake.claim++; }
     for (let i = 0; i < fishes.length; i++) {
@@ -2964,18 +3071,31 @@
       if (!f.onScreen && !f.leaving && !inward && !(f.school && !f.isLeader && f.state === ST.SHOAL) && f.state !== ST.FEED)
         setTarget(f, clamp(f.x, 0.1 * W, 0.9 * W), clamp(f.y, waterTop() + f.h, H - f.h), f.z);
     }
+    collideFish(dt);                                 // V5: тела не висят друг в друге (по положению)
   }
 
   /* ---------- начальная расстановка ---------- */
+  function initClash(f, x, y, z) {
+    for (let i = 0; i < fishes.length; i++) {
+      const g = fishes[i];
+      if (g === f || isOff(g) || !(g.aliveT === 0 && g.len > 1) || Math.abs(g.z - z) > 0.15) continue;
+      if (Math.abs(g.x - x) < 0.55 * (g.len + f.L0 / z) && Math.abs(g.y - y) < 0.6 * (g.h + bodyH(f) / z)) return true;
+    }
+    return false;
+  }
   function placeInitial(f, t) {
     const zn = f.pack ? f.pack.zone : [0.15, 0.85];
     f.dir = R() < 0.5 ? -1 : 1; f.yaw = 0; f.pitch = 0; f.vy = 0; f.turn.on = false;
     if (f.habit === "home") {
       homeOf(f);
-      f.z = f.hz; f.X = worldX(f.hx + rand(-0.5, 0.5) * f.hrx, f.z); f.Y = worldY(f.hy - 0.3 * f.hry, f.z);
+      f.z = f.hz; f.X = worldX(f.hx + (0.3 * f.hSide + rand(-0.2, 0.2) * (f.hSide ? 1 : 2.5)) * f.hrx, f.z); f.Y = worldY(f.hy - 0.3 * f.hry, f.z);
       f.v = 0.3 * f.L0; setState(f, ST.HOME, t);
     } else {
-      pickPoint(f, 0.1 * W, 0.9 * W, zn[0], zn[1], f.zMin, Math.min(f.zMax, f.zMin + 0.7 * (f.zMax - f.zMin)), false);
+      // V5: стартовая точка — не в теле уже расставленной рыбы (до 8 попыток)
+      for (let k = 0; k < 8; k++) {
+        pickPoint(f, 0.1 * W, 0.9 * W, zn[0], zn[1], f.zMin, Math.min(f.zMax, f.zMin + 0.7 * (f.zMax - f.zMin)), false);
+        if (!initClash(f, PK.x, PK.y, PK.z)) break;
+      }
       f.z = PK.z; f.X = worldX(PK.x, PK.z); f.Y = worldY(PK.y, PK.z); f.v = f.cruise * f.L0;
       if (f.school) setState(f, ST.SHOAL, t, rand(12, 24)); else nextActivity(f, t);
     }
