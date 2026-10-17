@@ -246,7 +246,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 </style>
 
 <div class="bg" aria-hidden="true"></div>
-<img class="still" src="__FIRST_FRAME__" alt="" aria-hidden="true">
+<img class="still" src="__FIRST_FRAME__" alt="" aria-hidden="true" loading="lazy">   <!-- no JS only; hidden (so never fetched) with JS -->
 <canvas id="seq" aria-hidden="true"></canvas>
 <header class="top"><div class="wrap">
   <a class="logo" href="#meet" aria-label="MITODERM"><img src="img/logo-mark.png" alt="MITODERM"></a>

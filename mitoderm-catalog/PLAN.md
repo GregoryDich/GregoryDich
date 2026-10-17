@@ -278,3 +278,5 @@ Blender 4.2.0 из образа без установки, ~7–9× быстре
 - Полная страница: `site/proto/build-vtech.py` + `vtech-live-template.html` → `vtech-live.html`; тексты — одобренная
   Figma 142:3 (`vtech-he-figma.json`), форма/контакты — те же источники, что у MASK; специалисты — монограмма + город.
   Проверка — `site/proto/qa/verify-live.cjs`.
+- Страница опубликована (черновые кадры 480 px, проверка 29/29): https://claude.ai/artifact/NdQezU5bikrsuaWVVW5TBK —
+  после архива с Mac тот же адрес получает кадры 2400 px. Figma — по-прежнему закрыта сетью сессии (`mcp.figma.com`).
