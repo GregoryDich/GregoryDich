@@ -258,11 +258,13 @@ if MODE == '3d':
         RAW.pop(k)
     T.update({
         'nav_spec': mkh('nav.specialists'), 'kit_double': dz['s5.double']['he'],
+        # the two layers named on the kit screen, from the approved line «מסכה כפולה: שכבה לבנה ושכבה כחולה, …»
+        'layer_white': dz['s5.double']['he'].split(':')[1].split(',')[0].strip().split(' ו')[0], 'layer_blue': dz['s5.double']['he'].split(':')[1].split(',')[0].strip().split(' ו')[1],
         'wa_display': site['whatsapp'], 'foot_access': site['footer_he']['accessibility'], 'foot_privacy': site['footer_he']['privacy'],
         'spec_empty': hook('spec.empty'),
         'phone_href': 'tel:' + tel, 'email_href': 'mailto:' + ui['email'] + '?subject=' + urllib.parse.quote('EXOCELL MASK'),
         'card_title': d['s04'][1], 'card_qty': d['kit'][0][0], 'card_line': d['kit'][0][2],  # '5×' + the reviewed line (the noun alone before it repeated «מסכות — מסכות»)
-        'card_double': dz['kit.double']['he'], 'card_net': net, 'card_actives_h': d['s03'][0], 'card_chip': hook('mask.use', x['b6.line']),
+        'card_net': net, 'card_actives_h': d['s03'][0], 'card_chip': hook('mask.use', x['b6.line']),
         'spec_kicker': mkh('spec.kicker'), 'spec_h2': brand(mkh('spec.title')),
         'spec_filter': mkh('spec.filter.profession'), 'spec_list': form['specialists']['title'],
         'spec_join_h': mkh('spec.join.title'), 'spec_join_cta': mkh('spec.join.cta'),

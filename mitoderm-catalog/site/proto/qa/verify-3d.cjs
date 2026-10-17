@@ -1,7 +1,7 @@
 // Verification of the EXOCELL MASK 3D page: screenshots per block at 1440x900 and 390x844, console errors, horizontal
 // overflow, dock highlight, text under fixed bars, the lead form (every price button, validation, loading, success,
 // error, Esc, focus return), the specialists filter, the 800px dock, reduced motion and the no-WebGL fallback.
-// usage: FONTDIR=<dir with the 4 TTFs> [ONLY=sections|phones|form|extra] node verify-3d.cjs <page.html> <outdir> <three.module.min.js> [label]
+// usage: FONTDIR=<dir with Rubik[wght].ttf> [ONLY=sections|phones|form|extra] node verify-3d.cjs <page.html> <outdir> <three.module.min.js> [label]
 // fonts: curl -L -o '<dir>/<file>' https://raw.githubusercontent.com/google/fonts/main/ofl/<family>/<file> for
 //   cormorantgaramond/CormorantGaramond[wght].ttf, jost/Jost[wght].ttf, frankruhllibre/FrankRuhlLibre[wght].ttf, heebo/Heebo[wght].ttf
 //   (brackets URL-encoded as %5B %5D). three.js: npm i three@0.160.0 → node_modules/three/build/three.module.min.js.
@@ -14,7 +14,7 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const ORIGIN = 'https://exocell.test/';
 // the page's real fonts (Google Fonts files from github.com/google/fonts), so line breaks and numerals are checked as shipped
 const FONTDIR = process.env.FONTDIR || path.join(require('os').tmpdir(), 'mitoderm-fonts');
-const FONTS = [['Cormorant Garamond', 'CormorantGaramond[wght].ttf'], ['Jost', 'Jost[wght].ttf'], ['Frank Ruhl Libre', 'FrankRuhlLibre[wght].ttf'], ['Heebo', 'Heebo[wght].ttf']];
+const FONTS = [['Rubik', 'Rubik[wght].ttf']];   // owner 17/10: Rubik in every role
 const FONT_CSS = FONTS.map(([f, file], i) => `@font-face{font-family:'${f}';src:url(https://fonts.gstatic.com/local/${i}.ttf) format('truetype');font-weight:100 900;font-style:normal;font-display:block}`).join('\n');
 const IDS = ['top', 'why', 'inside', 'feel', 'kit', 'protocol', 'offer', 'specialists'];
 const report = { label, errors: {}, checks: [] };

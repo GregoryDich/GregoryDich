@@ -1,5 +1,5 @@
 <title>{{page_title}}</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500&family=Frank+Ruhl+Libre:wght@300;400;500&family=Heebo:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap">
 <script>document.documentElement.lang = 'he'; document.documentElement.dir = 'rtl'; document.documentElement.classList.add('js');</script>
 <style>
 /* EXOCELL MASK, Hebrew, 3D scroll version, screen for screen as the approved Figma design (page 98:2). Two layers, as
@@ -13,17 +13,16 @@
   --gold: #c9a24b; --gold-soft: #d8bd7e; --gold-faint: rgba(201,162,75,.5); --gold-wash: rgba(201,162,75,.14);
   --hairline: rgba(201,162,75,.22); --hairline-cream: rgba(246,243,236,.1); --on-gold: #0a0a0b;
   --drop: #6fb7ba; --drop-soft: #9fd6d8; --error: #f0a595;
-  --display: 'Cormorant Garamond', 'Frank Ruhl Libre', Georgia, serif;
-  --body: 'Jost', 'Heebo', system-ui, sans-serif;
+  --display: 'Rubik', system-ui, sans-serif; --body: var(--display);   /* owner 17/10: Rubik in every role, no italics */
   --gutter: clamp(18px, 5vw, 72px); --maxw: 1200px; --ease: cubic-bezier(.22,1,.36,1);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html { background: var(--bg); }
-body { margin: 0; background: var(--bg); color: var(--cream); font: 300 clamp(15px, 1.15vw, 17px)/1.7 var(--body); -webkit-font-smoothing: antialiased; overflow-x: clip;
+body { margin: 0; background: var(--bg); color: var(--cream); font: 300 clamp(15px, 1.15vw, 17px)/1.65 var(--body); -webkit-font-smoothing: antialiased; overflow-x: clip;
   font-feature-settings: "lnum" 1; }  /* lining figures everywhere: Cormorant's old-style figures read «1o%», «o1» */
-@media (max-width: 1391px) { body { font-weight: 400; } }  /* Hebrew at 16 px and below reads better at 400 */
-h1, h2, h3, h4 { margin: 0; font-family: var(--display); font-weight: 400; text-wrap: balance; }
+@media (max-width: 1391px) { body { font-weight: 400; line-height: 1.6; } }  /* Hebrew at 16 px and below reads better at 400 */
+h1, h2, h3, h4 { margin: 0; font-family: var(--display); font-weight: 500; font-style: normal; text-wrap: balance; }
 p { margin: 0; text-wrap: pretty; }
 a { color: inherit; }
 img { max-width: 100%; display: block; }
@@ -54,8 +53,8 @@ ul.plain, ol.plain { list-style: none; margin: 0; padding: 0; }
 /* the 3D layer sits behind everything; sections are transparent so it shows through. Until the first 3D frame (and
    for good when there is no WebGL or three.js cannot load) the still packshot stands in, then fades out. */
 #gl { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
-.still-fallback { position: fixed; inset: 0; z-index: 0; background: radial-gradient(60% 60% at 72% 50%, rgba(111,183,186,.22), transparent 70%), var(--bg); transition: opacity .8s var(--ease), visibility 0s linear .8s; }
-.still-fallback img { position: absolute; right: 6%; top: 50%; transform: translateY(-50%); width: min(40vw, 520px); }
+.still-fallback { position: fixed; inset: 0; z-index: 0; background: radial-gradient(60% 60% at 28% 50%, rgba(111,183,186,.22), transparent 70%), var(--bg); transition: opacity .8s var(--ease), visibility 0s linear .8s; }
+.still-fallback img { position: absolute; left: 6%; top: 50%; transform: translateY(-50%); width: min(40vw, 520px); }
 .gl-on .still-fallback { opacity: 0; visibility: hidden; }
 .nogl #gl { display: none; }
 main, .top, .foot, .dock, .bar { position: relative; z-index: 1; }
@@ -67,17 +66,17 @@ main, .top, .foot, .dock, .bar { position: relative; z-index: 1; }
 .top .btn { min-height: 44px; padding-inline: 20px; font-size: 14px; background: rgba(10,10,11,.4); backdrop-filter: blur(8px); }
 @media (max-width: 460px) { .top .btn { display: none; } }
 
-/* sections: copy in the left half (the objects take the right); each block gets a screen of its own */
+/* sections: copy in the right half, the objects take the left (owner 17/10, as V-TECH); each block a screen of its own */
 .sec { min-height: 82svh; display: grid; align-items: center; padding-block: clamp(56px, 8vh, 96px); }
-.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); direction: ltr; }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); direction: rtl; }
 .split > * { direction: rtl; min-width: 0; }
 .split > .col { display: grid; gap: 18px; justify-items: start; align-content: center; max-width: 540px; }
-.sec h2 { font: 400 clamp(34px, 4.6vw, 58px)/1.06 var(--display); color: var(--cream); }
+.sec h2 { font: 500 clamp(30px, 3.4vw, 48px)/1.18 var(--display); letter-spacing: -.005em; color: var(--cream); }
 .sec p { color: var(--text); max-width: 46ch; }
-.hero h1 { font: 500 clamp(48px, 7vw, 100px)/1 var(--display); letter-spacing: .01em; }
-.hero .tag { font: 400 clamp(22px, 2.4vw, 30px)/1.3 var(--display); color: var(--gold-soft); }
+.hero h1 { font: 500 clamp(44px, 6vw, 88px)/1 var(--display); letter-spacing: -.01em; }
+.hero .tag { font: 400 clamp(20px, 2vw, 26px)/1.35 var(--display); color: var(--gold-soft); }
 .cta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }
-.hint { position: absolute; left: 75%; bottom: 150px; transform: translateX(-50%); color: var(--gold-soft); font: 400 12px/1 var(--body); display: grid; justify-items: center; gap: 6px; }
+.hint { position: absolute; left: 25%; bottom: 150px; transform: translateX(-50%); color: var(--gold-soft); font: 400 12px/1 var(--body); display: grid; justify-items: center; gap: 6px; }
 .hint i { display: block; width: 1px; height: 22px; background: var(--gold-soft); animation: bob 2s ease-in-out infinite; }
 @keyframes bob { 50% { transform: translateY(8px); } }
 .hero { position: relative; }
@@ -119,7 +118,7 @@ details ol { margin: 0 0 18px; padding-inline-start: 22px; color: var(--text); d
 .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 24px; margin: 44px 0 0; padding: 0; list-style: none; direction: rtl; }
 .step { display: grid; gap: 12px; align-content: start; min-width: 0; padding: 32px; border-radius: 24px; background: rgba(26,26,31,.95); border: 1px solid var(--hairline-cream); }
 .step .n { font: 300 22px/1 var(--display); color: var(--gold); }
-.step h3 { font: 400 24px/1.2 var(--display); color: var(--cream); }
+.step h3 { font: 500 21px/1.25 var(--display); color: var(--cream); }
 .step p { color: var(--text-faint); font: 400 15px/1.6 var(--body); }
 .step .chip.sm { justify-self: start; padding: 6px 14px; font-size: 14px; }
 
@@ -133,12 +132,16 @@ details ol { margin: 0 0 18px; padding-inline-start: 22px; color: var(--text); d
 .sec p.hours span { display: block; }
 .kitcard { justify-self: end; align-self: center; width: min(100%, 540px); display: grid; gap: 12px; padding: 26px 30px 28px; border-radius: 28px; border: 1px solid var(--hairline); background: linear-gradient(160deg, rgba(28,27,31,.95), rgba(14,14,17,.95)); box-shadow: 0 30px 90px rgba(0,0,0,.5); }
 .kc-head { display: flex; align-items: center; gap: 14px; }
-.kc-head h3 { font: 400 28px/1.1 var(--display); color: var(--cream); }
+.kc-head h3 { font: 500 26px/1.2 var(--display); color: var(--cream); }
 .kc-head .badge { letter-spacing: .14em; font-size: 11px; }
 .kc-pic { width: 100%; height: clamp(150px, 24vh, 230px); object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,.55)); }
 .kc-qty { display: flex; align-items: baseline; gap: 12px; max-width: none !important; color: var(--text-soft) !important; font: 400 15px/1.45 var(--body); }
-.kc-qty b { font: 400 34px/1 var(--display); color: var(--gold-soft); flex: none; }
-.kc-dbl { font: 400 14px/1.5 var(--body); color: var(--text-soft) !important; max-width: none !important; }
+.kc-qty b { font: 300 32px/1 var(--display); color: var(--gold-soft); flex: none; }
+.kitcard .facts { margin-top: 0; gap: 12px 20px; }   /* the kit's facts live in the card (one «מה באריזה» block, owner 17/10) */
+.kitcard .fact { padding-top: 10px; } .kitcard .fact b { font-size: 22px; } .kitcard .fact span { font-size: 13px; }
+/* the two layers named on the kit screen, over each layer (made visible by the 3D script) */
+.lyr { position: fixed; left: 0; top: 0; z-index: 2; margin: 0; pointer-events: none; padding: 6px 14px; border-radius: 999px; background: rgba(10,10,11,.7); border: 1px solid rgba(111,183,186,.45); font: 400 13px/1.2 var(--body); color: var(--cream); white-space: nowrap; opacity: 0; visibility: hidden; will-change: transform, opacity; }
+.lyr.on { opacity: var(--lo, 1); visibility: visible; }
 .kc-net { font: 400 13px/1 var(--body); color: var(--text-faint) !important; }
 .kitcard h4 { padding-top: 14px; border-top: 1px solid var(--hairline-cream); font: 500 13px/1.2 var(--body); letter-spacing: .04em; color: var(--gold); }
 .kc-act { columns: 2; column-gap: 26px; margin: 0; padding: 0; list-style: none; font: 400 14px/1.5 var(--body); color: var(--text-soft); }
@@ -342,6 +345,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   </div>
 </header>
 
+<p class="lyr" aria-hidden="true">{{layer_white}}</p><p class="lyr" aria-hidden="true">{{layer_blue}}</p>
 <main>
 <!-- 0 · Meet: the box in front of the moving background -->
 <section class="sec hero" id="top" data-st="0">
@@ -422,7 +426,6 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
       <h2 class="rv" style="--d:.06s">{{kit_h2}}</h2>
       <p class="rv" style="--d:.12s">{{kit_p}}</p>
       <div class="ph-slot wide" aria-hidden="true"></div>
-      <div class="facts">{{{kit_facts}}}</div>
       <p class="dbl">{{kit_double}}</p>
     </div>
     <div></div>
@@ -464,7 +467,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
       <div class="kc-head"><h3 id="kitcard-h">{{card_title}}</h3><span class="badge"><bdi>{{line_mark}}</bdi></span></div>
       <img class="kc-pic" src="__KIT__" alt="{{kitshot_alt}}" width="760" height="794" loading="lazy">
       <p class="kc-qty"><b><bdi dir="ltr">{{card_qty}}</bdi></b><span>{{card_line}}</span></p>
-      <p class="kc-dbl">{{card_double}}</p>
+      <div class="facts">{{{kit_facts}}}</div>
       <p class="kc-net"><bdi dir="ltr">{{card_net}}</bdi></p>
       <h4>{{card_actives_h}}</h4>
       <ul class="kc-act">{{{card_actives}}}</ul>
@@ -730,15 +733,15 @@ camera.position.set(0, 0, 7);
   const pm = new THREE.PMREMGenerator(renderer), room = new THREE.Scene();
   room.add(new THREE.Mesh(new THREE.BoxGeometry(12, 8, 12), new THREE.MeshBasicMaterial({ color: 0x0b0d0e, side: THREE.BackSide })));
   const panel = (c, i, x, y, z, w, h, ry) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(i) })); m.position.set(x, y, z); m.rotation.y = ry; room.add(m); };
-  panel(0xffffff, 3.2, -4.5, 2.4, 1, 3, 2.2, Math.PI / 2);
-  panel(0xffffff, 1.8, 4.8, 0.5, -1, 3, 4, -Math.PI / 2);
+  panel(0xffffff, 3.2, 4.5, 2.4, 1, 3, 2.2, -Math.PI / 2);   // the room mirrored with the composition (objects on the left)
+  panel(0xffffff, 1.8, -4.8, 0.5, -1, 3, 4, Math.PI / 2);
   panel(0xffffff, 1.2, 0, 3.8, -4, 6, 1, 0);
   scene.environment = pm.fromScene(room, 0.04).texture;
   pm.dispose();
 }
 scene.add(new THREE.HemisphereLight(0xffffff, 0x202022, 0.55));
-const key = new THREE.DirectionalLight(0xffffff, 1.25); key.position.set(-3, 4, 5); scene.add(key);
-const rim = new THREE.PointLight(0xffffff, 10, 12); rim.position.set(3.6, 1.2, 1.5); scene.add(rim);
+const key = new THREE.DirectionalLight(0xffffff, 1.25); key.position.set(3, 4, 5); scene.add(key);
+const rim = new THREE.PointLight(0xffffff, 10, 12); rim.position.set(-3.6, 1.2, 1.5); scene.add(rim);
 
 // ---- far layer: moving smoke on a big plane plus drifting specks; the camera's sway reveals its depth
 const bgMat = new THREE.ShaderMaterial({
@@ -888,12 +891,12 @@ const MASK = [
   Object.assign({}, OUT, { att: 1 }),
   OUT,
   P(2.6, 1.2, -2.5, -0.2, -0.6, 0.1, 0.6, 0, { att: 0, ly: 0.78, ls: 0.88 }),
-  P(3.72, 0.82, -0.7, 0.04, -0.42, -0.06, 0.5, 1, { att: 0, ly: 0.78, ls: 0.88 }),
+  P(3.3, 0.86, -0.7, 0.04, -0.42, -0.06, 0.5, 1, { att: 0, ly: 0.78, ls: 0.88 }),
   P(2.3, -1.25, -2.8, 0.1, -0.5, 0.1, 0.62, 0, { att: 0, ly: 0.78, ls: 0.88 })  // gone on the protocol: it must not show through the steps
 ];
 while (MASK.length < 9) MASK.push(MASK[5]);
 const BLUE_IN = P(2.45, 0.6, -2.0, 0, -0.5, 0, 0.45, 0), BLUE_OFF = P(2.3, -1.25, -2.8, 0.1, -0.5, 0.1, 0.6, 0);
-const MASK2 = [BLUE_IN, BLUE_IN, BLUE_IN, BLUE_IN, P(4.0, 0.56, -0.4, 0.04, -0.48, 0.05, 0.5, 1), BLUE_OFF, BLUE_OFF, BLUE_OFF, BLUE_OFF];
+const MASK2 = [BLUE_IN, BLUE_IN, BLUE_IN, BLUE_IN, P(4.3, 0.8, -0.7, 0.04, -0.48, 0.05, 0.5, 1), BLUE_OFF, BLUE_OFF, BLUE_OFF, BLUE_OFF];
 // sachets: in the box until the kit, then two rows in front of it, each turned to face the camera; back into the far box
 const face = (x, y, z, s, dz = 0) => [x, y, z, Math.atan(y / (7 - z)) * 0.9, -Math.atan(x / (7 - z)) + 0.08, dz, s];
 const KIT = [face(1.7, -1.0, 0.6, 0.71, 0.04), face(2.52, -1.04, 0.64, 0.71, -0.01), face(3.34, -1.0, 0.6, 0.71, -0.04),
@@ -978,14 +981,17 @@ function toPhone(cx, cy, z) {  // a point of the slot composition → world at d
   const sx = PH.ax + cx * PH.u, sy = PH.ay - cy * PH.u;
   return { x: camera.position.x + (sx / W * 2 - 1) * hh * camera.aspect, y: camera.position.y + (1 - sy / Hh * 2) * hh, k: PH.u * 2 * hh / Hh };
 }
+// owner 17/10: the copy on the right, the objects on the left (as V-TECH). The poses are authored for the right; the
+// composition is mirrored here (x, and the turns about y and z) while the objects themselves are not: the print reads
 function place(obj, p, extra = {}) {
-  let x = p.x, y = p.y, s = p.s, k = 1;
-  if (phone) { const m = toPhone(p.x, p.y, p.z); x = m.x; y = m.y; k = m.k; s *= k; }
-  obj.position.set(x + (extra.x || 0) * k, y + (extra.y || 0) * k, p.z);
-  obj.rotation.set(p.rx, p.ry + (extra.ry || 0), p.rz);
+  let x = -p.x, y = p.y, s = p.s, k = 1;
+  if (phone) { const m = toPhone(-p.x, p.y, p.z); x = m.x; y = m.y; k = m.k; s *= k; }
+  obj.position.set(x - (extra.x || 0) * k, y + (extra.y || 0) * k, p.z);
+  obj.rotation.set(p.rx, -(p.ry + (extra.ry || 0)), -p.rz);
   obj.scale.setScalar(s);
-  // only a fading object is drawn as transparent, so solid ones keep correct depth order
-  const o = phone ? p.o * PH.fade : p.o;
+  fade(obj, phone ? p.o * PH.fade : p.o);
+}
+function fade(obj, o) {  // only a fading object is drawn as transparent, so solid ones keep correct depth order
   mats(obj).forEach(m => { const want = obj.userData.alwaysT || o < 0.999; if (m.transparent !== want) { m.transparent = want; m.needsUpdate = true; } m.opacity = o; m.visible = o > 0.01; });
 }
 
@@ -1021,7 +1027,7 @@ const m4 = new THREE.Matrix4(), mL = new THREE.Matrix4(), q = new THREE.Quaterni
 function poseScene(s, t) {
   camera.position.set(sway.x * 0.9, -sway.y * 0.45, 7);
   if (phone) camera.lookAt(camera.position.x, camera.position.y, 0);  // straight ahead: the slot mapping is exact
-  else camera.lookAt(0.9, 0, 0);
+  else camera.lookAt(-0.9, 0, 0);
   camera.updateMatrixWorld();
   if (phone) phoneAnchor(s);
   const T = phone ? PHONE : DESK;
@@ -1041,13 +1047,24 @@ function poseScene(s, t) {
   }
   const m2p = pose(T.MASK2, s);
   place(mask2, m2p, { y: Math.sin(t * 0.7 + 2.2) * 0.035 });
-  return { bp, sp, mp, m2p };
+  // owner 17/10: one mask of two layers — the blue rides right behind the white one (its edge just shows); only on the
+  // kit screen do they part and stand side by side, named («שכבה לבנה» / «שכבה כחולה»)
+  const w4 = ease(Math.max(0, Math.min(1, 1 - Math.abs(s - 4) * 1.4)));
+  if (w4 < 0.999) {
+    vA.copy(mask2.position); qA.copy(mask2.quaternion); sA.copy(mask2.scale);   // the kit pose
+    v3.set(0, -0.025, -0.04).multiply(mask.scale).applyQuaternion(mask.quaternion).add(mask.position);   // no sideways shift: on the
+    // curved sides a shifted copy comes out in front of the white sheet
+    mask2.position.copy(v3).lerp(vA, w4); mask2.quaternion.copy(mask.quaternion).slerp(qA, w4); mask2.scale.copy(mask.scale).lerp(sA, w4);
+    m2p.o = mp.o * (1 - w4) + m2p.o * w4;
+    fade(mask2, phone ? m2p.o * PH.fade : m2p.o);
+  }
+  return { bp, sp, mp, m2p, w4 };
 }
 
 // The caption about the two-layer mask: a floating copy sits next to the masks in a free spot of the kit screen, never
 // over an object, inside the screen, clear of the copy, the header and the dock. Whether such a spot exists is decided
 // per screen size at the kit pose; if not, the caption stays in the copy (the in-copy one also serves screen readers).
-const dbl = document.querySelector('.kit .dbl'), kick = document.querySelector('.kit .kicker');
+const dbl = document.querySelector('.kit .dbl'), kick = document.querySelector('.kit .kicker'), LYR = [...document.querySelectorAll('.lyr')];
 const fl = dbl ? dbl.cloneNode(true) : null;
 if (fl) { fl.classList.add('fl'); fl.setAttribute('aria-hidden', 'true'); document.body.appendChild(fl); }
 const flSize = [[0, 0], [0, 0], [0, 0]], cap = { on: false, r: [0, 0, 0, 0] };  // one, two and three lines
@@ -1081,7 +1098,9 @@ function findSpot(p, copyTop, keepLast) {
   obs.push(mR, m2R);
   const ax = (Math.min(mR[0], m2R[0]) + Math.max(mR[2], m2R[2])) / 2, ay = Math.min(mR[1], m2R[1]);  // top centre of the masks
   const wr = document.querySelector('main .wrap').getBoundingClientRect().right;  // the content's right edge (logo line)
-  const L = phone ? 12 : W / 2 + 16, R = Math.min(W - 12, wr), T = 88, B = phone ? Math.min(Hh - 80, copyTop - 14) : Hh - 100;
+  const wl = document.querySelector('main .wrap').getBoundingClientRect().left;
+  const L = phone ? 12 : Math.max(12, wl), R = phone ? Math.min(W - 12, wr) : W / 2 - 16, T = 88, B = phone ? Math.min(Hh - 80, copyTop - 14) : Hh - 100;
+  LYR.forEach(el => { if (el.classList.contains('on')) { const r = el.getBoundingClientRect(); obs.push([r.left, r.top, r.right, r.bottom]); } });
   const free = (x, y, w, h) => x >= L && x + w <= R && y >= T && y + h <= B &&
     obs.every(o => x > o[2] + 8 || x + w < o[0] - 8 || y > o[3] + 8 || y + h < o[1] - 8);
   if (keepLast && flPos) {
@@ -1115,7 +1134,7 @@ window.__renderStill = (what, w, h) => {
   bg.visible = dust.visible = drops.visible = false;
   if (what === 'kit') { mask.visible = mask2.visible = false; }
   renderer.setPixelRatio(1); renderer.setSize(w, h, false); renderer.setClearColor(0x000000, 0);
-  camera.fov = 30; camera.aspect = w / h; camera.position.set(what === 'kit' ? 2.5 : 2.75, 0.15, 7.2); camera.lookAt(camera.position.x, 0.15, 0); camera.updateProjectionMatrix();
+  camera.fov = 30; camera.aspect = w / h; camera.position.set(what === 'kit' ? -2.5 : -2.75, 0.15, 7.2); camera.lookAt(camera.position.x, 0.15, 0); camera.updateProjectionMatrix();
   renderer.render(scene, camera);
   const url = renderer.domElement.toDataURL('image/png');
   bg.visible = dust.visible = drops.visible = mask.visible = mask2.visible = true;
@@ -1199,6 +1218,18 @@ function frame(now) {
   dust.rotation.y = t * 0.01; dust.position.y = Math.sin(t * 0.1) * 0.2;
   const p = poseScene(s, t);
 
+  // the two layers named, over each, while they stand apart on the kit screen
+  [[LYR[0], mask], [LYR[1], mask2]].forEach(([el, obj]) => {
+    if (!el) return;
+    const on = p.w4 * (p.mp.o > 0.05 ? 1 : 0) * (phone ? PH.fade : 1);
+    if (on > 0.02) {
+      const r = rectOf(obj), x = (r[0] + r[2]) / 2, y = Math.max(phone ? (PH.r[1] + el.offsetHeight + 4) : 96 + el.offsetHeight, r[1] - 8);
+      el.style.transform = `translate(${(x - el.offsetWidth / 2).toFixed(1)}px, ${(y - el.offsetHeight).toFixed(1)}px)`;
+      el.style.setProperty('--lo', on.toFixed(3));
+    }
+    el.classList.toggle('on', on > 0.02);
+  });
+
   // the floating caption, while the kit block is on screen
   cap.on = false;
   if (fl) {
@@ -1218,7 +1249,8 @@ function frame(now) {
   const br = p.bp.o > 0.05 ? rectOf(box) : null;  // the carton on screen: drops keep off its face
   const mr = [p.mp.o > 0.05 ? rectOf(mask) : null, p.m2p.o > 0.05 ? rectOf(mask2) : null].filter(Boolean);  // and off the masks
   let cx = c.x, cy = c.y, cs = c.s, unit = 1;
-  if (phone) { const m = toPhone(c.x, c.y, c.z); cx = m.x; cy = m.y; unit = m.k; cs *= unit; }
+  cx = -c.x;   // mirrored with the composition
+  if (phone) { const m = toPhone(-c.x, c.y, c.z); cx = m.x; cy = m.y; unit = m.k; cs *= unit; }
   dropSeed.forEach((d, i) => {
     const a = d.a + t * d.sp * 0.25;
     v3.set(cx + Math.cos(a) * d.r * cs, cy + d.y * cs * 0.8 + Math.sin(t * d.sp + i) * 0.08 * unit, c.z + (d.z + Math.sin(a) * 0.4) * (phone ? 0.5 : 1));
@@ -1229,7 +1261,7 @@ function frame(now) {
     if (phone) {
       const px = (vA.x + 1) / 2 * W, py = (1 - vA.y) / 2 * Hh, r = PH.r;
       edge = ease(Math.max(0, Math.min(1, 1 - Math.hypot(Math.max(r[0] - px, 0, px - r[2]), Math.max(r[1] - py, 0, py - r[3])) / 18)));
-    } else edge = ease(Math.max(0, Math.min(1, (vA.x + 0.06) / 0.16)));
+    } else edge = ease(Math.max(0, Math.min(1, (0.06 - vA.x) / 0.16)));   // the left half only
     for (const r of br ? [br, ...mr] : mr) {
       const px = (vA.x + 1) / 2 * W, py = (1 - vA.y) / 2 * Hh;
       edge *= ease(Math.max(0, Math.min(1, Math.hypot(Math.max(r[0] - px, 0, px - r[2]), Math.max(r[1] - py, 0, py - r[3])) / 14)));
