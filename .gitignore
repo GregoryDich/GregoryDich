@@ -1,3 +1,5 @@
 # Тестовый харнесс аквариума: зависимости и результаты прогонов (вне бандла .app)
 tools/aquarium-test/node_modules/
 tools/aquarium-test/out/
+# Видео-копии задника для headless-тестов (VP9) и LUT — генерирует tools/aquarium-test/make_media.sh
+tools/aquarium-test/media/
