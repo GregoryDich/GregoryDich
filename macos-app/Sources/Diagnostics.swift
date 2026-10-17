@@ -1,7 +1,7 @@
 import Cocoa
 import WebKit
 
-// Diagnostics for feedback (also meant for a future «Скопировать диагностику» menu item).
+// Diagnostics for feedback and for «Скопировать диагностику» / «Тест производительности» (PerfDiagnostics).
 // Public APIs only, no permission prompts. Never collected: serial number, hardware UUID,
 // user/computer/host name, IP or Wi-Fi details, app or window lists, absolute paths, install IDs.
 
@@ -202,7 +202,10 @@ enum Diagnostics {
         }
     }
 
-    private static func sysctlString(_ name: String) -> String? {
+    /// "Apple M4 Pro" (Apple silicon) or the Intel brand string.
+    static var cpuBrand: String? { sysctlString("machdep.cpu.brand_string").map { String($0.prefix(80)) } }
+
+    static func sysctlString(_ name: String) -> String? {
         var size = 0
         guard sysctlbyname(name, nil, &size, nil, 0) == 0, size > 0 else { return nil }
         var buf = [CChar](repeating: 0, count: size)
@@ -227,8 +230,9 @@ enum WallpaperProbe {
     /// Wallpaper web view on NSScreen.main (fallback: the first wallpaper web view).
     static func mainWebView() -> WKWebView? {
         // Wallpaper windows are the app's only click-through windows hosting a WKWebView.
+        // Visible only: a parked window (its display is gone for now) is ordered out.
         let wallpapers: [(window: NSWindow, web: WKWebView)] = NSApp.windows.compactMap { w in
-            guard w.ignoresMouseEvents, let web = webView(in: w.contentView) else { return nil }
+            guard w.ignoresMouseEvents, w.isVisible, let web = webView(in: w.contentView) else { return nil }
             return (w, web)
         }
         let mainID = NSScreen.main.flatMap { Diagnostics.displayID($0) }
@@ -281,5 +285,61 @@ enum WallpaperProbe {
             finish(obj)
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + timeout) { finish(nil) }
+    }
+}
+
+/// «Скопировать диагностику» and «Тест производительности»: the system facts of the feedback report
+/// (same collector, same privacy rules) + chip, host state, lifecycle counters and the page data.
+/// Pretty JSON for the clipboard; the owner pastes it into a mail or chat.
+enum PerfDiagnostics {
+    /// `windows`: WallpaperWindow.hostInfo() + "snapshot" (aquariumPerfSnapshot()); `extra` is merged
+    /// into the root (e.g. "probe" for the performance test).
+    static func report(kind: String, host: [String: Any], windows: [[String: Any]],
+                       extra: [String: Any] = [:]) -> String {
+        let app = FeedbackReport.AppInfo.current
+        var root: [String: Any] = [
+            "schema": "aq.perfdiag/1",
+            "kind": kind,
+            "createdAt": FBDate.string(Date()),
+            "app": ["bundleId": app.bundleId, "version": app.version, "build": app.build],
+            "chip": Diagnostics.cpuBrand ?? NSNull(),
+            "system": jsonObject(Diagnostics.system()),
+            "host": host,
+            "lifecycle": LifecycleStats.snapshot(),
+            "windows": windows,
+        ]
+        for (k, v) in extra { root[k] = v }
+        return json(root)
+    }
+
+    static func json(_ object: [String: Any]) -> String {
+        guard JSONSerialization.isValidJSONObject(object),
+              let data = try? JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys]),
+              let s = String(data: data, encoding: .utf8) else {
+            return "{\"schema\": \"aq.perfdiag/1\", \"error\": \"not serialisable\"}"
+        }
+        return s
+    }
+
+    /// An Encodable value as a JSONSerialization object (NSNull on failure).
+    static func jsonObject<T: Encodable>(_ value: T) -> Any {
+        guard let data = try? JSONEncoder().encode(value),
+              let obj = try? JSONSerialization.jsonObject(with: data) else { return NSNull() }
+        return obj
+    }
+
+    /// One line per probe configuration for the alert: "как есть: p50 16.7 · p90 18.1 · JS 4.2 мс".
+    static func probeSummary(_ result: Any) -> String {
+        guard let dict = result as? [String: Any] else { return "" }
+        if let error = dict["error"] as? String { return error }
+        guard let configs = dict["configs"] as? [[String: Any]] else { return "" }
+        func ms(_ v: Any?) -> String {
+            guard let n = v as? NSNumber else { return "—" }
+            return String(format: "%.1f", n.doubleValue)
+        }
+        return configs.prefix(16).map { c in
+            let name = (c["name"] as? String).map { String($0.prefix(40)) } ?? "?"
+            return "\(name): p50 \(ms(c["p50"])) · p90 \(ms(c["p90"])) · JS \(ms(c["jsP50"])) мс"
+        }.joined(separator: "\n")
     }
 }

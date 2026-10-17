@@ -90,12 +90,18 @@
        webView.evaluateJavaScript("aquariumSetPower('paused')")// stop drawing
        webView.evaluateJavaScript("aquariumSetPower('high')")  // 60 fps   */
   const normPower = (m) => (m === "low" || m === "paused") ? m : "high";
+  /* P1.1: стартовые данные приложения (WKUserScript до загрузки страницы):
+       window.__AQ_BOOT = { power, hud, budget, screen: {id, w, h, scale, maxFps, main}, crashes, loadReason, appVersion }
+     hud — HUD сразу включён; budget — Мп холста (число; второй экран — 2) или {mp, fps}; остальное — в снимок
+     диагностики и HUD. window.__AQ_POWER оставлен для совместимости (у него приоритет над boot.power). */
+  const BOOT = window.__AQ_BOOT && typeof window.__AQ_BOOT === "object" ? window.__AQ_BOOT : null;
   // V5: приложение передаёт режим ещё до загрузки страницы (WKUserScript: window.__AQ_POWER) — первый кадр
   // уже в нужном режиме (вызов evaluateJavaScript до загрузки терялся: на батарее шло 60 к/с)
-  let POWER = normPower(window.__AQ_POWER);
+  let POWER = normPower(window.__AQ_POWER || (BOOT && BOOT.power));
   window.aquariumSetPower = (m) => {
     m = normPower(m);
     if (m === POWER) return;                     // тот же режим — не сбрасывать замер регулятора
+    perfEvent("power", { from: POWER, to: m });
     POWER = m;
     if (m !== "paused") budgetChanged();         // бюджет пикселей зависит от питания (P1.3)
     lastShown = 0; govReset();                   // смена режима — замер интервалов заново
@@ -150,7 +156,22 @@
      Всё рисуется в CSS-пикселях: ctx.setTransform(RS, …). */
   const MAX_BACKING_PX = 8.3e6;
   const BUDGET_Q = PARAMS.has("budget") ? Math.min(8.3, Math.max(0.5, parseFloat(PARAMS.get("budget")) || 3.7)) * 1e6 : 0;
-  const pixelBudget = () => BUDGET_Q || (POWER === "low" ? 2.4e6 : 3.7e6);
+  /* P1.1/P1.2: бюджет и предел к/с от приложения — aquariumSetBudget({mp, fps}) или __AQ_BOOT.budget (второй экран:
+     2 Мп и 30 к/с); PROBE_BUDGET — временно, только на время зонда aquariumPerfProbe. Порядок: зонд → ?budget → приложение
+     → питание. NOVIDCAP — зонд «как было»: без предела «1.1 пикселя устройства на пиксель видео». */
+  let APP_BUDGET = 0, APP_FPS = 0, PROBE_BUDGET = 0, NOVIDCAP = false;
+  function setAppBudget(o) {
+    if (typeof o === "number") o = { mp: o };
+    o = o && typeof o === "object" ? o : {};
+    const mp = +o.mp, fps = +o.fps;
+    APP_BUDGET = mp > 0 ? Math.min(8.3, Math.max(0.5, mp)) * 1e6 : 0;
+    APP_FPS = fps > 0 ? Math.min(60, Math.max(10, Math.round(fps))) : 0;
+  }
+  if (BOOT && BOOT.budget != null) setAppBudget(BOOT.budget);
+  const pixelBudget = () => PROBE_BUDGET || BUDGET_Q || APP_BUDGET || (POWER === "low" ? 2.4e6 : 3.7e6);
+  const budgetSource = () => (PROBE_BUDGET ? "probe" : BUDGET_Q ? "url" : APP_BUDGET ? "app" : POWER === "low" ? "battery" : "power");
+  // целевые к/с: 'high' — 60, 'low' — 30; приложение может ограничить ещё (второй экран — 30)
+  const fpsTarget = () => Math.min(POWER === "low" ? 30 : 60, APP_FPS > 0 ? APP_FPS : 60);
   let DPR = Math.min(window.devicePixelRatio || 1, 2);
   let W = 0, H = 0, floorY = 0, RS = 1;
   // размер рыб: в видео-сцене — от масштаба задника (рыба той же величины относительно настоящего рифа на любом
@@ -173,6 +194,7 @@
   function setQuality(level) {
     level = clamp(level | 0, 0, QUALITY_LEVELS.length - 1);
     const prevRs = QUALITY.rsMul;
+    if (level !== QUALITY.level) perfEvent("gov", { from: QUALITY.level, to: level, p90: Math.round(GOV.p90 * 10) / 10 });
     Object.assign(QUALITY, QUALITY_LEVELS[level]);
     QUALITY.level = level;
     if (QUALITY.rsMul !== prevRs && W > 0) { applyBacking(); if (TEST) renderNow(); }
@@ -192,7 +214,7 @@
     GOV.tmp.sort();
     GOV.p90 = GOV.tmp[Math.min(n - 1, Math.floor(n * 0.9))];
     GOV.n = 0; GOV.acc = 0;
-    const target = POWER === "low" ? 1000 / 30 : 1000 / 60;
+    const target = 1000 / fpsTarget();
     if (GOV.p90 > 1.25 * target) { GOV.bad++; GOV.good = 0; }
     else { GOV.bad = 0; if (GOV.p90 <= 1.1 * target) GOV.good++; else GOV.good = 0; }
     if (GOV.bad >= 5 && QUALITY.level < QUALITY_LEVELS.length - 1) {
@@ -202,6 +224,308 @@
       setQuality(QUALITY.level - 1); GOV.lastUp = GOV.clock; GOV.good = 0;
     }
   }
+
+  /* ============================================================
+     P1.1: ЗАМЕР ПРОИЗВОДИТЕЛЬНОСТИ — HUD, снимок, зонд (цифры с Mac владельца; картинку не меняет)
+       • Кольца по 600 значений: интервалы ПОКАЗАННЫХ кадров (мс, по меткам rAF) и JS-мс кадра (performance.now()
+         вокруг syncVideos + симуляции + отрисовки; в WebKit JS-мс — только запись команд, поэтому разница
+         «интервал − JS» — ожидание растра). Гистограмма интервалов с запуска (ячейки по 1 мс, ≥ 250 — последняя).
+         Сырые интервалы rAF (240, и пропущенные кадры) — оценка vsync (виден ли ProMotion 120 Гц).
+         Пишется всегда (снимок нужен и без HUD), без аллокаций на кадр.
+       • Журнал событий (40, по кругу): ступени регулятора, смены RS, питание, тема, бюджет, видимость, ресайз,
+         видео (сторож, ошибки, оборот петли — длительность перемотки и пропуск кадров по requestVideoFrameCallback,
+         пропуски > 150 мс), кадры дольше 250 мс (подряд идущие — одной записью со счётчиком n).
+       • HUD — DOM-элемент <pre> под строкой меню (не на холсте: не мерим сам HUD), обновляется 2 раза в секунду
+         и только когда включён: aquariumSetDebug(true|false), __AQ_BOOT.hud или ?hud=1.
+       • aquariumPerfSnapshot() — объект ≈3 КБ для «Скопировать диагностику»; aquariumPerfProbe() — Promise, ≈45 с
+         по конфигурациям (регулятор на паузе), потом всё как было; aquariumSetBudget({mp, fps}) — второй экран.
+     Метка загрузки (restart-investigation): sessionStorage.aqBoots растёт при перезагрузке той же страницы
+     (сбой процесса WebContent) и начинается с 1 в новом WKWebView; тип навигации — navigate | reload.
+     ============================================================ */
+  const PERF = {
+    N: 600, i: 0, n: 0, iv: new Float32Array(600), js: new Float32Array(600), tmp: new Float32Array(600),
+    hist: new Uint32Array(251), frames: 0, maxAll: 0,
+    RN: 240, ri: 0, rn: 0, raw: new Float32Array(240), rtmp: new Float32Array(240),
+    ev: new Array(40), ei: 0, en: 0,
+    noPace: false, hud: null, hudOn: false, hudTimer: 0,
+  };
+  const PAGE_BOOTS = (() => {
+    try { const n = (parseInt(sessionStorage.getItem("aqBoots"), 10) || 0) + 1; sessionStorage.setItem("aqBoots", String(n)); return n; }
+    catch (e) { return 0; }
+  })();
+  const NAV_TYPE = (() => {
+    try {
+      const e = performance.getEntriesByType ? performance.getEntriesByType("navigation")[0] : null;
+      if (e && e.type) return e.type;
+      const t = performance.navigation ? performance.navigation.type : -1;
+      return t === 1 ? "reload" : t === 2 ? "back_forward" : t === 0 ? "navigate" : "?";
+    } catch (e) { return "?"; }
+  })();
+  const r1 = (x) => Math.round((+x || 0) * 10) / 10, r2 = (x) => Math.round((+x || 0) * 100) / 100, r3 = (x) => Math.round((+x || 0) * 1000) / 1000;
+  const EV_MERGE = { long: 1, vgap: 1 };             // частые события подряд (≤ 10 с) — одной записью
+  function perfEvent(e, d) {
+    const P = PERF, t = r1(performance.now() / 1000), L = P.ev.length;
+    if (EV_MERGE[e] && P.en) {
+      const p = P.ev[(P.ei + L - 1) % L];
+      if (p && p.e === e && t - (p.t2 || p.t) < 10) { p.n = (p.n || 1) + 1; p.t2 = t; if (d && d.ms > p.ms) p.ms = d.ms; return; }
+    }
+    const o = { t, e };
+    if (d) for (const k in d) o[k] = d[k];
+    P.ev[P.ei] = o; P.ei = (P.ei + 1) % L; if (P.en < L) P.en++;
+  }
+  function perfEvents(max) {
+    const P = PERF, L = P.ev.length, n = Math.min(P.en, max || L), o = [];
+    for (let i = n; i >= 1; i--) o.push(P.ev[(P.ei + L - i) % L]);
+    return o;
+  }
+  // сырой интервал rAF (и у пропущенных кадров) — для оценки vsync
+  function perfRaw(ms) {
+    if (!(ms > 0) || ms > 250) return;
+    const P = PERF; P.raw[P.ri] = ms; P.ri = (P.ri + 1) % P.RN; if (P.rn < P.RN) P.rn++;
+  }
+  // показанный кадр: интервал от прошлого показанного (метки rAF) и JS-мс этого кадра
+  function perfFrame(iv, js) {
+    const P = PERF;
+    P.iv[P.i] = iv; P.js[P.i] = js; P.i = (P.i + 1) % P.N; if (P.n < P.N) P.n++;
+    P.frames++; P.hist[iv < 250 ? iv | 0 : 250]++;
+    if (iv > P.maxAll) P.maxAll = iv;
+    if (iv > 250) perfEvent("long", { ms: Math.round(iv) });
+    if (PROBE.on) probeTick(iv, js);
+  }
+  // перцентили первых n значений src (копия в tmp, сортировка на месте) → out {n, p50, p90, p95, max, mean}
+  function ringPct(src, n, tmp, out) {
+    out.n = n; out.p50 = out.p90 = out.p95 = out.max = out.mean = 0;
+    if (!n) return out;
+    let s = 0;
+    for (let i = 0; i < n; i++) { tmp[i] = src[i]; s += src[i]; }
+    const a = tmp.subarray(0, n); a.sort();
+    const q = (p) => a[Math.min(n - 1, Math.floor(p * n))];
+    out.p50 = q(0.5); out.p90 = q(0.9); out.p95 = q(0.95); out.max = a[n - 1]; out.mean = s / n;
+    return out;
+  }
+  // оценка vsync: кластер самых коротких сырых интервалов rAF (5-й перцентиль ± 25%)
+  function vsyncEst() {
+    const P = PERF, n = P.rn;
+    if (n < 20) return 0;
+    for (let i = 0; i < n; i++) P.rtmp[i] = P.raw[i];
+    const a = P.rtmp.subarray(0, n); a.sort();
+    const p5 = a[Math.floor(n * 0.05)];
+    let s = 0, k = 0;
+    for (let i = 0; i < n; i++) { const v = a[i]; if (v >= p5 * 0.8 && v <= p5 * 1.25) { s += v; k++; } }
+    return k ? s / k : p5;
+  }
+  // перцентиль интервалов с запуска (по гистограмме, середина ячейки 1 мс; ≥ 250 мс — 250)
+  function histPct(p) {
+    const h = PERF.hist, tot = PERF.frames;
+    if (!tot) return 0;
+    let acc = 0;
+    for (let i = 0; i < h.length; i++) { acc += h[i]; if (acc >= p * tot) return i < 250 ? i + 0.5 : 250; }
+    return 250;
+  }
+  function histOver(ms) {                            // доля (%) интервалов с запуска длиннее ms
+    const h = PERF.hist, tot = PERF.frames;
+    if (!tot) return 0;
+    let k = 0;
+    for (let i = Math.min(250, Math.ceil(ms)); i < h.length; i++) k += h[i];
+    return (100 * k) / tot;
+  }
+  const PS_IV = { n: 0, p50: 0, p90: 0, p95: 0, max: 0, mean: 0 }, PS_JS = { n: 0, p50: 0, p90: 0, p95: 0, max: 0, mean: 0 };
+  function perfCore() {
+    const P = PERF, iv = ringPct(P.iv, P.n, P.tmp, PS_IV), js = ringPct(P.js, P.n, P.tmp, PS_JS);
+    const vs = vsyncEst(), tgt = fpsTarget(), lim = (vs || 1000 / 60) * 1.5, limT = (1000 / tgt) * 1.25;
+    let over = 0, overT = 0;
+    for (let i = 0; i < P.n; i++) { const v = P.iv[i]; if (v > lim) over++; if (v > limT) overT++; }
+    return { iv, js, vs, tgt, shown: iv.mean > 0 ? 1000 / iv.mean : 0, over: P.n ? (100 * over) / P.n : 0, overT: P.n ? (100 * overT) / P.n : 0, lim };
+  }
+  // видео темы: состояние, к/с по rVFC, потерянные кадры (getVideoPlaybackQuality), петли, сторож
+  function videoInfo(name) {
+    const S = BGS[name], v = S.vid;
+    let dropped = null, total = null;
+    try {
+      if (v && v.getVideoPlaybackQuality) { const q = v.getVideoPlaybackQuality(); dropped = q.droppedVideoFrames; total = q.totalVideoFrames; }
+      else if (v && v.webkitDroppedFrameCount != null) { dropped = v.webkitDroppedFrameCount; total = v.webkitDecodedFrameCount; }
+    } catch (e) { /* нет API */ }
+    return { st: S.vState, poster: S.pState, t: v ? r2(v.currentTime) : null, playing: v ? !v.paused : false, fps: r1(S.vfps), dropped, total,
+      loops: S.loopN, seekMs: S.loopSeek >= 0 ? r1(S.loopSeek) : null, loopGapMs: S.loopGap >= 0 ? r1(S.loopGap) : null, gapMax: r1(S.gapMax),
+      stalls: S.wdN, errors: S.vErrN, rvfc: S.rvfc };
+  }
+  function bootInfo() {
+    const b = BOOT, s = b.screen && typeof b.screen === "object" ? b.screen : null;
+    return { power: b.power, hud: !!b.hud, budget: b.budget != null ? b.budget : null, crashes: b.crashes != null ? b.crashes : null,
+      loadReason: b.loadReason || null, appVersion: b.appVersion || null,
+      screen: s ? { id: s.id, w: s.w, h: s.h, scale: s.scale, maxFps: s.maxFps, main: s.main } : null };
+  }
+  function perfSnapshot() {
+    const c = perfCore(), P = PERF;
+    const off = {}; let nOff = 0;
+    for (const k in LAYERS) if (!LAYERS[k]) { off[k] = false; nOff++; }
+    const sc = BOOT && BOOT.screen;
+    return {
+      v: 1, at: new Date().toISOString(), up: r1(performance.now() / 1000),
+      fps: { target: c.tgt, shown: r1(c.shown), frames: c.iv.n, p50: r2(c.iv.p50), p90: r2(c.iv.p90), p95: r2(c.iv.p95), max: r1(c.iv.max),
+        overVsyncPct: r1(c.over), overTargetPct: r1(c.overT), jsP50: r2(c.js.p50), jsP90: r2(c.js.p90), rasterWait: r2(Math.max(0, c.iv.p50 - c.js.p50)) },
+      since: { frames: P.frames, p50: histPct(0.5), p90: histPct(0.9), p95: histPct(0.95), p99: histPct(0.99), max: r1(P.maxAll),
+        overVsyncPct: r1(histOver(c.lim)) },
+      vsync: { ms: r2(c.vs), hz: c.vs ? Math.round(1000 / c.vs) : null, screenMaxFps: sc && sc.maxFps ? sc.maxFps : null },
+      canvas: { w: canvas.width, h: canvas.height, mp: r2((canvas.width * canvas.height) / 1e6), rs: r3(RS), dpr: DPR, css: [W, H],
+        budgetMp: r2(pixelBudget() / 1e6), budgetSrc: budgetSource(), videoZoom: r3(BGX.sc), devPxPerVideoPx: r2(BGX.sc * RS) },
+      gov: { on: GOV_ON, paused: PROBE.on, level: QUALITY.level, p90: r1(GOV.p90), fps: r1(GOV.fps), recover: GOV.recover },
+      power: POWER, appFps: APP_FPS || null, paced: !PERF.noPace, stagger: STAGGER, vigCss: VIG_CSS,
+      theme: { mode: TH.mode, target: THEMES[TH.target], k: r2(TH.k) },
+      bg: bgMode, video: bgMode === "video" ? { day: videoInfo("day"), night: videoInfo("night") } : null,
+      fish: fishes.length, layersOff: nOff ? off : null,
+      page: { boots: PAGE_BOOTS, nav: NAV_TYPE, wallpaper: WALLPAPER, test: TEST, seed: SEED, css: [window.innerWidth, window.innerHeight],
+        dpr: window.devicePixelRatio || 1, cores: navigator.hardwareConcurrency || null, ua: navigator.userAgent },
+      boot: BOOT ? bootInfo() : null,
+      probing: PROBE.on, probe: PROBE.last,
+      events: perfEvents(30),
+    };
+  }
+  /* ---------- HUD (DOM <pre>, 2 Гц, только когда включён) ---------- */
+  function hudEl() {
+    if (PERF.hud) return PERF.hud;
+    const el = document.createElement("pre");
+    el.id = "aqhud";
+    el.style.cssText = "position:fixed;left:12px;top:44px;margin:0;padding:7px 10px;z-index:30;pointer-events:none;user-select:none;" +
+      "-webkit-user-select:none;font:11px/1.45 ui-monospace,Menlo,Consolas,monospace;color:#d6ecff;background:rgba(0,12,24,0.62);" +
+      "border-radius:7px;white-space:pre;display:none";
+    document.body.appendChild(el);
+    PERF.hud = el;
+    return el;
+  }
+  function setHud(on) {
+    on = !!on;
+    PERF.hudOn = on;
+    const el = on ? hudEl() : PERF.hud;
+    if (el) el.style.display = on ? "block" : "none";
+    if (on && !PERF.hudTimer) { PERF.hudTimer = setInterval(hudUpdate, 500); hudUpdate(); }
+    else if (!on && PERF.hudTimer) { clearInterval(PERF.hudTimer); PERF.hudTimer = 0; }
+    return on;
+  }
+  function hudUpdate() {
+    if (!PERF.hudOn || !PERF.hud) return;
+    let s;
+    try { s = hudText(); } catch (e) { s = "HUD: " + (e && e.message); }
+    PERF.hud.textContent = s;
+  }
+  function evText(o) {
+    let s = o.t + " " + o.e;
+    for (const k in o) if (k !== "t" && k !== "e" && k !== "t2" && o[k] != null) s += " " + k + "=" + o[k];
+    return s;
+  }
+  function hudText() {
+    const c = perfCore(), P = PERF, f = (x, d) => (+x || 0).toFixed(d == null ? 1 : d), sc = BOOT && BOOT.screen;
+    const up = Math.floor(performance.now() / 1000), upS = up >= 3600 ? Math.floor(up / 3600) + " ч " + Math.floor((up % 3600) / 60) + " мин" : Math.floor(up / 60) + ":" + String(up % 60).padStart(2, "0");
+    const L = [
+      `к/с ${f(c.shown)} из ${c.tgt}   интервал p50 ${f(c.iv.p50)}  p90 ${f(c.iv.p90)}  p95 ${f(c.iv.p95)}  max ${f(c.iv.max, 0)} мс   >1 vsync ${f(c.over)}%  >цели ${f(c.overT)}%`,
+      `JS p50 ${f(c.js.p50)}  p90 ${f(c.js.p90)} мс   интервал − JS ${f(Math.max(0, c.iv.p50 - c.js.p50))} мс   vsync ≈ ` +
+        (c.vs ? `${f(c.vs)} мс (${Math.round(1000 / c.vs)} Гц)` : "?") + (sc && sc.maxFps ? `   экран ${sc.maxFps} Гц` : ""),
+      `буфер ${canvas.width}×${canvas.height} ${f((canvas.width * canvas.height) / 1e6, 2)} Мп  RS ${f(RS, 3)}  DPR ${DPR}  бюджет ${f(pixelBudget() / 1e6)} Мп (${budgetSource()})  ` +
+        `видео ×${f(BGX.sc, 2)} (${f(BGX.sc * RS, 2)} px устройства на px видео)`,
+      `регулятор Q${QUALITY.level}` + (PROBE.on ? ` (пауза: зонд ${PROBE.k + 1}/${PROBE.list.length} ${PROBE.list[PROBE.k].name})` : GOV_ON ? "" : " (выкл)") +
+        `  питание ${POWER}${APP_FPS ? " (предел " + APP_FPS + " к/с)" : ""}  тема ${THEMES[TH.target]}${TH.k > 0 && TH.k < 1 ? " " + f(TH.k, 2) : ""}  рыб ${fishes.length}`,
+    ];
+    if (bgMode === "video") {
+      const v = videoInfo(THEMES[TH.target]);
+      L.push(`видео ${v.st === 2 ? f(v.fps) + " к/с" : ["нет", "грузится", "", "ошибка"][v.st] || "?"}  потеряно ${v.dropped != null ? v.dropped + "/" + v.total : "?"}  ` +
+        `петель ${v.loops}${v.seekMs != null ? " (перемотка " + f(v.seekMs, 0) + " мс, пропуск " + (v.loopGapMs != null ? f(v.loopGapMs, 0) : "?") + " мс)" : ""}  ` +
+        `пропуск max ${f(v.gapMax, 0)} мс  сторож ${v.stalls}  ошибок ${v.errors}${v.rvfc ? "" : "  (нет rVFC)"}`);
+    } else L.push(`задник: ${bgMode || "процедурный"}`);
+    L.push(`экран ${sc ? sc.id + (sc.main ? " (главный)" : "") + " " + sc.w + "×" + sc.h + "@" + sc.scale : window.innerWidth + "×" + window.innerHeight}  ` +
+      `загрузка №${PAGE_BOOTS} (${NAV_TYPE}${BOOT && BOOT.loadReason ? ", " + BOOT.loadReason : ""})  сбоев ${BOOT && BOOT.crashes != null ? BOOT.crashes : "?"}  работает ${upS}`);
+    L.push(`с запуска: кадров ${P.frames}  p50 ${histPct(0.5)}  p95 ${histPct(0.95)}  p99 ${histPct(0.99)}  max ${f(P.maxAll, 0)} мс  >1 vsync ${f(histOver(c.lim))}%`);
+    const ev = perfEvents(3);
+    if (ev.length) L.push("события: " + ev.map(evText).join("  ·  "));
+    return L.join("\n");
+  }
+
+  /* ---------- зонд производительности: регулятор на паузе; каждая конфигурация — прогрев + замер (по интервалам
+     показанных кадров), затем всё как было. Конфигурации — те, что разделяют причины на Mac (ROADMAP P1.1) ---------- */
+  const PROBE_CONFIGS = [
+    { name: "current" },
+    { name: "asBefore", budget: 8.3, noVidCap: true, pace: false, stagger: false },   // как до V5: 8.3 Мп, каждый rAF, кэши в одном кадре
+    { name: "budget3.7", budget: 3.7 },
+    { name: "budget2.4", budget: 2.4 },
+    { name: "noCaustics", layers: { caustics: false } },
+    { name: "noRays", layers: { rays: false } },
+    { name: "noVignette", layers: { vignette: false } },
+    { name: "poster", layers: { backdrop: false } },                // постер темы вместо кадра видео (видео идёт)
+    { name: "noReef", layers: { xCoral: false, xProp: false } },    // без колоний и реквизита
+    { name: "noFishLight", layers: { fishlight: false } },
+    { name: "noGroups", layers: { groups: false } },
+  ];
+  const PROBE = { on: false, list: null, k: 0, phase: 0, acc: 0, n: 0, iv: new Float32Array(2048), js: new Float32Array(2048),
+                  tmp: new Float32Array(2048), warm: 1000, meas: 3000, res: null, saved: null, resolve: null, promise: null,
+                  timer: 0, t0: 0, last: null };
+  function probeApply(c) {
+    const s = PROBE.saved;
+    for (const k in s.layers) LAYERS[k] = s.layers[k];
+    STAGGER = s.stagger; PERF.noPace = false; NOVIDCAP = false; PROBE_BUDGET = 0;
+    if (c) {
+      if (c.layers) for (const k in c.layers) if (k in LAYERS) LAYERS[k] = c.layers[k];
+      if (c.budget) PROBE_BUDGET = c.budget * 1e6;
+      if (c.noVidCap) NOVIDCAP = true;
+      if (c.pace === false) PERF.noPace = true;
+      if (c.stagger === false) STAGGER = false;
+    }
+    if (W > 0 && Math.abs(backingRS() - RS) > 1e-6) applyBacking();
+  }
+  // opts (тесты): {warmMs, measureMs, configs: [имена]} — короче/выборочно; по умолчанию 1000 + 3000 мс × 11 ≈ 45 с
+  function probeStart(opts) {
+    if (PROBE.on) return PROBE.promise;
+    opts = opts && typeof opts === "object" ? opts : {};
+    const ms = (v, d) => (+v > 0 ? Math.min(20000, Math.max(20, +v)) : d);
+    PROBE.warm = ms(opts.warmMs, 1000); PROBE.meas = ms(opts.measureMs, 3000);
+    const want = Array.isArray(opts.configs) ? opts.configs : null;
+    PROBE.list = want ? PROBE_CONFIGS.filter((c) => want.indexOf(c.name) >= 0) : PROBE_CONFIGS.slice();
+    PROBE.saved = { layers: Object.assign({}, LAYERS), stagger: STAGGER };
+    PROBE.res = []; PROBE.k = 0; PROBE.phase = 0; PROBE.acc = 0; PROBE.n = 0; PROBE.t0 = performance.now(); PROBE.on = true;
+    PROBE.promise = new Promise((res) => { PROBE.resolve = res; });
+    const p = PROBE.promise;
+    perfEvent("probe", { start: PROBE.list.length });
+    if (!PROBE.list.length) { probeEnd(null); return p; }
+    probeApply(PROBE.list[0]);
+    // кадров нет (питание 'paused', окно скрыто, тест-режим) — не висеть: отмена с тем, что успели
+    PROBE.timer = setTimeout(() => probeEnd("timeout"), PROBE.list.length * (PROBE.warm + PROBE.meas) * 3 + 15000);
+    return p;
+  }
+  function probeTick(iv, js) {
+    const P = PROBE;
+    P.acc += iv;
+    if (P.phase === 0) { if (P.acc >= P.warm) { P.phase = 1; P.acc = 0; P.n = 0; } return; }
+    if (P.n < P.iv.length) { P.iv[P.n] = iv; P.js[P.n] = js; P.n++; }
+    if (P.acc < P.meas) return;
+    const a = ringPct(P.iv, P.n, P.tmp, {}), j = ringPct(P.js, P.n, P.tmp, {});
+    P.res.push({ name: P.list[P.k].name, frames: P.n, fps: a.mean > 0 ? r1(1000 / a.mean) : 0, p50: r2(a.p50), p90: r2(a.p90), p95: r2(a.p95),
+      max: r1(a.max), jsP50: r2(j.p50), jsP90: r2(j.p90), mp: r2((canvas.width * canvas.height) / 1e6), rs: r3(RS) });
+    P.k++; P.phase = 0; P.acc = 0; P.n = 0;
+    if (P.k >= P.list.length) probeEnd(null); else probeApply(P.list[P.k]);
+  }
+  function probeEnd(why) {
+    const P = PROBE;
+    if (!P.on) return;
+    if (P.timer) { clearTimeout(P.timer); P.timer = 0; }
+    P.on = false;
+    probeApply(null);                                // слои, бюджет, ритм, разнесение кэшей — как было
+    lastShown = 0; govReset();
+    const out = { v: 1, configs: P.res, warmMs: P.warm, measureMs: P.meas, tookMs: Math.round(performance.now() - P.t0), aborted: why || null,
+      level: QUALITY.level, power: POWER, fpsTarget: fpsTarget(), vsyncMs: r2(vsyncEst()), css: [W, H], dpr: DPR,
+      budgetMp: r2(pixelBudget() / 1e6), bg: bgMode, theme: THEMES[TH.target] };
+    P.last = out;
+    perfEvent("probe", { end: why || "ok" });
+    const r = P.resolve; P.resolve = null; P.promise = null;
+    if (r) r(out);
+  }
+  window.aquariumSetDebug = (on) => setHud(on);
+  window.aquariumPerfSnapshot = () => perfSnapshot();
+  window.aquariumPerfProbe = (opts) => probeStart(opts);
+  window.aquariumSetBudget = (o) => {
+    setAppBudget(o);
+    perfEvent("budget", { mp: APP_BUDGET ? r2(APP_BUDGET / 1e6) : null, fps: APP_FPS || null });
+    lastShown = 0; govReset();
+    applyBudgetNow();
+    return { mp: r2(pixelBudget() / 1e6), fps: fpsTarget() };
+  };
 
   /* ---------- math / color helpers ---------- */
   const rand = (a, b) => a + R() * (b - a);
@@ -323,7 +647,10 @@
   const BGS = {};
   for (let i = 0; i < THEMES.length; i++) BGS[THEMES[i]] = { name: THEMES[i], poster: null, pState: 0, pCbs: [], vid: null, vState: 0,
     vw: 0, vh: 0, aligned: false, lead: 0.35, tries: 0, retryAt: 0, frame: -1, lit: null, litCtx: null, litSrc: null,
-    vErrN: 0, vErrAt: 0, vRetryAt: 0, wdT: -1, wdAt: 0 };
+    vErrN: 0, vErrAt: 0, vRetryAt: 0, wdT: -1, wdAt: 0,
+    // P1.1 / restart-investigation: сторож (срабатывания, время продолжения), к/с видео и пропуски по rVFC, петли
+    wdN: 0, resumeT: -1, rvfc: false, rvLast: 0, lastMt: 0, rvT0: 0, rvN0: 0, vfps: 0, gapMax: 0,
+    loopN: 0, loopAt: 0, loopSeek: -1, loopGap: -1, loopPend: false };
   // V5: ошибка видео — не навсегда (сбой GPU/медиа-процесса после сна, ошибка декода): повтор через 5 с, 30 с,
   // 2 мин, дальше раз в 10 мин; «файла нет» (код 4) — не больше двух повторов, потом остаётся постер
   const VID_BACKOFF = [5, 30, 120, 600];
@@ -409,14 +736,21 @@
     try { v.disableRemotePlayback = true; v.disablePictureInPicture = true; } catch (e) { /* не везде есть */ }
     v.style.cssText = "display:block;width:2px;height:2px";
     S.vid = v; S.vState = 1; S.aligned = false; S.tries = 0; S.frame = -1;
+    S.rvLast = 0; S.lastMt = 0; S.rvT0 = 0; S.vfps = 0; S.loopAt = 0; S.loopPend = false;
     v.addEventListener("loadeddata", () => {
       if (S.vid !== v) return;
       S.vState = 2; S.vw = v.videoWidth || 0; S.vh = v.videoHeight || 0;
+      if (S.resumeT >= 0) {                          // сторож пересоздал видео — дальше с того места, где оно встало
+        const rt = S.resumeT; S.resumeT = -1;
+        try { if (rt > 0 && rt < (v.duration > 0 && isFinite(v.duration) ? v.duration : VDUR()) - 0.05) v.currentTime = rt; } catch (e) { /* нет перемотки */ }
+      }
+      if (!VTEST) vWatch(S, v);
       syncVideos(); assetsChanged();
     });
     v.addEventListener("error", () => {
       if (S.vid !== v) return;
       const code = v.error ? v.error.code : 0, now = performance.now();
+      perfEvent("verr", { th: name, code, n: S.vErrN + 1 });
       releaseVideo(name); S.vState = 3; S.vErrN++; S.vErrAt = now;
       S.vRetryAt = code === 4 && S.vErrN > 2 ? 0 : now + 1000 * VID_BACKOFF[Math.min(S.vErrN - 1, VID_BACKOFF.length - 1)];
       assetsChanged();
@@ -424,8 +758,49 @@
     v.src = videoUrl(name);
     vidBox.appendChild(v);
   }
+  /* P1.1 / restart-investigation: оборот петли — перемотка в начало (длительность seeking → seeked) и пропуск
+     показанных кадров вокруг неё по requestVideoFrameCallback (Safari 15.4+); там же к/с видео и пропуски > 150 мс.
+     Без rVFC — время по timeupdate, петля — по seeked. Колбэк один на видео (без аллокаций на кадр). */
+  function vWatch(S, v) {
+    const dur = () => (v.duration > 0 && isFinite(v.duration) ? v.duration : VDUR());
+    const loopEv = () => { perfEvent("vloop", { th: S.name, seekMs: S.loopSeek >= 0 ? r1(S.loopSeek) : null, gapMs: S.rvfc ? r1(S.loopGap) : null }); S.loopSeek = -1; };
+    v.addEventListener("seeking", () => {
+      if (S.vid !== v) return;
+      S.loopAt = S.aligned !== "seeking" && S.lastMt > dur() - 0.6 && v.currentTime < 0.6 ? performance.now() : 0;
+    });
+    v.addEventListener("seeked", () => {
+      if (S.vid !== v || !S.loopAt) return;
+      S.loopSeek = performance.now() - S.loopAt; S.loopAt = 0;
+      if (!S.rvfc) { S.loopN++; S.lastMt = 0; loopEv(); }
+      else if (S.loopPend) { S.loopPend = false; loopEv(); }  // первый кадр после петли пришёл раньше seeked
+    });
+    if (typeof v.requestVideoFrameCallback === "function") {
+      S.rvfc = true;
+      const cb = (now, md) => {
+        if (S.vid !== v) return;
+        const mt = md && md.mediaTime >= 0 ? md.mediaTime : v.currentTime, pf = md && md.presentedFrames > 0 ? md.presentedFrames : 0;
+        if (S.rvLast > 0) {
+          const gap = now - S.rvLast;
+          if (mt + 1 < S.lastMt) {                   // время видео пошло с начала — оборот петли
+            S.loopN++; S.loopGap = gap;
+            if (S.loopAt) S.loopPend = true; else loopEv();
+          } else if (gap > 150) perfEvent("vgap", { th: S.name, ms: Math.round(gap) });
+          if (gap > S.gapMax) S.gapMax = gap;
+        }
+        S.rvLast = now; S.lastMt = mt;
+        if (!S.rvT0) { S.rvT0 = now; S.rvN0 = pf; }
+        else if (now - S.rvT0 >= 1000) { S.vfps = ((pf - S.rvN0) * 1000) / (now - S.rvT0); S.rvT0 = now; S.rvN0 = pf; }
+        v.requestVideoFrameCallback(cb);
+      };
+      v.requestVideoFrameCallback(cb);
+    } else {
+      S.rvfc = false;
+      v.addEventListener("timeupdate", () => { if (S.vid === v) S.lastMt = v.currentTime; });
+    }
+  }
   function releaseVideo(name) {
     const S = BGS[name], v = S.vid;
+    S.resumeT = -1;
     if (!v) return;
     S.vid = null; S.vState = 0; S.aligned = false; S.frame = -1;
     try { v.pause(); v.removeAttribute("src"); v.load(); } catch (e) { /* уже освобождено */ }
@@ -448,13 +823,19 @@
       const v = S.vid;
       if (!v || S.vState !== 2) continue;
       if (S.aligned !== true) { alignVideo(S, BGS[THEMES[1 - i]]); continue; }   // пока выравнивается — стоит
-      // V5: сторож — видео «играет», данные есть, а время не идёт > 2 с (застрял декодер) → пересоздать
+      // V5: сторож — видео «играет», данные есть, а время не идёт > 2 с (застрял декодер) → пересоздать;
+      // P1.1: с того же времени (не с 0), срабатывания — в журнал
       if (run && !v.paused && v.readyState >= 2 && !v.seeking) {
         const ct = v.currentTime;
         if (ct !== S.wdT) { S.wdT = ct; S.wdAt = now; }
-        else if (now - S.wdAt > 2000) { releaseVideo(name); S.wdT = -1; continue; }
+        else if (now - S.wdAt > 2000) {
+          S.wdN++; perfEvent("vstall", { th: name, t: r2(ct), n: S.wdN });
+          releaseVideo(name); S.resumeT = ct; S.wdT = -1; continue;
+        }
       } else S.wdAt = now;
+      if (!run) S.rvLast = 0;                        // пауза — не «пропуск кадров» по rVFC
       if (run && v.paused && now >= S.retryAt) {
+        S.rvLast = 0;
         const p = v.play();
         if (p && p.catch) p.catch(() => { S.retryAt = performance.now() + 2000; });    // автозапуск запрещён — постер/кадр стоит, повтор через 2 с
       } else if (!run && !v.paused) v.pause();
@@ -548,7 +929,7 @@
   // что рисовать за тему: кадр видео (если есть данные и, в тесте, перемотано), иначе постер
   function bgSource(S) {
     const v = S.vid;
-    if (v && S.vState === 2 && v.readyState >= 2 && S.vw > 0 && (!VTEST || S.frame >= 0)) return v;
+    if (v && LAYERS.backdrop && S.vState === 2 && v.readyState >= 2 && S.vw > 0 && (!VTEST || S.frame >= 0)) return v;
     return S.pState === 2 ? S.poster : null;
   }
   // источник любого размера (MP4 2560, тестовая WebM 1920, постер) — тем же прямоугольником кадра
@@ -660,6 +1041,7 @@
     TH.mode = m === "day" || m === "night" ? m : "auto";
     const t = themeTargetFor(TH.mode);
     if (t !== TH.target) {
+      perfEvent("theme", { to: THEMES[t], mode: TH.mode });
       TH.target = t; TH.reqAt = performance.now();
       if (bgMode === "video") loadPoster(THEMES[t]);
     }
@@ -743,7 +1125,8 @@
 
   // слои — для гейтов (__aq.layers) и отладки (?layers=-rays,-caustics)
   const LAYERS = { caustics: true, rays: true, bubbles: true, particles: true, glow: true, shadows: true, fishlight: true,
-                  scene: true, groups: true, xShadow: true, xPatch: true, xProp: true, xCoral: true, xReefC: true };   // V4b: xCoral — колонии переднего рифа   // E4: слой сцены (патчи/пропсы) и группы вычитания — для гейтов и отладки
+                  scene: true, groups: true, xShadow: true, xPatch: true, xProp: true, xCoral: true, xReefC: true,   // V4b: xCoral — колонии переднего рифа   // E4: слой сцены (патчи/пропсы) и группы вычитания — для гейтов и отладки
+                  backdrop: true, vignette: true };   // P1.1 (зонд): backdrop false — постер темы вместо кадра видео (видео идёт); vignette false — без виньетки
   if (PARAMS.has("layers")) for (const s of PARAMS.get("layers").split(",")) {
     const k = s.replace(/^[-+ ]/, ""); if (k in LAYERS) LAYERS[k] = s[0] !== "-";
   }
@@ -1265,7 +1648,7 @@
   /* V5 (P1.5): пересборки по 15–20 Гц (K + карта света / кэш переднего рифа / поле света рыб) срабатывали от общих
      часов в одном кадре (+21–26% к его цене). Теперь у каждой — свой кадр по модулю 3 (SCN.frame); пропущенная ждёт
      свой кадр, но не дольше двух своих периодов. В тесте — без разнесения (детерминизм и прежние снимки). */
-  const STAGGER = !TEST;
+  let STAGGER = !TEST;                               // let: зонд P1.1 «как было» выключает разнесение
   function heavyWait(slot, t, last, hz) {
     return STAGGER && last === last && t >= last && t - last < 2 / hz && SCN.frame % 3 !== slot;
   }
@@ -4050,7 +4433,7 @@
   function mkItem(kind, id, def, z) {
     return { kind, id, def, z, z0: z, ents: [], imgs: [null, null, null], coreE: null, core: null, ops: new Float32Array(SC_OPMAX * SC_OPF), nOps: 0,
       x0: 0, y0: 0, x1: 0, y1: 0, iw: 1, ih: 1, cx: 0, cy: 0, pw: 0, ready: false, layer: kind !== "occ", shadow: null, ph: 0, front: false, box: null, sub: true, crab: false, prof: false, surf: false,
-      grid: null, rx: 0, ry: 0, rw: 1, rh: 1, rm: 0, dyn: false };   // grid — сетка занятости альфы (scene.js), r* — прямоугольник картинки кадра и запас качания
+      grid: null, rx: 0, ry: 0, rw: 1, rh: 1, rm: 0, dyn: false, gb: null };   // gb — буферы группы вычитания этого предмета; grid — сетка занятости альфы (scene.js), r* — прямоугольник картинки кадра и запас качания
   }
   // сцена из файла → предметы (на загрузку задника; без сцены — пусто)
   function buildSceneItems() {
@@ -4824,7 +5207,6 @@
   for (let i = 0; i < DYN_CAP; i++) DYN.push({ z: 0, kind: 0, obj: null, part: 0, x0: 0, y0: 0, x1: 0, y1: 0, g: -1 });
   let dynN = 0;
   const GRP_U = new Float32Array(64 * 4), GRP_Z = new Float32Array(64), GRP_M = [];   // рамки и глубины групп (по индексу в SCN.ord), члены группы (временный список)
-  const GB = [];                                            // буферы групп: GB[s] = [чётный, нечётный]
   function pushDyn(z, kind, obj, part, x0, y0, x1, y1) {
     if (dynN >= DYN_CAP) return;
     const d = DYN[dynN++]; d.z = z; d.kind = kind; d.obj = obj; d.part = part; d.x0 = x0; d.y0 = y0; d.x1 = x1; d.y1 = y1; d.g = -1;
@@ -4884,11 +5266,20 @@
     const zs = occSurfZ(q, d.x0, d.y0, d.x1, d.y1);
     return zs === zs && d.z > zs + 0.02;
   }
+  /* Буфер-черновик (группа вычитания, краб, кэш переднего рифа и его каустика): только растёт под нужный размер;
+     restart-investigation (гигиена памяти): если он вдвое больше нужного (по площади) 300 использований подряд —
+     пересоздаётся под нужный размер с запасом 1/8. Рисуется всегда лишь угол pw×ph — картинка та же. */
   function gbuf(slot, par, pw, ph) {
     let e = slot[par];
-    if (!e) e = slot[par] = { c: document.createElement("canvas"), g: null };
-    if (e.c.width < pw || e.c.height < ph) { e.c.width = Math.max(e.c.width, pw); e.c.height = Math.max(e.c.height, ph); e.g = null; }
-    if (!e.g) e.g = e.c.getContext("2d");
+    if (!e) e = slot[par] = { c: document.createElement("canvas"), g: null, over: 0 };
+    const c = e.c;
+    if (c.width < pw || c.height < ph) { c.width = Math.max(c.width, pw); c.height = Math.max(c.height, ph); e.g = null; e.over = 0; }
+    else if (c.width * c.height > 2 * pw * ph) {
+      if (++e.over >= 300) {
+        c.width = Math.min(c.width, Math.ceil(pw * 1.125) + 8); c.height = Math.min(c.height, Math.ceil(ph * 1.125) + 8); e.g = null; e.over = 0;
+      }
+    } else e.over = 0;
+    if (!e.g) e.g = c.getContext("2d");
     const g = e.g;
     g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
     g.clearRect(0, 0, pw, ph);
@@ -5008,7 +5399,7 @@
     if (!q || x1 <= x0 || y1 <= y0) return;
     const d0 = CNT.drawImage;
     const ox = Math.floor(x0 * RS) / RS, oy = Math.floor(y0 * RS) / RS, pw = Math.ceil(x1 * RS) - Math.floor(x0 * RS), ph = Math.ceil(y1 * RS) - Math.floor(y0 * RS);
-    let slot = GB[s]; if (!slot) slot = GB[s] = [null, null];
+    let slot = q.gb; if (!slot) slot = q.gb = [null, null];   // буферы — у предмета (не у индекса после сортировки)
     const tg0 = COUNTING ? performance.now() : 0;
     const e = gbuf(slot, SCN.frame & 1, pw, ph), g = e.g;
     if (COUNTING) CNT.e4MsBuf += performance.now() - tg0;
@@ -5503,6 +5894,10 @@
   }
   function drawVignette() {
     if (VIG.scene !== SCENE || VIG.w !== W || VIG.h !== H) buildVignette();   // сцена (темы) сменилась
+    if (!LAYERS.vignette) {                           // P1.1 (зонд «без виньетки»): CSS-слои — прозрачны
+      if (VIG_CSS) for (let i = 0; i < 2; i++) if (VIG_OP[i] !== 0) { VIG_OP[i] = 0; VIG[i].style.opacity = "0"; }
+      return;
+    }
     const k = TH.k;                                   // затемнение краёв — смесь двух виньеток
     if (VIG_CSS) {
       const o0 = Math.round((k < 0.999 ? (k > 0.001 ? 1 - k : 1) : 0) * 64) / 64, o1 = Math.round((k > 0.001 ? (k < 0.999 ? k : 1) : 0) * 64) / 64;
@@ -5524,12 +5919,15 @@
   // буфер холста и всё, что от него зависит (кэши) — без пересева сцены (зовёт и регулятор качества)
   function backingRS() {
     layoutBackdrop();
-    const r = Math.min(DPR, Math.sqrt(Math.min(MAX_BACKING_PX, pixelBudget()) / Math.max(1, W * H)), Math.max(1, 1.1 / Math.max(1e-3, BGX.sc)));
+    const r = Math.min(DPR, Math.sqrt(Math.min(MAX_BACKING_PX, pixelBudget()) / Math.max(1, W * H)), NOVIDCAP ? 8 : Math.max(1, 1.1 / Math.max(1e-3, BGX.sc)));
     return Math.max(0.25, Math.floor(r * QUALITY.rsMul * 16) / 16);
   }
   function applyBacking() {
+    const oRS = RS;
     RS = backingRS();
     canvas.width = Math.max(1, Math.floor(W * RS)); canvas.height = Math.max(1, Math.floor(H * RS));
+    if (RS !== oRS) perfEvent("rs", { from: r3(oRS), to: r3(RS), mp: r2((canvas.width * canvas.height) / 1e6) });
+    dropBuffers();
     canvas.style.width = W + "px"; canvas.style.height = H + "px";
     ctx.setTransform(RS, 0, 0, RS, 0, 0);
     layoutBackdrop(); layoutCamera(); buildVignette(); buildLightCaches(); buildFishLight(); buildDeepRuns();
@@ -5550,10 +5948,24 @@
     if (TEST || W <= 0 || budgetTimer) return;
     budgetTimer = setTimeout(() => { budgetTimer = 0; if (Math.abs(backingRS() - RS) > 1e-6) applyBacking(); }, 3000);
   }
+  // бюджет от приложения (aquariumSetBudget): до первого кадра и в тесте — сразу, дальше — как смена питания
+  function applyBudgetNow() {
+    if (W <= 0) return;
+    if (TEST || !revealed) { if (Math.abs(backingRS() - RS) > 1e-6) { applyBacking(); if (TEST) renderNow(); } }
+    else budgetChanged();
+  }
+  /* restart-investigation: буферы-черновики (группы вычитания, краб, кэш переднего рифа и его каустика) — заново
+     при смене буфера холста (прежние могли вырасти под крупный RS); кэши рифа пересоберутся в следующем кадре */
+  function dropBuffers() {
+    for (let i = 0; i < SCN.items.length; i++) SCN.items[i].gb = null;
+    CB[0] = CB[1] = null; RFB[0] = RFB[1] = null; RLB[0] = RLB[1] = null;
+    RFC.ok = false; RCC.ok = false;
+  }
   function resize() {
     const oW = W, oH = H, oSS = W > 0 ? sizeScale() : 1;
     W = window.innerWidth; H = window.innerHeight; floorY = H * 0.78;
     DPR = Math.min(window.devicePixelRatio || 1, 2);
+    perfEvent("resize", { w: W, h: H, dpr: DPR });
     seedParticles();
     applyBacking();
     buildScenery();
@@ -5818,24 +6230,29 @@
   let last = performance.now(), acc = 0, lastShown = 0;
   function frame(now) {
     requestAnimationFrame(frame);
-    let raw = (now - last) / 1000; last = now;
+    const rawMs = now - last;
+    let raw = rawMs / 1000; last = now;
     if (raw > 0.25) raw = 0.25; else if (raw < 0) raw = 0;
     // app told us the display is off/occluded, or the view is hidden -> stop work
     if (POWER === "paused" || document.hidden) { lastShown = 0; acc = 0; syncVideos(); return; }
     // V5: пока задник не определился (постер грузится) — ни симуляции, ни отрисовки: холст ещё прозрачен
     if (!bgSettled) { acc = 0; return; }
-    // V5 (P1.4): 'high' — не чаще 60 к/с (ProMotion 120 Гц — каждый второй vsync), 'low' — ≈30 к/с;
-    // допуск 15%: дрожание vsync не должно ронять 60 в 30 и 30 в 20. Время движения — честное (dt ≤ 0.1 с,
-    // подшаги ≤ 1/30 с в frameSim)
+    perfRaw(rawMs);                                  // P1.1: сырой интервал rAF — оценка vsync
+    // V5 (P1.4): 'high' — не чаще 60 к/с (ProMotion 120 Гц — каждый второй vsync), 'low' — ≈30 к/с (и предел
+    // приложения: второй экран — 30); допуск 15%: дрожание vsync не должно ронять 60 в 30 и 30 в 20. Время
+    // движения — честное (dt ≤ 0.1 с, подшаги ≤ 1/30 с в frameSim). Зонд «как было» — каждый rAF.
     acc += raw;
-    const step = POWER === "low" ? (1 / 30) * 0.85 : (1 / 60) * 0.85;
+    const step = PERF.noPace ? 0 : 0.85 / fpsTarget();
     if (acc < step) return;
     const dt = Math.min(acc, 0.1);
     acc = 0;
-    if (lastShown && GOV_ON) govSample(now - lastShown);
+    const iv = lastShown ? now - lastShown : 0;
+    if (iv && GOV_ON && !PROBE.on) govSample(iv);   // зонд — регулятор на паузе
     lastShown = now;
+    const t0 = performance.now();
     syncVideos();                                    // видео тем: загрузка/освобождение, play/pause (дёшево)
     frameBody(dt, true);
+    if (iv) perfFrame(iv, performance.now() - t0);   // P1.1: кольца HUD/снимка (и шаг зонда)
   }
 
   /* ---------- тестовый API: window.__aq ----------
@@ -5933,6 +6350,12 @@
     bgMap: (bx, by) => [bgX(bx), bgY(by)],
     bgUnmap: (x, y) => [bgBX(x), bgBY(y)],
     setQuality(level) { setQuality(level); return QUALITY.level; },
+    // P1.1: всё, что меняет зонд aquariumPerfProbe (проверка «после зонда — как было») и бюджет приложения
+    perfState() {
+      return { layers: Object.assign({}, LAYERS), budgetMp: pixelBudget() / 1e6, budgetSrc: budgetSource(), RS, backing: [canvas.width, canvas.height],
+        stagger: STAGGER, paced: !PERF.noPace, noVidCap: NOVIDCAP, probing: PROBE.on, level: QUALITY.level, fpsTarget: fpsTarget(),
+        appBudget: APP_BUDGET, appFps: APP_FPS, hud: PERF.hudOn, frames: PERF.frames };
+    },
     // E1: свет и вода — для гейтов и следующих этапов
     layers(o) { if (o) for (const k in o) if (k in LAYERS) LAYERS[k] = !!o[k]; return Object.assign({}, LAYERS); },
     lightAt(x, y) { updateLight(simT); return lightAt(x, y); },
@@ -6022,7 +6445,7 @@
   }
 
   window.addEventListener("resize", onResize);
-  document.addEventListener("visibilitychange", () => { last = performance.now(); lastShown = 0; govReset(); syncVideos(); });
+  document.addEventListener("visibilitychange", () => { perfEvent("vis", { hidden: document.hidden }); last = performance.now(); lastShown = 0; govReset(); syncVideos(); });
 
   if (WALLPAPER) {
     hint.style.display = "none";
@@ -6049,6 +6472,8 @@
   FEEDER.nextAuto = rand(150, 270);                   // первая автокормёжка (обои) — через 2.5–4.5 мин, дальше раз в 6–10
   loadBackdrop();                                     // видео-сцена (постер темы → видео) | фото | процедурный риф
   showHint();
+  perfEvent("boot", { boots: PAGE_BOOTS, nav: NAV_TYPE, reason: BOOT && BOOT.loadReason ? String(BOOT.loadReason) : null });
+  if ((BOOT && BOOT.hud) || flag("hud")) setHud(true);   // P1.1: HUD с самого запуска (приложение помнит галочку)
   // ?test=1: от rAF ничего не идёт — кадры только по window.__aq.step()
   if (!TEST) requestAnimationFrame(frame);
 })();

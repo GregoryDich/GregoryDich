@@ -133,14 +133,7 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
             _ = win.setFrameAutosaveName(FeedbackWindowController.autosaveName)
         }
         relayout()
-        // Accessory (menu-bar) app: activate explicitly, otherwise the window opens behind others.
-        // `activate()` exists only in the macOS 14 SDK (Swift 5.9+); `#available` alone does not
-        // stop an older SDK from failing to compile it.
-        #if compiler(>=5.9)
-        if #available(macOS 14.0, *) { NSApp.activate() } else { NSApp.activate(ignoringOtherApps: true) }
-        #else
-        NSApp.activate(ignoringOtherApps: true)
-        #endif
+        AppActivation.bringToFront()                  // accessory app: otherwise the window opens behind others
         win.makeKeyAndOrderFront(nil)
         relayout()
     }
