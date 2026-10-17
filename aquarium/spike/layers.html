@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тест слоёв</title>
+<!--
+  P1.8 (ROADMAP «Плавность на Mac»): пробный тест смешивания слоёв. НЕ часть обоев: движок (../index.html) эту
+  страницу не грузит и не знает о ней; приложение открывает её отдельным окном (меню с ⌥ → «Тест слоёв»,
+  macos-app/Sources/LayersTestWindow.swift, loadFileURL с доступом ко всей папке aquarium/).
+
+  Слева — нынешний путь обоев: кадр видео рисуется в <canvas> (drawImage, cover-fit), и в том же 2D-контексте
+  поверх — затемнение darkCan ('multiply'), каустика K ('color-dodge', пересчёт ≤ 20 Гц) и лучи ('screen').
+  Справа — те же три слоя отдельными элементами над настоящим <video>: <canvas> с CSS mix-blend-mode
+  multiply / color-dodge / screen — смешивает уже Core Animation (так задуман P1.9 «Задник слоями»).
+  Обе половины считают всё в координатах ОКНА — на линии раздела рисунок непрерывен, и ступенька видна сразу.
+  Формулы совпадают точно: K и darkCan непрозрачны (B(фон, K) одинаково в холсте и в CSS), лучи на прозрачном
+  слое копятся тем же 'screen' (премультиплицированно: 1 − Π(1 − p)), а CSS screen слоя даёт 1 − (1 − фон)(1 − P).
+  Код самодостаточный (идея движка, не сам движок): плитка каустики — известный «tileable water caustic»
+  (sin/cos-итерации) в ImageData, две плитки, сведённые 'lighten', × карта света ('multiply'); лучи — текстура
+  64×256 × 7. (Движок сводит свои плитки — фотонный сплат — через 'darken'; здесь плитки — тонкие сети, и минимум
+  оставил бы одни пересечения. Цена смешивания та же: две заливки паттерном + одна операция + карта.)
+  Правила WebKit те же, что у движка: без ctx.filter и getImageData, Safari 16.1, без аллокаций в кадре.
+
+  Параметры адреса: ?mode=both|canvas|layers  ?fx=0 (без эффектов)  ?theme=night  ?budget=Мп (0 — родное
+  разрешение, по умолчанию 3.7 — как обои от сети)  ?divider=0  ?note=0 (без подсказки).
+  Для проверки в headless: ?video=0 (только постер — сравнить формулы слоёв и холста без движения),
+  ?t=секунды (заморозить время лучей и каустики), ?ui=0 (без панели и подписей).
+  Клавиши: 1/2/3 — режим, E — эффекты, D — линия раздела, T — день/ночь, H — подсказка.
+  Для харнесса: window.__spike.stats() / setMode(m) / setFx(on) / setTheme(name).
+-->
+<style>
+  html { background: #000; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body { font: 12px/1.4 -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; color: #e9f0f6; }
+  /* крошечный видео-элемент ПОД холстом, как у движка: WebKit не останавливает «невидимое» видео */
+  #vbox { position: fixed; left: 0; top: 0; width: 2px; height: 2px; overflow: hidden; z-index: -1; pointer-events: none; }
+  #vbox video { display: block; width: 2px; height: 2px; }
+  #cvL { position: absolute; left: 0; top: 0; display: block; }
+  #right { position: absolute; top: 0; overflow: hidden; isolation: isolate; background: #000; }
+  #right > * { position: absolute; left: 0; top: 0; display: block; pointer-events: none; }
+  #vR, #pR { object-fit: fill; }
+  #darkR { mix-blend-mode: multiply; }
+  #kR { mix-blend-mode: color-dodge; }
+  #raysR { mix-blend-mode: screen; }
+  #divider { position: absolute; top: 0; bottom: 0; width: 1px; margin-left: -0.5px; background: rgba(255, 255, 255, 0.45); pointer-events: none; }
+  .lab { position: absolute; bottom: 14px; margin: 0; padding: 7px 9px; max-width: calc(50% - 40px); overflow: hidden;
+         font: 11px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace; white-space: pre;
+         background: rgba(4, 14, 24, 0.72); border-radius: 6px; pointer-events: none; }
+  .lab b { color: #ffd98a; font-weight: 600; }
+  #labL { left: 14px; }
+  #labR { right: 14px; }
+  #top { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: min(880px, calc(100% - 24px));
+         background: rgba(4, 14, 24, 0.80); border-radius: 8px; padding: 8px 12px; box-sizing: border-box; }
+  #bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  #bar button { font: inherit; color: inherit; background: rgba(255, 255, 255, 0.10); border: 1px solid rgba(255, 255, 255, 0.18);
+                border-radius: 5px; padding: 2px 8px; cursor: pointer; }
+  #bar button.on { background: rgba(255, 214, 120, 0.28); border-color: rgba(255, 214, 120, 0.7); }
+  #info { margin-left: auto; opacity: 0.75; font-size: 11px; }
+  #note { margin-top: 6px; }
+  #note p, #note ol { margin: 4px 0; }
+  #note ol { padding-left: 20px; }
+  #note li { margin: 2px 0; }
+  #msg { color: #ff9f8a; }
+</style>
+</head>
+<body>
+<div id="vbox"><video id="vL" muted loop playsinline webkit-playsinline preload="auto"></video></div>
+<canvas id="cvL"></canvas>
+<div id="right">
+  <img id="pR" alt="">
+  <video id="vR" muted loop playsinline webkit-playsinline preload="auto"></video>
+  <canvas id="darkR"></canvas>
+  <canvas id="kR"></canvas>
+  <canvas id="raysR"></canvas>
+</div>
+<div id="divider"></div>
+<pre id="labL" class="lab"></pre>
+<pre id="labR" class="lab"></pre>
+<div id="top">
+  <div id="bar">
+    <button data-k="1">1 · обе</button>
+    <button data-k="2">2 · только холст</button>
+    <button data-k="3">3 · только слои</button>
+    <button data-k="E">E · эффекты</button>
+    <button data-k="D">D · линия</button>
+    <button data-k="T">T · день/ночь</button>
+    <button data-k="H">H · подсказка</button>
+    <span id="info"></span>
+  </div>
+  <div id="note">
+    <p><b>Тест слоёв.</b> Слева — как обои рисуют сейчас: кадр видео копируется в холст, и в том же холсте поверх
+      него затемнение, каустика и лучи. Справа — те же слои отдельными элементами над самим видео; смешивает их
+      система (Core Animation). Картинка должна быть одинаковой; вопрос — что быстрее и совпадает ли цвет.</p>
+    <ol>
+      <li><b>Скорость.</b> Нажмите 2 («только холст»), подождите 10 секунд и запомните к/с и JS внизу. Потом 3
+        («только слои») — то же. Заодно в «Мониторинге системы» смотрите % ЦП процессов «Graphics and Media» и
+        веб-содержимого приложения, а в «Окно → История ГП» — нагрузку ГП. Хорошо, если у слоёв ровные 60 к/с при
+        заметно меньшем ЦП.</li>
+      <li><b>Цвет.</b> Нажмите E (эффекты выключатся — останется голое видео) и D (уберётся линия). Если на месте
+        раздела видна ступенька — справа светлее, темнее или насыщеннее, — цвет видео-слоя не совпадает с видео в
+        холсте (кораллы грейдились под холст). Смотрите и на светлом песке, и на тёмном камне; T — то же ночью.</li>
+      <li><b>Плавность.</b> Нет ли рывков у каждой половины, особенно на обороте петли (раз в ≈20 с).</li>
+    </ol>
+    <p>Левая половина может быть чуть мягче: холст ограничен бюджетом пикселей обоев, видео справа — в родном
+      разрешении. Для сравнения цвета это не важно. <span id="msg"></span></p>
+  </div>
+</div>
+<script>
+(function () {
+  "use strict";
+  const Q = new URLSearchParams(location.search);
+  const TAU = Math.PI * 2;
+  const clamp = (x, a, b) => (x < a ? a : x > b ? b : x);
+  const smooth = (a, b, x) => { const u = clamp((x - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); };
+  const frac = (x) => x - Math.floor(x);
+
+  /* ---------- параметры ---------- */
+  const VW = 2560, VH = 1440, ANCHOR_Y = 0.85;   // как видео-сцена scene.js: cover-fit, лишняя высота уходит вверх на 0.85
+  const BQ = Q.has("budget") ? parseFloat(Q.get("budget")) : 3.7;
+  const BUDGET = BQ > 0 ? clamp(BQ, 0.5, 40) * 1e6 : 0;   // Мп холста на всё окно (как P1.3); 0 — RS = DPR
+  const K_SCALE = 0.5, K_HZ = 20;                // K — доля RS (QUALITY.causticScale движка), пересчёт ≤ 20 Гц (CAUS.hz)
+  const MAP_STEP = 8;                            // карты света и затемнения — 1 пиксель на 8 CSS-px (статичны)
+  const DARKEN = 0.24, K_GAIN = 0.55;            // глубина darkCan и сила каустики (bg/(1 − K): K 0.55 → ×2.2 на нитях)
+  const TILE = 256;                              // плитка каустики, px
+  // плитки → окно: масштаб (CSS-px на пиксель плитки), сжатие по вертикали (пол в перспективе), дрейф (пикс. плитки/с)
+  const CA = { sc: 1.55, sq: 0.56, vx: 6.0, vy: 2.6 }, CB = { sc: 1.85, sq: 0.56, vx: -4.4, vy: 3.4 };
+  const THEMES = { day: { light: [255, 238, 205], name: "день" }, night: { light: [128, 172, 255], name: "ночь" } };
+  const N_RAYS = 7, RF = 10, RAY = new Float32Array(N_RAYS * RF);   // x, y, ux, uy, ширина, длина, α, частота, фаза, качание
+  const RING = 240;
+
+  let theme = Q.get("theme") === "night" ? "night" : "day";
+  let mode = /^(both|canvas|layers)$/.test(Q.get("mode") || "") ? Q.get("mode") : "both";
+  let fx = Q.get("fx") !== "0", showDiv = Q.get("divider") !== "0", showNote = Q.get("note") !== "0";
+  const VIDEO = Q.get("video") !== "0", UI = Q.get("ui") !== "0";
+  const T_FIX = Q.has("t") ? parseFloat(Q.get("t")) || 0 : -1;    // ≥ 0 — время эффектов заморожено (снимки)
+
+  /* ---------- элементы ---------- */
+  const $ = (id) => document.getElementById(id);
+  const cvL = $("cvL"), right = $("right"), pR = $("pR"), vR = $("vR"), vL = $("vL"), darkR = $("darkR"), kR = $("kR"), raysR = $("raysR");
+  const divEl = $("divider"), labL = $("labL"), labR = $("labR"), note = $("note"), info = $("info"), msg = $("msg"), top = $("top");
+  const gL = cvL.getContext("2d", { alpha: false });
+  const gRays = raysR.getContext("2d");
+  const poster = new Image();
+
+  // геометрия (CSS-px окна): cover-fit видео dx, dy, dw, dh при масштабе cs; RS — пиксели холста на CSS-px; kS — K
+  let W = 1, H = 1, DPR = 1, RS = 1, kS = 0.5, cs = 1, dx = 0, dy = 0, dw = 1, dh = 1, split = 0;
+
+  function makeHalf(name) {
+    return { name, on: false, x0: 0, x1: 0,
+      kc: null, kx: null, kw: 0, kh: 0, kT: NaN, patA: null, patB: null, dark: null, map: null, mw: 0, mh: 0,
+      last: 0, iv: new Float32Array(RING), js: new Float32Array(RING), n: 0, i: 0,
+      secT: 0, secN: 0, fps: 0, vSecN: 0, vfps: 0, lastVF: -1 };
+  }
+  const L = makeHalf("left"), R = makeHalf("right");
+  L.kc = document.createElement("canvas"); L.kx = L.kc.getContext("2d", { alpha: false });
+  L.dark = document.createElement("canvas"); L.map = document.createElement("canvas");
+  R.kc = kR; R.kx = kR.getContext("2d", { alpha: false });
+  R.dark = darkR; darkR.getContext("2d", { alpha: false }); R.map = document.createElement("canvas");
+
+  /* ---------- видео: состояние, к/с по requestVideoFrameCallback (Safari 15.4+), ошибки ---------- */
+  function vstate(v) { return { v, f: 0, pf0: 0, t0: 0, fps: 0, rvfc: false, err: 0, blocked: false }; }
+  const vsL = vstate(vL), vsR = vstate(vR);
+  function watch(s) {
+    const v = s.v;
+    v.muted = true; v.defaultMuted = true; v.playsInline = true; v.loop = true;
+    try { v.disableRemotePlayback = true; v.disablePictureInPicture = true; } catch (e) { /* не везде есть */ }
+    v.addEventListener("error", () => { s.err = v.error ? v.error.code : -1; showMsg(); });
+    v.addEventListener("loadeddata", () => { s.err = 0; showMsg(); });
+    if (typeof v.requestVideoFrameCallback !== "function") return;
+    s.rvfc = true;
+    const cb = (now, md) => {
+      s.f++;
+      const pf = md && md.presentedFrames > 0 ? md.presentedFrames : s.f;
+      if (!s.t0) { s.t0 = now; s.pf0 = pf; }
+      else if (now - s.t0 >= 1000) { s.fps = ((pf - s.pf0) * 1000) / (now - s.t0); s.t0 = now; s.pf0 = pf; }
+      v.requestVideoFrameCallback(cb);
+    };
+    v.requestVideoFrameCallback(cb);
+  }
+  watch(vsL); watch(vsR);
+  function play(s) {
+    s.blocked = false;
+    const p = s.v.play();
+    if (p && p.catch) p.catch(() => { s.blocked = true; showMsg(); });
+  }
+  function syncPlay() {                          // видео неактивной половины — на паузе (не тратит декодер)
+    if (!VIDEO) return;
+    if (L.on) play(vsL); else vL.pause();
+    if (R.on) play(vsR); else vR.pause();
+  }
+  // постер — слой 1 под видео (как в P1.9) и запасной кадр холста, пока у видео нет данных
+  function setSrc() {
+    const src = "../assets/reef_" + theme + ".mp4", pos = "../assets/reef_" + theme + ".jpg";
+    poster.src = pos; pR.src = pos;
+    vR.style.visibility = VIDEO ? "visible" : "hidden";
+    if (!VIDEO) return;
+    for (const s of [vsL, vsR]) { s.err = 0; s.f = 0; s.t0 = 0; s.fps = 0; s.v.src = src; }
+    syncPlay();
+  }
+  function showMsg() {
+    const a = [];
+    if (vsL.err || vsR.err) a.push("Видео не загрузилось (код " + (vsL.err || vsR.err) + ") — показан постер.");
+    if (vsL.blocked || vsR.blocked) a.push("Автозапуск видео запрещён — щёлкните по окну.");
+    msg.textContent = a.join(" ");
+  }
+  addEventListener("click", () => { if (vsL.blocked || vsR.blocked) syncPlay(); });
+
+  /* Мягкая синхронизация в режиме «обе»: левое (скрытое) видео подтягивается к правому скоростью ±4 %,
+     перемотка — только при расхождении > 0.4 с. Иначе на линии раздела движение рвётся, и цвет сравнивать трудно. */
+  let drift = 0, seekAt = 0;
+  function syncVideos() {
+    if (mode !== "both" || vL.paused || vR.paused || vL.readyState < 2 || vR.readyState < 2) { if (vL.playbackRate !== 1) vL.playbackRate = 1; return; }
+    const dur = vR.duration;
+    if (!(dur > 0) || !isFinite(dur) || vL.seeking || vR.seeking) return;
+    let d = vL.currentTime - vR.currentTime;
+    if (d > dur / 2) d -= dur; else if (d < -dur / 2) d += dur;
+    drift = d;
+    const now = performance.now();
+    if (Math.abs(d) > 0.4) {                     // перемотка не чаще раза в 5 с: медленный декодер не уйдёт в цикл перемоток
+      if (now - seekAt > 5000) { seekAt = now; vL.currentTime = (vR.currentTime + 0.03) % dur; }
+      vL.playbackRate = 1;
+    }
+    else if (Math.abs(d) > 0.02) vL.playbackRate = d > 0 ? 0.96 : 1.04;
+    else if (vL.playbackRate !== 1) vL.playbackRate = 1;
+  }
+
+  /* ---------- текстуры (один раз; без getImageData — только ImageData из посчитанных чисел) ---------- */
+  // «Tileable water caustic»: p + (cos(t − i.x) + sin(t + i.y), …) пять раз; длина в знаменателе — с постоянным |p|,
+  // чтобы плитка была строго периодичной (без шва). pw — резкость нитей, gain — их яркость.
+  function makeTile(time, pw, gain) {
+    const c = document.createElement("canvas"); c.width = c.height = TILE;
+    const g = c.getContext("2d"), img = g.createImageData(TILE, TILE), d = img.data;
+    for (let y = 0; y < TILE; y++) {
+      for (let x = 0; x < TILE; x++) {
+        const px = (x / TILE) * TAU - 250, py = (y / TILE) * TAU - 250;
+        let ix = px, iy = py, acc = 1;
+        for (let n = 0; n < 5; n++) {
+          const t = time * (1 - 3.5 / (n + 1));
+          const nx = px + Math.cos(t - ix) + Math.sin(t + iy), ny = py + Math.sin(t - iy) + Math.cos(t + ix);
+          ix = nx; iy = ny;
+          const qx = 1.25 / Math.sin(ix + t), qy = 1.25 / Math.cos(iy + t);
+          acc += 1 / Math.sqrt(qx * qx + qy * qy);
+        }
+        const c2 = 1.17 - Math.pow(acc / 5, 1.4), v = Math.min(1, gain * Math.pow(Math.abs(c2), pw));
+        const p = (y * TILE + x) * 4, g8 = Math.round(255 * v);
+        d[p] = g8; d[p + 1] = g8; d[p + 2] = g8; d[p + 3] = 255;
+      }
+    }
+    g.putImageData(img, 0, 0);
+    return c;
+  }
+  const tileA = makeTile(4.7, 14, 2.0), tileB = makeTile(40, 12, 1.6);
+
+  // луч: гаусс поперёк × быстрый разгон у кромки и долгое угасание вдоль; цвет — свет темы
+  const rayTex = document.createElement("canvas"); rayTex.width = 64; rayTex.height = 256;
+  function buildRayTex() {
+    const w = 64, h = 256, lc = THEMES[theme].light, g = rayTex.getContext("2d"), img = g.createImageData(w, h), d = img.data;
+    let pk = 0;
+    for (let y = 0; y < h; y++) { const s = (y + 0.5) / h; pk = Math.max(pk, (1 - Math.exp(-s / 0.06)) * Math.exp(-s / 0.6)); }
+    for (let y = 0; y < h; y++) {
+      const s = (y + 0.5) / h, prof = ((1 - Math.exp(-s / 0.06)) * Math.exp(-s / 0.6)) / pk;
+      for (let x = 0; x < w; x++) {
+        const q = ((x + 0.5) / w - 0.5) / 0.19, p = (y * w + x) * 4;
+        d[p] = lc[0]; d[p + 1] = lc[1]; d[p + 2] = lc[2];
+        d[p + 3] = Math.round(255 * clamp(Math.exp(-0.5 * q * q) * prof, 0, 1));
+      }
+    }
+    g.putImageData(img, 0, 0);
+  }
+
+  /* ---------- раскладка ---------- */
+  // маска света (доли окна): каустика — на нижних ≈ 2/3 (дно), ярче в «лужице» под лучами слева от центра
+  function lightMask(u, v) {
+    const du = (u - 0.45) / 0.42;
+    return smooth(0.30, 0.82, v) * (0.5 + 0.5 * Math.exp(-du * du));
+  }
+  function layoutRays() {
+    for (let k = 0; k < N_RAYS; k++) {
+      const o = k * RF, u = 0.08 + (0.84 * (k + 0.5)) / N_RAYS + 0.035 * Math.sin(k * 12.9898), tilt = 0.30 - 0.12 * u;
+      const ux = Math.sin(tilt), uy = Math.cos(tilt);
+      RAY[o] = u * W - 0.08 * H * ux; RAY[o + 1] = -0.08 * H * uy; RAY[o + 2] = ux; RAY[o + 3] = uy;
+      RAY[o + 4] = (0.05 + 0.07 * frac(k * 0.618 + 0.2)) * W; RAY[o + 5] = 1.2 * H;
+      RAY[o + 6] = 0.13 + 0.10 * frac(k * 0.377 + 0.5); RAY[o + 7] = 0.04 + 0.06 * frac(k * 0.71);
+      RAY[o + 8] = k * 2.1; RAY[o + 9] = 0.012 * W;
+    }
+  }
+  // буферы половины: K (kS), карты затемнения и света (1/MAP_STEP) — по аналитической маске в координатах ОКНА
+  function sizeHalf(hf) {
+    const rw = hf.x1 - hf.x0;
+    hf.kw = Math.max(4, Math.ceil(rw * kS)); hf.kh = Math.max(4, Math.ceil(H * kS));
+    hf.kc.width = hf.kw; hf.kc.height = hf.kh; hf.kT = NaN;
+    hf.kx.imageSmoothingEnabled = true;
+    hf.patA = hf.kx.createPattern(tileA, "repeat"); hf.patB = hf.kx.createPattern(tileB, "repeat");
+    hf.mw = Math.max(1, Math.ceil(rw / MAP_STEP)); hf.mh = Math.max(1, Math.ceil(H / MAP_STEP));
+    buildMaps(hf);
+  }
+  function buildMaps(hf) {
+    const mw = hf.mw, mh = hf.mh, lc = THEMES[theme].light;
+    hf.dark.width = mw; hf.dark.height = mh; hf.map.width = mw; hf.map.height = mh;
+    const gd = hf.dark.getContext("2d"), gm = hf.map.getContext("2d");
+    const id = gd.createImageData(mw, mh), im = gm.createImageData(mw, mh), D = id.data, M = im.data;
+    for (let j = 0; j < mh; j++) {
+      for (let i = 0; i < mw; i++) {
+        const m = lightMask((hf.x0 + (i + 0.5) * MAP_STEP) / W, ((j + 0.5) * MAP_STEP) / H), p = (j * mw + i) * 4;
+        const dv = Math.round(255 * (1 - DARKEN * m));
+        D[p] = dv; D[p + 1] = dv; D[p + 2] = dv; D[p + 3] = 255;
+        M[p] = Math.round(lc[0] * K_GAIN * m); M[p + 1] = Math.round(lc[1] * K_GAIN * m); M[p + 2] = Math.round(lc[2] * K_GAIN * m); M[p + 3] = 255;
+      }
+    }
+    gd.putImageData(id, 0, 0); gm.putImageData(im, 0, 0);
+  }
+  const px = (x) => x + "px";
+  function layout() {
+    W = Math.max(1, window.innerWidth); H = Math.max(1, window.innerHeight);
+    DPR = window.devicePixelRatio || 1;
+    RS = BUDGET > 0 ? Math.min(DPR, Math.sqrt(BUDGET / (W * H))) : DPR;
+    kS = RS * K_SCALE;
+    cs = Math.max(W / VW, H / VH); dw = VW * cs; dh = VH * cs; dx = (W - dw) / 2; dy = (H - dh) * ANCHOR_Y;
+    split = mode === "both" ? Math.round(W / 2) : mode === "canvas" ? W : 0;
+    L.x0 = 0; L.x1 = split; R.x0 = split; R.x1 = W;
+    L.on = split > 0; R.on = split < W;
+    layoutRays();
+    cvL.style.display = L.on ? "block" : "none"; labL.style.display = L.on && UI ? "block" : "none";
+    if (L.on) {
+      cvL.style.width = px(split); cvL.style.height = px(H);
+      cvL.width = Math.max(1, Math.round(split * RS)); cvL.height = Math.max(1, Math.round(H * RS));
+      sizeHalf(L);
+    }
+    right.style.display = R.on ? "block" : "none"; labR.style.display = R.on && UI ? "block" : "none";
+    if (R.on) {
+      const rw = W - split;
+      right.style.left = px(split); right.style.width = px(rw); right.style.height = px(H);
+      for (const el of [pR, vR]) { el.style.left = px(dx - split); el.style.top = px(dy); el.style.width = px(dw); el.style.height = px(dh); }
+      sizeHalf(R);
+      darkR.style.width = px(R.mw * MAP_STEP); darkR.style.height = px(R.mh * MAP_STEP);
+      kR.style.width = px(R.kw / kS); kR.style.height = px(R.kh / kS);
+      raysR.width = Math.max(1, Math.round(rw * RS)); raysR.height = Math.max(1, Math.round(H * RS));
+      raysR.style.width = px(rw); raysR.style.height = px(H);
+    }
+    const fxDisp = fx ? "block" : "none";
+    darkR.style.display = fxDisp; kR.style.display = fxDisp; raysR.style.display = fxDisp;
+    divEl.style.display = mode === "both" && showDiv ? "block" : "none"; divEl.style.left = px(split);
+    labL.style.maxWidth = labR.style.maxWidth = mode === "both" ? "calc(50% - 40px)" : "calc(100% - 28px)";
+    note.style.display = showNote ? "block" : "none"; top.style.display = UI ? "block" : "none";
+    resetStats(L); resetStats(R);
+    updateBar();
+  }
+
+  /* ---------- рисование (кадр: только вызовы контекста, ноль аллокаций) ---------- */
+  // видимая часть кадра видео в полосе окна [x0, x1) — тем же прямоугольником, что видео-элемент справа
+  function drawCover(g, im, k, x0, x1) {
+    const vx0 = Math.max(x0, dx), vx1 = Math.min(x1, dx + dw), vy0 = Math.max(0, dy), vy1 = Math.min(H, dy + dh);
+    if (vx1 <= vx0 || vy1 <= vy0) return;
+    g.drawImage(im, ((vx0 - dx) / cs) * k, ((vy0 - dy) / cs) * k, ((vx1 - vx0) / cs) * k, ((vy1 - vy0) / cs) * k, vx0, vy0, vx1 - vx0, vy1 - vy0);
+  }
+  // плитка → окно: x = sc·(u + ox), y = sq·sc·(v + oy); окно → K: ((x − x0)·kS, y·kS). Заливка — по всему буферу.
+  function fillTile(g, pat, x0, c, t, op, kw, kh) {
+    const ox = (c.vx * t) % TILE, oy = (c.vy * t) % TILE;
+    const a = kS * c.sc, d = kS * c.sc * c.sq, e = kS * (c.sc * ox - x0), f = kS * c.sc * c.sq * oy;
+    g.setTransform(a, 0, 0, d, e, f);
+    g.globalCompositeOperation = op; g.fillStyle = pat;
+    g.fillRect(-e / a, -f / d, kw / a, kh / d);
+  }
+  // K = max(A, B) × карта света — не чаще K_HZ; между пересчётами старый K просто накладывается снова
+  function updateK(hf, t) {
+    if (hf.kT === hf.kT && t >= hf.kT && t - hf.kT < 1 / K_HZ - 1e-6) return;
+    hf.kT = t;
+    const g = hf.kx;
+    fillTile(g, hf.patA, hf.x0, CA, t, "source-over", hf.kw, hf.kh);
+    fillTile(g, hf.patB, hf.x0, CB, t, "lighten", hf.kw, hf.kh);
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = "multiply";
+    g.drawImage(hf.map, 0, 0, hf.mw, hf.mh, 0, 0, hf.mw * MAP_STEP * kS, hf.mh * MAP_STEP * kS);
+    g.globalCompositeOperation = "source-over";
+  }
+  // лучи — в координатах окна; g уже настроен на нужную операцию ('screen')
+  function drawRays(g, t, x0) {
+    for (let k = 0; k < N_RAYS; k++) {
+      const o = k * RF, ux = RAY[o + 2], uy = RAY[o + 3], wpx = RAY[o + 4], len = RAY[o + 5], nx = uy, ny = -ux;
+      const sway = RAY[o + 9] * Math.sin(TAU * RAY[o + 7] * 0.6 * t + RAY[o + 8] * 1.3);
+      const e = RAY[o] - (nx * wpx) / 2 + sway - x0, f = RAY[o + 1] - (ny * wpx) / 2;
+      g.setTransform((RS * nx * wpx) / 64, (RS * ny * wpx) / 64, (RS * ux * len) / 256, (RS * uy * len) / 256, RS * e, RS * f);
+      g.globalAlpha = RAY[o + 6] * (0.72 + 0.28 * Math.sin(TAU * RAY[o + 7] * t + RAY[o + 8]));
+      g.drawImage(rayTex, 0, 0);
+    }
+    g.globalAlpha = 1;
+  }
+  function drawLeft(t) {
+    const g = gL, x0 = L.x0, x1 = L.x1;
+    g.setTransform(RS, 0, 0, RS, -x0 * RS, 0);
+    g.globalCompositeOperation = "source-over"; g.globalAlpha = 1;
+    if (VIDEO && vL.readyState >= 2 && !vsL.err && vL.videoWidth > 0) {
+      drawCover(g, vL, vL.videoWidth / VW, x0, x1);
+      const key = vsL.rvfc ? vsL.f : vL.currentTime;           // новый кадр видео попал в холст?
+      if (key !== L.lastVF) { L.lastVF = key; L.vSecN++; }
+    } else if (poster.complete && poster.naturalWidth > 0) drawCover(g, poster, poster.naturalWidth / VW, x0, x1);
+    else { g.fillStyle = "#06243a"; g.fillRect(x0, 0, x1 - x0, H); }
+    if (!fx) return;
+    updateK(L, t);
+    g.globalCompositeOperation = "multiply";
+    g.drawImage(L.dark, 0, 0, L.mw, L.mh, x0, 0, L.mw * MAP_STEP, L.mh * MAP_STEP);
+    g.globalCompositeOperation = "color-dodge";
+    g.drawImage(L.kc, 0, 0, L.kw, L.kh, x0, 0, L.kw / kS, L.kh / kS);
+    g.globalCompositeOperation = "screen";
+    drawRays(g, t, x0);
+    g.globalCompositeOperation = "source-over";
+  }
+  // справа JS только обновляет содержимое слоёв; видео и смешивание — дело композитора
+  function drawRight(t) {
+    if (!vsR.rvfc) { const key = vR.currentTime; if (key !== R.lastVF) { R.lastVF = key; R.vSecN++; } }
+    if (!fx) return;
+    updateK(R, t);
+    const g = gRays;
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "source-over"; g.globalAlpha = 1;
+    g.clearRect(0, 0, raysR.width, raysR.height);
+    g.globalCompositeOperation = "screen";                    // на прозрачном слое: P = 1 − Π(1 − p), как слева
+    drawRays(g, t, R.x0);
+    g.globalCompositeOperation = "source-over";
+  }
+
+  /* ---------- свои циклы rAF и счётчики у каждой половины ---------- */
+  function resetStats(hf) { hf.last = 0; hf.n = 0; hf.i = 0; hf.secT = 0; hf.secN = 0; hf.fps = 0; hf.vSecN = 0; hf.vfps = 0; }
+  function frameStat(hf, now, js) {
+    if (hf.last > 0) {
+      hf.iv[hf.i] = now - hf.last; hf.js[hf.i] = js;
+      hf.i = (hf.i + 1) % RING; if (hf.n < RING) hf.n++;
+    }
+    hf.last = now; hf.secN++;
+    if (!hf.secT) { hf.secT = now; hf.secN = 0; hf.vSecN = 0; }
+    else if (now - hf.secT >= 1000) {
+      hf.fps = (hf.secN * 1000) / (now - hf.secT); hf.vfps = (hf.vSecN * 1000) / (now - hf.secT);
+      hf.secT = now; hf.secN = 0; hf.vSecN = 0;
+    }
+  }
+  let rafL = 0, rafR = 0;
+  function frameL(now) {
+    rafL = 0;
+    if (!L.on) return;
+    rafL = requestAnimationFrame(frameL);
+    const t0 = performance.now();
+    drawLeft(T_FIX >= 0 ? T_FIX : now / 1000);
+    frameStat(L, now, performance.now() - t0);
+  }
+  function frameR(now) {
+    rafR = 0;
+    if (!R.on) return;
+    rafR = requestAnimationFrame(frameR);
+    const t0 = performance.now();
+    drawRight(T_FIX >= 0 ? T_FIX : now / 1000);
+    frameStat(R, now, performance.now() - t0);
+  }
+  function startLoops() {
+    if (L.on && !rafL) rafL = requestAnimationFrame(frameL);
+    if (R.on && !rafR) rafR = requestAnimationFrame(frameR);
+  }
+
+  /* ---------- подписи (2 раза в секунду) ---------- */
+  const SCR = new Float32Array(RING), PI = new Float32Array(5), PJ = new Float32Array(5);
+  // p10, p50, p90, p95, макс
+  function pcts(src, n, out) {
+    out.fill(0);
+    if (n < 1) return out;
+    SCR.set(src.subarray(0, n));
+    const s = SCR.subarray(0, n).sort(), at = (q) => s[Math.min(n - 1, Math.floor(q * (n - 1) + 0.5))];
+    out[0] = at(0.1); out[1] = at(0.5); out[2] = at(0.9); out[3] = at(0.95); out[4] = s[n - 1];
+    return out;
+  }
+  function slowShare(hf, vs) {
+    if (!hf.n || !(vs > 0)) return 0;
+    let k = 0;
+    for (let i = 0; i < hf.n; i++) if (hf.iv[i] > 1.5 * vs) k++;
+    return (100 * k) / hf.n;
+  }
+  const f1 = (x) => (x > 0 ? x.toFixed(1) : "—"), f2 = (x) => x.toFixed(2);
+  function quality(v) {
+    if (!v.getVideoPlaybackQuality) return "потерь не узнать";
+    const q = v.getVideoPlaybackQuality();
+    return "потеряно " + q.droppedVideoFrames + " из " + q.totalVideoFrames;
+  }
+  function timingLines(hf) {
+    pcts(hf.iv, hf.n, PI); pcts(hf.js, hf.n, PJ);
+    return "к/с " + f1(hf.fps) + " · интервал p50 " + f1(PI[1]) + " / p95 " + f1(PI[3]) + " / макс " + f1(PI[4]) + " мс\n" +
+      "медленных (> 1.5 кадра) " + slowShare(hf, PI[0]).toFixed(1) + " % · JS " + PJ[1].toFixed(2) + " мс (p90 " + PJ[2].toFixed(2) + ")\n";
+  }
+  function vidState(s) { return !VIDEO ? "выкл. (?video=0), постер" : s.err ? "ошибка " + s.err + ", постер" : s.v.paused ? "пауза" : s.v.readyState < 2 ? "грузится" : ""; }
+  function updateLabels() {
+    if (L.on) {
+      const st = vidState(vsL);
+      labL.innerHTML = "<b>ХОЛСТ — как сейчас</b>: видео → drawImage в &lt;canvas&gt;, слои в 2D-контексте\n";
+      labL.appendChild(document.createTextNode(timingLines(L) +
+        "видео в холсте: " + (st || f1(L.vfps) + " новых кадров/с") + " · " + quality(vL) + "\n" +
+        "холст " + cvL.width + "×" + cvL.height + " = " + f2((cvL.width * cvL.height) / 1e6) + " Мп, RS " + f2(RS) +
+        (fx ? " · K " + L.kw + "×" + L.kh : " · эффекты выкл.") +
+        (mode === "both" && VIDEO ? " · рассинхрон " + Math.round(drift * 1000) + " мс" : "")));
+    }
+    if (R.on) {
+      const st = vidState(vsR);
+      labR.innerHTML = "<b>СЛОИ — CSS</b>: &lt;video&gt; + холсты с mix-blend-mode, смешивает Core Animation\n";
+      labR.appendChild(document.createTextNode(timingLines(R) +
+        "видео показано: " + (st || f1(vsR.rvfc ? vsR.fps : R.vfps) + " кадров/с" + (vsR.rvfc ? " (rVFC)" : "")) + " · " + quality(vR) + "\n" +
+        "видео в родном разрешении" +
+        (fx ? " · лучи " + raysR.width + "×" + raysR.height + " · K " + R.kw + "×" + R.kh : " · эффекты выкл.")));
+    }
+  }
+  function updateBar() {
+    for (const b of document.querySelectorAll("#bar button")) {
+      const k = b.getAttribute("data-k");
+      const on = (k === "1" && mode === "both") || (k === "2" && mode === "canvas") || (k === "3" && mode === "layers") ||
+        (k === "E" && fx) || (k === "D" && showDiv) || (k === "T" && theme === "night") || (k === "H" && showNote);
+      b.className = on ? "on" : "";
+    }
+    info.textContent = "окно " + W + "×" + H + " @" + DPR + "x · бюджет " + (BUDGET ? f1(BUDGET / 1e6) + " Мп" : "родной") +
+      " · " + THEMES[theme].name + " · K ≤ " + K_HZ + " Гц · rVFC " + (vsR.rvfc ? "есть" : "нет");
+  }
+
+  /* ---------- управление ---------- */
+  function setMode(m) { if (!/^(both|canvas|layers)$/.test(m)) return; mode = m; layout(); syncPlay(); startLoops(); }
+  function setFx(on) { fx = !!on; layout(); }
+  function setTheme(name) {
+    theme = name === "night" ? "night" : "day";
+    buildRayTex(); setSrc(); layout();
+  }
+  function act(k) {
+    if (k === "1") setMode("both"); else if (k === "2") setMode("canvas"); else if (k === "3") setMode("layers");
+    else if (k === "E") setFx(!fx);
+    else if (k === "D") { showDiv = !showDiv; layout(); }
+    else if (k === "T") setTheme(theme === "day" ? "night" : "day");
+    else if (k === "H") { showNote = !showNote; layout(); }
+  }
+  const CODES = { Digit1: "1", Digit2: "2", Digit3: "3", Numpad1: "1", Numpad2: "2", Numpad3: "3", KeyE: "E", KeyD: "D", KeyT: "T", KeyH: "H" };
+  addEventListener("keydown", (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;   // ⌘W и прочее — окну
+    const k = CODES[e.code];
+    if (k) { e.preventDefault(); act(k); }
+  });
+  for (const b of document.querySelectorAll("#bar button")) b.addEventListener("click", (e) => { e.stopPropagation(); act(b.getAttribute("data-k")); });
+  let resizeTimer = 0;
+  addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(layout, 150); });
+
+  function snapHalf(hf, vs) {
+    if (!hf.on) return null;
+    pcts(hf.iv, hf.n, PI); pcts(hf.js, hf.n, PJ);
+    const q = vs.v.getVideoPlaybackQuality ? vs.v.getVideoPlaybackQuality() : null;
+    return { fps: +hf.fps.toFixed(1), frames: hf.n, p50: +PI[1].toFixed(2), p95: +PI[3].toFixed(2), max: +PI[4].toFixed(2),
+      jsP50: +PJ[1].toFixed(3), jsP90: +PJ[2].toFixed(3), videoFps: +(hf === L ? hf.vfps : vs.rvfc ? vs.fps : hf.vfps).toFixed(1),
+      videoReady: vs.v.readyState, videoErr: vs.err, paused: vs.v.paused, dropped: q ? q.droppedVideoFrames : null, total: q ? q.totalVideoFrames : null };
+  }
+  window.__spike = {
+    stats: () => ({ mode, fx, theme, W, H, DPR, RS: +RS.toFixed(3), split, drift: +drift.toFixed(3), rvfc: vsR.rvfc,
+      left: snapHalf(L, vsL), right: snapHalf(R, vsR) }),
+    setMode, setFx, setTheme,
+  };
+
+  /* ---------- старт ---------- */
+  buildRayTex();
+  layout();
+  setSrc();
+  startLoops();
+  setInterval(() => {
+    if ((window.devicePixelRatio || 1) !== DPR) layout();     // окно переехало на экран с другим DPR
+    syncVideos(); updateLabels(); updateBar();
+  }, 500);
+})();
+</script>
+</body>
+</html>
