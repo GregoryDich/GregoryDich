@@ -47,6 +47,7 @@
 | `proto/vtech-live.html`, `proto/img/`, `proto/seq/`, `proto/serve-local.py` | אב-טיפוס V-TECH ושרת מקומי. הפריימים ב-`seq/480` זמניים. |
 | `proto/exocell-mask-3d.html` | אב-טיפוס MASK. ‏three.js 0.160 נטען מ-jsDelivr. |
 | `proto/vtech-live-template.html`, `proto/build-vtech.py` | התבנית והבונה של V-TECH |
+| `proto/story_content.py` | הטקסטים של מוצר אחר על אותה תבנית, מתוך המקורות המאושרים: `build-vtech.py --product <slug> --files <dir>` |
 | `proto/exocell-3d-template.html`, `proto/build-exocell.py` | התבנית והבונה של MASK |
 | `proto/vtech-he-figma.json`, `proto/exocell-he-design.json`, `proto/exocell-he-ui.json` | הטקסטים המאושרים בעברית |
 | `MITODERM-3D-story.xlsx`, `product-pages.he.json` | הטקסטים לכל המוצרים; מפת הדרכים |

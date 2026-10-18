@@ -1,4 +1,4 @@
-<title>V-TECH SYSTEM Live</title>
+<title>{{h1}} Live</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap">
 <script>document.documentElement.lang = 'he'; document.documentElement.dir = 'rtl'; document.documentElement.classList.add('js');</script>
 <style>
@@ -310,11 +310,11 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
 <div class="cells front" aria-hidden="true"></div>
 <header class="top"><div class="wrap">
   <a class="logo" href="#meet" aria-label="MITODERM"><img src="img/logo-mark.png" alt="MITODERM"></a>
-  <a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{cta_price}}</a>
+  <a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener"{{{lead}}}>{{cta_price}}</a>
 </div></header>
 <main>
   <section id="meet" class="sec" data-st="0"><div class="wrap"><div class="copy">
-    <div class="badges rv"><span class="mark-line"><bdi>{{line_mark}}</bdi></span><span class="badge">{{line_name}}</span><span class="badge pro">{{use_pro}}</span></div>
+    <div class="badges rv"><span class="mark-line"><bdi>{{line_mark}}</bdi></span><span class="badge">{{line_name}}</span><span class="badge{{{use_cls}}}">{{use_pro}}</span></div>
     <p class="kicker rv" style="--d:.06s">{{eyebrow}}</p>
     <div class="head">
       <h1 class="rv" style="--d:.12s"><bdi>{{h1}}</bdi></h1>
@@ -323,7 +323,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
     </div>
     <p class="lead rv" style="--d:.24s">{{s1_lead}}</p>
     <ul class="chips rv" style="--d:.3s">{{{s1_chips}}}</ul>
-    <div class="cta rv" style="--d:.36s"><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{cta_price}}</a><a class="btn ghost" href="#inside">{{s1_more}}</a></div>
+    <div class="cta rv" style="--d:.36s"><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener"{{{lead}}}>{{cta_price}}</a><a class="btn ghost" href="#inside">{{s1_more}}</a></div>
   </div></div></section>
   <section id="why" class="sec" data-st="1"><div class="wrap"><div class="copy">
     <p class="kicker line rv">{{nav1}}</p>
@@ -366,7 +366,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
       </div>
       <p class="lead rv" style="--d:.12s">{{s5_p}}</p>
       <p class="pill rv" style="--d:.18s">{{{s5_chip}}}</p>
-      <p class="note rv" style="--d:.24s">{{s5_note}}</p>
+      {{{s5_note}}}
     </div>
     <ol class="steps">{{{s5_steps}}}</ol>
   </div></section>
@@ -375,7 +375,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
       <p class="kicker line rv">{{nav5}}</p>
       <h2 class="rv" style="--d:.06s">{{{s7_h2}}}</h2>
       <p class="lead rv" style="--d:.12s">{{s7_p}}</p>
-      <div class="cta rv" style="--d:.18s"><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{cta_price}}</a><a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{s7_training}}</a></div>
+      <div class="cta rv" style="--d:.18s"><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener"{{{lead}}}>{{cta_price}}</a>{{{offer_more}}}</div>
       <div class="contacts rv" style="--d:.24s">
         <a href="{{phone_href}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span>{{phone_label}} <bdi dir="ltr">{{phone}}</bdi></span></a>
         <a href="{{email_href}}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg><span>{{email_label}} <bdi dir="ltr">{{email}}</bdi></span></a>
@@ -384,10 +384,10 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
     <aside class="kitcard rv" style="--d:.1s" aria-labelledby="kitcard-h">
       <div class="kc-head"><h3 id="kitcard-h">{{s7_card_title}}</h3><span class="badge"><bdi>{{line_mark}}</bdi></span></div>
       <figure class="kc-fig">   <!-- owner 17/10: the box as in his photo, with what is in it named around it -->
-        <p class="kc-call top" aria-hidden="true"><b><bdi dir="ltr">5×</bdi></b>{{{kit_call_top}}}</p>
+        {{{kit_call_top}}}
         <canvas class="kc-live" role="img" aria-label="{{kit_alt}}"></canvas>
         <img class="kc-pic" src="img/kit.webp" alt="{{kit_alt}}" {{{kit_size}}} loading="lazy">
-        <p class="kc-call bot" aria-hidden="true"><b><bdi dir="ltr">5×</bdi></b>{{{kit_call_bot}}}</p>
+        {{{kit_call_bot}}}
       </figure>
       {{{s7_card_lines}}}
       {{{s7_card_facts}}}
@@ -415,10 +415,10 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
 </main>
 <footer class="foot"><div class="wrap"><img src="img/logo.png" alt="MITODERM — Where Science Meets Beauty"><span>{{footer}}</span><span class="legal"><a href="#">{{foot_access}}</a><a href="#">{{foot_privacy}}</a></span></div></footer>
 <nav class="dock" aria-label="{{nav_label}}">{{{dock}}}</nav>
-<div class="bar"><b><bdi>{{bar_name}}</bdi><small>{{bar_note}}</small></b><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{cta_price}}</a></div>
+<div class="bar"><b><bdi>{{bar_name}}</bdi><small>{{bar_note}}</small></b><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener"{{{lead}}}>{{cta_price}}</a></div>
 
 <!-- Lead form. This page is a static preview and cannot send data: the submit handler prevents the default and only
-     simulates the request. In production the form POSTs JSON {name, phone, email, profession, source: 'V-TECH SYSTEM page'}
+     simulates the request. In production the form POSTs JSON {name, phone, email, profession, source: '{{h1}} page'}
      to data-endpoint (/api/leads), as mitoderm.com does. -->
 <dialog class="lead" id="lead" aria-labelledby="lead-h">
   <div class="lead-in">
@@ -941,7 +941,7 @@ onmessage = async e => {
     e.preventDefault(); if (sending) return; tried = true;
     var ok = NAMES.map(check).every(Boolean); ok = checkConsent() && ok;
     if (!ok) { var bad = form.querySelector('[aria-invalid="true"]'); if (bad) bad.focus(); return; }
-    var payload = { name: form.elements.name.value.trim(), phone: form.elements.phone.value.trim(), email: form.elements.email.value.trim(), profession: form.elements.profession.value.trim(), source: 'V-TECH SYSTEM page' };
+    var payload = { name: form.elements.name.value.trim(), phone: form.elements.phone.value.trim(), email: form.elements.email.value.trim(), profession: form.elements.profession.value.trim(), source: '{{h1}} page' };
     fail.hidden = true; setBusy(true);
     sendLead(payload).then(function () { setBusy(false); body.hidden = true; done.hidden = false; done.focus(); }, function () { setBusy(false); fail.hidden = false; });
   });

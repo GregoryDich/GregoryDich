@@ -9,7 +9,9 @@
 // reduced motion: key frames only; no JS: the first frame as a still; the lead form validates and completes; no
 // console errors. With SYNTH=<2400×1500 RGBA webp> the same file is served for every frame at the 2400 tier, the CPU
 // is slowed 4× and the story is scrolled down and up twice: memory window, long tasks, frame on time after a stop.
-// Screenshots per screen, mid-run, during the landing.
+// Screenshots per screen, mid-run, during the landing. Any product page built by build-vtech.py: the kit callouts are
+// expected when the card lists two kinds (V-TECH), and a home-care page («טיפוח ביתי», no .badge.pro on S1) must send
+// every «איפה לקנות» to WhatsApp, not to the price form, with the offer's second button going to the specialists.
 // usage: [SYNTH=<webp>] FONTDIR=<dir with Rubik[wght].ttf> NODE_PATH=$(npm root -g) node verify-live.cjs <page.html> <files dir> <out dir>
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
@@ -226,7 +228,14 @@ async function synthRun(browser, tag, assert) {
     const cyr = await p.evaluate(() => (document.body.innerText.match(/[Ѐ-ӿ]+/g) || []).slice(0, 5));
     ok('desktop: no Cyrillic in the page text', !cyr.length, cyr.join(' '));
     // the lead form: opens from the price button, validates, completes
-    await scrollTo(p, 0); await p.click('.top [data-lead]');
+    const home = await p.evaluate(() => !document.querySelector('#meet .badge.pro'));
+    if (home) {   // home care: «איפה לקנות» opens WhatsApp everywhere, the lead form only for professionals (join)
+      const b = await p.evaluate(() => ['.top .btn', '#meet .cta .btn.primary', '#offer .cta .btn.primary', '.bar .btn', '#offer .cta .btn.ghost'].map(q => {
+        const a = document.querySelector(q); return { h: a.getAttribute('href'), lead: a.hasAttribute('data-lead'), t: a.textContent.trim() }; }));
+      ok('desktop: home care, «איפה לקנות» opens WhatsApp (not the form), the second offer button the specialists',
+        b.slice(0, 4).every(x => /^https:\/\/wa\.me\/\d+\?text=/.test(x.h) && !x.lead && x.t === b[0].t) && b[4].h === '#specialists' && !b[4].lead, JSON.stringify(b.map(x => x.t + ' → ' + x.h.slice(0, 24))));
+    }
+    await scrollTo(p, 0); await p.click('[data-lead]');   // the first in the page: the header (pro) or the join button (home)
     const opened = await p.evaluate(() => document.getElementById('lead').open);
     await p.click('#lead .submit'); const errsShown = await p.evaluate(() => [...document.querySelectorAll('#lead .err')].filter(e => e.textContent).length);
     await p.screenshot({ path: `${out}/desk-form-errors.jpg`, type: 'jpeg', quality: 80 });
@@ -266,10 +275,12 @@ async function synthRun(browser, tag, assert) {
     ok(`phone ${w}: the DNA helix is never fetched`, !req.helix, `${req.helix} requests`);
     ok(`phone ${w}: the offer pushes the stage away`, gone.o === 0 && gone.push > 0, `canvas opacity ${gone.o}, push ${gone.push}px`);
     const order = await p.evaluate(() => ['#offer h2', '#offer .kitcard', '#offer .lead', '#offer .cta', '#offer .contacts'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top + scrollY)));
+    const kinds = await p.evaluate(() => document.querySelectorAll('#offer .kc-qty').length);
     const calls = await p.evaluate(() => { const c = document.querySelector('#offer .kitcard').getBoundingClientRect(), pic = document.querySelector('#offer .kc-pic, #offer .kitcard.live .kc-live');
       const pr = [...document.querySelectorAll('#offer .kc-pic, #offer .kc-live')].map(e => e.getBoundingClientRect()).find(r => r.height > 0);
       return [...document.querySelectorAll('#offer .kc-call')].map(e => { const r = e.getBoundingClientRect(); return { t: e.textContent.trim(), in: r.left >= c.left && r.right <= c.right, top: r.bottom <= pr.top + 1, bot: r.top >= pr.bottom - 1 }; }); });
-    ok(`phone ${w}: the kit's callouts name what is in it, above and below the picture`, calls.length === 2 && calls[0].in && calls[1].in && calls[0].top && calls[1].bot && /5×/.test(calls[0].t) && /5×/.test(calls[1].t), JSON.stringify(calls.map(c => c.t)));
+    if (kinds === 2) ok(`phone ${w}: the kit's callouts name what is in it, above and below the picture`, calls.length === 2 && calls[0].in && calls[1].in && calls[0].top && calls[1].bot && /5×/.test(calls[0].t) && /5×/.test(calls[1].t), JSON.stringify(calls.map(c => c.t)));
+    else ok(`phone ${w}: one kind in the box, no callouts`, !calls.length, JSON.stringify(calls.map(c => c.t)));
     ok(`phone ${w}: offer reads heading → card → text → buttons → contacts`, order.every((v, i) => !i || v > order[i - 1]), order.join(' < '));
     const cover = await p.evaluate(async () => {   // the card's foot at the bottom of the screen: the bar is not over it
       const c = document.querySelector('#offer .kitcard'); scrollTo(0, c.getBoundingClientRect().bottom + scrollY - innerHeight + 8);

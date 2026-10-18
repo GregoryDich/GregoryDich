@@ -5,6 +5,10 @@
 # with the EXOCELL MASK page). The build fails if any placeholder is left unfilled or any text is never placed.
 # `python3 build-vtech.py` writes the page; `... --files <dir> --keys <dir of transparent key frames>` also writes its
 # images (img/) into <dir>, the folder published with the page. Specialists: a monogram and the city only (public repo).
+# `--product <slug>` (default v-tech-system) builds another product's page on the same template: its texts come from
+# story_content.py (the product's reviewed 3D story and catalogue page, in this schema), the page is written into
+# <dir> as <slug>-live.html. A home-care product's buttons go to WhatsApp («איפה לקנות»), not to the price form; the
+# blocks it has no text for (protocol note, step paragraphs, kit callouts) are left out.
 # Frames: <dir>/seq/<tier>/<A>_<B>_NNN.webp, one folder per tier (the full 16:10 frame's width in px: 1600, 1920,
 # 2400 …); each frame holds only its run's crop box, from <dir>/seq/runs.json ({"runs": [{"a", "b", "n", "box":
 # [x0, y0, x1, y1] in fractions of the frame]}]}, else 40 frames and the whole frame). Only complete tiers are offered.
@@ -16,14 +20,18 @@ from PIL import Image
 
 ARGS = sys.argv[1:]
 opt = lambda name: ARGS[ARGS.index(name) + 1] if name in ARGS else None
-FILES, KEYS = opt('--files'), opt('--keys')
+FILES, KEYS, PRODUCT = opt('--files'), opt('--keys'), opt('--product') or 'v-tech-system'
 H = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.normpath(os.path.join(H, '..'))
 REPO = os.path.normpath(os.path.join(SITE, '..'))
 load = lambda *p: json.load(open(os.path.join(*p), encoding='utf-8'))
 
-v = load(H, 'vtech-he-figma.json')
-cat = {s['slug']: h for s, h in zip(load(SITE, 'product-pages.json'), load(SITE, 'product-pages.he.json'))}['v-tech-system']
+if PRODUCT == 'v-tech-system':
+    v = load(H, 'vtech-he-figma.json')
+else:
+    assert FILES, '--files <dir> is needed: the page is written there, next to its img/ and seq/'
+    sys.path.insert(0, H); from story_content import content; v = content(PRODUCT)
+cat = {s['slug']: h for s, h in zip(load(SITE, 'product-pages.json'), load(SITE, 'product-pages.he.json'))}[PRODUCT]
 ui = load(H, 'exocell-he-ui.json')
 form = load(SITE, 'sources/mitoderm-com/form-he.json'); ff = form['form']
 site = load(SITE, 'sources/mitoderm-com/contacts.json')
@@ -57,6 +65,10 @@ PIN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5a
 CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.8"/></svg>'
 s1, s2, s3, s4, s5, s6, s7, s8, s9 = (v[f's{i}'] for i in range(1, 10))
 tel = '+972' + re.sub(r'\D', '', ui['phone'])[1:]
+NAME, HOME = s1['h1'], v.get('use') == 'home'
+# the main button: the price form (WhatsApp without JS) for a professional product, WhatsApp for a home-care one
+WA_MAIN = wa(ui['wa_text_product'].format(name=NAME)) if HOME else wa(ui['wa_text_price'].replace('EXOCELL MASK', NAME))
+LEAD = '' if HOME else ' data-lead aria-haspopup="dialog"'
 
 T = {
     'cta_price': v['cta_price'], 'line_mark': s1['line_mark'], 'line_name': s1['line_name'], 'use_pro': s1['use_pro'],
@@ -64,11 +76,11 @@ T = {
     **{f'nav{i}': nav[i] for i in range(1, 6)},
     's2_h2': s2['h2'], 's2_p': s2['p'], 's2_kicker': s2['kicker'],
     's3_h2': s3['h2'], 's3_kicker': s3['kicker'], 's3_formula': s3['formula'], 's3_legend': s3['legend'],
-    's4_h2': s4['h2'], 's4_p': s4['p'], 's5_h2': s5['h2'], 's5_p': s5['p'], 's5_note': s5['note'],
-    's7_p': s7['p'], 's7_training': s7['training'], 's7_card_title': s7['card_title'],
+    's4_h2': s4['h2'], 's4_p': s4['p'], 's5_h2': s5['h2'], 's5_p': s5['p'],
+    's7_p': s7['p'], 's7_card_title': s7['card_title'],
     'kit_alt': s1['h1'] + ': ' + s6['p'].split('.')[0],   # the approved S6 line: what is in the box
     'phone_href': 'tel:' + tel, 'phone_label': ui['phone_label'], 'phone': ui['phone'],
-    'email_href': 'mailto:' + ui['email'] + '?subject=' + urllib.parse.quote('V-TECH SYSTEM'), 'email_label': ui['email_label'], 'email': ui['email'],
+    'email_href': 'mailto:' + ui['email'] + '?subject=' + urllib.parse.quote(NAME), 'email_label': ui['email_label'], 'email': ui['email'],
     's8_kicker': s8['kicker'], 's8_filter': s8['filter'], 'spec_empty': ui['spec.empty'], 's8_list': s8['list'],
     's8_join': s8['join'], 's8_join_cta': s8['join_cta'], 's9_line_h': s9['line_h'], 's9_more_h': s9['more_h'],
     'footer': home['home.footer-2'], 'foot_access': site['footer_he']['accessibility'], 'foot_privacy': site['footer_he']['privacy'],
@@ -88,17 +100,24 @@ def card(name, line, use, img, i):
             f'<h3><bdi>{esc(name)}</bdi></h3><p>{keep(line)}</p><span class="go">{esc(s9["go"])}</span></div></a>')
 
 
-book = f'<a class="book" href="{esc(wa(ui["wa_text_price"].replace("EXOCELL MASK", "V-TECH SYSTEM")))}" data-lead aria-haspopup="dialog">{esc(s8["book"])} <span aria-hidden="true">↗</span></a>'
+book = f'<a class="book" href="{esc(WA_MAIN)}"{LEAD}>{esc(s8["book"])} <span aria-hidden="true">↗</span></a>'
+calls = len(s7['card_lines']) == 2   # the two kinds in the box named over and under its picture (V-TECH: sachets, ampoules)
+call = lambda pos, k: (f'<p class="kc-call {pos}" aria-hidden="true"><b><bdi dir="ltr">{esc(s7["card_lines"][k][0])}</bdi></b>'
+                       f'{esc(s7["card_lines"][k][1].split(" — ")[0])}</p>') if calls else ''
 RAW = {
     's1_chips': lis(s1['chips'], keep), 's2_chips': lis(s2['chips']), 's3_p': keep(s3['p']), 's3_chips': lis(s3['chips'], keep),
     's3_formula_list': lis(cat['ingredients'], keep), 's4_pins': lis(s4['pins']), 's5_chip': keep(s5['chip']),
-    's5_steps': ''.join(f'<li class="step rv" style="--d:{i * .08:.2f}s"><span class="n">0{i + 1}</span><h3>{keep(t)}</h3><p>{keep(p)}</p></li>'
+    's5_steps': ''.join(f'<li class="step rv" style="--d:{i * .08:.2f}s"><span class="n">0{i + 1}</span><h3>{keep(t)}</h3>{f"<p>{keep(p)}</p>" if p else ""}</li>'
                         for i, (t, p) in enumerate(s5['steps'])),
+    's5_note': f'<p class="note rv" style="--d:.24s">{esc(s5["note"])}</p>' if s5['note'] else '',
+    'lead': LEAD, 'use_cls': '' if HOME else ' pro',
+    'offer_more': (f'<a class="btn ghost" href="#specialists">{esc(s7["training"])}</a>' if HOME else
+                   f'<a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener"{LEAD}>{esc(s7["training"])}</a>'),
     's7_h2': keep(s7['h2']),
-    'kit_call_top': esc(s7['card_lines'][1][1].split(' — ')[0]), 'kit_call_bot': esc(s7['card_lines'][0][1].split(' — ')[0]),   # «מסכת ג׳ל» over the sachets, «סרום» under the ampoules
+    'kit_call_top': call('top', 1), 'kit_call_bot': call('bot', 0),   # «מסכת ג׳ל» over the sachets, «סרום» under the ampoules
     's7_card_lines': ''.join(f'<p class="kc-qty"><b><bdi dir="ltr">{esc(q)}</bdi></b><span>{keep(t)}</span></p>' for q, t in s7['card_lines']),
-    # one thin line from the approved S6 facts: «4–6 טיפולים בסדרה · 14 יום בין טיפול לטיפול»
-    's7_card_facts': '<p class="kc-facts">' + '<i aria-hidden="true">·</i>'.join(
+    # one thin line from the approved S6 facts: «4–6 טיפולים בסדרה · 14 יום בין טיפול לטיפול» (or the product's own line)
+    's7_card_facts': f'<p class="kc-facts"><span>{keep(s7["card_facts"])}</span></p>' if 'card_facts' in s7 else '<p class="kc-facts">' + '<i aria-hidden="true">·</i>'.join(
         f'<span><b><bdi dir="ltr">{esc(n)}</bdi></b> {esc(l)}</span>' for n, l in s6['facts'][2:4]) + '</p>',
     's7_card_chips': lis(s7['card_chips'], keep), 's8_h2': keep(brand(s8['h2'])), 's8_p': keep(brand(s8['p'])),
     's8_chips': ''.join(f'<button type="button" class="fchip" data-tag="{esc(tag)}" aria-pressed="{str(tag == s8["tag"]).lower()}">{esc(label)}</button>'
@@ -140,7 +159,8 @@ def save(im, path, width, **kw):  # downscale to width (never up) and write WebP
     im.save(path, **kw); return im.size
 
 
-KIT = f'{KEYS}/v6-kit.png' if KEYS and os.path.exists(f'{KEYS}/v6-kit.png') else f'{SITE}/design/vtech-3d/hd/kit-hd.webp'   # the kit of the story's last frame
+KIT = (f'{KEYS}/v6-kit.png' if KEYS and os.path.exists(f'{KEYS}/v6-kit.png') else   # the kit of the story's last frame
+       f'{SITE}/design/vtech-3d/hd/kit-hd.webp' if PRODUCT == 'v-tech-system' else f'{REPO}/protocols/print/img/{PRODUCT}.webp')
 k = Image.open(KIT).convert('RGBA'); k = k.crop(k.getchannel('A').point(lambda a: 255 if a > 8 else 0).getbbox())
 kit_size = (min(760, k.width), round(min(760, k.width) * k.height / k.width))
 if FILES:   # the page's images: smoke, logos, kit card, related products, phone stills cut from the key frames
@@ -187,7 +207,7 @@ assert not missing, f'no text for {sorted(missing)}'
 assert not unused, f'texts never placed: {sorted(unused)}'
 page = re.sub(r'\{\{\{(\w+)\}\}\}', lambda m: RAW[m.group(1)], page)
 page = re.sub(r'\{\{(\w+)\}\}', lambda m: esc(T[m.group(1)]), page)
-ASSETS = {'__WA_PRICE__': esc(wa(ui['wa_text_price'].replace('EXOCELL MASK', 'V-TECH SYSTEM'))), '__STILL__': STILL,
+ASSETS = {'__WA_PRICE__': esc(WA_MAIN), '__STILL__': STILL,
           '__SEQ__': json.dumps({'runs': RUNS, 'tiers': TIERS, 'cells': CELLS, 'mols': MOLS, 'helix': HELIX}, separators=(',', ':')),
           # phone: three still cells around the S3 ampoules (soft and bokeh sprites, small)
           '__PH_CELLS__': ('<span class="ph-cells" aria-hidden="true">' + ''.join(
@@ -196,6 +216,6 @@ ASSETS = {'__WA_PRICE__': esc(wa(ui['wa_text_price'].replace('EXOCELL MASK', 'V-
 for k, val in ASSETS.items(): page = page.replace(k, val)
 left = re.findall(r'__[A-Z0-9_]+__|\{\{', page)
 assert not left, f'unfilled placeholders: {sorted(set(left))}'
-out = os.path.join(H, 'vtech-live.html')
+out = os.path.join(H, 'vtech-live.html') if PRODUCT == 'v-tech-system' else os.path.join(FILES, f'{PRODUCT}-live.html')
 open(out, 'w', encoding='utf-8').write(page)
 print(out, len(page), 'bytes;', len(T), 'texts,', len(RAW), 'blocks')
