@@ -44,7 +44,7 @@ security find-identity -v -p codesigning
 | Пункт | Что делает |
 |---|---|
 | **Показать FPS** | галочка (запоминается): HUD производительности поверх аквариума на всех экранах (виден, когда рабочий стол не закрыт окнами) — к/с, интервалы p50/p90/p95, JS-мс, буфер, бюджет, регулятор, видео. HUD — DOM-элемент, на холсте не рисуется |
-| **Скопировать диагностику** | JSON в буфер обмена: `aquariumPerfSnapshot()` с каждого экрана + модель Mac и чип (`hw.model`, `machdep.cpu.brand_string`), ОЗУ, macOS, все экраны (размер, `backingScaleFactor`, `maximumFramesPerSecond`, главный ли; в `host.screens` — ID экрана и есть ли на нём аквариум: `shown`/`parked`/`none`), сеть/батарея, Low Power Mode, `thermalState`, версия, счётчики загрузок и сбоев страницы. Вставить (⌘V) в письмо или чат |
+| **Скопировать диагностику** | JSON в буфер обмена: `aquariumPerfSnapshot()` с каждого экрана + модель Mac и чип (`hw.model`, `machdep.cpu.brand_string`), ОЗУ, macOS, все экраны (размер, `backingScaleFactor`, `maximumFramesPerSecond`, главный ли; в `host.screens` — ID экрана и есть ли на нём аквариум: `shown`/`parked`/`none`), сеть/батарея, Low Power Mode, `thermalState`, версия, счётчики загрузок, сбоев и зависаний страницы. Вставить (⌘V) в письмо или чат |
 | **Тест производительности (≈45 с)** | только с зажатой **⌥** при щелчке по рыбке. `aquariumPerfProbe()` на главном экране: 11 конфигураций по 4 с (как есть, 3,7 и 2,4 Мп, без каустики/лучей/виньетки, постер вместо видео, без рифа/света рыб/групп, последней — «как было»). Mac не трогать; по окончании — окно с итогами (к/с, p50/p90, JS-мс по каждой конфигурации), полный результат в буфере обмена. Перед тестом покажите рабочий стол (F11): пока аквариум закрыт окнами, WebKit его не рисует (тест тогда не запустится). Если стол закрыли или дисплей заснул — «прерван», в буфере то, что успели. Не запускается, пока открыт «Тест слоёв» |
 | **Тест слоёв** | только с **⌥**: `aquarium/spike/layers.html` в обычном окне (CSS-смешивание над видео против холста, P1.8). Пока окно открыто, обои на паузе — не мешают замеру; пока идёт тест производительности, пункт недоступен. Клавиши страницы (1/2/3, E, D, T, H) работают сразу, ⌘W закрывает |
 | Написать отзыв… | окно обратной связи (ниже) |
@@ -59,10 +59,11 @@ security find-identity -v -p codesigning
   `ignoresMouseEvents` (клики проходят к иконкам). Внутри — `WKWebView` с
   аквариумом в режиме обоев. До загрузки страницы (`WKUserScript`, document start) приложение
   передаёт `window.__WALLPAPER = true`, `window.__AQ_POWER` и
-  `window.__AQ_BOOT = {power, hud, budget, screen: {id, w, h, scale, maxFps, main}, crashes, loadReason, appVersion}`
+  `window.__AQ_BOOT = {power, hud, budget, screen: {id, w, h, scale, maxFps, main}, crashes, unresponsive, loadReason, appVersion}`
   (`w`/`h` — в точках; `budget` — `{mp, fps}` или `null`: на втором и следующих экранах `{mp: 2, fps: 30}`, в Low
   Power Mode и при перегреве `mp: 1.8` на любом экране, `null` — бюджет движка; `loadReason` — `launch` |
-  `displayAdded` | `crashReload` | `retry`). После загрузки: `aquariumSetPower('high'|'low'|'paused')` (только при
+  `displayAdded` | `crashReload` | `retry`; `crashes`/`unresponsive` — сколько всего было сбоев и зависаний; ключи
+  только добавляются, старые страницы их не замечают). После загрузки: `aquariumSetPower('high'|'low'|'paused')` (только при
   смене), `aquariumSetBudget({mp, fps})` при смене роли экрана или Low Power Mode/перегрева (`{mp: null, fps: null}` —
   снова бюджет движка), `aquariumSetDebug(on)` для HUD. Всё, что подставляется в JavaScript, кодируется как JSON
   (`PageScript.literal`), строки не склеиваются вручную.
@@ -75,7 +76,16 @@ security find-identity -v -p codesigning
   (никогда не «чёрный навсегда» и без шторма перезагрузок). Причина берётся из приватного метода WebKit
   `_webView:webContentProcessDidTerminateWithReason:` (0 память, 1 CPU, 2 клиент, 3 сбой, 4 предел сбоев
   GPU-процесса) и пишется в `UserDefaults`: `aq.wc.total`, `aq.wc.log` (последние 20: время, экран,
-  причина, секунд с загрузки), `aq.pageLoads` (число загрузок по причинам) и `aq.pageLoads.log`.
+  причина, секунд с загрузки, `unresponsiveSec` — если перед этим страница висела), `aq.pageLoads` (число загрузок
+  по причинам) и `aq.pageLoads.log`.
+- **Зависание страницы** (≈ «замерло, потом белый экран»). Приватные методы WebKit
+  `_webViewWebProcessDidBecomeUnresponsive:` / `_webViewWebProcessDidBecomeResponsive:` (WebKit зовёт их, когда
+  процесс страницы 3 с не отвечает на то, чего UI-процесс ждёт, и когда ответил) → `aq.unresponsive.total` и
+  `aq.unresponsive.log` (последние 20: время, экран, секунд с загрузки, `end` — `responsive` | `terminated` |
+  `closed` | `open` (приложение закрыли, пока висело), `durationSec`). WebKit замечает зависание только пока чего-то
+  ждёт от страницы (загрузка, ввод…), так что зависание без этого видно лишь как сбой. В диагностике:
+  `lifecycle.unresponsiveTotal`/`unresponsiveLog`, `windows[].unresponsiveThisRun` и, если страница висит прямо
+  сейчас, `windows[].unresponsiveForSec` (снимок `snapshot` тогда — `{"error": "timeout"}`).
 - `Lifecycle.swift` — журнал, настройки, счётчики; `LayersTestWindow.swift` — окно «Тест слоёв».
 
 ## Журнал и отладка
@@ -83,7 +93,7 @@ security find-identity -v -p codesigning
 # что происходило (загрузки страниц с причиной, сбои, экраны, питание):
 log show --last 3h --style compact --predicate 'subsystem == "com.gregorydich.aquariumwallpaper"'
 log stream --predicate 'subsystem == "com.gregorydich.aquariumwallpaper"'      # вживую
-# счётчики сбоев и загрузок:
+# счётчики сбоев, зависаний и загрузок (aq.wc.*, aq.unresponsive.*, aq.pageLoads*):
 defaults read com.gregorydich.aquariumwallpaper
 # Safari ▸ Разработка ▸ <ваш Mac> ▸ страница обоев (macOS 13.3+; затем перезапустить приложение):
 defaults write com.gregorydich.aquariumwallpaper inspectable -bool YES
@@ -150,8 +160,9 @@ Low Power Mode → в журнале «power low (lowPowerMode)», в HUD «бю
 - **Несколько мониторов** — окно создаётся на каждый; при смене разрешения или
   расположения окно только меняет размер (без перезагрузки). Второй и следующие
   экраны идут с 30 fps и бюджетом 2 Мп; «Только на главном экране» оставляет один.
-- **Аквариум «перезапускается» или чёрный экран** — «Скопировать диагностику» и
-  `log show …` из раздела «Журнал и отладка» (там видно, была ли перезагрузка и почему).
+- **Аквариум «перезапускается», замирает, чёрный или белый экран** — «Скопировать диагностику» (лучше прямо
+  во время зависания) и `log show …` из раздела «Журнал и отладка»: там видно, висела ли страница
+  («WebContent unresponsive»), сколько, и была ли перезагрузка и почему.
 - **Полностью выключить** — значок в строке меню → «Выход».
 
 > Хотите максимально нативно (SpriteKit/Metal вместо WebView) ради ещё меньшего

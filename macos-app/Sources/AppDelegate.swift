@@ -43,7 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NotificationCenter.default.addObserver(
             self, selector: #selector(screensChanged),
             name: NSApplication.didChangeScreenParametersNotification, object: nil)
-        // Low Power Mode and thermal state: posted on arbitrary threads (handler hops to main).
+        // Low Power Mode and thermal state: posted on arbitrary threads (handler hops to main, capture-free).
         NotificationCenter.default.addObserver(
             self, selector: #selector(powerConditionsChanged),
             name: .NSProcessInfoPowerStateDidChange, object: nil)
@@ -223,13 +223,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // MARK: Power / sleep — optimisation for a 24/7 laptop wallpaper
     private func startPowerMonitoring() {
         applyPowerState()
-        let ctx = Unmanaged.passUnretained(self).toOpaque()
-        let callback: IOPowerSourceCallbackType = { context in
-            guard let context = context else { return }
-            let me = Unmanaged<AppDelegate>.fromOpaque(context).takeUnretainedValue()
-            DispatchQueue.main.async { me.applyPowerState() }
-        }
-        if let unmanaged = IOPSNotificationCreateRunLoopSource(callback, ctx) {
+        // Battery/AC changes. Needs no context: the handler finds the delegate itself (applyPowerStateSoon).
+        let callback: IOPowerSourceCallbackType = { _ in AppDelegate.applyPowerStateSoon() }
+        if let unmanaged = IOPSNotificationCreateRunLoopSource(callback, nil) {
             let src = unmanaged.takeRetainedValue()
             CFRunLoopAddSource(CFRunLoopGetCurrent(), src, .commonModes)   // also while a menu/alert is open
             powerSource = src
@@ -237,7 +233,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc nonisolated private func powerConditionsChanged() {
-        DispatchQueue.main.async { [weak self] in self?.applyPowerState() }
+        AppDelegate.applyPowerStateSoon()
+    }
+
+    /// From any thread (IOPS callback, Low Power Mode / thermal-state notifications): applyPowerState() on
+    /// the next main-queue turn. Static and capture-free on purpose: the main-queue block is @Sendable and
+    /// AppDelegate is not Sendable, so capturing `self` (or the IOPS context object) in it is a Swift 6
+    /// warning ("capture of 'self' with non-Sendable type 'AppDelegate?' in a '@Sendable' closure"). The
+    /// delegate is looked up on the main thread instead; it lives as long as the app (main.swift).
+    nonisolated private static func applyPowerStateSoon() {
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {                   // the main queue runs on the main thread
+                guard let app = NSApp.delegate as? AppDelegate else { return }
+                app.applyPowerState()
+            }
+        }
     }
 
     @objc private func displaySleep() {

@@ -2,10 +2,10 @@ import Cocoa
 import os
 
 // Shared plumbing for AppDelegate and WallpaperWindow: the unified log, persisted settings,
-// page-load and WebContent-termination counters (UserDefaults) and two small UI helpers.
+// page-load, WebContent-termination and unresponsive-page counters (UserDefaults) and two small UI helpers.
 // What happened and why is readable after the fact, without a debugger:
 //   log show --last 3h --style compact --predicate 'subsystem == "com.gregorydich.aquariumwallpaper"'
-//   defaults read com.gregorydich.aquariumwallpaper          (aq.wc.*, aq.pageLoads*)
+//   defaults read com.gregorydich.aquariumwallpaper          (aq.wc.*, aq.pageLoads*, aq.unresponsive.*)
 
 // MARK: - Log
 enum Log {
@@ -42,18 +42,24 @@ enum AppSettings {
     }
 }
 
-// MARK: - Page loads and WebContent terminations (persist across launches)
-/// Keys: `aq.wc.total` (all terminations ever), `aq.wc.log` (last 20: at, display, reason, code, sinceLoadSec),
-/// `aq.pageLoads` ({reason: count}: launch | displayAdded | crashReload | retry), `aq.pageLoads.log` (last 20).
-/// Shown in «Скопировать диагностику»; the total also goes to the page as `__AQ_BOOT.crashes`.
+// MARK: - Page loads, WebContent terminations and unresponsive pages (persist across launches)
+/// Keys: `aq.wc.total` (all terminations ever), `aq.wc.log` (last 20: at, display, reason, code, sinceLoadSec,
+/// unresponsiveSec when the page was unresponsive at the moment it died),
+/// `aq.pageLoads` ({reason: count}: launch | displayAdded | crashReload | retry), `aq.pageLoads.log` (last 20),
+/// `aq.unresponsive.total` (WebKit reported the page unresponsive, all episodes ever), `aq.unresponsive.log`
+/// (last 20: at, display, sinceLoadSec, end = open | responsive | terminated | closed, durationSec).
+/// Shown in «Скопировать диагностику»; the totals also go to the page as `__AQ_BOOT.crashes` / `.unresponsive`.
 enum LifecycleStats {
     static let wcTotalKey = "aq.wc.total"
     static let wcLogKey = "aq.wc.log"
     static let loadsKey = "aq.pageLoads"
     static let loadsLogKey = "aq.pageLoads.log"
+    static let unresponsiveTotalKey = "aq.unresponsive.total"
+    static let unresponsiveLogKey = "aq.unresponsive.log"
     private static let logLimit = 20
 
     static var terminations: Int { UserDefaults.standard.integer(forKey: wcTotalKey) }
+    static var unresponsiveEpisodes: Int { UserDefaults.standard.integer(forKey: unresponsiveTotalKey) }
 
     /// `_WKProcessTerminationReason` (WKNavigationDelegatePrivate.h); nil = the public delegate
     /// method was called, which carries no reason.
@@ -69,14 +75,48 @@ enum LifecycleStats {
         }
     }
 
-    static func recordTermination(display: CGDirectDisplayID, code: Int?, sinceLoad: TimeInterval?) {
+    /// `unresponsiveFor`: the page had been unresponsive this long when its process died (a freeze that
+    /// ended in a kill — the white-screen case), nil if it was responsive.
+    static func recordTermination(display: CGDirectDisplayID, code: Int?, sinceLoad: TimeInterval?,
+                                  unresponsiveFor: TimeInterval? = nil) {
         let d = UserDefaults.standard
         d.set(d.integer(forKey: wcTotalKey) + 1, forKey: wcTotalKey)
         var entry: [String: Any] = ["at": FBDate.string(Date()), "display": Int(display), "reason": reasonName(code)]
         if let code = code { entry["code"] = code }
         if let s = sinceLoad { entry["sinceLoadSec"] = Int(s.rounded()) }
+        if let u = unresponsiveFor { entry["unresponsiveSec"] = tenths(u) }
         append(entry, to: wcLogKey)
     }
+
+    /// WebKit reported the page's WebContent process unresponsive. Counted and logged at once, as an
+    /// `end: "open"` episode, so a freeze is on record even if the app is quit or killed before it ends;
+    /// endUnresponsive fills in how and when it ended.
+    static func recordUnresponsive(display: CGDirectDisplayID, sinceLoad: TimeInterval?) {
+        let d = UserDefaults.standard
+        d.set(d.integer(forKey: unresponsiveTotalKey) + 1, forKey: unresponsiveTotalKey)
+        var entry: [String: Any] = ["at": FBDate.string(Date()), "display": Int(display), "end": "open"]
+        if let s = sinceLoad { entry["sinceLoadSec"] = Int(s.rounded()) }
+        append(entry, to: unresponsiveLogKey)
+    }
+
+    /// Closes the newest open episode of `display`: `end` = responsive | terminated | closed, `durationSec`
+    /// = time from WebKit's "unresponsive" (itself ≈3 s after the page stopped answering) to that end.
+    static func endUnresponsive(display: CGDirectDisplayID, duration: TimeInterval, end: String) {
+        let d = UserDefaults.standard
+        guard var log = d.array(forKey: unresponsiveLogKey),
+              let i = log.lastIndex(where: { item in
+                  guard let e = item as? [String: Any] else { return false }
+                  return (e["display"] as? NSNumber)?.intValue == Int(display) && (e["end"] as? String) == "open"
+              }),
+              var entry = log[i] as? [String: Any] else { return }
+        entry["end"] = end
+        entry["durationSec"] = tenths(duration)
+        log[i] = entry
+        d.set(log, forKey: unresponsiveLogKey)
+    }
+
+    /// Seconds rounded to 0.1.
+    private static func tenths(_ t: TimeInterval) -> Double { (t * 10).rounded() / 10 }
 
     static func recordLoad(display: CGDirectDisplayID, reason: String) {
         let d = UserDefaults.standard
@@ -96,13 +136,15 @@ enum LifecycleStats {
         d.set(log, forKey: key)
     }
 
-    /// For «Скопировать диагностику».
+    /// For «Скопировать диагностику» (`lifecycle`). Keys are only ever added, never renamed.
     static func snapshot() -> [String: Any] {
         let d = UserDefaults.standard
         return ["wcTotal": d.integer(forKey: wcTotalKey),
                 "wcLog": d.array(forKey: wcLogKey) ?? [],
                 "pageLoads": d.dictionary(forKey: loadsKey) ?? [:],
-                "pageLoadsLog": d.array(forKey: loadsLogKey) ?? []]
+                "pageLoadsLog": d.array(forKey: loadsLogKey) ?? [],
+                "unresponsiveTotal": d.integer(forKey: unresponsiveTotalKey),
+                "unresponsiveLog": d.array(forKey: unresponsiveLogKey) ?? []]
     }
 }
 

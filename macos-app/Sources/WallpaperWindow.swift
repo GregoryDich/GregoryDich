@@ -60,10 +60,13 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     private var nextReason = "crashReload"
     private var failures: [Date] = []                // terminations + failed loads, last 5 min
     private var gaveUp = false                       // quick backoff exhausted → slow retry
+    /// Set while WebKit reports the WebContent process unresponsive (a hung page): since when.
+    private var unresponsiveSince: Date?
     // This run only (the persistent totals are in LifecycleStats).
     private var loadCount = 0
     private var terminationCount = 0
     private var loadFailureCount = 0
+    private var unresponsiveCount = 0
 
     private var loaded: Bool { state == .ready }
 
@@ -156,7 +159,8 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
 
     /// `window.__AQ_BOOT` (contract with aquarium/index.html, P1.1):
     /// {power, hud, budget: {mp, fps}|null, screen: {id, w, h (points), scale, maxFps, main}, crashes,
-    ///  loadReason: launch|displayAdded|crashReload|retry, appVersion}. `__AQ_POWER` stays for older pages.
+    ///  unresponsive, loadReason: launch|displayAdded|crashReload|retry, appVersion}. `__AQ_POWER` stays for
+    /// older pages. Keys are only ever added (e.g. `unresponsive`), never renamed: older pages keep working.
     /// Every value goes through PageScript.literal (JSON), so nothing in it can break out of the script.
     private func bootSource() -> String {
         var screen = screenInfo.dict
@@ -168,6 +172,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
             "budget": budget ?? NSNull(),
             "screen": screen,
             "crashes": LifecycleStats.terminations,
+            "unresponsive": LifecycleStats.unresponsiveEpisodes,
             "loadReason": loadReason,
             "appVersion": AppSettings.appVersion,
         ]
@@ -204,6 +209,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     /// Releases the page: WebKit logs `close:` and the WebContent process exits.
     func close() {
         guard !closed else { return }
+        endUnresponsive("closed")                        // before `closed`: the episode must not stay open
         closed = true
         NSObject.cancelPreviousPerformRequests(withTarget: self)
         webView.navigationDelegate = nil
@@ -272,8 +278,11 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
             "visible": window.isVisible, "screen": screen, "loadReason": loadReason,
             "loadsThisRun": loadCount, "terminationsThisRun": terminationCount,
             "loadFailuresThisRun": loadFailureCount, "slowRetry": gaveUp,
+            "unresponsiveThisRun": unresponsiveCount,
         ]
         if let t = loadStartedAt { d["loadedAgoSec"] = Int(Date().timeIntervalSince(t)) }
+        // Copied during a freeze: the page's snapshot times out, this says for how long it has been hung.
+        if let u = unresponsiveSince { d["unresponsiveForSec"] = Int(Date().timeIntervalSince(u)) }
         return d
     }
 
@@ -391,11 +400,54 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     private func contentProcessTerminated(code: Int?) {
         guard !closed else { return }
         let since = loadStartedAt.map { Date().timeIntervalSince($0) }
+        let frozeFor = endUnresponsive("terminated")     // a hang that ended in a kill: the white-screen case
         terminationCount += 1
-        LifecycleStats.recordTermination(display: displayID, code: code, sinceLoad: since)
+        LifecycleStats.recordTermination(display: displayID, code: code, sinceLoad: since, unresponsiveFor: frozeFor)
         Log.error("WebContent terminated on display \(displayID): \(LifecycleStats.reasonName(code)), " +
-                  "\(Int(since ?? -1)) s after load (total \(LifecycleStats.terminations))")
+                  "\(Int(since ?? -1)) s after load" +
+                  (frozeFor.map { ", unresponsive for \(Int($0.rounded())) s before" } ?? "") +
+                  " (total \(LifecycleStats.terminations))")
         if state != .waiting { scheduleRecovery(reason: "crashReload") }   // else a reload is already scheduled
+    }
+
+    /// Private WebKit delegate methods (WKNavigationDelegatePrivate.h: `_webViewWebProcessDidBecomeUnresponsive:`,
+    /// `_webViewWebProcessDidBecomeResponsive:`; NavigationState.mm checks respondsToSelector: when the
+    /// delegate is set). WebKit calls them when the WebContent process has not answered a message the UI
+    /// process waits on for 3 s (ResponsivenessTimer, started by loads and input, among others) and when it
+    /// answers again — a page stuck in a long JavaScript task, the suspected start of "freezes, then a white
+    /// screen". WebKit notices only while it is waiting on the page, so a hang may show up only as a
+    /// termination (with `unresponsiveSec` in `aq.wc.log` when WebKit had noticed it first).
+    /// Matched by selector only, like the termination method above; nothing private is linked.
+    @objc(_webViewWebProcessDidBecomeUnresponsive:)
+    private func privateWebProcessDidBecomeUnresponsive(_ webView: WKWebView) {
+        guard !closed, unresponsiveSince == nil else { return }
+        let now = Date()
+        let since = loadStartedAt.map { now.timeIntervalSince($0) }
+        unresponsiveSince = now
+        unresponsiveCount += 1
+        LifecycleStats.recordUnresponsive(display: displayID, sinceLoad: since)
+        Log.error("WebContent unresponsive on display \(displayID): \(Int(since ?? -1)) s after load, " +
+                  "state \(state.rawValue), power \(power) (total \(LifecycleStats.unresponsiveEpisodes))")
+    }
+
+    @objc(_webViewWebProcessDidBecomeResponsive:)
+    private func privateWebProcessDidBecomeResponsive(_ webView: WKWebView) {
+        guard !closed else { return }
+        endUnresponsive("responsive")
+    }
+
+    /// Ends an open unresponsive episode (`how`: responsive | terminated | closed) in the log and in
+    /// LifecycleStats; returns how long it lasted, nil if none was open.
+    @discardableResult
+    private func endUnresponsive(_ how: String) -> TimeInterval? {
+        guard let start = unresponsiveSince else { return nil }
+        unresponsiveSince = nil
+        let duration = Date().timeIntervalSince(start)
+        LifecycleStats.endUnresponsive(display: displayID, duration: duration, end: how)
+        let text = "display \(displayID): WebContent was unresponsive for \(String(format: "%.1f", duration)) s, " +
+                   "ended: \(how)"
+        if how == "responsive" { Log.info(text) } else { Log.error(text) }
+        return duration
     }
 
     // MARK: Recovery
