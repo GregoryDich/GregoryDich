@@ -31,6 +31,8 @@ find "$AQ" \( -name '*.md' -o -name 'README.txt' -o -name '.DS_Store' \) -type f
 # Переопределить: MIN_MACOS=14.0 ARCHS="arm64" ./build.sh
 MIN_MACOS="${MIN_MACOS:-$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' Resources/Info.plist 2>/dev/null || echo 13.0)}"
 ARCHS="${ARCHS:-arm64 x86_64}"
+# Фреймворки — по import в Sources: Cocoa, WebKit, IOKit (IOKit.ps), ServiceManagement. `import os` (Logger) —
+# часть libSystem, отдельный -framework не нужен.
 echo "▸ Компиляция Swift (Release, macOS $MIN_MACOS+, $ARCHS)"
 mkdir -p build/bin
 SLICES=()

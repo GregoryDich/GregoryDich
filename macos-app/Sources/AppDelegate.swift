@@ -65,8 +65,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let btn = statusItem.button {
-            btn.image = NSImage(systemSymbolName: "fish.fill", accessibilityDescription: "Aquarium")
-            btn.image?.isTemplate = true
+            if let image = NSImage(systemSymbolName: "fish.fill", accessibilityDescription: "Aquarium") {
+                image.isTemplate = true
+                btn.image = image
+            } else {
+                btn.title = "🐟"                          // no SF Symbol: an empty item would be invisible
+            }
         }
         let menu = NSMenu()
         menu.autoenablesItems = false
@@ -116,6 +120,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         probeItem.isEnabled = !probeRunning
         probeItem.title = probeRunning ? "Тест производительности — идёт…" : "Тест производительности (≈45 с)"
         layersItem.isHidden = !optionHeld
+        layersItem.isEnabled = !probeRunning                // the test pauses the wallpapers: the probe would stall
     }
 
     // MARK: Wallpaper windows (one per display)
@@ -151,6 +156,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let onlyMain = AppSettings.onlyMainScreen
         let wanted = Set(order.filter { !onlyMain || $0 == primary })
         let mode = currentMode()
+        let constrained = powerConstrained
         var kept = 0, added = 0, restored = 0, parkedNow = 0, closed = 0
 
         for id in order where wanted.contains(id) {
@@ -165,13 +171,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 windows[id] = w
                 w.update(screen: screen)
                 w.setRole(isMain: isMain)
-                w.setPower(mode)
+                w.setPower(mode, constrained: constrained)
                 w.show()
                 restored += 1
                 Log.info("display \(id) is back after \(Int(Date().timeIntervalSince(p.since))) s — window restored, no reload")
             } else {
                 let w = WallpaperWindow(screen: screen, displayID: id, isMain: isMain, power: mode,
-                                        reason: started ? "displayAdded" : "launch")
+                                        constrained: constrained, reason: started ? "displayAdded" : "launch")
                 windows[id] = w
                 w.show()
                 added += 1
@@ -249,6 +255,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         (displaysAsleep || layersTest != nil) ? "paused" : powerMode
     }
 
+    /// Low Power Mode or heat: on top of "low", the pages get the 1.8 MP budget (ROADMAP P1.3).
+    private var powerConstrained: Bool {
+        powerReasons.contains("lowPowerMode") || powerReasons.contains("thermal")
+    }
+
     /// 'low' (30 fps, smaller pixel budget) on battery, in Low Power Mode, or when the Mac is hot
     /// (thermal state serious/critical); 'high' (60 fps) otherwise.
     private func updatePowerMode() {
@@ -267,8 +278,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func applyPowerState() {
         updatePowerMode()
-        let mode = currentMode()
-        windows.values.forEach { $0.setPower(mode) }        // no-op unless the mode really changed
+        let mode = currentMode(), constrained = powerConstrained
+        windows.values.forEach { $0.setPower(mode, constrained: constrained) }   // no-op unless something changed
     }
 
     // MARK: Menu actions
@@ -288,15 +299,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func hostState() -> [String: Any] {
-        [
+        let primary = AppDelegate.primaryDisplayID
+        // Every display macOS reports (also those without an aquarium), with the app's notion of "main".
+        let screens: [[String: Any]] = NSScreen.screens.prefix(8).map { screen in
+            var d = WallpaperWindow.ScreenInfo(screen).dict
+            let id = AppDelegate.displayID(of: screen)
+            d["id"] = id.map { Int($0) } ?? -1
+            d["main"] = id != nil && id == primary
+            d["wallpaper"] = id.map { windows[$0] != nil ? "shown" : parked[$0] != nil ? "parked" : "none" } ?? "none"
+            return d
+        }
+        return [
             "powerMode": powerMode,
             "powerReasons": powerReasons,
+            "powerConstrained": powerConstrained,
+            "screens": screens,
             "displaysAsleep": displaysAsleep,
             "onlyMainScreen": AppSettings.onlyMainScreen,
             "hud": AppSettings.hud,
             "inspectable": AppSettings.inspectable,
             "layersTestOpen": layersTest != nil,
-            "primaryDisplay": AppDelegate.primaryDisplayID.map { Int($0) } ?? -1,
+            "primaryDisplay": primary.map { Int($0) } ?? -1,
             "parkedDisplays": parked.map { ["display": Int($0.key), "parkedAgoSec": Int(Date().timeIntervalSince($0.value.since))] },
         ]
     }
@@ -354,26 +377,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             guard let self = self else { return }
             self.probeRunning = false
             self.refreshMenu(optionHeld: false)
-            guard let result = result else {
-                Log.error("perf probe failed: \(error ?? "?")")
-                HostAlert.show("Тест производительности не удался", error ?? "", style: .warning)
+            // The page answers {error} when it has no aquariumPerfProbe (an older engine).
+            let pageError = (result as? [String: Any])?["error"] as? String
+            guard let result = result, pageError == nil else {
+                let why = pageError ?? error ?? "?"
+                Log.error("perf probe failed: \(why)")
+                HostAlert.show("Тест производительности не удался", why, style: .warning)
                 return
             }
             let json = PerfDiagnostics.report(kind: "probe", host: self.hostState(),
                                               windows: [w.hostInfo()], extra: ["probe": result])
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(json, forType: .string)
-            Log.info("perf probe done (\(json.utf8.count) bytes)")
+            // "timeout": no frames for a long while (display slept, page paused) — partial results only.
+            let aborted = (result as? [String: Any])?["aborted"] as? String
+            Log.info("perf probe done (\(json.utf8.count) bytes)" + (aborted.map { ", aborted: \($0)" } ?? ""))
+            var parts: [String] = []
+            if aborted != nil { parts.append("Страница перестала рисовать кадры — ниже только то, что успели.") }
             let summary = PerfDiagnostics.probeSummary(result)
-            HostAlert.show("Тест производительности готов",
-                           (summary.isEmpty ? "" : summary + "\n\n") +
-                           "Результат скопирован — вставьте его (⌘V) в письмо или сообщение разработчику.")
+            if !summary.isEmpty { parts.append(summary) }
+            parts.append("Результат скопирован — вставьте его (⌘V) в письмо или сообщение разработчику.")
+            if aborted == nil {
+                HostAlert.show("Тест производительности готов", parts.joined(separator: "\n\n"))
+            } else {
+                HostAlert.show("Тест производительности прерван", parts.joined(separator: "\n\n"), style: .warning)
+            }
         }
     }
 
     /// ⌥ «Тест слоёв»: aquarium/spike/layers.html in its own window; wallpapers pause meanwhile.
     @objc private func openLayersTest() {
         if let open = layersTest { open.present(); return }
+        guard !probeRunning else {
+            HostAlert.show("Тест слоёв не открыт", "Идёт тест производительности — дождитесь его окончания.", style: .warning)
+            return
+        }
         guard let test = LayersTestWindow() else {
             HostAlert.show("Тест слоёв недоступен", "В этой сборке нет страницы aquarium/spike/layers.html.", style: .warning)
             return

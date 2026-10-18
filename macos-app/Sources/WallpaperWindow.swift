@@ -37,6 +37,8 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     /// engine's defaults (3.7 MP / 2.4 MP on battery, 60 / 30 fps).
     static let secondaryBudgetMP = 2.0
     static let secondaryFps = 30
+    /// Low Power Mode or a hot Mac (thermalState serious/critical), any display (P1.3): 1.8 MP.
+    static let constrainedBudgetMP = 1.8
     private static let backoff: [TimeInterval] = [1, 5, 15]     // quick reloads, at most 3 per 5 min…
     private static let backoffWindow: TimeInterval = 300
     private static let slowRetry: TimeInterval = 600            // …then every 10 min (and on wake / screen change)
@@ -46,13 +48,15 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     private let webView: WKWebView
     private let contentController: WKUserContentController
     private(set) var power: String
+    /// Low Power Mode or thermal pressure: the smaller pixel budget (on top of power "low").
+    private(set) var constrained: Bool
     private(set) var isMain: Bool
     private(set) var state: State = .loading
     private var screenInfo: ScreenInfo
     private var closed = false
     private var loadReason: String
     private var loadStartedAt: Date?
-    private var loadIsMain = true                    // role in the boot script of the current load
+    private var loadBudget = "null"                  // budget in the boot script of the current load (JS literal)
     private var nextReason = "crashReload"
     private var failures: [Date] = []                // terminations + failed loads, last 5 min
     private var gaveUp = false                       // quick backoff exhausted → slow retry
@@ -64,10 +68,12 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     private var loaded: Bool { state == .ready }
 
     /// `reason` — why this page is being created: "launch" | "displayAdded".
-    init(screen: NSScreen, displayID: CGDirectDisplayID, isMain: Bool, power: String, reason: String) {
+    init(screen: NSScreen, displayID: CGDirectDisplayID, isMain: Bool, power: String, constrained: Bool,
+         reason: String) {
         self.displayID = displayID
         self.isMain = isMain
         self.power = power
+        self.constrained = constrained
         self.loadReason = reason
         screenInfo = ScreenInfo(screen)
 
@@ -127,7 +133,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         state = .loading
         loadReason = reason
         loadStartedAt = Date()
-        loadIsMain = isMain
+        loadBudget = budgetLiteral
         loadCount += 1
         installBootScript()
         LifecycleStats.recordLoad(display: displayID, reason: reason)
@@ -136,9 +142,22 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
     }
 
+    /// Pixel budget and frame cap for `aquariumSetBudget` / `__AQ_BOOT.budget`; nil = the engine's own
+    /// (main display, not constrained). Secondary: {mp: 2, fps: 30}; Low Power Mode / heat: mp 1.8.
+    private var budget: [String: Any]? {
+        guard !isMain || constrained else { return nil }
+        var mp = isMain ? WallpaperWindow.constrainedBudgetMP : WallpaperWindow.secondaryBudgetMP
+        if constrained { mp = min(mp, WallpaperWindow.constrainedBudgetMP) }
+        return ["mp": mp, "fps": isMain ? NSNull() : WallpaperWindow.secondaryFps]
+    }
+
+    /// The budget as a JS literal: `{"fps":30,"mp":2}` or `null`.
+    private var budgetLiteral: String { budget.map { PageScript.literal($0) } ?? "null" }
+
     /// `window.__AQ_BOOT` (contract with aquarium/index.html, P1.1):
-    /// {power, hud, budget: MP|null, screen: {id, w, h (points), scale, maxFps, main}, crashes,
+    /// {power, hud, budget: {mp, fps}|null, screen: {id, w, h (points), scale, maxFps, main}, crashes,
     ///  loadReason: launch|displayAdded|crashReload|retry, appVersion}. `__AQ_POWER` stays for older pages.
+    /// Every value goes through PageScript.literal (JSON), so nothing in it can break out of the script.
     private func bootSource() -> String {
         var screen = screenInfo.dict
         screen["id"] = Int(displayID)
@@ -146,17 +165,14 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         let boot: [String: Any] = [
             "power": power,
             "hud": AppSettings.hud,
-            "budget": isMain ? NSNull() : WallpaperWindow.secondaryBudgetMP,
+            "budget": budget ?? NSNull(),
             "screen": screen,
             "crashes": LifecycleStats.terminations,
             "loadReason": loadReason,
             "appVersion": AppSettings.appVersion,
         ]
-        var json = "null"
-        if let data = try? JSONSerialization.data(withJSONObject: boot), let s = String(data: data, encoding: .utf8) {
-            json = s
-        }
-        return "window.__WALLPAPER = true; window.__AQ_POWER = '\(power)'; window.__AQ_BOOT = \(json);"
+        return "window.__WALLPAPER = true; window.__AQ_POWER = \(PageScript.literal(power)); " +
+               "window.__AQ_BOOT = \(PageScript.literal(boot));"
     }
 
     /// Takes effect on the next navigation (ours, or a reload WebKit does on its own).
@@ -167,7 +183,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     }
 
     private func evaluate(_ js: String) {
-        guard loaded else { return }
+        guard loaded, !closed else { return }
         webView.evaluateJavaScript(js, completionHandler: nil)
     }
 
@@ -177,7 +193,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     /// The display disappeared (maybe only for a moment: standby, re-enumeration): hide and pause,
     /// keep the page. AppDelegate re-shows it if the display returns, or closes it after 15 min.
     func park() {
-        setPower("paused")
+        setPower("paused", constrained: constrained)
         window.orderOut(nil)
         Log.info("display \(displayID) gone — window parked (hidden, paused)")
     }
@@ -190,7 +206,8 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         webView.navigationDelegate = nil
         webView.stopLoading()
         window.orderOut(nil)
-        window.contentView = nil
+        window.contentView = nil                         // the WKWebView goes with this object
+        window.close()                                   // out of NSApp.windows (isReleasedWhenClosed = false)
         Log.info("display \(displayID) window closed")
     }
 
@@ -204,14 +221,22 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     }
 
     // MARK: Page controls
-    /// "high" (60 fps) | "low" (30 fps: battery, Low Power Mode, heat) | "paused" (display asleep, parked).
+    /// `mode`: "high" (60 fps) | "low" (30 fps: battery, Low Power Mode, heat) | "paused" (display asleep,
+    /// parked, layers test open). `constrained`: Low Power Mode or heat → 1.8 MP budget.
     /// Sent only on a real change (every IOPS event, e.g. a battery-percent tick, used to reset the
     /// engine's frame-rate governor); re-sent after every (re)load in didFinish.
-    func setPower(_ mode: String) {
-        guard mode != power else { return }
+    func setPower(_ mode: String, constrained c: Bool) {
+        let modeChanged = mode != power, budgetChanged = c != constrained
+        guard modeChanged || budgetChanged else { return }
         power = mode
+        constrained = c
         installBootScript()
-        evaluate("window.aquariumSetPower && window.aquariumSetPower('\(mode)')")
+        if modeChanged { sendPower() }
+        if budgetChanged { applyBudget() }
+    }
+
+    private func sendPower() {
+        evaluate("window.aquariumSetPower && window.aquariumSetPower(\(PageScript.literal(power)))")
     }
 
     /// The display became (or stopped being) the one with the menu bar.
@@ -222,17 +247,16 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         applyBudget()
     }
 
-    /// Secondary display: 2 MP / 30 fps. Main: `{mp: null, fps: null}` = back to the engine's own budget.
+    /// Secondary display: {mp: 2, fps: 30}. Main: `{mp: null, fps: null}` = back to the engine's own budget.
     private func applyBudget() {
-        let arg = isMain ? "{mp: null, fps: null}"
-                         : "{mp: \(WallpaperWindow.secondaryBudgetMP), fps: \(WallpaperWindow.secondaryFps)}"
+        let arg = budget.map { PageScript.literal($0) } ?? "{mp: null, fps: null}"
         evaluate("window.aquariumSetBudget && window.aquariumSetBudget(\(arg))")
     }
 
     /// «Показать FPS»: the DOM HUD (not drawn on the canvas). Also in `__AQ_BOOT.hud` for later loads.
     func setHUD(_ on: Bool) {
         installBootScript()
-        evaluate("window.aquariumSetDebug && window.aquariumSetDebug(\(on))")
+        evaluate("window.aquariumSetDebug && window.aquariumSetDebug(\(PageScript.literal(on)))")
     }
 
     // MARK: Diagnostics
@@ -241,6 +265,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         screen["id"] = Int(displayID)
         var d: [String: Any] = [
             "display": Int(displayID), "main": isMain, "state": state.rawValue, "power": power,
+            "constrained": constrained, "budget": budget ?? NSNull(),
             "visible": window.isVisible, "screen": screen, "loadReason": loadReason,
             "loadsThisRun": loadCount, "terminationsThisRun": terminationCount,
             "loadFailuresThisRun": loadFailureCount, "slowRetry": gaveUp,
@@ -259,7 +284,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
 
     /// `aquariumPerfSnapshot()` as a JSON object, or {error}. Completion on the main thread, exactly once.
     func perfSnapshot(timeout: TimeInterval = 2, completion: @escaping (Any) -> Void) {
-        guard loaded else { completion(["error": "page not loaded (\(state.rawValue))"]); return }
+        guard loaded, !closed else { completion(["error": "page not loaded (\(state.rawValue))"]); return }
         var finished = false
         let finish: (Any) -> Void = { value in
             if finished { return }
@@ -286,7 +311,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
 
     /// `aquariumPerfProbe()` (≈45 s): (result, nil) or (nil, error text). Main thread, exactly once.
     func perfProbe(timeout: TimeInterval = 150, completion: @escaping (Any?, String?) -> Void) {
-        guard loaded else { completion(nil, "страница не загружена (\(state.rawValue))"); return }
+        guard loaded, !closed else { completion(nil, "страница не загружена (\(state.rawValue))"); return }
         var finished = false
         let finish: (Any?, String?) -> Void = { value, error in
             if finished { return }
@@ -316,9 +341,9 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         let ms = loadStartedAt.map { Int(Date().timeIntervalSince($0) * 1000) } ?? -1
         Log.info("display \(displayID) loaded in \(ms) ms (\(loadReason))")
         // Re-assert what may have changed while the page was loading (the boot script had the old values).
-        evaluate("window.aquariumSetPower && window.aquariumSetPower('\(power)')")
-        if !isMain || loadIsMain != isMain { applyBudget() }
-        evaluate("window.aquariumSetDebug && window.aquariumSetDebug(\(AppSettings.hud))")
+        sendPower()
+        if budgetLiteral != loadBudget { applyBudget() }
+        evaluate("window.aquariumSetDebug && window.aquariumSetDebug(\(PageScript.literal(AppSettings.hud)))")
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
@@ -399,5 +424,23 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         guard !closed, gaveUp, state == .waiting else { return }
         Log.info("display \(displayID): early retry (wake / screen change)")
         load(reason: "retry")
+    }
+}
+
+/// Swift value → JavaScript source literal via JSON: strings quoted and escaped, numbers, true/false, null,
+/// arrays, objects (keys sorted: the same value always gives the same text, see didFinish).
+/// U+2028/U+2029 are escaped as well (raw, they end a line in pre-ES2019 JavaScript).
+/// Invalid input (NaN, a non-JSON type) gives `null` — checked first: JSONSerialization raises an
+/// Objective-C exception on it, which `try?` does not catch.
+enum PageScript {
+    static func literal(_ value: Any) -> String {
+        let wrapped: [Any] = [value]                     // fragments (a bare string/number) are not valid roots
+        guard JSONSerialization.isValidJSONObject(wrapped),
+              let data = try? JSONSerialization.data(withJSONObject: wrapped, options: [.sortedKeys]),
+              var s = String(data: data, encoding: .utf8), s.hasPrefix("["), s.hasSuffix("]") else { return "null" }
+        s.removeFirst()
+        s.removeLast()
+        return s.replacingOccurrences(of: "\u{2028}", with: "\\u2028")
+                .replacingOccurrences(of: "\u{2029}", with: "\\u2029")
     }
 }

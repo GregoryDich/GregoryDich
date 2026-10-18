@@ -33,6 +33,7 @@ final class LayersTestWindow: NSObject, NSWindowDelegate {
         window.title = "Тест слоёв"
         window.contentMinSize = NSSize(width: 640, height: 400)
         window.contentView = webView
+        window.initialFirstResponder = webView           // the page's keys (1/2/3, E, D, T, H) work at once
         super.init()
         window.delegate = self
         if !window.setFrameUsingName(LayersTestWindow.autosaveName) { window.center() }

@@ -328,18 +328,27 @@ enum PerfDiagnostics {
         return obj
     }
 
-    /// One line per probe configuration for the alert: "как есть: p50 16.7 · p90 18.1 · JS 4.2 мс".
+    /// Probe configuration names (aquarium/index.html PROBE_CONFIGS) as the owner reads them.
+    private static let probeNames: [String: String] = [
+        "current": "как есть", "asBefore": "как было (8,3 Мп)", "budget3.7": "бюджет 3,7 Мп",
+        "budget2.4": "бюджет 2,4 Мп", "noCaustics": "без каустики", "noRays": "без лучей",
+        "noVignette": "без виньетки", "poster": "постер вместо видео", "noReef": "без рифа",
+        "noFishLight": "без света рыб", "noGroups": "без групп",
+    ]
+
+    /// One line per probe configuration for the alert: "как есть: 41.2 к/с · p50 16.7 · p90 18.1 · JS 4.2 мс".
     static func probeSummary(_ result: Any) -> String {
         guard let dict = result as? [String: Any] else { return "" }
         if let error = dict["error"] as? String { return error }
         guard let configs = dict["configs"] as? [[String: Any]] else { return "" }
-        func ms(_ v: Any?) -> String {
-            guard let n = v as? NSNumber else { return "—" }
+        func num(_ v: Any?) -> String {
+            guard let n = v as? NSNumber, n.doubleValue.isFinite else { return "—" }
             return String(format: "%.1f", n.doubleValue)
         }
         return configs.prefix(16).map { c in
-            let name = (c["name"] as? String).map { String($0.prefix(40)) } ?? "?"
-            return "\(name): p50 \(ms(c["p50"])) · p90 \(ms(c["p90"])) · JS \(ms(c["jsP50"])) мс"
+            let raw = (c["name"] as? String).map { String($0.prefix(40)) } ?? "?"
+            let name = probeNames[raw] ?? raw
+            return "\(name): \(num(c["fps"])) к/с · p50 \(num(c["p50"])) · p90 \(num(c["p90"])) · JS \(num(c["jsP50"])) мс"
         }.joined(separator: "\n")
     }
 }
