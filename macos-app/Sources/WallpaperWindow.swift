@@ -190,6 +190,9 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     // MARK: Window
     func show() { window.orderFrontRegardless() }
 
+    /// False while other windows cover this whole display: WebKit then hides the page and draws no frames.
+    var isDesktopVisible: Bool { window.occlusionState.contains(.visible) }
+
     /// The display disappeared (maybe only for a moment: standby, re-enumeration): hide and pause,
     /// keep the page. AppDelegate re-shows it if the display returns, or closes it after 15 min.
     func park() {
@@ -310,7 +313,10 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     """
 
     /// `aquariumPerfProbe()` (≈45 s): (result, nil) or (nil, error text). Main thread, exactly once.
-    func perfProbe(timeout: TimeInterval = 150, completion: @escaping (Any?, String?) -> Void) {
+    /// The timeout must clearly exceed the page's own abort timer (index.html probeStart: 11 configs ×
+    /// (1 + 3 s) × 3 + 15 s = 147 s), so the page always answers first with its partial results: WebKit
+    /// throttles timers of a hidden page and App Nap can delay them. Keep it ≥ 11·4·3 + 15 + 60 s.
+    func perfProbe(timeout: TimeInterval = 240, completion: @escaping (Any?, String?) -> Void) {
         guard loaded, !closed else { completion(nil, "страница не загружена (\(state.rawValue))"); return }
         var finished = false
         let finish: (Any?, String?) -> Void = { value, error in

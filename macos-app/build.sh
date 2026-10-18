@@ -59,5 +59,8 @@ fi
 
 if [ "${1:-}" = "--run" ]; then
   echo "▸ Запуск"
+  # Старая копия ещё работает → `open` лишь активирует её, и новая сборка не стартует. По полному пути (-f):
+  # имя процесса (p_comm) в macOS обрезано до 16 символов (MAXCOMLEN), а "AquariumWallpaper" — 17: `pkill -x` не найдёт.
+  pkill -f "$APP.app/Contents/MacOS/$APP" 2>/dev/null && sleep 1 || true
   open "$OUT"
 fi

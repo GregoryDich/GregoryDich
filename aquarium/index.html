@@ -262,7 +262,7 @@
     } catch (e) { return "?"; }
   })();
   const r1 = (x) => Math.round((+x || 0) * 10) / 10, r2 = (x) => Math.round((+x || 0) * 100) / 100, r3 = (x) => Math.round((+x || 0) * 1000) / 1000;
-  const EV_MERGE = { long: 1, vgap: 1 };             // частые события (среди 4 последних, ≤ 10 с) — одной записью: n, t2, max ms
+  const EV_MERGE = { long: 1, vgap: 1, vstall: 1 };  // частые события (среди 4 последних, ≤ 10 с) — одной записью: n, t2, max ms
   function perfEvent(e, d) {
     const P = PERF, t = r1(performance.now() / 1000), L = P.ev.length;
     if (EV_MERGE[e]) {
@@ -289,12 +289,12 @@
   }
   // показанный кадр: интервал от прошлого показанного (метки rAF) и JS-мс этого кадра
   function perfFrame(iv, js) {
+    if (PROBE.on) { probeTick(iv, js); return; }      // кадры зонда (синтетические конфигурации) — не в кольца и «с запуска»
     const P = PERF;
     P.iv[P.i] = iv; P.js[P.i] = js; P.i = (P.i + 1) % P.N; if (P.n < P.N) P.n++;
     P.frames++; P.hist[iv < 250 ? iv | 0 : 250]++;
     if (iv > P.maxAll) P.maxAll = iv;
     if (iv > 250) perfEvent("long", { ms: Math.round(iv) });
-    if (PROBE.on) probeTick(iv, js);
   }
   // перцентили первых n значений src (копия в tmp, сортировка на месте) → out {n, p50, p90, p95, max, mean}
   function ringPct(src, n, tmp, out) {
@@ -350,7 +350,8 @@
       else if (v && v.webkitDroppedFrameCount != null) { dropped = v.webkitDroppedFrameCount; total = v.webkitDecodedFrameCount; }
     } catch (e) { /* нет API */ }
     return { st: S.vState, poster: S.pState, t: v ? r2(v.currentTime) : null, playing: v ? !v.paused : false, fps: r1(S.vfps), dropped, total,
-      loops: S.loopN, seekMs: S.loopSeek >= 0 ? r1(S.loopSeek) : null, loopGapMs: S.loopGap >= 0 ? r1(S.loopGap) : null, gapMax: r1(S.gapMax),
+      loops: S.loopN, seekMs: S.lastSeek >= 0 ? r1(S.lastSeek) : null, loopGapMs: S.loopGap >= 0 ? r1(S.loopGap) : null,
+      seekMax: r1(S.seekMax), loopGapMax: r1(S.loopGapMax), loopsSlow: S.loopSlow, gapMax: r1(S.gapMax),
       stalls: S.wdN, errors: S.vErrN, rvfc: S.rvfc };
   }
   function bootInfo() {
@@ -407,7 +408,7 @@
     return on;
   }
   function hudUpdate() {
-    if (!PERF.hudOn || !PERF.hud) return;
+    if (!PERF.hudOn || !PERF.hud || POWER === "paused" || document.hidden) return;   // экран спит / окно скрыто — без DOM-записей
     let s;
     try { s = hudText(); } catch (e) { s = "HUD: " + (e && e.message); }
     PERF.hud.textContent = s;
@@ -447,7 +448,6 @@
      показанных кадров), затем всё как было. Конфигурации — те, что разделяют причины на Mac (ROADMAP P1.1) ---------- */
   const PROBE_CONFIGS = [
     { name: "current" },
-    { name: "asBefore", budget: 8.3, noVidCap: true, pace: false, stagger: false },   // как до V5: 8.3 Мп, каждый rAF, кэши в одном кадре
     { name: "budget3.7", budget: 3.7 },
     { name: "budget2.4", budget: 2.4 },
     { name: "noCaustics", layers: { caustics: false } },
@@ -457,12 +457,24 @@
     { name: "noReef", layers: { xCoral: false, xProp: false } },    // без колоний и реквизита
     { name: "noFishLight", layers: { fishlight: false } },
     { name: "noGroups", layers: { groups: false } },
+    // последним: RS до 2 укрупняет варианты кораллов и реквизита (tk только растёт) — остальные мерились бы с ними
+    { name: "asBefore", budget: 8.3, noVidCap: true, pace: false, stagger: false },   // как до V5: 8.3 Мп, каждый rAF, кэши в одном кадре
   ];
   const PROBE = { on: false, list: null, k: 0, phase: 0, acc: 0, n: 0, iv: new Float32Array(2048), js: new Float32Array(2048),
                   tmp: new Float32Array(2048), warm: 1000, meas: 3000, res: null, saved: null, resolve: null, promise: null,
                   timer: 0, t0: 0, last: null };
+  // варианты предметов, укрупнённые прошлой конфигурацией (бюджет выше текущего → RS выше), — прежнего масштаба: каждая
+  // конфигурация начинает с тех же вариантов, что и «current» (крупнее — только если нужно ей самой, drawReefLayer)
+  function probeRestoreTks() {
+    const tks = PROBE.saved.tks;
+    for (let i = 0; i < tks.length; i += 2) {
+      const it = tks[i];
+      if (it.timgs && it.tk !== tks[i + 1] && SCN.items.indexOf(it) >= 0) { buildItemThemes(it, tks[i + 1]); RCC.ok = false; RFC.ok = false; it.posed = false; }
+    }
+  }
   function probeApply(c) {
     const s = PROBE.saved;
+    probeRestoreTks();
     for (const k in s.layers) LAYERS[k] = s.layers[k];
     STAGGER = s.stagger; PERF.noPace = false; NOVIDCAP = false; PROBE_BUDGET = 0;
     if (c) {
@@ -513,12 +525,7 @@
     if (!P.on) return;
     if (P.timer) { clearTimeout(P.timer); P.timer = 0; }
     P.on = false;
-    probeApply(null);                                // слои, бюджет, ритм, разнесение кэшей — как было
-    const tks = P.saved.tks;                         // варианты предметов, укрупнённые зондом, — прежнего масштаба
-    for (let i = 0; i < tks.length; i += 2) {
-      const it = tks[i];
-      if (it.timgs && it.tk !== tks[i + 1] && SCN.items.indexOf(it) >= 0) { buildItemThemes(it, tks[i + 1]); RCC.ok = false; RFC.ok = false; it.posed = false; }
-    }
+    probeApply(null);                                // слои, бюджет, ритм, разнесение кэшей, масштаб вариантов — как было
     lastShown = 0; govReset();
     const out = { v: 1, configs: P.res, warmMs: P.warm, measureMs: P.meas, tookMs: Math.round(performance.now() - P.t0), aborted: why || null,
       level: QUALITY.level, power: POWER, fpsTarget: fpsTarget(), vsyncMs: r2(vsyncEst()), css: [W, H], dpr: DPR,
@@ -662,7 +669,7 @@
     vErrN: 0, vErrAt: 0, vRetryAt: 0, wdT: -1, wdAt: 0,
     // P1.1 / restart-investigation: сторож (срабатывания, время продолжения), к/с видео и пропуски по rVFC, петли
     wdN: 0, resumeT: -1, rvfc: false, rvLast: 0, lastMt: 0, rvT0: 0, rvN0: 0, vfps: 0, gapMax: 0,
-    loopN: 0, loopAt: 0, loopSeek: -1, loopGap: -1, loopPend: false, ownSeek: false };
+    loopN: 0, loopAt: 0, loopSeek: -1, loopGap: -1, loopPend: false, ownSeek: false, lastSeek: -1, seekMax: 0, loopGapMax: 0, loopSlow: 0 };
   // V5: ошибка видео — не навсегда (сбой GPU/медиа-процесса после сна, ошибка декода): повтор через 5 с, 30 с,
   // 2 мин, дальше раз в 10 мин; «файла нет» (код 4) — не больше двух повторов, потом остаётся постер
   const VID_BACKOFF = [5, 30, 120, 600];
@@ -774,7 +781,17 @@
      показанных кадров вокруг неё по requestVideoFrameCallback (Safari 15.4+); там же к/с видео и пропуски > 150 мс.
      Без rVFC — время по timeupdate, петля — по seeked. Колбэк один на видео (без аллокаций на кадр). */
   function vWatch(S, v) {
-    const loopEv = () => { perfEvent("vloop", { th: S.name, seekMs: S.loopSeek >= 0 ? r1(S.loopSeek) : null, gapMs: S.rvfc ? r1(S.loopGap) : null }); S.loopSeek = -1; };
+    // петля каждые ≈20 с: в журнал — первая и медленные (перемотка или пропуск > 100 мс — порог «рывка»: первые три и каждый
+    // новый максимум), остальные — в счётчики и максимумы снимка; иначе за ≈13 мин журнал (40) — одни vloop, boot/rs/gov вытеснены
+    const loopEv = () => {
+      const sk = S.loopSeek, gp = S.rvfc ? S.loopGap : -1, max = sk > S.seekMax || gp > S.loopGapMax, slow = sk > 100 || gp > 100;
+      S.lastSeek = sk; S.loopSeek = -1;
+      if (sk > S.seekMax) S.seekMax = sk;
+      if (gp > S.loopGapMax) S.loopGapMax = gp;
+      if (slow) S.loopSlow++;
+      if (S.loopN <= 1 || (slow && (S.loopSlow <= 3 || max)))
+        perfEvent("vloop", { th: S.name, n: S.loopN, seekMs: sk >= 0 ? r1(sk) : null, gapMs: gp >= 0 ? r1(gp) : null });
+    };
     v.addEventListener("seeking", () => {          // перемотка к началу, которую начали не мы (выравнивание, сторож), — петля
       if (S.vid !== v) return;
       S.loopAt = !S.ownSeek && v.currentTime < 0.6 ? performance.now() : 0;
@@ -841,7 +858,7 @@
         const ct = v.currentTime;
         if (ct !== S.wdT) { S.wdT = ct; S.wdAt = now; }
         else if (now - S.wdAt > 2000) {
-          S.wdN++; perfEvent("vstall", { th: name, t: r2(ct), n: S.wdN });
+          S.wdN++; perfEvent("vstall", { th: name, vt: r2(ct), n: S.wdN });   // vt — время видео (t — метка журнала)
           releaseVideo(name); S.resumeT = ct; S.wdT = -1; continue;
         }
       } else S.wdAt = now;
@@ -6461,7 +6478,10 @@
   }
 
   window.addEventListener("resize", onResize);
-  document.addEventListener("visibilitychange", () => { perfEvent("vis", { hidden: document.hidden }); last = performance.now(); lastShown = 0; govReset(); syncVideos(); });
+  document.addEventListener("visibilitychange", () => {
+    perfEvent("vis", { hidden: document.hidden }); last = performance.now(); lastShown = 0; govReset(); syncVideos();
+    if (document.hidden && PROBE.on) probeEnd("hidden");   // рабочий стол закрыт окнами (WebKit скрыл страницу) — сразу, не через 147 с
+  });
 
   if (WALLPAPER) {
     hint.style.display = "none";

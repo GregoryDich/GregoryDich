@@ -121,17 +121,24 @@ enum AppActivation {
 }
 
 enum HostAlert {
-    /// A plain informational alert, shown on the next main-loop turn (never from inside a
-    /// WebKit callback). Timers that must keep running meanwhile are scheduled in `.common` modes.
+    /// A plain informational alert, shown on the next run-loop turn by a run-loop timer (never from
+    /// inside a WebKit callback). Not DispatchQueue.main.async: a modal loop started inside a main-queue
+    /// block stops the main queue until the alert closes (CFRunLoop does not drain it re-entrantly), so
+    /// power changes, snapshot/probe timeouts and onClose would all wait for the OK click. From a timer
+    /// callout the modal loop still services the main queue and `.common`-mode timers.
+    /// `.default` mode: never fires inside menu tracking, and a second alert waits for the first to close.
     static func show(_ title: String, _ info: String, style: NSAlert.Style = .informational) {
-        DispatchQueue.main.async {
-            AppActivation.bringToFront()
-            let alert = NSAlert()
-            alert.messageText = title
-            alert.informativeText = info
-            alert.alertStyle = style
-            alert.addButton(withTitle: "OK")
-            alert.runModal()
+        let timer = Timer(timeInterval: 0, repeats: false) { _ in
+            MainActor.assumeIsolated {                   // Swift 5.9+, back-deployed to macOS 10.15
+                AppActivation.bringToFront()
+                let alert = NSAlert()
+                alert.messageText = title
+                alert.informativeText = info
+                alert.alertStyle = style
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+            }
         }
+        RunLoop.main.add(timer, forMode: .default)
     }
 }

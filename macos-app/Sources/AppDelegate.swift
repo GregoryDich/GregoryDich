@@ -370,6 +370,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             HostAlert.show("Тест не запущен", "Закройте «Тест слоёв» и не давайте экрану заснуть.", style: .warning)
             return
         }
+        // WKWebView detects window occlusion: a desktop fully covered by windows is a hidden page, no frames.
+        guard w.isDesktopVisible else {
+            HostAlert.show("Тест не запущен",
+                           "Аквариум сейчас закрыт окнами и не рисуется. Покажите рабочий стол (F11 или жест " +
+                           "«развести большой и три пальца») и запустите тест снова.", style: .warning)
+            return
+        }
         probeRunning = true
         refreshMenu(optionHeld: true)
         Log.info("perf probe started on display \(primary)")
@@ -389,11 +396,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                                               windows: [w.hostInfo()], extra: ["probe": result])
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(json, forType: .string)
-            // "timeout": no frames for a long while (display slept, page paused) — partial results only.
+            // "hidden": the desktop got covered by windows (WebKit hid the page); "timeout": no frames for a
+            // long while (display slept, page paused) — partial results only.
             let aborted = (result as? [String: Any])?["aborted"] as? String
             Log.info("perf probe done (\(json.utf8.count) bytes)" + (aborted.map { ", aborted: \($0)" } ?? ""))
             var parts: [String] = []
-            if aborted != nil { parts.append("Страница перестала рисовать кадры — ниже только то, что успели.") }
+            if aborted != nil {
+                parts.append("Аквариум перестал рисовать кадры (рабочий стол закрыли окнами или экран заснул) — " +
+                             "ниже только то, что успели. Покажите рабочий стол и повторите тест.")
+            }
             let summary = PerfDiagnostics.probeSummary(result)
             if !summary.isEmpty { parts.append(summary) }
             parts.append("Результат скопирован — вставьте его (⌘V) в письмо или сообщение разработчику.")
