@@ -48,6 +48,9 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round
 .still-f img { position: absolute; max-width: none; }
 /* one composited layer per field, the sprites painted into it (a layer per sprite made every frame's commit slow) */
 .cells { overflow: hidden; contain: strict; will-change: transform; }
+/* S3: the DNA helix (PDRN) far behind the ampoules, an animated loop over black screened onto the plate; desktop only */
+.helix { position: fixed; z-index: 1; left: 1vw; top: 16vh; width: min(48vw, 80vh); height: auto; max-width: none; opacity: 0;
+  visibility: hidden; mix-blend-mode: screen; filter: blur(1.2px); pointer-events: none; will-change: opacity, transform; }
 .cells img { position: absolute; left: 0; top: 0; width: 256px; height: 256px; max-width: none; opacity: 0; visibility: hidden; }
 .cells i { position: absolute; left: 0; top: 0; width: 8px; height: 8px; border-radius: 50%; opacity: 0; visibility: hidden;
   background: radial-gradient(circle, #fff1cf 0, rgba(232,196,120,.85) 30%, rgba(201,162,75,0) 70%); }
@@ -239,7 +242,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 .head { display: contents; }
 .slot, .ph-cells { display: none; }
 @media (max-width: 899px) {
-  .still, .cells { display: none !important; }
+  .still, .cells, .helix { display: none !important; }
   html:not(.story) #seq, html:not(.story) .plate { display: none !important; }
   html.story .bg, html.story .plate { inset: var(--stage-top, 60px) 0 auto 0; height: var(--stage-h, 46svh); z-index: 3;
     transform: translate3d(0, calc(-1px * var(--push, 0)), 0) !important; }
@@ -301,6 +304,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 <div class="bg" aria-hidden="true"></div>
 <div class="plate" aria-hidden="true"></div>
 <div class="still" aria-hidden="true"><div class="still-f"><img src="seq/480/v1-meet_v2-why_000.webp" alt="" loading="lazy" style="left:18.460%;top:20.670%;width:29.120%;height:61.660%"></div></div>   <!-- no JS only: the first key frame in its box; hidden (so never fetched) with JS -->
+<img class="helix" alt="" aria-hidden="true" decoding="async">
 <div class="cells back" aria-hidden="true"></div>
 <canvas id="seq" aria-hidden="true"></canvas>
 <div class="cells front" aria-hidden="true"></div>
@@ -454,8 +458,8 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 // compressed files, so the whole story downloads once. Cells: a field of exosome sprites the camera flies through
 // from S1 to S3 (far ones behind the product, near ones in front of it but never over the copy or the S3 hero).
 (() => {
-  const CFG = {"runs":[{"a":"v1-meet","b":"v2-why","n":40,"box":[0.1846,0.2067,0.4758,0.8233]},{"a":"v2-why","b":"v3-inside","n":40,"box":[0.0367,0.0733,0.4237,0.8667]},{"a":"v3-inside","b":"v4-feel","n":40,"box":[0.0117,0.07,0.5133,0.8467]},{"a":"v4-feel","b":"v5-protocol","n":40,"box":[0.0013,0.0733,0.5133,0.77]},{"a":"v5-protocol","b":"v6-kit","n":40,"box":[0,0,0.5321,0.8433]}],"tiers":[480],"cells":["c01","c02","c03","c04","c05","c06","c07","c08","c09","c10"]};
-  const RUNS = CFG.runs, R = RUNS.length, NS = RUNS.map(r => r.n), TIERS = CFG.tiers.slice().sort((a, b) => a - b), SPRITES = CFG.cells;
+  const CFG = {"runs":[{"a":"v1-meet","b":"v2-why","n":40,"box":[0.1846,0.2067,0.4758,0.8233]},{"a":"v2-why","b":"v3-inside","n":40,"box":[0.0367,0.0733,0.4237,0.8667]},{"a":"v3-inside","b":"v4-feel","n":40,"box":[0.0117,0.07,0.5133,0.8467]},{"a":"v4-feel","b":"v5-protocol","n":40,"box":[0.0013,0.0733,0.5133,0.77]},{"a":"v5-protocol","b":"v6-kit","n":40,"box":[0,0,0.5321,0.8433]}],"tiers":[480],"cells":["c01","c02","c03","c04","c05","c06","c07","c08","c09","c10"],"mols":["m01","m02","m03","m04"],"helix":true};
+  const RUNS = CFG.runs, R = RUNS.length, NS = RUNS.map(r => r.n), TIERS = CFG.tiers.slice().sort((a, b) => a - b), SPRITES = CFG.cells, MOLS = CFG.mols || [];
   const OFF = NS.map((n, k) => NS.slice(0, k).reduce((a, b) => a + b, 0)), TOTAL = OFF[R - 1] + NS[R - 1];
   const BACK = 4, AHEAD = 8, FLIGHT = 4, WARM = 2;              // decode window and fetch concurrency
   const HOLD0 = 0.04, HOLD = 0.15, READ = 0.85, END = 0.12;      // a screen holds its key frame until it has been read
@@ -730,7 +734,10 @@ onmessage = async e => {
     [5, 0.22, -0.16, 3.4, 0.18, 0, 2.2, -30],
     [4, -0.24, 0.10, 6.6, 0.30, 0, 0, 35], [6, -0.62, -0.10, 7.4, 0.28, 0, 0, 20], [7, 0.18, 0.52, 5.4, 0.20, 0, 0, -25],
     [8, -0.40, 0.34, 2.5, 0.30, 1, 0, 40], [9, -0.36, -0.44, 3.2, 0.24, 1, 0, -35], [2, 0.40, 0.46, 3.9, 0.20, 1, 0, 30],
-    [5, -0.62, 0.04, 4.6, 0.34, 1, 0, -20]];
+    [5, -0.62, 0.04, 4.6, 0.34, 1, 0, -20],
+    // PDRN molecules ('m' + index into MOLS) among the cells, smaller and mostly far
+    ['m0', -0.56, -0.40, 4.2, 0.20, 0, 0, 18], ['m1', 0.12, 0.24, 5.8, 0.17, 0, 0, -22], ['m2', -0.30, 0.50, 3.6, 0.15, 1, 0, 26],
+    ['m3', -0.88, -0.02, 6.2, 0.21, 0, 1.5, -15]];
   const VP = [0.26, 0.52], ZC = 4.2, FAR = 9, FRONT_IN = [1.9, 2.7];
   const HERO = [[2, [0.12, 0.25, 0.40, 0.85]]];   // [screen, viewport box]: no near cell over the S3 ampoules
   let cellEls = null, cellsOn = false;
@@ -738,8 +745,8 @@ onmessage = async e => {
     if (cellEls || !SPRITES.length || mode === 'off' || saveData || stage) return;   // phone: no field yet (the stage clips it)
     const layers = [document.querySelector('.cells.back'), document.querySelector('.cells.front')];
     plate.style.backgroundImage = 'url(img/plate.webp)';
-    cellEls = FIELD.map((f, n) => {
-      const id = SPRITES[f[0] % SPRITES.length], layer = layers[f[5]];
+    cellEls = FIELD.filter(f => typeof f[0] === 'number' || MOLS.length).map((f, n) => {
+      const id = typeof f[0] === 'number' ? SPRITES[f[0] % SPRITES.length] : MOLS[+f[0].slice(1) % MOLS.length], layer = layers[f[5]];
       const imgs = [0, 1, 2].map(s => { const im = new Image(); im.decoding = 'async'; im.alt = ''; im.src = `img/cells/${id}-${s}.webp`; layer.appendChild(im); return im; });
       const dust = [0, 1, 2, 3, 4].map(j => { const d = document.createElement('i'); layer.appendChild(d); return { el: d, a: n * 2.4 + j * 1.31, f: 0.35 + ((n * 7 + j * 3) % 5) / 8 }; });
       return { f, imgs, dust, st: ['', '', ''], ph: n * 1.7 };
@@ -809,6 +816,18 @@ onmessage = async e => {
     if (Math.abs(po - lastPlate) > 0.002) { plate.style.opacity = po.toFixed(3); lastPlate = po; }
     if (!cellEls && mode !== 'off' && (pos > 0.01 || shown >= 0)) buildCells();
     if (cells(t, y) && !document.hidden) kick();
+    helix();
+  }
+  // ---- the DNA helix behind S3: fetched only when the story nears S3 on a desktop, eased in and out around it
+  const hx = document.querySelector('.helix');
+  let hxOn = false, lastHx = -1;
+  function helix() {
+    if (!CFG.helix || !hx || stage || mode === 'off' || saveData || calm.matches) return;
+    if (!hxOn) { if (pos < 1.1) return; hx.src = 'img/helix.webp'; hxOn = true; }
+    const o = 0.38 * smooth(1.35, 1.95, pos) * (1 - smooth(2.45, 2.95, pos));
+    if (Math.abs(o - lastHx) < 0.002) return;
+    lastHx = o; hx.style.opacity = o.toFixed(3); hx.style.visibility = o > 0.004 ? 'visible' : 'hidden';
+    hx.style.transform = `translate3d(0, ${((2 - pos) * 6).toFixed(2)}vh, 0)`;
   }
   function kick() { if (!raf) raf = requestAnimationFrame(tick); }
   function land(y) {   // the card rises: the 3D kit flies from its place in the frame into the card's picture, then hands over

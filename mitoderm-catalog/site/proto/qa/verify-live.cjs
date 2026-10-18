@@ -30,7 +30,7 @@ const MB = b => (b / 1e6).toFixed(1) + ' MB';
 
 async function open(browser, w, h, opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: opts.dpr || 1, reducedMotion: opts.reduce ? 'reduce' : 'no-preference', hasTouch: w < 500, javaScriptEnabled: !opts.nojs });
-  const p = await ctx.newPage(); const errs = [], req = { seq: new Map(), cells: new Set() };
+  const p = await ctx.newPage(); const errs = [], req = { seq: new Map(), cells: new Set(), helix: 0 };
   p.on('console', m => { if (m.type() === 'error') errs.push(m.text().slice(0, 200)); });
   p.on('pageerror', e => errs.push('PAGEERROR ' + e.message.slice(0, 200)));
   if (opts.tier) await ctx.addInitScript(t => { window.__SEQ_TIER = t; }, opts.tier);
@@ -44,6 +44,7 @@ async function open(browser, w, h, opts = {}) {
     if (!rel || rel === 'index.html') return r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: html });
     if (rel.startsWith('seq/')) req.seq.set(rel, (req.seq.get(rel) || 0) + 1);
     if (rel.startsWith('img/cells/')) req.cells.add(rel);
+    if (rel === 'img/helix.webp') req.helix++;
     if (opts.synth && rel.startsWith('seq/')) return r.fulfill({ path: opts.synth, contentType: 'image/webp' });
     const f = path.join(filesDir, rel);
     return fs.existsSync(f) ? r.fulfill({ path: f, contentType: TYPES[path.extname(f)] || 'application/octet-stream' }) : r.fulfill({ status: 404, body: '' });
@@ -173,13 +174,15 @@ async function synthRun(browser, tag, assert) {
     const keysN = (await seq(p)).keys, cap = st0.win + keysN + 1;
     ok('desktop: only the window and the end frames stay decoded', maxDec <= cap, `max ${maxDec} decoded (window ${st0.win} + ${keysN} end frames + the one on screen = ${cap}), max ${MB(maxBytes)}`);
     // each screen at its reading position (section top at the top of the screen): its key frame, shown
-    const holds = [], cellsAt = {}, plateAt = {};
+    const holds = [], cellsAt = {}, plateAt = {}, hxAt = {}, molsAt = {};
     for (let k = 0; k < STORY.length - 1; k++) {
       await p.evaluate(id => scrollTo(0, document.getElementById(id).offsetTop), STORY[k]);
       await p.waitForFunction(k => { const s = window.__seq(); return s.shown && s.shown[0] === k && s.shown[1] === 0; }, k, { timeout: 3000 }).catch(() => {});
       await p.waitForTimeout(400);
       const s = await seq(p); holds.push(`${STORY[k]}:${frame(s).toFixed(2)}/${shownAt(s).toFixed(2)}`); if (frame(s) !== k || shownAt(s) !== k) holds.push('!');
       const cs = await cellsNow(p); cellsAt[STORY[k]] = cs.length; plateAt[STORY[k]] = await p.evaluate(() => +document.querySelector('.plate').style.opacity);
+      const hx = await p.evaluate(() => { const h = document.querySelector('.helix'), b = h.getBoundingClientRect(); return { o: +h.style.opacity || 0, right: b.right, loaded: h.complete && h.naturalWidth > 0 }; });
+      hxAt[STORY[k]] = hx; molsAt[STORY[k]] = await p.evaluate(() => [...document.querySelectorAll('.cells img')].filter(i => /\/m\d\d-/.test(i.src) && i.style.visibility === 'visible').length);
       cellBad.push(...cellRules(cs, 1440, 900, k === 2 ? [0.12, 0.25, 0.40, 0.85] : null));
       await p.screenshot({ path: `${out}/desk-s${k + 1}.jpg`, type: 'jpeg', quality: 82 });
     }
@@ -189,6 +192,10 @@ async function synthRun(browser, tag, assert) {
     ok('desktop: the deep plate behind S2–S3 only', plateAt.why > 0.95 && plateAt.inside > 0.95 && plateAt.meet < 0.05 && plateAt.feel < 0.05,
       Object.entries(plateAt).map(([k, v]) => `${k}:${v.toFixed(2)}`).join(' '));
     ok('desktop: cells never over the copy (faint bokeh only) nor the S3 ampoules', !cellBad.length, cellBad.slice(0, 4).join(' | '));
+    ok('desktop: PDRN molecules float with the cells in S2–S3', molsAt.why + molsAt.inside >= 2 && !molsAt.feel && !molsAt.protocol,
+      Object.entries(molsAt).map(([k, v]) => `${k}:${v}`).join(' '));
+    ok('desktop: the DNA helix shows behind S3 only, in the 3D half', hxAt.inside.o > 0.3 && hxAt.inside.loaded && hxAt.inside.right <= 1440 * 0.5 && hxAt.meet.o === 0 && hxAt.feel.o < 0.05 && hxAt.protocol.o === 0,
+      Object.entries(hxAt).map(([k, v]) => `${k}:${v.o.toFixed(2)}`).join(' ') + ` · right edge ${hxAt.inside.right.toFixed(0)}`);
     const legend = await p.evaluate(() => { const l = document.querySelector('#inside .legend'); return l && l.textContent.trim(); });
     ok('desktop: S3 legend for the cells', legend === 'אקסוזומים סינתטיים — המחשה', legend);
     for (let k = 0; k < R; k++) {   // mid-run frames, to look at
@@ -256,6 +263,7 @@ async function synthRun(browser, tag, assert) {
     await p.evaluate(() => document.querySelector('.related').scrollIntoView()); await p.waitForTimeout(300);
     const seqReq = [...req.seq.values()].reduce((a, b) => a + b, 0), gone = await p.evaluate(() => ({ o: +document.getElementById('seq').style.opacity, push: +getComputedStyle(document.documentElement).getPropertyValue('--push') }));
     ok(`phone ${w}: frames fetched, not the whole story at once`, seqReq > 0, `${seqReq} requests`);
+    ok(`phone ${w}: the DNA helix is never fetched`, !req.helix, `${req.helix} requests`);
     ok(`phone ${w}: the offer pushes the stage away`, gone.o === 0 && gone.push > 0, `canvas opacity ${gone.o}, push ${gone.push}px`);
     const order = await p.evaluate(() => ['#offer h2', '#offer .kitcard', '#offer .lead', '#offer .cta', '#offer .contacts'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top + scrollY)));
     const calls = await p.evaluate(() => { const c = document.querySelector('#offer .kitcard').getBoundingClientRect(), pic = document.querySelector('#offer .kc-pic, #offer .kitcard.live .kc-live');

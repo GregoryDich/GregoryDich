@@ -10,6 +10,7 @@
 # [x0, y0, x1, y1] in fractions of the frame]}]}, else 40 frames and the whole frame). Only complete tiers are offered.
 # Exosome cells: site/design/vtech-3d/cells/cNN-{0,1,2}.webp (sharp, soft, bokeh) and plate.webp are copied into
 # <dir>/img/cells/ and <dir>/img/plate.webp when they exist; otherwise whatever <dir>/img/cells/ holds is used.
+# PDRN molecules mNN-{0,1,2}.webp join the same field; helix.webp (the DNA loop) goes to <dir>/img/ for S3.
 import glob, html, json, os, re, shutil, sys, urllib.parse
 from PIL import Image
 
@@ -156,9 +157,9 @@ if FILES:   # the page's images: smoke, logos, kit card, related products, phone
         p = round(0.03 * max(x1 - x0, y1 - y0))   # a little air around the objects
         save(im.crop((max(0, x0 - p), max(0, y0 - p), min(im.width, x1 + p), min(im.height, y1 + p))), f'{FILES}/img/m{n}.webp', 900, quality=84, method=6)
     src = f'{SITE}/design/vtech-3d/cells'   # exosome sprites and the deep plate (render), when they exist
-    real = sorted(glob.glob(f'{src}/c[0-9][0-9]-[012].webp'))
+    real = sorted(glob.glob(f'{src}/[cm][0-9][0-9]-[012].webp'))   # cells (c) and PDRN molecules (m)
     if real:
-        for f in glob.glob(f'{FILES}/img/cells/c[0-9][0-9]-[012].webp'): os.remove(f)
+        for f in glob.glob(f'{FILES}/img/cells/[cm][0-9][0-9]-[012].webp'): os.remove(f)
         os.makedirs(f'{FILES}/img/cells', exist_ok=True)
         for f in real:   # sharp ≤ 1024 px, soft ≤ 640, bokeh ≤ 512: what a cell is ever drawn at
             im = Image.open(f); cap = (1024, 640, 512)[int(f[-6])]
@@ -166,13 +167,18 @@ if FILES:   # the page's images: smoke, logos, kit card, related products, phone
             else: shutil.copyfile(f, f'{FILES}/img/cells/{os.path.basename(f)}')
     if os.path.exists(f'{src}/plate.webp'):
         save(Image.open(f'{src}/plate.webp').convert('RGB'), f'{FILES}/img/plate.webp', 2592, quality=82, method=6)
+    if os.path.exists(f'{src}/helix.webp'):   # the DNA helix loop (animated, over black: the page screens it)
+        shutil.copyfile(f'{src}/helix.webp', f'{FILES}/img/helix.webp')
 RAW['kit_size'] = f'width="{kit_size[0]}" height="{kit_size[1]}"'
 cdir, plate = (f'{FILES}/img/cells', f'{FILES}/img/plate.webp') if FILES else (f'{SITE}/design/vtech-3d/cells',) * 2
-CELLS = sorted(c for c in {os.path.basename(f)[:3] for f in glob.glob(f'{cdir}/c[0-9][0-9]-0.webp')}
-               if all(os.path.exists(f'{cdir}/{c}-{v}.webp') for v in '012'))
+def sprites(k): return sorted(c for c in {os.path.basename(f)[:3] for f in glob.glob(f'{cdir}/{k}[0-9][0-9]-0.webp')}
+                              if all(os.path.exists(f'{cdir}/{c}-{v}.webp') for v in '012'))
+CELLS, MOLS = sprites('c'), sprites('m')
 if CELLS and not os.path.exists(plate if FILES else f'{plate}/plate.webp'):
     print('cells without plate.webp: no cells'); CELLS = []
-print('cells:', ' '.join(CELLS) or 'none')
+if not CELLS: MOLS = []   # the molecules float in the cells' field
+HELIX = os.path.exists(f'{FILES}/img/helix.webp' if FILES else f'{cdir}/helix.webp') and bool(CELLS)
+print('cells:', ' '.join(CELLS) or 'none', '| molecules:', ' '.join(MOLS) or 'none', '| helix:', HELIX)
 
 page = open(os.path.join(H, 'vtech-live-template.html'), encoding='utf-8').read()
 used = set(re.findall(r'\{\{\{?(\w+)\}?\}\}', page))
@@ -182,7 +188,7 @@ assert not unused, f'texts never placed: {sorted(unused)}'
 page = re.sub(r'\{\{\{(\w+)\}\}\}', lambda m: RAW[m.group(1)], page)
 page = re.sub(r'\{\{(\w+)\}\}', lambda m: esc(T[m.group(1)]), page)
 ASSETS = {'__WA_PRICE__': esc(wa(ui['wa_text_price'].replace('EXOCELL MASK', 'V-TECH SYSTEM'))), '__STILL__': STILL,
-          '__SEQ__': json.dumps({'runs': RUNS, 'tiers': TIERS, 'cells': CELLS}, separators=(',', ':')),
+          '__SEQ__': json.dumps({'runs': RUNS, 'tiers': TIERS, 'cells': CELLS, 'mols': MOLS, 'helix': HELIX}, separators=(',', ':')),
           # phone: three still cells around the S3 ampoules (soft and bokeh sprites, small)
           '__PH_CELLS__': ('<span class="ph-cells" aria-hidden="true">' + ''.join(
               f'<img src="img/cells/{CELLS[j % len(CELLS)]}-{s}.webp" alt="" loading="lazy" decoding="async">' for j, s in ((0, 2), (3, 1), (6, 1)))

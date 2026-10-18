@@ -3,11 +3,34 @@ object on a transparent film, for the page's floating layer (with the exosome ce
   molecule: a ring of five beads with a sixth on a branch, joined by tapered bonds, like the owner's pictures
   helix:    a DNA double helix, two gold strands and the base-pair rungs between them, lying on a diagonal
 usage: <python with bpy> molecules_scene.py <out.png> <molecule|helix> [size=1024] [samples=128] [seed=1] [turn=0]
-(turn: the helix's spin about its own axis in turns, for a loop of frames)"""
-import bpy, bmesh, math, random, sys
-from mathutils import Vector, Matrix
+(turn: the helix's spin about its own axis in turns, for a loop of frames; half a turn repeats it: two strands)
+       python3 molecules_scene.py post <render.png> <stem>   → <stem>-0/-1/-2.webp (sharp, soft, bokeh) for the page
+       python3 molecules_scene.py anim <out.webp> <frames…>  → a looping animated WebP over black"""
+import math, random, sys
 
 ARGS = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:]
+if ARGS[0] in ('post', 'anim'):   # python3 + PIL: page assets from the renders
+    from PIL import Image, ImageFilter
+    if ARGS[0] == 'post':   # post <render.png> <stem>: <stem>-0 sharp (1024), -1 soft (448), -2 bokeh (352), like the cells
+        import numpy as np
+        im = Image.open(ARGS[1]).convert('RGBA'); stem = ARGS[2]
+        def blur(r, size):   # on premultiplied colour, so the glow keeps its colour where it thins out
+            a = np.asarray(im).astype(np.float32) / 255; pm = a[..., :3] * a[..., 3:]
+            ch = [np.asarray(Image.fromarray(np.uint8(np.clip(c, 0, 1) * 255)).filter(ImageFilter.GaussianBlur(r))).astype(np.float32) / 255
+                  for c in (pm[..., 0], pm[..., 1], pm[..., 2], a[..., 3])]
+            al = ch[3]; rgb = np.dstack(ch[:3]) / np.maximum(al[..., None], 1e-4)
+            out = np.dstack([np.clip(rgb, 0, 1), al]) * 255 + 0.5
+            return Image.fromarray(out.astype(np.uint8), 'RGBA').resize((size, size), Image.LANCZOS)
+        im.resize((1024, 1024), Image.LANCZOS).save(f'{stem}-0.webp', quality=86, alpha_quality=100, method=6)
+        blur(6, 448).save(f'{stem}-1.webp', quality=80, alpha_quality=100, method=6)
+        blur(26, 352).save(f'{stem}-2.webp', quality=78, alpha_quality=100, method=6)
+    else:   # anim <out.webp> <frame.png …>: the helix spin as one looping animated WebP over black (the page screens it)
+        fr = [Image.alpha_composite(Image.new('RGBA', Image.open(f).size, (0, 0, 0, 255)), Image.open(f).convert('RGBA')).convert('RGB') for f in ARGS[2:]]
+        fr[0].save(ARGS[1], save_all=True, append_images=fr[1:], duration=110, loop=0, quality=70, method=6)
+    print('ok', ARGS[0]); sys.exit()
+
+import bpy, bmesh
+from mathutils import Vector, Matrix
 OUT, WHAT = ARGS[0], ARGS[1]
 SIZE = int(ARGS[2]) if len(ARGS) > 2 else 1024
 SPP = int(ARGS[3]) if len(ARGS) > 3 else 128
