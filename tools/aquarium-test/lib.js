@@ -81,8 +81,10 @@ async function openEngine(o, { test = true, viewport } = {}) {
   const base = server ? server.base : 'file://' + root;
   const url = `${base}/index.html?${buildQuery(o, { test })}`;
   const vp = viewport || { width: o.w || 1920, height: o.h || 1200, deviceScaleFactor: o.dpr || 1 };
-  const args = [...chromium.args, '--force-color-profile=srgb', '--hide-scrollbars'];
+  let args = [...chromium.args, '--force-color-profile=srgb', '--hide-scrollbars'];
   if (o['file-access']) args.push('--allow-file-access-from-files');
+  // процесс рендера отдельно (blackbox.js убивает его, как WebKit — WebContent); по умолчанию — один процесс
+  if (o.multiprocess) args = args.filter((a) => a !== '--single-process');
   const browser = await puppeteer.launch({ executablePath: await chromium.executablePath(), headless: chromium.headless,
     args, defaultViewport: vp, protocolTimeout: 600000 });
   return { browser, server, url, root, vp };

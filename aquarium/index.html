@@ -102,7 +102,7 @@
     m = normPower(m);
     if (m === POWER) return;                     // тот же режим — не сбрасывать замер регулятора
     perfEvent("power", { from: POWER, to: m });
-    POWER = m;
+    POWER = m; PERF.armed = false;               // «чёрный ящик»: сон/пробуждение дисплея — не «застой»
     if (m !== "paused") budgetChanged();         // бюджет пикселей зависит от питания (P1.3)
     lastShown = 0; govReset();                   // смена режима — замер интервалов заново
     syncVideos();                                // 'paused' — видео-задник тоже на паузу (и обратно)
@@ -244,9 +244,13 @@
      ============================================================ */
   const PERF = {
     N: 600, i: 0, n: 0, iv: new Float32Array(600), js: new Float32Array(600), tmp: new Float32Array(600),
-    hist: new Uint32Array(251), frames: 0, maxAll: 0,
+    hist: new Uint32Array(251), frames: 0, maxAll: 0, maxAllT: 0,
     RN: 240, ri: 0, rn: 0, raw: new Float32Array(240), rtmp: new Float32Array(240),
-    ev: new Array(40), ei: 0, en: 0,
+    ev: new Array(40), ei: 0, en: 0, evTotal: 0,
+    // «чёрный ящик»: показанные кадры с метками rAF (≥ 30 с при 60 к/с) — окно «последние 30 с»
+    BN: 2048, bi: 0, bn: 0, biv: new Float32Array(2048), bjs: new Float32Array(2048), bts: new Float64Array(2048),
+    btmp: new Float32Array(2048), btmp2: new Float32Array(2048),
+    cbJs: 0, cbAt: 0, armed: false, stallNow: false,   // JS-мс и начало (performance.now) прошлого колбэка rAF; он был активным; застой в этом кадре
     noPace: false, hud: null, hudOn: false, hudTimer: 0,
   };
   const PAGE_BOOTS = (() => {
@@ -265,6 +269,7 @@
   const EV_MERGE = { long: 1, vgap: 1, vstall: 1 };  // частые события (среди 4 последних, ≤ 10 с) — одной записью: n, t2, max ms
   function perfEvent(e, d) {
     const P = PERF, t = r1(performance.now() / 1000), L = P.ev.length;
+    P.evTotal++;                                     // «чёрный ящик»: есть ли новое с прошлой записи
     if (EV_MERGE[e]) {
       for (let j = 1; j <= Math.min(4, P.en); j++) {
         const p = P.ev[(P.ei + L - j) % L];
@@ -287,15 +292,186 @@
     if (!(ms > 0) || ms > 250) return;
     const P = PERF; P.raw[P.ri] = ms; P.ri = (P.ri + 1) % P.RN; if (P.rn < P.RN) P.rn++;
   }
-  // показанный кадр: интервал от прошлого показанного (метки rAF) и JS-мс этого кадра
-  function perfFrame(iv, js) {
+  // показанный кадр: интервал от прошлого показанного (метки rAF) и JS-мс этого кадра; now — метка rAF кадра
+  function perfFrame(iv, js, now) {
     if (PROBE.on) { probeTick(iv, js); return; }      // кадры зонда (синтетические конфигурации) — не в кольца и «с запуска»
     const P = PERF;
     P.iv[P.i] = iv; P.js[P.i] = js; P.i = (P.i + 1) % P.N; if (P.n < P.N) P.n++;
+    P.biv[P.bi] = iv; P.bjs[P.bi] = js; P.bts[P.bi] = now; P.bi = (P.bi + 1) % P.BN; if (P.bn < P.BN) P.bn++;
     P.frames++; P.hist[iv < 250 ? iv | 0 : 250]++;
-    if (iv > P.maxAll) P.maxAll = iv;
-    if (iv > 250) perfEvent("long", { ms: Math.round(iv) });
+    if (iv > P.maxAll) { P.maxAll = iv; P.maxAllT = now; }
+    if (iv > 250 && !P.stallNow) perfEvent("long", { ms: Math.round(iv) });   // > 1 с — уже записан как 'stall'
   }
+
+  /* ---------- «ЧЁРНЫЙ ЯЩИК» (freeze / white-screen forensics) ----------
+     Зависание страницы WebKit не прощает: процесс WebContent убит → белый экран → приложение перезагружает
+     страницу, и всё, что было в памяти (кольца, журнал), пропадает. Поэтому:
+       • каждые 5 с (setInterval — вне кадра; ничего нового — не пишется, но не реже раза в минуту), на
+         visibilitychange / pagehide и сразу после «застоя» — сжатая запись в sessionStorage 'aq.blackbox'
+         (JSON ≤ 8 КБ): хвост журнала событий, кадры за последние 30 с (интервал p50/p95/max, самый длинный —
+         с меткой времени, JS p50/p95), RS, бюджет, питание, тема, ступень регулятора, видео (состояние,
+         currentTime), номер загрузки, время работы. Объект записи — один, заранее выделенный;
+       • при загрузке, если это перезагрузка (тип навигации reload, или счётчик aqBoots > 1, или
+         __AQ_BOOT.loadReason crashReload/retry), прошлая запись переезжает в 'aq.blackbox.prev' и видна в
+         aquariumPerfSnapshot().prevSession (+ prevSummary — строка; она же в HUD);
+       • «застой»: между вызовами колбэков rAF > 1 с при активной странице (не скрыта, не 'paused' ни в прошлом
+         колбэке, ни при смене питания) → событие 'stall' {ms, js — JS-мс прошлого колбэка, ph — что движок делал
+         между ними: время фаз верхнего уровня, вложенные — в их счёт}. Фазы — метки вокруг тяжёлых операций: сборка
+         вариантов темы (theme), вариантов кораллов (coralVar), смена буфера холста (rs), ресайз, задник, маска
+         каустики, перекраска кэшей темы (themeTint), спрайты рыб, видео, пересборка кэша переднего рифа и
+         буфера каустики K. Начало РЕДКОЙ фазы (и вложенной редкой, если метки ещё нет) пишется в sessionStorage
+         'aq.phase' (снимается в конце внешней): если страница повисла в ней насовсем и была убита — следующая
+         загрузка покажет prevSession.diedIn.
+     Без аллокаций на кадр: типизированные массивы и счётчики; строки — только у событий и записей. */
+  const PH_NAMES = ["theme", "coralVar", "rs", "resize", "backdrop", "mask", "themeTint", "fishSprite", "video", "reefCache", "causticK", "blackbox"];
+  const PH_THEME = 0, PH_CORAL = 1, PH_RS = 2, PH_RESIZE = 3, PH_BACKDROP = 4, PH_MASK = 5, PH_TINT = 6, PH_FISH = 7, PH_VIDEO = 8,
+        PH_REEF = 9, PH_CAUS = 10, PH_BB = 11, PH_RARE = 9;      // id < PH_RARE — редкие: их начало — в sessionStorage
+  const PH = { ms: new Float64Array(PH_NAMES.length), n: new Uint16Array(PH_NAMES.length), used: 0, depth: 0, id: -1, t0: 0, marked: false };
+  const BB_KEY = "aq.blackbox", BB_PREV = "aq.blackbox.prev", BB_PHASE = "aq.phase", BB_MAX = 8000, STALL_MS = 1000;
+  const BB_RELOAD = NAV_TYPE === "reload" || PAGE_BOOTS > 1 ||
+    !!(BOOT && (BOOT.loadReason === "crashReload" || BOOT.loadReason === "retry"));
+  const BB = { on: PAGE_BOOTS > 0, writes: 0, bytes: 0, fails: 0, err: null, stalls: 0, worst: null, worstMs: 0, sr: [],
+               lastFr: -1, lastEv: -1, lastAt: 0, timer: 0, gone: false, prev: null, prevLine: "" };
+  // фаза верхнего уровня (вложенные — в её счёт): время копится с прошлого rAF; редкая — метка в sessionStorage
+  function phB(id) {
+    const top = PH.depth++ === 0;
+    if (top) { PH.id = id; PH.t0 = performance.now(); }
+    if (id < PH_RARE && BB.on && !PH.marked) {        // вложенная редкая (тема внутри кэша рифа) — тоже, если метки нет
+      try { sessionStorage.setItem(BB_PHASE, PH_NAMES[id] + "@" + r1(performance.now() / 1000)); PH.marked = true; } catch (e) { /* нет хранилища */ }
+    }
+  }
+  function phE() {
+    if (PH.depth <= 0) { PH.depth = 0; return; }
+    if (--PH.depth > 0) return;
+    const id = PH.id;
+    PH.ms[id] += performance.now() - PH.t0; PH.n[id]++; PH.used |= 1 << id;
+    if (PH.marked) { PH.marked = false; try { sessionStorage.removeItem(BB_PHASE); } catch (e) { /* нет хранилища */ } }
+  }
+  // начало колбэка rAF (после проверки на застой): фазы — заново; фаза, брошенная исключением, — закрыть
+  function phReset() {
+    if (PH.depth) { PH.depth = 0; if (PH.marked) { PH.marked = false; try { sessionStorage.removeItem(BB_PHASE); } catch (e) { /* нет */ } } }
+    if (!PH.used) return;
+    for (let i = 0; i < PH.ms.length; i++) { PH.ms[i] = 0; PH.n[i] = 0; }
+    PH.used = 0;
+  }
+  function phText() {                                // «theme 812, reefCache 31×2» — фазы ≥ 1 мс (только при застое); нет — null
+    if (!PH.used) return null;
+    let s = "";
+    for (let i = 0; i < PH_NAMES.length; i++) {
+      if (!(PH.used & (1 << i)) || PH.ms[i] < 1) continue;
+      s += (s ? ", " : "") + PH_NAMES[i] + " " + Math.round(PH.ms[i]) + (PH.n[i] > 1 ? "×" + PH.n[i] : "");
+    }
+    return s || null;
+  }
+  function stallLog(ms) {
+    const P = PERF, d = { ms: Math.round(ms), js: r1(P.cbJs), ph: phText() }, L = P.ev.length;
+    // застой без тяжёлых фаз сразу за таким же (≤ 10 с) — одной записью (n, t2, max ms): кадры, которые долго не
+    // приходят (растр, GPU), не вытесняют из журнала остальное; с фазами — всегда отдельно
+    const pe = P.en ? P.ev[(P.ei + L - 1) % L] : null, t = r1(performance.now() / 1000);
+    if (!d.ph && pe && pe.e === "stall" && !pe.ph && t - (pe.t2 || pe.t) < 10) { pe.n = (pe.n || 1) + 1; pe.t2 = t; if (d.ms > pe.ms) pe.ms = d.ms; P.evTotal++; }
+    else perfEvent("stall", d);
+    P.stallNow = true; BB.stalls++;
+    const rec = { t, ms: d.ms, js: d.js, ph: d.ph };
+    BB.sr.push(rec); if (BB.sr.length > 4) BB.sr.shift();   // 4 последних — и в записи (журнал могут вытеснить частые события)
+    if (ms > BB.worstMs) { BB.worstMs = ms; BB.worst = rec; }
+    bbWrite("stall");                                // сразу: следующий застой может оказаться последним
+  }
+  // заранее выделенный объект записи (поля перезаписываются; массив событий — те же объекты журнала)
+  const BBO = { v: 1, boot: 0, nav: "", reason: null, app: null, why: "", at: "", up: 0,
+    win: { s: 30, n: 0, fps: 0, p50: 0, p95: 0, max: 0, maxAt: null, jsP50: 0, jsP95: 0 },
+    since: { frames: 0, max: 0, maxAt: null },
+    rs: 0, mp: 0, budget: 0, budgetSrc: "", power: "", hidden: false, theme: "", themeK: 0, gov: 0, govP90: 0, probing: false, bg: null,
+    video: null, stalls: 0, worst: null, lastStalls: null, gone: false, writes: 0, events: [] };
+  const BBV = { th: "", st: 0, poster: 0, t: null, playing: false, fps: 0, loops: 0, stalls: 0, errors: 0 };
+  function bbPct(a, k, p) { return a[Math.min(k - 1, Math.floor(p * k))]; }
+  function bbFill(why, now) {
+    const P = PERF, o = BBO, w = o.win;
+    o.boot = PAGE_BOOTS; o.nav = NAV_TYPE; o.reason = BOOT && BOOT.loadReason ? String(BOOT.loadReason) : null;
+    o.app = BOOT && BOOT.appVersion ? String(BOOT.appVersion) : null;
+    o.why = why; o.at = new Date().toISOString(); o.up = r1(now / 1000);
+    // показанные кадры за последние 30 с (по меткам rAF), самый длинный — с меткой (с от загрузки, как t событий)
+    let k = 0, sum = 0, mx = 0, mxT = 0;
+    const from = now - 30000;
+    for (let j = 1; j <= P.bn; j++) {
+      const i = (P.bi + P.BN - j) % P.BN;
+      if (P.bts[i] < from) break;
+      const v = P.biv[i];
+      P.btmp[k] = v; P.btmp2[k] = P.bjs[i]; k++; sum += v;
+      if (v > mx) { mx = v; mxT = P.bts[i]; }
+    }
+    w.n = k; w.fps = k && sum > 0 ? r1((1000 * k) / sum) : 0; w.max = r1(mx); w.maxAt = k ? r1(mxT / 1000) : null;
+    if (k) {
+      const a = P.btmp.subarray(0, k), b = P.btmp2.subarray(0, k);
+      a.sort(); b.sort();
+      w.p50 = r2(bbPct(a, k, 0.5)); w.p95 = r2(bbPct(a, k, 0.95)); w.jsP50 = r2(bbPct(b, k, 0.5)); w.jsP95 = r2(bbPct(b, k, 0.95));
+    } else { w.p50 = w.p95 = w.jsP50 = w.jsP95 = 0; }
+    o.since.frames = P.frames; o.since.max = r1(P.maxAll); o.since.maxAt = P.frames ? r1(P.maxAllT / 1000) : null;
+    o.rs = r3(RS); o.mp = r2((canvas.width * canvas.height) / 1e6); o.budget = r2(pixelBudget() / 1e6); o.budgetSrc = budgetSource();
+    o.power = POWER; o.hidden = !!document.hidden; o.theme = THEMES[TH.target]; o.themeK = r2(TH.k);
+    o.gov = QUALITY.level; o.govP90 = r1(GOV.p90); o.probing = PROBE.on; o.bg = bgMode;
+    if (bgMode === "video") {
+      const S = BGS[THEMES[TH.target]], v = S.vid, q = BBV;
+      q.th = S.name; q.st = S.vState; q.poster = S.pState; q.t = v ? r2(v.currentTime) : null; q.playing = v ? !v.paused : false;
+      q.fps = r1(S.vfps); q.loops = S.loopN; q.stalls = S.wdN; q.errors = S.vErrN;
+      o.video = q;
+    } else o.video = null;
+    o.stalls = BB.stalls; o.worst = BB.worst; o.lastStalls = BB.sr.length ? BB.sr : null; o.gone = BB.gone; o.writes = BB.writes + 1;
+    const E = o.events, L = P.ev.length;
+    E.length = 0;
+    for (let i = P.en; i >= 1; i--) E.push(P.ev[(P.ei + L - i) % L]);
+  }
+  function bbWrite(why) {
+    if (!BB.on) return;
+    const now = performance.now(), P = PERF;
+    // таймер: ничего нового (пауза, скрыто, тест-режим) — не писать, но не реже раза в минуту
+    if (why === "timer" && P.frames === BB.lastFr && P.evTotal === BB.lastEv && now - BB.lastAt < 60000) return;
+    phB(PH_BB);
+    try {
+      bbFill(why, now);
+      let s = JSON.stringify(BBO);
+      while (s.length > BB_MAX && BBO.events.length > 4) { BBO.events.splice(0, Math.ceil(BBO.events.length / 4)); s = JSON.stringify(BBO); }
+      sessionStorage.setItem(BB_KEY, s);
+      BB.writes++; BB.bytes = s.length; BB.lastFr = P.frames; BB.lastEv = P.evTotal; BB.lastAt = now;
+    } catch (e) { BB.fails++; BB.err = String((e && e.message) || e).slice(0, 80); }
+    BBO.events.length = 0;                           // не держать события журнала между записями
+    phE();
+  }
+  // одна строка о прошлом сеансе (HUD и снимок)
+  function bbPrevText(p) {
+    if (!p) return "";
+    const sec = (ms) => (ms >= 1000 ? (ms / 1000).toFixed(1) + " с" : Math.round(ms) + " мс");
+    const dur = (x) => (x >= 3600 ? Math.floor(x / 3600) + " ч " + Math.floor((x % 3600) / 60) + " мин"
+      : x >= 60 ? Math.floor(x / 60) + " мин " + Math.floor(x % 60) + " с" : Math.round(x) + " с");
+    let s = "прошлый сеанс" + (p.boot ? " №" + p.boot : "") + ": ";
+    if (p.missing) s += "записи нет (оборвался при запуске)";
+    else if (p.broken) s += "запись повреждена";
+    else {
+      const w = p.win, up = +p.up || 0, end = p.gone ? "ухода" : "перезапуска";   // gone — страница уходила сама (pagehide)
+      s += "работал " + dur(up);
+      if (w && w.max >= 250) s += ", длинный кадр " + sec(w.max) + (w.maxAt != null ? " за " + Math.max(0, Math.round(up - w.maxAt)) + " с до " + end : " перед " + end);
+      else if (w && w.n) s += ", кадры ровные (max " + sec(w.max) + ", p95 " + sec(w.p95) + ")";
+      if (p.stalls) s += ", застоев " + p.stalls + (p.worst ? " (худший " + sec(p.worst.ms) + (p.worst.ph ? ": " + p.worst.ph : "") + ")" : "");
+      s += ", запись: " + (p.why || "?");
+    }
+    if (p.diedIn) s += ", оборвался в фазе " + p.diedIn;
+    return s;
+  }
+  // загрузка: прошлая запись этой вкладки (WKWebView) → 'aq.blackbox.prev', если это перезагрузка
+  (function bbBoot() {
+    if (!BB.on) return;
+    try {
+      const raw = sessionStorage.getItem(BB_KEY), died = sessionStorage.getItem(BB_PHASE);
+      if (died != null) sessionStorage.removeItem(BB_PHASE);
+      if (raw != null) sessionStorage.removeItem(BB_KEY);
+      if (!BB_RELOAD) return;
+      let p = null;
+      if (raw != null) { try { p = JSON.parse(raw); } catch (e) { p = null; } if (!p || typeof p !== "object") p = { v: 1, broken: true }; }
+      else p = { v: 1, missing: true, boot: PAGE_BOOTS > 1 ? PAGE_BOOTS - 1 : null };
+      p.diedIn = died || null;
+      sessionStorage.setItem(BB_PREV, JSON.stringify(p));
+      BB.prev = p; BB.prevLine = bbPrevText(p);
+    } catch (e) { BB.err = String((e && e.message) || e).slice(0, 80); }
+  })();
   // перцентили первых n значений src (копия в tmp, сортировка на месте) → out {n, p50, p90, p95, max, mean}
   function ringPct(src, n, tmp, out) {
     out.n = n; out.p50 = out.p90 = out.p95 = out.max = out.mean = 0;
@@ -370,7 +546,7 @@
       fps: { target: c.tgt, shown: r1(c.shown), frames: c.iv.n, p50: r2(c.iv.p50), p90: r2(c.iv.p90), p95: r2(c.iv.p95), max: r1(c.iv.max),
         overVsyncPct: r1(c.over), overTargetPct: r1(c.overT), jsP50: r2(c.js.p50), jsP90: r2(c.js.p90), rasterWait: r2(Math.max(0, c.iv.p50 - c.js.p50)) },
       since: { frames: P.frames, p50: histPct(0.5), p90: histPct(0.9), p95: histPct(0.95), p99: histPct(0.99), max: r1(P.maxAll),
-        overVsyncPct: r1(histOver(c.lim)) },
+        maxAt: P.frames ? r1(P.maxAllT / 1000) : null, overVsyncPct: r1(histOver(c.lim)) },
       vsync: { ms: r2(c.vs), hz: c.vs ? Math.round(1000 / c.vs) : null, screenMaxFps: sc && sc.maxFps ? sc.maxFps : null },
       canvas: { w: canvas.width, h: canvas.height, mp: r2((canvas.width * canvas.height) / 1e6), rs: r3(RS), dpr: DPR, css: [W, H],
         budgetMp: r2(pixelBudget() / 1e6), budgetSrc: budgetSource(), videoZoom: r3(BGX.sc), devPxPerVideoPx: r2(BGX.sc * RS) },
@@ -383,7 +559,10 @@
         dpr: window.devicePixelRatio || 1, cores: navigator.hardwareConcurrency || null, ua: navigator.userAgent },
       boot: BOOT ? bootInfo() : null,
       probing: PROBE.on, probe: PROBE.last,
+      blackbox: { on: BB.on, writes: BB.writes, bytes: BB.bytes, fails: BB.fails, err: BB.err, stalls: BB.stalls, worst: BB.worst, last: BB.sr },
+      prevSummary: BB.prevLine || null,
       events: perfEvents(30),
+      prevSession: BB.prev,                          // запись прошлого сеанса этой вкладки (≤ 8 КБ), если это перезагрузка
     };
   }
   /* ---------- HUD (DOM <pre>, 2 Гц, только когда включён) ---------- */
@@ -438,7 +617,9 @@
     } else L.push(`задник: ${bgMode || "процедурный"}`);
     L.push(`экран ${sc ? sc.id + (sc.main ? " (главный)" : "") + " " + sc.w + "×" + sc.h + "@" + sc.scale : window.innerWidth + "×" + window.innerHeight}  ` +
       `загрузка №${PAGE_BOOTS} (${NAV_TYPE}${BOOT && BOOT.loadReason ? ", " + BOOT.loadReason : ""})  сбоев ${BOOT && BOOT.crashes != null ? BOOT.crashes : "?"}  работает ${upS}`);
-    L.push(`с запуска: кадров ${P.frames}  p50 ${histPct(0.5)}  p95 ${histPct(0.95)}  p99 ${histPct(0.99)}  max ${f(P.maxAll, 0)} мс  >1 vsync ${f(histOver(c.lim))}%`);
+    L.push(`с запуска: кадров ${P.frames}  p50 ${histPct(0.5)}  p95 ${histPct(0.95)}  p99 ${histPct(0.99)}  max ${f(P.maxAll, 0)} мс  >1 vsync ${f(histOver(c.lim))}%` +
+      (BB.stalls ? `  застоев ${BB.stalls} (худший ${f(BB.worstMs / 1000, 1)} с)` : ""));
+    if (BB.prevLine) L.push(BB.prevLine);
     const ev = perfEvents(3);
     if (ev.length) L.push("события: " + ev.map(evText).join("  ·  "));
     return L.join("\n");
@@ -716,7 +897,8 @@
     im.onerror = () => loadPhoto(i + 1);
     im.src = BG_CANDIDATES[i];
   }
-  function applyBackdrop(im, src) {
+  function applyBackdrop(im, src) { phB(PH_BACKDROP); applyBackdrop0(im, src); phE(); }   // «чёрный ящик»: задник пришёл — сцена, свет, риф
+  function applyBackdrop0(im, src) {
     const oSS = W > 0 ? sizeScale() : 1;
     bgImg = im; bgSrc = src; bgReady = true; bgSettled = true;
     useScene(src); themeMix(); layoutBackdrop();
@@ -744,6 +926,7 @@
     const S = BGS[name];
     if (S.vState === 3 && !VTEST && S.vRetryAt > 0 && performance.now() >= S.vRetryAt) { S.vState = 0; S.vRetryAt = 0; }
     if (!VID_ALLOWED || bgMode !== "video" || S.vid || S.vState === 3 || !videoScene()) return;
+    phB(PH_VIDEO);                                    // «чёрный ящик»: новое видео (элемент, источник)
     if (!vidBox) {
       vidBox = document.createElement("div");
       vidBox.style.cssText = "position:fixed;left:0;top:0;width:2px;height:2px;overflow:hidden;z-index:-1;pointer-events:none";
@@ -776,6 +959,7 @@
     });
     v.src = videoUrl(name);
     vidBox.appendChild(v);
+    phE();
   }
   /* P1.1 / restart-investigation: оборот петли — перемотка в начало (длительность seeking → seeked) и пропуск
      показанных кадров вокруг неё по requestVideoFrameCallback (Safari 15.4+); там же к/с видео и пропуски > 150 мс.
@@ -832,8 +1016,10 @@
     S.resumeT = -1;
     if (!v) return;
     S.vid = null; S.vState = 0; S.aligned = false; S.frame = -1;
+    phB(PH_VIDEO);                                    // «чёрный ящик»: освобождение видео (load() без источника)
     try { v.pause(); v.removeAttribute("src"); v.load(); } catch (e) { /* уже освобождено */ }
     if (v.parentNode) v.parentNode.removeChild(v);
+    phE();
   }
   // нужна ли тема сейчас: она — цель или ещё видна в переходе
   const themeNeeded = (i) => TH.target === i || (i === 1 ? TH.k > 0 : TH.k < 1);
@@ -1107,6 +1293,7 @@
     const k = TH.k;
     if (!force && TH.kC >= 0 && (k === TH.kC || (Math.abs(k - TH.kC) < 0.125 && k > 0 && k < 1))) return;
     TH.kC = k;
+    phB(PH_TINT);                                     // «чёрный ящик»: перекраска кэшей темы
     const c = (v) => Math.round(clamp(v, 0, 255));
     TV_FOG = `rgb(${c(TV.fog[0])},${c(TV.fog[1])},${c(TV.fog[2])})`;
     TV_PART = `rgb(${c(TV.particle[0])},${c(TV.particle[1])},${c(TV.particle[2])})`;
@@ -1114,6 +1301,7 @@
     for (let i = 0; i < PACK.length; i++) { const r = PACK[i]; if (r.ready && r.fog) { tintFog(r); tintLit(r); } }
     if (lightBuilt) { buildBubbleSprites(); buildParticleSprites(); }
     lfT = NaN;                                        // поле света рыб — пересобрать
+    phE();
   }
   // V5: варианты предметов новой темы готовы (их строит themePrebuild — по набору за кадр)
   function themeItemsReady(i) {
@@ -1495,7 +1683,8 @@
     rock *= 0.8 * (1.2 - 0.4 * clamp(by, 0, 1));                  // верх рифа ближе к свету
     return Math.max(sand, rock);
   }
-  function buildMask() {
+  function buildMask() { phB(PH_MASK); buildMask0(); phE(); }   // «чёрный ящик»: маска и альбедо каустики
+  function buildMask0() {
     const bh = BGX.bandH, mw = Math.max(8, Math.ceil(W / 4)), mh = Math.max(4, Math.ceil((H - bh) / 4));
     if (!maskCan) maskCan = document.createElement("canvas");
     maskCan.width = mw; maskCan.height = mh; maskW = mw; maskH = mh;
@@ -1690,6 +1879,10 @@
     if (kT === kT && t >= kT && t - kT < 1 / CAUS.hz - 1e-6) return true;
     if (heavyWait(0, t, kT, CAUS.hz)) return true;             // V5 (P1.5): тяжёлые пересборки — в разных кадрах
     kT = t;
+    phB(PH_CAUS); rebuildK(t); phE();                           // «чёрный ящик»: пересборка буфера K
+    return true;
+  }
+  function rebuildK(t) {
     updateLightMap(t);
     const g = kCtx, bh = BGX.bandH;
     causticPos(t, 1);
@@ -1711,7 +1904,6 @@
     g.globalCompositeOperation = "multiply";
     g.drawImage(mapCan, 0, 0, kW, kH);
     g.globalCompositeOperation = "source-over";
-    return true;
   }
   function drawCaustics(t) {
     const d0 = CNT.drawImage;
@@ -2336,19 +2528,22 @@
       const r = PACK[i];
       if (!r.ready || !r.base || r.tq === q) continue;
       n++; r.tq = q;
-      if (q <= 0 || !TP[1]) { r.mips = r.base; if (r.tm) { for (const c of r.tm) c.width = c.height = 1; r.tm = null; } continue; }
-      const a = TP[0].fishMul, b = TP[1].fishMul, col = (j) => Math.round(clamp(255 * (a[j] + (b[j] - a[j]) * q), 0, 255));
-      if (!r.tm) r.tm = r.base.map((c) => { const d = document.createElement("canvas"); d.width = c.width; d.height = c.height; return d; });
-      const fill = `rgb(${col(0)},${col(1)},${col(2)})`;
-      for (let j = 0; j < r.base.length; j++) {
-        const c = r.tm[j], g = c.getContext("2d"), src = r.base[j];
-        g.globalCompositeOperation = "copy"; g.drawImage(src, 0, 0);
-        g.globalCompositeOperation = "multiply"; g.fillStyle = fill; g.fillRect(0, 0, c.width, c.height);
-        g.globalCompositeOperation = "destination-in"; g.drawImage(src, 0, 0);
-        g.globalCompositeOperation = "source-over";
-      }
-      r.mips = r.tm;
+      phB(PH_TINT); fishTintOne(r, q); phE();       // «чёрный ящик»: перекраска мипов вида
     }
+  }
+  function fishTintOne(r, q) {
+    if (q <= 0 || !TP[1]) { r.mips = r.base; if (r.tm) { for (const c of r.tm) c.width = c.height = 1; r.tm = null; } return; }
+    const a = TP[0].fishMul, b = TP[1].fishMul, col = (j) => Math.round(clamp(255 * (a[j] + (b[j] - a[j]) * q), 0, 255));
+    if (!r.tm) r.tm = r.base.map((c) => { const d = document.createElement("canvas"); d.width = c.width; d.height = c.height; return d; });
+    const fill = `rgb(${col(0)},${col(1)},${col(2)})`;
+    for (let j = 0; j < r.base.length; j++) {
+      const c = r.tm[j], g = c.getContext("2d"), src = r.base[j];
+      g.globalCompositeOperation = "copy"; g.drawImage(src, 0, 0);
+      g.globalCompositeOperation = "multiply"; g.fillStyle = fill; g.fillRect(0, 0, c.width, c.height);
+      g.globalCompositeOperation = "destination-in"; g.drawImage(src, 0, 0);
+      g.globalCompositeOperation = "source-over";
+    }
+    r.mips = r.tm;
   }
   let LIT_GRAD = null;
   // подсветка вида в цвет света темы: основа + 'source-atop' 15% света (перекраска ступенями перехода)
@@ -2375,7 +2570,7 @@
       // виды с count: 0 не заселяются — их картинку и не запрашиваем (ноль упавших запросов)
       if (e.image && rec.count > 0) {
         const im = new Image();
-        im.onload = () => { if (im.naturalWidth > 0) { bakeFish(rec, im); rec.ready = true; } };   // без перерисовки на каждый спрайт
+        im.onload = () => { if (im.naturalWidth > 0) { phB(PH_FISH); bakeFish(rec, im); phE(); rec.ready = true; } };   // без перерисовки на каждый спрайт
         im.onerror = () => { rec.ready = false; rec.failed = true; };
         im.src = e.image;
       }
@@ -4621,7 +4816,8 @@
     g.globalCompositeOperation = "source-over";
     return c;
   }
-  function buildItemThemes(it, tk) {                       // tk — масштаб вариантов (зонд P1.1 возвращает прежний)
+  function buildItemThemes(it, tk) { phB(PH_CORAL); buildItemThemes0(it, tk); phE(); }   // «чёрный ящик»: варианты предмета
+  function buildItemThemes0(it, tk) {                      // tk — масштаб вариантов (зонд P1.1 возвращает прежний)
     it.timgs = null; it.tset = null;
     const d = it.def;
     if (bgMode !== "video" || (it.kind !== "prop" && it.kind !== "coral") || !TP[0] || !TP[1]) return;
@@ -4643,6 +4839,12 @@
     const T = it.timgs;
     if (!T) return null;
     if (T[i]) return T[i];
+    phB(PH_THEME);                                           // «чёрный ящик»: сборка варианта темы (внутри coralVar — в его счёт)
+    const r = themeSet0(it, i, T);
+    phE();
+    return r;
+  }
+  function themeSet0(it, i, T) {
     const tb = performance.now();
     const p = it.tset, a = TP[0], b = TP[1], out = [];
     for (let j = 0; j < it.imgs.length; j++) {
@@ -5153,6 +5355,7 @@
       return;
     }
     if (SCN.reefDue || !RFC.ok) {                          // 2) пересборка кэша
+      phB(PH_REEF);                                        // «чёрный ящик»: фаза (без return внутри блока)
       let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
       for (let i = 0; i < SCN.nLate; i++) { const it = SCN.late[i]; if (it.x0 < x0) x0 = it.x0; if (it.y0 < y0) y0 = it.y0; if (it.x1 > x1) x1 = it.x1; if (it.y1 > y1) y1 = it.y1; }
       const X0 = Math.max(0, Math.floor(x0 * RS)), Y0 = Math.max(0, Math.floor(y0 * RS)), X1 = Math.min(canvas.width, Math.ceil(x1 * RS)), Y1 = Math.min(canvas.height, Math.ceil(y1 * RS));
@@ -5173,6 +5376,7 @@
         g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
         RFC.ok = true; RFC.t = t; RFC.W = W; RFC.H = H; RFC.RS = RS; RFC.x = ox; RFC.y = oy; RFC.pw = pw; RFC.ph = ph;
       }
+      phE();
     }
     if (RFC.ok) {                                          // 3) кэш — на холст 1:1
       ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
@@ -5952,7 +6156,8 @@
     const r = Math.min(DPR, Math.sqrt(Math.min(MAX_BACKING_PX, pixelBudget()) / Math.max(1, W * H)), NOVIDCAP ? 8 : Math.max(1, 1.1 / Math.max(1e-3, BGX.sc)));
     return Math.max(0.25, Math.floor(r * QUALITY.rsMul * 16) / 16);
   }
-  function applyBacking() {
+  function applyBacking() { phB(PH_RS); applyBacking0(); phE(); }   // фаза «чёрного ящика»: смена буфера холста
+  function applyBacking0() {
     const oRS = RS;
     RS = backingRS();
     canvas.width = Math.max(1, Math.floor(W * RS)); canvas.height = Math.max(1, Math.floor(H * RS));
@@ -5991,7 +6196,8 @@
     CB[0] = CB[1] = null; RFB[0] = RFB[1] = null; RLB[0] = RLB[1] = null;
     RFC.ok = false; RCC.ok = false;
   }
-  function resize() {
+  function resize() { phB(PH_RESIZE); resize0(); phE(); }
+  function resize0() {
     const oW = W, oH = H, oSS = W > 0 ? sizeScale() : 1;
     W = window.innerWidth; H = window.innerHeight; floorY = H * 0.78;
     DPR = Math.min(window.devicePixelRatio || 1, 2);
@@ -6260,7 +6466,14 @@
   let last = performance.now(), acc = 0, lastShown = 0;
   function frame(now) {
     requestAnimationFrame(frame);
-    const rawMs = now - last;
+    const rawMs = now - last, P = PERF, cbAt = performance.now(), gap = cbAt - P.cbAt;
+    // «чёрный ящик»: между колбэками rAF > 1 с, и прошлый колбэк был активным, — застой главного потока (фазы — что
+    // движок делал между ними); дальше фазы копятся заново. По часам ВЫЗОВА, не по метке rAF: метка — начало кадра,
+    // и кадр, начатый, пока поток был занят, приходит с ней после (Chromium) — застой и фазы ушли бы не в тот кадр
+    P.stallNow = false; P.cbAt = cbAt;
+    if (gap > STALL_MS && P.armed) stallLog(gap);
+    phReset(); P.cbJs = 0;
+    P.armed = POWER !== "paused" && !document.hidden;
     let raw = rawMs / 1000; last = now;
     if (raw > 0.25) raw = 0.25; else if (raw < 0) raw = 0;
     // app told us the display is off/occluded, or the view is hidden -> stop work
@@ -6282,7 +6495,9 @@
     const t0 = performance.now();
     syncVideos();                                    // видео тем: загрузка/освобождение, play/pause (дёшево)
     frameBody(dt, true);
-    if (iv) perfFrame(iv, performance.now() - t0);   // P1.1: кольца HUD/снимка (и шаг зонда)
+    const js = performance.now() - t0;
+    P.cbJs = js;
+    if (iv) perfFrame(iv, js, now);                  // P1.1: кольца HUD/снимка/«чёрного ящика» (и шаг зонда)
   }
 
   /* ---------- тестовый API: window.__aq ----------
@@ -6386,6 +6601,15 @@
         stagger: STAGGER, paced: !PERF.noPace, noVidCap: NOVIDCAP, probing: PROBE.on, level: QUALITY.level, fpsTarget: fpsTarget(),
         appBudget: APP_BUDGET, appFps: APP_FPS, hud: PERF.hudOn, frames: PERF.frames };
     },
+    // тесты (blackbox.js): занять главный поток на ms (внутри фазы phase из PH_NAMES — как если бы её делал движок)
+    busy(ms, phase) {
+      const id = PH_NAMES.indexOf(phase), t0 = performance.now(), d = Math.min(120000, +ms || 0);
+      if (id >= 0) phB(id);
+      while (performance.now() - t0 < d) { /* занято */ }
+      if (id >= 0) phE();
+      return performance.now() - t0;
+    },
+    blackbox() { return { on: BB.on, reload: BB_RELOAD, writes: BB.writes, bytes: BB.bytes, fails: BB.fails, err: BB.err, stalls: BB.stalls, prevLine: BB.prevLine, phases: PH_NAMES.slice() }; },
     // тесты (perf.js): симуляция на паузе (кадры рисуются, рыбы стоят) и сброс кэшей по времени и буферов — кадр «с нуля»
     pause(on) { paused = !!on; return paused; },
     invalidate() { themeInvalidate(); dropBuffers(); return true; },
@@ -6480,8 +6704,12 @@
   window.addEventListener("resize", onResize);
   document.addEventListener("visibilitychange", () => {
     perfEvent("vis", { hidden: document.hidden }); last = performance.now(); lastShown = 0; govReset(); syncVideos();
+    PERF.armed = false;
     if (document.hidden && PROBE.on) probeEnd("hidden");   // рабочий стол закрыт окнами (WebKit скрыл страницу) — сразу, не через 147 с
+    bbWrite(document.hidden ? "hidden" : "visible");       // «чёрный ящик»: скрытую страницу WebKit может выгрузить
   });
+  window.addEventListener("pagehide", () => { BB.gone = true; bbWrite("pagehide"); });   // ушла сама (не убита)
+  window.addEventListener("pageshow", (e) => { if (e.persisted) BB.gone = false; });
 
   if (WALLPAPER) {
     hint.style.display = "none";
@@ -6509,6 +6737,13 @@
   loadBackdrop();                                     // видео-сцена (постер темы → видео) | фото | процедурный риф
   showHint();
   perfEvent("boot", { boots: PAGE_BOOTS, nav: NAV_TYPE, reason: BOOT && BOOT.loadReason ? String(BOOT.loadReason) : null });
+  if (BB.prev) {                                      // «чёрный ящик»: главное о прошлом сеансе — и в журнал этого
+    const p = BB.prev, w = p.win;
+    perfEvent("prev", p.missing || p.broken ? { boot: p.boot || null, none: 1, died: p.diedIn }
+      : { boot: p.boot, up: p.up, why: p.why, max: w ? w.max : null, maxAt: w ? w.maxAt : null, stalls: p.stalls || 0, died: p.diedIn });
+  }
+  bbWrite("boot");                                    // первая запись — сразу (дальше — каждые 5 с)
+  if (BB.on) BB.timer = setInterval(() => bbWrite("timer"), 5000);
   if ((BOOT && BOOT.hud) || flag("hud")) setHud(true);   // P1.1: HUD с самого запуска (приложение помнит галочку)
   // ?test=1: от rAF ничего не идёт — кадры только по window.__aq.step()
   if (!TEST) requestAnimationFrame(frame);

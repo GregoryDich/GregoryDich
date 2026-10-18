@@ -9,7 +9,9 @@
     "stats": "node stats.js",
     "matrix": "node matrix.js",
     "bench": "node bench.js",
-    "governor": "node governor.js"
+    "governor": "node governor.js",
+    "perf": "node perf.js",
+    "blackbox": "node blackbox.js"
   },
   "dependencies": {
     "@sparticuz/chromium": "^131.0.1",
