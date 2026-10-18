@@ -353,7 +353,8 @@ RS), `rs` (смена буфера холста и кэши света), `resize
 и `stall`. HUD: строка «прошлый сеанс …», в строке «с запуска» — «застоев N (худший X с)».
 
 `window.__aq`: `busy(ms, phase?)` — занять главный поток на ms (внутри фазы из списка — как если бы её делал движок);
-`blackbox()` → `{on, reload, writes, bytes, fails, err, stalls, prevLine, phases}`. `lib.openEngine(o)` — `o.multiprocess`:
+`blackbox()` → `{on, reload, writes, bytes, fails, err, stalls, prevLine, phases, depth, marked, used}` (`depth` — открытые фазы:
+между колбэками rAF 0; `marked` — стоит метка `aq.phase`; `used` — битовая маска фаз с прошлого колбэка). `lib.openEngine(o)` — `o.multiprocess`:
 без `--single-process` (процесс рендера отдельно; в одном процессе его смерть роняет браузер).
 
 ```sh
@@ -362,7 +363,8 @@ node blackbox.js --out /tmp/x/bb.json [--w 640 --h 400 --dpr 1] [--no-crash]
 ```
 
 Без `?test=1`, настоящий rAF и видео, `__AQ_BOOT` как у приложения (HUD с запуска), браузер в несколько процессов:
-1. ≈6.5 с кадров → `aq.blackbox` — JSON ≤ 8 КБ с полями выше (boot 1, `nav` navigate, видео); `prevSession` нет.
+1. ≈6.5 с кадров → `aq.blackbox` — JSON ≤ 8 КБ с полями выше (boot 1, `nav` navigate, видео); `prevSession` нет; фазы
+   сбалансированы (`depth` 0, метки нет — и здесь, и после перезагрузки).
 2. busy-wait 1.5 с через `page.evaluate` (вне движка) → `stall` ≥ 1500 мс (js — мс прошлого колбэка, без тяжёлых фаз), сразу в записи.
 3. `__aq.setQuality(4)` (applyBacking — фаза `rs`) + 1.2 с в той же задаче → `stall` с `ph` «rs …».
 4. 40 событий (`aquariumSetBudget` туда-обратно) → `page.reload()`: `boots` 2, `nav` reload; `prevSession` ≤ 8 КБ, boot 1,

@@ -83,6 +83,9 @@ const busyWait = (page, ms, before) => page.evaluate((ms, before) => {
       b1.reason === 'launch' && b1.nav === 'navigate' && b1.gone === false && evs(b1, 'boot').length === 1 &&
       (b1.bg !== 'video' || !!(b1.video && b1.video.th && b1.video.st >= 1 && 't' in b1.video)));
     G.firstNoPrev = s1.prevSession === null && s1.prevSummary === null && r1.prev === null && s1.page.boots === 1;
+    // фазы сбалансированы (каждая открытая закрыта; метка редкой фазы снята): между колбэками rAF глубина 0
+    const ph1 = await page.evaluate(() => { const b = window.__aq.blackbox(); return { depth: b.depth, marked: b.marked, phase: sessionStorage.getItem('aq.phase') }; });
+    S.first.phases = ph1;
 
     // 2) долгая задача вне движка: busy-wait 1.5 с → 'stall'
     const [, end2] = await busyWait(page, 1500);
@@ -109,6 +112,8 @@ const busyWait = (page, ms, before) => page.evaluate((ms, before) => {
     await ready(page);
     await sleep(1500);                                        // HUD — 2 раза в секунду
     const r4 = await page.evaluate(readBox), s4 = await snap(page), h4 = await hudText(page);
+    const ph4 = await page.evaluate(() => { const b = window.__aq.blackbox(); return { depth: b.depth, marked: b.marked }; });
+    G.phasesBalanced = ph1.depth === 0 && !ph1.marked && ph1.phase === null && ph4.depth === 0 && !ph4.marked && r4.phase === null;
     const p4 = s4.prevSession, p4s = p4 ? JSON.stringify(p4) : '';
     const hasStall = (p, e) => !!(p && e && Array.isArray(p.lastStalls) && p.lastStalls.some((x) => x.t === e.t && x.ms === e.ms));
     S.reload = { boots: s4.page.boots, nav: s4.page.nav, prevBytes: Buffer.byteLength(p4s), prevStoredBytes: r4.prev ? Buffer.byteLength(r4.prev) : 0,

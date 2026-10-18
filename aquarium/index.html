@@ -6609,7 +6609,8 @@
       if (id >= 0) phE();
       return performance.now() - t0;
     },
-    blackbox() { return { on: BB.on, reload: BB_RELOAD, writes: BB.writes, bytes: BB.bytes, fails: BB.fails, err: BB.err, stalls: BB.stalls, prevLine: BB.prevLine, phases: PH_NAMES.slice() }; },
+    blackbox() { return { on: BB.on, reload: BB_RELOAD, writes: BB.writes, bytes: BB.bytes, fails: BB.fails, err: BB.err, stalls: BB.stalls, prevLine: BB.prevLine,
+      phases: PH_NAMES.slice(), depth: PH.depth, marked: PH.marked, used: PH.used }; },
     // тесты (perf.js): симуляция на паузе (кадры рисуются, рыбы стоят) и сброс кэшей по времени и буферов — кадр «с нуля»
     pause(on) { paused = !!on; return paused; },
     invalidate() { themeInvalidate(); dropBuffers(); return true; },
