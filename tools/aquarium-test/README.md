@@ -216,7 +216,7 @@ node gates_v2.js --out /tmp/x/gates_v2.json [--cases "1512x982@2,…"] [--times 
 
 | Флаг | Что делает |
 |---|---|
-| `?theme=day\|night` | тема принудительно (иначе — `prefers-color-scheme` системы; в headless — день) |
+| `?theme=day\|night\|auto` | тема принудительно, сильнее `__AQ_BOOT.theme` (иначе — `__AQ_BOOT.theme` приложения, иначе — `prefers-color-scheme` системы; в headless — день) |
 | `?bgvideo=webm` | только с `?test=1`: задник — тестовые копии VP9 `tools/aquarium-test/media/reef_{day,night}.webm` (1920×1080, вне бандла; пересборка — `make_media.sh … --no-mp4`) |
 | `?bgvideo=intra` | только с `?test=1`: `media/reef_{day,night}_i.mp4` — H.264 1920×1080, ВСЕ кадры ключевые (перемотка на соседний кадр — один декод: клипы и `stats.js` быстрые). Сборка: `ffmpeg -i ../../aquarium/assets/reef_day.mp4 -vf scale=1920:1080:flags=lanczos -c:v libx264 -preset veryfast -crf 18 -g 1 -keyint_min 1 -sc_threshold 0 -pix_fmt yuv420p -an media/reef_day_i.mp4` (≈110 МБ, не в git) |
 | `?bgvideo=mp4` | только с `?test=1`: отгружаемые MP4 (один ключевой кадр — перемотка дорогая: годится для кадров, не для клипов) |
@@ -231,6 +231,10 @@ node gates_v2.js --out /tmp/x/gates_v2.json [--cases "1512x982@2,…"] [--times 
 node still.js --out /tmp/x/day.png --steps 300 --q "bgvideo=webm"                 # день, кадр видео t = 10 с
 node still.js --out /tmp/x/night.png --steps 300 --q "bgvideo=mp4&theme=night"    # ночь, отгружаемый MP4
 node clip.js --out /tmp/x/fade.mp4 --frames 150 --format jpeg --q "bgvideo=webm" --at "15:__aq.setTheme('night')"
+# меню «Тема аквариума»: __AQ_BOOT.theme (как WKUserScript приложения) против оформления системы (emulateMediaFeatures);
+# в выводе still.js — theme {mode, target, k, dark}
+node still.js --out /tmp/x/day_dark.png --boot '{"theme":"day"}' --scheme dark       # день при тёмном оформлении
+node still.js --out /tmp/x/night_light.png --boot '{"theme":"night"}' --scheme light # ночь при светлом
 node stats.js --q "bgvideo=webm" --out /tmp/x/stats.json                          # 360 перемоток — ≈5–8 мин
 ```
 

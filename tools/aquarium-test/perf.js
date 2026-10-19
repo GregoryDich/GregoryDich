@@ -28,7 +28,7 @@ function injectBoot(w, h) {
   window.__WALLPAPER = true;
   window.__AQ_POWER = 'high';
   window.__AQ_BOOT = { power: 'high', hud: true, budget: null, screen: { id: 1, w, h, scale: 1, maxFps: 60, main: true },
-    crashes: 0, loadReason: 'launch', appVersion: 'perf.js' };
+    crashes: 0, loadReason: 'launch', appVersion: 'perf.js', theme: 'auto' };
 }
 // rAF подменён (как bench.js/governor.js) + simT = 5 до прихода постера: без пересева рыб по сцене, который зависит
 // от порядка асинхронных загрузок (иначе два запуска одного движка расставляют рыб по-разному)

@@ -1,6 +1,7 @@
 // Детерминированный кадр: ?test=1&nofilter=1&seed=N, N шагов по dt через window.__aq.step → PNG.
 //   node still.js --out shot.png [--w 1920 --h 1200 --dpr 1 --seed 1 --steps 90 --dt 1/30]
 //                 [--q "debug=1&nobg=1"] [--http] [--root ../../aquarium] [--clip x,y,w,h] [--allow-errors]
+//                 [--boot '{"theme":"day"}'] [--scheme dark|light]   (__AQ_BOOT как у приложения; оформление системы)
 // Печатает JSON-сводку (url, stats последнего кадра, scene) в stdout, ошибки — в stderr; код 2 при ошибках.
 'use strict';
 const path = require('path');
@@ -10,7 +11,8 @@ const L = require('./lib');
   const o = L.parseArgs(process.argv.slice(2), { w: 1920, h: 1200, dpr: 1, seed: 1, steps: 90, dt: 1 / 30, out: path.join(__dirname, 'out', 'still.png') });
   const env = await L.openEngine(o);
   try {
-    const { page, cap } = await L.newPage(env);
+    const { page, cap } = await L.newPage(env, { inject: L.bootInject(o) });
+    await L.emulateScheme(page, o);
     await L.gotoReady(page, env.url);
     // быстрый прогон без отрисовки, последний шаг — с отрисовкой
     await page.evaluate(async (dt, n) => { await window.__aq.step(dt, n, { render: 'last' }); }, o.dt, Math.max(1, o.steps | 0));
@@ -18,8 +20,8 @@ const L = require('./lib');
     const out = path.resolve(o.out); L.ensureDir(path.dirname(out));
     await page.screenshot({ path: out, clip: L.clipOpt(o) });
     const info = await page.evaluate(() => {
-      const s = window.__aq.stats(), sc = window.__aq.scene();
-      return { stats: { last: s.last, backing: s.backing, RS: s.RS, dpr: s.dpr, quality: s.quality.level, photo: s.photo,
+      const s = window.__aq.stats(), sc = window.__aq.scene(), th = window.__aq.theme();
+      return { theme: { mode: th.mode, target: th.target, k: th.k, dark: th.dark }, stats: { last: s.last, backing: s.backing, RS: s.RS, dpr: s.dpr, quality: s.quality.level, photo: s.photo,
         sceneFromFile: s.sceneFromFile, fish: s.fish, simT: s.simT },
         scene: { backdrop: sc.backdrop, bandH: sc.bandH, visibleBX: sc.visibleBX, visibleBY: sc.visibleBY, horizon: sc.horizon } };
     });

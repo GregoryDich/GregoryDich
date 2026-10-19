@@ -115,6 +115,18 @@ async function newPage(env, { inject } = {}) {
   return { page, cap };
 }
 
+// --boot '{"theme":"day"}' — window.__AQ_BOOT до загрузки страницы, как WKUserScript приложения (WallpaperWindow.bootSource);
+// для newPage(env, { inject })
+function bootInject(o) {
+  if (!o.boot) return undefined;
+  const boot = typeof o.boot === 'string' ? JSON.parse(o.boot) : o.boot;
+  return { fn: (b) => { window.__AQ_BOOT = b; }, args: [boot] };
+}
+// --scheme dark|light — prefers-color-scheme (оформление macOS; WKWebView следует системе). До page.goto.
+async function emulateScheme(page, o) {
+  if (o.scheme) await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: String(o.scheme) }]);
+}
+
 async function gotoReady(page, url, timeout = 30000) {
   await page.goto(url, { waitUntil: 'load', timeout });
   await page.waitForFunction(() => window.__aq && window.__aq.ready(), { timeout, polling: 100 });
@@ -151,4 +163,4 @@ function report(errors, warnings, allow) {
 
 function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); return p; }
 
-module.exports = { DEFAULT_ROOT, parseArgs, serve, buildQuery, openEngine, newPage, gotoReady, stepFrames, clipOpt, finish, report, ensureDir, captureErrors };
+module.exports = { DEFAULT_ROOT, parseArgs, serve, buildQuery, openEngine, newPage, bootInject, emulateScheme, gotoReady, stepFrames, clipOpt, finish, report, ensureDir, captureErrors };

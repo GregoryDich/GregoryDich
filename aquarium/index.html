@@ -69,7 +69,7 @@
      ?nofilter=1   HAS_FILTER = false (как в WebKit/WKWebView, где ctx.filter выключен)
      ?nobg=1       задник не грузится — процедурный векторный риф (проверка фолбэка)
      ?gov=0        регулятор качества выключен (замеры харнессом с синтетическим временем)
-     ?theme=day|night  тема принудительно (иначе — по оформлению macOS, см. «ТЕМЫ»)
+     ?theme=day|night|auto  тема принудительно (сильнее __AQ_BOOT.theme; иначе — по оформлению macOS, см. «ТЕМЫ»)
      ?bgvideo=0    без видео-задника (только постер); в тесте: ?bgvideo=webm|intra — тестовые копии из
                    tools/aquarium-test/media (вне бандла), ?bgvideo=mp4 — отгружаемые MP4 (см. «ЗАДНИК»)   */
   const PARAMS = new URLSearchParams(location.search);
@@ -91,9 +91,10 @@
        webView.evaluateJavaScript("aquariumSetPower('high')")  // 60 fps   */
   const normPower = (m) => (m === "low" || m === "paused") ? m : "high";
   /* P1.1: стартовые данные приложения (WKUserScript до загрузки страницы):
-       window.__AQ_BOOT = { power, hud, budget, screen: {id, w, h, scale, maxFps, main}, crashes, loadReason, appVersion }
-     hud — HUD сразу включён; budget — Мп холста (число; второй экран — 2) или {mp, fps}; остальное — в снимок
-     диагностики и HUD. window.__AQ_POWER оставлен для совместимости (у него приоритет над boot.power). */
+       window.__AQ_BOOT = { power, hud, budget, screen: {id, w, h, scale, maxFps, main}, crashes, loadReason, appVersion, theme }
+     hud — HUD сразу включён; budget — Мп холста (число; второй экран — 2) или {mp, fps}; theme — 'auto'|'day'|'night'
+     (меню «Тема аквариума»: первый кадр уже в этой теме, см. «ТЕМЫ»); остальное — в снимок диагностики и HUD.
+     window.__AQ_POWER оставлен для совместимости (у него приоритет над boot.power). */
   const BOOT = window.__AQ_BOOT && typeof window.__AQ_BOOT === "object" ? window.__AQ_BOOT : null;
   // V5: приложение передаёт режим ещё до загрузки страницы (WKUserScript: window.__AQ_POWER) — первый кадр
   // уже в нужном режиме (вызов evaluateJavaScript до загрузки терялся: на батарее шло 60 к/с)
@@ -1196,8 +1197,10 @@
 
   /* ============================================================
      ТЕМЫ: ДЕНЬ («Мальдивы») и НОЧЬ (королевский синий LED)
-       Выбор: ?theme=day|night — принудительно; иначе — оформление macOS: matchMedia('(prefers-color-scheme:
-       dark)') со слушателем смены (WKWebView следует системе); window.aquariumSetTheme('day'|'night'|'auto').
+       Выбор: ?theme=day|night|auto (тесты) сильнее всего; иначе __AQ_BOOT.theme (меню рыбки «Тема аквариума»:
+       'auto'|'day'|'night' — решено до первого кадра, постера и вариантов предметов: без вспышки «день → ночь»);
+       режим 'auto' — оформление macOS: matchMedia('(prefers-color-scheme: dark)') со слушателем смены (WKWebView
+       следует системе). Смена на ходу — window.aquariumSetTheme('day'|'night'|'auto') (переход ≈3 с).
        Переход ≈3 с: TH.p идёт линейно к цели (0 — день, 1 — ночь) по часам симуляции, вес ночи
        TH.k = smoothstep(p). Пока идёт переход, рисуются ОБА задника (ночной поверх дневного с α = k), лучи,
        отсвет дна, виньетка и реквизит — обоими вариантами с весами, а числа света (цвет, сила каустики и
@@ -1291,7 +1294,10 @@
       if (TH.mq.addEventListener) TH.mq.addEventListener("change", onSys); else if (TH.mq.addListener) TH.mq.addListener(onSys);
     }
   } catch (e) { TH.mq = null; }
-  TH.mode = THEME_Q === "day" || THEME_Q === "night" ? THEME_Q : "auto";
+  // режим с запуска — до первого кадра (loadBackdrop грузит постер этой темы, варианты предметов строятся под неё):
+  // ?theme= (явный параметр теста) → __AQ_BOOT.theme (меню приложения) → 'auto'
+  const themeModeOf = (m) => (m === "day" || m === "night" || m === "auto" ? m : null);
+  TH.mode = themeModeOf(THEME_Q) || themeModeOf(BOOT && BOOT.theme) || "auto";
   TH.target = themeTargetFor(TH.mode); TH.p = TH.k = TH.target;
   // готов ли задник темы i (в реальном времени переход его ждёт, ≤ 3 с)
   function themeSourceReady(i) {

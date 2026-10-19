@@ -33,7 +33,7 @@ function injectBoot(w, h) {
   window.__WALLPAPER = true;
   window.__AQ_POWER = 'high';
   window.__AQ_BOOT = { power: 'high', hud: true, budget: null, screen: { id: 1, w, h, scale: 1, maxFps: 60, main: true },
-    crashes: 0, loadReason: 'launch', appVersion: 'blackbox.js' };
+    crashes: 0, loadReason: 'launch', appVersion: 'blackbox.js', theme: 'auto' };
 }
 const readBox = () => {
   const k = (n) => { try { return sessionStorage.getItem(n); } catch (e) { return 'ERR ' + e.message; } };

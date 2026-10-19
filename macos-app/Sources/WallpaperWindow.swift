@@ -93,7 +93,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         self.loadReason = reason
         screenInfo = ScreenInfo(screen)
 
-        // Boot state (wallpaper flag, power mode, HUD, budget, screen, crash count) reaches the page at
+        // Boot state (wallpaper flag, power mode, HUD, budget, theme, screen, crash count) reaches the page at
         // document start: the very first frame already runs at the right rate (evaluateJavaScript before
         // the page has loaded is lost). The script is rebuilt before every load (installBootScript).
         let config = WKWebViewConfiguration()
@@ -175,8 +175,10 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
 
     /// `window.__AQ_BOOT` (contract with aquarium/index.html, P1.1):
     /// {power, hud, budget: {mp, fps}|null, screen: {id, w, h (points), scale, maxFps, main}, crashes,
-    ///  unresponsive, loadReason: launch|displayAdded|crashReload|retry, appVersion}. `__AQ_POWER` stays for
-    /// older pages. Keys are only ever added (e.g. `unresponsive`), never renamed: older pages keep working.
+    ///  unresponsive, loadReason: launch|displayAdded|crashReload|retry, appVersion, theme: auto|day|night}.
+    /// `theme` («Тема аквариума») is decided before the page's first frame: no day → night transition at start.
+    /// `__AQ_POWER` stays for older pages. Keys are only ever added (e.g. `unresponsive`, `theme`), never renamed:
+    /// older pages keep working.
     /// Every value goes through PageScript.literal (JSON), so nothing in it can break out of the script.
     private func bootSource() -> String {
         var screen = screenInfo.dict
@@ -191,6 +193,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
             "unresponsive": LifecycleStats.unresponsiveEpisodes,
             "loadReason": loadReason,
             "appVersion": AppSettings.appVersion,
+            "theme": AppSettings.theme.rawValue,
         ]
         return "window.__WALLPAPER = true; window.__AQ_POWER = \(PageScript.literal(power)); " +
                "window.__AQ_BOOT = \(PageScript.literal(boot));"
@@ -284,6 +287,17 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         evaluate("window.aquariumSetDebug && window.aquariumSetDebug(\(PageScript.literal(on)))")
     }
 
+    /// «Тема аквариума» (AppSettings.theme, already saved): the page crossfades (≈3 s) to it now; later loads
+    /// start in it (`__AQ_BOOT.theme`).
+    func setTheme(_ theme: AquariumTheme) {
+        installBootScript()
+        sendTheme(theme)
+    }
+
+    private func sendTheme(_ theme: AquariumTheme) {
+        evaluate("window.aquariumSetTheme && window.aquariumSetTheme(\(PageScript.literal(theme.rawValue)))")
+    }
+
     // MARK: Diagnostics
     func hostInfo() -> [String: Any] {
         var screen = screenInfo.dict
@@ -375,6 +389,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         sendPower()
         if budgetLiteral != loadBudget { applyBudget() }
         evaluate("window.aquariumSetDebug && window.aquariumSetDebug(\(PageScript.literal(AppSettings.hud)))")
+        sendTheme(AppSettings.theme)                     // as at boot: a no-op; chosen while loading: crossfade
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {

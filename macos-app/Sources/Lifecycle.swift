@@ -21,6 +21,7 @@ enum Log {
 enum AppSettings {
     static let hudKey = "aq.hud"                      // «Показать FPS»
     static let onlyMainKey = "aq.onlyMainScreen"      // «Только на главном экране»
+    static let themeKey = "aq.theme"                  // «Тема аквариума»: auto | day | night
     /// Safari ▸ Develop ▸ <Mac> ▸ wallpaper page (macOS 13.3+). Read when a page is created:
     ///   defaults write com.gregorydich.aquariumwallpaper inspectable -bool YES   (then restart the app)
     static let inspectableKey = "inspectable"
@@ -33,12 +34,32 @@ enum AppSettings {
         get { UserDefaults.standard.bool(forKey: onlyMainKey) }
         set { UserDefaults.standard.set(newValue, forKey: onlyMainKey) }
     }
+    /// «Тема аквариума»; a missing or unknown value reads as `.auto` (follow the macOS appearance).
+    static var theme: AquariumTheme {
+        get { AquariumTheme(rawValue: UserDefaults.standard.string(forKey: themeKey) ?? "") ?? .auto }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: themeKey) }
+    }
     static var inspectable: Bool { UserDefaults.standard.bool(forKey: inspectableKey) }
 
     /// "1.0 (1)" — CFBundleShortVersionString (CFBundleVersion).
     static var appVersion: String {
         let app = FeedbackReport.AppInfo.current
         return "\(app.version) (\(app.build))"
+    }
+}
+
+/// «Тема аквариума» in the fish menu. The raw value is the contract with aquarium/index.html: UserDefaults
+/// `aq.theme`, `__AQ_BOOT.theme` (the first frame is already in this theme) and `aquariumSetTheme(…)`.
+/// `.auto` follows the macOS appearance (prefers-color-scheme in the WKWebView, live).
+enum AquariumTheme: String, CaseIterable {
+    case auto, day, night
+
+    var menuTitle: String {
+        switch self {
+        case .auto:  return "Как в системе"
+        case .day:   return "Всегда день"
+        case .night: return "Всегда ночь"
+        }
     }
 }
 

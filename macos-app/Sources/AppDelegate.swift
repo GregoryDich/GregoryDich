@@ -6,7 +6,7 @@ import ServiceManagement
 /// Live-wallpaper controller: a menu-bar agent that places one desktop-level,
 /// click-through window (hosting the aquarium WebView) on every screen, and
 /// throttles rendering for battery, Low Power Mode, heat and sleep. No pause/settings UI by design;
-/// the menu has diagnostics for the 60-fps work (P1.1) and the feedback form.
+/// the menu has diagnostics for the 60-fps work (P1.1), the aquarium theme and the feedback form.
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// One window per display, keyed by CGDirectDisplayID (stable across resolution/arrangement
     /// changes and wake), so a screen-parameter change never reloads the aquarium needlessly.
@@ -25,6 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var layersItem: NSMenuItem!
     private var onlyMainItem: NSMenuItem!
     private var loginItem: NSMenuItem!
+    private var themeItems: [NSMenuItem] = []           // «Тема аквариума» ▸ one per AquariumTheme, in order
 
     private var powerSource: CFRunLoopSource?
     private var powerMode = "high"
@@ -61,7 +62,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: Menu bar
     /// Показать FPS · Скопировать диагностику · (⌥: Тест производительности, Тест слоёв) · — ·
-    /// Написать отзыв… · Только на главном экране (2+ displays) · Запускать при входе · — · Выход
+    /// Тема аквариума ▸ (Как в системе · Всегда день · Всегда ночь) · Написать отзыв… ·
+    /// Только на главном экране (2+ displays) · Запускать при входе · — · Выход
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let btn = statusItem.button {
@@ -87,6 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(layersItem)
         menu.addItem(.separator())
 
+        menu.addItem(themeMenuItem())
         menu.addItem(FeedbackCenter.shared.menuItem())   // «Написать отзыв…» (FeedbackWindow.swift)
         onlyMainItem = item("Только на главном экране", #selector(toggleOnlyMain(_:)))
         menu.addItem(onlyMainItem)
@@ -106,6 +109,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         return it
     }
 
+    /// «Тема аквариума ▸»: Как в системе / Всегда день / Всегда ночь — a checkmark on the chosen one (radio group).
+    private func themeMenuItem() -> NSMenuItem {
+        let sub = NSMenu(title: "Тема аквариума")
+        sub.autoenablesItems = false
+        themeItems = AquariumTheme.allCases.map { theme in
+            let it = item(theme.menuTitle, #selector(chooseTheme(_:)))
+            it.representedObject = theme.rawValue
+            sub.addItem(it)
+            return it
+        }
+        let parent = NSMenuItem(title: "Тема аквариума", action: nil, keyEquivalent: "")
+        parent.submenu = sub
+        return parent
+    }
+
+    private func refreshThemeChecks() {
+        let current = AppSettings.theme.rawValue
+        for it in themeItems { it.state = (it.representedObject as? String) == current ? .on : .off }
+    }
+
     /// The test items show only when ⌥ is held while clicking the fish.
     func menuWillOpen(_ menu: NSMenu) {
         refreshMenu(optionHeld: NSEvent.modifierFlags.contains(.option))
@@ -114,6 +137,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func refreshMenu(optionHeld: Bool) {
         hudItem.state = AppSettings.hud ? .on : .off
         loginItem.state = LoginItem.isEnabled ? .on : .off
+        refreshThemeChecks()
         onlyMainItem.state = AppSettings.onlyMainScreen ? .on : .off
         onlyMainItem.isHidden = NSScreen.screens.count < 2 && !AppSettings.onlyMainScreen
         probeItem.isHidden = !optionHeld
@@ -301,6 +325,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         parked.values.forEach { $0.window.setHUD(on) }
     }
 
+    /// «Тема аквариума ▸ …»: saved (`aq.theme`) and sent to every page at once (a ≈3-s crossfade on screen; parked
+    /// pages too, so a returning display shows it); later loads start in it (`__AQ_BOOT.theme`).
+    @objc private func chooseTheme(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String, let theme = AquariumTheme(rawValue: raw) else { return }
+        let changed = theme != AppSettings.theme
+        AppSettings.theme = theme
+        refreshThemeChecks()
+        guard changed else { return }
+        Log.info("theme: \(theme.rawValue)")
+        windows.values.forEach { $0.setTheme(theme) }
+        parked.values.forEach { $0.window.setTheme(theme) }
+    }
+
     @objc private func toggleOnlyMain(_ sender: NSMenuItem) {
         AppSettings.onlyMainScreen = !AppSettings.onlyMainScreen
         sender.state = AppSettings.onlyMainScreen ? .on : .off
@@ -327,6 +364,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             "displaysAsleep": displaysAsleep,
             "onlyMainScreen": AppSettings.onlyMainScreen,
             "hud": AppSettings.hud,
+            "theme": AppSettings.theme.rawValue,         // «Тема аквариума»; what each page shows: snapshot.theme
             "inspectable": AppSettings.inspectable,
             "layersTestOpen": layersTest != nil,
             "primaryDisplay": primary.map { Int($0) } ?? -1,
