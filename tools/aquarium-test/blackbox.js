@@ -12,7 +12,8 @@
 //     boot 1, gone (pagehide), оба застоя — в lastStalls/worst; 'aq.blackbox.prev' в sessionStorage; HUD и
 //     prevSummary — «прошлый сеанс №1 …»;
 //  4b) busy-wait 1.5 с и в той же задаче visibilitychange(hidden) (document.hidden подменён; как WebKit, скрывший
-//     страницу, пока поток был занят) → 'stall' с hide: 1 — ровно один, запись 'hidden' — с ним в win/since max;
+//     страницу, пока поток был занят) → 'stall' с hide: 1 — ровно один, запись 'hidden' — с ним в win/since max,
+//     и «с запуска max» помнит его после возврата на вид (в кольца кадров он не попадает);
 //  5) (--no-crash — пропустить) __aq.busy(60000, 'theme') — страница «повисла» в фазе сборки темы → процессы рендера
 //     убиты SIGKILL → page.reload(): prevSession.diedIn = 'theme@…', boot 2, gone false, 'aq.phase' снят.
 // Свои застои ищутся по времени (t события — сразу после busy-wait): программный растр headless медленный (3–7 к/с),
@@ -102,8 +103,10 @@ const busyWait = (page, ms, before) => page.evaluate((ms, before) => {
       boxNow: bNow && { why: bNow.why, win: bNow.win && { max: bNow.win.max, maxAt: bNow.win.maxAt }, since: bNow.since } };
     G.stallLogged = !!(e2 && e2.ms >= 1500 && e2.ms < 6000 && e2.js < 500 && !(e2.ph && /(^|, )(theme|coralVar|rs|resize) /.test(e2.ph)) && stallInLog(s2, end2));
     G.stallPersisted = !!(b2 && e2 && b2.stalls >= 1 && Array.isArray(b2.lastStalls) && b2.lastStalls.some((x) => x.t === e2.t && x.ms === e2.ms));
-    G.stallInRecord = !!(e2 && bNow && bNow.why === 'stall' && bNow.win && bNow.since && bNow.win.max >= e2.ms && bNow.win.maxAt === e2.t &&
-      bNow.since.max >= e2.ms && bNow.since.maxAt === e2.t);
+    // max ≥ застоя; равен — значит, это он (метка его); больше — был кадр длиннее (естественный застой растра headless)
+    const hasMax = (m, at, e) => !!(m != null && m >= e.ms && (m > e.ms || at === e.t));
+    G.stallInRecord = !!(e2 && bNow && bNow.why === 'stall' && bNow.win && bNow.since && hasMax(bNow.win.max, bNow.win.maxAt, e2) &&
+      hasMax(bNow.since.max, bNow.since.maxAt, e2));
 
     // 3) застой с тяжёлой фазой движка: смена буфера холста (setQuality → applyBacking — 'rs') + 1.2 с в той же задаче
     const q0 = await page.evaluate(() => window.__aq.perfState().level);
@@ -156,12 +159,13 @@ const busyWait = (page, ms, before) => page.evaluate((ms, before) => {
     const ours4b = (s4b.blackbox.last || []).filter((x) => inWin(x.t, hb.end));
     const logIdx = s4b.events.findIndex((e) => e.e === 'stall' && inWin(e.t, hb.end));
     S.hideStall = { event: e4b, n: ours4b.length, logEvent: logIdx >= 0 ? s4b.events[logIdx] : null, nextLog: logIdx >= 0 ? s4b.events[logIdx + 1] || null : null,
-      box: bh && { why: bh.why, hidden: bh.hidden, win: bh.win && { max: bh.win.max, maxAt: bh.win.maxAt }, since: bh.since, lastStalls: bh.lastStalls } };
+      box: bh && { why: bh.why, hidden: bh.hidden, win: bh.win && { max: bh.win.max, maxAt: bh.win.maxAt }, since: bh.since, lastStalls: bh.lastStalls },
+      sinceAfter: s4b.since && { max: s4b.since.max, maxAt: s4b.since.maxAt } };
     G.hideStall = !!(e4b && e4b.hide === 1 && e4b.ms >= 1500 && e4b.ms < 6000 && ours4b.length === 1 && logIdx >= 0 &&
       s4b.events[logIdx].hide === 1 && S.hideStall.nextLog && S.hideStall.nextLog.e === 'vis' && S.hideStall.nextLog.hidden === true);
     G.hideStallInRecord = !!(e4b && bh && bh.why === 'hidden' && bh.hidden === true && Array.isArray(bh.lastStalls) &&
-      bh.lastStalls.some((x) => x.t === e4b.t && x.ms === e4b.ms && x.hide === 1) && bh.win && bh.win.max >= e4b.ms && bh.win.maxAt === e4b.t &&
-      bh.since && bh.since.max >= e4b.ms);
+      bh.lastStalls.some((x) => x.t === e4b.t && x.ms === e4b.ms && x.hide === 1) && bh.win && hasMax(bh.win.max, bh.win.maxAt, e4b) &&
+      bh.since && hasMax(bh.since.max, bh.since.maxAt, e4b) && !!s4b.since && s4b.since.max >= e4b.ms);   // и «с запуска» — после кадров на виду
 
     // 5) «смерть» в фазе: страница повисла в сборке темы → процессы рендера убиты → перезагрузка
     if (o.crash !== false) {

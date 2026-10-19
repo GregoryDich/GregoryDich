@@ -374,6 +374,9 @@
     if (!d.ph && !hide && pe && pe.e === "stall" && !pe.ph && !pe.hide && t - (pe.t2 || pe.t) < 10) { pe.n = (pe.n || 1) + 1; pe.t2 = t; if (d.ms > pe.ms) pe.ms = d.ms; P.evTotal++; }
     else perfEvent("stall", d);
     P.stallNow = true; BB.stalls++;
+    // замечен при скрытии — в кольца кадров не попадёт никогда: «с запуска max» берёт его сам (иначе он пропал бы
+    // из since.max после первого кадра на виду); окно 30 с — через stallNow в bbFill, пока страница скрыта
+    if (hide && d.ms > P.maxAll) { P.maxAll = d.ms; P.maxAllT = performance.now(); }
     const rec = { t, ms: d.ms, js: d.js, ph: d.ph };
     if (hide) rec.hide = 1;
     BB.sr.push(rec); if (BB.sr.length > 4) BB.sr.shift();   // 4 последних — и в записи (журнал могут вытеснить частые события)
