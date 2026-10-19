@@ -246,6 +246,34 @@ for s in stories:
                      act[0] if i == 0 else '', btn[0] if i == 0 else '', 'да' if ins['pro_only'] and i == 0 else ''])
 sheet(wb, "What's inside", [('Страница', 20), ('Компонент', 34), ('Кол-во', 10), ('Объём / доза', 26), ('Источник', 30),
                             ('Активы HE', 50), ('Кнопка HE', 28), ('Только для специалистов', 12)], rows, he_cols=('Активы HE', 'Кнопка HE'))
+# the science pages and About (owner 19/10: the team found no spicules in the workbook): every text of the catalogue
+# pages BIOSPICULE, synthetic exosomes and About as reviewed (product-pages.he.json), next to the site's English
+SCIENCE = {'biospicule': 'המדע: BIOSPICULE™', 'synthetic-exosomes': 'המדע: אקסוזומים סינתטיים', 'about': 'אודות MITODERM'}
+srows = []
+for slug, page in SCIENCE.items():
+    h, e = cat_he[slug], cat_en[slug]
+    # an LRM after ™/® keeps the mark on its Latin word in a right-to-left cell (else «BIOSPICULE™» shows as «™BIOSPICULE»)
+    lrm = lambda v: re.sub(r'(?<=[A-Za-z0-9])([™®])', '\\1\u200e', v)
+    add = lambda block, he, en: srows.append([lrm(page), block, lrm(he), en]) if he else None
+    for f, block in (('eyebrow', 'כותרת-על'), ('name', 'שם'), ('hero_sub', 'כותרת משנה'), ('tagline', 'סלוגן'), ('lead', 'פסקת פתיחה')):
+        add(block, h[f], e[f])
+    for i, (a, b) in enumerate(zip(h['stats'], e['stats']), 1):
+        add(f'נתון {i}', ' · '.join(a), ' · '.join(b))
+    for n, (sec, items, item) in enumerate((('s01', 'benefits', 'פריט'), ('s02', 'steps', 'שלב'), ('s03', 'ingredients', 'פריט'),
+                                            ('s04', 'kit', 'פריט'), ('s05', 'chips', None)), 1):
+        if h.get(sec):
+            add(f'מקטע {n} · כותרת-על', h[sec][0], e[sec][0]); add(f'מקטע {n} · כותרת', h[sec][1], e[sec][1])
+        if item is None:
+            add(f'מקטע {n} · תגיות', ' · '.join(h[items]), ' · '.join(e[items]))
+            continue
+        for i, (a, b) in enumerate(zip(h[items] or [], e[items] or []), 1):
+            if isinstance(a, list):
+                add(f'מקטע {n} · {item} {i} · כותרת', a[0], b[0]); add(f'מקטע {n} · {item} {i} · טקסט', a[1], b[1])
+            else:
+                add(f'מקטע {n} · {item} {i}', a, b)
+    for f, (a, b) in zip(('כותרת', 'טקסט', 'כפתור'), zip(h['cta'], e['cta'])):
+        add(f'קריאה לפעולה · {f}', a, b)
+sheet(wb, 'דפי מדע ואודות', [('עמוד', 26), ('בלוק', 28), ('HE', 70), ('EN', 60)], srows, he_cols=('עמוד', 'בלוק', 'HE'))
 sheet(wb, '3D assets', [('Страница', 20), ('Объект', 34), ('Как строим', 30), ('Текстура / источник', 44), ('Статус', 16)],
       [[s['name'], a['object'], a['build'], a['texture_source'], a['status']] for s in stories for a in s['assets']])
 sheet(wb, 'New strings', [('Страница', 20), ('Ключ', 20), ('EN', 50), ('HE', 50), ('Где', 40)],
