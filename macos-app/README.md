@@ -78,12 +78,15 @@ security find-identity -v -p codesigning
   GPU-процесса) и пишется в `UserDefaults`: `aq.wc.total`, `aq.wc.log` (последние 20: время, экран,
   причина, секунд с загрузки, `unresponsiveSec` — если перед этим страница висела), `aq.pageLoads` (число загрузок
   по причинам) и `aq.pageLoads.log`.
-- **Зависание страницы** (≈ «замерло, потом белый экран»). Приватные методы WebKit
+- **Зависание страницы** (≈ «замерло, потом белый экран»). Два источника: приватные методы WebKit
   `_webViewWebProcessDidBecomeUnresponsive:` / `_webViewWebProcessDidBecomeResponsive:` (WebKit зовёт их, когда
-  процесс страницы 3 с не отвечает на то, чего UI-процесс ждёт, и когда ответил) → `aq.unresponsive.total` и
-  `aq.unresponsive.log` (последние 20: время, экран, секунд с загрузки, `end` — `responsive` | `terminated` |
-  `closed` | `open` (приложение закрыли, пока висело), `durationSec`). WebKit замечает зависание только пока чего-то
-  ждёт от страницы (загрузка, ввод…), так что зависание без этого видно лишь как сбой. В диагностике:
+  процесс страницы 3 с не отвечает на то, чего UI-процесс ждёт, — а ждёт он только загрузок и ввода, которого у обоев
+  нет) и свой пульс приложения: раз в 10 с видимой работающей странице уходит `evaluateJavaScript("0")`; нет ответа к
+  следующему тику — зависание с момента отправки (на скрытой или `paused` странице пульс молчит). «Ответила» —
+  только успешный ответ; «responsive» от WebKit засчитывается через оборот цикла (сбой в том же стеке закрывает
+  эпизод как `terminated`). → `aq.unresponsive.total` и `aq.unresponsive.log` (последние 20: время начала, экран,
+  секунд с загрузки, `source` — `webkit` | `heartbeat`, `end` — `responsive` | `terminated` | `closed` | `open`
+  (приложение закрыли, пока висело), `durationSec`). В диагностике:
   `lifecycle.unresponsiveTotal`/`unresponsiveLog`, `windows[].unresponsiveThisRun` и, если страница висит прямо
   сейчас, `windows[].unresponsiveForSec` (снимок `snapshot` тогда — `{"error": "timeout"}`).
 - `Lifecycle.swift` — журнал, настройки, счётчики; `LayersTestWindow.swift` — окно «Тест слоёв».

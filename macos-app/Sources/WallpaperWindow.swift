@@ -42,6 +42,11 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     private static let backoff: [TimeInterval] = [1, 5, 15]     // quick reloads, at most 3 per 5 min…
     private static let backoffWindow: TimeInterval = 300
     private static let slowRetry: TimeInterval = 600            // …then every 10 min (and on wake / screen change)
+    /// App-side heartbeat: WebKit checks the page only while it waits on it (loads, input — a wallpaper gets
+    /// neither), so every 10 s a trivial evaluateJavaScript goes to a visible, running page; still unanswered
+    /// at the next tick (≥ pingTimeout) → an unresponsive episode (source "heartbeat").
+    private static let heartbeatInterval: TimeInterval = 10
+    private static let pingTimeout: TimeInterval = 5
 
     let displayID: CGDirectDisplayID
     private let window: NSWindow
@@ -60,8 +65,11 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     private var nextReason = "crashReload"
     private var failures: [Date] = []                // terminations + failed loads, last 5 min
     private var gaveUp = false                       // quick backoff exhausted → slow retry
-    /// Set while WebKit reports the WebContent process unresponsive (a hung page): since when.
+    /// Set while the WebContent process is unresponsive (a hung page: WebKit said so, or a heartbeat went
+    /// unanswered): since when.
     private var unresponsiveSince: Date?
+    private var pingSentAt: Date?                    // heartbeat in flight (nil: none)
+    private var pingSeq = 0                          // bumped to disown a ping of the previous document
     // This run only (the persistent totals are in LifecycleStats).
     private var loadCount = 0
     private var terminationCount = 0
@@ -119,6 +127,8 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         super.init()
         webView.navigationDelegate = self
         load(reason: reason)
+        // .common: keeps running while a menu or an alert is open; close() cancels it.
+        perform(#selector(heartbeat), with: nil, afterDelay: WallpaperWindow.heartbeatInterval, inModes: [.common])
     }
 
     // MARK: Loading
@@ -133,6 +143,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
             return
         }
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(recover), object: nil)
+        pingSentAt = nil; pingSeq += 1                   // a ping lost with the old document is not held against the new one
         state = .loading
         loadReason = reason
         loadStartedAt = Date()
@@ -399,6 +410,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
 
     private func contentProcessTerminated(code: Int?) {
         guard !closed else { return }
+        pingSentAt = nil; pingSeq += 1                   // its callback fails with an error: not "responsive"
         let since = loadStartedAt.map { Date().timeIntervalSince($0) }
         let frozeFor = endUnresponsive("terminated")     // a hang that ended in a kill: the white-screen case
         terminationCount += 1
@@ -413,27 +425,66 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     /// Private WebKit delegate methods (WKNavigationDelegatePrivate.h: `_webViewWebProcessDidBecomeUnresponsive:`,
     /// `_webViewWebProcessDidBecomeResponsive:`; NavigationState.mm checks respondsToSelector: when the
     /// delegate is set). WebKit calls them when the WebContent process has not answered a message the UI
-    /// process waits on for 3 s (ResponsivenessTimer, started by loads and input, among others) and when it
-    /// answers again — a page stuck in a long JavaScript task, the suspected start of "freezes, then a white
-    /// screen". WebKit notices only while it is waiting on the page, so a hang may show up only as a
-    /// termination (with `unresponsiveSec` in `aq.wc.log` when WebKit had noticed it first).
-    /// Matched by selector only, like the termination method above; nothing private is linked.
+    /// process waits on for 3 s (ResponsivenessTimer, started only by loads, reloads, back/forward and input
+    /// events) and when it answers again — a page stuck in a long JavaScript task, the suspected start of
+    /// "freezes, then a white screen". A wallpaper page gets no input, so in steady state WebKit never asks;
+    /// the heartbeat below covers that. Matched by selector only, like the termination method above.
     @objc(_webViewWebProcessDidBecomeUnresponsive:)
     private func privateWebProcessDidBecomeUnresponsive(_ webView: WKWebView) {
-        guard !closed, unresponsiveSince == nil else { return }
-        let now = Date()
-        let since = loadStartedAt.map { now.timeIntervalSince($0) }
-        unresponsiveSince = now
-        unresponsiveCount += 1
-        LifecycleStats.recordUnresponsive(display: displayID, sinceLoad: since)
-        Log.error("WebContent unresponsive on display \(displayID): \(Int(since ?? -1)) s after load, " +
-                  "state \(state.rawValue), power \(power) (total \(LifecycleStats.unresponsiveEpisodes))")
+        // unresponsive → responsive → unresponsive within one turn: the same open episode
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(markResponsive), object: nil)
+        beginUnresponsive(since: Date(), source: "webkit")
     }
 
+    /// Decided one run-loop turn later: WebKit can report "responsive" in the same call stack just before the
+    /// termination (WebPageProxy::dispatchProcessDidTerminate with site isolation; the background
+    /// responsiveness timer's processTerminated without RunningBoard). A kill then closes the episode as
+    /// `terminated` first, and the deferred call finds nothing open.
     @objc(_webViewWebProcessDidBecomeResponsive:)
     private func privateWebProcessDidBecomeResponsive(_ webView: WKWebView) {
+        guard !closed, unresponsiveSince != nil else { return }
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(markResponsive), object: nil)
+        perform(#selector(markResponsive), with: nil, afterDelay: 0, inModes: [.common])
+    }
+
+    @objc private func markResponsive() {
         guard !closed else { return }
         endUnresponsive("responsive")
+    }
+
+    /// Every 10 s: a visible, running, loaded page gets `0` to evaluate. Only a successful reply counts as
+    /// responsive (a termination fails the pending callback with an error); no reply by the next tick opens
+    /// an episode dated from when the ping was sent. One ping at a time: a hung page is not sent more.
+    /// The completion captures like perfSnapshot's (a method without concurrency annotations): no Sendable warning.
+    @objc private func heartbeat() {
+        guard !closed else { return }
+        perform(#selector(heartbeat), with: nil, afterDelay: WallpaperWindow.heartbeatInterval, inModes: [.common])
+        // Hidden or paused: WebKit may throttle the page, a slow reply is no hang. A reply still in flight
+        // stays ours (it still ends an open episode); it just is not timed.
+        guard loaded, power != "paused", isDesktopVisible else { pingSentAt = nil; return }
+        if let sent = pingSentAt {
+            if Date().timeIntervalSince(sent) >= WallpaperWindow.pingTimeout { beginUnresponsive(since: sent, source: "heartbeat") }
+            return
+        }
+        pingSeq += 1
+        let seq = pingSeq
+        pingSentAt = Date()
+        webView.evaluateJavaScript("0") { [weak self] _, error in
+            guard let self = self, !self.closed, seq == self.pingSeq, error == nil else { return }
+            self.pingSentAt = nil
+            self.endUnresponsive("responsive")
+        }
+    }
+
+    /// Opens an unresponsive episode (`source`: webkit | heartbeat) unless one is open: counted and logged at once.
+    private func beginUnresponsive(since: Date, source: String) {
+        guard !closed, unresponsiveSince == nil else { return }
+        let sinceLoad = loadStartedAt.map { since.timeIntervalSince($0) }
+        unresponsiveSince = since
+        unresponsiveCount += 1
+        LifecycleStats.recordUnresponsive(display: displayID, at: since, sinceLoad: sinceLoad, source: source)
+        Log.error("WebContent unresponsive on display \(displayID) (\(source)): \(Int(sinceLoad ?? -1)) s after load, " +
+                  "state \(state.rawValue), power \(power) (total \(LifecycleStats.unresponsiveEpisodes))")
     }
 
     /// Ends an open unresponsive episode (`how`: responsive | terminated | closed) in the log and in

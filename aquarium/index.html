@@ -321,11 +321,13 @@
          каустики, перекраска кэшей темы (themeTint), спрайты рыб, видео, пересборка кэша переднего рифа и
          буфера каустики K. Начало РЕДКОЙ фазы (и вложенной редкой, если метки ещё нет) пишется в sessionStorage
          'aq.phase' (снимается в конце внешней): если страница повисла в ней насовсем и была убита — следующая
-         загрузка покажет prevSession.diedIn.
+         загрузка покажет prevSession.diedIn. Частые и лёгкие (themeTint — каждый кадр перехода дня и ночи, доли мс;
+         reefCache, causticK) метки не пишут. Застой, сразу за которым страницу скрыли (visibilitychange раньше
+         колбэка rAF), пишется при скрытии — с hide: 1.
      Без аллокаций на кадр: типизированные массивы и счётчики; строки — только у событий и записей. */
-  const PH_NAMES = ["theme", "coralVar", "rs", "resize", "backdrop", "mask", "themeTint", "fishSprite", "video", "reefCache", "causticK", "blackbox"];
-  const PH_THEME = 0, PH_CORAL = 1, PH_RS = 2, PH_RESIZE = 3, PH_BACKDROP = 4, PH_MASK = 5, PH_TINT = 6, PH_FISH = 7, PH_VIDEO = 8,
-        PH_REEF = 9, PH_CAUS = 10, PH_BB = 11, PH_RARE = 9;      // id < PH_RARE — редкие: их начало — в sessionStorage
+  const PH_NAMES = ["theme", "coralVar", "rs", "resize", "backdrop", "mask", "fishSprite", "video", "themeTint", "reefCache", "causticK", "blackbox"];
+  const PH_THEME = 0, PH_CORAL = 1, PH_RS = 2, PH_RESIZE = 3, PH_BACKDROP = 4, PH_MASK = 5, PH_FISH = 6, PH_VIDEO = 7, PH_TINT = 8,
+        PH_REEF = 9, PH_CAUS = 10, PH_BB = 11, PH_RARE = 8;      // id < PH_RARE — редкие: их начало — в sessionStorage
   const PH = { ms: new Float64Array(PH_NAMES.length), n: new Uint16Array(PH_NAMES.length), used: 0, depth: 0, id: -1, t0: 0, marked: false };
   const BB_KEY = "aq.blackbox", BB_PREV = "aq.blackbox.prev", BB_PHASE = "aq.phase", BB_MAX = 8000, STALL_MS = 1000;
   const BB_RELOAD = NAV_TYPE === "reload" || PAGE_BOOTS > 1 ||
@@ -363,15 +365,17 @@
     }
     return s || null;
   }
-  function stallLog(ms) {
+  function stallLog(ms, hide) {                       // hide — замечен при скрытии страницы (колбэка rAF после застоя не было)
     const P = PERF, d = { ms: Math.round(ms), js: r1(P.cbJs), ph: phText() }, L = P.ev.length;
+    if (hide) d.hide = 1;
     // застой без тяжёлых фаз сразу за таким же (≤ 10 с) — одной записью (n, t2, max ms): кадры, которые долго не
     // приходят (растр, GPU), не вытесняют из журнала остальное; с фазами — всегда отдельно
     const pe = P.en ? P.ev[(P.ei + L - 1) % L] : null, t = r1(performance.now() / 1000);
-    if (!d.ph && pe && pe.e === "stall" && !pe.ph && t - (pe.t2 || pe.t) < 10) { pe.n = (pe.n || 1) + 1; pe.t2 = t; if (d.ms > pe.ms) pe.ms = d.ms; P.evTotal++; }
+    if (!d.ph && !hide && pe && pe.e === "stall" && !pe.ph && !pe.hide && t - (pe.t2 || pe.t) < 10) { pe.n = (pe.n || 1) + 1; pe.t2 = t; if (d.ms > pe.ms) pe.ms = d.ms; P.evTotal++; }
     else perfEvent("stall", d);
     P.stallNow = true; BB.stalls++;
     const rec = { t, ms: d.ms, js: d.js, ph: d.ph };
+    if (hide) rec.hide = 1;
     BB.sr.push(rec); if (BB.sr.length > 4) BB.sr.shift();   // 4 последних — и в записи (журнал могут вытеснить частые события)
     if (ms > BB.worstMs) { BB.worstMs = ms; BB.worst = rec; }
     bbWrite("stall");                                // сразу: следующий застой может оказаться последним
@@ -406,6 +410,11 @@
       w.p50 = r2(bbPct(a, k, 0.5)); w.p95 = r2(bbPct(a, k, 0.95)); w.jsP50 = r2(bbPct(b, k, 0.5)); w.jsP95 = r2(bbPct(b, k, 0.95));
     } else { w.p50 = w.p95 = w.jsP50 = w.jsP95 = 0; }
     o.since.frames = P.frames; o.since.max = r1(P.maxAll); o.since.maxAt = P.frames ? r1(P.maxAllT / 1000) : null;
+    if (P.stallNow && BB.sr.length) {                // застой этого колбэка ещё не в кольцах (perfFrame — в конце кадра; после скрытия — не будет)
+      const s = BB.sr[BB.sr.length - 1];
+      if (s.ms > w.max) { w.max = s.ms; w.maxAt = s.t; }
+      if (s.ms > o.since.max) { o.since.max = s.ms; o.since.maxAt = s.t; }
+    }
     o.rs = r3(RS); o.mp = r2((canvas.width * canvas.height) / 1e6); o.budget = r2(pixelBudget() / 1e6); o.budgetSrc = budgetSource();
     o.power = POWER; o.hidden = !!document.hidden; o.theme = THEMES[TH.target]; o.themeK = r2(TH.k);
     o.gov = QUALITY.level; o.govP90 = r1(GOV.p90); o.probing = PROBE.on; o.bg = bgMode;
@@ -446,8 +455,11 @@
     if (p.missing) s += "записи нет (оборвался при запуске)";
     else if (p.broken) s += "запись повреждена";
     else {
-      const w = p.win, up = +p.up || 0, end = p.gone ? "ухода" : "перезапуска";   // gone — страница уходила сама (pagehide)
-      s += "работал " + dur(up);
+      // up — время последней записи; повисла в редкой фазе (diedIn «фаза@с») — жила минимум до её начала.
+      // gone — страница уходила сама (pagehide): запись — последнее, что было; иначе жила не меньше up
+      const dT = p.diedIn ? parseFloat(String(p.diedIn).split("@")[1]) : NaN, hung = dT > 0;
+      const w = p.win, up = Math.max(+p.up || 0, hung ? dT : 0), end = p.gone ? "ухода" : hung ? "зависания" : "последней записи";
+      s += (p.gone || hung ? "работал " : "работал ≥ ") + dur(up);
       if (w && w.max >= 250) s += ", длинный кадр " + sec(w.max) + (w.maxAt != null ? " за " + Math.max(0, Math.round(up - w.maxAt)) + " с до " + end : " перед " + end);
       else if (w && w.n) s += ", кадры ровные (max " + sec(w.max) + ", p95 " + sec(w.p95) + ")";
       if (p.stalls) s += ", застоев " + p.stalls + (p.worst ? " (худший " + sec(p.worst.ms) + (p.worst.ph ? ": " + p.worst.ph : "") + ")" : "");
@@ -6704,6 +6716,11 @@
 
   window.addEventListener("resize", onResize);
   document.addEventListener("visibilitychange", () => {
+    // «чёрный ящик»: застой, сразу за которым страницу скрыли (событие пришло раньше колбэка rAF), иначе пропал бы —
+    // armed снимается ниже, lastShown = 0. При обычном скрытии с прошлого колбэка меньше кадра: WebKit скрывает
+    // страницу тем же обновлением состояния, что останавливает rAF
+    const sg = performance.now() - PERF.cbAt;
+    if (document.hidden && PERF.armed && sg > STALL_MS) stallLog(sg, true);
     perfEvent("vis", { hidden: document.hidden }); last = performance.now(); lastShown = 0; govReset(); syncVideos();
     PERF.armed = false;
     if (document.hidden && PROBE.on) probeEnd("hidden");   // рабочий стол закрыт окнами (WebKit скрыл страницу) — сразу, не через 147 с

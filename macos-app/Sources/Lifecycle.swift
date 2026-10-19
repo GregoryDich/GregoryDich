@@ -46,8 +46,9 @@ enum AppSettings {
 /// Keys: `aq.wc.total` (all terminations ever), `aq.wc.log` (last 20: at, display, reason, code, sinceLoadSec,
 /// unresponsiveSec when the page was unresponsive at the moment it died),
 /// `aq.pageLoads` ({reason: count}: launch | displayAdded | crashReload | retry), `aq.pageLoads.log` (last 20),
-/// `aq.unresponsive.total` (WebKit reported the page unresponsive, all episodes ever), `aq.unresponsive.log`
-/// (last 20: at, display, sinceLoadSec, end = open | responsive | terminated | closed, durationSec).
+/// `aq.unresponsive.total` (the page was unresponsive: WebKit reported it or the app's heartbeat went unanswered;
+/// all episodes ever), `aq.unresponsive.log` (last 20: at, display, sinceLoadSec, source = webkit | heartbeat,
+/// end = open | responsive | terminated | closed, durationSec).
 /// Shown in «Скопировать диагностику»; the totals also go to the page as `__AQ_BOOT.crashes` / `.unresponsive`.
 enum LifecycleStats {
     static let wcTotalKey = "aq.wc.total"
@@ -88,19 +89,21 @@ enum LifecycleStats {
         append(entry, to: wcLogKey)
     }
 
-    /// WebKit reported the page's WebContent process unresponsive. Counted and logged at once, as an
+    /// The page's WebContent process is unresponsive since `at` (`source`: webkit — WebKit reported it;
+    /// heartbeat — the app's ping sent at `at` went unanswered). Counted and logged at once, as an
     /// `end: "open"` episode, so a freeze is on record even if the app is quit or killed before it ends;
     /// endUnresponsive fills in how and when it ended.
-    static func recordUnresponsive(display: CGDirectDisplayID, sinceLoad: TimeInterval?) {
+    static func recordUnresponsive(display: CGDirectDisplayID, at: Date, sinceLoad: TimeInterval?, source: String) {
         let d = UserDefaults.standard
         d.set(d.integer(forKey: unresponsiveTotalKey) + 1, forKey: unresponsiveTotalKey)
-        var entry: [String: Any] = ["at": FBDate.string(Date()), "display": Int(display), "end": "open"]
+        var entry: [String: Any] = ["at": FBDate.string(at), "display": Int(display), "end": "open", "source": source]
         if let s = sinceLoad { entry["sinceLoadSec"] = Int(s.rounded()) }
         append(entry, to: unresponsiveLogKey)
     }
 
     /// Closes the newest open episode of `display`: `end` = responsive | terminated | closed, `durationSec`
-    /// = time from WebKit's "unresponsive" (itself ≈3 s after the page stopped answering) to that end.
+    /// = time from its start (WebKit's "unresponsive", itself ≈3 s after the page stopped answering; or the
+    /// unanswered heartbeat's send time) to that end.
     static func endUnresponsive(display: CGDirectDisplayID, duration: TimeInterval, end: String) {
         let d = UserDefaults.standard
         guard var log = d.array(forKey: unresponsiveLogKey),

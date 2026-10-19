@@ -6,11 +6,13 @@
 //  1) загрузка → ≈6.5 с настоящих кадров: в 'aq.blackbox' — валидный JSON ≤ 8 КБ (boot 1, окно 30 с, RS, бюджет,
 //     питание, тема, регулятор, видео, журнал); первая загрузка — prevSession нет;
 //  2) busy-wait 1.5 с через page.evaluate (вне движка) → событие 'stall' (ms ≥ 1500, js — мс прошлого колбэка) и
-//     немедленная запись ящика (why 'stall');
+//     немедленная запись ящика (why 'stall'; застой в ней уже в win/since max, хотя в кольца кадр попадёт в конце колбэка);
 //  3) __aq.setQuality(4) (смена буфера холста — фаза 'rs') + busy-wait 1.2 с в той же задаче → 'stall' с ph 'rs …';
 //  4) 40 событий (aquariumSetBudget туда-обратно; журнал — по кругу 40) → page.reload(): prevSession есть, ≤ 8 КБ,
 //     boot 1, gone (pagehide), оба застоя — в lastStalls/worst; 'aq.blackbox.prev' в sessionStorage; HUD и
 //     prevSummary — «прошлый сеанс №1 …»;
+//  4b) busy-wait 1.5 с и в той же задаче visibilitychange(hidden) (document.hidden подменён; как WebKit, скрывший
+//     страницу, пока поток был занят) → 'stall' с hide: 1 — ровно один, запись 'hidden' — с ним в win/since max;
 //  5) (--no-crash — пропустить) __aq.busy(60000, 'theme') — страница «повисла» в фазе сборки темы → процессы рендера
 //     убиты SIGKILL → page.reload(): prevSession.diedIn = 'theme@…', boot 2, gone false, 'aq.phase' снят.
 // Свои застои ищутся по времени (t события — сразу после busy-wait): программный растр headless медленный (3–7 к/с),
@@ -49,6 +51,8 @@ const stallInLog = (s, end) => s.events.some((e) => e.e === 'stall' && (inWin(e.
 // busy-wait в странице: [начало, конец] по её часам
 const busyWait = (page, ms, before) => page.evaluate((ms, before) => {
   if (before === 'rs4') window.__aq.setQuality(4);         // смена буфера холста (applyBacking — фаза 'rs') в той же задаче
+  // колбэк rAF после колбэка движка в том же обновлении (он зарегистрирован раньше): запись ящика сразу после застоя
+  if (before === 'grab') requestAnimationFrame(() => { window.__bbNow = sessionStorage.getItem('aq.blackbox'); });
   const t0 = performance.now();
   while (performance.now() - t0 < ms) { /* занято */ }
   return [t0, performance.now()];
@@ -88,13 +92,18 @@ const busyWait = (page, ms, before) => page.evaluate((ms, before) => {
     S.first.phases = ph1;
 
     // 2) долгая задача вне движка: busy-wait 1.5 с → 'stall'
-    const [, end2] = await busyWait(page, 1500);
+    const [, end2] = await busyWait(page, 1500, 'grab');
     await sleep(1500);
+    // запись сразу после застоя (why 'stall' — из колбэка движка, до perfFrame): застой уже в win/since max
+    const bNow = parse(await page.evaluate(() => window.__bbNow || null));
     const s2 = await snap(page), e2 = ourStall(s2, end2);
     const b2 = parse((await page.evaluate(readBox)).box);
-    S.stall = { event: e2, boxWhy: b2 && b2.why, boxLastStalls: b2 && b2.lastStalls, worst: s2.blackbox.worst, stallsTotal: s2.blackbox.stalls };
+    S.stall = { event: e2, boxWhy: b2 && b2.why, boxLastStalls: b2 && b2.lastStalls, worst: s2.blackbox.worst, stallsTotal: s2.blackbox.stalls,
+      boxNow: bNow && { why: bNow.why, win: bNow.win && { max: bNow.win.max, maxAt: bNow.win.maxAt }, since: bNow.since } };
     G.stallLogged = !!(e2 && e2.ms >= 1500 && e2.ms < 6000 && e2.js < 500 && !(e2.ph && /(^|, )(theme|coralVar|rs|resize) /.test(e2.ph)) && stallInLog(s2, end2));
     G.stallPersisted = !!(b2 && e2 && b2.stalls >= 1 && Array.isArray(b2.lastStalls) && b2.lastStalls.some((x) => x.t === e2.t && x.ms === e2.ms));
+    G.stallInRecord = !!(e2 && bNow && bNow.why === 'stall' && bNow.win && bNow.since && bNow.win.max >= e2.ms && bNow.win.maxAt === e2.t &&
+      bNow.since.max >= e2.ms && bNow.since.maxAt === e2.t);
 
     // 3) застой с тяжёлой фазой движка: смена буфера холста (setQuality → applyBacking — 'rs') + 1.2 с в той же задаче
     const q0 = await page.evaluate(() => window.__aq.perfState().level);
@@ -130,6 +139,30 @@ const busyWait = (page, ms, before) => page.evaluate((ms, before) => {
     G.prevSummary = typeof s4.prevSummary === 'string' && s4.prevSummary.startsWith('прошлый сеанс №1: работал') &&
       / до ухода/.test(s4.prevSummary) && S.reload.hudLine === s4.prevSummary && !!S.reload.prevEvent && S.reload.prevEvent.boot === 1;
 
+    // 4b) застой, сразу за которым страницу скрыли: visibilitychange пришёл раньше колбэка rAF
+    const hb = await page.evaluate(() => {
+      const t0 = performance.now();
+      while (performance.now() - t0 < 1500) { /* занято */ }
+      const end = performance.now();
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+      document.dispatchEvent(new Event('visibilitychange'));
+      const box = sessionStorage.getItem('aq.blackbox');       // запись 'hidden' — до возврата видимости
+      delete document.hidden;
+      document.dispatchEvent(new Event('visibilitychange'));
+      return { end, box };
+    });
+    await sleep(1500);
+    const s4b = await snap(page), e4b = ourStall(s4b, hb.end), bh = parse(hb.box);
+    const ours4b = (s4b.blackbox.last || []).filter((x) => inWin(x.t, hb.end));
+    const logIdx = s4b.events.findIndex((e) => e.e === 'stall' && inWin(e.t, hb.end));
+    S.hideStall = { event: e4b, n: ours4b.length, logEvent: logIdx >= 0 ? s4b.events[logIdx] : null, nextLog: logIdx >= 0 ? s4b.events[logIdx + 1] || null : null,
+      box: bh && { why: bh.why, hidden: bh.hidden, win: bh.win && { max: bh.win.max, maxAt: bh.win.maxAt }, since: bh.since, lastStalls: bh.lastStalls } };
+    G.hideStall = !!(e4b && e4b.hide === 1 && e4b.ms >= 1500 && e4b.ms < 6000 && ours4b.length === 1 && logIdx >= 0 &&
+      s4b.events[logIdx].hide === 1 && S.hideStall.nextLog && S.hideStall.nextLog.e === 'vis' && S.hideStall.nextLog.hidden === true);
+    G.hideStallInRecord = !!(e4b && bh && bh.why === 'hidden' && bh.hidden === true && Array.isArray(bh.lastStalls) &&
+      bh.lastStalls.some((x) => x.t === e4b.t && x.ms === e4b.ms && x.hide === 1) && bh.win && bh.win.max >= e4b.ms && bh.win.maxAt === e4b.t &&
+      bh.since && bh.since.max >= e4b.ms);
+
     // 5) «смерть» в фазе: страница повисла в сборке темы → процессы рендера убиты → перезагрузка
     if (o.crash !== false) {
       await sleep(5600);                                      // хотя бы одна запись по таймеру в этом сеансе
@@ -152,7 +185,7 @@ const busyWait = (page, ms, before) => page.evaluate((ms, before) => {
         prevBoot: p5 && p5.boot, prevWhy: p5 && p5.why, prevGone: p5 && p5.gone, diedIn: p5 && p5.diedIn,
         prevBytes: p5 ? Buffer.byteLength(JSON.stringify(p5)) : 0, prevSummary: s5.prevSummary, phaseKeyAfter: r5.phase };
       G.crashDiedIn = !!(crashed && p5 && p5.boot === 2 && typeof p5.diedIn === 'string' && /^theme@\d/.test(p5.diedIn) && p5.gone === false &&
-        s5.page.boots === 3 && r5.phase === null && /оборвался в фазе theme@/.test(s5.prevSummary || '') && / до перезапуска|ровные/.test(s5.prevSummary || ''));
+        s5.page.boots === 3 && r5.phase === null && /оборвался в фазе theme@/.test(s5.prevSummary || '') && / до зависания|ровные/.test(s5.prevSummary || ''));
     }
     await page.close();
   } finally { await L.finish(env); }
