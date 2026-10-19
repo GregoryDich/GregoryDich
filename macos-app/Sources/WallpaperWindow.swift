@@ -132,8 +132,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         super.init()
         webView.navigationDelegate = self
         load(reason: reason)
-        // .common: keeps running while a menu or an alert is open; close() cancels it.
-        perform(#selector(heartbeat), with: nil, afterDelay: WallpaperWindow.heartbeatInterval, inModes: [.common])
+        armHeartbeat()
     }
 
     // MARK: Loading
@@ -256,7 +255,9 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     func setPower(_ mode: String, constrained c: Bool) {
         let modeChanged = mode != power, budgetChanged = c != constrained
         guard modeChanged || budgetChanged else { return }
+        let wasPaused = power == "paused"
         power = mode
+        if (mode == "paused") != wasPaused { armHeartbeat() }   // no 10-s wakeups while paused (display asleep, parked)
         constrained = c
         installBootScript()
         if modeChanged { sendPower() }
@@ -483,11 +484,21 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     /// desktop not covered (WebKit hides the page and may throttle it — a slow reply there is no hang).
     private var pingWanted: Bool { loaded && power != "paused" && isDesktopVisible }
 
+    /// The 10-s tick runs only while the page is not paused: a paused window (display asleep all night, parked
+    /// up to 15 min) does not wake the app 6 times a minute (perform timers have no tolerance, not coalesced).
+    /// .common: keeps running while a menu or an alert is open; close() cancels it. A ping already in flight
+    /// at a pause is dropped by pingOverdue (pingWanted false) without a verdict.
+    private func armHeartbeat() {
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(heartbeat), object: nil)
+        guard !closed, power != "paused" else { return }
+        perform(#selector(heartbeat), with: nil, afterDelay: WallpaperWindow.heartbeatInterval, inModes: [.common])
+    }
+
     /// Every 10 s: a page that `pingWanted` gets `0` to evaluate; one ping at a time (a hung page is not sent
     /// more). Only a successful reply counts as responsive; pingOverdue opens the episode. The completion
     /// captures like perfSnapshot's (a method without concurrency annotations): no Sendable diagnostics.
     @objc private func heartbeat() {
-        guard !closed else { return }
+        guard !closed, power != "paused" else { return }   // setPower re-arms it on resume
         perform(#selector(heartbeat), with: nil, afterDelay: WallpaperWindow.heartbeatInterval, inModes: [.common])
         guard pingSentAt == nil, pingWanted else { return }
         pingSeq += 1
@@ -500,11 +511,27 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
 
     private func pingReplied(seq: Int, error: Error?) {
         guard !closed, seq == pingSeq else { return }    // disowned: its document is gone
-        // Killed: contentProcessTerminated decides (whichever of the two callbacks comes first) — keep the ping.
+        // Killed (the code older WebKit gives it): contentProcessTerminated decides, whichever callback comes first.
         if let e = error as? WKError, e.code == .webContentProcessTerminated { return }
+        if error != nil {
+            // A dying WebContent fails pending evaluateJavaScript calls inside the termination, just BEFORE
+            // webContentProcessDidTerminate (WebKit main: WebProcessProxy::processDidTerminateOrFailedToLaunch →
+            // shutDown → Connection::invalidate → cancelAsyncReplyHandlers), and with WKError 5
+            // (javaScriptResultTypeIsUnsupported), not .webContentProcessTerminated. Keep the ping for
+            // contentProcessTerminated; if nothing disowns it this turn, drop it without a verdict.
+            perform(#selector(pingFailed(_:)), with: NSNumber(value: seq), afterDelay: 0, inModes: [.common])
+            return
+        }
         pingSentAt = nil
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(pingOverdue), object: nil)
-        if error == nil { endUnresponsive("responsive") }   // any other error: no verdict; the next tick pings again
+        endUnresponsive("responsive")
+    }
+
+    /// A failed ping that no termination or new load disowned within a turn: no verdict; the next tick pings again.
+    @objc private func pingFailed(_ seq: NSNumber) {
+        guard !closed, seq.intValue == pingSeq else { return }   // contentProcessTerminated / load() disowned it
+        pingSentAt = nil
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(pingOverdue), object: nil)
     }
 
     private func schedulePingCheck(after delay: TimeInterval) {

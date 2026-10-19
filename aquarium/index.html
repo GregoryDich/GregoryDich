@@ -1231,7 +1231,7 @@
     for (let j = 0; j < 3; j++) out[j] = b.coralNear[j] + (b.coralMul[j] - b.coralNear[j]) * t;
     return out;
   }
-  const TH = { mode: "auto", target: 0, p: 0, k: 0, kC: -1, dur: 3, reqAt: 0, mq: null };   // reqAt — performance.now() запроса смены
+  const TH = { mode: "auto", target: 0, p: 0, k: 0, kC: -1, dur: 3, reqAt: 0, mq: null };   // reqAt — performance.now() первого активного кадра после запроса смены (0 — такого кадра ещё не было)
   const TP = [null, null];                            // параметры тем (числа, цвета — массивы rgb)
   const TV = { light: [255, 244, 220], fog: [23, 138, 158], water: [45, 207, 236], caustics: 0.34, rays: 1, particles: 1, fishLit: 1.3,
                glow: 1, vignette: [0, 38, 52, 0.24], particle: [242, 246, 232], bubble: [236, 248, 250], coralMul: [1, 1, 1], glowK: 0, hazeK: 1, fogMin: 0,
@@ -1276,7 +1276,7 @@
     const t = themeTargetFor(TH.mode);
     if (t !== TH.target) {
       perfEvent("theme", { to: THEMES[t], mode: TH.mode });
-      TH.target = t; TH.reqAt = performance.now();
+      TH.target = t; TH.reqAt = 0;   // ожидание задника/вариантов (≤ 3 с) — с первого активного кадра (смена на скрытой странице, во сне дисплея)
       if (bgMode === "video") loadPoster(THEMES[t]);
     }
     if (instant) { TH.p = TH.target; TH.k = TH.target; themeMix(); themeInvalidate(); }
@@ -1331,6 +1331,7 @@
   }
   function themeStep(dt) {
     if (TH.p === TH.target) return;
+    if (!TH.reqAt) TH.reqAt = performance.now();
     // ждём задник темы и варианты предметов (V5: иначе первый кадр перехода строил все недостающие наборы разом —
     // рывок 150–600 мс) не дольше 3 с (по часам)
     if (!TEST && (!themeSourceReady(TH.target) || !themeItemsReady(TH.target)) && performance.now() - TH.reqAt < 3000) return;
@@ -6288,10 +6289,11 @@
       ctx.fillStyle = "#02101c"; ctx.fillRect(0, 0, canvas.width, canvas.height);
       return;
     }
+    const first = !revealed;                         // первый кадр (холст ещё прозрачен): все готовые виды рыб — сразу в тему
     reveal();
     if (COUNTING) profT = performance.now();
     themeCaches(false);                              // ступени перекраски кэшей темы (обычно — ничего)
-    fishTintStep(TEST ? 99 : 1);                     // V5: ночной свет на рыбах (по виду за кадр)
+    fishTintStep(TEST || first ? 99 : 1);            // V5: ночной свет на рыбах (по виду за кадр; первый кадр — все)
     updateLight(t);
     SCN.frame++;
     if (SCN.built) themePrebuild();                  // V4b: варианты предметов под тему — по одному набору на кадр
