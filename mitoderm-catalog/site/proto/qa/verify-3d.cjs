@@ -94,7 +94,7 @@ async function sections(browser, vw, vh, tag) {
       const rects = window.__objRects ? window.__objRects() : [];
       const vis = el => { const s = getComputedStyle(el); return s.display !== 'none' && s.visibility !== 'hidden' && +s.opacity > 0.05; };
       const sec = document.getElementById(id);
-      const copy = [...sec.querySelectorAll('h1, h2, p, .kicker, .chip, .btn, .mark, .fact, .step, .badges, .contacts a, .kitcard, .shot')].filter(el => vis(el) && !el.closest('[hidden]') && !el.classList.contains('dbl'))
+      const copy = [...sec.querySelectorAll('h1, h2, p, .kicker, .chip, .btn, .mark, .fact, .step, .badges, .contacts a, .kitcard, .shot')].filter(el => vis(el) && !el.closest('[hidden]') && !el.classList.contains('dbl') && !el.classList.contains('lyr'))   // .lyr: captions of the 3D layers (in the slot on a phone)
         .map(el => { const r = el.getBoundingClientRect(); return ['copy ' + el.tagName.toLowerCase() + '.' + (el.className || '').toString().split(' ')[0], r]; });
       const fixed = [['header logo', document.querySelector('.top .logo')], ['header button', document.querySelector('.top .btn')], ['dock', document.querySelector('.dock')], ['bar', document.querySelector('.bar')]]
         .filter(([n, el]) => el && vis(el)).map(([n, el]) => [n, el.getBoundingClientRect()]);
@@ -179,7 +179,7 @@ async function sections(browser, vw, vh, tag) {
         scrollTo(0, y); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
         const rects = window.__objRects();
         const copy = [...document.querySelectorAll('main h1, main h2, main p, main .chip, main .btn, main .fact, main .step, main .mark, main .kicker, main .badges, main .shot')]
-          .filter(el => el.offsetParent && !el.classList.contains('dbl')).map(el => el.getBoundingClientRect()).filter(r => r.bottom > 0 && r.top < innerHeight);
+          .filter(el => el.offsetParent && !el.classList.contains('dbl') && !el.classList.contains('lyr')).map(el => el.getBoundingClientRect()).filter(r => r.bottom > 0 && r.top < innerHeight);
         for (const o of rects) for (const r of copy) {
           const ix = Math.min(o[2], r.right) - Math.max(o[0], r.left), iy = Math.min(o[3], r.bottom) - Math.max(o[1], r.top);
           if (ix > 6 && iy > 6) { hits.push(y); break; }

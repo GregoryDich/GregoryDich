@@ -57,6 +57,8 @@ ul.plain, ol.plain { list-style: none; margin: 0; padding: 0; }
 .still-fallback img { position: absolute; left: 6%; top: 50%; transform: translateY(-50%); width: min(40vw, 520px); }
 .gl-on .still-fallback { opacity: 0; visibility: hidden; }
 .nogl #gl { display: none; }
+.ph-gl { position: absolute; left: -16px; top: -16px; z-index: 1; display: block; pointer-events: none; }   /* phone: the product inside its slot (sized by the script) */
+.ph-slot > .lyr { position: absolute; }
 main, .top, .foot, .dock, .bar { position: relative; z-index: 1; }
 
 /* header: logo and the price button; the section menu is the dock at the bottom, as on the reference */
@@ -716,7 +718,7 @@ let renderer;
 // alpha: the build renders stills on a transparent ground (the page itself clears to opaque black)
 try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' }); }
 catch (e) { root.classList.add('nogl'); throw e; }
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+let quality = 2;   // desktop pixel-ratio cap: 2, stepping down to 1.5 (the old cap) if frames run long; set in resize()
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
@@ -725,20 +727,22 @@ renderer.setClearColor(0x0a0a0b, 1);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 80);
 camera.position.set(0, 0, 7);
+camera.layers.enable(1);   // desktop: one pass draws the far layer (layer 1) and the product (layer 0)
 
 // environment for reflections: a small dark room with soft neutral white panels, baked once. The product is lit only by
 // neutral light, so it keeps the colours of its real print at every pose; the teal is only around it (smoke, specks,
 // drops, glow) — owner, 11/10
-{
-  const pm = new THREE.PMREMGenerator(renderer), room = new THREE.Scene();
+function makeEnv(r) {   // one per renderer: a PMREM texture belongs to its WebGL context
+  const pm = new THREE.PMREMGenerator(r), room = new THREE.Scene();
   room.add(new THREE.Mesh(new THREE.BoxGeometry(12, 8, 12), new THREE.MeshBasicMaterial({ color: 0x0b0d0e, side: THREE.BackSide })));
   const panel = (c, i, x, y, z, w, h, ry) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(i) })); m.position.set(x, y, z); m.rotation.y = ry; room.add(m); };
   panel(0xffffff, 3.2, 4.5, 2.4, 1, 3, 2.2, -Math.PI / 2);   // the room mirrored with the composition (objects on the left)
   panel(0xffffff, 1.8, -4.8, 0.5, -1, 3, 4, Math.PI / 2);
   panel(0xffffff, 1.2, 0, 3.8, -4, 6, 1, 0);
-  scene.environment = pm.fromScene(room, 0.04).texture;
-  pm.dispose();
+  const tex = pm.fromScene(room, 0.04).texture;
+  pm.dispose(); return tex;
 }
+const env1 = makeEnv(renderer); scene.environment = env1;
 scene.add(new THREE.HemisphereLight(0xffffff, 0x202022, 0.55));
 const key = new THREE.DirectionalLight(0xffffff, 1.25); key.position.set(3, 4, 5); scene.add(key);
 const rim = new THREE.PointLight(0xffffff, 10, 12); rim.position.set(-3.6, 1.2, 1.5); scene.add(rim);
@@ -769,7 +773,7 @@ const bgMat = new THREE.ShaderMaterial({
   depthWrite: false
 });
 const bg = new THREE.Mesh(new THREE.PlaneGeometry(48, 28), bgMat);
-bg.position.z = -14; scene.add(bg);
+bg.position.z = -14; bg.layers.set(1); scene.add(bg);
 
 const dust = (() => {
   const N = 420, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), c1 = new THREE.Color(0x9fd6d8), c2 = new THREE.Color(0xd8bd7e);
@@ -783,7 +787,7 @@ const dust = (() => {
   const x = dot.getContext('2d'), gr = x.createRadialGradient(16, 16, 0, 16, 16, 16);
   gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, 32, 32);
   const m = new THREE.PointsMaterial({ size: 0.06, map: new THREE.CanvasTexture(dot), vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending });
-  const p = new THREE.Points(g, m); scene.add(p); return p;
+  const p = new THREE.Points(g, m); p.layers.set(1); scene.add(p); return p;
 })();
 
 // ---- the product
@@ -962,10 +966,46 @@ const mats = (obj) => obj.userData.mats || (obj.userData.mats = (() => {
 // phone anchor: the slot on screen for stage s (blended between neighbours), px per composition unit, and its rect
 const SLOT = Array.from({ length: 9 }, (_, i) => document.querySelector(`[data-st="${i}"] .ph-slot`));
 const PH = { ax: 0, ay: 0, u: 60, r: [0, 0, 0, 0], fade: 1 };
+// phone (owner 19/10: the product swam against the copy and was soft): the product is drawn by its own renderer on a small
+// canvas inside the slot that holds it, so it scrolls with the copy natively (a fixed canvas lags the compositor's
+// scroll by a frame), at the phone's full pixel ratio. It renders that slot's part of the full-screen phone view
+// (setViewOffset), the slot placed at mid-height: the same poses, sizes and perspective, whatever the scroll. The fixed
+// canvas keeps only the far layer (smoke and specks, layer 1).
+const M = 16, pcv = document.createElement('canvas'); pcv.className = 'ph-gl'; pcv.setAttribute('aria-hidden', 'true');
+const bgCam = new THREE.PerspectiveCamera(48, 1, 0.1, 80); bgCam.layers.set(1);
+let pr2 = null, env2 = null, host = null, FW = 1, FH = 1, PHL = [0, 0, 0, 0], ML = M;   // PHL: the slot in the slot canvas (px)
+function phoneRenderer() {
+  if (!pr2) {
+    pr2 = new THREE.WebGLRenderer({ canvas: pcv, antialias: true, alpha: true, powerPreference: 'high-performance' });
+    pr2.outputColorSpace = renderer.outputColorSpace; pr2.toneMapping = renderer.toneMapping; pr2.toneMappingExposure = renderer.toneMappingExposure;
+    pr2.setClearColor(0x000000, 0); env2 = makeEnv(pr2);
+  }
+  return pr2;
+}
+function mountIn(el) {   // the slot canvas and the two layer captions move into the slot that holds the product
+  if (host === el) return;
+  host = el; el.appendChild(pcv); LYR.forEach(l => el.appendChild(l));
+}
+function unmount() {   // desktop: back to one full-screen canvas; the captions back before <main>
+  if (!host) return;
+  host = null; pcv.remove(); document.querySelector('main').before(...LYR); camera.clearViewOffset();
+}
+function slotView(r) {   // r: the slot's rect on screen → the slot canvas's size, its view offset; returns the slot's top in the view
+  const ml = Math.max(0, Math.min(M, Math.floor(r[0]))), mr = Math.max(0, Math.min(M, Math.floor(FW - r[2])));   // never past the screen's sides
+  const w = r[2] - r[0], h = r[3] - r[1], cw = Math.round(w + ml + mr), ch = Math.round(h + 2 * M), top = Math.round(FH / 2 - h / 2);
+  const R2 = phoneRenderer(), pr = Math.min(window.devicePixelRatio || 1, 3);
+  if (W !== cw || Hh !== ch || ML !== ml || R2.getPixelRatio() !== pr) {
+    R2.setPixelRatio(pr); R2.setSize(cw, ch, false); W = cw; Hh = ch; ML = ml;
+    pcv.style.left = -ml + 'px'; pcv.style.width = cw + 'px'; pcv.style.height = ch + 'px';
+  }
+  camera.setViewOffset(FW, FH, Math.round(r[0]) - ml, top - M, cw, ch);
+  PHL = [ml, M, ml + w, M + h];
+  return top;
+}
 function slotAt(i) {
   const el = SLOT[i]; if (!el) return null;
   const r = el.getBoundingClientRect(); if (!r.height) return null;
-  return { ax: r.left + r.width / 2, ay: r.top + r.height / 2, u: Math.min(r.height / PFIT[i], r.width / PFITW[i]), r: [r.left, r.top, r.right, r.bottom] };
+  return { el, ax: r.left + r.width / 2, ay: r.top + r.height / 2, u: Math.min(r.height / PFIT[i], r.width / PFITW[i]), r: [r.left, r.top, r.right, r.bottom] };
 }
 function phoneAnchor(s) {
   const i = Math.max(0, Math.min(8, Math.floor(s))), j = Math.min(8, i + 1), t = ease(Math.max(0, Math.min(1, s - i)));
@@ -973,13 +1013,14 @@ function phoneAnchor(s) {
   if (!a && !b) return;  // between blocks without a slot the objects are faded out: keep the last anchor
   a = a || b; b = b || a;
   const f = Math.max(0, Math.min(1, s - i)), two = a !== b, use = two && f >= 0.5 ? b : a;
-  PH.ax = use.ax; PH.ay = use.ay; PH.u = use.u; PH.r = use.r;
+  mountIn(use.el); const top = slotView(use.r), h = use.r[3] - use.r[1];   // the slot at mid-height of the full view
+  PH.ax = use.ax; PH.ay = top + h / 2; PH.u = use.u; PH.r = [use.r[0], top, use.r[2], top + h];
   PH.fade = two ? ease(Math.min(1, Math.abs(1 - 2 * f) * 2.2)) : 1;
 }
 function toPhone(cx, cy, z) {  // a point of the slot composition → world at depth z; k = world units per composition unit
   const hh = (camera.position.z - z) * Math.tan(camera.fov * Math.PI / 360);
   const sx = PH.ax + cx * PH.u, sy = PH.ay - cy * PH.u;
-  return { x: camera.position.x + (sx / W * 2 - 1) * hh * camera.aspect, y: camera.position.y + (1 - sy / Hh * 2) * hh, k: PH.u * 2 * hh / Hh };
+  return { x: camera.position.x + (sx / FW * 2 - 1) * hh * camera.aspect, y: camera.position.y + (1 - sy / FH * 2) * hh, k: PH.u * 2 * hh / FH };   // the full view
 }
 // owner 17/10: the copy on the right, the objects on the left (as V-TECH). The poses are authored for the right; the
 // composition is mirrored here (x, and the turns about y and z) while the objects themselves are not: the print reads
@@ -1121,7 +1162,9 @@ function findSpot(p, copyTop, keepLast) {
   return best;
 }
 // test hook: screen rectangles of the visible near objects (the verification checks them against copy, header, dock)
-window.__objRects = () => [box, ...sachets, mask, mask2].filter(o => mats(o).some(m => m.visible && m.opacity > 0.05)).map(rectOf);
+const onScreen = r => { if (!host) return r; const c = pcv.getBoundingClientRect(); return [r[0] + c.left, r[1] + c.top, r[2] + c.left, r[3] + c.top]; };   // phone: slot canvas → screen
+const productRenderer = () => (phone && pr2 ? pr2 : renderer);
+window.__objRects = () => [box, ...sachets, mask, mask2].filter(o => mats(o).some(m => m.visible && m.opacity > 0.05)).map(o => onScreen(rectOf(o)));
 // test hooks: the rendered colour of the carton's plain front (the print must keep its colour at every pose), and per
 // visible sachet its screen rect, the band of its EXOCELL wordmark, depth and angle to the camera (the print must read)
 const bbox = pts => [Math.min(...pts.map(p => p[0])), Math.min(...pts.map(p => p[1])), Math.max(...pts.map(p => p[0])), Math.max(...pts.map(p => p[1]))];
@@ -1130,7 +1173,7 @@ const proj = (o, pts, z) => pts.map(([a, b]) => { cv.set(a, b, z).applyMatrix4(o
 // ('kit': carton + 5 sachets) and the no-WebGL still ('still': the kit with the white and the blue mask). Returns a PNG URL.
 window.__renderStill = (what, w, h) => {
   const keep = { phone, pr: renderer.getPixelRatio(), cam: camera.position.clone(), fov: camera.fov, aspect: camera.aspect };
-  phone = false; poseScene(4, 0);
+  phone = false; unmount(); scene.environment = env1; poseScene(4, 0);
   bg.visible = dust.visible = drops.visible = false;
   if (what === 'kit') { mask.visible = mask2.visible = false; }
   renderer.setPixelRatio(1); renderer.setSize(w, h, false); renderer.setClearColor(0x000000, 0);
@@ -1144,16 +1187,16 @@ window.__renderStill = (what, w, h) => {
 };
 window.__maskState = () => [mask, mask2].map(m => ({ o: m.material.opacity, transparent: m.material.transparent, visible: m.material.visible && m.visible }));
 window.__maskPixel = (i) => {  // rendered colour of a mask's forehead (no openings there)
-  const m = i ? mask2 : mask; renderer.render(scene, camera); m.updateWorldMatrix(true, false);
-  const [[x, y]] = proj(m, [[0, 0.62]], 0.0), dpr = renderer.getPixelRatio(), g = renderer.getContext(), px = new Uint8Array(100);
+  const m = i ? mask2 : mask, R0 = productRenderer(); R0.render(scene, camera); m.updateWorldMatrix(true, false);
+  const [[x, y]] = proj(m, [[0, 0.62]], 0.0), dpr = R0.getPixelRatio(), g = R0.getContext(), px = new Uint8Array(100);
   g.readPixels(Math.round(x * dpr) - 2, Math.round((Hh - y) * dpr) - 2, 5, 5, g.RGBA, g.UNSIGNED_BYTE, px);
   const med = k => { const v = []; for (let j = 0; j < 25; j++) v.push(px[j * 4 + k]); v.sort((p, q) => p - q); return v[12]; };
   return { x, y, rgb: [med(0), med(1), med(2)] };
 };
 window.__frontPixel = () => {
-  renderer.render(scene, camera);
+  const R0 = productRenderer(); R0.render(scene, camera);
   box.updateWorldMatrix(true, false);
-  const [[x, y]] = proj(box, [[0, -0.14]], 0.137), dpr = renderer.getPixelRatio(), g = renderer.getContext(), px = new Uint8Array(100);
+  const [[x, y]] = proj(box, [[0, -0.14]], 0.137), dpr = R0.getPixelRatio(), g = R0.getContext(), px = new Uint8Array(100);
   g.readPixels(Math.round(x * dpr) - 2, Math.round((Hh - y) * dpr) - 2, 5, 5, g.RGBA, g.UNSIGNED_BYTE, px);
   const med = k => { const v = []; for (let i = 0; i < 25; i++) v.push(px[i * 4 + k]); v.sort((m, n) => m - n); return v[12]; };
   return { x, y, rgb: [med(0), med(1), med(2)] };
@@ -1161,8 +1204,8 @@ window.__frontPixel = () => {
 window.__sachetInfo = () => [...sachets, mask, mask2].filter(o => mats(o).some(m => m.visible && m.opacity > 0.5)).map(o => {
   o.updateWorldMatrix(true, false);
   const n = new THREE.Vector3(0, 0, 1).transformDirection(o.matrixWorld), c = o.getWorldPosition(new THREE.Vector3());
-  const rect = o.isMesh && o.geometry === sachetGeo ? bbox(proj(o, [[-0.5, -0.585], [0.5, -0.585], [-0.5, 0.585], [0.5, 0.585]], 0.02)) : rectOf(o);
-  return { sachet: o.geometry === sachetGeo, rect, band: o.geometry === sachetGeo ? bbox(proj(o, [[-0.34, -0.08], [0.34, -0.08], [-0.34, 0.07], [0.34, 0.07]], 0.02)) : null,
+  const rect = onScreen(o.isMesh && o.geometry === sachetGeo ? bbox(proj(o, [[-0.5, -0.585], [0.5, -0.585], [-0.5, 0.585], [0.5, 0.585]], 0.02)) : rectOf(o));
+  return { sachet: o.geometry === sachetGeo, rect, band: o.geometry === sachetGeo ? onScreen(bbox(proj(o, [[-0.34, -0.08], [0.34, -0.08], [-0.34, 0.07], [0.34, 0.07]], 0.02))) : null,
     z: c.z, angle: Math.acos(Math.min(1, n.dot(camera.position.clone().sub(c).normalize()))) };
 });
 function checkFit() {  // at this screen size, is there a free spot at the kit pose (no sway, no bob)?
@@ -1179,14 +1222,18 @@ function checkFit() {  // at this screen size, is there a free spot at the kit p
 }
 
 function resize() {
-  W = window.innerWidth; Hh = window.innerHeight;
+  FW = W = window.innerWidth; FH = Hh = window.innerHeight;
   phone = phoneQ.matches;
+  // phone: the fixed canvas draws only the far layer, at 1 px per CSS px (soft smoke); desktop: everything, up to 2
+  renderer.setPixelRatio(phone ? 1 : Math.min(window.devicePixelRatio || 1, quality));
+  if (phone) { camera.layers.set(0); phoneRenderer(); scene.environment = env2; if (host) W = Hh = 0; }   // the slot view is sized in the next frame
+  else { camera.layers.set(0); camera.layers.enable(1); unmount(); scene.environment = env1; }
   const fm = phone ? frontSm : front;  // phone: the print pre-scaled to its size on screen, so thin letters stay readable
   if (frontMat.map !== fm) { frontMat.map = fm; frontMat.emissiveMap = fm; frontMat.needsUpdate = true; }
-  renderer.setSize(W, Hh, false);
+  renderer.setSize(FW, FH, false);
   // narrower than 16:10 (tablets, small windows): widen the vertical view so the scene keeps its 16:10 framing and the
   // objects stay in the right half, clear of the copy
-  camera.aspect = W / Hh;
+  camera.aspect = FW / FH;
   camera.fov = phone ? 48 : Math.max(35, 2 * Math.atan(Math.tan(17.5 * Math.PI / 180) * 1.6 / camera.aspect) * 180 / Math.PI);
   camera.updateProjectionMatrix();
   measure(); checkFit();
@@ -1198,7 +1245,7 @@ window.addEventListener('load', relayout);
 if ('ResizeObserver' in window) new ResizeObserver(relayout).observe(document.body);
 if (document.fonts) document.fonts.ready.then(relayout);
 
-let s = 0, last = performance.now(), visible = true;
+let s = 0, last = performance.now(), visible = true, slow = 0;
 document.addEventListener('visibilitychange', () => { visible = !document.hidden; if (visible) { last = performance.now(); requestAnimationFrame(frame); } });
 function frame(now) {
   now = now || performance.now();
@@ -1209,7 +1256,8 @@ function frame(now) {
   const t = reduce ? 0 : now / 1000;
   const target = stage();
   if (reduce) s = Math.round(target);  // reduced motion: whole stages, no in-between poses
-  else s += (target - s) * (window.__snap ? 1 : Math.min(1, dt * 6));  // __snap: test hook, no easing
+  else if (phone || window.__snap) s = target;   // phone: the pose follows the scroll exactly (__snap: test hook)
+  else s += (target - s) * Math.min(1, dt * 6);
   // the far layer turns with the pointer (camera sways around the product), the near objects keep their place
   if (!reduce) { sway.x += (pointer.x - sway.x) * 0.05; sway.y += (pointer.y - sway.y) * 0.05; }
   bg.rotation.set(sway.y * 0.05, sway.x * 0.08, 0);  // the far layer turns a little more than the scene
@@ -1223,8 +1271,9 @@ function frame(now) {
     if (!el) return;
     const on = p.w4 * (p.mp.o > 0.05 ? 1 : 0) * (phone ? PH.fade : 1);
     if (on > 0.02) {
-      const r = rectOf(obj), x = (r[0] + r[2]) / 2, y = Math.max(phone ? (PH.r[1] + el.offsetHeight + 4) : 96 + el.offsetHeight, r[1] - 8);
-      el.style.transform = `translate(${(x - el.offsetWidth / 2).toFixed(1)}px, ${(y - el.offsetHeight).toFixed(1)}px)`;
+      const r = rectOf(obj), x = (r[0] + r[2]) / 2, y = Math.max(phone ? (PHL[1] + el.offsetHeight + 4) : 96 + el.offsetHeight, r[1] - 8);
+      const ox = phone ? ML : 0, oy = phone ? M : 0;   // phone: slot-canvas → slot coordinates
+      el.style.transform = `translate(${(x - ox - el.offsetWidth / 2).toFixed(1)}px, ${(y - oy - el.offsetHeight).toFixed(1)}px)`;
       el.style.setProperty('--lo', on.toFixed(3));
     }
     el.classList.toggle('on', on > 0.02);
@@ -1259,7 +1308,7 @@ function frame(now) {
     vA.copy(v3).project(camera);
     let edge;
     if (phone) {
-      const px = (vA.x + 1) / 2 * W, py = (1 - vA.y) / 2 * Hh, r = PH.r;
+      const px = (vA.x + 1) / 2 * W, py = (1 - vA.y) / 2 * Hh, r = PHL;
       edge = ease(Math.max(0, Math.min(1, 1 - Math.hypot(Math.max(r[0] - px, 0, px - r[2]), Math.max(r[1] - py, 0, py - r[3])) / 18)));
     } else edge = ease(Math.max(0, Math.min(1, (0.06 - vA.x) / 0.16)));   // the left half only
     for (const r of br ? [br, ...mr] : mr) {
@@ -1277,7 +1326,16 @@ function frame(now) {
   drops.instanceMatrix.needsUpdate = true;
   drops.visible = c.o > 0.01;
 
-  renderer.render(scene, camera);
+  if (phone) {   // the far layer full screen, the product in its slot
+    bgCam.position.copy(camera.position); bgCam.quaternion.copy(camera.quaternion);
+    bgCam.fov = camera.fov; bgCam.aspect = FW / FH; bgCam.updateProjectionMatrix();
+    renderer.render(scene, bgCam);
+    if (host) pr2.render(scene, camera);
+  } else {
+    renderer.render(scene, camera);
+    slow = dt > 0.022 ? slow + 1 : 0;   // ~1.5 s of frames over 22 ms: draw at the old cap (1.5) instead of 2
+    if (slow > 90 && quality > 1.5) { quality = 1.5; slow = 0; renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality)); renderer.setSize(FW, FH, false); }
+  }
   if (!window.__glReady) { window.__glReady = true; root.classList.add('gl-on'); checkFit(); }
   if (visible && !reduce) requestAnimationFrame(frame);
 }
