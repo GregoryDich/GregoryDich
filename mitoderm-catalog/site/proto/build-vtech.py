@@ -15,6 +15,7 @@
 # Exosome cells: site/design/vtech-3d/cells/cNN-{0,1,2}.webp (sharp, soft, bokeh) and plate.webp are copied into
 # <dir>/img/cells/ and <dir>/img/plate.webp when they exist; otherwise whatever <dir>/img/cells/ holds is used.
 # PDRN molecules mNN-{0,1,2}.webp join the same field; helix.webp (the DNA loop) goes to <dir>/img/ for S3.
+# The frame engine is engine/story.js (an ES module, also what a React app mounts); the build inlines it into the page.
 import glob, html, json, os, re, shutil, sys, urllib.parse
 from PIL import Image
 
@@ -216,6 +217,10 @@ ASSETS = {'__WA_PRICE__': esc(WA_MAIN), '__STILL__': STILL,
 for k, val in ASSETS.items(): page = page.replace(k, val)
 left = re.findall(r'__[A-Z0-9_]+__|\{\{', page)
 assert not left, f'unfilled placeholders: {sorted(set(left))}'
+# the frame engine (engine/story.js, the module a React app imports) goes into the page: one file to publish or open
+ENGINE, IMPORT = open(os.path.join(H, 'engine', 'story.js'), encoding='utf-8').read(), "import { createFrameStory } from './engine/story.js';"
+assert page.count(IMPORT) == 1 and ENGINE.count('export function createFrameStory(') == 1 and '</script' not in ENGINE
+page = page.replace(IMPORT, '// engine/story.js, inlined by build-vtech.py\n' + ENGINE.replace('export function createFrameStory(', 'function createFrameStory(', 1))
 out = os.path.join(H, 'vtech-live.html') if PRODUCT == 'v-tech-system' else os.path.join(FILES, f'{PRODUCT}-live.html')
 open(out, 'w', encoding='utf-8').write(page)
 print(out, len(page), 'bytes;', len(T), 'texts,', len(RAW), 'blocks')

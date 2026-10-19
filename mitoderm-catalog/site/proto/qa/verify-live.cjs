@@ -56,6 +56,7 @@ async function open(browser, w, h, opts = {}) {
   return { ctx, p, errs, req };
 }
 const seq = p => p.evaluate(() => window.__seq());
+const frames = p => p.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
 const scrollTo = (p, y) => p.evaluate(v => scrollTo(0, v), y);
 const frame = s => s.run + s.want / (s.N - 1);                      // the wanted frame in run units (0 … R)
 const shownAt = s => s.shown ? s.shown[0] + s.shown[1] / (s.Ns[s.shown[0]] - 1) : -1;
@@ -161,7 +162,7 @@ async function synthRun(browser, tag, assert) {
     const end = await offerRead(p);
     const seen = []; let mono = true, prev = -1, maxDec = 0, maxBytes = 0, cellsSeen = { s2: 0, s3: 0, after: 0 }, cellBad = [];
     for (let y = 0; y <= end; y += 60) {
-      await scrollTo(p, y); await p.waitForTimeout(25);
+      await scrollTo(p, y); await frames(p);   // two frames: the engine has seen this scroll (a fixed wait loses that race under load)
       const s = await seq(p); const g = frame(s); seen.push(+g.toFixed(3));
       if (g < prev - 1e-9) mono = false; prev = g;
       maxDec = Math.max(maxDec, s.decoded); maxBytes = Math.max(maxBytes, s.decodedBytes);
