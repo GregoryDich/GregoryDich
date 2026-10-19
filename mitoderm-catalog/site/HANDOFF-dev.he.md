@@ -47,6 +47,8 @@
 | `proto/vtech-live.html`, `proto/img/`, `proto/seq/`, `proto/serve-local.py` | אב-טיפוס V-TECH ושרת מקומי. הפריימים ב-`seq/480` זמניים. |
 | `proto/exocell-mask-3d.html` | אב-טיפוס MASK. ‏three.js 0.160 נטען מ-jsDelivr. |
 | `proto/vtech-live-template.html`, `proto/build-vtech.py` | התבנית והבונה של V-TECH |
+| `proto/engine/story.js` | מנוע הפריימים: מודול ES אחד, `createFrameStory`. ‏`build-vtech.py` מכניס אותו לתוך העמוד, כך שאב-הטיפוס של V-TECH ועמוד EXOTECH GEL רצים עליו. |
+| `proto/react/useFrameStory.js`, `proto/react/StoryPage.jsx`, `proto/react/demo/` | אותו מנוע ב-React: hook, דוגמת עמוד ודמו שרץ (ראו «React» למטה) |
 | `proto/story_content.py` | הטקסטים של מוצר אחר על אותה תבנית, מתוך המקורות המאושרים: `build-vtech.py --product <slug> --files <dir>` |
 | `proto/exocell-3d-template.html`, `proto/build-exocell.py` | התבנית והבונה של MASK |
 | `proto/vtech-he-figma.json`, `proto/exocell-he-design.json`, `proto/exocell-he-ui.json` | הטקסטים המאושרים בעברית |
@@ -55,6 +57,19 @@
 | `design/handoff/` | צילומי האב-טיפוס ופריימי המפתח העדכניים |
 | `proto/qa/verify-live.cjs`, `proto/qa/verify-3d.cjs` | בדיקות קבלה ב-Playwright: ‏V-TECH — ‏55 בדיקות, MASK — ‏240 בדיקות |
 | `../design-rules.md` | כללי העיצוב המלאים |
+
+## React
+
+המתכנת בונה ב-React, ולכן מנוע הפריימים מוכן כמודול שאפשר להרכיב בכל עמוד React:
+
+- **המודול:** ‏`proto/engine/story.js`, הפונקציה `createFrameStory`. זה בדיוק הקוד שאב-הטיפוס של V-TECH רץ עליו: בדיקות ה-QA ‏(55/55) ובדיקת השוואה מול הגרסה הקודמת ‏(45 מיקומי גלילה × מחשב, טלפון והפחתת תנועה, בלי אף הבדל) בודקות אותו.
+- **ב-React:** ה-hook ‏`proto/react/useFrameStory.js` ודוגמת העמוד `proto/react/StoryPage.jsx`. בדוגמה יש אותם שמות מחלקות כמו באב-הטיפוס, כך שה-CSS שלו עובד בלי שינוי.
+- **מחזור חיים:** המנוע מתחיל ב-`useEffect`, וב-unmount משחרר הכול: המאזינים, ה-worker, הפריימים המפוענחים והתאים שהוסיף. זה עובד גם עם StrictMode (הרכבה, פירוק והרכבה מחדש) וגם במעבר בין עמודים.
+- **SSR:** הייבוא בטוח, כי שום דבר לא נוגע ב-`window` לפני ה-effect. ב-Next.js משתמשים בו בקומפוננטת לקוח (`'use client'`).
+- **נתונים:** ‏`config` הוא האובייקט ש-`build-vtech.py` כותב לעמוד ‏(runs, tiers, cells, mols, helix). ‏`base` היא התיקייה עם `seq/` ו-`img/`, ואפשר לתת נתיב יחסי כמו `'/v-tech/'`.
+- **מבנה:** מסכי הסיפור לפי הסדר, אחד יותר ממספר המעברים, כשהאחרון הוא ההצעה עם כרטיס הערכה. הטקסט של כל מסך נמצא בתוך `.wrap`. לקנבס, לשתי שכבות התאים ולתמונת הסליל אסור שיהיו ילדים של React, כי המנוע מוסיף ומעצב את התוכן שלהם.
+- **אחרי ההצעה** צריך לפחות מסך אחד של תוכן (מוצרים קשורים, תחתית), אחרת הערכה לא מספיקה לנחות בכרטיס.
+- **דמו:** בתיקייה `proto/react/demo` מריצים `npm install && npm run build`, אחר כך `python3 serve-local.py` בתיקייה `proto`, ופותחים http://localhost:8000/react/demo/dist/index.html. נבדק ב-Playwright, ‏11/11: הרכבה כפולה ב-StrictMode עם worker אחד, גלילה עד הסוף, נחיתת הערכה, פירוק בלי שאריות והרכבה מחדש, טלפון.
 
 ## מנוע הפריימים (V-TECH)
 
