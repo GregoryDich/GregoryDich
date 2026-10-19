@@ -42,7 +42,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round
 .plate { background: var(--bg) center / cover no-repeat; opacity: 0; }
 #seq, .still, .cells { position: fixed; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none; }
 #seq { inset: auto; left: 0; top: 0; transform-origin: 0 0; }   /* sized and placed by the engine: its run's box of the cover-fitted frame */
-.js .still { display: none; }
+.js:not(.no-gl) .still { display: none; }   /* no-gl: a live scene could not start (no WebGL) */
 .still { overflow: hidden; }
 .still-f { position: absolute; left: 50%; top: 50%; width: max(100vw, 160vh); height: max(62.5vw, 100vh); transform: translate(-50%, -50%); }   /* the 16:10 frame, cover-fitted */
 .still-f img { position: absolute; max-width: none; }
@@ -451,11 +451,12 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
 
 <script type="module">
 // The scroll story on pre-rendered frames: engine/story.js (build-vtech.py inlines it here), the same module a React
-// app mounts (react/useFrameStory.js).
+// app mounts (react/useFrameStory.js). A product with a live three.js scene (build-vtech.py --scene) draws it instead.
 import { createFrameStory } from './engine/story.js';
+__SCENE_JS__
 const $ = id => document.getElementById(id), q = s => document.querySelector(s);
 const story = createFrameStory({
-  config: __SEQ__, canvas: $('seq'), sections: ['meet', 'why', 'inside', 'feel', 'protocol', 'offer'].map($), header: q('.top'),
+  config: __SEQ__, scene: __SCENE__, canvas: $('seq'), sections: ['meet', 'why', 'inside', 'feel', 'protocol', 'offer'].map($), header: q('.top'),
   card: q('.kitcard'), bg: q('.bg'), plate: q('.plate'), helix: q('.helix'), cellLayers: [q('.cells.back'), q('.cells.front')],
   tier: window.__SEQ_TIER, noWorker: !!window.__SEQ_NO_WORKER });
 window.__seq = story.state;   // for the QA script

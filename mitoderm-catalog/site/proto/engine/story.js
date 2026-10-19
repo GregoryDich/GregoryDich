@@ -34,7 +34,10 @@ export function createFrameStory(o) {
   const LAND0 = 0.85, LAND1 = 0.25;   // the last run ends as the offer card's top reaches 85% of the screen; the kit lands by 25%
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
   const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
-  const canvas = o.canvas, ctx = canvas.getContext('2d');
+  // scene: a 3D scene drawn instead of frames, { draw(p, view), kit(view) → canvas, animated } (a three.js product page);
+  // the story geometry, the phone stage, the card, the cells and the helix stay the same
+  const SCENE = o.scene || null;
+  const canvas = o.canvas, ctx = SCENE ? null : canvas.getContext('2d');
   const bg = o.bg || null, plate = o.plate || null;
   const card = o.card || null, cardCv = o.cardCanvas || (card && card.querySelector('.kc-live')), cardCtx = cardCv && cardCv.getContext('2d');
   const secs = o.sections, header = o.header || null, root = o.root || document.documentElement;   // sections: the screens in story order, one more than the runs
@@ -105,7 +108,7 @@ onmessage = async e => {
 };`;
   let worker = null, reqId = 0, okOnce = false, workerUrl = '';
   try {
-    if (window.Worker && window.createImageBitmap && !o.noWorker) {
+    if (window.Worker && window.createImageBitmap && !o.noWorker && !SCENE) {
       workerUrl = URL.createObjectURL(new Blob([WORKER], { type: 'text/javascript' })); worker = new Worker(workerUrl);
       worker.onmessage = e => done(e.data); worker.onerror = () => fallback();
     }
@@ -174,7 +177,7 @@ onmessage = async e => {
   }
   function pump() {
     needPump = false;
-    if (mode === 'off' || document.hidden) return;
+    if (mode === 'off' || document.hidden || SCENE) return;
     const D = desired(), r = rOf(want), rank = new Map(D.map((k, i) => [k, i])), prio = []; keep = new Set(D);
     for (const [k, id] of flight) if (!keep.has(k)) { flight.delete(k); cancel(id); } else prio.push([id, rank.get(k)]);   // passed by: drop
     for (const [k, id] of warmFlight) if (Math.abs(rOf(k) - r) >= 2) { warmFlight.delete(k); cancel(id); }   // runs two or more away
@@ -209,6 +212,13 @@ onmessage = async e => {
   const boxRect = r => { const b = RUNS[r].box; return { x: cover.x + b[0] * cover.w, y: cover.y + b[1] * cover.h, w: (b[2] - b[0]) * cover.w, h: (b[3] - b[1]) * cover.h }; };
   function draw() {
     if (mode === 'off') return;
+    if (SCENE) {   // the pose for the story position, rendered into the run's box at the screen's pixel ratio (not while hidden)
+      if (lastOp === 0 && shown >= 0) return;
+      const p = mode === 'keys' ? Math.round(pos) : pos, B = boxRect(Math.min(R - 1, Math.floor(p))), id = B.w.toFixed(2) + 'x' + B.h.toFixed(2);
+      SCENE.draw(p, { cover, box: B, dpr, t: performance.now() / 1000, still: mode !== 'full' });
+      if (id !== placed) { canvas.style.width = B.w + 'px'; canvas.style.height = B.h + 'px'; placed = id; }
+      shownBox = B; shown = want; dirty = false; return;
+    }
     const k = pick();
     if (k !== want && want !== missAt) { misses++; missAt = want; }
     if (k < 0 || (k === shown && !dirty)) return;
@@ -224,9 +234,13 @@ onmessage = async e => {
   }
 
   // the offer card: the last frame of the kit run, cropped to what it shows
-  let kitCrop = null;
+  let kitCrop = null, sk = null;
+  function sceneKit() {   // a scene: its kit pose, rendered once at the last run's box, for the card and the flight into it
+    if (!sk && cover.w) { const im = SCENE.kit({ cover, box: boxRect(R - 1), dpr }); sk = { im, w: im.width, h: im.height, bytes: 0 }; }
+    return sk;
+  }
   function drawCard() {
-    const e = bm.get(KIT); if (!cardCtx || !e || !cardCv.width) return;
+    const e = SCENE ? sceneKit() : bm.get(KIT); if (!cardCtx || !e || !cardCv.width) return;
     if (!kitCrop || kitCrop.im !== e.im) kitCrop = { im: e.im, r: alphaBox(e), w: e.w, h: e.h };
     const [sx, sy, sw, sh] = kitCrop.r, cw = cardCv.width, ch = cardCv.height, s = Math.min(cw / sw, ch / sh), w = sw * s, h = sh * s;
     cardCtx.clearRect(0, 0, cw, ch); cardCtx.imageSmoothingQuality = 'high';
@@ -260,7 +274,7 @@ onmessage = async e => {
     warmed.clear(); missing.clear(); fails.clear(); planFor = ''; shown = -1; kitCrop = null; mode = m; tier = t;
     root.classList.toggle('story', m !== 'off');
     if (card) { card.classList.toggle('live', m !== 'off' && !stage); if (m !== 'off' && !stage) card.classList.remove('rv'); }   // no reveal shift: the kit lands on it; phone: the card keeps its HD picture
-    ctx.clearRect(0, 0, canvas.width, canvas.height); needPump = true;
+    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); needPump = true;
   }
   function measure() {
     dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight;
@@ -272,7 +286,7 @@ onmessage = async e => {
       cover = { w: 16 * k, h: 10 * k }; cover.x = (W - uw * cover.w) / 2 - U[0] * cover.w; cover.y = top + (sh - uh * cover.h) / 2 - U[1] * cover.h;
       stage = { top, h: sh }; root.style.setProperty('--stage-top', top + 'px'); root.style.setProperty('--stage-h', sh + 'px');
     }
-    const m = !TIERS.length ? 'off' : calm.matches || saveData ? 'keys' : 'full', t = m === 'off' ? 0 : pickTier();
+    const m = !TIERS.length && !SCENE ? 'off' : calm.matches || saveData ? 'keys' : 'full', t = m === 'off' ? 0 : SCENE ? 1 : pickTier();
     if (m !== mode || t !== tier) reset(m, t);
     placed = '';
     geo = secs.map(s => ({ top: s.offsetTop, h: s.offsetHeight, cont: (s.querySelector('.wrap') || s).getBoundingClientRect().bottom + scrollY - s.offsetTop }));
@@ -280,6 +294,7 @@ onmessage = async e => {
     if (cardCv && m !== 'off') {
       const r = cardCv.getBoundingClientRect(), w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
       if (w && (cardCv.width !== w || cardCv.height !== h)) { cardCv.width = w; cardCv.height = h; drawCard(); }
+      if (SCENE) { sk = null; kitCrop = null; drawCard(); }
     }
     if (cellEls) layoutCells();
     dirty = true; needPump = true; kick();
@@ -385,6 +400,7 @@ onmessage = async e => {
     if (!cellEls && mode !== 'off' && (pos > 0.01 || shown >= 0)) buildCells();
     if (cells(t, y) && !document.hidden) kick();
     helix();
+    if (SCENE && SCENE.animated && mode === 'full' && !document.hidden && lastOp !== 0) { dirty = true; kick(); }   // a living scene: every frame it shows
   }
   // ---- the DNA helix behind S3: fetched only when the story nears S3 on a desktop, eased in and out around it
   const hx = o.helix || null;
@@ -461,7 +477,7 @@ onmessage = async e => {
       peak: Object.assign({}, peak), warmed: warmed.size, fetchMs: stats.n ? +(stats.fetch / stats.n).toFixed(1) : 0,
       decodeMs: stats.n ? +(stats.decode / stats.n).toFixed(1) : 0, maxDecodeMs: +stats.maxDecode.toFixed(1), missing: missing.size, pos,
       cells: cellEls ? cellEls.length : 0, cellsVisible: cellEls ? cellEls.filter(c => c.imgs.some(im => im.style.visibility === 'visible')).length : 0,
-      card: card ? card.className : '', destroyed };
+      card: card ? card.className : '', destroyed, scene: !!SCENE, sceneState: SCENE && SCENE.state ? SCENE.state() : null };
   }
   return { measure, destroy, state };
 }

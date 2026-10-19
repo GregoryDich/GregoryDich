@@ -12,7 +12,10 @@
 // Screenshots per screen, mid-run, during the landing. Any product page built by build-vtech.py: the kit callouts are
 // expected when the card lists two kinds (V-TECH), and a home-care page («טיפוח ביתי», no .badge.pro on S1) must send
 // every «איפה לקנות» to WhatsApp, not to the price form, with the offer's second button going to the specialists.
+// A page with a live three.js scene (build-vtech.py --scene): no frames are fetched or decoded; the canvas is checked
+// for drawing at the screen's pixel density instead.
 // usage: [SYNTH=<webp>] FONTDIR=<dir with Rubik[wght].ttf> NODE_PATH=$(npm root -g) node verify-live.cjs <page.html> <files dir> <out dir>
+// A scene page: THREE=<three.module.min.js of three@0.160.0> serves the CDN file locally and turns on software WebGL.
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 const [pagePath, filesDir, out] = process.argv.slice(2);
@@ -40,6 +43,7 @@ async function open(browser, w, h, opts = {}) {
     window.__lt = []; try { new PerformanceObserver(l => { for (const e of l.getEntries()) window.__lt.push([e.startTime, e.duration]); }).observe({ type: 'longtask', buffered: true }); } catch (e) {}
   });
   await ctx.route('https://fonts.googleapis.com/**', r => r.fulfill({ status: 200, contentType: 'text/css', body: FONT_CSS }));
+  if (process.env.THREE) await ctx.route('https://cdn.jsdelivr.net/npm/three@0.160.0/**', r => r.fulfill({ path: process.env.THREE, contentType: 'application/javascript' }));
   await ctx.route('https://fonts.gstatic.com/local/**', r => r.fulfill({ path: path.join(FONTDIR, FONTS[+r.request().url().match(/(\d+)\.ttf$/)[1]][1]), contentType: 'font/ttf' }));
   await ctx.route(ORIGIN + '**', r => {   // context-wide, so the frame worker's fetches are served (and counted) too
     const rel = decodeURIComponent(new URL(r.request().url()).pathname.slice(1));
@@ -152,13 +156,17 @@ async function synthRun(browser, tag, assert) {
 }
 
 (async () => {
-  const browser = await chromium.launch();
+  const browser = await chromium.launch(process.env.THREE ? { args: ['--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] } : {});
   if (process.env.ONLY !== 'synth') {   // ONLY=synth: the synthetic run alone
   { // desktop: the story
     const { ctx, p, errs, req } = await open(browser, 1440, 900, { dpr: 2 });
     await layout(p, 'desktop 1440');
     const st0 = await seq(p); const R = st0.R;
-    ok('desktop: worker decoding, tier picked', st0.worker && st0.tier > 0, `worker ${st0.worker}, tier ${st0.tier}, mode ${st0.mode}`);
+    if (st0.scene) {
+      const d = await p.evaluate(() => { const c = document.getElementById('seq'), q = window.__seq().sceneState; return { w: c.width, css: parseFloat(c.style.width), q: q.quality }; });
+      ok('desktop: the live 3D scene draws at the screen\'s pixel density (2; a slow GPU steps it down)', st0.mode === 'full' && Math.abs(d.w / d.css - Math.min(2, d.q)) < 0.02,
+        `mode ${st0.mode}, canvas ${d.w} px for ${d.css.toFixed(0)} css px = ${(d.w / d.css).toFixed(2)}, step ${d.q}`);
+    } else ok('desktop: worker decoding, tier picked', st0.worker && st0.tier > 0, `worker ${st0.worker}, tier ${st0.tier}, mode ${st0.mode}`);
     const end = await offerRead(p);
     const seen = []; let mono = true, prev = -1, maxDec = 0, maxBytes = 0, cellsSeen = { s2: 0, s3: 0, after: 0 }, cellBad = [];
     for (let y = 0; y <= end; y += 60) {
@@ -171,11 +179,14 @@ async function synthRun(browser, tag, assert) {
     }
     ok('desktop: story position follows the scroll monotonically', mono, seen.filter((g, i) => i % 6 === 0).map(g => g.toFixed(2)).join(','));
     ok('desktop: the story runs from S1 to the offer', seen[0] === 0 && Math.abs(seen[seen.length - 1] - R) < 1e-6, `${seen[0]}..${seen[seen.length - 1]} of ${R}`);
-    await p.waitForFunction(() => window.__seq().warmed >= window.__seq().Ns.reduce((a, b) => a + b, 0), null, { timeout: 60000 }).catch(() => {});
-    const total = st0.Ns.reduce((a, b) => a + b, 0), fetched = [...req.seq.keys()].length, dup = [...req.seq.values()].reduce((a, b) => a + b, 0) - fetched;
-    ok('desktop: every frame of every run is fetched', fetched === total, `${fetched}/${total} files, ${dup} fetched twice`);
-    const keysN = (await seq(p)).keys, cap = st0.win + keysN + 1;
-    ok('desktop: only the window and the end frames stay decoded', maxDec <= cap, `max ${maxDec} decoded (window ${st0.win} + ${keysN} end frames + the one on screen = ${cap}), max ${MB(maxBytes)}`);
+    if (st0.scene) ok('desktop: a live scene fetches and decodes no frames', !req.seq.size && !maxDec, `${req.seq.size} frame files, ${maxDec} decoded`);
+    else {
+      await p.waitForFunction(() => window.__seq().warmed >= window.__seq().Ns.reduce((a, b) => a + b, 0), null, { timeout: 60000 }).catch(() => {});
+      const total = st0.Ns.reduce((a, b) => a + b, 0), fetched = [...req.seq.keys()].length, dup = [...req.seq.values()].reduce((a, b) => a + b, 0) - fetched;
+      ok('desktop: every frame of every run is fetched', fetched === total, `${fetched}/${total} files, ${dup} fetched twice`);
+      const keysN = (await seq(p)).keys, cap = st0.win + keysN + 1;
+      ok('desktop: only the window and the end frames stay decoded', maxDec <= cap, `max ${maxDec} decoded (window ${st0.win} + ${keysN} end frames + the one on screen = ${cap}), max ${MB(maxBytes)}`);
+    }
     // each screen at its reading position (section top at the top of the screen): its key frame, shown
     const holds = [], cellsAt = {}, plateAt = {}, hxAt = {}, molsAt = {};
     for (let k = 0; k < STORY.length - 1; k++) {
@@ -272,7 +283,11 @@ async function synthRun(browser, tag, assert) {
     ok(`phone ${w}: each screen shows its own run`, held.every((v, i) => +v.split(':')[1].split('.')[0] === Math.min(i, q.R - 1) || +v.split(':')[1].split('.')[0] === i - 1), held.join(' '));
     await p.evaluate(() => document.querySelector('.related').scrollIntoView()); await p.waitForTimeout(300);
     const seqReq = [...req.seq.values()].reduce((a, b) => a + b, 0), gone = await p.evaluate(() => ({ o: +document.getElementById('seq').style.opacity, push: +getComputedStyle(document.documentElement).getPropertyValue('--push') }));
-    ok(`phone ${w}: frames fetched, not the whole story at once`, seqReq > 0, `${seqReq} requests`);
+    if (q.scene) {
+      const d = await p.evaluate(() => { const c = document.getElementById('seq'); return { r: c.width / parseFloat(c.style.width), q: window.__seq().sceneState.quality }; });
+      ok(`phone ${w}: the live scene draws at the screen's density (2; a slow GPU steps it down), no frames fetched`, Math.abs(d.r - Math.min(2, d.q)) < 0.02 && !seqReq,
+        `density ${d.r.toFixed(2)}, step ${d.q}, ${seqReq} frame requests`);
+    } else ok(`phone ${w}: frames fetched, not the whole story at once`, seqReq > 0, `${seqReq} requests`);
     ok(`phone ${w}: the DNA helix is never fetched`, !req.helix, `${req.helix} requests`);
     ok(`phone ${w}: the offer pushes the stage away`, gone.o === 0 && gone.push > 0, `canvas opacity ${gone.o}, push ${gone.push}px`);
     const order = await p.evaluate(() => ['#offer h2', '#offer .kitcard', '#offer .lead', '#offer .cta', '#offer .contacts'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top + scrollY)));

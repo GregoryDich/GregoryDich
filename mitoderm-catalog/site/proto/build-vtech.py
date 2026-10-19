@@ -16,12 +16,15 @@
 # <dir>/img/cells/ and <dir>/img/plate.webp when they exist; otherwise whatever <dir>/img/cells/ holds is used.
 # PDRN molecules mNN-{0,1,2}.webp join the same field; helix.webp (the DNA loop) goes to <dir>/img/ for S3.
 # The frame engine is engine/story.js (an ES module, also what a React app mounts); the build inlines it into the page.
+# `--scene` (another product): no frames; the page draws scenes/<slug>.js live with three.js (the engine's `scene`),
+# every run in the same box SCENE_BOX, its textures from img/<slug>-3d/; without WebGL the first key frame stands still.
 import glob, html, json, os, re, shutil, sys, urllib.parse
 from PIL import Image
 
 ARGS = sys.argv[1:]
 opt = lambda name: ARGS[ARGS.index(name) + 1] if name in ARGS else None
 FILES, KEYS, PRODUCT = opt('--files'), opt('--keys'), opt('--product') or 'v-tech-system'
+SCENE = '--scene' in ARGS
 H = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.normpath(os.path.join(H, '..'))
 REPO = os.path.normpath(os.path.join(SITE, '..'))
@@ -134,19 +137,24 @@ RAW = {
 }
 PAIRS = [('v1-meet', 'v2-why'), ('v2-why', 'v3-inside'), ('v3-inside', 'v4-feel'), ('v4-feel', 'v5-protocol'), ('v5-protocol', 'v6-kit')]
 RUNS = [{'a': a, 'b': b, 'n': 40, 'box': [0, 0, 1, 1]} for a, b in PAIRS]
-if FILES and os.path.exists(f'{FILES}/seq/runs.json'):   # crop boxes and frame counts from the render
+SCENE_BOX = [0.07, 0.19, 0.52, 0.81]   # a live scene: the left of the 16:10 frame that the objects move in (all screens)
+SCENE_JS = os.path.join(H, 'scenes', f'{PRODUCT}.js')
+if SCENE:
+    assert PRODUCT != 'v-tech-system' and os.path.exists(SCENE_JS) and FILES and KEYS, '--scene needs --product with scenes/<slug>.js, --files, --keys'
+    RUNS = [{'a': a, 'b': b, 'n': 60, 'box': SCENE_BOX} for a, b in PAIRS]
+elif FILES and os.path.exists(f'{FILES}/seq/runs.json'):   # crop boxes and frame counts from the render
     RUNS = json.load(open(f'{FILES}/seq/runs.json'))['runs']
     assert [(r['a'], r['b']) for r in RUNS] == PAIRS, 'runs.json must list the five runs in story order'
 for r in RUNS:
     x0, y0, x1, y1 = r['box']; assert 0 <= x0 < x1 <= 1 and 0 <= y0 < y1 <= 1 and r['n'] >= 2, r
 frame = lambda r, i, t: f'seq/{t}/{r["a"]}_{r["b"]}_{i:03d}.webp'
 TIERS = []
-if FILES:   # a tier is offered only when every frame of every run is there
+if FILES and not SCENE:   # a tier is offered only when every frame of every run is there
     for d in sorted(glob.glob(f'{FILES}/seq/[0-9]*/'), key=lambda d: int(os.path.basename(d.rstrip('/')))):
         t = int(os.path.basename(d.rstrip('/'))); lack = sum(not os.path.exists(f'{FILES}/{frame(r, i, t)}') for r in RUNS for i in range(r['n']))
         print(f'tier {t}: ' + ('complete' if not lack else f'{lack} frames missing, not offered'))
         if not lack: TIERS.append(t)
-else:
+elif not SCENE:
     print('no --files: the page is built without frames (no 3D)')
 STILL = ''
 if TIERS:   # no JS: the first key frame, in its box of the cover-fitted frame
@@ -190,6 +198,11 @@ if FILES:   # the page's images: smoke, logos, kit card, related products, phone
         save(Image.open(f'{src}/plate.webp').convert('RGB'), f'{FILES}/img/plate.webp', 2592, quality=82, method=6)
     if os.path.exists(f'{src}/helix.webp'):   # the DNA helix loop (animated, over black: the page screens it)
         shutil.copyfile(f'{src}/helix.webp', f'{FILES}/img/helix.webp')
+    if SCENE:   # the scene's textures; the first key frame as the still (no JS, no WebGL)
+        shutil.copytree(os.path.join(H, 'img', f'{PRODUCT}-3d'), f'{FILES}/img/{PRODUCT}-3d', dirs_exist_ok=True)
+        save(Image.open(f'{KEYS}/v1-meet.png').convert('RGBA'), f'{FILES}/img/still.webp', 1920, quality=86, alpha_quality=92, method=6)
+        STILL = ('<div class="still" aria-hidden="true"><div class="still-f"><img src="img/still.webp" alt="" loading="lazy" '
+                 'style="left:0;top:0;width:100%;height:100%"></div></div>')
 RAW['kit_size'] = f'width="{kit_size[0]}" height="{kit_size[1]}"'
 cdir, plate = (f'{FILES}/img/cells', f'{FILES}/img/plate.webp') if FILES else (f'{SITE}/design/vtech-3d/cells',) * 2
 def sprites(k): return sorted(c for c in {os.path.basename(f)[:3] for f in glob.glob(f'{cdir}/{k}[0-9][0-9]-0.webp')}
@@ -208,7 +221,15 @@ assert not missing, f'no text for {sorted(missing)}'
 assert not unused, f'texts never placed: {sorted(unused)}'
 page = re.sub(r'\{\{\{(\w+)\}\}\}', lambda m: RAW[m.group(1)], page)
 page = re.sub(r'\{\{(\w+)\}\}', lambda m: esc(T[m.group(1)]), page)
+# the live scene: three.js from jsDelivr (as the MASK page) and the scene module inlined; no WebGL → no-gl, the still
+SRC = open(SCENE_JS, encoding='utf-8').read() if SCENE else ''
+assert not SCENE or (SRC.count('export function createScene(') == 1 and '</script' not in SRC)
+SCENE_INIT = ("(() => { try { return createScene(THREE, { canvas: $('seq'), base: document.baseURI, onLoad: () => story.measure() }); }\n"
+              "  catch (e) { document.documentElement.classList.add('no-gl'); return null; } })()")
 ASSETS = {'__WA_PRICE__': esc(WA_MAIN), '__STILL__': STILL,
+          '__SCENE_JS__': ("import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js';\n"
+                           f'// scenes/{PRODUCT}.js, inlined by build-vtech.py\n' + SRC.replace('export function createScene(', 'function createScene(', 1)) if SCENE else '',
+          '__SCENE__': SCENE_INIT if SCENE else 'null',
           '__SEQ__': json.dumps({'runs': RUNS, 'tiers': TIERS, 'cells': CELLS, 'mols': MOLS, 'helix': HELIX}, separators=(',', ':')),
           # phone: three still cells around the S3 ampoules (soft and bokeh sprites, small)
           '__PH_CELLS__': ('<span class="ph-cells" aria-hidden="true">' + ''.join(
