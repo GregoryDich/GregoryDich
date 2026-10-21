@@ -72,8 +72,10 @@ s1, s2, s3, s4, s5, s6, s7, s8, s9 = (v[f's{i}'] for i in range(1, 10))
 tel = '+972' + re.sub(r'\D', '', ui['phone'])[1:]
 NAME, HOME = s1['h1'], v.get('use') == 'home'
 EXO, PDRN = v.get('exo', True), v.get('pdrn', True)   # synthetic exosomes, PDRN: the cells' field, the molecules, the DNA helix
-if v.get('line', 'V-TECH FACE') not in ('V-TECH FACE', 'HAIR'):   # design-rules: both black and gold
-    print(f'line smoke: the gold V-TECH smoke stands in, the {v["line"]} line has none of its own yet')
+LINE = v.get('line', 'V-TECH FACE')   # the line's smoke: V-TECH FACE and HAIR are black and gold (design-rules), the others
+SMOKE = (f'{SITE}/design/vtech-3d/layers/vt-bg-wide.jpg' if LINE in ('V-TECH FACE', 'HAIR')   # recoloured by tools/line_smoke.py
+         else f'{SITE}/design/lines/{LINE.lower()}-smoke.jpg')
+assert os.path.exists(SMOKE), f'no smoke for the {LINE} line: run tools/line_smoke.py'
 # the main button: the price form (WhatsApp without JS) for a professional product, WhatsApp for a home-care one
 WA_MAIN = wa(ui['wa_text_product'].format(name=NAME)) if HOME else wa(ui['wa_text_price'].replace('EXOCELL MASK', NAME))
 LEAD = '' if HOME else ' data-lead aria-haspopup="dialog"'
@@ -196,7 +198,7 @@ KIT_W = 1200   # the offer card's picture: up to ~320 css px tall on a phone at 
 kit_size = (min(KIT_W, k.width), round(min(KIT_W, k.width) * k.height / k.width))
 if FILES:   # the page's images: smoke, logos, kit card, related products, phone stills cut from the key frames
     os.makedirs(f'{FILES}/img', exist_ok=True)
-    save(Image.open(f'{SITE}/design/vtech-3d/layers/vt-bg-wide.jpg').convert('RGB'), f'{FILES}/img/bg.webp', 3456, quality=80, method=6)   # the whole source
+    save(Image.open(SMOKE).convert('RGB'), f'{FILES}/img/bg.webp', 3456, quality=80, method=6)   # the whole source
     save(Image.open(f'{SITE}/img/mitoderm-logo-white-mark.png').convert('RGBA'), f'{FILES}/img/logo-mark.png', 600, optimize=True)
     save(Image.open(f'{SITE}/img/mitoderm-logo-white.png').convert('RGBA'), f'{FILES}/img/logo.png', 420, optimize=True)
     save(k, f'{FILES}/img/kit.webp', KIT_W, quality=86, method=6)
