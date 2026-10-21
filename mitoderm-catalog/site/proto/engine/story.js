@@ -43,7 +43,13 @@ export function createFrameStory(o) {
   const secs = o.sections, header = o.header || null, root = o.root || document.documentElement;   // sections: the screens in story order, one more than the runs
   const phone = matchMedia(o.phoneQuery || '(max-width: 899px)'), calm = matchMedia('(prefers-reduced-motion: reduce)');
   const U = RUNS.reduce((u, r) => [Math.min(u[0], r.box[0]), Math.min(u[1], r.box[1]), Math.max(u[2], r.box[2]), Math.max(u[3], r.box[3])], [1, 1, 0, 0]);   // all runs' boxes
-  let stage = null, push = 0, lastPush = -1;   // phone: the stage rect under the header that the runs' union fits into
+  let stage = null, push = 0, lastPush = -1, staged = null;   // phone: the stage rect under the header that the runs' union fits into
+  let probe = null;   // the large viewport (browser toolbars retracted) for this orientation, from CSS 100lvh
+  const largeH = () => {
+    if (!probe) { probe = document.createElement('div'); probe.className = 'lvh-probe'; probe.setAttribute('aria-hidden', 'true');
+      probe.style.cssText = 'position:fixed;left:0;top:0;width:0;height:100vh;height:100lvh;visibility:hidden;pointer-events:none'; document.body.appendChild(probe); }
+    return probe.offsetHeight;
+  };
   const nav = navigator, saveData = !!(nav.connection && nav.connection.saveData);
   const capped = (nav.maxTouchPoints > 1 && /Macintosh/.test(nav.userAgent)) || (nav.deviceMemory > 0 && nav.deviceMemory <= 4);   // iPad, small RAM: ≤ 1600
   const key = (r, i) => r * 1000 + i, rOf = k => Math.floor(k / 1000), iOf = k => k % 1000, gOf = k => OFF[rOf(k)] + iOf(k);
@@ -235,12 +241,14 @@ onmessage = async e => {
 
   // the offer card: the last frame of the kit run, cropped to what it shows
   let kitCrop = null, sk = null;
-  function sceneKit() {   // a scene: its kit pose, rendered once at the last run's box, for the card and the flight into it
-    if (!sk && cover.w) { const im = SCENE.kit({ cover, box: boxRect(R - 1), dpr }); sk = { im, w: im.width, h: im.height, bytes: 0 }; }
+  function sceneKit() {   // a scene: its kit pose, rendered at the last run's box for the card and the flight into it, again
+    if (!cover.w) return sk;   // only when that box, the pixel ratio or the scene's version (textures, a restored context) change
+    const B = boxRect(R - 1), id = [B.w, B.h, dpr, SCENE.state ? SCENE.state().version : 0].join();
+    if (!sk || sk.id !== id) { const im = SCENE.kit({ cover, box: B, dpr }); sk = { id, im, w: im.width, h: im.height, bytes: 0 }; }
     return sk;
   }
   function drawCard() {
-    const e = SCENE ? sceneKit() : bm.get(KIT); if (!cardCtx || !e || !cardCv.width) return;
+    const e = SCENE ? (stage ? null : sceneKit()) : bm.get(KIT); if (!cardCtx || !e || !cardCv.width) return;   // phone: the card keeps its picture
     if (!kitCrop || kitCrop.im !== e.im) kitCrop = { im: e.im, r: alphaBox(e), w: e.w, h: e.h };
     const [sx, sy, sw, sh] = kitCrop.r, cw = cardCv.width, ch = cardCv.height, s = Math.min(cw / sw, ch / sh), w = sw * s, h = sh * s;
     cardCtx.clearRect(0, 0, cw, ch); cardCtx.imageSmoothingQuality = 'high';
@@ -281,20 +289,21 @@ onmessage = async e => {
     const s = Math.max(W / 16, H / 10); cover = { w: 16 * s, h: 10 * s, x: (W - 16 * s) / 2, y: (H - 10 * s) / 2 };
     stage = null;
     if (phone.matches) {   // the union of the runs' boxes fits the stage: the same scale for every run, so the motion carries on
-      const top = Math.round(header ? header.getBoundingClientRect().bottom : 0), sh = Math.round(0.46 * H);
+      const top = Math.round(header ? header.getBoundingClientRect().bottom : 0), sh = Math.round(0.46 * Math.max(H, largeH()));   // toolbars don't resize it
       const uw = U[2] - U[0], uh = U[3] - U[1], k = Math.min(0.98 * W / (uw * 16), 0.96 * sh / (uh * 10));
       cover = { w: 16 * k, h: 10 * k }; cover.x = (W - uw * cover.w) / 2 - U[0] * cover.w; cover.y = top + (sh - uh * cover.h) / 2 - U[1] * cover.h;
       stage = { top, h: sh }; root.style.setProperty('--stage-top', top + 'px'); root.style.setProperty('--stage-h', sh + 'px');
     }
     const m = !TIERS.length && !SCENE ? 'off' : calm.matches || saveData ? 'keys' : 'full', t = m === 'off' ? 0 : SCENE ? 1 : pickTier();
-    if (m !== mode || t !== tier) reset(m, t);
+    if (m !== mode || t !== tier || (SCENE && !!stage !== staged)) reset(m, t);   // a scene: a phone ↔ desktop switch too (its tier never changes)
+    staged = !!stage;
     placed = '';
     geo = secs.map(s => ({ top: s.offsetTop, h: s.offsetHeight, cont: (s.querySelector('.wrap') || s).getBoundingClientRect().bottom + scrollY - s.offsetTop }));
     cardTop = card && m !== 'off' ? card.getBoundingClientRect().top + scrollY : geo[R].top + 0.3 * H;
     if (cardCv && m !== 'off') {
       const r = cardCv.getBoundingClientRect(), w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
       if (w && (cardCv.width !== w || cardCv.height !== h)) { cardCv.width = w; cardCv.height = h; drawCard(); }
-      if (SCENE) { sk = null; kitCrop = null; drawCard(); }
+      if (SCENE && !stage) drawCard();
     }
     if (cellEls) layoutCells();
     dirty = true; needPump = true; kick();
@@ -414,20 +423,26 @@ onmessage = async e => {
     hx.style.transform = `translate3d(0, ${((2 - pos) * 6).toFixed(2)}vh, 0)`;
   }
   function kick() { if (!raf && !destroyed) raf = requestAnimationFrame(tick); }
+  function show(o) {   // the canvas's opacity; a scene is not drawn while hidden, so on its way back it is drawn at once
+    if (o === lastOp) return;
+    const was = lastOp; canvas.style.opacity = String(o); canvas.style.visibility = o > 0 ? '' : 'hidden'; lastOp = o;
+    if (SCENE && was === 0 && o > 0) draw();
+  }
   function land(y) {   // the card rises: the 3D kit flies from its place in the frame into the card's picture, then hands over
     const l = clamp((LAND0 * H - (cardTop - y)) / ((LAND0 - LAND1) * H)), e = l * l * (3 - 2 * l);
     const swap = smooth(0.88, 1, l), op = mode === 'off' ? 0 : mode === 'keys' ? 1 - l : 1 - swap;
     if (stage) {   // phone: no flight; the offer section pushes the stage (smoke, plate, 3D) up and away, the card shows the kit
       push = clamp(stage.top + stage.h - (geo[R].top - y), 0, stage.top + stage.h + 40);
       if (push !== lastPush) { root.style.setProperty('--push', push.toFixed(1)); lastPush = push; }
-      const B = shownBox, tfp = B ? `translate3d(${B.x.toFixed(2)}px,${(B.y - push).toFixed(2)}px,0)` : '', o = mode === 'off' || push >= stage.top + stage.h + 40 ? 0 : 1;
+      show(mode === 'off' || push >= stage.top + stage.h + 40 ? 0 : 1);   // first: a scene coming back is drawn into its new box
+      const B = shownBox, tfp = B ? `translate3d(${B.x.toFixed(2)}px,${(B.y - push).toFixed(2)}px,0)` : '';
       if (tfp !== lastTf) { canvas.style.transform = tfp; canvas.style.zIndex = ''; lastTf = tfp; }
-      if (o !== lastOp) { canvas.style.opacity = String(o); canvas.style.visibility = o > 0 ? '' : 'hidden'; lastOp = o; }
       if (cardCv && mode !== 'off') cardCv.style.opacity = '1';
       return;
     }
+    show(op);   // first: a scene coming back is drawn into its new box
     const B = shownBox; let tf = B ? `translate3d(${B.x.toFixed(2)}px,${B.y.toFixed(2)}px,0)` : '', fly = false;
-    if (mode === 'full' && l > 0 && op > 0 && shown === KIT && kitCrop && cardCv && B) {
+    if (mode === 'full' && l > 0 && op > 0 && shown === KIT && kitCrop && cardCv && cardCv.clientWidth > 0 && B) {
       const [sx, sy, sw, sh] = kitCrop.r, fx = B.w / kitCrop.w, fy = B.h / kitCrop.h, k = { x: sx * fx, y: sy * fy, w: sw * fx };   // the kit in the canvas
       const c = cardCv.getBoundingClientRect(), s = Math.min(c.width / sw, c.height / sh);
       const T = { x: c.left + (c.width - sw * s) / 2, y: c.top + (c.height - sh * s) / 2, w: sw * s };   // where the card draws it
@@ -435,7 +450,6 @@ onmessage = async e => {
       tf = `translate3d(${(X - k.x * sc).toFixed(2)}px,${(Y - k.y * sc).toFixed(2)}px,0) scale(${sc.toFixed(5)})`; fly = true;
     }
     if (tf !== lastTf) { canvas.style.transform = tf; canvas.style.zIndex = fly ? '3' : ''; lastTf = tf; }   // above the card while it flies
-    if (op !== lastOp) { canvas.style.opacity = String(op); canvas.style.visibility = op > 0 ? '' : 'hidden'; lastOp = op; }
     if (cardCv && mode !== 'off') cardCv.style.opacity = String(mode === 'keys' ? l : swap);
   }
 
@@ -468,6 +482,7 @@ onmessage = async e => {
     if (cellEls) for (const c of cellEls) { c.imgs.forEach(im => im.remove()); c.dust.forEach(d => d.el.remove()); }
     cellEls = null;
     root.classList.remove('story'); for (const v of ['--stage-top', '--stage-h', '--push']) root.style.removeProperty(v);
+    if (probe) probe.remove();
   }
   function state() {   // for QA and debugging
     let bytes = 0; for (const e of bm.values()) bytes += e.bytes;

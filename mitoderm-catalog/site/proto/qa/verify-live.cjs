@@ -57,6 +57,8 @@ async function open(browser, w, h, opts = {}) {
   });
   await p.goto(ORIGIN + 'index.html', { waitUntil: 'load' });
   if (!opts.nojs) await p.evaluate(() => document.fonts.ready);
+  // a 3D-scene page starts its story once three.js has loaded (or gives up: no-gl)
+  if (!opts.nojs) await p.waitForFunction(() => window.__seq || document.documentElement.classList.contains('no-gl'), null, { timeout: 20000 }).catch(() => {});
   return { ctx, p, errs, req };
 }
 const seq = p => p.evaluate(() => window.__seq());

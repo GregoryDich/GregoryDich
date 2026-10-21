@@ -461,7 +461,7 @@ const story = createFrameStory({
   tier: window.__SEQ_TIER, noWorker: !!window.__SEQ_NO_WORKER });
 window.__seq = story.state;   // for the QA script
 </script>
-<script type="module">   // a module too, so it runs after the story module, as it always has
+<script type="module">   // a module, as it always was; it does not use the story module (which, on a 3D-scene page, waits for three.js)
 // page: reveal on scroll, the dock, the specialists filter and the lead form
 (function () {
   var root = document.documentElement, reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

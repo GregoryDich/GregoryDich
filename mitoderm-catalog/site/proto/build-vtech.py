@@ -221,13 +221,16 @@ assert not missing, f'no text for {sorted(missing)}'
 assert not unused, f'texts never placed: {sorted(unused)}'
 page = re.sub(r'\{\{\{(\w+)\}\}\}', lambda m: RAW[m.group(1)], page)
 page = re.sub(r'\{\{(\w+)\}\}', lambda m: esc(T[m.group(1)]), page)
-# the live scene: three.js from jsDelivr (as the MASK page) and the scene module inlined; no WebGL → no-gl, the still
+# the live scene: three.js from jsDelivr (as the MASK page), imported so that a failed load (or no WebGL) leaves the
+# page whole, without 3D: no-gl, the still; then the scene module inlined
 SRC = open(SCENE_JS, encoding='utf-8').read() if SCENE else ''
 assert not SCENE or (SRC.count('export function createScene(') == 1 and '</script' not in SRC)
-SCENE_INIT = ("(() => { try { return createScene(THREE, { canvas: $('seq'), base: document.baseURI, onLoad: () => story.measure() }); }\n"
+SCENE_INIT = ("(() => { try { if (!THREE) throw 0; return createScene(THREE, { canvas: $('seq'), base: document.baseURI, onLoad: () => story.measure() }); }\n"
               "  catch (e) { document.documentElement.classList.add('no-gl'); return null; } })()")
 ASSETS = {'__WA_PRICE__': esc(WA_MAIN), '__STILL__': STILL,
-          '__SCENE_JS__': ("import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js';\n"
+          '__SCENE_JS__': ("// three.js 0.160 from jsDelivr: failed or stalled (8 s), the page goes on without 3D (no-gl: the still)\n"
+                           "const THREE = await Promise.race([import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js').catch(() => null),\n"
+                           "  new Promise(r => setTimeout(r, 8000, null))]);\n"
                            f'// scenes/{PRODUCT}.js, inlined by build-vtech.py\n' + SRC.replace('export function createScene(', 'function createScene(', 1)) if SCENE else '',
           '__SCENE__': SCENE_INIT if SCENE else 'null',
           '__SEQ__': json.dumps({'runs': RUNS, 'tiers': TIERS, 'cells': CELLS, 'mols': MOLS, 'helix': HELIX}, separators=(',', ':')),
