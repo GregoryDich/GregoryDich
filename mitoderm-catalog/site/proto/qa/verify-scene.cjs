@@ -4,9 +4,9 @@
 //   pearls     gel pearls only once the lid is up (never through or above a closed lid);
 //   kit        the live kit pose at p = 5, mid idle sway, is the picture kit() gives the offer card (no double image);
 //   restore    after a lost and restored WebGL context the gold is not black (the environment is rebuilt);
-//   step-down  on a fake clock: a steady 30 Hz (a low-power cap) steps down once, finds no gain, goes back to 2 and
-//              stops trying; slow frames that get faster at the lower ratio keep it, also when vsync steps hide the gain
-//              from a median.
+//   step-down  on a fake clock, at DPR 2: a steady 30 Hz (a low-power cap) steps down once, finds no gain, goes back to
+//              2 and stops trying; slow frames that get faster at the lower ratio keep it, also when vsync steps hide the
+//              gain from a median; each step cuts ≥ 20 % of the pixels (DPR 2.125 goes to 1.5, DPR 1.5 tries 1.25).
 // usage: NODE_PATH=$(npm root -g) node verify-scene.cjs <scene.js> <three.module.min.js (three@0.160.0)>
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
@@ -20,7 +20,7 @@ import { createScene } from '/scene.js';
 const c = document.getElementById('c');
 const make = () => createScene(THREE, { canvas: c, base: location.origin + '/files/', onLoad: () => { window.__loaded = true; } });
 let sc = make();
-const view = (t, still) => ({ cover: { x: 0, y: 0, w: ${W}, h: ${H} }, box: { x: 0, y: 0, w: ${W}, h: ${H} }, dpr: 1, t, still });
+const view = (t, still) => ({ cover: { x: 0, y: 0, w: ${W}, h: ${H} }, box: { x: 0, y: 0, w: ${W}, h: ${H} }, dpr: window.__dpr || 1, t, still });
 const grab = () => { const o = document.createElement('canvas'); o.width = c.width; o.height = c.height; o.getContext('2d').drawImage(c, 0, 0); return o; };
 const pix = (cv) => cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
 window.__draw = (p, t = 0, still = true) => { sc.draw(p, view(t, still)); return sc.state(); };
@@ -83,11 +83,11 @@ const lum = (d, x, y) => { const i = (y * W + x) * 4; return 0.299 * d[i] + 0.58
   ok('restore: the jar is not black after a lost context', la > 0.7 * lb && la > 40, `jar centre ${lb.toFixed(0)} → ${la.toFixed(0)}`);
 
   // step-down on a fake clock
-  const run = (steps) => p.evaluate(async steps => {
-    window.__fresh(); window.__fakeTime(true); let t = 1000, q = [];
+  const run = (steps, dpr = 2) => p.evaluate(async ([steps, dpr]) => {
+    window.__dpr = dpr; window.__fresh(); window.__fakeTime(true); let t = 1000, q = [];
     for (const [ms, n] of steps) for (let i = 0; i < n; i++) { t += ms; window.__clock(t); q.push(window.__draw(1, t / 1000, false).quality); }
-    window.__fakeTime(false); const s = window.__draw(1, 0, true); return { q: [...new Set(q)], quality: s.quality, capped: s.capped };
-  }, steps);
+    window.__fakeTime(false); const s = window.__draw(1, 0, true); window.__dpr = 1; return { q: [...new Set(q)], quality: s.quality, capped: s.capped };
+  }, [steps, dpr]);
   const cap = await run([[33.4, 400]]);
   ok('step-down: a steady 30 Hz (a cap) goes back to 2 and stops trying', cap.quality === 2 && cap.capped, JSON.stringify(cap));
   const slow = await run([[30, 90], [16.7, 200]]);
@@ -97,6 +97,10 @@ const lum = (d, x, y) => { const i = (y * W + x) * 4; return 0.299 * d[i] + 0.58
   ok('step-down: a gain hidden by vsync steps (33 → 17/33 ms) keeps 1.5', vsync.quality === 1.5, JSON.stringify(vsync));
   const fast = await run([[16.7, 400]]);
   ok('step-down: 60 Hz stays at 2', fast.quality === 2 && fast.q.length === 1, JSON.stringify(fast));
+  const odd = await run([[30, 90], [16.7, 200]], 2.125);
+  ok('step-down: DPR 2.125 skips the near-empty step to 2 and keeps 1.5', odd.q.includes(1.5) && !odd.q.includes(2) && odd.quality === 1.5, JSON.stringify(odd));
+  const low = await run([[30, 90], [16.7, 200]], 1.5);
+  ok('step-down: DPR 1.5 tries 1.25 (no empty trial at 1.5)', low.quality === 1.25 && !low.capped, JSON.stringify(low));
 
   ok('no page errors', !errs.filter(e => !/Context Lost|Context Restored/.test(e)).length, errs.join(' | ').slice(0, 300));
   await b.close();

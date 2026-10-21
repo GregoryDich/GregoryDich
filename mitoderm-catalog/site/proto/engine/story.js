@@ -285,7 +285,7 @@ onmessage = async e => {
     if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); needPump = true;
   }
   function measure() {
-    dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+    dpr = Math.min(phone.matches ? 3 : 2, devicePixelRatio || 1); W = innerWidth; H = innerHeight;   // a phone's small stage: its full DPR
     const s = Math.max(W / 16, H / 10); cover = { w: 16 * s, h: 10 * s, x: (W - 16 * s) / 2, y: (H - 10 * s) / 2 };
     stage = null;
     if (phone.matches) {   // the union of the runs' boxes fits the stage: the same scale for every run, so the motion carries on

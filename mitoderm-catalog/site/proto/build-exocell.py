@@ -315,7 +315,7 @@ if MODE == '3d':
     ASSETS['__SACHET__'] = jpeg_uri(os.path.join(SITE, 'img/exocell-sachet-front.jpg'))    # print of the single sachet
     ASSETS['__MIRROR__'] = jpeg_uri(os.path.join(H, 'scenes/03-mirror.jpg'))              # the approved treatment frame
     ASSETS['__FALLBACK__'] = fallback_still()
-    ASSETS['__KIT__'] = data_uri(os.path.join(SITE, 'design/exocell-3d/kit-hd.png'), 760, 'WEBP')  # bright kit render
+    ASSETS['__KIT__'] = data_uri(os.path.join(SITE, 'design/exocell-3d/kit-hd.png'), 1200, 'WEBP')  # bright kit render (also the form's panel)
 
 page = open(os.path.join(H, 'exocell-3d-template.html' if MODE == '3d' else 'exocell-template.html'), encoding='utf-8').read()
 used = set(re.findall(r'\{\{\{?(\w+)\}?\}\}', page))

@@ -172,19 +172,20 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   }
 
   // ---- drawing into the engine's box: the full frame is the cover; the canvas shows the box's part of it
-  // the phone's stage is small: it draws at the screen's full density (≤ 3, as the MASK page; the engine counts frames at ≤ 2)
-  const phone = matchMedia('(max-width: 899px)'), dense = () => (phone.matches ? Math.min(3, devicePixelRatio || 1) : 0);
-  let quality = dense() > 2 ? 3 : 2, size = '', renders = 0, lastT = 0, lastP = 0, lastView = null, trial = null, capped = false;
-  const LADDER = [3, 2, 1.5, 1.25], win = [];
-  function pace(now, still) {   // fewer pixels when frames run long: a 90-frame median over 24 ms steps down one rung, and
-    if (still || capped) { lastT = now; return; }   // the next window keeps it only if frames got ≥ 20 % shorter; if not,
-    const dt = lastT ? now - lastT : 0; lastT = now;   // the rate is a cap (low-power 30 Hz), not the GPU: back, no more tries
-    if (!dt || dt > 400) return;   // a pause (hidden, idle), not a frame
+  // the density drawn: a phone's stage is small, so it draws at the screen's full density (≤ 3, as the MASK page), a
+  // desktop at the engine's (≤ 2); long frames lower it under a cap (pace), which a rotation keeps
+  const phone = matchMedia('(max-width: 899px)'), full = view => (phone.matches ? Math.min(3, devicePixelRatio || 1) : view.dpr);
+  let cap = Infinity, pr = 0, size = '', renders = 0, lastT = 0, lastP = 0, lastView = null, trial = null, capped = false;
+  const LADDER = [2, 1.5, 1.25], win = [];
+  function pace(now, still) {   // fewer pixels when frames run long: a 90-frame median over 24 ms tries the next cap that
+    if (still || capped) { lastT = now; return; }   // cuts ≥ 20 % of the pixels; the next window keeps it only if frames got
+    const dt = lastT ? now - lastT : 0; lastT = now;   // ≥ 20 % shorter; if not, the rate is a cap (low-power 30 Hz), not
+    if (!dt || dt > 400) return;   // the GPU: back, no more tries. A gap over 400 ms is a pause (hidden, idle), not a frame
     win.push(dt); if (win.length < 90) return;
     const m = win.slice().sort((a, b) => a - b)[45], mean = win.reduce((a, v) => a + Math.min(v, 100), 0) / win.length; win.length = 0;
-    if (trial) { if (mean > trial.mean * 0.8) { quality = trial.q; capped = true; } trial = null; return; }   // the mean: vsync-
-    const i = LADDER.indexOf(quality);   // quantised medians would hide a 30 → 18 ms gain
-    if (m > 24 && i < LADDER.length - 1) { trial = { q: quality, mean }; quality = LADDER[i + 1]; }
+    if (trial) { if (mean > trial.mean * 0.8) { cap = trial.cap; capped = true; } trial = null; return; }   // the mean: vsync-
+    const next = LADDER.find(q => (q / pr) ** 2 <= 0.8);   // quantised medians would hide a 30 → 18 ms gain
+    if (m > 24 && next) { trial = { cap, mean }; cap = next; }
   }
   function fit(view, pr) {
     const id = `${view.box.w}x${view.box.h}@${pr}`;
@@ -193,10 +194,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     camera.setViewOffset(view.cover.w, view.cover.h, view.box.x - view.cover.x, view.box.y - view.cover.y, view.box.w, view.box.h);
     camera.updateProjectionMatrix();
   }
-  function render(p, view) {
-    const d = dense(); if (quality > 2 && d <= 2) quality = 2;   // rung 3 is the dense phone's only (a phone turned wide)
-    fit(view, Math.min(d > 2 ? d : view.dpr, quality)); pose(p, view.still ? 0 : view.t); renderer.render(scene, camera); renders++;
-  }
+  function render(p, view) { pr = Math.min(full(view), cap); fit(view, pr); pose(p, view.still ? 0 : view.t); renderer.render(scene, camera); renders++; }
   function draw(p, view) { pace(performance.now(), view.still); lastP = p; lastView = view; render(p, view); }
   let kits = 0;   // kit pictures rendered (QA: none on a phone, none for a toolbar)
   function kit(view) {   // the kit pose rendered once into a picture (the offer card, the flight into it), then the current pose again
@@ -213,6 +211,6 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     for (const t of [jarInk, boxInk, foil, scene.environment]) t.dispose();
     renderer.dispose();
   }
-  const state = () => ({ quality, capped, pixelRatio: renderer.getPixelRatio(), width: canvas.width, height: canvas.height, renders, loaded, version, kits, lastP, lidUp, pearlsOn });
+  const state = () => ({ quality: pr, cap, capped, pixelRatio: renderer.getPixelRatio(), width: canvas.width, height: canvas.height, renders, loaded, version, kits, lastP, lidUp, pearlsOn });
   return { draw, kit, dispose, state, animated: true };
 }
