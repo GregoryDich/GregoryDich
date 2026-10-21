@@ -1,6 +1,6 @@
 # MITODERM — אתר v2: מסירה למתכנת
 
-עודכן 19/10/2026.
+עודכן 21/10/2026.
 
 ## מאיפה מתחילים
 
@@ -27,6 +27,12 @@
    אחר כך פותחים בדפדפן:
    - http://localhost:8000/vtech-live.html
    - http://localhost:8000/exocell-mask-3d.html
+4. **שלושת העמודים החיים, ב-HD, בלי התקנה.** הקישורים נפתחים אחרי שיתוף מצד הבעלים (Share → גישה לפי קישור):
+   - V-TECH SYSTEM — https://claude.ai/artifact/NdQezU5bikrsuaWVVW5TBK
+   - EXOCELL MASK — https://claude.ai/artifact/FA5ySxGihnDAmjQPvDftzn
+   - EXOTECH GEL — https://claude.ai/artifact/LsJVky9GDssBuW1eQkLaTe
+
+   הקוד כולו: https://github.com/GregoryDich/GregoryDich/tree/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site
 
 ## סדר הבנייה
 
@@ -51,13 +57,14 @@
 | `proto/react/useFrameStory.js`, `proto/react/StoryPage.jsx`, `proto/react/demo/` | אותו מנוע ב-React: hook, דוגמת עמוד ודמו שרץ (ראו «React» למטה) |
 | `proto/scenes/exotech-gel.js`, `proto/scenes/render-keys.cjs` | סצנת three.js חיה של EXOTECH GEL: המנוע מצייר אותה במקום פריימים (`build-vtech.py --product exotech-gel --scene`). ‏`render-keys.cjs` מרנדר ממנה את תמונות המפתח: הסטילס לטלפון ותמונת הערכה. |
 | `design/exotech-gel/make_textures.py` | ההדפסה על הצנצנת ועל הקופסה, מסודרת מחדש בגופן Jost לפי מדידות מתמונת המוצר, ולכן חדה בכל גודל |
-| `proto/story_content.py` | הטקסטים של מוצר אחר על אותה תבנית, מתוך המקורות המאושרים: `build-vtech.py --product <slug> --files <dir>` |
+| `proto/story_content.py` | הטקסטים של מוצר אחר על אותה תבנית, מתוך המקורות המאושרים: `build-vtech.py --product <slug> --files <dir>`. לכל מוצר הקו שלו (V-TECH FACE, ‏HAIR, ‏PEELING, ‏BIOSPICULE, ‏DEVICES): תג הקו, הכותרת «עוד מקו …» וכרטיסי «משלימים את הטיפול». האגדה של האקסוזומים, התאים, מולקולות ה-PDRN וסליל ה-DNA מופיעים רק במוצר שהרכב שלו כולל אותם. |
 | `proto/exocell-3d-template.html`, `proto/build-exocell.py` | התבנית והבונה של MASK |
 | `proto/vtech-he-figma.json`, `proto/exocell-he-design.json`, `proto/exocell-he-ui.json` | הטקסטים המאושרים בעברית |
 | `MITODERM-3D-story.xlsx`, `product-pages.he.json` | הטקסטים לכל המוצרים; מפת הדרכים |
 | `design/vtech-3d/` | פריימי מפתח, תאים, מולקולות, סליל DNA, סצנות Blender |
 | `design/handoff/` | צילומי האב-טיפוס ופריימי המפתח העדכניים |
 | `proto/qa/verify-live.cjs`, `proto/qa/verify-3d.cjs` | בדיקות קבלה ב-Playwright: ‏V-TECH — ‏55 בדיקות, MASK — ‏240 בדיקות |
+| `proto/qa/verify-hd.cjs` | בדיקת HD: כל תמונה, רקע וקנבס שנראים בגלילה, בטלפון 390 (DPR 3) ובמחשב 1440 ו-1920 (DPR 2). כמות הפיקסלים שיש מול הכמות שצריך. |
 | `../design-rules.md` | כללי העיצוב המלאים |
 
 ## React
