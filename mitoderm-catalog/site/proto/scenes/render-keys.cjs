@@ -1,12 +1,12 @@
 // Renders a live scene's key poses (scenes/<slug>.js, positions 0…5: meet, why, inside, feel, protocol, kit) as
-// transparent 2400×1500 PNGs, the full 16:10 frame, named as the frame pipeline names its key frames (v1-meet.png …
+// transparent PNGs of the full 16:10 frame (3840×2400 by default: the no-WebGL still covers a 4K screen at DPR 2), named as the frame pipeline names its key frames (v1-meet.png …
 // v6-kit.png): build-vtech.py --keys takes them for the phone stills, the offer card's picture and the no-WebGL still,
 // so every picture of the product comes from the same 3D model. Headless Chromium with software GL (SwiftShader).
-// usage: NODE_PATH=$(npm root -g) node render-keys.cjs <scene.js> <three.module.min.js (three@0.160.0)> <out dir>
+// usage: NODE_PATH=$(npm root -g) node render-keys.cjs <scene.js> <three.module.min.js (three@0.160.0)> <out dir> [width=3840]
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
-const [sceneFile, threeFile, out] = process.argv.slice(2);
-const KEYS = ['v1-meet', 'v2-why', 'v3-inside', 'v4-feel', 'v5-protocol', 'v6-kit'], W = 2400, H = 1500;
+const [sceneFile, threeFile, out, width = '3840'] = process.argv.slice(2);
+const KEYS = ['v1-meet', 'v2-why', 'v3-inside', 'v4-feel', 'v5-protocol', 'v6-kit'], W = +width, H = Math.round(W * 10 / 16);
 const page = `<!doctype html><html><body style="margin:0"><canvas id="c" style="width:${W}px;height:${H}px"></canvas>
 <script type="module">
 import * as THREE from '/three.js';

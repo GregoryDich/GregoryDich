@@ -100,7 +100,7 @@ RAW = {
 def card(slug, img, use, i, txt=esc):
     c = cat[slug]
     return (f'<a class="card rv" style="--d:{i * .08:.2f}s" href="{esc(wa(ui["wa_text_product"].format(name=c["name"])))}" target="_blank" rel="noopener">'
-            f'<div class="pic"><img src="{data_uri(os.path.join(REPO, "protocols/assets/img", img), 360, "WEBP")}" alt="{esc(c["name"])}" loading="lazy"></div>'
+            f'<div class="pic"><img src="{data_uri(os.path.join(REPO, "protocols/assets/img", img), 1000, "WEBP")}" alt="{esc(c["name"])}" loading="lazy"></div>'
             f'<div class="body"><span class="badge{" pro" if use == "pro" else " home"}">{esc(ui["use_pro" if use == "pro" else "use_home"])}</span>'
             f'<h3><bdi>{txt(c["name"])}</bdi></h3><p>{txt(c["tagline"])}</p><span class="go">{esc(ui["card_cta"])} ←</span></div></a>')
 
@@ -112,7 +112,7 @@ for key, row in RELATED.items():
     RAW[key] = ''.join(card(s, f, u, i) for i, (s, f, u) in enumerate(row))
 
 ASSETS = {
-    '__LOGO_MARK__': data_uri(os.path.join(SITE, 'img/mitoderm-logo-white-mark.png'), 300),
+    '__LOGO_MARK__': data_uri(os.path.join(SITE, 'img/mitoderm-logo-white-mark.png'), 600),
     '__LOGO_FULL__': data_uri(os.path.join(SITE, 'img/mitoderm-logo-white.png'), 420),
     '__WA_PRICE__': esc(wa(ui['wa_text_price'])), '__WA_BUNDLE__': esc(wa(ui['wa_text_bundle'])),
 }
@@ -176,8 +176,8 @@ def fallback_still():
     d3 = os.path.join(SITE, 'design/exocell-3d')
     still = os.path.join(d3, 'still-hd.png')  # rendered from this page's own scene (true colours), see window.__renderStill
     if os.path.exists(still):
-        c = Image.open(still).convert('RGBA')
-        c = c.resize((720, round(720 * c.height / c.width)), Image.LANCZOS)
+        c = Image.open(still).convert('RGBA')   # full size (1273 px): it also fills the phone's slot until the 3D draws
+        if c.width > 1280: c = c.resize((1280, round(1280 * c.height / c.width)), Image.LANCZOS)
         buf = io.BytesIO()
         c.save(buf, 'WEBP', quality=84, method=6)
         return 'data:image/webp;base64,' + base64.b64encode(buf.getvalue()).decode()
