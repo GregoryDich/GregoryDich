@@ -23,6 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var hudItem: NSMenuItem!
     private var probeItem: NSMenuItem!
     private var layersItem: NSMenuItem!
+    private var vlayerItem: NSMenuItem!                 // ⌥ «Задник слоями (тест)», checkmark = aq.vlayer
     private var onlyMainItem: NSMenuItem!
     private var loginItem: NSMenuItem!
     private var themeItems: [NSMenuItem] = []           // «Тема аквариума» ▸ one per AquariumTheme, in order
@@ -61,7 +62,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     // MARK: Menu bar
-    /// Показать FPS · Скопировать диагностику · (⌥: Тест производительности, Тест слоёв) · — ·
+    /// Показать FPS · Скопировать диагностику · (⌥: Тест производительности, Тест слоёв, Задник слоями (тест)) · — ·
     /// Тема аквариума ▸ (Как в системе · Всегда день · Всегда ночь) · Написать отзыв… ·
     /// Только на главном экране (2+ displays) · Запускать при входе · — · Выход
     private func setupStatusItem() {
@@ -87,6 +88,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         layersItem = item("Тест слоёв", #selector(openLayersTest))
         layersItem.isHidden = true
         menu.addItem(layersItem)
+        vlayerItem = item("Задник слоями (тест)", #selector(toggleVlayer(_:)))
+        vlayerItem.isHidden = true
+        menu.addItem(vlayerItem)
         menu.addItem(.separator())
 
         menu.addItem(themeMenuItem())
@@ -145,6 +149,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         probeItem.title = probeRunning ? "Тест производительности — идёт…" : "Тест производительности (≈45 с)"
         layersItem.isHidden = !optionHeld
         layersItem.isEnabled = !probeRunning                // the test pauses the wallpapers: the probe would stall
+        vlayerItem.state = AppSettings.vlayer ? .on : .off
+        vlayerItem.isHidden = !optionHeld
+        vlayerItem.isEnabled = !probeRunning                // the toggle reloads the page the probe runs on
     }
 
     // MARK: Wallpaper windows (one per display)
@@ -345,6 +352,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         applyScreens()
     }
 
+    /// ⌥ «Задник слоями (тест)» (ROADMAP P1.9): saved (`aq.vlayer`), then every wallpaper page is reloaded with the
+    /// new `__AQ_BOOT.vlayer` — the engine picks the backdrop path at boot, there is no live switch outside the
+    /// probe. Parked pages reload too (hidden, paused), so a returning display shows the chosen mode. The windows
+    /// themselves are kept: no close/park/restore bookkeeping changes, only `aq.pageLoads.vlayer` grows.
+    @objc private func toggleVlayer(_ sender: NSMenuItem) {
+        guard !probeRunning else {                       // the item is disabled meanwhile; belt and braces
+            HostAlert.show("Режим не переключён", "Идёт тест производительности — дождитесь его окончания.", style: .warning)
+            return
+        }
+        let on = !AppSettings.vlayer
+        AppSettings.vlayer = on
+        sender.state = on ? .on : .off
+        Log.info("vlayer: \(on) — reloading \(windows.count) shown + \(parked.count) parked pages")
+        windows.values.forEach { $0.reload(reason: "vlayer") }
+        parked.values.forEach { $0.window.reload(reason: "vlayer") }
+    }
+
     private func hostState() -> [String: Any] {
         let primary = AppDelegate.primaryDisplayID
         // Every display macOS reports (also those without an aquarium), with the app's notion of "main".
@@ -365,6 +389,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             "onlyMainScreen": AppSettings.onlyMainScreen,
             "hud": AppSettings.hud,
             "theme": AppSettings.theme.rawValue,         // «Тема аквариума»; what each page shows: snapshot.theme
+            "vlayer": AppSettings.vlayer,                // ⌥ «Задник слоями (тест)»; in use per page: snapshot.vlayer
             "inspectable": AppSettings.inspectable,
             "layersTestOpen": layersTest != nil,
             "primaryDisplay": primary.map { Int($0) } ?? -1,

@@ -65,6 +65,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     private var loadReason: String
     private var loadStartedAt: Date?
     private var loadBudget = "null"                  // budget in the boot script of the current load (JS literal)
+    private var loadVlayer = false                   // `__AQ_BOOT.vlayer` of the current load (chosen at boot only)
     private var nextReason = "crashReload"
     private var failures: [Date] = []                // terminations + failed loads, last 5 min
     private var gaveUp = false                       // quick backoff exhausted → slow retry
@@ -152,12 +153,24 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         loadReason = reason
         loadStartedAt = Date()
         loadBudget = budgetLiteral
+        loadVlayer = AppSettings.vlayer
         loadCount += 1
         installBootScript()
         LifecycleStats.recordLoad(display: displayID, reason: reason)
-        Log.info("load display \(displayID): reason=\(reason) main=\(isMain) power=\(power) " +
+        Log.info("load display \(displayID): reason=\(reason) main=\(isMain) power=\(power) vlayer=\(loadVlayer) " +
                  "\(screenInfo.w)x\(screenInfo.h)@\(screenInfo.scale)x \(screenInfo.maxFps)Hz")
         webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+    }
+
+    /// A deliberate reload with a fresh boot script — ⌥ «Задник слоями (тест)»: the layered backdrop is chosen at
+    /// boot (`__AQ_BOOT.vlayer`), so the page must start over. Same path as recovery (counted in `aq.pageLoads`
+    /// under `reason`, e.g. "vlayer"); a recovery already scheduled is replaced by this load, and the backoff
+    /// state stays as it is — this is not a failure. A parked (hidden, paused) page reloads too, so a returning
+    /// display shows the chosen mode. A load in flight is simply superseded (its -999 cancel is ignored).
+    func reload(reason: String) {
+        guard !closed else { return }
+        Log.info("display \(displayID): reload requested (\(reason), was \(state.rawValue))")
+        load(reason: reason)
     }
 
     /// Pixel budget and frame cap for `aquariumSetBudget` / `__AQ_BOOT.budget`; nil = the engine's own
@@ -174,10 +187,13 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
 
     /// `window.__AQ_BOOT` (contract with aquarium/index.html, P1.1):
     /// {power, hud, budget: {mp, fps}|null, screen: {id, w, h (points), scale, maxFps, main}, crashes,
-    ///  unresponsive, loadReason: launch|displayAdded|crashReload|retry, appVersion, theme: auto|day|night}.
+    ///  unresponsive, loadReason: launch|displayAdded|crashReload|retry|vlayer, appVersion, theme: auto|day|night,
+    ///  vlayer: Bool}.
     /// `theme` («Тема аквариума») is decided before the page's first frame: no day → night transition at start.
-    /// `__AQ_POWER` stays for older pages. Keys are only ever added (e.g. `unresponsive`, `theme`), never renamed:
-    /// older pages keep working.
+    /// `vlayer` (⌥ «Задник слоями (тест)», P1.9) is read only at boot — `?vlayer=` in the URL wins, so headless
+    /// tests are unaffected; the engine reports the mode in use as `aquariumPerfSnapshot().vlayer`.
+    /// `__AQ_POWER` stays for older pages. Keys are only ever added (e.g. `unresponsive`, `theme`, `vlayer`), never
+    /// renamed: older pages keep working.
     /// Every value goes through PageScript.literal (JSON), so nothing in it can break out of the script.
     private func bootSource() -> String {
         var screen = screenInfo.dict
@@ -193,6 +209,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
             "loadReason": loadReason,
             "appVersion": AppSettings.appVersion,
             "theme": AppSettings.theme.rawValue,
+            "vlayer": AppSettings.vlayer,
         ]
         return "window.__WALLPAPER = true; window.__AQ_POWER = \(PageScript.literal(power)); " +
                "window.__AQ_BOOT = \(PageScript.literal(boot));"
@@ -307,6 +324,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
             "display": Int(displayID), "main": isMain, "state": state.rawValue, "power": power,
             "constrained": constrained, "budget": budget ?? NSNull(),
             "visible": window.isVisible, "screen": screen, "loadReason": loadReason,
+            "vlayer": loadVlayer,                        // what this page booted with; in use: snapshot.vlayer
             "loadsThisRun": loadCount, "terminationsThisRun": terminationCount,
             "loadFailuresThisRun": loadFailureCount, "slowRetry": gaveUp,
             "unresponsiveThisRun": unresponsiveCount,

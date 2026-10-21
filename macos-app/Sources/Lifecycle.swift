@@ -22,6 +22,9 @@ enum AppSettings {
     static let hudKey = "aq.hud"                      // «Показать FPS»
     static let onlyMainKey = "aq.onlyMainScreen"      // «Только на главном экране»
     static let themeKey = "aq.theme"                  // «Тема аквариума»: auto | day | night
+    /// ⌥ «Задник слоями (тест)» (ROADMAP P1.9): the engine's layered backdrop, chosen at boot (`__AQ_BOOT.vlayer`);
+    /// off by default. Toggling reloads every wallpaper page.
+    static let vlayerKey = "aq.vlayer"
     /// Safari ▸ Develop ▸ <Mac> ▸ wallpaper page (macOS 13.3+). Read when a page is created:
     ///   defaults write com.gregorydich.aquariumwallpaper inspectable -bool YES   (then restart the app)
     static let inspectableKey = "inspectable"
@@ -38,6 +41,10 @@ enum AppSettings {
     static var theme: AquariumTheme {
         get { AquariumTheme(rawValue: UserDefaults.standard.string(forKey: themeKey) ?? "") ?? .auto }
         set { UserDefaults.standard.set(newValue.rawValue, forKey: themeKey) }
+    }
+    static var vlayer: Bool {
+        get { UserDefaults.standard.bool(forKey: vlayerKey) }
+        set { UserDefaults.standard.set(newValue, forKey: vlayerKey) }
     }
     static var inspectable: Bool { UserDefaults.standard.bool(forKey: inspectableKey) }
 
@@ -66,7 +73,8 @@ enum AquariumTheme: String, CaseIterable {
 // MARK: - Page loads, WebContent terminations and unresponsive pages (persist across launches)
 /// Keys: `aq.wc.total` (all terminations ever), `aq.wc.log` (last 20: at, display, reason, code, sinceLoadSec,
 /// unresponsiveSec when the page was unresponsive at the moment it died),
-/// `aq.pageLoads` ({reason: count}: launch | displayAdded | crashReload | retry), `aq.pageLoads.log` (last 20),
+/// `aq.pageLoads` ({reason: count}: launch | displayAdded | crashReload | retry | vlayer — the ⌥ «Задник слоями»
+/// toggle reloading the page on purpose), `aq.pageLoads.log` (last 20),
 /// `aq.unresponsive.total` (the page was unresponsive: WebKit reported it or the app's heartbeat went unanswered;
 /// all episodes ever), `aq.unresponsive.log` (last 20: at, display, sinceLoadSec, source = webkit | heartbeat,
 /// end = open | responsive | terminated | closed, durationSec).
