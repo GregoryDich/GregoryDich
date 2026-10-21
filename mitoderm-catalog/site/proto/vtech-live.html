@@ -251,6 +251,8 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   html.story .slot, html.story .ph-cells { display: none !important; }
   html.story .head { grid-template-columns: minmax(0, 1fr); }
   html.story #meet { padding-top: calc(var(--stage-h, 46svh) + 18px); }
+  /* a jump to a section (a button, a link) lands its heading just under the 3D stage, not behind it */
+  html.story .sec { scroll-margin-top: calc(var(--stage-top, 60px) + var(--stage-h, 46svh)); }
   /* the copy, then room in which the run plays in the stage, so the next heading arrives under its own key frame */
   html.story #meet, html.story #why, html.story #inside, html.story #feel, html.story #protocol { min-height: 0; padding-bottom: 64svh; }
   /* S3: three still cells around the ampoules (no moving field on a phone) */

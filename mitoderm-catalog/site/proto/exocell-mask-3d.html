@@ -1240,7 +1240,10 @@ function resize(force) {   // force === true: rebuild the view whatever changed 
   const w = window.innerWidth, was = phone;
   phone = phoneQ.matches;
   const h = phone ? Math.max(window.innerHeight, largeH()) : window.innerHeight;   // phone: the large viewport, per orientation
-  if (phone && was && w === FW && h === FH && force !== true) return;   // a toolbar or a keyboard: not a new layout
+  if (phone && was && w === FW && h === FH && force !== true) {   // a toolbar or a keyboard: not a new layout. A rotation can
+    clearTimeout(resize.t); resize.t = setTimeout(() => { if (window.innerWidth !== FW) resize(); }, 300);   // report the old size
+    return;   // at first (iOS): look again once it has settled
+  }
   FW = w; FH = h; if (!phone || !host) { W = w; Hh = h; }   // phone with a slot: W, Hh hold the slot canvas's size (slotView)
   canvas.style.height = phone ? FH + 'px' : '';   // the far layer covers the large viewport too
   // phone: the fixed canvas draws only the far layer, at 1 px per CSS px (soft smoke); desktop: everything, up to 2
