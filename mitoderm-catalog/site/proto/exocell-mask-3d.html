@@ -742,7 +742,11 @@ function makeEnv(r) {   // one per renderer: a PMREM texture belongs to its WebG
   const tex = pm.fromScene(room, 0.04).texture;
   pm.dispose(); return tex;
 }
-const env1 = makeEnv(renderer); scene.environment = env1;
+let env1 = makeEnv(renderer); scene.environment = env1;
+canvas.addEventListener('webglcontextrestored', () => {   // a lost context: three.js restores image textures, not the
+  const old = env1; env1 = makeEnv(renderer); old.dispose(); if (!phone) scene.environment = env1;   // rendered environment
+  renderer.setClearColor(0x0a0a0b, 1); if (reduce) schedule();   // (a restore resets the clear colour; reduced motion: draw now)
+});
 scene.add(new THREE.HemisphereLight(0xffffff, 0x202022, 0.55));
 const key = new THREE.DirectionalLight(0xffffff, 1.25); key.position.set(3, 4, 5); scene.add(key);
 const rim = new THREE.PointLight(0xffffff, 10, 12); rim.position.set(-3.6, 1.2, 1.5); scene.add(rim);
@@ -870,6 +874,9 @@ const sachets = [0, 1, 2, 3, 4].map(() => { const b = foilBack.clone(), f = foil
 const DROPS = 22, drops = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 28, 20), new THREE.MeshPhysicalMaterial({ color: 0xbfeef0, roughness: 0.05, metalness: 0, transmission: 0.92, thickness: 0.6, ior: 1.33, clearcoat: 1 }), DROPS);
 const dropSeed = Array.from({ length: DROPS }, (_, i) => ({ a: Math.random() * Math.PI * 2, r: 0.9 + Math.random() * 1.1, y: (Math.random() - 0.5) * 2.4, z: (Math.random() - 0.3) * 1.4, s: 0.03 + Math.random() * 0.07, sp: 0.15 + Math.random() * 0.35 }));
 scene.add(drops);
+const dropGlass = drops.material, dropPhone = new THREE.MeshPhysicalMaterial({ color: 0xbfeef0, roughness: 0.05, metalness: 0, clearcoat: 1, transparent: true, opacity: 0.55, depthWrite: false });
+// (phone: the slot canvas is transparent, and three.js's transmission pass refracts a white half-alpha clear there —
+// the drops went milky; on the phone they are glossy see-through beads without transmission)
 
 // ---- choreography: one pose per block (0 Meet, 1 Why, 2 Inside, 3 Feel, 4 Kit, 5 Protocol, 6 Offer, 7 Specialists,
 // 8 related); poses blend as the page scrolls. Desktop poses are the Figma stills (render.html d1–d6); in the kit the
@@ -979,6 +986,7 @@ function phoneRenderer() {
     pr2 = new THREE.WebGLRenderer({ canvas: pcv, antialias: true, alpha: true, powerPreference: 'high-performance' });
     pr2.outputColorSpace = renderer.outputColorSpace; pr2.toneMapping = renderer.toneMapping; pr2.toneMappingExposure = renderer.toneMappingExposure;
     pr2.setClearColor(0x000000, 0); env2 = makeEnv(pr2);
+    pcv.addEventListener('webglcontextrestored', () => { const old = env2; env2 = makeEnv(pr2); old.dispose(); pr2.setClearColor(0x000000, 0); if (phone) scene.environment = env2; if (reduce) schedule(); });
   }
   return pr2;
 }
@@ -1014,7 +1022,7 @@ function phoneAnchor(s) {
   a = a || b; b = b || a;
   const f = Math.max(0, Math.min(1, s - i)), two = a !== b, use = two && f >= 0.5 ? b : a;
   mountIn(use.el); const top = slotView(use.r), h = use.r[3] - use.r[1];   // the slot at mid-height of the full view
-  PH.ax = use.ax; PH.ay = top + h / 2; PH.u = use.u; PH.r = [use.r[0], top, use.r[2], top + h];
+  PH.ax = use.ax; PH.ay = top + h / 2; PH.u = use.u; PH.r = [use.r[0], top, use.r[2], top + h]; PH.sr = use.r;
   PH.fade = two ? ease(Math.min(1, Math.abs(1 - 2 * f) * 2.2)) : 1;
 }
 function toPhone(cx, cy, z) {  // a point of the slot composition → world at depth z; k = world units per composition unit
@@ -1044,7 +1052,7 @@ function measure() {
   const top = document.querySelector('.top'), bar = document.querySelector('.bar');
   const hdr = phone && top ? top.offsetHeight : 0, low = phone && bar && bar.offsetParent ? bar.offsetHeight : 0;
   anchors = secs.map(el => {
-    const r = el.getBoundingClientRect(), vh = window.innerHeight - hdr - low;
+    const r = el.getBoundingClientRect(), vh = FH - hdr - low;   // FH: the large viewport on a phone (see resize)
     return { st: +el.dataset.st, y: r.top + window.scrollY - hdr + Math.min(0, (r.height - vh) / 2) };
   });
   if (anchors.length) anchors[0].y = Math.max(0, anchors[0].y);  // the page opens on the first block, whole
@@ -1182,7 +1190,7 @@ window.__renderStill = (what, w, h) => {
   const url = renderer.domElement.toDataURL('image/png');
   bg.visible = dust.visible = drops.visible = mask.visible = mask2.visible = true;
   renderer.setClearColor(0x0a0a0b, 1); renderer.setPixelRatio(keep.pr); phone = keep.phone;
-  camera.fov = keep.fov; camera.position.copy(keep.cam); resize();
+  camera.fov = keep.fov; camera.position.copy(keep.cam); resize(true);
   return url;
 };
 window.__maskState = () => [mask, mask2].map(m => ({ o: m.material.opacity, transparent: m.material.transparent, visible: m.material.visible && m.visible }));
@@ -1210,7 +1218,7 @@ window.__sachetInfo = () => [...sachets, mask, mask2].filter(o => mats(o).some(m
 });
 function checkFit() {  // at this screen size, is there a free spot at the kit pose (no sway, no bob)?
   if (!fl || !anchors.length) return;
-  if (phone) { capFits = false; dbl.classList.remove('away'); if (reduce) requestAnimationFrame(frame); return; }  // phone: in the copy
+  if (phone) { capFits = false; dbl.classList.remove('away'); if (reduce) schedule(); return; }  // phone: in the copy
   sizeFl();
   const sw = [sway.x, sway.y]; sway.x = sway.y = 0;
   const a4 = anchors.find(a => a.st === 4);
@@ -1218,16 +1226,28 @@ function checkFit() {  // at this screen size, is there a free spot at the kit p
   capFits = !!findSpot(poseScene(4, 0), copyTop, false);
   sway.x = sw[0]; sway.y = sw[1];
   dbl.classList.toggle('away', capFits);
-  if (reduce) requestAnimationFrame(frame);
+  if (reduce) schedule();
 }
 
-function resize() {
-  FW = W = window.innerWidth; FH = Hh = window.innerHeight;
+function largeH() {   // the large viewport (browser toolbars retracted) for this orientation, from CSS 100lvh
+  if (!largeH.el) { const d = largeH.el = document.createElement('div'); d.className = 'lvh-probe'; d.setAttribute('aria-hidden', 'true');
+    d.style.cssText = 'position:fixed;left:0;top:0;width:0;height:100vh;height:100lvh;visibility:hidden;pointer-events:none'; document.body.appendChild(d); }
+  return largeH.el.offsetHeight;
+}
+function resize(force) {   // force === true: rebuild the view whatever changed (after a still render)
+  // phone: the browser's toolbars collapse and expand while scrolling (and a keyboard opens): the layout keeps the large
+  // viewport at this width, so the anchors, the poses and the slot canvas stay as they are
+  const w = window.innerWidth, was = phone;
   phone = phoneQ.matches;
+  const h = phone ? Math.max(window.innerHeight, largeH()) : window.innerHeight;   // phone: the large viewport, per orientation
+  if (phone && was && w === FW && h === FH && force !== true) return;   // a toolbar or a keyboard: not a new layout
+  FW = w; FH = h; if (!phone || !host) { W = w; Hh = h; }   // phone with a slot: W, Hh hold the slot canvas's size (slotView)
+  canvas.style.height = phone ? FH + 'px' : '';   // the far layer covers the large viewport too
   // phone: the fixed canvas draws only the far layer, at 1 px per CSS px (soft smoke); desktop: everything, up to 2
   renderer.setPixelRatio(phone ? 1 : Math.min(window.devicePixelRatio || 1, quality));
-  if (phone) { camera.layers.set(0); phoneRenderer(); scene.environment = env2; if (host) W = Hh = 0; }   // the slot view is sized in the next frame
+  if (phone) { camera.layers.set(0); phoneRenderer(); scene.environment = env2; }   // the slot view is sized in the next frame
   else { camera.layers.set(0); camera.layers.enable(1); unmount(); scene.environment = env1; }
+  drops.material = phone ? dropPhone : dropGlass;
   const fm = phone ? frontSm : front;  // phone: the print pre-scaled to its size on screen, so thin letters stay readable
   if (frontMat.map !== fm) { frontMat.map = fm; frontMat.emissiveMap = fm; frontMat.needsUpdate = true; }
   renderer.setSize(FW, FH, false);
@@ -1237,7 +1257,7 @@ function resize() {
   camera.fov = phone ? 48 : Math.max(35, 2 * Math.atan(Math.tan(17.5 * Math.PI / 180) * 1.6 / camera.aspect) * 180 / Math.PI);
   camera.updateProjectionMatrix();
   measure(); checkFit();
-  if (reduce) requestAnimationFrame(frame);
+  if (reduce) schedule();
 }
 const relayout = () => { measure(); checkFit(); };
 window.addEventListener('resize', resize); resize();
@@ -1245,12 +1265,34 @@ window.addEventListener('load', relayout);
 if ('ResizeObserver' in window) new ResizeObserver(relayout).observe(document.body);
 if (document.fonts) document.fonts.ready.then(relayout);
 
-let s = 0, last = performance.now(), visible = true, slow = 0;
-document.addEventListener('visibilitychange', () => { visible = !document.hidden; if (visible) { last = performance.now(); requestAnimationFrame(frame); } });
+let s = 0, last = performance.now(), visible = true, slotRenders = 0;
+window.__slotRenders = () => slotRenders;   // test hook: frames the phone's slot renderer drew
+// desktop: fewer pixels when frames run long. A 90-frame median over 24 ms steps 2 → 1.5; the next window keeps it only
+// if frames got at least 20 % shorter, else the rate is a cap (a low-power 30 Hz), not the GPU: back to 2, no more tries
+let paceT = 0, paceTrial = null, paceCapped = false; const paceWin = [];
+const setQuality = q => { quality = q; renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality)); renderer.setSize(FW, FH, false); };
+function pace(now) {   // (not under reduced motion — frames follow the scroll there — nor where 1.5 changes nothing)
+  if (reduce || (window.devicePixelRatio || 1) <= 1.5) return;
+  const d = paceT ? now - paceT : 0; paceT = now;
+  if (paceCapped || !d || d > 400) return;   // a pause (hidden, the form), not a frame
+  paceWin.push(d); if (paceWin.length < 90) return;
+  const m = paceWin.slice().sort((a, b) => a - b)[45], mean = paceWin.reduce((a, v) => a + Math.min(v, 100), 0) / paceWin.length; paceWin.length = 0;
+  if (paceTrial) { if (mean > paceTrial.mean * 0.8) { setQuality(paceTrial.q); paceCapped = true; } paceTrial = null; return; }   // the mean:
+  if (m > 24 && quality > 1.5) { paceTrial = { q: quality, mean }; setQuality(1.5); }   // vsync-quantised medians hide gains
+}
+window.__quality = () => ({ quality, capped: paceCapped });   // test hooks: the step-down, the view sizes, the drops' material
+window.__view = () => ({ FW, FH, W, Hh, phone });
+window.__drops = () => ({ transmission: drops.material.transmission, depthWrite: drops.material.depthWrite });
+document.addEventListener('visibilitychange', () => { visible = !document.hidden; if (visible) { last = performance.now(); schedule(); } });
+// every frame request goes through one guard: a page hidden and shown again used to run one more frame loop each
+// time (the callback still queued from before plus a new one), doubling the work per vsync (owner 19/10: not smooth)
+function schedule() { if (!schedule.id) schedule.id = requestAnimationFrame(t => { schedule.id = 0; frame(t); }); }
+window.__frames = () => frame.n || 0;   // test hook: frames drawn
 function frame(now) {
+  frame.n = (frame.n || 0) + 1;
   now = now || performance.now();
   if (root.classList.contains('form-open') && window.__glReady) {  // the lead form covers the page: no 3D work meanwhile
-    last = now; if (visible && !reduce) requestAnimationFrame(frame); return;
+    last = now; if (visible && !reduce) schedule(); return;
   }
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   const t = reduce ? 0 : now / 1000;
@@ -1330,15 +1372,15 @@ function frame(now) {
     bgCam.position.copy(camera.position); bgCam.quaternion.copy(camera.quaternion);
     bgCam.fov = camera.fov; bgCam.aspect = FW / FH; bgCam.updateProjectionMatrix();
     renderer.render(scene, bgCam);
-    if (host) pr2.render(scene, camera);
+    const sr = PH.sr;   // the slot on screen: not drawn while it is scrolled away
+    if (host && sr && sr[3] > -120 && sr[1] < window.innerHeight + 120) { pr2.render(scene, camera); slotRenders++; }   // a fling's margin
   } else {
     renderer.render(scene, camera);
-    slow = dt > 0.022 ? slow + 1 : 0;   // ~1.5 s of frames over 22 ms: draw at the old cap (1.5) instead of 2
-    if (slow > 90 && quality > 1.5) { quality = 1.5; slow = 0; renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality)); renderer.setSize(FW, FH, false); }
+    pace(now);
   }
   if (!window.__glReady) { window.__glReady = true; root.classList.add('gl-on'); checkFit(); }
-  if (visible && !reduce) requestAnimationFrame(frame);
+  if (visible && !reduce) schedule();
 }
-requestAnimationFrame(frame);
-if (reduce) window.addEventListener('scroll', () => requestAnimationFrame(frame), { passive: true });
+schedule();
+if (reduce) window.addEventListener('scroll', schedule, { passive: true });
 </script>
