@@ -316,7 +316,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
 </div></header>
 <main>
   <section id="meet" class="sec" data-st="0"><div class="wrap"><div class="copy">
-    <div class="badges rv"><span class="mark-line"><bdi>{{line_mark}}</bdi></span><span class="badge">{{line_name}}</span><span class="badge{{{use_cls}}}">{{use_pro}}</span></div>
+    <div class="badges rv">{{{line_badges}}}<span class="badge{{{use_cls}}}">{{use_pro}}</span></div>
     <p class="kicker rv" style="--d:.06s">{{eyebrow}}</p>
     <div class="head">
       <h1 class="rv" style="--d:.12s"><bdi>{{h1}}</bdi></h1>
@@ -345,7 +345,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
       __PH_CELLS__
     </div>
     <p class="lead rv" style="--d:.12s">{{{s3_p}}}</p>
-    <p class="legend rv" style="--d:.15s"><span class="dot" aria-hidden="true"></span><span>{{s3_legend}}</span></p>
+    {{{s3_legend}}}
     <p class="kicker rv" style="--d:.18s">{{s3_kicker}}</p>
     <ul class="chips rv" style="--d:.24s">{{{s3_chips}}}</ul>
     <details class="rv" style="--d:.3s"><summary>{{s3_formula}}</summary><ul>{{{s3_formula_list}}}</ul></details>
@@ -384,7 +384,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
       </div>
     </div>
     <aside class="kitcard rv" style="--d:.1s" aria-labelledby="kitcard-h">
-      <div class="kc-head"><h3 id="kitcard-h">{{s7_card_title}}</h3><span class="badge"><bdi>{{line_mark}}</bdi></span></div>
+      <div class="kc-head"><h3 id="kitcard-h">{{s7_card_title}}</h3>{{{kit_line}}}</div>
       <figure class="kc-fig">   <!-- owner 17/10: the box as in his photo, with what is in it named around it -->
         {{{kit_call_top}}}
         <canvas class="kc-live" role="img" aria-label="{{kit_alt}}"></canvas>
@@ -409,10 +409,8 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
     </div>
   </div></section>
   <section class="related" data-st="7"><div class="wrap">
-    <h2 class="rv">{{s9_line_h}}</h2>
-    <div class="cards">{{{s9_line}}}</div>
-    <h2 class="rv">{{s9_more_h}}</h2>
-    <div class="cards">{{{s9_more}}}</div>
+    {{{s9_line}}}
+    {{{s9_more}}}
   </div></section>
 </main>
 <footer class="foot"><div class="wrap"><img src="img/logo.png" alt="MITODERM — Where Science Meets Beauty"><span>{{footer}}</span><span class="legal"><a href="#">{{foot_access}}</a><a href="#">{{foot_privacy}}</a></span></div></footer>

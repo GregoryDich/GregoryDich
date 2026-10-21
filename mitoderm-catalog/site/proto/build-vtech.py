@@ -70,23 +70,26 @@ CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="
 s1, s2, s3, s4, s5, s6, s7, s8, s9 = (v[f's{i}'] for i in range(1, 10))
 tel = '+972' + re.sub(r'\D', '', ui['phone'])[1:]
 NAME, HOME = s1['h1'], v.get('use') == 'home'
+EXO, PDRN = v.get('exo', True), v.get('pdrn', True)   # synthetic exosomes, PDRN: the cells' field, the molecules, the DNA helix
+if v.get('line', 'V-TECH FACE') not in ('V-TECH FACE', 'HAIR'):   # design-rules: both black and gold
+    print(f'line smoke: the gold V-TECH smoke stands in, the {v["line"]} line has none of its own yet')
 # the main button: the price form (WhatsApp without JS) for a professional product, WhatsApp for a home-care one
 WA_MAIN = wa(ui['wa_text_product'].format(name=NAME)) if HOME else wa(ui['wa_text_price'].replace('EXOCELL MASK', NAME))
 LEAD = '' if HOME else ' data-lead aria-haspopup="dialog"'
 
 T = {
-    'cta_price': v['cta_price'], 'line_mark': s1['line_mark'], 'line_name': s1['line_name'], 'use_pro': s1['use_pro'],
+    'cta_price': v['cta_price'], 'use_pro': s1['use_pro'],
     'eyebrow': s1['eyebrow'], 'h1': s1['h1'], 'tag': s1['tag'], 's1_lead': s1['lead'], 's1_more': s1['more'],
     **{f'nav{i}': nav[i] for i in range(1, 6)},
     's2_h2': s2['h2'], 's2_p': s2['p'], 's2_kicker': s2['kicker'],
-    's3_h2': s3['h2'], 's3_kicker': s3['kicker'], 's3_formula': s3['formula'], 's3_legend': s3['legend'],
+    's3_h2': s3['h2'], 's3_kicker': s3['kicker'], 's3_formula': s3['formula'],
     's4_h2': s4['h2'], 's4_p': s4['p'], 's5_h2': s5['h2'], 's5_p': s5['p'],
     's7_p': s7['p'], 's7_card_title': s7['card_title'],
     'kit_alt': s1['h1'] + ': ' + s6['p'].split('.')[0],   # the approved S6 line: what is in the box
     'phone_href': 'tel:' + tel, 'phone_label': ui['phone_label'], 'phone': ui['phone'],
     'email_href': 'mailto:' + ui['email'] + '?subject=' + urllib.parse.quote(NAME), 'email_label': ui['email_label'], 'email': ui['email'],
     's8_kicker': s8['kicker'], 's8_filter': s8['filter'], 'spec_empty': ui['spec.empty'], 's8_list': s8['list'],
-    's8_join': s8['join'], 's8_join_cta': s8['join_cta'], 's9_line_h': s9['line_h'], 's9_more_h': s9['more_h'],
+    's8_join': s8['join'], 's8_join_cta': s8['join_cta'],
     'footer': home['home.footer-2'], 'foot_access': site['footer_he']['accessibility'], 'foot_privacy': site['footer_he']['privacy'],
     'nav_label': ui['nav_label'], 'bar_name': v['bar'][0], 'bar_note': v['bar'][1], 'close_label': ui['ui.close'],
     'form_p1': ff['titleP1'], 'form_p2': ff['titleP2'].strip(), 'form_p3': ff['titleP3'], 'form_sub': ff['subtitle'],
@@ -129,7 +132,14 @@ RAW = {
     's8_cards': ''.join(f'<article class="spec rv" style="--d:{i * .08:.2f}s" data-tags="{esc(s8["tag"])}"><div class="av" aria-hidden="true">{esc(city[0])}</div>'
                         f'<div class="sb"><h3>{PIN}<span>{esc(city)}</span></h3><div class="tags"><span>{esc(s8["tag"])}</span><span>{CHECK}{esc(s8["certified"])}</span></div>'
                         f'{book}</div></article>' for i, city in enumerate(s8['cities'])),
-    's9_line': ''.join(card(*c, i) for i, c in enumerate(s9['line'])), 's9_more': ''.join(card(*c, i) for i, c in enumerate(s9['more'])),
+    # the line's badge (its Latin name, its Hebrew name where there is one) on S1 and the offer card
+    'line_badges': (f'<span class="mark-line"><bdi>{esc(s1["line_mark"])}</bdi></span>' if s1['line_mark'] else '')
+                   + (f'<span class="badge">{esc(s1["line_name"])}</span>' if s1['line_name'] else ''),
+    'kit_line': f'<span class="badge"><bdi>{esc(s1["line_mark"] or s1["line_name"])}</bdi></span>' if s1['line_mark'] or s1['line_name'] else '',
+    # the exosome legend only on a product with synthetic exosomes; a related row only when it has cards
+    's3_legend': f'<p class="legend rv" style="--d:.15s"><span class="dot" aria-hidden="true"></span><span>{esc(s3["legend"])}</span></p>' if s3['legend'] else '',
+    **{f's9_{k}': f'<h2 class="rv">{esc(s9[k + "_h"])}</h2>\n    <div class="cards">' + ''.join(card(*c, i) for i, c in enumerate(s9[k])) + '</div>' if s9[k] else ''
+       for k in ('line', 'more')},
     'dock': ''.join(f'<a href="#{h}" data-i="{i}">{esc(n)}</a>' for i, (h, n) in enumerate(zip(
         ('meet', 'why', 'inside', 'feel', 'protocol', 'offer', 'specialists'), nav))),
     'form_fail': keep(ui['form.error']),
@@ -171,22 +181,25 @@ def save(im, path, width, **kw):  # downscale to width (never up) and write WebP
 KIT = (f'{KEYS}/v6-kit.png' if KEYS and os.path.exists(f'{KEYS}/v6-kit.png') else   # the kit of the story's last frame
        f'{SITE}/design/vtech-3d/hd/kit-hd.webp' if PRODUCT == 'v-tech-system' else f'{REPO}/protocols/print/img/{PRODUCT}.webp')
 k = Image.open(KIT).convert('RGBA'); k = k.crop(k.getchannel('A').point(lambda a: 255 if a > 8 else 0).getbbox())
-kit_size = (min(760, k.width), round(min(760, k.width) * k.height / k.width))
+KIT_W = 1200   # the offer card's picture: up to ~320 css px tall on a phone at DPR 3, ~500 on a desktop at 2
+kit_size = (min(KIT_W, k.width), round(min(KIT_W, k.width) * k.height / k.width))
 if FILES:   # the page's images: smoke, logos, kit card, related products, phone stills cut from the key frames
     os.makedirs(f'{FILES}/img', exist_ok=True)
-    save(Image.open(f'{SITE}/design/vtech-3d/layers/vt-bg-wide.jpg').convert('RGB'), f'{FILES}/img/bg.webp', 2592, quality=80, method=6)
-    save(Image.open(f'{SITE}/img/mitoderm-logo-white-mark.png').convert('RGBA'), f'{FILES}/img/logo-mark.png', 360, optimize=True)
+    save(Image.open(f'{SITE}/design/vtech-3d/layers/vt-bg-wide.jpg').convert('RGB'), f'{FILES}/img/bg.webp', 3456, quality=80, method=6)   # the whole source
+    save(Image.open(f'{SITE}/img/mitoderm-logo-white-mark.png').convert('RGBA'), f'{FILES}/img/logo-mark.png', 600, optimize=True)
     save(Image.open(f'{SITE}/img/mitoderm-logo-white.png').convert('RGBA'), f'{FILES}/img/logo.png', 420, optimize=True)
-    save(k, f'{FILES}/img/kit.webp', 760, quality=86, method=6)
-    for c in s9['line'] + s9['more']:
-        save(Image.open(f'{REPO}/protocols/assets/img/{c[3]}').convert('RGBA'), f'{FILES}/img/{c[3]}', 360, quality=82, method=6)
+    save(k, f'{FILES}/img/kit.webp', KIT_W, quality=86, method=6)
+    for c in s9['line'] + s9['more']:   # a card's packshot at its full size (≤ 1000 px): 204 css px tall × 3 on a phone
+        src = next(f'{REPO}/protocols/{d}/img/{c[3]}' for d in ('assets', 'print') if os.path.exists(f'{REPO}/protocols/{d}/img/{c[3]}'))
+        save(Image.open(src).convert('RGBA'), f'{FILES}/img/{c[3]}', 1000, quality=84, method=6)
     assert KEYS, '--keys <dir with the transparent key frames (render_series.py output)> is needed for the phone stills'
     for n, shot in enumerate(('v1-meet', 'v2-why', 'v3-inside', 'v4-feel', 'v5-protocol'), 1):   # the key frames of the story of 17/10
         im = Image.open(f'{KEYS}/{shot}.png').convert('RGBA'); x0, y0, x1, y1 = im.getchannel('A').point(lambda a: 255 if a > 8 else 0).getbbox()
         p = round(0.03 * max(x1 - x0, y1 - y0))   # a little air around the objects
         save(im.crop((max(0, x0 - p), max(0, y0 - p), min(im.width, x1 + p), min(im.height, y1 + p))), f'{FILES}/img/m{n}.webp', 900, quality=84, method=6)
     src = f'{SITE}/design/vtech-3d/cells'   # exosome sprites and the deep plate (render), when they exist
-    real = sorted(glob.glob(f'{src}/[cm][0-9][0-9]-[012].webp'))   # cells (c) and PDRN molecules (m)
+    kinds = ('c' if EXO else '') + ('m' if EXO and PDRN else '')   # cells (c), PDRN molecules (m)
+    real = sorted(f for k in kinds for f in glob.glob(f'{src}/{k}[0-9][0-9]-[012].webp'))
     if real:
         for f in glob.glob(f'{FILES}/img/cells/[cm][0-9][0-9]-[012].webp'): os.remove(f)
         os.makedirs(f'{FILES}/img/cells', exist_ok=True)
@@ -194,24 +207,24 @@ if FILES:   # the page's images: smoke, logos, kit card, related products, phone
             im = Image.open(f); cap = (1024, 640, 512)[int(f[-6])]
             if im.width > cap: save(im.convert('RGBA'), f'{FILES}/img/cells/{os.path.basename(f)}', cap, quality=88, alpha_quality=92, method=6)
             else: shutil.copyfile(f, f'{FILES}/img/cells/{os.path.basename(f)}')
-    if os.path.exists(f'{src}/plate.webp'):
+    if EXO and os.path.exists(f'{src}/plate.webp'):
         save(Image.open(f'{src}/plate.webp').convert('RGB'), f'{FILES}/img/plate.webp', 2592, quality=82, method=6)
-    if os.path.exists(f'{src}/helix.webp'):   # the DNA helix loop (animated, over black: the page screens it)
+    if EXO and PDRN and os.path.exists(f'{src}/helix.webp'):   # the DNA helix loop (animated, over black: the page screens it)
         shutil.copyfile(f'{src}/helix.webp', f'{FILES}/img/helix.webp')
     if SCENE:   # the scene's textures; the first key frame as the still (no JS, no WebGL)
         shutil.copytree(os.path.join(H, 'img', f'{PRODUCT}-3d'), f'{FILES}/img/{PRODUCT}-3d', dirs_exist_ok=True)
-        save(Image.open(f'{KEYS}/v1-meet.png').convert('RGBA'), f'{FILES}/img/still.webp', 1920, quality=86, alpha_quality=92, method=6)
+        save(Image.open(f'{KEYS}/v1-meet.png').convert('RGBA'), f'{FILES}/img/still.webp', 3840, quality=86, alpha_quality=92, method=6)
         STILL = ('<div class="still" aria-hidden="true"><div class="still-f"><img src="img/still.webp" alt="" loading="lazy" '
                  'style="left:0;top:0;width:100%;height:100%"></div></div>')
 RAW['kit_size'] = f'width="{kit_size[0]}" height="{kit_size[1]}"'
 cdir, plate = (f'{FILES}/img/cells', f'{FILES}/img/plate.webp') if FILES else (f'{SITE}/design/vtech-3d/cells',) * 2
 def sprites(k): return sorted(c for c in {os.path.basename(f)[:3] for f in glob.glob(f'{cdir}/{k}[0-9][0-9]-0.webp')}
                               if all(os.path.exists(f'{cdir}/{c}-{v}.webp') for v in '012'))
-CELLS, MOLS = sprites('c'), sprites('m')
+CELLS, MOLS = (sprites('c') if EXO else []), (sprites('m') if PDRN else [])
 if CELLS and not os.path.exists(plate if FILES else f'{plate}/plate.webp'):
     print('cells without plate.webp: no cells'); CELLS = []
 if not CELLS: MOLS = []   # the molecules float in the cells' field
-HELIX = os.path.exists(f'{FILES}/img/helix.webp' if FILES else f'{cdir}/helix.webp') and bool(CELLS)
+HELIX = PDRN and os.path.exists(f'{FILES}/img/helix.webp' if FILES else f'{cdir}/helix.webp') and bool(CELLS)
 print('cells:', ' '.join(CELLS) or 'none', '| molecules:', ' '.join(MOLS) or 'none', '| helix:', HELIX)
 
 page = open(os.path.join(H, 'vtech-live-template.html'), encoding='utf-8').read()
