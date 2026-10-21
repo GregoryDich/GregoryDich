@@ -334,9 +334,12 @@ enum PerfDiagnostics {
         "budget2.4": "бюджет 2,4 Мп", "noCaustics": "без каустики", "noRays": "без лучей",
         "noVignette": "без виньетки", "poster": "постер вместо видео", "noReef": "без рифа",
         "noFishLight": "без света рыб", "noGroups": "без групп",
+        "vlayer": "задник слоями", "canvas": "задник холстом",   // P1.9: the other backdrop path (name depends on the current one)
     ]
 
     /// One line per probe configuration for the alert: "как есть: 41.2 к/с · p50 16.7 · p90 18.1 · JS 4.2 мс".
+    /// A configuration the engine could not measure (`skipped: true` — the other backdrop path needs a video scene)
+    /// says so instead of a row of dashes.
     static func probeSummary(_ result: Any) -> String {
         guard let dict = result as? [String: Any] else { return "" }
         if let error = dict["error"] as? String { return error }
@@ -348,6 +351,7 @@ enum PerfDiagnostics {
         return configs.prefix(16).map { c in
             let raw = (c["name"] as? String).map { String($0.prefix(40)) } ?? "?"
             let name = probeNames[raw] ?? raw
+            if (c["skipped"] as? Bool) == true { return "\(name): пропущено (нет видео-сцены)" }
             return "\(name): \(num(c["fps"])) к/с · p50 \(num(c["p50"])) · p90 \(num(c["p90"])) · JS \(num(c["jsP50"])) мс"
         }.joined(separator: "\n")
     }

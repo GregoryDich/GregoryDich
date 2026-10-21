@@ -1349,8 +1349,10 @@
        затемнения, color-dodge каустики, screen лучей). В режиме слоёв их делает композитор (Core Animation) над
        настоящим <video>, а холст остаётся прозрачным и несёт только то, что ПЕРЕД задником. Сцена #stage
        (isolation: isolate — своя группа смешивания; проявление — у неё), снизу вверх:
-         1) постеры тем (<img> — те же Image, что грузит loadPoster): запасной кадр и постер зонда «poster»;
-         2) <video> дня и ночи в прямоугольнике cover-fit из layoutBackdrop (transform/размер, object-fit: fill —
+         1) постер и <video> дня, затем постер и <video> ночи (vlOrder: источники ночи над источниками дня — в
+            переходе ночь лежит поверх дня с весом k, как в drawBackdrop, каким бы ни был источник каждой темы);
+            постеры (<img>) — те же Image, что грузит loadPoster: запасной кадр и постер зонда «poster»;
+         2) <video> в прямоугольнике cover-fit из layoutBackdrop (transform/размер, object-fit: fill —
             весь кадр ровно в (dx, dy, dw, dh), как drawBgSource); ночное — с прозрачностью k (вес ночи), как
             drawBackdrop; невидимое — opacity 0 (не display: none и не visibility: WebKit останавливает «невидимое»
             видео); после перехода ненужное видео освобождает syncVideos (themeNeeded) — декодер один;
@@ -1409,9 +1411,12 @@
     }
     vlOrder();
   }
-  // порядок слоёв сцены снизу вверх (видео темы может появиться позже постеров и в любом порядке тем)
+  // порядок слоёв сцены снизу вверх (видео темы может появиться позже постеров и в любом порядке тем).
+  // Источники ДНЯ ниже источников НОЧИ: в переходе vlBackdrop показывает день с прозрачностью 1, а ночь — с весом k
+  // ПОВЕРХ него (как drawBackdrop: D, затем N@k) — какой бы из двух (постер или видео) ни был источником темы;
+  // ночной постер под дневным видео (ночное видео в ошибке или ещё не выровнено) делал переход невидимым до k ≈ 1
   function vlOrder() {
-    const st = VL.stage, seq = [BGS.day.poster, BGS.night.poster, BGS.day.vid, BGS.night.vid, VL.tint, VL.dark, VL.k, VL.can2, VL.rays];
+    const st = VL.stage, seq = [BGS.day.poster, BGS.day.vid, BGS.night.poster, BGS.night.vid, VL.tint, VL.dark, VL.k, VL.can2, VL.rays];
     let prev = null;
     for (let i = 0; i < seq.length; i++) {
       const el = seq[i];
@@ -6502,7 +6507,10 @@
         c = document.createElement("canvas");
         if (VIG_CSS) {
           c.style.cssText = "position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:1;opacity:0";
-          canvas.parentNode.insertBefore(c, canvas.nextSibling);
+          // рядом с постоянным #tank (не с текущим canvas: в режиме слоёв это #tank2 ВНУТРИ сцены #stage, и виньетка
+          // пропадала бы вместе со сценой при возврате к холсту — откат на фото/риф, зонд «canvas»); сцена стоит перед
+          // #tank, z-index 1 держит виньетку над обоими путями
+          VL.can1.parentNode.insertBefore(c, VL.can1.nextSibling);
         }
       }
       const v = TP[i].vignette;

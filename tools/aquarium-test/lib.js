@@ -71,6 +71,8 @@ function buildQuery(o, { test = true } = {}) {
   if (o.wallpaper !== false) q.set('wallpaper', '1');      // как в macOS-приложении: без подсказки и курсора
   if (o.nofilter !== false) q.set('nofilter', '1');
   if (o.seed !== undefined && o.seed !== false) q.set('seed', String(o.seed));
+  // P1.9: --vlayer 1|0 — задник слоями (CSS mix-blend-mode над <video>) | холст; без флага — умолчание движка (холст)
+  if (o.vlayer !== undefined && o.vlayer !== false) q.set('vlayer', o.vlayer === true || +o.vlayer ? '1' : '0');
   if (o.q) for (const [k, v] of new URLSearchParams(String(o.q))) q.set(k, v);
   return q.toString();
 }
