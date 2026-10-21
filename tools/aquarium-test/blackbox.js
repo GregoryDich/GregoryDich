@@ -60,7 +60,9 @@ const busyWait = (page, ms, before) => page.evaluate((ms, before) => {
 }, ms, before || null);
 
 (async () => {
-  const env = await L.openEngine(Object.assign({}, o, { test: false, multiprocess: true }), { test: false });
+  // P1.10: регулятор v2 выключен — в headless он ступал бы вниз каждые ≈1.5 с (фаза 'rs' в чужих кадрах, setQuality(4)
+  // без смены буфера); регулятор проверяет governor.js
+  const env = await L.openEngine(Object.assign({}, o, { test: false, multiprocess: true, q: 'gov=0' + (o.q ? '&' + o.q : '') }), { test: false });
   const out = { url: env.url, viewport: env.vp, steps: {}, gates: {} };
   const S = out.steps, G = out.gates;
   let cap;

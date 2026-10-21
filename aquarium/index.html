@@ -15,6 +15,20 @@
   #tank { display: block; width: 100vw; height: 100vh; cursor: default; opacity: 0; transition: opacity 0.4s ease-out; }
   #tank.on { opacity: 1; }
   body.hide-cursor #tank { cursor: none; }
+  /* P1.9 (?vlayer=1): задник слоями — сцена #stage (своя группа смешивания), снизу вверх: постеры и <video> тем в
+     прямоугольнике cover-fit, затемнение каустики (multiply), K (color-dodge), прозрачный главный холст #tank2,
+     лучи (screen); виньетка (z-index 1) и HUD остаются над сценой. Проявление — у сцены, а не у холста */
+  #stage { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; overflow: hidden; isolation: isolate;
+           opacity: 0; transition: opacity 0.4s ease-out; cursor: default; }
+  #stage.on { opacity: 1; }
+  #stage > * { position: absolute; left: 0; top: 0; display: block; pointer-events: none; transform-origin: 0 0; }
+  #stage > img, #stage > video { object-fit: fill; opacity: 0; }
+  #tank2 { width: 100vw; height: 100vh; pointer-events: auto; cursor: default; }
+  body.hide-cursor #stage, body.hide-cursor #tank2 { cursor: none; }
+  .vl-tint { width: 100%; height: 100%; mix-blend-mode: multiply; opacity: 0; }
+  .vl-dark { mix-blend-mode: multiply; }
+  .vl-k { mix-blend-mode: color-dodge; }
+  .vl-rays { mix-blend-mode: screen; }
   #hint {
     position: fixed; left: 18px; bottom: 16px; margin: 0; padding: 9px 14px;
     border-radius: 12px;
@@ -52,8 +66,9 @@
    Self-contained HTML5 Canvas, без зависимостей.
    ============================================================ */
 (function () {
-  const canvas = document.getElementById("tank");
-  const mainCtx = canvas.getContext("2d", { alpha: false });
+  // P1.9: let — в режиме слоёв (?vlayer=1) главный холст другой: прозрачный #tank2 внутри сцены #stage (setVlayer)
+  let canvas = document.getElementById("tank");
+  let mainCtx = canvas.getContext("2d", { alpha: false });
   // ctx — текущая цель рисования: главный холст или (E4) буфер группы вычитания; OX/OY — её начало
   // в CSS px экрана (у главного холста 0). Рыбы, пузырьки и хлопья ставят преобразования с −OX/−OY.
   let ctx = mainCtx, OX = 0, OY = 0;
@@ -69,9 +84,12 @@
      ?nofilter=1   HAS_FILTER = false (как в WebKit/WKWebView, где ctx.filter выключен)
      ?nobg=1       задник не грузится — процедурный векторный риф (проверка фолбэка)
      ?gov=0        регулятор качества выключен (замеры харнессом с синтетическим временем)
+     ?govlevel=N   стартовая ступень регулятора 0–7 (тесты; сильнее памяти и __AQ_BOOT.govLevel), см. «регулятор v2»
      ?theme=day|night|auto  тема принудительно (сильнее __AQ_BOOT.theme; иначе — по оформлению macOS, см. «ТЕМЫ»)
      ?bgvideo=0    без видео-задника (только постер); в тесте: ?bgvideo=webm|intra — тестовые копии из
-                   tools/aquarium-test/media (вне бандла), ?bgvideo=mp4 — отгружаемые MP4 (см. «ЗАДНИК»)   */
+                   tools/aquarium-test/media (вне бандла), ?bgvideo=mp4 — отгружаемые MP4 (см. «ЗАДНИК»)
+     ?vlayer=1     P1.9: задник слоями (видео, затемнение и каустика — CSS-слои под прозрачным холстом, лучи — слоем
+                   над ним); сильнее __AQ_BOOT.vlayer; ?vlayer=0 — старый путь (по умолчанию). См. «ЗАДНИК СЛОЯМИ» */
   const PARAMS = new URLSearchParams(location.search);
   const flag = (k) => PARAMS.has(k) && PARAMS.get(k) !== "0";
   const WALLPAPER = flag("wallpaper") || window.__WALLPAPER === true;
@@ -91,11 +109,16 @@
        webView.evaluateJavaScript("aquariumSetPower('high')")  // 60 fps   */
   const normPower = (m) => (m === "low" || m === "paused") ? m : "high";
   /* P1.1: стартовые данные приложения (WKUserScript до загрузки страницы):
-       window.__AQ_BOOT = { power, hud, budget, screen: {id, w, h, scale, maxFps, main}, crashes, loadReason, appVersion, theme }
+       window.__AQ_BOOT = { power, hud, budget, screen: {id, w, h, scale, maxFps, main}, crashes, loadReason, appVersion, theme,
+                            vlayer, govLevel }
      hud — HUD сразу включён; budget — Мп холста (число; второй экран — 2) или {mp, fps}; theme — 'auto'|'day'|'night'
-     (меню «Тема аквариума»: первый кадр уже в этой теме, см. «ТЕМЫ»); остальное — в снимок диагностики и HUD.
+     (меню «Тема аквариума»: первый кадр уже в этой теме, см. «ТЕМЫ»); screen.maxFps — vsync для цели регулятора;
+     govLevel — стартовая ступень регулятора (0–7), если у страницы нет своей памяти на эту пару «экран + питание»
+     (localStorage); остальное — в снимок диагностики и HUD.
      window.__AQ_POWER оставлен для совместимости (у него приоритет над boot.power). */
   const BOOT = window.__AQ_BOOT && typeof window.__AQ_BOOT === "object" ? window.__AQ_BOOT : null;
+  // P1.9: режим слоёв — ?vlayer=1|0 (адрес сильнее), иначе __AQ_BOOT.vlayer === true; по умолчанию выключен
+  const VLAYER_Q = PARAMS.has("vlayer") ? flag("vlayer") : !!(BOOT && BOOT.vlayer === true);
   // V5: приложение передаёт режим ещё до загрузки страницы (WKUserScript: window.__AQ_POWER) — первый кадр
   // уже в нужном режиме (вызов evaluateJavaScript до загрузки терялся: на батарее шло 60 к/с)
   let POWER = normPower(window.__AQ_POWER || (BOOT && BOOT.power));
@@ -104,8 +127,9 @@
     if (m === POWER) return;                     // тот же режим — не сбрасывать замер регулятора
     perfEvent("power", { from: POWER, to: m });
     POWER = m; PERF.armed = false;               // «чёрный ящик»: сон/пробуждение дисплея — не «застой»
+    govLoad(true);                               // P1.10: ступень этой пары «экран + питание» (буфер — с бюджетом ниже)
     if (m !== "paused") budgetChanged();         // бюджет пикселей зависит от питания (P1.3)
-    lastShown = 0; govReset();                   // смена режима — замер интервалов заново
+    lastShown = 0; govReset();                   // смена режима — замер интервалов заново (3 с тишины)
     syncVideos();                                // 'paused' — видео-задник тоже на паузу (и обратно)
   };
 
@@ -160,7 +184,9 @@
   /* P1.1/P1.2: бюджет и предел к/с от приложения — aquariumSetBudget({mp, fps}) или __AQ_BOOT.budget (второй экран:
      2 Мп и 30 к/с); PROBE_BUDGET — временно, только на время зонда aquariumPerfProbe. Порядок: зонд → ?budget → приложение
      → питание. NOVIDCAP — зонд «как было»: без предела «1.1 пикселя устройства на пиксель видео». */
-  let APP_BUDGET = 0, APP_FPS = 0, PROBE_BUDGET = 0, NOVIDCAP = false;
+  // ?vidcap=0 (тесты): без предела «1.1 px устройства на px видео» — RS до DPR (гейт layers_psnr.js сравнивает пути при равном разрешении)
+  const NOVIDCAP_Q = PARAMS.get("vidcap") === "0";
+  let APP_BUDGET = 0, APP_FPS = 0, PROBE_BUDGET = 0, NOVIDCAP = NOVIDCAP_Q;
   function setAppBudget(o) {
     if (typeof o === "number") o = { mp: o };
     o = o && typeof o === "object" ? o : {};
@@ -169,61 +195,147 @@
     APP_FPS = fps > 0 ? Math.min(60, Math.max(10, Math.round(fps))) : 0;
   }
   if (BOOT && BOOT.budget != null) setAppBudget(BOOT.budget);
-  const pixelBudget = () => PROBE_BUDGET || BUDGET_Q || APP_BUDGET || (POWER === "low" ? 2.4e6 : 3.7e6);
+  // P1.11: в режиме слоёв полноэкранные проходы ушли из холста — бюджет холста 6 Мп от сети / 3.7 на батарее (RS всё
+  // равно ≤ DPR: рыбы и кораллы в родной резкости Retina; запас проверяет регулятор)
+  const pixelBudget = () => PROBE_BUDGET || BUDGET_Q || APP_BUDGET || (POWER === "low" ? (VL.on ? 3.7e6 : 2.4e6) : (VL.on ? 6.0e6 : 3.7e6));
   const budgetSource = () => (PROBE_BUDGET ? "probe" : BUDGET_Q ? "url" : APP_BUDGET ? "app" : POWER === "low" ? "battery" : "power");
-  // целевые к/с: 'high' — 60, 'low' — 30; приложение может ограничить ещё (второй экран — 30)
-  const fpsTarget = () => Math.min(POWER === "low" ? 30 : 60, APP_FPS > 0 ? APP_FPS : 60);
+  // целевые к/с: 'high' — 60, 'low' — 30; приложение может ограничить ещё (второй экран — 30); последняя ступень
+  // регулятора (QUALITY.fps30) — ровные 30
+  const fpsTargetBase = () => Math.min(POWER === "low" ? 30 : 60, APP_FPS > 0 ? APP_FPS : 60);
+  const fpsTarget = () => Math.min(fpsTargetBase(), QUALITY.fps30 ? 30 : 60);
   let DPR = Math.min(window.devicePixelRatio || 1, 2);
   let W = 0, H = 0, floorY = 0, RS = 1;
   // размер рыб: в видео-сцене — от масштаба задника (рыба той же величины относительно настоящего рифа на любом
   // соотношении сторон: на 3440×1440 было на ≈30% крупнее, чем на 4:3); иначе — доля ширины экрана (как в LMA2)
   const sizeScale = () => (bgReady && bgMode === "video" ? clamp(BGX.sc * 1.75, 0.6, 3) : clamp(W / 1300, 0.8, 2.8));
 
-  /* ---------- регулятор качества (меряет сам себя — целевого железа под рукой нет) ----------
-     p90 интервала показанных кадров > 1.25× цели 5 с подряд → ступень вниз:
-     частицы −50% → срезы рыб −30% → буфер каустики 0.5→0.35 → RS −15%.
-     30 с хороших кадров → ступень вверх (после «отскока» ожидание удваивается, до 10 мин).
-     Остальные этапы ЧИТАЮТ QUALITY.particles / fishSlices / causticScale / rsMul. */
+  /* ---------- регулятор качества v2 (P1.10; меряет сам себя — целевого железа под рукой нет) ----------
+     Кадр на Mac упирается в заливку, поэтому ступени — по цене за снятый пиксель: сначала масштаб буфера
+     (RS × 0.9 / 0.8 / 0.7 / 0.6 — только размер холста и кэши света; варианты кораллов пересобираются лишь при
+     РОСТЕ масштаба, см. drawReefLayer), потом эффекты одной ступенью (K 0.35, кэши 15 Гц, без нитей лучей,
+     частицы ×0.5), потом срезы рыб ×0.7, последней — ровные 30 к/с (на батарее и при пределе приложения ≤ 30
+     эта ступень лишняя: govMaxLevel). Остальные этапы ЧИТАЮТ QUALITY.rsMul / particles / fishSlices /
+     causticScale / cacheHz / filaments / fps30.
+     Замер — окна по 1 с интервалов показанных кадров (p50, p90); цель govTarget — тот кратный vsync интервал,
+     на который ложится ритм frame() (60 Гц и ProMotion — 16.7 мс, 50 Гц — 20, 30 к/с — 33.3 или 40). Первые 3 с
+     после старта, ресайза, смены темы (и весь переход тем: два видео, пересборки), питания, бюджета и зонда не
+     считаются; после своей ступени — 0.5 с. Вниз: p50 > 1.9× цели — сразу (одно окно), p90 > 1.5× — три окна подряд.
+     Вверх: p90 ≤ 1.1× цели (все кадры в свой vsync) GOV.recover с подряд — 5 с; после «отскока» (вверх и в течение
+     15 с снова вниз) ожидание удваивается до 10 мин, а удержавшаяся ступень вверх возвращает 5 с — без качелей.
+     Между 1.1× и 1.5× — мёртвая зона, ступень держится. Ступень помнится на пару «экран + питание»
+     (localStorage 'aq.gov.<экран>.<питание>'; запасной источник — __AQ_BOOT.govLevel; ?govlevel=N — тесты) и
+     с неё начинается следующий запуск. Проверка — tools/aquarium-test/governor.js. */
   const QUALITY_LEVELS = [
-    { particles: 1.0, fishSlices: 1.0, causticScale: 0.5,  rsMul: 1.0 },
-    { particles: 0.5, fishSlices: 1.0, causticScale: 0.5,  rsMul: 1.0 },
-    { particles: 0.5, fishSlices: 0.7, causticScale: 0.5,  rsMul: 1.0 },
-    { particles: 0.5, fishSlices: 0.7, causticScale: 0.35, rsMul: 1.0 },
-    { particles: 0.5, fishSlices: 0.7, causticScale: 0.35, rsMul: 0.85 },
+    { name: "полное",       rsMul: 1.0, particles: 1.0, fishSlices: 1.0, causticScale: 0.5,  cacheHz: 20, filaments: 1, fps30: 0 },
+    { name: "×0.9",         rsMul: 0.9, particles: 1.0, fishSlices: 1.0, causticScale: 0.5,  cacheHz: 20, filaments: 1, fps30: 0 },
+    { name: "×0.8",         rsMul: 0.8, particles: 1.0, fishSlices: 1.0, causticScale: 0.5,  cacheHz: 20, filaments: 1, fps30: 0 },
+    { name: "×0.7",         rsMul: 0.7, particles: 1.0, fishSlices: 1.0, causticScale: 0.5,  cacheHz: 20, filaments: 1, fps30: 0 },
+    { name: "×0.6",         rsMul: 0.6, particles: 1.0, fishSlices: 1.0, causticScale: 0.5,  cacheHz: 20, filaments: 1, fps30: 0 },
+    { name: "×0.6+эффекты", rsMul: 0.6, particles: 0.5, fishSlices: 1.0, causticScale: 0.35, cacheHz: 15, filaments: 0, fps30: 0 },
+    { name: "+срезы",       rsMul: 0.6, particles: 0.5, fishSlices: 0.7, causticScale: 0.35, cacheHz: 15, filaments: 0, fps30: 0 },
+    { name: "+30 к/с",      rsMul: 0.6, particles: 0.5, fishSlices: 0.7, causticScale: 0.35, cacheHz: 15, filaments: 0, fps30: 1 },
   ];
   const QUALITY = Object.assign({ level: 0 }, QUALITY_LEVELS[0]);
-  function setQuality(level) {
+  // noBacking — буфер не сейчас (смена питания: его пересоберёт budgetChanged вместе с новым бюджетом)
+  function setQuality(level, noBacking) {
     level = clamp(level | 0, 0, QUALITY_LEVELS.length - 1);
     const prevRs = QUALITY.rsMul;
-    if (level !== QUALITY.level) perfEvent("gov", { from: QUALITY.level, to: level, p90: Math.round(GOV.p90 * 10) / 10 });
+    if (level !== QUALITY.level) perfEvent("gov", { from: QUALITY.level, to: level, p50: r1(GOV.p50), p90: r1(GOV.p90), tgt: r1(GOV.target) });
     Object.assign(QUALITY, QUALITY_LEVELS[level]);
     QUALITY.level = level;
-    if (QUALITY.rsMul !== prevRs && W > 0) { applyBacking(); if (TEST) renderNow(); }
+    if (QUALITY.rsMul !== prevRs && W > 0 && !noBacking) { applyBacking(); if (TEST) renderNow(); }
   }
-  const GOV = { iv: new Float32Array(160), tmp: new Float32Array(160), n: 0, acc: 0,
-                bad: 0, good: 0, p90: 0, fps: 0, recover: 30, clock: 0, lastUp: -1e9 };   // clock — мс показанных кадров
-  function govReset() { GOV.n = 0; GOV.acc = 0; }
-  function govSample(ms) {
-    if (!(ms > 0) || ms > 500) return;           // паузы, скрытие, первый кадр — не в счёт
+  const GOV_SETTLE_MS = 3000, GOV_STEP_MS = 500, GOV_WIN_MS = 1000, GOV_DOWN_P50 = 1.9, GOV_DOWN_P90 = 1.5, GOV_DOWN_N = 3,
+        GOV_UP_P90 = 1.1, GOV_RECOVER_S = 5, GOV_RECOVER_MAX = 600, GOV_BOUNCE_MS = 15000;
+  const GOV = { iv: new Float32Array(256), tmp: new Float32Array(256), n: 0, acc: 0, win: 0, p50: 0, p90: 0, fps: 0,
+                bad: 0, good: 0, recover: GOV_RECOVER_S, clock: 0, lastUp: -1e9, upTo: -1,   // clock — мс показанных кадров
+                quiet: true, settleT0: NaN, settleMs: GOV_SETTLE_MS, target: 1000 / 60, vs: 0, vsSrc: "",
+                key: "", stored: -1, downs: 0, ups: 0 };
+  const GOV_LEVEL_Q = PARAMS.has("govlevel") ? Math.min(QUALITY_LEVELS.length - 1, Math.max(0, parseInt(PARAMS.get("govlevel"), 10) || 0)) : -1;   // clamp ещё не объявлен
+  // тишина: окно заново, settleMs по часам rAF с первого же показанного кадра (старт, ресайз, тема, питание, бюджет, зонд)
+  function govReset(settleMs) { GOV.n = 0; GOV.acc = 0; GOV.good = 0; GOV.bad = 0; GOV.quiet = true; GOV.settleMs = settleMs || GOV_SETTLE_MS; }
+  // последняя ступень (30 к/с) — только там, где цель выше 30
+  const govMaxLevel = () => (fpsTargetBase() > 30 ? QUALITY_LEVELS.length - 1 : QUALITY_LEVELS.length - 2);
+  // vsync, мс: экран от приложения (maxFps) надёжнее оценки по сырым интервалам rAF; оценка — только правдоподобная
+  // (48–250 Гц): на перегруженной машине кластер коротких интервалов — это уже 2 vsync, и цель раздулась бы
+  function govVsync() {
+    const sc = BOOT && BOOT.screen, hz = sc ? +sc.maxFps : 0;
+    if (hz >= 48 && hz <= 250) { GOV.vsSrc = "экран"; return 1000 / hz; }
+    const v = vsyncEst();
+    if (v >= 4 && v <= 20.9) { GOV.vsSrc = "оценка"; return v; }
+    GOV.vsSrc = "";
+    return 0;
+  }
+  // цель, мс: ритм frame() рисует на первом vsync после 0.85 периода цели — кратное vsync, не меньше периода
+  function govTarget() {
+    const base = 1000 / fpsTarget(), vs = govVsync();
+    GOV.vs = vs;
+    if (!vs) return base;
+    return Math.max(base, Math.max(1, Math.ceil((0.85 * base) / vs)) * vs);
+  }
+  // пара «экран + питание»: id экрана от приложения, иначе размер экрана и DPR (браузер, тесты)
+  function govKey() {
+    const sc = BOOT && BOOT.screen, id = sc && sc.id != null ? String(sc.id) : (screen.width || 0) + "x" + (screen.height || 0) + "@" + (window.devicePixelRatio || 1);
+    return "aq.gov." + id + "." + POWER;
+  }
+  function govStoredLevel(key) {
+    try { const v = parseInt(localStorage.getItem(key), 10); if (v >= 0 && v < QUALITY_LEVELS.length) return v; } catch (e) { /* нет хранилища */ }
+    const b = BOOT ? parseInt(BOOT.govLevel, 10) : NaN;
+    return b >= 0 && b < QUALITY_LEVELS.length ? b : 0;
+  }
+  function govStore(level) {
+    GOV.stored = level;
+    try { localStorage.setItem(GOV.key, String(level)); } catch (e) { /* приватный режим, запрет — просто не помним */ }
+  }
+  // старт и смена питания: ступень этой пары (?govlevel=N сильнее — тесты); noBacking — буфер отложен (budgetChanged)
+  function govLoad(noBacking) {
+    if (POWER === "paused") return;
+    GOV.key = govKey();
+    const lv = GOV_LEVEL_Q >= 0 ? GOV_LEVEL_Q : govStoredLevel(GOV.key);
+    GOV.stored = lv;
+    setQuality(Math.min(lv, govMaxLevel()), noBacking);
+  }
+  function govStep(level, why) {
+    if (why === "down") GOV.downs++; else GOV.ups++;
+    setQuality(level);
+    govStore(level);
+    govReset(GOV_STEP_MS);
+  }
+  // показанный кадр: ms — интервал от прошлого показанного, now — метка rAF (часы окон и тишины; в тестах — синтетические)
+  function govSample(ms, now) {
+    if (!(ms > 0) || ms > 500) return;           // паузы, скрытие, первый кадр, застои — не в счёт
     GOV.fps = GOV.fps ? GOV.fps * 0.95 + (1000 / ms) * 0.05 : 1000 / ms;
+    GOV.clock += ms;
+    if (TH.p !== TH.target) { GOV.quiet = true; GOV.n = 0; GOV.acc = 0; return; }   // переход тем — не мерим, после него 3 с тишины
+    if (GOV.quiet) { GOV.quiet = false; GOV.settleT0 = now; GOV.n = 0; GOV.acc = 0; }
+    if (now - GOV.settleT0 < GOV.settleMs) return;
     if (GOV.n < GOV.iv.length) GOV.iv[GOV.n++] = ms;
-    GOV.acc += ms; GOV.clock += ms;
-    if (GOV.acc < 1000) return;
-    // p90 за последнюю секунду: копия в заранее выделенный буфер, сортировка на месте
+    GOV.acc += ms;
+    if (GOV.acc < GOV_WIN_MS) return;
+    // p50 и p90 окна: копия в заранее выделенный буфер, сортировка на месте (без аллокаций)
     const n = GOV.n;
     for (let i = 0; i < GOV.tmp.length; i++) GOV.tmp[i] = i < n ? GOV.iv[i] : Infinity;
     GOV.tmp.sort();
+    GOV.p50 = GOV.tmp[Math.min(n - 1, Math.floor(n * 0.5))];
     GOV.p90 = GOV.tmp[Math.min(n - 1, Math.floor(n * 0.9))];
-    GOV.n = 0; GOV.acc = 0;
-    const target = 1000 / fpsTarget();
-    if (GOV.p90 > 1.25 * target) { GOV.bad++; GOV.good = 0; }
-    else { GOV.bad = 0; if (GOV.p90 <= 1.1 * target) GOV.good++; else GOV.good = 0; }
-    if (GOV.bad >= 5 && QUALITY.level < QUALITY_LEVELS.length - 1) {
-      if (GOV.clock - GOV.lastUp < 15000) GOV.recover = Math.min(GOV.recover * 2, 600);   // без «качелей»
-      setQuality(QUALITY.level + 1); GOV.bad = 0; GOV.good = 0;
-    } else if (GOV.good >= GOV.recover && QUALITY.level > 0) {
-      setQuality(QUALITY.level - 1); GOV.lastUp = GOV.clock; GOV.good = 0;
+    GOV.n = 0; GOV.acc = 0; GOV.win++;
+    const T = govTarget(), L = QUALITY.level, max = govMaxLevel();
+    GOV.target = T;
+    // удержавшаяся ступень вверх (15 с без отскока) — ожидание восстановления снова 5 с
+    if (GOV.recover > GOV_RECOVER_S && GOV.upTo === L && GOV.clock - GOV.lastUp > GOV_BOUNCE_MS) { GOV.recover = GOV_RECOVER_S; GOV.upTo = -1; }
+    if (GOV.p50 > GOV_DOWN_P50 * T) GOV.bad = GOV_DOWN_N;        // половина кадров опаздывает почти вдвое — сразу
+    else if (GOV.p90 > GOV_DOWN_P90 * T) GOV.bad++;
+    else GOV.bad = 0;
+    if (GOV.bad >= GOV_DOWN_N) {
+      GOV.good = 0; GOV.bad = 0;
+      if (L < max) {
+        if (GOV.clock - GOV.lastUp < GOV_BOUNCE_MS) { GOV.recover = Math.min(GOV.recover * 2, GOV_RECOVER_MAX); GOV.upTo = -1; }   // отскок — без «качелей»
+        govStep(L + 1, "down");
+      } else if (L > max) govStep(max, "down");  // питание/предел к/с сняли смысл ступени 30 к/с
+      return;
     }
+    if (GOV.p90 <= GOV_UP_P90 * T) GOV.good++; else GOV.good = 0;
+    if (GOV.good >= GOV.recover && L > 0) { GOV.lastUp = GOV.clock; GOV.upTo = L - 1; govStep(L - 1, "up"); }
   }
 
   /* ============================================================
@@ -566,8 +678,16 @@
       vsync: { ms: r2(c.vs), hz: c.vs ? Math.round(1000 / c.vs) : null, screenMaxFps: sc && sc.maxFps ? sc.maxFps : null },
       canvas: { w: canvas.width, h: canvas.height, mp: r2((canvas.width * canvas.height) / 1e6), rs: r3(RS), dpr: DPR, css: [W, H],
         budgetMp: r2(pixelBudget() / 1e6), budgetSrc: budgetSource(), videoZoom: r3(BGX.sc), devPxPerVideoPx: r2(BGX.sc * RS) },
-      gov: { on: GOV_ON, paused: PROBE.on, level: QUALITY.level, p90: r1(GOV.p90), fps: r1(GOV.fps), recover: GOV.recover },
+      // P1.10: регулятор v2 — ступень, цель (кратное vsync), окно p50/p90, счётчики восстановления, память пары
+      gov: { on: GOV_ON, paused: PROBE.on, level: QUALITY.level, max: govMaxLevel(), name: QUALITY.name, rsMul: QUALITY.rsMul,
+        targetMs: r2(govTarget()), vsyncMs: r2(GOV.vs), vsyncSrc: GOV.vsSrc || null, p50: r1(GOV.p50), p90: r1(GOV.p90), fps: r1(GOV.fps),
+        good: GOV.good, bad: GOV.bad, recover: GOV.recover, quiet: GOV.quiet, windows: GOV.win, downs: GOV.downs, ups: GOV.ups,
+        key: GOV.key, stored: GOV.stored },
       power: POWER, appFps: APP_FPS || null, paced: !PERF.noPace, stagger: STAGGER, vigCss: VIG_CSS,
+      // P1.9: режим слоёв (задник, затемнение, K и лучи — CSS-слои) и размеры его буферов
+      vlayer: VL.on, vlayerWant: VL.want,
+      layers: VL.on ? { rays: [VL.rays.width, VL.rays.height], raysScale: r3(VL.raysS), raysHz: RAYS_HZ, k: [kW, kH],
+        dark: darkCan ? [darkCan.width, darkCan.height] : null } : null,
       theme: { mode: TH.mode, target: THEMES[TH.target], k: r2(TH.k) },
       bg: bgMode, video: bgMode === "video" ? { day: videoInfo("day"), night: videoInfo("night") } : null,
       fish: fishes.length, layersOff: nOff ? off : null,
@@ -621,9 +741,11 @@
       `JS p50 ${f(c.js.p50)}  p90 ${f(c.js.p90)} мс   интервал − JS ${f(Math.max(0, c.iv.p50 - c.js.p50))} мс   vsync ≈ ` +
         (c.vs ? `${f(c.vs)} мс (${Math.round(1000 / c.vs)} Гц)` : "?") + (sc && sc.maxFps ? `   экран ${sc.maxFps} Гц` : ""),
       `буфер ${canvas.width}×${canvas.height} ${f((canvas.width * canvas.height) / 1e6, 2)} Мп  RS ${f(RS, 3)}  DPR ${DPR}  бюджет ${f(pixelBudget() / 1e6)} Мп (${budgetSource()})  ` +
-        `видео ×${f(BGX.sc, 2)} (${f(BGX.sc * RS, 2)} px устройства на px видео)`,
-      `регулятор Q${QUALITY.level}` + (PROBE.on ? ` (пауза: зонд ${PROBE.k + 1}/${PROBE.list.length} ${PROBE.list[PROBE.k].name})` : GOV_ON ? "" : " (выкл)") +
-        `  питание ${POWER}${APP_FPS ? " (предел " + APP_FPS + " к/с)" : ""}  тема ${THEMES[TH.target]}${TH.k > 0 && TH.k < 1 ? " " + f(TH.k, 2) : ""}  рыб ${fishes.length}`,
+        `видео ×${f(BGX.sc, 2)} (${f(BGX.sc * RS, 2)} px устройства на px видео)  слои ${VL.on ? `вкл (лучи ${VL.rays.width}×${VL.rays.height} ≤${RAYS_HZ} Гц, K ${kW}×${kH})` : "выкл"}`,
+      `регулятор Q${QUALITY.level}/${govMaxLevel()} ${QUALITY.name}` + (PROBE.on ? ` (пауза: зонд ${PROBE.k + 1}/${PROBE.list.length} ${PROBE.list[PROBE.k].name})` : GOV_ON ? "" : " (выкл)") +
+        `  цель ${f(govTarget())} мс (vsync ${GOV.vs ? f(GOV.vs, 2) + " мс, " + GOV.vsSrc : "?"})  окно p50 ${f(GOV.p50)}  p90 ${f(GOV.p90)} мс` +
+        `  хорошо ${GOV.good}/${GOV.recover} с  плохо ${GOV.bad}/${GOV_DOWN_N}${GOV.quiet || !PERF.frames ? "  тишина" : ""}  память ${GOV.key.replace(/^aq\.gov\./, "")}=${GOV.stored}`,
+      `питание ${POWER}${APP_FPS ? " (предел " + APP_FPS + " к/с)" : ""}  тема ${THEMES[TH.target]}${TH.k > 0 && TH.k < 1 ? " " + f(TH.k, 2) : ""}  рыб ${fishes.length}`,
     ];
     if (bgMode === "video") {
       const v = videoInfo(THEMES[TH.target]);
@@ -654,6 +776,9 @@
     { name: "noReef", layers: { xCoral: false, xProp: false } },    // без колоний и реквизита
     { name: "noFishLight", layers: { fishlight: false } },
     { name: "noGroups", layers: { groups: false } },
+    // P1.9: другой путь задника — слои, если сейчас холст (и наоборот: «canvas», probeStart подменяет имя);
+    // без видео-сцены (фото, процедурный риф) переключить нельзя — конфигурация пропускается (skipped, числа null)
+    { name: "vlayer", vlayer: true },
     // последним: RS до 2 укрупняет варианты кораллов и реквизита (tk только растёт) — остальные мерились бы с ними
     { name: "asBefore", budget: 8.3, noVidCap: true, pace: false, stagger: false },   // как до V5: 8.3 Мп, каждый rAF, кэши в одном кадре
   ];
@@ -673,15 +798,26 @@
     const s = PROBE.saved;
     probeRestoreTks();
     for (const k in s.layers) LAYERS[k] = s.layers[k];
-    STAGGER = s.stagger; PERF.noPace = false; NOVIDCAP = false; PROBE_BUDGET = 0;
+    STAGGER = s.stagger; PERF.noPace = false; NOVIDCAP = NOVIDCAP_Q; PROBE_BUDGET = 0;
+    let vl = s.vl;
     if (c) {
       if (c.layers) for (const k in c.layers) if (k in LAYERS) LAYERS[k] = c.layers[k];
       if (c.budget) PROBE_BUDGET = c.budget * 1e6;
       if (c.noVidCap) NOVIDCAP = true;
       if (c.pace === false) PERF.noPace = true;
       if (c.stagger === false) STAGGER = false;
+      if (c.vlayer != null) vl = !!c.vlayer;
     }
+    if (vl !== VL.on) setVlayer(vl);                 // P1.9: слои ↔ холст (пересобирает буфер сам)
     if (W > 0 && Math.abs(backingRS() - RS) > 1e-6) applyBacking();
+  }
+  // конфигурации, невозможные здесь (слои без видео-сцены), — в результат с null, без замера
+  function probeSkip() {
+    const P = PROBE;
+    while (P.k < P.list.length && P.list[P.k].skipped) {
+      P.res.push({ name: P.list[P.k].name, skipped: true, frames: 0, fps: null, p50: null, p90: null, p95: null, max: null, jsP50: null, jsP90: null, mp: null, rs: null });
+      P.k++;
+    }
   }
   // opts (тесты): {warmMs, measureMs, configs: [имена]} — короче/выборочно; по умолчанию 1000 + 3000 мс × 11 ≈ 45 с
   function probeStart(opts) {
@@ -690,17 +826,21 @@
     const ms = (v, d) => (+v > 0 ? Math.min(20000, Math.max(20, +v)) : d);
     PROBE.warm = ms(opts.warmMs, 1000); PROBE.meas = ms(opts.measureMs, 3000);
     const want = Array.isArray(opts.configs) ? opts.configs : null;
-    PROBE.list = want ? PROBE_CONFIGS.filter((c) => want.indexOf(c.name) >= 0) : PROBE_CONFIGS.slice();
+    // P1.9: «vlayer» — другой путь задника: в режиме слоёв это «canvas»; без видео-сцены — пропуск (skipped)
+    const vlName = VL.on ? "canvas" : "vlayer";
+    PROBE.list = (want ? PROBE_CONFIGS.filter((c) => want.indexOf(c.vlayer != null ? vlName : c.name) >= 0) : PROBE_CONFIGS.slice())
+      .map((c) => (c.vlayer == null ? c : !vlFeasible() ? { name: vlName, skipped: true } : { name: vlName, vlayer: !VL.on }));
     // масштаб вариантов кораллов и реквизита: «как было» (RS 2) их укрупнит — после зонда вернуть прежние
     const tks = [];
     for (let i = 0; i < SCN.items.length; i++) { const it = SCN.items[i]; if (it.timgs) tks.push(it, it.tk); }
-    PROBE.saved = { layers: Object.assign({}, LAYERS), stagger: STAGGER, tks };
+    PROBE.saved = { layers: Object.assign({}, LAYERS), stagger: STAGGER, tks, vl: VL.on };
     PROBE.res = []; PROBE.k = 0; PROBE.phase = 0; PROBE.acc = 0; PROBE.n = 0; PROBE.t0 = performance.now(); PROBE.on = true;
     PROBE.promise = new Promise((res) => { PROBE.resolve = res; });
     const p = PROBE.promise;
     perfEvent("probe", { start: PROBE.list.length });
-    if (!PROBE.list.length) { probeEnd(null); return p; }
-    probeApply(PROBE.list[0]);
+    probeSkip();
+    if (PROBE.k >= PROBE.list.length) { probeEnd(null); return p; }
+    probeApply(PROBE.list[PROBE.k]);
     // кадров нет (питание 'paused', окно скрыто, тест-режим) — не висеть: отмена с тем, что успели
     PROBE.timer = setTimeout(() => probeEnd("timeout"), PROBE.list.length * (PROBE.warm + PROBE.meas) * 3 + 15000);
     return p;
@@ -715,6 +855,7 @@
     P.res.push({ name: P.list[P.k].name, frames: P.n, fps: a.mean > 0 ? r1(1000 / a.mean) : 0, p50: r2(a.p50), p90: r2(a.p90), p95: r2(a.p95),
       max: r1(a.max), jsP50: r2(j.p50), jsP90: r2(j.p90), mp: r2((canvas.width * canvas.height) / 1e6), rs: r3(RS) });
     P.k++; P.phase = 0; P.acc = 0; P.n = 0;
+    probeSkip();
     if (P.k >= P.list.length) probeEnd(null); else probeApply(P.list[P.k]);
   }
   function probeEnd(why) {
@@ -904,7 +1045,7 @@
     if (TEST) loadPoster(other);                      // тест: обе темы сразу — смена темы без ожидания загрузки
   }
   function loadPhoto(i) {
-    if (i >= BG_CANDIDATES.length) { bgMode = null; bgSettled = true; assetsChanged(); return; }
+    if (i >= BG_CANDIDATES.length) { bgMode = null; bgSettled = true; if (VL.on) setVlayer(false); assetsChanged(); return; }   // процедурный риф — старый путь
     const im = new Image();
     im.onload = () => {
       if (!(im.naturalWidth > 0)) { loadPhoto(i + 1); return; }
@@ -917,6 +1058,7 @@
   function applyBackdrop0(im, src) {
     const oSS = W > 0 ? sizeScale() : 1;
     bgImg = im; bgSrc = src; bgReady = true; bgSettled = true;
+    if (VL.on && !vlFeasible()) setVlayer(false);     // P1.9: задник оказался фото — старый путь
     useScene(src); themeMix(); layoutBackdrop();
     // V5: масштаб буфера и размер рыб зависят от масштаба задника (P1.3, «рыбы относительно рифа»)
     if (W > 0 && Math.abs(backingRS() - RS) > 1e-6) applyBacking();
@@ -931,6 +1073,18 @@
 
   /* ---------- видео тем ---------- */
   let vidBox = null;
+  // крошечный элемент ПОД холстом (старый путь): WebKit не останавливает «невидимое» видео; P1.9 — в режиме слоёв
+  // видео уходит в сцену #stage (vlAttach) и возвращается сюда при выключении (vlDetachVideo)
+  const VIDBOX_CSS = "position:fixed;left:0;top:0;width:2px;height:2px;overflow:hidden;z-index:-1;pointer-events:none";
+  const VID_CSS = "display:block;width:2px;height:2px";
+  function vidBoxEl() {
+    if (!vidBox) {
+      vidBox = document.createElement("div");
+      vidBox.style.cssText = VIDBOX_CSS;
+      document.body.appendChild(vidBox);
+    }
+    return vidBox;
+  }
   function videoUrl(name) {
     // только тест, вне бандла: webm — копии VP9 этапа V1; intra — H.264 1920×1080 «все кадры ключевые» (перемотка
     // на соседний кадр — один кадр декода: клипы и stats.js в разы быстрее)
@@ -943,17 +1097,11 @@
     if (S.vState === 3 && !VTEST && S.vRetryAt > 0 && performance.now() >= S.vRetryAt) { S.vState = 0; S.vRetryAt = 0; }
     if (!VID_ALLOWED || bgMode !== "video" || S.vid || S.vState === 3 || !videoScene()) return;
     phB(PH_VIDEO);                                    // «чёрный ящик»: новое видео (элемент, источник)
-    if (!vidBox) {
-      vidBox = document.createElement("div");
-      vidBox.style.cssText = "position:fixed;left:0;top:0;width:2px;height:2px;overflow:hidden;z-index:-1;pointer-events:none";
-      document.body.appendChild(vidBox);
-    }
     const v = document.createElement("video");
     v.muted = true; v.defaultMuted = true; v.loop = !TEST; v.playsInline = true; v.preload = "auto"; v.autoplay = false;
     v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("webkit-playsinline", "");
     try { v.disableRemotePlayback = true; v.disablePictureInPicture = true; } catch (e) { /* не везде есть */ }
-    v.style.cssText = "display:block;width:2px;height:2px";
-    S.vid = v; S.vState = 1; S.aligned = false; S.tries = 0; S.frame = -1;
+    S.vid = v; S.vState = 1; S.aligned = false; S.tries = 0; S.frame = -1; S.fresh = false;
     S.rvLast = 0; S.lastMt = 0; S.rvT0 = 0; S.vfps = 0; S.loopAt = 0; S.loopPend = false;
     v.addEventListener("loadeddata", () => {
       if (S.vid !== v) return;
@@ -974,7 +1122,7 @@
       assetsChanged();
     });
     v.src = videoUrl(name);
-    vidBox.appendChild(v);
+    if (VL.on) vlAttach(v); else vlDetachVideo(v);   // P1.9: слой сцены | крошечный элемент под холстом
     phE();
   }
   /* P1.1 / restart-investigation: оборот петли — перемотка в начало (длительность seeking → seeked) и пропуск
@@ -1110,7 +1258,7 @@
       const tt = (fi + 0.5) / vFps();
       if (S.frame === fi && !v.seeking) { res(); return; }
       const to = setTimeout(fin, 60000);
-      function fin() { clearTimeout(to); v.removeEventListener("seeked", fin); S.frame = fi; res(); }
+      function fin() { clearTimeout(to); v.removeEventListener("seeked", fin); S.frame = fi; S.fresh = true; res(); }   // fresh — кадр ещё не показан (vlPresented)
       v.addEventListener("seeked", fin);
       v.currentTime = tt;
     });
@@ -1196,6 +1344,217 @@
   }
 
   /* ============================================================
+     ЗАДНИК СЛОЯМИ — P1.9 / P1.7 (?vlayer=1 | __AQ_BOOT.vlayer; по умолчанию выключено)
+       На Mac владельца кадр упирается в растр: ≈4,5 полноэкранных прохода со смешиванием (видео в холст, multiply
+       затемнения, color-dodge каустики, screen лучей). В режиме слоёв их делает композитор (Core Animation) над
+       настоящим <video>, а холст остаётся прозрачным и несёт только то, что ПЕРЕД задником. Сцена #stage
+       (isolation: isolate — своя группа смешивания; проявление — у неё), снизу вверх:
+         1) постеры тем (<img> — те же Image, что грузит loadPoster): запасной кадр и постер зонда «poster»;
+         2) <video> дня и ночи в прямоугольнике cover-fit из layoutBackdrop (transform/размер, object-fit: fill —
+            весь кадр ровно в (dx, dy, dw, dh), как drawBgSource); ночное — с прозрачностью k (вес ночи), как
+            drawBackdrop; невидимое — opacity 0 (не display: none и не visibility: WebKit останавливает «невидимое»
+            видео); после перехода ненужное видео освобождает syncVideos (themeNeeded) — декодер один;
+         3) подкраска ночи (div, multiply, прозрачность k) — только когда у ночи нет своего задника (nightTint);
+         4) darkCan — холст с mix-blend-mode: multiply (копия darkCan при смене маски и размера — редко);
+         5) K — холст с color-dodge (копия kCan при каждой пересборке K, ≤ CAUS.hz = 20 Гц; сам kCan остаётся
+            внеэкранным: его читают каустика реквизита и переднего рифа — холст в DOM читать на Mac дорого);
+         6) главный холст #tank2 (alpha: true, очищается каждый кадр): тени, передний риф, частицы, пузырьки, рыбы,
+            группы вычитания, свет рыб. Всё это source-over, а он ассоциативен — результат тот же, что на непрозрачном
+            холсте; тени (multiply) и вспышки (lighter) ложатся на прозрачное и смешиваются обычно — разница на песке
+            ≤ единиц/255 (ROADMAP P1.9);
+         7) лучи (P1.7) — холст с mix-blend-mode: screen, RAYS_S долей CSS-разрешения, перерисовка ≤ RAYS_HZ;
+            на прозрачном слое screen копит 1 − Π(1 − p), CSS screen слоя даёт 1 − (1 − фон)(1 − P) — формула холста;
+            отсвет дна (тоже screen) — в этом же слое: screen коммутативен, разница — только под рыбами (α ≤ 0.12);
+         8) виньетка (CSS-слои P1.6, z-index 1) и HUD — над сценой, как раньше.
+       Колонны-окклюдеры ничего не требуют: рыба за колонной — в группе вычитания (в буфере вырезано отверстие
+       альфой маски), сквозь него видна живая колонна из видео. Фото-сцена и процедурный риф — старый путь (режим
+       снимается, когда задник оказался не видео). ?vlayer=0 — не меняется ничего: тот же холст #tank (alpha: false),
+       тот же порядок и те же операции (кадр бит-в-бит). Включение/выключение на ходу (зонд «vlayer»/«canvas»):
+       два холста — #tank и прозрачный #tank2 в сцене, setVlayer переключает canvas/mainCtx и пересобирает буфер.
+       Тест-режим: страница снимается целиком (page.screenshot — композитор); с видео (?bgvideo=…) шаг ждёт
+       показанный кадр по requestVideoFrameCallback (vlPresented). Гейт — tools/aquarium-test/layers_psnr.js
+       (слои против холста ≥ 45 дБ). occluderRoundTrip (captureLitBackdrop читает холст) в режиме слоёв не работает.
+       В кадре — ни одной аллокации: строки стилей только при смене геометрии/прозрачности (квант 1/128).
+     ============================================================ */
+  const RAYS_HZ = 30;                                  // перерисовка слоя лучей (качание 0.02–0.08 Гц, нити 0.05–0.14 Гц)
+  const VL = { want: VLAYER_Q, on: false, stage: null, can1: canvas, ctx1: mainCtx, can2: null, ctx2: null,
+               tint: null, dark: null, darkG: null, k: null, kG: null, rays: null, raysG: null, raysS: 1, raysT: NaN,
+               darkDirty: true, kT: NaN, kw: -1, kh: -1, ks: -1, gx: NaN, gy: NaN, gw: NaN, gh: NaN, geoN: 0,
+               caus: -1, raysOn: -1, raysKey: -1 };
+  const vlFeasible = () => !NOBG && bgMode === "video";
+  function vlBuild() {
+    if (VL.stage) return;
+    const st = document.createElement("div"); st.id = "stage";
+    if (TEST) st.style.transition = "none";          // тест: кадр виден сразу (как у #tank)
+    const tint = document.createElement("div"); tint.className = "vl-tint"; tint.style.background = NIGHT_TINT;
+    const dark = document.createElement("canvas"); dark.className = "vl-dark"; dark.width = 4; dark.height = 4;
+    const k = document.createElement("canvas"); k.className = "vl-k"; k.width = 4; k.height = 4;
+    const c2 = document.createElement("canvas"); c2.id = "tank2";
+    const rays = document.createElement("canvas"); rays.className = "vl-rays"; rays.width = 4; rays.height = 4;
+    st.appendChild(tint); st.appendChild(dark); st.appendChild(k); st.appendChild(c2); st.appendChild(rays);
+    VL.can1.parentNode.insertBefore(st, VL.can1);
+    VL.stage = st; VL.tint = tint; VL.dark = dark; VL.darkG = dark.getContext("2d", { alpha: false });
+    VL.k = k; VL.kG = k.getContext("2d", { alpha: false }); VL.can2 = c2; VL.ctx2 = c2.getContext("2d");
+    VL.rays = rays; VL.raysG = rays.getContext("2d");
+    if (!WALLPAPER) c2.addEventListener("pointerdown", (e) => dropFoodAt(e.clientX, e.clientY));   // горсть хлопьев (вне обоев)
+    if (revealed) st.classList.add("on");
+  }
+  // элемент задника (постер/видео темы) — в сцену, в порядок слоёв; стиль — с нуля (геометрия и прозрачность — в кадре)
+  function vlAttach(el) {
+    if (!el || !VL.stage) return;
+    if (el.parentNode !== VL.stage) {
+      if (el.parentNode) el.parentNode.removeChild(el);
+      el.style.cssText = ""; el.__aqGeo = -1; el.__aqOp = -1;
+      VL.stage.appendChild(el);
+    }
+    vlOrder();
+  }
+  // порядок слоёв сцены снизу вверх (видео темы может появиться позже постеров и в любом порядке тем)
+  function vlOrder() {
+    const st = VL.stage, seq = [BGS.day.poster, BGS.night.poster, BGS.day.vid, BGS.night.vid, VL.tint, VL.dark, VL.k, VL.can2, VL.rays];
+    let prev = null;
+    for (let i = 0; i < seq.length; i++) {
+      const el = seq[i];
+      if (!el || el.parentNode !== st) continue;
+      const want = prev ? prev.nextSibling : st.firstChild;
+      if (want !== el) st.insertBefore(el, want);
+      prev = el;
+    }
+  }
+  function vlDetachVideo(v) {                          // видео — обратно под холст (старый путь)
+    if (!v) return;
+    const box = vidBoxEl();
+    v.style.cssText = VID_CSS; v.__aqGeo = -1; v.__aqOp = -1;
+    if (v.parentNode !== box) box.appendChild(v);
+  }
+  function setVlayer(on) {
+    on = !!on && vlFeasible();
+    if (on === VL.on) return VL.on;
+    VL.on = on;
+    perfEvent("vlayer", { on: on ? 1 : 0 });
+    if (on) {
+      vlBuild();
+      canvas = VL.can2; mainCtx = VL.ctx2; ctx = mainCtx;
+      VL.can1.style.display = "none"; VL.stage.style.display = "block";
+      for (let i = 0; i < THEMES.length; i++) { const S = BGS[THEMES[i]]; if (S.pState === 2) vlAttach(S.poster); if (S.vid) vlAttach(S.vid); }
+    } else {
+      canvas = VL.can1; mainCtx = VL.ctx1; ctx = mainCtx;
+      VL.stage.style.display = "none"; VL.can1.style.display = "";
+      for (let i = 0; i < THEMES.length; i++) vlDetachVideo(BGS[THEMES[i]].vid);
+    }
+    VL.darkDirty = true; VL.kT = NaN; VL.raysT = NaN; VL.geoN++; VL.gx = NaN;
+    if (W > 0) applyBacking();                        // буфер нового холста, кэши, слои (vlLayout)
+    return VL.on;
+  }
+  // размеры слоёв под буфер холста (зовёт applyBacking): лучи — RAYS_S × CSS-разрешения; K и darkCan — при копии
+  function vlLayout() {
+    if (!VL.on) return;
+    VL.raysS = clamp(RS * 0.5, 0.5, 1);
+    const rw = Math.max(4, Math.ceil(W * VL.raysS)), rh = Math.max(4, Math.ceil(H * VL.raysS));
+    if (VL.rays.width !== rw || VL.rays.height !== rh) { VL.rays.width = rw; VL.rays.height = rh; }
+    VL.rays.style.width = rw + "px"; VL.rays.style.height = rh + "px"; VL.rays.style.transform = "scale(" + 1 / VL.raysS + ")";
+    VL.raysT = NaN; VL.darkDirty = true; VL.kT = NaN; VL.kw = -1; VL.gx = NaN;
+    vlPlace();
+  }
+  // прямоугольник cover-fit (BGX) → постеры и видео сцены; строки стилей — только при смене геометрии или источника
+  function vlPlace() {
+    if (VL.gx !== BGX.dx || VL.gy !== BGX.dy || VL.gw !== BGX.dw || VL.gh !== BGX.dh) { VL.gx = BGX.dx; VL.gy = BGX.dy; VL.gw = BGX.dw; VL.gh = BGX.dh; VL.geoN++; }
+    for (let i = 0; i < THEMES.length; i++) { const S = BGS[THEMES[i]]; vlGeo(S.poster); vlGeo(S.vid); }
+  }
+  /* Элемент — в РОДНОМ размере кадра (2560×1440; тестовая WebM 1920×1080; постер), а в прямоугольник cover-fit его ставит
+     преобразование translate + scale: композитор берёт дробные сдвиг и масштаб точно, как drawImage с дробным dx.
+     Размер через width/height раскладка снапает к целым px — сдвиг задника на доли пикселя давал ≈ 40 дБ против
+     холста (фактура рифа), с преобразованием — ≥ 60 дБ. То же — у слоёв затемнения, K и лучей (scale 1/масштаб). */
+  function vlGeo(el) {
+    if (!el || el.parentNode !== VL.stage) return;
+    const nw = el.videoWidth || el.naturalWidth || 0, nh = el.videoHeight || el.naturalHeight || 0;
+    if (!(nw > 0) || !(nh > 0) || (el.__aqGeo === VL.geoN && el.__aqNW === nw && el.__aqNH === nh)) return;
+    el.__aqGeo = VL.geoN; el.__aqNW = nw; el.__aqNH = nh;
+    el.style.width = nw + "px"; el.style.height = nh + "px";
+    el.style.transform = "translate(" + VL.gx + "px," + VL.gy + "px) scale(" + VL.gw / nw + "," + VL.gh / nh + ")";
+  }
+  // прозрачность слоя (квант 1/128 — строка только при смене; 0 и 1 — точно)
+  function vlOp(el, op) {
+    if (!el || el.parentNode !== VL.stage) return;
+    const q = op >= 0.999 ? 1 : op <= 0.001 ? 0 : Math.round(op * 128) / 128;
+    if (el.__aqOp === q) return;
+    el.__aqOp = q; el.style.opacity = q === 1 ? "1" : q === 0 ? "0" : String(q);
+  }
+  // кадр: какие постеры/видео видны и с какой прозрачностью — ровно по случаям drawBackdrop
+  function vlBackdrop() {
+    const k = TH.k, D = BGS.day, N = BGS.night;
+    if (D.pState === 2 && D.poster.parentNode !== VL.stage) vlAttach(D.poster);
+    if (N.pState === 2 && N.poster.parentNode !== VL.stage) vlAttach(N.poster);
+    vlPlace();
+    const a = k < 0.999 ? bgSource(D) : null, b = k > 0.001 ? bgSource(N) : null;
+    let s0 = null, s1 = null, o1 = 0, tint = 0;
+    if (a) { s0 = a; if (b) { s1 = b; o1 = k; } else tint = k; }   // переход: ночь поверх дня с весом k | ночь «светом»
+    else if (b) s0 = b;
+    else { const c = bgSource(D) || bgSource(N) || bgImg; if (c) { s0 = c; if (c === D.poster || c === D.vid) tint = k; } }
+    vlOp(D.poster, s0 === D.poster ? 1 : s1 === D.poster ? o1 : 0);
+    vlOp(N.poster, s0 === N.poster ? 1 : s1 === N.poster ? o1 : 0);
+    vlOp(D.vid, s0 === D.vid ? 1 : s1 === D.vid ? o1 : 0);
+    vlOp(N.vid, s0 === N.vid ? 1 : s1 === N.vid ? o1 : 0);
+    vlOp(VL.tint, tint > 0.002 ? tint : 0);
+  }
+  // затемнение и K — в слои сцены (копии; буферы остаются внеэкранными). Зовёт drawCaustics, когда K актуален
+  function vlCaustics() {
+    const bh = BGX.bandH;
+    if (VL.darkDirty && darkCan) {
+      VL.darkDirty = false;
+      if (VL.dark.width !== darkCan.width || VL.dark.height !== darkCan.height) { VL.dark.width = darkCan.width; VL.dark.height = darkCan.height; }
+      VL.darkG.setTransform(1, 0, 0, 1, 0, 0); VL.darkG.globalAlpha = 1; VL.darkG.drawImage(darkCan, 0, 0);
+      VL.dark.style.width = darkCan.width + "px"; VL.dark.style.height = darkCan.height + "px";   // как drawImage(darkCan, 0, bh, W, H − bh)
+      VL.dark.style.transform = "translate(0px," + bh + "px) scale(" + W / darkCan.width + "," + (H - bh) / darkCan.height + ")";
+    }
+    if (kT === kT && VL.kT !== kT) {
+      VL.kT = kT;
+      if (VL.k.width !== kW || VL.k.height !== kH) { VL.k.width = kW; VL.k.height = kH; }
+      VL.kG.setTransform(1, 0, 0, 1, 0, 0); VL.kG.globalAlpha = 1; VL.kG.drawImage(kCan, 0, 0);
+      if (VL.kw !== kW || VL.kh !== kH || VL.ks !== kS) {                           // как drawImage(kCan, …, 0, bh, kW / kS, kH / kS)
+        VL.kw = kW; VL.kh = kH; VL.ks = kS;
+        VL.k.style.width = kW + "px"; VL.k.style.height = kH + "px"; VL.k.style.transform = "translate(0px," + bh + "px) scale(" + 1 / kS + ")";
+      }
+    }
+  }
+  function vlShowCaus(on) {
+    on = on ? 1 : 0;
+    if (VL.caus === on) return;
+    VL.caus = on; VL.dark.style.display = VL.k.style.display = on ? "block" : "none";
+  }
+  // слой лучей (P1.7): отсвет дна + лучи, 'screen' на прозрачном, перерисовка ≤ RAYS_HZ и при смене слоёв/темы
+  function vlRays(t) {
+    const on = (LAYERS.rays || LAYERS.glow) && !!STEX[0] ? 1 : 0;
+    if (VL.raysOn !== on) { VL.raysOn = on; VL.rays.style.display = on ? "block" : "none"; }
+    if (!on) return;
+    const key = (LAYERS.rays ? 1 : 0) + (LAYERS.glow ? 2 : 0) + (QUALITY.filaments ? 4 : 0);
+    if (key === VL.raysKey && VL.raysT === VL.raysT && t >= VL.raysT && t - VL.raysT < 1 / RAYS_HZ - 1e-6) return;
+    VL.raysKey = key; VL.raysT = t;
+    const g = VL.raysG, S = VL.raysS;
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
+    g.clearRect(0, 0, VL.rays.width, VL.rays.height);
+    g.setTransform(S, 0, 0, S, 0, 0);
+    if (LAYERS.glow) drawFloorGlowTo(g);
+    if (LAYERS.rays) drawStreaksTo(g, S, t);
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
+  }
+  // тест с видео: дождаться, пока композитор покажет перемотанный кадр (rVFC), не дольше 500 мс
+  function vlPresented() {
+    return new Promise((res) => {
+      let pend = 0, done = false;
+      const fin = () => { if (!done) { done = true; res(); } };
+      for (let i = 0; i < THEMES.length; i++) {
+        const S = BGS[THEMES[i]], v = S.vid;
+        if (!v || S.vState !== 2 || !S.fresh || !(v.__aqOp > 0) || typeof v.requestVideoFrameCallback !== "function") continue;
+        S.fresh = false; pend++;
+        v.requestVideoFrameCallback(() => { if (--pend === 0) fin(); });
+      }
+      if (!pend) { fin(); return; }
+      setTimeout(fin, 500);
+    });
+  }
+
+  /* ============================================================
      ТЕМЫ: ДЕНЬ («Мальдивы») и НОЧЬ (королевский синий LED)
        Выбор: ?theme=day|night|auto (тесты) сильнее всего; иначе __AQ_BOOT.theme (меню рыбки «Тема аквариума»:
        'auto'|'day'|'night' — решено до первого кадра, постера и вариантов предметов: без вспышки «день → ночь»);
@@ -1276,6 +1635,7 @@
     const t = themeTargetFor(TH.mode);
     if (t !== TH.target) {
       perfEvent("theme", { to: THEMES[t], mode: TH.mode });
+      govReset();                    // P1.10: смена темы — регулятор молчит весь переход и 3 с после
       TH.target = t; TH.reqAt = 0;   // ожидание задника/вариантов (≤ 3 с) — с первого активного кадра (смена на скрытой странице, во сне дисплея)
       if (bgMode === "video") loadPoster(THEMES[t]);
     }
@@ -1283,8 +1643,8 @@
     syncVideos();
     return THEMES[TH.target];
   }
-  // мгновенная смена темы при том же simT: сбросить кэши, привязанные ко времени (лучи, карта света, K, поле света рыб)
-  function themeInvalidate() { lightT = NaN; lmT = NaN; kT = NaN; lfT = NaN; }
+  // мгновенная смена темы при том же simT: сбросить кэши, привязанные ко времени (лучи, карта света, K, поле света рыб, слой лучей)
+  function themeInvalidate() { lightT = NaN; lmT = NaN; kT = NaN; lfT = NaN; VL.raysT = NaN; }
   window.aquariumSetTheme = (m) => setThemeMode(m, false);
   // начальная тема — без перехода
   try {
@@ -1548,29 +1908,31 @@
     STEX[0] = buildStreakTextures(TP[0].light, TP[0].raysReach); STEX[1] = buildStreakTextures(TP[1].light, TP[1].raysReach);
     streakTex = STEX[0].body;                        // поле света рыб берёт только альфу — годится любая тема
   }
-  function drawStreaks(t) {
+  function drawStreaks(t) { drawStreaksTo(ctx, RS, t); }
+  // на контекст g с масштабом S (device px на CSS px): главный холст (RS) или слой лучей P1.7 (VL.raysS)
+  function drawStreaksTo(g, S, t) {
     if (!STEX[0] || !stN) return;
     const d0 = CNT.drawImage, mul = bgReady ? 1 : 1.35, wN = TH.k, wD = 1 - wN;
-    ctx.globalCompositeOperation = "screen";
+    g.globalCompositeOperation = "screen";
     for (let k = 0; k < stN; k++) {
       const o = k * ST_F, ux = STV[o + 2], uy = STV[o + 3], wpx = STV[o + 4], len = STV[o + 5];
       const nx = uy, ny = -ux;                       // поперёк луча
       const a = (nx * wpx) / 64, b = (ny * wpx) / 64, c = (ux * len) / 512, d = (uy * len) / 512;
       const e = STV[o] - (nx * wpx) / 2, f = STV[o + 1] - (ny * wpx) / 2;
-      ctx.setTransform(RS * a, RS * b, RS * c, RS * d, RS * e, RS * f);
+      g.setTransform(S * a, S * b, S * c, S * d, S * e, S * f);
       const al = clamp(STV[o + 6] * mul, 0, 1);
-      if (wD > 0.003) { ctx.globalAlpha = al * wD; ctx.drawImage(STEX[0].body, 0, 0); }
-      if (wN > 0.003) { ctx.globalAlpha = al * wN; ctx.drawImage(STEX[1].body, 0, 0); }
+      if (wD > 0.003) { g.globalAlpha = al * wD; g.drawImage(STEX[0].body, 0, 0); }
+      if (wN > 0.003) { g.globalAlpha = al * wN; g.drawImage(STEX[1].body, 0, 0); }
       const s = STREAKS[k], off = 0.16 * wpx * Math.sin(TAU * s.fF * t + s.fP);   // нити гуляют поперёк луча
       const fa = STV[o + 7] * mul;
-      if (fa > 0.004 && s.wf > 0.024 && !s.cone) {
-        ctx.setTransform(RS * a, RS * b, RS * c, RS * d, RS * (e + nx * off), RS * (f + ny * off));
-        if (wD > 0.003) { ctx.globalAlpha = clamp(fa, 0, 1) * wD; ctx.drawImage(STEX[0].fil, 0, 0); }
-        if (wN > 0.003) { ctx.globalAlpha = clamp(fa, 0, 1) * wN; ctx.drawImage(STEX[1].fil, 0, 0); }
+      if (QUALITY.filaments && fa > 0.004 && s.wf > 0.024 && !s.cone) {   // P1.10: ступень «эффекты» — без нитей
+        g.setTransform(S * a, S * b, S * c, S * d, S * (e + nx * off), S * (f + ny * off));
+        if (wD > 0.003) { g.globalAlpha = clamp(fa, 0, 1) * wD; g.drawImage(STEX[0].fil, 0, 0); }
+        if (wN > 0.003) { g.globalAlpha = clamp(fa, 0, 1) * wN; g.drawImage(STEX[1].fil, 0, 0); }
       }
     }
-    ctx.setTransform(RS, 0, 0, RS, 0, 0);
-    ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+    g.setTransform(S, 0, 0, S, 0, 0);
+    g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
     e1Count("e1Light", d0);
   }
 
@@ -1780,6 +2142,7 @@
     litCan = pd.lit;
     if (mapCan && (mapCan.width !== mw || mapCan.height !== mh)) { mapCan.width = mw; mapCan.height = mh; }
     lmT = NaN; kT = NaN;                                           // карту света и K пересобрать
+    VL.darkDirty = true;                                           // P1.9: слой затемнения — скопировать заново
   }
   function maskAtScreen(x, y) {
     if (!MASK_F) return NaN;
@@ -1896,10 +2259,11 @@
   function updateCaustics(t) {
     if (!patA || !patB) return false;
     if (Math.abs(kS - RS * QUALITY.causticScale) > 1e-6) buildKBuffer();     // регулятор сменил долю буфера
-    // K пересчитывается не чаще CAUS.hz (20 Гц): рисунок плывёт ≈10 px/с — шаг ≈0.5 px, глазу незаметно,
-    // а растр буфера — самая дорогая часть света. Между пересчётами K просто накладывается снова.
-    if (kT === kT && t >= kT && t - kT < 1 / CAUS.hz - 1e-6) return true;
-    if (heavyWait(0, t, kT, CAUS.hz)) return true;             // V5 (P1.5): тяжёлые пересборки — в разных кадрах
+    // K пересчитывается не чаще CAUS.hz (20 Гц; ступень регулятора «эффекты» — 15): рисунок плывёт ≈10 px/с — шаг
+    // ≈0.5 px, глазу незаметно, а растр буфера — самая дорогая часть света. Между пересчётами K просто накладывается снова.
+    const hz = Math.min(CAUS.hz, QUALITY.cacheHz);
+    if (kT === kT && t >= kT && t - kT < 1 / hz - 1e-6) return true;
+    if (heavyWait(0, t, kT, hz)) return true;                  // V5 (P1.5): тяжёлые пересборки — в разных кадрах
     kT = t;
     phB(PH_CAUS); rebuildK(t); phE();                           // «чёрный ящик»: пересборка буфера K
     return true;
@@ -1930,11 +2294,14 @@
   function drawCaustics(t) {
     const d0 = CNT.drawImage;
     if (updateCaustics(t)) {
-      ctx.globalCompositeOperation = "multiply";
-      ctx.drawImage(darkCan, 0, BGX.bandH, W, H - BGX.bandH);
-      ctx.globalCompositeOperation = "color-dodge";
-      ctx.drawImage(kCan, 0, 0, kW, kH, 0, BGX.bandH, kW / kS, kH / kS);
-      ctx.globalCompositeOperation = "source-over";
+      if (VL.on) vlCaustics();                       // P1.9: затемнение и K — слои сцены (multiply / color-dodge — у композитора)
+      else {
+        ctx.globalCompositeOperation = "multiply";
+        ctx.drawImage(darkCan, 0, BGX.bandH, W, H - BGX.bandH);
+        ctx.globalCompositeOperation = "color-dodge";
+        ctx.drawImage(kCan, 0, 0, kW, kH, 0, BGX.bandH, kW / kS, kH / kS);
+        ctx.globalCompositeOperation = "source-over";
+      }
     }
     e1Count("e1Light", d0);
   }
@@ -2040,10 +2407,12 @@
       k = end;
     }
   }
-  function drawFloorGlow() {
+  function drawFloorGlow() { drawFloorGlowTo(ctx); }
+  // на контекст g в CSS-координатах (преобразование уже стоит): главный холст или слой лучей P1.7 (тоже 'screen')
+  function drawFloorGlowTo(g) {
     if (!glowSpr[0]) return;
     const d0 = CNT.drawImage, wN = TH.k, wD = 1 - wN;
-    ctx.globalCompositeOperation = "screen";
+    g.globalCompositeOperation = "screen";
     for (let i = 0; i < GLOW_SRC.length; i++) {
       const o = GLOW_SRC[i] * ST_F, ux = STV[o + 2], uy = STV[o + 3];
       let x = STV[o] + (ux / uy) * (H * 0.9 - STV[o + 1]);
@@ -2051,10 +2420,10 @@
       const y2 = floorYAt(x);
       if (y2 > H + 0.02 * H || x < -0.2 * W || x > 1.2 * W) continue;   // луч падает за кадр / не на видимый песок
       const gw = 0.26 * W, gh = 0.075 * H, a = clamp(0.5 * STV[o + 6], 0, 0.12) * GLOW_A[i] * TV.glow;
-      if (wD > 0.003) { ctx.globalAlpha = a * wD; ctx.drawImage(glowSpr[0], x - gw / 2, y2 - gh * 0.62, gw, gh); }
-      if (wN > 0.003) { ctx.globalAlpha = a * wN; ctx.drawImage(glowSpr[1], x - gw / 2, y2 - gh * 0.62, gw, gh); }
+      if (wD > 0.003) { g.globalAlpha = a * wD; g.drawImage(glowSpr[0], x - gw / 2, y2 - gh * 0.62, gw, gh); }
+      if (wN > 0.003) { g.globalAlpha = a * wN; g.drawImage(glowSpr[1], x - gw / 2, y2 - gh * 0.62, gw, gh); }
     }
-    ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+    g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
     e1Count("e1Light", d0);
   }
 
@@ -5238,8 +5607,9 @@
     const lay = (LAYERS.xCoral ? 1 : 0) + (LAYERS.xProp ? 2 : 0) + (LAYERS.xReefC ? 4 : 0) + (LAYERS.caustics ? 8 : 0);
     // передний риф — кэш на ≤ 20 Гц (см. drawReefLayer): позы его предметов «замирают» между пересборками
     const same = RFC.ok && RFC.W === W && RFC.H === H && RFC.RS === RS && RFC.lay === lay && Math.abs(RFC.k - TH.k) < 0.03 && (RFC.k === TH.k || (TH.k > 0 && TH.k < 1));
-    let due = !(same && t >= RFC.t && t - RFC.t < 1 / REEF_HZ - 1e-6);
-    if (due && same && heavyWait(1, t, RFC.t, REEF_HZ)) due = false;   // V5 (P1.5): не в кадре пересборки K
+    const rhz = Math.min(REEF_HZ, QUALITY.cacheHz);            // P1.10: ступень «эффекты» — 15 Гц
+    let due = !(same && t >= RFC.t && t - RFC.t < 1 / rhz - 1e-6);
+    if (due && same && heavyWait(1, t, RFC.t, rhz)) due = false;   // V5 (P1.5): не в кадре пересборки K
     for (let i = 0; i < SCN.items.length; i++) {
       const it = SCN.items[i];
       if (!itemReady(it)) continue;
@@ -6175,7 +6545,8 @@
   // буфер холста и всё, что от него зависит (кэши) — без пересева сцены (зовёт и регулятор качества)
   function backingRS() {
     layoutBackdrop();
-    const r = Math.min(DPR, Math.sqrt(Math.min(MAX_BACKING_PX, pixelBudget()) / Math.max(1, W * H)), NOVIDCAP ? 8 : Math.max(1, 1.1 / Math.max(1e-3, BGX.sc)));
+    // P1.11: в режиме слоёв видео — не в холсте, предел «1.1 px устройства на px видео» снят (спрайты — до DPR)
+    const r = Math.min(DPR, Math.sqrt(Math.min(MAX_BACKING_PX, pixelBudget()) / Math.max(1, W * H)), NOVIDCAP || VL.on ? 8 : Math.max(1, 1.1 / Math.max(1e-3, BGX.sc)));
     return Math.max(0.25, Math.floor(r * QUALITY.rsMul * 16) / 16);
   }
   function applyBacking() { phB(PH_RS); applyBacking0(); phE(); }   // фаза «чёрного ящика»: смена буфера холста
@@ -6188,6 +6559,7 @@
     canvas.style.width = W + "px"; canvas.style.height = H + "px";
     ctx.setTransform(RS, 0, 0, RS, 0, 0);
     layoutBackdrop(); layoutCamera(); buildVignette(); buildLightCaches(); buildFishLight(); buildDeepRuns();
+    vlLayout();                                      // P1.9: слои сцены под новый буфер
   }
   // V5: событие resize — CSS-размер сразу (браузер растянет старый буфер), дорогая пересборка (буфер, кэши
   // света, риф, рыбы) — один раз через 150 мс после последнего события (перетаскивание окна, смена режима
@@ -6224,6 +6596,7 @@
     W = window.innerWidth; H = window.innerHeight; floorY = H * 0.78;
     DPR = Math.min(window.devicePixelRatio || 1, 2);
     perfEvent("resize", { w: W, h: H, dpr: DPR });
+    govReset();                                      // P1.10: после ресайза — 3 с тишины (пересборки, новый буфер)
     seedParticles();
     applyBacking();
     buildScenery();
@@ -6280,7 +6653,7 @@
   const prof = (k) => { if (COUNTING) { const n = performance.now(); CNT[k] += n - profT; profT = n; } };
   // V5: холст проявляется (CSS opacity 0 → 1 за 0.4 с) после первого настоящего кадра; в тесте — сразу
   let revealed = false;
-  function reveal() { if (!revealed) { revealed = true; canvas.classList.add("on"); } }
+  function reveal() { if (!revealed) { revealed = true; VL.can1.classList.add("on"); if (VL.stage) VL.stage.classList.add("on"); } }
   function render(t) {
     if (!bgSettled) {
       // V5: задник ещё грузится — тёмная вода без рифа и рыб (процедурный риф — только при настоящем отказе
@@ -6299,14 +6672,20 @@
     if (SCN.built) themePrebuild();                  // V4b: варианты предметов под тему — по одному набору на кадр
     poseScene(t);
     if (bgReady) {
-      drawBackdrop();                                // кадр видео/постера (в переходе тем — оба)
+      if (VL.on) {                                   // P1.9: задник — слои сцены, холст прозрачный и чистый
+        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.setTransform(RS, 0, 0, RS, 0, 0);
+        vlBackdrop();                                // постеры/видео тем: видимость и прозрачность (в переходе — оба)
+      } else drawBackdrop();                         // кадр видео/постера (в переходе тем — оба)
       prof("pBack");
       drawSceneLayer(t);                             // до каустики: свет ложится на предметы, как на фото
       if (bgMode === "photo") nightTint(TH.k);       // фото-сцена ночью — общий multiply кадра с её патчами и реквизитом
       prof("pScene");
       if (LAYERS.caustics) drawCaustics(t);
+      if (VL.on) vlShowCaus(LAYERS.caustics && !!kCan);
       prof("pCaus");
-      if (LAYERS.glow) drawFloorGlow();
+      if (LAYERS.glow && !VL.on) drawFloorGlow();    // в режиме слоёв отсвет — в слое лучей (vlRays)
       if (LAYERS.shadows) drawFishShadows();
       drawReefLayer(t);                              // V4b: передний риф (колонии + реквизит видео-сцены) со своей каустикой
       prof("pReef");
@@ -6342,7 +6721,8 @@
     if (COUNTING) CNT.e4MsLLC += performance.now() - tc0;
     prof("pLight");
     drawParticles(t, true);
-    if (LAYERS.rays) drawStreaks(t);
+    if (VL.on) vlRays(t);                            // P1.7: лучи (и отсвет дна) — слой 'screen' над холстом, ≤ RAYS_HZ
+    else if (LAYERS.rays) drawStreaks(t);
     drawVignette();
     prof("pTail");
   }
@@ -6421,9 +6801,9 @@
     if (DEBUG >= 2) { drawDebugGeometry(); drawDebugScene(); }
     drawDebugFish();
     const lines = [
-      `RS ${RS.toFixed(3)}  css ${W}×${H}  буфер ${canvas.width}×${canvas.height} (${(canvas.width * canvas.height / 1e6).toFixed(2)} Мп)  dpr ${DPR}`,
-      `Q${q.level}  частицы ${q.particles}  срезы ${q.fishSlices}  каустика ${q.causticScale}  rs×${q.rsMul}  ` +
-        `p90 ${GOV.p90.toFixed(1)} мс  ${GOV.fps.toFixed(0)} к/с  power ${POWER}${TEST ? "  TEST" : ""}`,
+      `RS ${RS.toFixed(3)}  css ${W}×${H}  буфер ${canvas.width}×${canvas.height} (${(canvas.width * canvas.height / 1e6).toFixed(2)} Мп)  dpr ${DPR}  слои ${VL.on ? "да" : "нет"}`,
+      `Q${q.level} ${q.name}  rs×${q.rsMul}  частицы ${q.particles}  срезы ${q.fishSlices}  каустика ${q.causticScale}  кэши ${q.cacheHz} Гц  нити ${q.filaments}  ` +
+        `цель ${GOV.target.toFixed(1)} мс  окно p50 ${GOV.p50.toFixed(1)} p90 ${GOV.p90.toFixed(1)} мс  ${GOV.fps.toFixed(0)} к/с  power ${POWER}${TEST ? "  TEST" : ""}`,
       `drawImage ${L.drawImage}  setTransform ${L.setTransform}  градиенты ${L.gradients}  паттерны ${L.patterns}  ` +
         `save/restore ${L.save}/${L.restore}  getImageData ${L.getImageData}  filter ${L.filter}  JS ${L.jsMs.toFixed(2)} мс`,
       `сцена: ${SCENE_FROM_FILE ? "scene.js" : "умолчания"}  задник: ${bgSrc || (NOBG ? "выкл (nobg)" : "нет")}  ` +
@@ -6513,7 +6893,7 @@
     const dt = Math.min(acc, 0.1);
     acc = 0;
     const iv = lastShown ? now - lastShown : 0;
-    if (iv && GOV_ON && !PROBE.on) govSample(iv);   // зонд — регулятор на паузе
+    if (iv && GOV_ON && !PROBE.on) govSample(iv, now);   // зонд — регулятор на паузе
     lastShown = now;
     const t0 = performance.now();
     syncVideos();                                    // видео тем: загрузка/освобождение, play/pause (дёшево)
@@ -6546,6 +6926,7 @@
           frameSim(dt);
           await seekVideosTo(simT);
           frameDraw();
+          if (VL.on) await vlPresented();            // P1.9: кадр видео показан композитором (снимок страницы — честный)
         }
         return simT;
       };
@@ -6554,7 +6935,7 @@
       return p;
     },
     // темы: setTheme('day'|'night'|'auto', instant) — как aquariumSetTheme, instant — без перехода (тесты)
-    setTheme(m, instant) { const r = setThemeMode(m, !!instant); if (VTEST && instant) return seekVideosTo(simT).then(() => { renderNow(); return r; }); if (TEST && instant) renderNow(); return r; },
+    setTheme(m, instant) { const r = setThemeMode(m, !!instant); if (VTEST && instant) return seekVideosTo(simT).then(async () => { renderNow(); if (VL.on) await vlPresented(); return r; }); if (TEST && instant) renderNow(); return r; },
     theme() { return { mode: TH.mode, target: THEMES[TH.target], p: TH.p, k: TH.k, dark: systemDark(), bgMode, bgSrc,
       sources: THEMES.map((n) => { const S = BGS[n]; return { theme: n, poster: S.pState, video: S.vState, aligned: S.aligned, frame: S.frame,
         t: S.vid ? S.vid.currentTime : null, playing: S.vid ? !S.vid.paused : false, size: [S.vw, S.vh] }; }),
@@ -6570,12 +6951,14 @@
         last: Object.assign({}, STAT.last), avg, max: Object.assign({}, STAT.max),
         backing: { w: canvas.width, h: canvas.height, mp: canvas.width * canvas.height / 1e6 },
         css: { w: W, h: H }, dpr: DPR, RS, quality: Object.assign({}, QUALITY),
-        governor: { p90: GOV.p90, fps: GOV.fps, bad: GOV.bad, good: GOV.good, recover: GOV.recover },
+        governor: { level: QUALITY.level, max: govMaxLevel(), p50: GOV.p50, p90: GOV.p90, target: govTarget(), vsync: GOV.vs, fps: GOV.fps,
+          bad: GOV.bad, good: GOV.good, recover: GOV.recover, quiet: GOV.quiet, windows: GOV.win, downs: GOV.downs, ups: GOV.ups, key: GOV.key, stored: GOV.stored },
         hasFilter: HAS_FILTER, photo: bgReady, sceneFromFile: SCENE_FROM_FILE, power: POWER,
         bgMode, theme: THEMES[TH.target], themeK: TH.k, video: bgMode === "video" ? THEMES.map((n) => BGS[n].vState) : null,
         fish: fishes.length, bubbles: bubN, flakes: flkN, simT, seed: SEED,
         particles: Math.round(PT_N * QUALITY.particles), layers: Object.assign({}, LAYERS),
         light: { streaks: stN, kBuffer: [kW, kH], kScale: kS, mask: maskImg ? "png" : "procedural" },
+        vlayer: VL.on,                                 // P1.9: задник слоями
       };
     },
     fish() {
@@ -6622,8 +7005,12 @@
     perfState() {
       return { layers: Object.assign({}, LAYERS), budgetMp: pixelBudget() / 1e6, budgetSrc: budgetSource(), RS, backing: [canvas.width, canvas.height],
         stagger: STAGGER, paced: !PERF.noPace, noVidCap: NOVIDCAP, probing: PROBE.on, level: QUALITY.level, fpsTarget: fpsTarget(),
-        appBudget: APP_BUDGET, appFps: APP_FPS, hud: PERF.hudOn, frames: PERF.frames };
+        appBudget: APP_BUDGET, appFps: APP_FPS, hud: PERF.hudOn, frames: PERF.frames, vlayer: VL.on, govKey: GOV.key, govStored: GOV.stored };
     },
+    // P1.9: режим слоёв — состояние и переключение на ходу (тесты; без видео-сцены включить нельзя)
+    vlayer() { return { on: VL.on, want: VL.want, feasible: vlFeasible(), raysScale: VL.raysS, raysHz: RAYS_HZ,
+      rays: VL.on ? [VL.rays.width, VL.rays.height] : null, k: [kW, kH], canvas: canvas.id }; },
+    setVlayer(on) { const r = setVlayer(on); if (TEST) renderNow(); return r; },
     // тесты (blackbox.js): занять главный поток на ms (внутри фазы phase из PH_NAMES — как если бы её делал движок)
     busy(ms, phase) {
       const id = PH_NAMES.indexOf(phase), t0 = performance.now(), d = Math.min(120000, +ms || 0);
@@ -6759,6 +7146,9 @@
   /* ---------- start ---------- */
   preloadScene();                                     // картинки сцены — параллельно с задником (E4)
   buildPropShadow();
+  // P1.9: задник слоями — только у видео-сцены; режим решается до первого буфера (loadBackdrop ставит то же bgMode)
+  if (VL.want && !NOBG && videoScene()) { bgMode = "video"; setVlayer(true); }
+  govLoad();                                          // P1.10: ступень регулятора этой пары «экран + питание» — до первого буфера
   resize();
   buildBubbleSources();
   seedTank(targetFishCount());

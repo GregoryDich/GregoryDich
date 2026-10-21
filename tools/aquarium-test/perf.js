@@ -6,11 +6,12 @@
 //     (валидный JSON < 6 КБ, нужные поля, метка загрузки); оборот петли видео (перемотка к концу → событие vloop с
 //     длительностью перемотки и пропуском кадров по rVFC); сторож видео (currentTime «застыл» → пересоздание и
 //     продолжение с того же времени, событие vstall); aquariumSetBudget({mp: 2, fps: 30}) и сброс; короткий зонд
-//     (--full — полный ≈45 с) на настоящих кадрах: все конфигурации, после — всё как было.
+//     (--full — полный ≈50 с) на настоящих кадрах: все 12 конфигураций (P1.9: «vlayer»/«canvas» — другой путь задника,
+//     переключается на ходу), после — всё как было (и путь задника тоже).
 //  2) «после зонда — как было» (rAF подменён, синтетические 16.67 мс, ?bgvideo=0): прогрев, симуляция на паузе
 //     (__aq.pause — рыбы стоят, кадры рисуются), кадр «с нуля» в момент T0 (__aq.invalidate + render), короткий зонд
-//     (все 11 конфигураций рисуются, часы идут), снова T0 и кадр «с нуля»: кадры совпадают, состояние (слои, бюджет, RS,
-//     буфер, ритм, разнесение кэшей, регулятор) — как до зонда; потом симуляция идёт дальше.
+//     (все 12 конфигураций рисуются, часы идут), снова T0 и кадр «с нуля»: кадры совпадают, состояние (слои, бюджет, RS,
+//     буфер, ритм, разнесение кэшей, регулятор, путь задника) — как до зонда; потом симуляция идёт дальше.
 //     Сравнивать с отдельной страницей без зонда нельзя: поведение рыб читает позы кораллов из кэша рифа, и другой
 //     ритм его пересборок во время зонда уводит траектории (хаос, а не «след» зонда).
 // Печатает JSON {live, ab, gates, allPass}; код 2, если гейт не прошёл или были ошибки страницы.
@@ -164,7 +165,9 @@ async function restorePage(env, { k0, shot0, shot1 }) {
   const G = out.gates;
   // 1) живая часть
   if (o.live !== false) {
-    const env = await L.openEngine(Object.assign({}, o, { wallpaper: false, test: false }), { test: false });
+    // P1.10: регулятор v2 выключен — в headless (программный растр, 3–7 к/с) он менял бы буфер холста и цель к/с каждые
+    // ≈1.5 с посреди проверок HUD/снимка/бюджета; сам регулятор проверяет governor.js
+    const env = await L.openEngine(Object.assign({}, o, { wallpaper: false, test: false, q: 'gov=0' + (o.q ? '&' + o.q : '') }), { test: false });
     try {
       const r = await livePart(env);
       out.live = r;
@@ -183,7 +186,9 @@ async function restorePage(env, { k0, shot0, shot1 }) {
         r.budget.mid.backing[0] * r.budget.mid.backing[1] <= 2.0e6 + 1 && r.budget.after.src !== 'app' && r.budget.after.fps === 60 &&
         r.budget.after.backing[0] === r.budget.before.backing[0] && r.budget.after.backing[1] === r.budget.before.backing[1]);
       const p = r.probe;
-      G.probeLiveAllConfigs = !!(p && p.res && !p.res.aborted && p.res.configs.length === 11 && p.res.configs.every((c) => c.frames > 0 && c.p50 > 0));
+      // P1.9: 12 конфигураций; «vlayer» (в режиме слоёв — «canvas») переключает путь задника на ходу; без видео-сцены — skipped (null)
+      G.probeLiveAllConfigs = !!(p && p.res && !p.res.aborted && p.res.configs.length === 12 && p.res.configs.every((c) => c.skipped || (c.frames > 0 && c.p50 > 0)));
+      G.probeLiveVlayer = !!(p && p.res && p.res.configs.some((c) => (c.name === 'vlayer' || c.name === 'canvas') && !c.skipped && c.frames > 0));
       G.probeLiveRestores = !!(p && JSON.stringify(Object.assign({}, p.s0, { frames: 0 })) === JSON.stringify(Object.assign({}, p.s1, { frames: 0 })));
     } finally { await L.finish(env); }
   }
@@ -196,7 +201,7 @@ async function restorePage(env, { k0, shot0, shot1 }) {
       const d = imgDiff(s0, s1);
       out.ab = Object.assign(R, { diff: d });
       G.abNoErrors = R.errors.length === 0;
-      G.abAllConfigs = !!(R.probe && !R.probe.aborted && R.probe.configs.length === (o.configs ? String(o.configs).split(',').length : 11) && R.probe.configs.every((c) => c.frames > 0));
+      G.abAllConfigs = !!(R.probe && !R.probe.aborted && R.probe.configs.length === (o.configs ? String(o.configs).split(',').length : 12) && R.probe.configs.every((c) => c.skipped || c.frames > 0));
       G.abStateRestored = JSON.stringify(Object.assign({}, R.before, { frames: 0 })) === JSON.stringify(Object.assign({}, R.after, { frames: 0 }));
       // тот же кадр: допуск — шум самого метода (скачок часов назад: лучи/частицы чуть иначе; без зонда ≈ 1000 px, ≤ 4/255)
       G.abFrameIdentical = d.differ === 0 || d.psnr >= 60;

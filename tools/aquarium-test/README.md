@@ -27,11 +27,13 @@ Chromium распаковывается @sparticuz/chromium во временн�
 | `?debug=1` | оверлей: RS, буфер, уровень качества, p90/fps, счётчики canvas, JS мс; `?debug=2` — плюс геометрия сцены (линия воды, горизонт, safeX, пол, точки, источники пузырьков и света) |
 | `?nofilter=1` | `HAS_FILTER = false` (как в WebKit). В отгружаемом коде `ctx.filter` не используется вовсе — кадры с флагом и без совпадают |
 | `?nobg=1` | задник не грузится → процедурный векторный риф (проверка фолбэка) |
-| `?gov=0` | регулятор качества выключен (нужно `bench.js`: синтетическое время 1/30 с иначе «роняет» качество) |
+| `?gov=0` | регулятор качества выключен (нужно `bench.js`, `perf.js`, `blackbox.js`: синтетическое время 1/30 с и программный растр headless иначе «роняют» качество, v2 — за ≈1.5 с на ступень) |
+| `?govlevel=N` | стартовая ступень регулятора v2 (0–7; сильнее памяти `localStorage['aq.gov.<экран>.<питание>']` и `__AQ_BOOT.govLevel`) |
 | `?wallpaper=1` | режим обоев, как в macOS-приложении (без подсказки, курсора и ввода) |
+| `?vlayer=1` | P1.9: задник слоями (CSS mix-blend-mode над `<video>`, прозрачный холст, лучи слоем); по умолчанию 0 — холст (см. раздел P1.9) |
 
 Скрипты харнесса по умолчанию добавляют `test=1&wallpaper=1&nofilter=1&seed=1`
-(отключаются `--no-test`, `--no-wallpaper`, `--no-nofilter`; `--seed N`; прочее — `--q "debug=2&nobg=1"`).
+(отключаются `--no-test`, `--no-wallpaper`, `--no-nofilter`; `--seed N`; `--vlayer 1|0`; прочее — `--q "debug=2&nobg=1"`).
 
 ## `window.__aq` (есть всегда; счётчики — только при `?test=1` или `?debug=1`)
 
@@ -41,7 +43,7 @@ Chromium распаковывается @sparticuz/chromium во временн�
 | `step(dt = 1/30, n = 1, { render })` | `n` шагов по `dt` с; `render: true` (каждый шаг, по умолчанию) \| `false` \| `"last"`; возвращает `simT` |
 | `setTime(t)` | часы симуляции `simT` (фазы хвостов, лучей, планктона) |
 | `render()` | перерисовать текущее состояние без шага |
-| `stats()` | `{ last, avg, max }` по ключам `drawImage, setTransform, gradients, patterns, save, restore, getImageData, filter, jsMs` (среднее/максимум — с последнего `resetStats()`), `frames, backing {w,h,mp}, css, dpr, RS, quality {level, particles, fishSlices, causticScale, rsMul}, governor {p90, fps, …}, hasFilter, photo, sceneFromFile, fish, bubbles, simT, seed` |
+| `stats()` | `{ last, avg, max }` по ключам `drawImage, setTransform, gradients, patterns, save, restore, getImageData, filter, jsMs` (среднее/максимум — с последнего `resetStats()`), `frames, backing {w,h,mp}, css, dpr, RS, quality {level, name, rsMul, particles, fishSlices, causticScale, cacheHz, filaments, fps30}, governor {level, max, p50, p90, target, vsync, fps, good, bad, recover, quiet, windows, downs, ups, key, stored}, hasFilter, photo, sceneFromFile, fish, bubbles, simT, seed` |
 | `resetStats()` | обнулить накопленные среднее/максимум |
 | `fish()` | снимок рыб: `{ i, id, x, y, z, depth, len, facing, vx, vy, alpha, sprite }` |
 | `scene()` | `{ fromFile, backdrop, photo, bandH, map (BGX), horizon [x,y], visibleBX, visibleBY, scene }` |
@@ -84,9 +86,20 @@ node bench.js --runs 3 --out /tmp/x/bench_new.json                       # те�
 git show 041f9c0:aquarium/index.html > /tmp/base/index.html  # + скопировать fish/ и assets/ рядом
 node bench.js --root /tmp/base --strip-filter --seed-math 1 --runs 3     # исходный движок
 
-# регулятор качества и режимы питания (синтетические интервалы кадров, без test-режима)
-node governor.js
+# регулятор качества v2 (P1.10) и режимы питания: rAF подменён, vsync 60 Гц синтетический, «машина» — стоимость растра
+# кадра по ступени (пока растр занят, rAF не приходит); гейты settle/downFast/hold/recover/extreme/powerLow/powerBack/
+# extremeRecover/memory/paused/low30/high60/noErrors, JSON {scenarios, gates, allPass}, код 2 при провале (≈3–5 мин)
+node governor.js --out /tmp/x/gov.json
 ```
+
+Регулятор v2 (движок, раздел «регулятор качества v2»): ступени по цене за снятый пиксель — RS ×0.9/0.8/0.7/0.6 → эффекты
+(K 0.35, кэши 15 Гц, без нитей лучей, частицы ×0.5) → срезы рыб ×0.7 → ровные 30 к/с (нет на батарее и при пределе ≤ 30).
+Окна по 1 с (p50/p90 интервалов показанных кадров); цель — кратный vsync интервал, на который ложится ритм (`__AQ_BOOT.screen.maxFps`,
+иначе оценка vsync 48–250 Гц); 3 с тишины после старта/ресайза/темы (и весь переход)/питания/бюджета/зонда, 0.5 с после своей
+ступени. Вниз: p50 > 1.9× цели — сразу, p90 > 1.5× — 3 окна. Вверх: p90 ≤ 1.1× цели `recover` с (5; после отскока ×2 до 600;
+удержавшаяся ступень возвращает 5). Ступень помнится на пару «экран + питание» (`localStorage`, запасной `__AQ_BOOT.govLevel`).
+В headless (программный растр 3–7 к/с) живой регулятор ступает вниз каждые ≈1.5 с, поэтому `perf.js` (живая часть) и
+`blackbox.js` идут с `?gov=0`.
 
 ## Гейты (SPEC §5): как мерить
 
@@ -286,7 +299,7 @@ CSS-слоем). В тест-режиме разнос пересборок кэ
 |---|---|
 | `window.__AQ_BOOT = {power, hud, budget, screen: {id, w, h, scale, maxFps, main}, crashes, loadReason, appVersion}` | до загрузки (WKUserScript): питание (если нет `__AQ_POWER`), HUD сразу, бюджет Мп (число или `{mp, fps}`), остальное — в снимок и HUD |
 | `aquariumSetDebug(on)` | HUD — DOM `<pre>` слева под строкой меню, 2 Гц, только когда включён (на холсте не рисуется) |
-| `aquariumPerfSnapshot()` | объект ≈3 КБ (JSON): `fps` (цель/показано, интервал p50/p90/p95/max, `overVsyncPct`, `overTargetPct`, `jsP50/90`, `rasterWait` = p50 интервала − p50 JS), `since` (с запуска, по гистограмме), `vsync` (оценка по сырым интервалам rAF + `screenMaxFps`), `canvas` (буфер, Мп, RS, DPR, бюджет и источник, `videoZoom`), `gov`, `power`, `appFps`, `paced`, `stagger`, `theme`, `video.{day,night}` (к/с по rVFC, `dropped/total` из `getVideoPlaybackQuality`, петли, перемотка и пропуск кадров последней петли, их максимумы `seekMax`/`loopGapMax`, `loopsSlow` — петли > 100 мс, `gapMax`, срабатывания сторожа, ошибки), `fish`, `layersOff`, `page` (`boots` — sessionStorage.aqBoots, `nav` — navigate/reload, UA), `boot`, `probe` (последний зонд), `events` (30 последних) |
+| `aquariumPerfSnapshot()` | объект ≈3 КБ (JSON): `fps` (цель/показано, интервал p50/p90/p95/max, `overVsyncPct`, `overTargetPct`, `jsP50/90`, `rasterWait` = p50 интервала − p50 JS), `since` (с запуска, по гистограмме), `vsync` (оценка по сырым интервалам rAF + `screenMaxFps`), `canvas` (буфер, Мп, RS, DPR, бюджет и источник, `videoZoom`), `gov` (v2: `level`/`max`/`name`/`rsMul`, `targetMs`, `vsyncMs`/`vsyncSrc`, окно `p50`/`p90`, `good`/`bad`/`recover`/`quiet`, `windows`/`downs`/`ups`, память `key`/`stored`), `power`, `appFps`, `paced`, `stagger`, `theme`, `video.{day,night}` (к/с по rVFC, `dropped/total` из `getVideoPlaybackQuality`, петли, перемотка и пропуск кадров последней петли, их максимумы `seekMax`/`loopGapMax`, `loopsSlow` — петли > 100 мс, `gapMax`, срабатывания сторожа, ошибки), `fish`, `layersOff`, `page` (`boots` — sessionStorage.aqBoots, `nav` — navigate/reload, UA), `boot`, `probe` (последний зонд), `events` (30 последних) |
 | `aquariumPerfProbe(opts?)` | Promise ≈45 с: регулятор на паузе, 11 конфигураций по 1 с прогрева + 3 с замера (`current`, `budget3.7`, `budget2.4`, `noCaustics`, `noRays`, `noVignette`, `poster`, `noReef`, `noFishLight`, `noGroups`, последней `asBefore` — 8.3 Мп без предела видео, каждый rAF, кэши в одном кадре) → `{configs: [{name, frames, fps, p50, p90, p95, max, jsP50, jsP90, mp, rs}], warmMs, measureMs, tookMs, aborted, level, power, fpsTarget, vsyncMs, …}`; потом всё как было (слои, бюджет, ритм, разнесение кэшей, масштаб вариантов кораллов; масштаб вариантов возвращается и перед каждой конфигурацией). Кадры зонда не попадают в кольца и «с запуска» снимка. Только для тестов: `{warmMs, measureMs, configs: [имена]}`. Страница скрыта (`visibilitychange`: рабочий стол закрыт окнами) — сразу `aborted: "hidden"`; нет кадров (питание `paused`, тест-режим) — отмена по таймауту (147 с) с `aborted: "timeout"` |
 | `aquariumSetBudget({mp, fps})` | бюджет холста (Мп) и предел к/с от приложения — второй экран `{mp: 2, fps: 30}`; `{mp: null, fps: null}` — снова по питанию. Буфер — сразу до первого кадра, потом через ≤ 3 с (как смена питания) |
 
@@ -320,6 +333,48 @@ node perf.js --no-ab --full            # живая часть с полным �
    ≥ 60 дБ PSNR (шум самого метода — скачок часов назад: без зонда ≈ 1000 px ≤ 4/255). Опорные числа: 2593 px (0.04%), max 19/255,
    75.4 дБ. Сравнивать с отдельной страницей без зонда нельзя: поведение рыб читает позы кораллов из кэша рифа, другой ритм его
    пересборок во время зонда уводит траектории (хаос, а не след зонда).
+
+## Этап P1.9 / P1.7 «задник слоями, лучи слоем»: флаг, снимки, гейт PSNR
+
+Флаг движка `?vlayer=1` (сильнее `__AQ_BOOT.vlayer === true`; по умолчанию выключено, `?vlayer=0` — старый путь без единого
+изменения): видео-сцена рисуется слоями композитора — сцена `#stage` (`isolation: isolate`), снизу вверх: постеры тем `<img>`,
+`<video>` дня и ночи в прямоугольнике cover-fit (родной размер + `transform: translate + scale`; ночное — `opacity` = вес ночи),
+подкраска ночи (multiply, только без ночного задника), `darkCan` (`mix-blend-mode: multiply`, копия при смене маски), K
+(`color-dodge`, копия при каждой пересборке ≤ 20 Гц), прозрачный главный холст `#tank2` (очищается каждый кадр: тени, передний
+риф, частицы, пузырьки, рыбы, группы вычитания, свет рыб), лучи и отсвет дна (`screen`, холст `RAYS_S = clamp(RS/2, 0.5, 1)`
+CSS-разрешения, перерисовка ≤ 30 Гц), виньетка (как раньше). Фото-сцена и процедурный риф — старый путь (режим снимается).
+Переключение на ходу — `__aq.setVlayer(on)` (два холста: `#tank` alpha: false и `#tank2`), `__aq.vlayer()` → `{on, want, feasible,
+raysScale, raysHz, rays, k, canvas}`; `stats().vlayer`, `perfState().vlayer`, снимок — `vlayer`, `vlayerWant`, `layers {rays, raysScale,
+raysHz, k, dark}`; HUD — «слои вкл/выкл» в строке буфера; журнал — событие `vlayer`. Зонд: 12-я конфигурация `vlayer` (в режиме
+слоёв — `canvas`) — другой путь задника на ходу; без видео-сцены — `skipped: true`, числа `null`.
+`?vidcap=0` (тесты) — без предела «1.1 px устройства на px видео» (RS до DPR).
+
+Снимки (`still.js`, `clip.js`) в режиме слоёв — это всегда страница целиком (`page.screenshot`), холст не читается; с видео
+(`?bgvideo=…`) шаг `__aq.step()` после перемотки ждёт показанный кадр по `requestVideoFrameCallback` (не дольше 500 мс на кадр).
+`--vlayer 1|0` есть у всех скриптов (`lib.buildQuery`). `occluderRoundTrip` (`captureLitBackdrop` читает холст) в режиме слоёв не работает.
+
+```sh
+# гейт: ОДИН момент симуляции двумя путями (холст → слои на той же странице через __aq.setVlayer): PSNR ≥ 45 дБ
+node layers_psnr.js --out /tmp/x/psnr.json --shots /tmp/x/layers        # 1512×982@2 и 2560×1440 × день, ночь, середина перехода
+node layers_psnr.js --eq 0 --cases 1512x982@2                           # при отгружаемом бюджете (на Retina слои резче — ≈ 38 дБ)
+node layers_psnr.js --rootB /tmp/base --vlayerA 0 --vlayerB 0 --eq 0    # два движка, две страницы: кадр vlayer=0 должен совпасть бит-в-бит
+node still.js --vlayer 1 --w 1512 --h 982 --dpr 2 --q "bgvideo=intra"  # слой <video> на настоящем кадре (ждёт rVFC)
+```
+
+По умолчанию `--eq 1`: оба пути при равном разрешении задника (`budget=8.3&vidcap=0`, RS = DPR). При отгружаемом бюджете холст на
+Retina рисует задник в RS ≈ 1.56 px устройства на CSS px и растягивается браузером до 2, а слой видео показан в родных 2 — слои
+резче, разница на фактуре рифа ≈ 37 дБ (это выигрыш, а не ошибка смешивания: без эффектов и рифа при равном RS — 69 дБ).
+Снапинг размеров раскладки: элемент размером `width: dw` композитор ставит в целые px, и задник сдвигается на доли пикселя
+(≈ 40 дБ против холста); родной размер + `transform: scale` повторяет `drawImage` с дробным сдвигом (61 дБ без эффектов).
+
+Опорные числа (этот контейнер, seed 1, 150 шагов, `--eq 1`): 1512×982@2 — день 53.9 / ночь 55.6 / переход 53.4 дБ;
+2560×1440 — 52.5 / 55.3 / 53.5 дБ; 1920×1200 — 52.3 / 54.8 / 53.3 дБ. Остаток — лучи в ½–¾ разрешения, отсвет дна поверх рыб
+(в холсте он под ними), тени и вспышки на прозрачном холсте (обычное наложение вместо multiply/lighter), округление
+премультиплицированной альфы (max 3/255 на рыбах).
+
+Шум сравнения двух страниц: `litMax` рыб при загрузке считается по лучам того момента, когда пришли спрайты и постер (порядок
+асинхронных загрузок), и через поведение уводит траектории — поэтому гейт сравнивает пути на одной странице, а два движка
+(`--rootB`) — только «бит-в-бит или перезапустить».
 
 ## «Чёрный ящик» (зависания и белый экран): запись, прошлый сеанс, застои
 
