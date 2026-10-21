@@ -20,7 +20,7 @@ import { createScene } from '/scene.js';
 const c = document.getElementById('c');
 const make = () => createScene(THREE, { canvas: c, base: location.origin + '/files/', onLoad: () => { window.__loaded = true; } });
 let sc = make();
-const view = (t, still) => ({ cover: { x: 0, y: 0, w: ${W}, h: ${H} }, box: { x: 0, y: 0, w: ${W}, h: ${H} }, dpr: window.__dpr || 1, t, still });
+const view = (t, still, k = window.__k || 1) => ({ cover: { x: 0, y: 0, w: ${W} * k, h: ${H} * k }, box: { x: 0, y: 0, w: ${W} * k, h: ${H} * k }, dpr: window.__dpr || 1, t, still });
 const grab = () => { const o = document.createElement('canvas'); o.width = c.width; o.height = c.height; o.getContext('2d').drawImage(c, 0, 0); return o; };
 const pix = (cv) => cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
 window.__draw = (p, t = 0, still = true) => { sc.draw(p, view(t, still)); return sc.state(); };
@@ -84,9 +84,9 @@ const lum = (d, x, y) => { const i = (y * W + x) * 4; return 0.299 * d[i] + 0.58
 
   // step-down on a fake clock
   const run = (steps, dpr = 2) => p.evaluate(async ([steps, dpr]) => {
-    window.__dpr = dpr; window.__fresh(); window.__fakeTime(true); let t = 1000, q = [];
+    window.__dpr = dpr; window.__k = 0.25; window.__fresh(); window.__fakeTime(true); let t = 1000, q = [];   // a small canvas: only the clock matters
     for (const [ms, n] of steps) for (let i = 0; i < n; i++) { t += ms; window.__clock(t); q.push(window.__draw(1, t / 1000, false).quality); }
-    window.__fakeTime(false); const s = window.__draw(1, 0, true); window.__dpr = 1; return { q: [...new Set(q)], quality: s.quality, capped: s.capped };
+    window.__fakeTime(false); const s = window.__draw(1, 0, true); window.__dpr = 1; window.__k = 1; return { q: [...new Set(q)], quality: s.quality, capped: s.capped };
   }, [steps, dpr]);
   const cap = await run([[33.4, 400]]);
   ok('step-down: a steady 30 Hz (a cap) goes back to 2 and stops trying', cap.quality === 2 && cap.capped, JSON.stringify(cap));
