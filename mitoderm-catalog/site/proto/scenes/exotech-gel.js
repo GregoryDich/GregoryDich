@@ -55,15 +55,20 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     const t = pm.fromScene(room, 0.02).texture; pm.dispose(); return t;
   }
   scene.environment = makeEnv();
+  const restored = () => {   // after a lost context three.js restores image textures, not the rendered environment: rebuild
+    const old = scene.environment; scene.environment = makeEnv(); old.dispose(); size = '';   // it, and have the engine
+    version++; if (onLoad) onLoad();   // redraw (the kit picture too), also under reduced motion
+  };
+  canvas.addEventListener('webglcontextrestored', restored);
   const key = new THREE.DirectionalLight(0xfff1dc, 1.6); key.position.set(-4, 7, 6); scene.add(key);
 
   // ---- textures: the typeset print (alpha) and the foil's relief
-  let loaded = 0;
+  let loaded = 0, version = 0;   // version: textures loaded, a context restored — the engine re-renders the kit picture
   const ANISO = renderer.capabilities.getMaxAnisotropy();
   const tex = (name, srgb) => new THREE.TextureLoader().load(new URL(`img/exotech-gel-3d/${name}`, base).href, t => {
     if (srgb) t.colorSpace = THREE.SRGBColorSpace;
     t.anisotropy = ANISO; t.needsUpdate = true;
-    if (++loaded === 3 && onLoad) onLoad();   // the engine redraws the kit picture with the print on it
+    if (++loaded === 3) { version++; if (onLoad) onLoad(); }   // the engine redraws the kit picture with the print on it
   });
   const jarInk = tex('jar-print.png'), boxInk = tex('box-print.png'), foil = tex('foil.jpg');
   foil.wrapS = foil.wrapT = THREE.RepeatWrapping;
@@ -89,7 +94,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   mesh(new THREE.SphereGeometry(1, SEG, 80, 0, Math.PI * 2, 0, TS - G), gold, twist);
   const LON = [-42, 42], LAT = [7, 27];   // the print decal (make_textures.py)
   mesh(new THREE.SphereGeometry(1.0012, 192, 40, Math.PI / 2 + rad(LON[0]), rad(LON[1] - LON[0]), rad(90 - LAT[1]), rad(LAT[1] - LAT[0])), ink(jarInk), twist);
-  mesh(new THREE.CylinderGeometry(0.988, 0.988, 0.016, SEG, 1, true), dark, jar, Math.cos(TS));   // the seam's dark line
+  const seam = mesh(new THREE.CylinderGeometry(0.993, 0.993, 0.012, SEG, 1, true), dark, jar, Math.cos(TS));   // the seam's dark line: inside
+  // both shells' rims (0.9932 lid, 0.9943 base), in front of the silver shoulder
   const lathe = (pts, m, parent) => mesh(new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), SEG), m, parent);
   const yLid = Math.cos(TS - G), rLid = Math.sin(TS - G), yBase = Math.cos(TS + G), rBase = Math.sin(TS + G);
   const threads = (r, y0, y1, depth, n, out) => {   // a wall of n rounded thread ridges, from y0 to y1
@@ -136,33 +142,48 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     [[470, 760, 500, 1, 0.62], [950, 800, 350, -0.22, 0, 0]]];     // kit: the packshot again, flies into the offer card
   const D_BOX = DIST + 1.2, D_JAR = DIST;   // depth in front of the camera: the box a little behind the jar
   const mix = (a, b, s) => a.map((x, i) => x + (b[i] - x) * s);
+  let lidUp = 0, pearlsOn = 0;   // the last pose, for QA
   const tmp = new V3();
   function pose(p, t) {
     const k = Math.min(KEYS.length - 2, Math.floor(p)), f = p - k, s = f * f * (3 - 2 * f);
+    const live = 1 - smooth(4.85, 5, p);   // the idle sway settles on the kit pose, so it matches the card's picture as it lands
     const bx = mix(KEYS[k][0], KEYS[k + 1][0], s), jx = mix(KEYS[k][1], KEYS[k + 1][1], s);
     // the jar: its height in px is its diameter
-    const R = world(jx[2] / 2, D_JAR), bob = 0.006 * Math.sin(t * 0.8);
+    const R = world(jx[2] / 2, D_JAR), bob = 0.006 * Math.sin(t * 0.8) * live;
     jar.position.copy(at(jx[0], jx[1], D_JAR, tmp)); jar.position.y += bob * R; jar.scale.setScalar(R);
-    jar.rotation.set(jx[4], jx[3] + 0.05 * Math.sin(t * 0.45), 0);
+    jar.rotation.set(jx[4], jx[3] + 0.05 * Math.sin(t * 0.45) * live, 0);
     const open = jx[5], tw = smooth(0, 0.45, open), up = smooth(0.3, 1, open);
     twist.rotation.y = tw * Math.PI / 2;                                  // unscrews: a quarter turn, counter-clockwise from above
     lid.position.set(0, tw * 0.04 + up * 0.62, -up * 0.18); lid.rotation.x = -smooth(0.5, 1, open) * 0.5;   // lifts and tips back
-    for (const m of pearls) {
-      const u = m.userData, h = (t * 0.07 + u.ph) % 1, o = open * smooth(0, 0.15, h) * (1 - smooth(0.75, 1, h));
-      m.visible = o > 0.01; m.scale.setScalar(u.s * o);
-      m.position.set(Math.cos(u.a + t * 0.2) * u.r, 0.38 + h * 0.9, Math.sin(u.a + t * 0.2) * u.r * 0.6 + 0.15);
+    seam.visible = up < 0.01; lidUp = up; pearlsOn = 0;
+    const gap = Math.max(0, yLid + lid.position.y - 0.08 - 0.36);   // from the gel to just under the lifted lid's rim
+    for (const m of pearls) {   // only once the lid is well up, and only in the gap under it (never through the lid)
+      const u = m.userData, h = (t * 0.07 + u.ph) % 1, o = smooth(0.55, 0.9, up) * smooth(0, 0.15, h) * (1 - smooth(0.75, 1, h));
+      m.visible = o > 0.01; m.scale.setScalar(u.s * o); if (m.visible) pearlsOn++;
+      m.position.set(Math.cos(u.a + t * 0.2) * u.r, 0.36 + h * gap, Math.sin(u.a + t * 0.2) * u.r * 0.6 + 0.15);
     }
     // the box: its height px is the front's height plus the top's sliver; drawn as the front's
     box.visible = bx[3] > 0.01;
     if (box.visible) {
       const S = world(bx[2] * 0.86, D_BOX) / BH;
-      box.position.copy(at(bx[0], bx[1], D_BOX, tmp)); box.scale.setScalar(S); box.rotation.set(0, bx[4] + 0.02 * Math.sin(t * 0.4 + 1), 0);
+      box.position.copy(at(bx[0], bx[1], D_BOX, tmp)); box.scale.setScalar(S); box.rotation.set(0, bx[4] + 0.02 * Math.sin(t * 0.4 + 1) * live, 0);
       for (const m of boxMats) { m.opacity = clamp(bx[3] / 0.3); m.envMapIntensity = bx[3]; }   // «in the dark»: less light, gone below 0.3
     }
   }
 
   // ---- drawing into the engine's box: the full frame is the cover; the canvas shows the box's part of it
-  let quality = 2, size = '', renders = 0, slowN = 0, slowT = 0, lastT = 0, lastP = 0, lastView = null;
+  let quality = 2, size = '', renders = 0, lastT = 0, lastP = 0, lastView = null, trial = null, capped = false;
+  const LADDER = [2, 1.5, 1.25], win = [];
+  function pace(now, still) {   // fewer pixels when frames run long: a 90-frame median over 24 ms steps down one rung, and
+    if (still || capped) { lastT = now; return; }   // the next window keeps it only if frames got ≥ 20 % shorter; if not,
+    const dt = lastT ? now - lastT : 0; lastT = now;   // the rate is a cap (low-power 30 Hz), not the GPU: back, no more tries
+    if (!dt || dt > 400) return;   // a pause (hidden, idle), not a frame
+    win.push(dt); if (win.length < 90) return;
+    const m = win.slice().sort((a, b) => a - b)[45], mean = win.reduce((a, v) => a + Math.min(v, 100), 0) / win.length; win.length = 0;
+    if (trial) { if (mean > trial.mean * 0.8) { quality = trial.q; capped = true; } trial = null; return; }   // the mean: vsync-
+    const i = LADDER.indexOf(quality);   // quantised medians would hide a 30 → 18 ms gain
+    if (m > 24 && i < LADDER.length - 1) { trial = { q: quality, mean }; quality = LADDER[i + 1]; }
+  }
   function fit(view, pr) {
     const id = `${view.box.w}x${view.box.h}@${pr}`;
     if (id !== size) { renderer.setPixelRatio(pr); renderer.setSize(view.box.w, view.box.h, false); size = id; }
@@ -170,26 +191,23 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     camera.setViewOffset(view.cover.w, view.cover.h, view.box.x - view.cover.x, view.box.y - view.cover.y, view.box.w, view.box.h);
     camera.updateProjectionMatrix();
   }
-  function draw(p, view) {
-    const now = performance.now();   // 90 frames over 24 ms on average: fewer pixels (2 → 1.5 → 1.25 → 1); a pause (hidden, idle) is no frame
-    if (!view.still && lastT && now - lastT < 400) { slowT += now - lastT; if (++slowN === 90) { if (slowT / 90 > 24 && quality > 1) quality = quality > 1.5 ? 1.5 : quality > 1.25 ? 1.25 : 1; slowN = 0; slowT = 0; } }
-    lastT = now; lastP = p; lastView = view;
-    fit(view, Math.min(view.dpr, quality));
-    pose(p, view.still ? 0 : view.t);
-    renderer.render(scene, camera); renders++;
-  }
+  function render(p, view) { fit(view, Math.min(view.dpr, quality)); pose(p, view.still ? 0 : view.t); renderer.render(scene, camera); renders++; }
+  function draw(p, view) { pace(performance.now(), view.still); lastP = p; lastView = view; render(p, view); }
+  let kits = 0;   // kit pictures rendered (QA: none on a phone, none for a toolbar)
   function kit(view) {   // the kit pose rendered once into a picture (the offer card, the flight into it), then the current pose again
+    kits++;
     fit(view, view.dpr); pose(KEYS.length - 1, 0); renderer.render(scene, camera);
     const c = document.createElement('canvas'); c.width = canvas.width; c.height = canvas.height; c.getContext('2d').drawImage(canvas, 0, 0);
-    if (lastView) draw(lastP, lastView);
+    if (lastView) render(lastP, lastView);
     return c;
   }
   function dispose() {
+    canvas.removeEventListener('webglcontextrestored', restored);
     scene.traverse(o => { if (o.geometry) o.geometry.dispose(); });
     for (const m of [gold, goldSoft, silver, white, gel, dark, foilMat, black, boxInkMat]) m.dispose();
     for (const t of [jarInk, boxInk, foil, scene.environment]) t.dispose();
     renderer.dispose();
   }
-  const state = () => ({ quality, pixelRatio: renderer.getPixelRatio(), width: canvas.width, height: canvas.height, renders, loaded });
+  const state = () => ({ quality, capped, pixelRatio: renderer.getPixelRatio(), width: canvas.width, height: canvas.height, renders, loaded, version, kits, lastP, lidUp, pearlsOn });
   return { draw, kit, dispose, state, animated: true };
 }
