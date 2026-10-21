@@ -70,7 +70,7 @@ def content(slug):
     use = 'home' if en['tag'] == 'HOME CARE' else 'pro'
     two = lambda k: [t.strip() for t in sb[k].split(' · ')]
     labels = lambda b, ks=(1, 2, 3, 4): [sb[f'{b}.label{i}'] for i in ks]
-    buy, more = two('b0.cta')[:2]; ask = two('b6.cta')[1]   # b6.cta: the price button, then the offer's second one
+    buy, more = two('b0.cta')[:2]; ask = (two('b6.cta') + [''])[1]   # b6.cta: the price button, then the offer's second one
     qty = sb['b5.line'].split(' ', 1)[0]; qty = qty if re.fullmatch(r'\d+×', qty) else ''
     line_id = next(k for k, v in LINES.items() if slug in v)
     mark = MARK.get(line_id, line_id) if line_id != 'V-TECH FACE' else ui['line_mark']
@@ -95,7 +95,7 @@ def content(slug):
                'h1': name, 'tag': sb['b0.title'], 'lead': sb['b0.line'], 'chips': labels('b0'), 'more': more},
         's2': {'h2': sb['b1.title'], 'p': sb['b1.line'], 'kicker': c['s05'][0], 'chips': labels('b1')},
         's3': {'h2': sb['b2.title'], 'legend': vt['s3']['legend'] if exo else '', 'p': sb['b2.line'], 'kicker': c['s03'][0],
-               'chips': labels('b2'), 'formula': vt['s3']['formula']},
+               'chips': labels('b2'), 'formula': vt['s3']['formula'] if line_id != 'DEVICES' else ''},   # a device: no «formula»
         's4': {'h2': sb['b3.title'], 'p': sb['b3.line'], 'pins': labels('b3')},
         's5': {'h2': sb['b4.title'], 'p': sb['b4.line'], 'chip': sb['b4.label4'], 'note': '',
                'steps': [[re.sub(r'^\d+\s*·\s*', '', t), ''] for t in labels('b4', (1, 2, 3))]},
@@ -103,7 +103,7 @@ def content(slug):
         's7': {'h2': sb['b6.title'], 'p': sb['b6.line'], 'training': ask, 'card_title': vt['s7']['card_title'],
                'card_lines': [[qty, sb['b5.line'][len(qty):].strip()]] if qty else [], 'card_facts': sb['b5.title'], 'card_chips': labels('b5', (3, 4))},
         's8': {**vt['s8'], 'tag': ui['spec_tag_scalp'] if scalp else vt['s8']['tag']},
-        's9': {**{k: vt['s9'][k] for k in ('more_h', 'go', 'pro', 'home')}, 'line_h': vt['s9']['line_h'].replace(ui['line_mark'], mark or lname),
+        's9': {**{k: vt['s9'][k] for k in ('more_h', 'go', 'pro', 'home')}, 'line_h': vt['s9']['line_h'].replace(ui['line_mark'], mark or 'ה' + lname),   # «עוד מקו המכשור»: a common noun takes the article
                'line': [card(s) for s in line], 'more': [card(s) for s in also]},
         'bar': [name, ui['use_' + use]],
     }

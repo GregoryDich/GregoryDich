@@ -64,6 +64,7 @@ def brand(s):  # Latin product and brand names in capitals, as everywhere in the
 
 
 lis = lambda items, f=esc: ''.join(f'<li>{f(t)}</li>' for t in items)
+txt = lambda s: keep(s) if re.search('[™®]', s) else esc(s)   # a mark sign stays after its word in an RTL line
 nav = v['nav']
 PIN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>'
 CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.8"/></svg>'
@@ -82,10 +83,10 @@ T = {
     'eyebrow': s1['eyebrow'], 'h1': s1['h1'], 'tag': s1['tag'], 's1_lead': s1['lead'], 's1_more': s1['more'],
     **{f'nav{i}': nav[i] for i in range(1, 6)},
     's2_h2': s2['h2'], 's2_p': s2['p'], 's2_kicker': s2['kicker'],
-    's3_h2': s3['h2'], 's3_kicker': s3['kicker'], 's3_formula': s3['formula'],
+    's3_h2': s3['h2'], 's3_kicker': s3['kicker'],
     's4_h2': s4['h2'], 's4_p': s4['p'], 's5_h2': s5['h2'], 's5_p': s5['p'],
     's7_p': s7['p'], 's7_card_title': s7['card_title'],
-    'kit_alt': s1['h1'] + ': ' + s6['p'].split('.')[0],   # the approved S6 line: what is in the box
+    'kit_alt': s1['h1'] + ': ' + re.split(r'\.\s+(?=[^\sa-z])', s6['p'], 1)[0],   # the S6 line's first sentence (not «1.5%»): what is in the box
     'phone_href': 'tel:' + tel, 'phone_label': ui['phone_label'], 'phone': ui['phone'],
     'email_href': 'mailto:' + ui['email'] + '?subject=' + urllib.parse.quote(NAME), 'email_label': ui['email_label'], 'email': ui['email'],
     's8_kicker': s8['kicker'], 's8_filter': s8['filter'], 'spec_empty': ui['spec.empty'], 's8_list': s8['list'],
@@ -113,13 +114,22 @@ call = lambda pos, k: (f'<p class="kc-call {pos}" aria-hidden="true"><b><bdi dir
                        f'{esc(s7["card_lines"][k][1].split(" — ")[0])}</p>') if calls else ''
 RAW = {
     's1_chips': lis(s1['chips'], keep), 's2_chips': lis(s2['chips']), 's3_p': keep(s3['p']), 's3_chips': lis(s3['chips'], keep),
-    's3_formula_list': lis(cat['ingredients'], keep), 's4_pins': lis(s4['pins']), 's5_chip': keep(s5['chip']),
+    's3_formula': (f'<details class="rv" style="--d:.3s"><summary>{esc(s3["formula"])}</summary><ul>{lis(cat["ingredients"], keep)}</ul></details>'
+                   if s3['formula'] else ''),   # a device has features, not a formula
+    's4_pins': lis(s4['pins']), 's5_chip': keep(s5['chip']),
     's5_steps': ''.join(f'<li class="step rv" style="--d:{i * .08:.2f}s"><span class="n">0{i + 1}</span><h3>{keep(t)}</h3>{f"<p>{keep(p)}</p>" if p else ""}</li>'
                         for i, (t, p) in enumerate(s5['steps'])),
     's5_note': f'<p class="note rv" style="--d:.24s">{esc(s5["note"])}</p>' if s5['note'] else '',
     'lead': LEAD, 'use_cls': '' if HOME else ' pro',
-    'offer_more': (f'<a class="btn ghost" href="#specialists">{esc(s7["training"])}</a>' if HOME else
-                   f'<a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener"{LEAD}>{esc(s7["training"])}</a>'),
+    # the offer's second button does what its label says: a price quote opens the price form (a home-care page too),
+    # «WhatsApp» opens WhatsApp, a home-care page otherwise sends to the specialists, a professional one to the form
+    'offer_more': '' if not s7['training'] else (
+        f'<a class="btn ghost" href="{esc(wa(ui["wa_text_price"].replace("EXOCELL MASK", NAME)))}" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{esc(s7["training"])}</a>'
+        if HOME and 'מחיר' in s7['training'] else
+        f'<a class="btn ghost" href="{esc(wa(ui["wa_text_product"].format(name=NAME)))}" target="_blank" rel="noopener">{esc(s7["training"])}</a>'
+        if 'WhatsApp' in s7['training'] else
+        f'<a class="btn ghost" href="#specialists">{esc(s7["training"])}</a>' if HOME else
+        f'<a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener"{LEAD}>{esc(s7["training"])}</a>'),
     's7_h2': keep(s7['h2']),
     'kit_call_top': call('top', 1), 'kit_call_bot': call('bot', 0),   # «מסכת ג׳ל» over the sachets, «סרום» under the ampoules
     's7_card_lines': ''.join(f'<p class="kc-qty"><b><bdi dir="ltr">{esc(q)}</bdi></b><span>{keep(t)}</span></p>' for q, t in s7['card_lines']),
@@ -138,8 +148,9 @@ RAW = {
     'kit_line': f'<span class="badge"><bdi>{esc(s1["line_mark"] or s1["line_name"])}</bdi></span>' if s1['line_mark'] or s1['line_name'] else '',
     # the exosome legend only on a product with synthetic exosomes; a related row only when it has cards
     's3_legend': f'<p class="legend rv" style="--d:.15s"><span class="dot" aria-hidden="true"></span><span>{esc(s3["legend"])}</span></p>' if s3['legend'] else '',
-    **{f's9_{k}': f'<h2 class="rv">{esc(s9[k + "_h"])}</h2>\n    <div class="cards">' + ''.join(card(*c, i) for i, c in enumerate(s9[k])) + '</div>' if s9[k] else ''
-       for k in ('line', 'more')},
+    's9': ('<section class="related" data-st="7"><div class="wrap">\n    ' + '\n    '.join(
+        f'<h2 class="rv">{txt(s9[k + "_h"])}</h2>\n    <div class="cards">' + ''.join(card(*c, i) for i, c in enumerate(s9[k])) + '</div>' if s9[k] else ''
+        for k in ('line', 'more')) + '\n  </div></section>') if s9['line'] or s9['more'] else '',
     'dock': ''.join(f'<a href="#{h}" data-i="{i}">{esc(n)}</a>' for i, (h, n) in enumerate(zip(
         ('meet', 'why', 'inside', 'feel', 'protocol', 'offer', 'specialists'), nav))),
     'form_fail': keep(ui['form.error']),
@@ -233,7 +244,8 @@ missing, unused = used - set(T) - set(RAW), (set(T) | set(RAW)) - used
 assert not missing, f'no text for {sorted(missing)}'
 assert not unused, f'texts never placed: {sorted(unused)}'
 page = re.sub(r'\{\{\{(\w+)\}\}\}', lambda m: RAW[m.group(1)], page)
-page = re.sub(r'\{\{(\w+)\}\}', lambda m: esc(T[m.group(1)]), page)
+KEEP = {'eyebrow', 'tag', 's1_lead', 's2_h2', 's2_p', 's2_kicker', 's3_h2', 's3_kicker', 's4_h2', 's4_p', 's5_h2', 's5_p', 's7_p'}   # text, not attributes
+page = re.sub(r'\{\{(\w+)\}\}', lambda m: txt(T[m.group(1)]) if m.group(1) in KEEP else esc(T[m.group(1)]), page)
 # the live scene: three.js from jsDelivr (as the MASK page), imported so that a failed load (or no WebGL) leaves the
 # page whole, without 3D: no-gl, the still; then the scene module inlined
 SRC = open(SCENE_JS, encoding='utf-8').read() if SCENE else ''
