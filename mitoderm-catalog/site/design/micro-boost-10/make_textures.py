@@ -1,0 +1,432 @@
+"""Textures for the three.js MICRO BOOST 10% scene (site/proto/scenes/micro-boost-10.js), sharp at any size: the print is
+typeset, not cut from the photo. Places, sizes and colours are measured on the largest packshot,
+protocols/print/img/micro-boost-10.webp (385×1252, never upscaled), in edge coordinates (a pixel i spans [i, i+1)):
+  the front  x 0.87 … 304.91 (the edge to the right side), top y = 5.25 − 0.01317 x, foot y = 1245.58 + 0.01844 x;
+             a point of the front is u = (x − 0.87) / 304.04 across, v = (y − top) / (foot − top) down (the print sits
+             on the photo linearly in x: what the designer centred reads u 0.500 ± 0.001)
+  the true proportions H : W : D = 4.21 : 1 : 1.21 (the medallion's ring is a circle: the photo is stretched ×1.05 in x),
+             so the front is W/H = 0.2376 and the texture's texels are square
+(the measurements and their corrections: the spec of 22/10, §2). Typeface: Rubik (SIL OFL, github.com/google/fonts),
+the closest by overlay (0.87–0.95 correlation, Jost and Inter lower), each line at its own narrowing; every glyph's
+ink centre stands on its measured centre (ink-weighted, ±0.0017 u), its cap height and baseline as measured, so the
+spacing is the photo's, not the font's. The gold monogram M is the owner's file site/img/mitoderm-m-gold.png reduced
+(566 → 170 px). The medallion is three layers, none an upscaled photo:
+  ring   the photo's colours in polar coordinates (radius × angle), smoothed along the angle (σ 3°): a smooth field (the
+         drawn bevel: light at the left, dark at the lower left, is part of the print), its edges drawn sharp on the
+         fitted circles (outer R = 0.10256 H, the disc's edge 0.80 R)
+  disc   the photo's silver disc with its dark strokes taken out (filled from the surrounding silver) and blurred
+         (σ 1.5 px): a soft field that keeps the faint grey «ghost» spicules
+  strokes the dark green spicules (#243523) traced as the half-contrast iso-line of the photo's stroke map: each
+         stroke's ink, measured against the local silver, is sampled smoothly at the texture's scale and cut sharp at
+         half of its own ridge's darkness (so the thin tapering ends keep their length, lighter); centre lines within
+         a pixel of the photo by construction, edges sharp at any size
+The packaging's vector file would replace all of it one for one (a question to the owner).
+Writes into <out dir>:
+  box-face.png   the front's colours, RGB 960×4040 (3.1 texels per px where the box is largest, 820 frame px in a 3840
+                 key; ≤ 4096 for phones): the paper #F8EEE4, the band #132A1C, the inks and golds as pipetted
+  box-metal.png  the front's material, RGB 480×2020: G roughness (paper 0.70, ink and band 0.60, gold 0.28), B metalness
+                 (gold 0.60)
+usage: python3 -I make_textures.py <font dir with Rubik[wght].ttf> <out dir>"""
+import os, sys
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont
+from scipy import ndimage
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+SITE = os.path.normpath(os.path.join(HERE, '..', '..'))
+REPO = os.path.normpath(os.path.join(SITE, '..'))
+PACKSHOT = os.path.join(REPO, 'protocols', 'print', 'img', 'micro-boost-10.webp')
+MONOGRAM = os.path.join(SITE, 'img', 'mitoderm-m-gold.png')
+
+TW, TH = 960, 4040                                       # box-face.png (W/H 0.2376, square texels)
+X0, XW = 0.87, 304.04                                    # the front on the packshot: left edge, width (photo px)
+TOP, FOOT = (5.25, -0.01317), (1245.58, 0.01844)         # its top and foot: y = a + b·x
+PAPER, BAND = '#F8EEE4', '#132A1C'
+BAND_V = (0.2221, 0.3102)
+# the lines: (units, weight, narrowing, cap height (H), baseline (v), colour); a unit is (glyphs, ink centre u): a
+# pair the photo merges («AT», «.1», «fl») is set as one run with the font's kerning, its ink centred on the measure
+LINES = [
+    ([('M', .1576), ('I', .2468), ('T', .3232), ('O', .4230), ('D', .5285), ('E', .6277), ('R', .7297), ('M', .8434)],
+     500, 0.95, 0.0219, 0.1653, '#2E3829'),
+    ([(c, u) for c, u in zip('BIOSPICULEPROFESSIONAL', (.1512, .1782, .2044, .2409, .2754, .3014, .3260, .3657, .3962, .4319,
+                                                         .4810, .5187, .5565, .5888, .6233, .6600, .6954, .7203, .7462, .7851, .8236, .8544))],
+     400, 0.935, 0.0102, 0.1843, '#0F0C03'),
+    ([(c, u) for c, u in zip('MICROBOOST10%', (.0883, .1464, .1946, .2662, .3365, .4316, .5025, .5743, .6433, .7068, .7926, .8474, .9223))],
+     500, 0.88, 0.0191, 0.2766, '#CEC296'),
+    ([(c, u) for c, u in zip('SPICULESERUM', (.1351, .1965, .2457, .2915, .3639, .4218, .4862, .5801, .6382, .7064, .7781, .8555))],
+     400, 0.925, 0.0185, 0.3748, '#0B0900'),
+    ([(c, u) for c, u in zip('Concentrated', (.2562, .3105, .3602, .4084, .4564, .5065, .5488, .5812, .6245, .6644, .7045, .7574))],
+     500, 0.845, 0.0152, 0.8004, '#222014'),
+    ([(c, u) for c, u in zip('SpiculeSystem', (.2251, .2748, .3133, .3468, .3974, .4330, .4666, .5374, .5860, .6312, .6698, .7102, .7722))],
+     550, 0.835, 0.0152, 0.8262, '#232217'),
+    ([(c, u) for c, u in zip('PROFESSIONAL', (.1537, .1904, .2269, .2590, .2932, .3283, .3630, .3881, .4132, .4510, .4891, .5208))]
+     + [('T', .5671), ('R', .6002), ('E', .6343), ('AT', .6843), ('M', .7394), ('E', .7773), ('N', .8146), ('T', .8508)],
+     500, 0.81, 0.0104, 0.8920, '#191109'),
+    ([('3', .3000), ('m', .3533), ('l', .3853), ('℮', .4319), ('0', .4943), ('.1', .5342), ('0', .5638), ('fl', .6125),
+      ('.', .6370), ('o', .6601), ('z', .6901), ('.', .7127)],
+     400, 0.93, 0.0104, 0.9508, '#1A1209'),
+]
+ESTIMATED_H = 0.0111                                     # «℮»'s ink height (H): as tall as the digits (Rubik's is 0.89 of a cap)
+RULES = [((0.1121, 0.8914), 0.8700), ((0.1117, 0.8912), 0.9030)]   # (u from, to), axis v; 0.0016 H of the text's ink
+RULE_T, RULE_C = 0.0016, '#191109'
+FRAME = ((0.1339, 0.8682), (0.7697, 0.8394), 0.0026, '#CDB28C')    # centre lines u, v; line width (H); gold
+M_BOX, M_MEDIAN = ((0.4040, 0.5807), (0.0430, 0.0873)), '#C3A271'  # the monogram's ink box (u, v), its gold's median
+# the medallion: centre (u, v), outer radius (H); in photo px its centre (153.07, 647.22), half axes 131.2 × 127.7
+MED_UV, MED_R = (0.5006, 0.5171), 0.10256
+MED_PX, MED_AX = (153.07, 647.22), (131.2, 127.7)
+DISC_EDGE, RING_SMOOTH, DISC_BLUR = 0.80, 3.0, 1.0     # the disc's edge (of R), the ring's smoothing (°), the disc's blur (px)
+STROKE, STROKE_L = '#243523', 140                       # the strokes' ink; lighter than that (mean RGB) is silver
+WMAX, TIP = 3.2, 2.2                                     # a stroke's widest (photo px); its spindle: w(t) = w (1 − |2t − 1|^TIP)
+GOLD_ROUGH, GOLD_METAL, PAPER_ROUGH, INK_ROUGH = 0.28, 0.60, 0.70, 0.60
+
+
+def hexrgb(h): return np.array([int(h[i:i + 2], 16) for i in (1, 3, 5)], np.float32)
+
+
+def photo_xy(u, v):   # a point of the front (u, v) → photo px (edge coordinates)
+    x = X0 + XW * u
+    top = TOP[0] + TOP[1] * x; foot = FOOT[0] + FOOT[1] * x
+    return x, top + v * (foot - top)
+
+
+def sample(img, x, y, order=1):   # an (H, W[, C]) array at photo edge coordinates (x, y); outside: edge values
+    c = [y - 0.5, x - 0.5]
+    if img.ndim == 2: return ndimage.map_coordinates(img, c, order=order, mode='nearest')
+    return np.stack([ndimage.map_coordinates(img[..., k], c, order=order, mode='nearest') for k in range(img.shape[2])], -1)
+
+
+def cover1(a, b, n):   # coverage of the texels 0…n−1 (texel i spans [i, i+1)) by the interval [a, b]
+    i = np.arange(n, dtype=np.float32)
+    return np.clip(np.minimum(b, i + 1) - np.maximum(a, i), 0, 1)
+
+
+def over(rgb, a, col, y0=0, x0=0):   # paint colour `col` with coverage `a` (a patch at row y0, column x0)
+    h, w = a.shape
+    reg = rgb[y0:y0 + h, x0:x0 + w]
+    reg += (np.asarray(col, np.float32) - reg) * a[..., None]
+
+
+# ---- type
+_fonts, _glyphs = {}, {}
+FS = 400
+
+
+def font(path, weight):
+    k = (path, weight)
+    if k not in _fonts:
+        f = ImageFont.truetype(path, FS, layout_engine=ImageFont.Layout.BASIC); f.set_variation_by_axes([weight]); _fonts[k] = f
+    return _fonts[k]
+
+
+def glyph(path, text, weight):
+    """`text` (one glyph or a kerned pair) at FS px: its alpha (float), the baseline row (edge y), the ink centre x
+    (alpha-weighted, edge coordinates) and the cap height of the weight (an H's ink height)"""
+    k = (path, text, weight)
+    if k not in _glyphs:
+        f = font(path, weight); P = FS
+        im = Image.new('L', (FS * 3, FS * 2)); ImageDraw.Draw(im).text((P, int(FS * 1.4)), text, font=f, fill=255, anchor='ls')
+        h = Image.new('L', (FS * 3, FS * 2)); ImageDraw.Draw(h).text((P, int(FS * 1.4)), 'H', font=f, fill=255, anchor='ls')
+        a = np.asarray(im).astype(np.float32) / 255; hy = np.nonzero(np.asarray(h).max(1) > 127)[0]
+        cx = (a.sum(0) * (np.arange(a.shape[1]) + 0.5)).sum() / a.sum()
+        _glyphs[k] = (a, int(FS * 1.4), cx, hy[-1] + 1 - hy[0])
+    return _glyphs[k]
+
+
+def place(layer, path, text, weight, cu, base, cap, narrow, ink_h=None, T=(TW, TH)):
+    """paints one unit's alpha into `layer` (H×W float): its ink centre at u = cu, its baseline at v = base, scaled to the
+    cap height `cap` (fraction of H; or its own ink height to `ink_h`) and narrowed; exact sub-texel placement (the
+    source box of a filtered resize)"""
+    a, by, cx, gc = glyph(path, text, weight)
+    ys, xs = np.nonzero(a > 0.002)
+    if ink_h: gc = (ys.max() + 1 - ys.min()) * cap / ink_h
+    W, H = T; sy = cap * H / gc; sx = sy * narrow    # texels per source px
+    tx = lambda x: cu * W + (x - cx) * sx; ty = lambda y: base * H + (y - by) * sy
+    X0_, X1_ = int(np.floor(tx(xs.min()))) - 2, int(np.ceil(tx(xs.max() + 1))) + 2
+    Y0_, Y1_ = int(np.floor(ty(ys.min()))) - 2, int(np.ceil(ty(ys.max() + 1))) + 2
+    sx0 = cx + (X0_ - cu * W) / sx; sx1 = cx + (X1_ - cu * W) / sx
+    sy0 = by + (Y0_ - base * H) / sy; sy1 = by + (Y1_ - base * H) / sy
+    g = Image.fromarray((a * 255).astype(np.uint8)).resize((X1_ - X0_, Y1_ - Y0_), Image.LANCZOS, box=(sx0, sy0, sx1, sy1))
+    g = np.asarray(g).astype(np.float32) / 255
+    y0, x0 = max(0, Y0_), max(0, X0_)
+    g = g[y0 - Y0_:Y1_ - Y0_ - max(0, Y1_ - H), x0 - X0_:X1_ - X0_ - max(0, X1_ - W)]
+    reg = layer[y0:y0 + g.shape[0], x0:x0 + g.shape[1]]
+    np.maximum(reg, g, out=reg)
+
+
+def typeset_line(path, line, W=TW, H=TH, layer=None):
+    units, weight, narrow, cap, base, col = line
+    layer = np.zeros((H, W), np.float32) if layer is None else layer
+    for text, cu in units:
+        place(layer, path, text, weight, cu, base, cap, narrow, ink_h=ESTIMATED_H if text == '℮' else None, T=(W, H))
+    return layer
+
+
+# ---- the medallion's strokes, traced: each a spindle (pointed at both ends) along a straight or gently bent centre line
+def bilinear(img, x, y):   # photo array at edge coordinates, 0 outside
+    return ndimage.map_coordinates(img, [np.asarray(y) - 0.5, np.asarray(x) - 0.5], order=1, mode='constant', cval=0.0)
+
+
+def trace_strokes(D, limit=260):
+    """greedy: the strongest line of the stroke map (a Hough vote weighted by darkness), its longest run along that line
+    (gaps ≤ 6 px: a crossing stroke has been taken out there), its centre line refitted to the ink twice (straight),
+    then bent (a parabola) where that fits better by > 0.2 px rms; its tips out to where the ridge fades; its width from
+    the ink across its middle; then the stroke is taken out of the map and the next one found. Returns strokes in photo
+    px: (origin, along, across, s0, s1, k, width, darkness): the centre line is origin + along·s + across·(k0 + k1 s +
+    k2 s²) for s in [s0, s1]"""
+    # each pixel's stroke direction (the structure tensor: the normal across a stroke, and how clearly there is one);
+    # a pixel votes only for lines along its own stroke, and a line's run counts only pixels lying along it, so the
+    # rows and columns through the dense middle (each crossing many strokes) are not taken for strokes
+    g = ndimage.gaussian_filter(D, 0.7); gx, gy = ndimage.sobel(g, 1), ndimage.sobel(g, 0)
+    jxx, jxy, jyy = (ndimage.gaussian_filter(a, 1.6) for a in (gx * gx, gx * gy, gy * gy))
+    phi = 0.5 * np.arctan2(2 * jxy, jxx - jyy); coh = np.sqrt((jxx - jyy) ** 2 + 4 * jxy ** 2) / np.maximum(jxx + jyy, 1e-9)
+    O = (np.cos(2 * phi) * coh, np.sin(2 * phi) * coh, coh)
+    W = D.copy(); out = []
+    TH_ = np.radians(np.arange(0, 180, 0.75)); C, S = np.cos(TH_), np.sin(TH_)
+    ss = np.arange(-170, 170.01, 0.5); oo = np.arange(-2.5, 2.51, 0.25)
+    for _ in range(limit):
+        ys, xs = np.nonzero(W > 0.4)
+        if len(xs) < 12: break
+        w = W[ys, xs]; X, Y = xs + 0.5, ys + 0.5; ph = np.mod(phi[ys, xs], np.pi); ch = coh[ys, xs]
+        rho = np.round(X[:, None] * C + Y[:, None] * S).astype(int); off = rho.min()
+        dth = np.abs(np.angle(np.exp(2j * (TH_[None, :] - ph[:, None])))) / 2      # 0…π/2
+        vote = w[:, None] * np.where(dth < np.radians(4), 1.0, 1 - ch[:, None]) * (dth < np.radians(30))
+        acc = np.zeros((rho.max() - off + 1, len(TH_)))
+        for j in range(len(TH_)): np.add.at(acc[:, j], rho[:, j] - off, vote[:, j])
+        i, j = np.unravel_index(acc.argmax(), acc.shape)
+        if acc[i, j] < 5: break
+        n = np.array([C[j], S[j]]); d = np.array([-S[j], C[j]]); p0 = n * (i + off); k = np.zeros(3)
+        p0 = p0 + d * ((np.array(MED_PX) - p0) @ d)   # the line's origin by the disc's centre
+        prof = lambda p0, d, n, k: _profile(W, O, p0, d, n, ss, oo, k)
+        pk, co = prof(p0, d, n, k); run = _best_run(ss, pk)
+        for it in range(5):   # twice straight, then bent: the run grows along a bending stroke
+            if run is None: break
+            s0, s1 = run; m = (ss >= s0) & (ss <= s1) & (pk > 0.4)
+            if m.sum() < 6: run = None; break
+            sm, cm, wm = ss[m], co[m], pk[m]
+            if it < 2:   # straight: rotate and shift the line onto the fit, its origin at the run's middle
+                A1 = np.stack([np.ones_like(sm), sm], 1); k1 = np.linalg.lstsq(A1 * wm[:, None], cm * wm, rcond=None)[0]
+                sc = (s0 + s1) / 2; ang = np.arctan(k1[1])
+                p0 = p0 + d * sc + n * (k1[0] + k1[1] * sc)
+                d, n = d * np.cos(ang) + n * np.sin(ang), n * np.cos(ang) - d * np.sin(ang)
+            else:        # bent, if that fits clearly better
+                A1 = np.stack([np.ones_like(sm), sm], 1); A2 = np.stack([np.ones_like(sm), sm, sm * sm], 1)
+                k1 = np.linalg.lstsq(A1 * wm[:, None], cm * wm, rcond=None)[0]; k2 = np.linalg.lstsq(A2 * wm[:, None], cm * wm, rcond=None)[0]
+                r1 = np.sqrt(np.average((A1 @ k1 - cm) ** 2, weights=wm)); r2 = np.sqrt(np.average((A2 @ k2 - cm) ** 2, weights=wm))
+                half = (s1 - s0) / 2
+                if r1 - r2 > 0.15 and abs(k2[2]) * half * half < 6: k = k2
+            pk, co = prof(p0, d, n, k); run = _best_run(ss, pk)
+        if run is None:   # nothing along it: weaken the voters of this line and go on
+            o = np.abs(X * n[0] + Y * n[1] - p0 @ n); W[ys[o < 1.5], xs[o < 1.5]] *= 0.5; continue
+        s0, s1 = run
+        while s0 - 0.5 >= ss[0] and _at(ss, pk, s0 - 0.5) > 0.22: s0 -= 0.5   # the tips, while a little ink holds
+        while s1 + 0.5 <= ss[-1] and _at(ss, pk, s1 + 0.5) > 0.22: s1 += 0.5
+        m = (ss >= s0 + 0.3 * (s1 - s0)) & (ss <= s1 - 0.3 * (s1 - s0))
+        if s1 - s0 < 10 or m.sum() < 3: _erase(W, p0, d, n, s0, s1, k, 1.6); continue
+        integ = _integral(D, p0, d, n, ss[m], k)   # on the whole map: the pieces left between crossings are honest
+        dark = float(np.clip(np.median(pk[m]), 0.45, 1.0))
+        width = float(np.clip(np.percentile(integ, 40) / dark, 1.2, WMAX))   # the ink across ÷ its darkness
+        out.append((p0.copy(), d.copy(), n.copy(), float(s0), float(s1), k.copy(), width, dark))
+        _erase(W, p0, d, n, s0, s1, k, width / 2 + 0.5)
+    return merge_strokes(out)
+
+
+def merge_strokes(st, ang=5.0, across=2.0, gap=30.0):
+    """pieces of one stroke (cut where others cross it) joined: nearly the same direction, within `across` px of each
+    other's line and `gap` px apart along it; the joined stroke is straight through both pieces' centre lines"""
+    st = list(st); changed = True
+    pts = lambda q: q[0][None] + q[1][None] * np.linspace(q[3], q[4], 9)[:, None] + q[2][None] * _off(np.linspace(q[3], q[4], 9), q[5])[:, None]
+    while changed:
+        changed = False
+        for a in range(len(st)):
+            for b in range(a + 1, len(st)):
+                p, q = st[a], st[b]
+                if abs(p[1] @ q[1]) < np.cos(np.radians(ang)): continue
+                e = pts(q) - p[0][None]; o = e @ p[2] - _off(e @ p[1], p[5]); s = e @ p[1]
+                if np.abs(o).max() > across + abs(p[5][2]) * 0: continue
+                lo, hi = min(p[3], s.min()), max(p[4], s.max())
+                if max(s.min() - p[4], p[3] - s.max()) > gap: continue
+                P = np.concatenate([pts(p), pts(q)]); c = P.mean(0)
+                w_, v_ = np.linalg.eigh(np.cov((P - c).T)); d = v_[:, 1] * np.sign(v_[:, 1] @ p[1]); n = np.array([-d[1], d[0]])
+                sP = (P - c) @ d
+                st[a] = (c, d, n, float(sP.min()), float(sP.max()), np.zeros(3), max(p[6], q[6]), max(p[7], q[7]))
+                del st[b]; changed = True; break
+            if changed: break
+    return st
+
+
+def _off(s, k): return k[0] + k[1] * s + k[2] * s * s
+
+
+def _profile(W, O, p0, d, n, ss, oo, k):   # along the centre line: the ridge (max across ±2.5 px) of the ink lying
+    off = _off(ss, k)                          # along it (where the strokes' direction is clear), the ink's centroid across
+    P = p0[None, None, :] + d[None, None, :] * ss[:, None, None] + n[None, None, :] * (oo[None, :, None] + off[:, None, None])
+    v = bilinear(W, P[..., 0], P[..., 1])
+    c2, s2, ch = (bilinear(a, P[..., 0], P[..., 1]) for a in O)
+    t2 = 2 * np.arctan2(n[1], n[0]); agree = (ch + c2 * np.cos(t2) + s2 * np.sin(t2)) / 2   # coh·(1 + cos 2Δ)/2
+    v = v * np.clip(1 - ch + agree, 0, 1) ** 2
+    pk = v.max(1); wv = np.maximum(v - 0.2, 0); co = (wv * oo[None, :]).sum(1) / np.maximum(wv.sum(1), 1e-6) + off
+    return pk, co
+
+
+def _best_run(ss, pk, gap=10.0, minlen=9.0):   # the run along the line with the most ink (gaps ≤ gap px)
+    runs, s, last = [], None, None
+    for q, on in zip(ss, pk > 0.4):
+        if not on: continue
+        if s is None or q - last > gap:
+            if s is not None: runs.append((s, last))
+            s = q
+        last = q
+    if s is not None: runs.append((s, last))
+    runs = [r for r in runs if r[1] - r[0] >= minlen]
+    return max(runs, key=lambda r: pk[(ss >= r[0]) & (ss <= r[1])].sum()) if runs else None
+
+
+def _at(ss, pk, s): return float(np.interp(s, ss, pk))
+
+
+def _integral(W, p0, d, n, s, k):   # the ink across the centre line (darkness × px)
+    oo = np.arange(-3, 3.01, 0.25); off = _off(s, k)
+    P = p0[None, None, :] + d[None, None, :] * s[:, None, None] + n[None, None, :] * (oo[None, :, None] + off[:, None, None])
+    return bilinear(W, P[..., 0], P[..., 1]).clip(0, 1).sum(1) * 0.25
+
+
+def _erase(W, p0, d, n, s0, s1, k, r):   # take a stroke out of the map (its pixels within r px of the centre line)
+    ys, xs = np.nonzero(W > 0.02); X, Y = xs + 0.5 - p0[0], ys + 0.5 - p0[1]
+    s = X * d[0] + Y * d[1]; o = X * n[0] + Y * n[1] - _off(s, k)
+    m = (s >= s0 - 1) & (s <= s1 + 1) & (np.abs(o) < r + 0.8)
+    W[ys[m], xs[m]] *= np.clip((np.abs(o[m]) - r) / 0.8, 0, 1)
+
+
+# ---- the medallion
+def medallion(rgb, metal):
+    shot = np.asarray(Image.open(PACKSHOT).convert('RGB')).astype(np.float32)
+    L = shot.mean(2)
+    cxp, cyp = MED_PX; rx, ry = MED_AX
+    # the disc's dark strokes: darkness against the local silver, the silver read from the pixels round them (the
+    # strokes are far darker than anything else on the disc: L < 140 against 150…250; the grey ghosts stay silver)
+    keep = 1 - ndimage.binary_dilation(L < STROKE_L, iterations=1).astype(np.float32)
+    norm = lambda a: ndimage.gaussian_filter(a * keep, 3) / np.maximum(ndimage.gaussian_filter(keep, 3), 1e-3)
+    bg = norm(L)
+    Ls = hexrgb(STROKE).mean()
+    D = np.clip((bg - L) / np.maximum(bg - Ls, 20), 0, 1.2)
+    yy, xx = np.mgrid[0:shot.shape[0], 0:shot.shape[1]] + 0.5
+    rr = np.hypot((xx - cxp) / rx, (yy - cyp) / ry)
+    D[rr > DISC_EDGE - 0.03] = 0
+    # the disc without its strokes: the stroke pixels (and a pixel round them) filled from the silver, then blurred
+    hole = ndimage.binary_dilation(D > 0.3, iterations=2)
+    clean = shot.copy()
+    bgc = np.stack([norm(shot[..., k]) for k in range(3)], -1)
+    clean[hole] = bgc[hole]
+    clean = np.stack([ndimage.gaussian_filter(clean[..., k], DISC_BLUR) for k in range(3)], -1)
+    # the ring in polar coordinates, smoothed along the angle
+    A, RHO = 720, np.arange(0.70, 1.0401, 0.002)
+    ang = (np.arange(A) + 0.5) / A * 2 * np.pi
+    px = cxp + rx * RHO[None, :] * np.cos(ang)[:, None]; py = cyp + ry * RHO[None, :] * np.sin(ang)[:, None]
+    polar = sample(shot, px, py, order=1)                                     # (A, len(RHO), 3)
+    polar = ndimage.gaussian_filter1d(polar, RING_SMOOTH / 360 * A, axis=0, mode='wrap')
+    # the texture's medallion window
+    R = MED_R * TH; cu, cv = MED_UV[0] * TW, MED_UV[1] * TH
+    x0, x1, y0, y1 = int(cu - R - 4), int(cu + R + 5), int(cv - R - 4), int(cv + R + 5)
+    ty, tx = np.mgrid[y0:y1, x0:x1].astype(np.float32) + 0.5
+    d = np.hypot(tx - cu, ty - cv); rho = d / R
+    th = np.mod(np.arctan2(ty - cv, tx - cu), 2 * np.pi)
+    # the same point on the photo (through the front's mapping: the photo's x stretch is in it)
+    u, v = tx / TW, ty / TH; pxx, pyy = photo_xy(u, v)
+    ring = np.stack([ndimage.map_coordinates(polar[..., k], [th / (2 * np.pi) * A - 0.5, (rho - RHO[0]) / 0.002], order=1, mode='wrap')
+                     for k in range(3)], -1)
+    disc = sample(clean, pxx, pyy, order=3)
+    # strokes: traced on the photo (trace_strokes), drawn as spindles at the texture's scale, edges anti-aliased by
+    # their distance in texels (the photo's x and y scales differ: the normal's own scale)
+    J = np.array([TW / XW, TH / (FOOT[0] - TOP[0] + (FOOT[1] - TOP[1]) * cxp)])
+    keepa = np.ones(d.shape, np.float32)
+    for p0, dd, nn, s0, s1, k, wd, dark in trace_strokes(D):
+        P = np.stack([pxx - p0[0], pyy - p0[1]], -1)
+        sx = P @ dd; o = P @ nn - _off(sx, k)
+        m = (sx > s0 - 1) & (sx < s1 + 1) & (np.abs(o) < wd)
+        if not m.any(): continue
+        t_ = np.clip((sx[m] - s0) / (s1 - s0), 0, 1); hw = wd / 2 * (1 - np.abs(2 * t_ - 1) ** TIP)
+        a = np.clip(0.5 - (np.abs(o[m]) - hw) * np.linalg.norm(J * nn), 0, 1) * min(1.0, dark / 0.6)
+        keepa[m] *= 1 - a
+    cov = (1 - keepa) * np.clip((DISC_EDGE - 0.02) * R - d + 0.5, 0, 1)
+    # compose: disc inside DISC_EDGE (its edge sharp), the ring field to the outer edge, the strokes on the disc
+    win = rgb[y0:y1, x0:x1]
+    inner = np.clip(DISC_EDGE * R - d + 0.5, 0, 1)[..., None]
+    outer = np.clip(R - d + 0.5, 0, 1)[..., None]
+    field = ring * (1 - inner) + disc * inner
+    win[:] = win * (1 - outer) + field * outer
+    win += (hexrgb(STROKE) - win) * cov[..., None]
+    gold = (outer[..., 0] * (1 - inner[..., 0]))
+    m = metal[y0:y1, x0:x1]
+    m[..., 1] = m[..., 1] * (1 - gold) + GOLD_ROUGH * gold
+    m[..., 2] = np.maximum(m[..., 2], GOLD_METAL * gold)
+    m[..., 1] = m[..., 1] * (1 - inner[..., 0]) + INK_ROUGH * inner[..., 0]   # the printed silver: no metal
+
+
+def disk(r):
+    y, x = np.mgrid[-r:r + 1, -r:r + 1]; return x * x + y * y <= r * r + 0.5
+
+
+# ---- the monogram
+def monogram(rgb, metal):
+    src = Image.open(MONOGRAM).convert('RGBA'); im = Image.new('RGBA', (src.width + 40, src.height + 40)); im.paste(src, (20, 20))
+    a = np.asarray(im.getchannel('A'))
+    ys, xs = np.nonzero(a > 8); bx0, by0, bx1, by1 = xs.min(), ys.min(), xs.max() + 1, ys.max() + 1
+    (u0, u1), (v0, v1) = M_BOX
+    X0_, X1_, Y0_, Y1_ = u0 * TW, u1 * TW, v0 * TH, v1 * TH
+    ix0, ix1, iy0, iy1 = int(np.floor(X0_)) - 1, int(np.ceil(X1_)) + 1, int(np.floor(Y0_)) - 1, int(np.ceil(Y1_)) + 1
+    kx, ky = (bx1 - bx0) / (X1_ - X0_), (by1 - by0) / (Y1_ - Y0_)
+    box = (bx0 + (ix0 - X0_) * kx, by0 + (iy0 - Y0_) * ky, bx0 + (ix1 - X0_) * kx, by0 + (iy1 - Y0_) * ky)
+    # premultiplied reduction: colour weighted by alpha
+    pre = np.asarray(im).astype(np.float32); pre[..., :3] *= pre[..., 3:] / 255
+    chans = [np.asarray(Image.fromarray(pre[..., k]).resize((ix1 - ix0, iy1 - iy0), Image.LANCZOS, box=box)) for k in range(4)]
+    al = np.clip(chans[3] / 255, 0, 1); col = np.stack(chans[:3], -1) / np.maximum(al[..., None], 1e-3)
+    col = np.clip(col, 0, 255)
+    # its gold's median pulled to the photo's (a gain per channel, in linear light)
+    lin = lambda c: ((c / 255 + 0.055) / 1.055) ** 2.4
+    srgb = lambda l: (1.055 * np.clip(l, 0, 1) ** (1 / 2.4) - 0.055) * 255
+    solid = al > 0.9
+    med = np.median(col[solid], 0); gain = lin(hexrgb(M_MEDIAN)) / lin(med)
+    col = srgb(lin(col) * gain)
+    reg = rgb[iy0:iy1, ix0:ix1]; reg += (col - reg) * al[..., None]
+    m = metal[iy0:iy1, ix0:ix1]
+    m[..., 1] = m[..., 1] * (1 - al) + GOLD_ROUGH * al; m[..., 2] = np.maximum(m[..., 2], GOLD_METAL * al)
+
+
+def box_face(rubik):
+    rgb = np.ones((TH, TW, 3), np.float32) * hexrgb(PAPER)
+    metal = np.zeros((TH, TW, 3), np.float32); metal[..., 1] = PAPER_ROUGH
+    full = np.ones(TW, np.float32)
+    # the band (full width) and its gold name
+    bv = cover1(BAND_V[0] * TH, BAND_V[1] * TH, TH)
+    over(rgb, bv[:, None] * full[None, :], hexrgb(BAND)); metal[..., 1] -= (PAPER_ROUGH - INK_ROUGH) * bv[:, None]
+    for line in LINES:
+        a = typeset_line(rubik, line)
+        over(rgb, a, hexrgb(line[5]))
+        if line[5] == '#CEC296':   # the band's gold letters: foil
+            metal[..., 1] = metal[..., 1] * (1 - a) + GOLD_ROUGH * a; metal[..., 2] = np.maximum(metal[..., 2], GOLD_METAL * a)
+        else:
+            metal[..., 1] = metal[..., 1] * (1 - a) + INK_ROUGH * a
+    for (ua, ub), vv in RULES:
+        a = cover1((vv - RULE_T / 2) * TH, (vv + RULE_T / 2) * TH, TH)[:, None] * cover1(ua * TW, ub * TW, TW)[None, :]
+        over(rgb, a, hexrgb(RULE_C)); metal[..., 1] = metal[..., 1] * (1 - a) + INK_ROUGH * a
+    (fu0, fu1), (fv0, fv1), ft, fc = FRAME; h = ft / 2 * TH
+    cx = lambda a_, b_: cover1(a_, b_, TW)[None, :]; cy = lambda a_, b_: cover1(a_, b_, TH)[:, None]
+    outer = cy(fv0 * TH - h, fv1 * TH + h) * cx(fu0 * TW - h, fu1 * TW + h)
+    inner = cy(fv0 * TH + h, fv1 * TH - h) * cx(fu0 * TW + h, fu1 * TW - h)
+    a = np.clip(outer - inner, 0, 1)
+    over(rgb, a, hexrgb(fc))
+    metal[..., 1] = metal[..., 1] * (1 - a) + GOLD_ROUGH * a; metal[..., 2] = np.maximum(metal[..., 2], GOLD_METAL * a)
+    monogram(rgb, metal)
+    medallion(rgb, metal)
+    face = Image.fromarray(np.clip(rgb + 0.5, 0, 255).astype(np.uint8))
+    m = np.clip(metal * 255 + 0.5, 0, 255).astype(np.uint8)
+    mat = Image.fromarray(m).resize((TW // 2, TH // 2), Image.BOX)
+    return face, mat
+
+
+if __name__ == '__main__':
+    fdir, out = sys.argv[1:3]; os.makedirs(out, exist_ok=True)
+    face, mat = box_face(os.path.join(fdir, 'Rubik[wght].ttf'))
+    face.save(f'{out}/box-face.png', optimize=True); mat.save(f'{out}/box-metal.png', optimize=True)
+    for n in ('box-face.png', 'box-metal.png'):
+        im = Image.open(f'{out}/{n}'); print(n, im.size, im.mode, os.path.getsize(f'{out}/{n}') // 1024, 'KB')
