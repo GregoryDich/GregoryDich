@@ -4,22 +4,22 @@
 // module draws the pose for the story position into the box. Objects are placed by frame pixel (2400×1500); the only
 // packshot, site/img/exosignal-spray.png (400×300, a mock-up), gives the box and the bottle's silhouettes and the kit's
 // composition: the tall matte black box seen square on, the bottle right of it with a gap of 0.184 of the box's width.
-// The story (site/story3d.json, as specified for the page): S1 the packshot, a still thin mist far behind the pair (one
-// soft cloud), none near the cap; S1 → S2 the camera comes close, the bottle's top leaves the frame's top edge and a
-// cloud comes in from there, drawing out into a thread of droplets between two warm flashes, the two EXOSIGNAL HAIR
-// visits (its packshot, the line's sign, by the far one; on a phone the thread runs top to bottom), the bottle stands
-// on it, days run along it and flash gold behind the bottle; S3 close again, the top over the edge: one cloud comes in
-// through it, opens down and left and parts into three; S4 the three settle into a haze and onto a gold parting line,
-// melting; S5 two partings open one after the other, the bottle passes along each with its top cut by the edge and
-// small clouds fall from beyond the edge behind it, the drops spread in soft rings; the box and the HAIR packshot stand
-// far behind, all above the page's step cards; S6–S7 once the cards have gone the box comes forward, the bottle turns
-// once to +30° and back and stands by it: the packshot's pose (the kit card), a warm gold backlight behind the pair.
+// The story (site/story3d.json, as specified for the page, under the owner's rule of 22/10: the scene shows only what
+// exists — the products as photographed, the spray's mist as loose clouds of droplets, a soft shapeless glow; no thread,
+// flashes, lines, rings or other drawn shapes): S1 the packshot, a still thin mist far behind the pair (one soft cloud),
+// none near the cap; S1 → S2 the camera comes close, the bottle's top leaves the frame's top edge and a cloud comes in
+// from there and opens into a loose cloud low behind the bottle, which stands by the EXOSIGNAL HAIR packshot (the
+// line's sign; on a phone the packshot on top, the bottle and its cloud below it); S3 close again, the top over the
+// edge: one cloud comes in through it, drifts down and left and parts into three; S4 the three settle into a soft haze,
+// a few drops in it melting; S5 the bottle passes right to left and back with its top cut by the edge, small clouds fall
+// from beyond the edge behind it and melt where they come to rest; the box and the HAIR packshot stand far behind, all
+// above the page's step cards; S6–S7 once the cards have gone the box comes forward, the bottle turns once to +30° and
+// back and stands by it: the packshot's pose (the kit card), a warm gold backlight behind the pair.
 // Nothing is opened: no photo shows the sprayer under the cap, so the cap stays on and the mist always comes from
 // beyond the frame's edge. The scene's frame is the page's scene box (frame y 285 at its top: the canvas ends there),
 // so the bottle leaves it by fading over the edge's last 48 px, as the mist does. The product keeps its print's colours
 // (emissive ≈ 85 % + neutral shading, toneMapped off); the line's gold lives only around it (the droplets' rims, the
-// thread, the flashes, the lines, the rings, the glow). No text is drawn but the package's own print
-// (design/exosignal-spray/make_textures.py).
+// kit's glow). No text is drawn but the package's own print (design/exosignal-spray/make_textures.py).
 //
 // createScene(THREE, { canvas, base, onLoad }) → { draw(p, view), kit(view) → canvas, animated, state(), dispose() }
 //   p: the story position 0…5 (run index + progress); view: { cover, box, dpr, t, still } from the engine
@@ -194,53 +194,16 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const HX = HB / 0.8195, KX = HX * 750 / TAN;   // the bottle is 0.8195 of the box's height; the front h px tall at KX / h
   box.scale.setScalar(HX);
 
-  // ---- the line's graphics, flat to the camera in frame pixels (a plane at a depth; local x = px − 1200, y = 750 − py),
-  // always behind the products and drawn before them: strokes with a soft edge, at least 1.5 device px wide (the HAIR
-  // scene's), gold of the HAIR line only
+  // ---- flat to the camera in frame pixels (a plane at a depth; local x = px − 1200, y = 750 − py), always behind the
+  // products and drawn before them: the mist, the HAIR packshot, the kit's glow (gold of the HAIR line only)
   const pxU = { value: 1 };   // device px per frame px
-  // the glows add their colour (× their alpha) and keep a true alpha (it adds too): a picture read back (the keys, the
+  // the glow adds its colour (× its alpha) and keeps a true alpha (it adds too): a picture read back (the keys, the
   // phone stills, the kit picture) un-premultiplies to the glow's own gold, where one-factor alpha (a²) clipped to lemon
   const ADD = { blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneFactor,
     blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneFactor };
   const place = (g, D) => { at(1200, 750, D, g.position); g.quaternion.copy(lay.quaternion); g.scale.setScalar(world(1, D)); };
   const plane = D => { const g = new THREE.Group(); scene.add(g); place(g, D); return g; };
   const hex3 = h => new THREE.Vector3(((h >> 16) & 255) / 255, ((h >> 8) & 255) / 255, (h & 255) / 255);   // sRGB as drawn
-  const STROKE_V = `attribute float aSide, aHalf, aCore, aT, aU;
-    varying float vSide, vHalf, vCore, vT, vU, vPx;
-    void main() { vSide = aSide; vHalf = aHalf; vCore = aCore; vT = aT; vU = aU; vPx = position.x + 1200.0;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
-  const STROKE_F = `uniform vec3 uA, uB; uniform float uOpacity, uDraw, uPx, uGlow, uGlowA, uX0, uX1, uU0, uU1;
-    varying float vSide, vHalf, vCore, vT, vU, vPx;
-    void main() {
-      float d = abs(vSide) * vHalf, c = max(vCore * uPx, 0.75);
-      float a = clamp(c + 0.5 - d * uPx, 0.0, 1.0);
-      if (uGlow > 0.0) a = max(a, uGlowA * exp(-(d * d) / (uGlow * uGlow)));
-      a *= clamp((uDraw - vT) * 60.0, 0.0, 1.0) * uOpacity;
-      a *= smoothstep(uX0, uX0 + 24.0, vPx) * (1.0 - smoothstep(uX1 - 24.0, uX1, vPx));   // the part drawn (x) …
-      a *= smoothstep(uU0, uU0 + 0.03, vU) * (1.0 - smoothstep(uU1 - 0.03, uU1, vU));     // … or along it
-      gl_FragColor = vec4(mix(uA, uB, vU), a);
-    }`;
-  function strokeMat(a, b, o = {}) {
-    return new THREE.ShaderMaterial(Object.assign({ vertexShader: STROKE_V, fragmentShader: STROKE_F, transparent: true, depthWrite: false, side: THREE.DoubleSide,
-      uniforms: { uA: { value: hex3(a) }, uB: { value: hex3(b) }, uOpacity: { value: 0 }, uDraw: { value: 1 }, uPx: pxU, uGlow: { value: o.glow || 0 },
-        uGlowA: { value: o.glowA || 0 }, uX0: { value: -1e4 }, uX1: { value: 1e4 }, uU0: { value: -1 }, uU1: { value: 2 } } }, ADD));
-  }
-  function strokes(list) {   // [{ pts: [[x, y] frame px], core: s → half width px, t: s → draw time, ext: geometry half width }]
-    const pos = [], side = [], half = [], core = [], tt = [], uu = [], idx = [];
-    for (const s of list) {
-      const n = s.pts.length, b0 = pos.length / 3;
-      for (let i = 0; i < n; i++) {
-        const [x, y] = s.pts[i], [xa, ya] = s.pts[Math.max(0, i - 1)], [xb, yb] = s.pts[Math.min(n - 1, i + 1)];
-        const l = Math.hypot(xb - xa, yb - ya) || 1, nx = -(yb - ya) / l, ny = (xb - xa) / l, u = i / (n - 1);
-        for (const sd of [-1, 1]) { pos.push(x + nx * s.ext * sd - 1200, 750 - (y + ny * s.ext * sd), 0); side.push(sd); half.push(s.ext); core.push(s.core(u)); tt.push(s.t(u)); uu.push(u); }
-        if (i) { const a = b0 + (i - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
-      }
-    }
-    const g = new THREE.BufferGeometry(); g.setIndex(idx);
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    for (const [k, v] of [['aSide', side], ['aHalf', half], ['aCore', core], ['aT', tt], ['aU', uu]]) g.setAttribute(k, new THREE.Float32BufferAttribute(v, 1));
-    return g;
-  }
   const SPOT_F = `uniform vec3 uC; uniform float uOpacity; varying vec2 vUv;
     void main() { vec2 q = vUv * 2.0 - 1.0; float r2 = dot(q, q); gl_FragColor = vec4(uC, uOpacity * exp(-3.0 * r2) * (1.0 - smoothstep(0.5, 1.0, r2))); }`;
   const spotMat = c => new THREE.ShaderMaterial(Object.assign({ vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
@@ -248,32 +211,21 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const spot = (parent, c, order) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), spotMat(c)); m.renderOrder = order; m.visible = false; parent.add(m); return m; };
   const setSpot = (m, cx, cy, rx, ry, a) => { m.position.set(cx - 1200, 750 - cy, 0); m.scale.set(rx, ry, 1); m.material.uniforms.uOpacity.value = a; m.visible = a > 0.004; };
 
-  // the planes, placed every frame behind the farthest product: the far visit's flash (behind the HAIR packshot), the
-  // HAIR packshot, the effects; the kit's glow just behind the box
-  const ff = plane(DIST), hp = plane(DIST), fx = plane(DIST), gb = plane(DIST);
-  const farFlash = spot(ff, 0xc9a24b, 1), nearFlash = spot(fx, 0xc9a24b, 4), glowBox = spot(gb, 0xc9a24b, 3);
+  // the planes, placed every frame behind the farthest product: the HAIR packshot, the mist; the kit's glow just behind
+  // the box
+  const hp = plane(DIST), fx = plane(DIST), gb = plane(DIST);
+  const glowBox = spot(gb, 0xc9a24b, 3);
   const hairBoard = new THREE.Mesh(new THREE.PlaneGeometry(1, 714 / 1087).translate(0, 357 / 1087, 0),
     new THREE.MeshBasicMaterial({ map: hairTex, transparent: true, depthWrite: false, toneMapped: false }));
   hairBoard.renderOrder = 2; hp.add(hairBoard);
 
-  // S2: the thread (a quadratic Bézier from the far visit to the near one), its faint gold underlay; on a phone (story3d's
-  // mobile layout) the HAIR packshot is 60 % of the stage's width on top (its words readable) and the thread runs top to
-  // bottom beside it: the far visit's flash by the packshot, the bottle in the middle (t 0.5) standing on it, the near
-  // flash at the foot of the stage (its glow ends above the stage's top edge, frame y 285)
-  const THREAD = { p0: [330, 790], c: [720, 960], p1: [1110, 950], tb: 0.59 }, THREAD_PH = { p0: [900, 350], c: [1095, 850], p1: [1070, 1150], tb: 0.5 };
-  const bez = (T, t) => { const u = 1 - t; return [u * u * T.p0[0] + 2 * u * t * T.c[0] + t * t * T.p1[0], u * u * T.p0[1] + 2 * u * t * T.c[1] + t * t * T.p1[1]]; };
-  const underMat = strokeMat(0xd8bd7e, 0xc9a24b, { glow: 3, glowA: 0.25 });
-  const underGeo = [THREAD, THREAD_PH].map(T => strokes([{ pts: Array.from({ length: 61 }, (_, i) => bez(T, i / 60)), core: () => 0.5, ext: 8, t: () => 0 }]));
-  const under = new THREE.Mesh(underGeo[0], underMat); under.renderOrder = 5; fx.add(under);
-  // S4–S5: the partings (core 1.2 px, a soft glow ±4.5 px, as the HAIR line), drawn over a visible x range
+  // S2: the loose cloud low behind the bottle (centre, spread px); on a phone (story3d's mobile layout) the HAIR packshot
+  // is 60 % of the stage's width on top (its words readable), the bottle and its cloud below it at the right
+  const HAZE2 = [700, 900, 190, 95], HAZE2_PH = [990, 860, 115, 150];
   // S5 keeps above the page's three step cards ("along the bottom") while p = 4 is held: their top edge comes up to
   // frame y ≈ 830 on 1440×900 and ≈ 720 on 1920×1080 (any 16:9 screen) before the story moves on (1050 / 920 at the
-  // reading position), so everything of S5 stays above y 700, the rings round the second parting included
-  const LY = 980, L1 = 600, L2 = 680;
-  const lineAt = (y, x0, x1) => strokes([{ pts: Array.from({ length: 91 }, (_, i) => [x0 + (x1 - x0) * i / 90, y]), core: () => 1.2, ext: 16, t: () => 0 }]);
-  const lines = [[LY, 300, 1120], [L1, 300, 1000], [L2, 300, 1060]].map(([y, x0, x1]) => {
-    const m = new THREE.Mesh(lineAt(y, x0, x1), strokeMat(0xe0c98c, 0xd8bd7e, { glow: 4.5, glowA: 0.35 })); m.renderOrder = 6; m.visible = false; fx.add(m); return m;
-  });
+  // reading position), so everything of S5 stays above y 700: the bottle's feet on its passes (P1, P2), the small clouds
+  const P1 = 600, P2 = 680;
 
   // The kit is the packshot (box x 111.1…230.4 mean 171.1, y 1.5…298.6; the bottle's axis 271.75, foot 296.24, 243.46
   // tall) scaled ×2.558 (the box 760 px) round the composition's centre to (700, 750); S1 the same ×2.356 (the box 700
@@ -291,8 +243,9 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // ---- the mist: one instanced quad per droplet, all motion in the vertex shader (no matrices on the CPU): each
   // droplet's place is a mix of six layouts, weighted by the story and by its own opacity in each (so a droplet only
   // in one layout fades where it is, one in two flies between them): 0 the still mist of S1, 1 the cloud coming in from
-  // above, 2 the thread, 3 the cone parting into three clouds, 4 the haze and the drops on the S4 line, 5 the small
-  // clouds falling onto the S5 partings. Each layout uses its own share of the droplets (by seed); a phone draws half
+  // above, 2 the loose cloud of S2, 3 the cloud parting into three, 4 the haze of S4 with its melting drops, 5 the small
+  // clouds falling in S5. Every layout is a loose cloud: Gaussian, its spread varied per droplet (no edge, no line or
+  // ring). Each layout uses its own share of the droplets (by seed); a phone draws half
   const NM = 1400, rng = (s => () => { s |= 0; s = s + 0x6d2b79f5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; })(20261022);
   const SEED = new Float32Array(NM * 4), GAU = new Float32Array(NM * 2), SZ = new Float32Array(NM * 2);
   for (let i = 0; i < NM; i++) {
@@ -306,20 +259,21 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const mg = quad(new THREE.InstancedBufferGeometry(), NM);
   mg.setAttribute('aS', new THREE.InstancedBufferAttribute(SEED, 4)); mg.setAttribute('aG', new THREE.InstancedBufferAttribute(GAU, 2));
   mg.setAttribute('aZ', new THREE.InstancedBufferAttribute(SZ, 2));
-  const TU = () => ({ value: new THREE.Vector2() });
+  // S5: where the nine small clouds come to rest, scattered round the far box and HAIR packshot (not over them) and
+  // above y 700: five fall as the bottle passes right to left (x 470…985: each has fallen before it stops at 330), four
+  // as it passes back (x 410…930: fallen before it stops at 1060)
+  const REST = [[985, 630], [890, 350], [800, 590], [610, 650], [470, 615], [410, 395], [545, 345], [740, 430], [930, 480]];
   const MU = { uTime: { value: 0 }, uPx: pxU, uW: { value: [0, 0, 0, 0, 0, 0] }, uCloud: { value: new THREE.Vector4(690, 180, 90, 70) },
-    uT0: TU(), uTC: TU(), uT1: TU(), uTB: { value: 0.59 }, uWind: { value: 0 }, uSplit: { value: 0 }, uEnter: { value: 0 }, uSettle: { value: 0 },
-    uBx1: { value: 1300 }, uBx2: { value: 0 }, uAbsorb: { value: 0 } };
+    uHaze: { value: new THREE.Vector4(...HAZE2) }, uSplit: { value: 0 }, uEnter: { value: 0 }, uMelt: { value: 0 },
+    uBx1: { value: 1300 }, uBx2: { value: 0 }, uAbsorb: { value: 0 }, uRest: { value: REST.map(([x, y]) => new THREE.Vector2(x, y)) } };
   // S1's cloud: three Gaussian lobes (centre, spread): behind the box, at its upper left, low behind the bottle
   const S1C = [[650, 820], [470, 610], [980, 1010]], S1S = [[230, 200], [110, 120], [150, 70]];
   const v2 = a => `vec2(${a[0].toFixed(1)}, ${a[1].toFixed(1)})`;
   // the layouts, written once for the shader and once (dropAt below) for QA: keep the two the same
   const MIST_V = `attribute vec4 aS; attribute vec2 aG, aZ;
-    uniform float uTime, uPx, uW[6], uTB, uWind, uSplit, uEnter, uSettle, uBx1, uBx2, uAbsorb;
-    uniform vec4 uCloud; uniform vec2 uT0, uTC, uT1;
+    uniform float uTime, uPx, uW[6], uSplit, uEnter, uMelt, uBx1, uBx2, uAbsorb;
+    uniform vec4 uCloud, uHaze; uniform vec2 uRest[9];
     varying vec2 vQ; varying float vA;
-    vec2 bez(float t) { float u = 1.0 - t; return u * u * uT0 + 2.0 * u * t * uTC + t * t * uT1; }
-    vec2 dbez(float t) { return 2.0 * (1.0 - t) * (uTC - uT0) + 2.0 * t * (uT1 - uTC); }
     vec2 wob(float k) { return vec2(sin(uTime * 0.3 * k + aZ.y), cos(uTime * 0.27 * k + aZ.y * 1.3)); }
     vec4 L0() {   // S1: a still thin mist far behind the pair, one soft cloud (no edges: its density falls off as a
       // Gaussian), thinning out between 150 and 220 px from the cap's frame
@@ -332,39 +286,32 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       vec2 p = uCloud.xy + aG * uCloud.zw * 0.5 + 3.0 * wob(2.3);
       return vec4(p, aS.w < 0.45 ? 0.7 * smoothstep(300.0, 420.0, p.y) : 0.0, 1.0);
     }
-    vec4 L2() {   // the thread: each droplet at its place along it; winding into the bottle's point
-      float t = mix(aS.y, uTB, uWind); vec2 d = normalize(dbez(t)), n = vec2(-d.y, d.x);
-      vec2 p = bez(t) + n * aG.x * 5.0 * (1.0 - uWind) + d * 4.0 * sin(uTime * 0.5 + aZ.y);
-      float a = 0.6 * smoothstep(0.0, 0.06, aS.y) * (1.0 - smoothstep(0.94, 1.0, aS.y)) * (1.0 - smoothstep(0.6, 1.0, uWind));
-      return vec4(p, aS.w < 0.45 ? a : 0.0, 1.0);
+    vec4 L2() {   // S2: the loose cloud low behind the bottle (uHaze: centre, spread)
+      vec2 p = uHaze.xy + aG * uHaze.zw * (0.55 + 0.9 * aS.y) + 4.0 * wob(1.2);
+      return vec4(p, aS.w < 0.45 ? 0.5 : 0.0, 1.0);
     }
-    vec4 L3() {   // one cloud enters from above, through the top edge by the bottle's cut top, opens as a cone down and
-      // left and parts into three (b2.label1–3); some
-      float k = floor(aS.x * 3.0);   // droplets melt as one looks (b2.label4)
-      vec2 C = k < 0.5 ? vec2(420.0, 560.0) : (k < 1.5 ? vec2(650.0, 760.0) : vec2(440.0, 960.0));
-      vec2 cl = C + aG * 48.0 + 4.0 * wob(1.4);
-      vec2 ax = vec2(-0.607, 0.795), nr = vec2(0.795, 0.607);
-      vec2 cone = vec2(900.0, 240.0) + ax * aS.z * 660.0 + nr * aG.y * (14.0 + 110.0 * aS.z);
-      vec2 p = mix(cone, cl, uSplit); p.y -= (1.0 - uEnter) * 460.0;
+    vec4 L3() {   // one cloud enters from above, through the top edge by the bottle's cut top, drifts down and left and
+      // parts into three (b2.label1–3); some droplets melt as one looks (b2.label4)
+      float k = floor(aS.x * 3.0);
+      vec2 C = k < 0.5 ? vec2(420.0, 560.0) : (k < 1.5 ? vec2(650.0, 760.0) : vec2(440.0, 960.0)), w = 4.0 * wob(1.4);
+      vec2 one = vec2(800.0, 520.0) + aG * vec2(115.0, 95.0) * (0.6 + 0.8 * aS.z) + w, cl = C + aG * 48.0 + w;
+      vec2 p = mix(one, cl, uSplit); p.y -= (1.0 - uEnter) * 460.0;
       float melt = aS.z > 0.82 ? 0.5 + 0.5 * sin(uTime * 0.9 + aZ.y * 3.0) : 1.0;
       return vec4(p, aS.w < 0.64 ? 0.7 * melt * smoothstep(300.0, 420.0, p.y) : 0.0, 1.0);
     }
-    vec4 L4() {   // S4: a thin haze above the line; a few drops settle on it, each at its own stage of melting
-      vec2 haze = vec2(mix(300.0, 1100.0, aS.y), mix(870.0, 950.0, aS.z)) + 5.0 * wob(1.0);
+    vec4 L4() {   // S4: the three settle into a soft haze; a few larger drops in it melt, each at its own stage
+      vec2 p = vec2(700.0, 840.0) + aG * vec2(190.0, 95.0) * (0.55 + 0.9 * aS.y) + 5.0 * wob(1.0);
       bool drop = aS.w < 0.05;
-      vec2 p = drop ? mix(haze, vec2(mix(320.0, 1100.0, aS.y), ${LY - 1}.0), uSettle) : haze;
-      float a = drop ? mix(0.55, 0.85 * (1.0 - 0.8 * aS.z), uSettle) : (aS.w < 0.3 ? 0.22 : 0.0);
-      return vec4(p, a, drop ? mix(1.0, 1.0 - 0.6 * aS.z, uSettle) : 1.0);
+      float a = drop ? mix(0.55, 0.85 * (1.0 - 0.8 * aS.z), uMelt) : (aS.w < 0.3 ? 0.22 : 0.0);
+      return vec4(p, a, drop ? mix(1.0, 1.0 - 0.6 * aS.z, uMelt) : 1.0);
     }
-    vec4 L5() {   // S5: nine small clouds fall from beyond the top edge just behind the bottle, five onto the first parting
-      // as it passes right to left, four onto the second as it passes back; then they melt in soft rings (b4.label3)
-      float k = floor(aS.x * 9.0);
-      bool one = k < 4.5; float q = one ? k / 4.0 : (k - 5.0) / 3.0;
-      float x = one ? mix(800.0, 380.0, q) : mix(400.0, 940.0, q), L = one ? ${L1}.0 : ${L2}.0;
-      float fall = one ? smoothstep(x + 40.0, x - 120.0, uBx1) : smoothstep(x - 40.0, x + 120.0, uBx2);
-      vec2 land = vec2(x + aG.x * 16.0, L - 1.0 - abs(aG.y) * 1.5), sky = vec2(x + 20.0 + aG.x * 9.0, 230.0 + aG.y * 14.0);
+    vec4 L5() {   // S5: nine small clouds fall from beyond the top edge just behind the bottle, five as it passes right to
+      // left, four as it passes back, come to rest as loose clouds (uRest) and melt (b4.label3)
+      float k = floor(aS.x * 9.0); bool one = k < 4.5; vec2 r = uRest[int(k)];
+      float fall = one ? smoothstep(r.x + 40.0, r.x - 120.0, uBx1) : smoothstep(r.x - 40.0, r.x + 120.0, uBx2);
+      vec2 rest = r + aG * 22.0 * (0.6 + 0.8 * aS.y), sky = vec2(r.x + 20.0 + aG.x * 9.0, 230.0 + aG.y * 14.0);
       float a = smoothstep(0.0, 0.05, fall) * 0.8 * (1.0 - 0.7 * uAbsorb * aS.z);
-      return vec4(mix(sky, land, fall), aS.w < 0.12 ? a : 0.0, 1.0 - 0.5 * uAbsorb * aS.z);
+      return vec4(mix(sky, rest, fall), aS.w < 0.12 ? a : 0.0, 1.0 - 0.5 * uAbsorb * aS.z);
     }
     void main() {
       vec4 l[6]; l[0] = L0(); l[1] = L1(); l[2] = L2(); l[3] = L3(); l[4] = L4(); l[5] = L5();
@@ -386,29 +333,23 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   function dropAt(i, u, t) {
     const s = SEED.subarray(i * 4, i * 4 + 4), g = GAU.subarray(i * 2, i * 2 + 2), ph = SZ[i * 2 + 1];
     const wob = k => [Math.sin(t * 0.3 * k + ph), Math.cos(t * 0.27 * k + ph * 1.3)], mx = (a, b, k) => a + (b - a) * k;
-    const T = { p0: [u.uT0.value.x, u.uT0.value.y], c: [u.uTC.value.x, u.uTC.value.y], p1: [u.uT1.value.x, u.uT1.value.y] };
     const L = [];
     { const w = wob(1), lo = s[0] < 0.45 ? 0 : s[0] < 0.72 ? 1 : 2, x = S1C[lo][0] + g[0] * S1S[lo][0], y = S1C[lo][1] + g[1] * S1S[lo][1];
       const d = Math.max(CAP0[0] - x, x - CAP0[2], CAP0[1] - y, y - CAP0[3], 0);
       L.push([x + 1.5 * w[0], y + 1.5 * w[1], s[3] > 0.83 && s[3] < 0.99 ? 0.7 * smooth(150, 220, d) : 0]); }
     { const c = u.uCloud.value, w = wob(2.3), x = c.x + g[0] * c.z * 0.5 + 3 * w[0], y = c.y + g[1] * c.w * 0.5 + 3 * w[1]; L.push([x, y, s[3] < 0.45 ? 0.7 * smooth(300, 420, y) : 0]); }
-    { const tt = mx(s[1], u.uTB.value, u.uWind.value), e = 1e-3, [x, y] = bez(T, tt), [xa, ya] = bez(T, Math.max(0, tt - e)), [xb, yb] = bez(T, Math.min(1, tt + e));
-      const l = Math.hypot(xb - xa, yb - ya) || 1, dx = (xb - xa) / l, dy = (yb - ya) / l, k = g[0] * 5 * (1 - u.uWind.value), q = 4 * Math.sin(t * 0.5 + ph);
-      const a = 0.6 * smooth(0, 0.06, s[1]) * (1 - smooth(0.94, 1, s[1])) * (1 - smooth(0.6, 1, u.uWind.value));
-      L.push([x - dy * k + dx * q, y + dx * k + dy * q, s[3] < 0.45 ? a : 0]); }
-    { const k = Math.floor(s[0] * 3), C = k < 0.5 ? [420, 560] : k < 1.5 ? [650, 760] : [440, 960], w = wob(1.4);
-      const cl = [C[0] + g[0] * 48 + 4 * w[0], C[1] + g[1] * 48 + 4 * w[1]];
-      const cone = [900 - 0.607 * s[2] * 660 + 0.795 * g[1] * (14 + 110 * s[2]), 240 + 0.795 * s[2] * 660 + 0.607 * g[1] * (14 + 110 * s[2])];
-      const x = mx(cone[0], cl[0], u.uSplit.value), y = mx(cone[1], cl[1], u.uSplit.value) - (1 - u.uEnter.value) * 460;
+    { const h = u.uHaze.value, w = wob(1.2), sp = 0.55 + 0.9 * s[1]; L.push([h.x + g[0] * h.z * sp + 4 * w[0], h.y + g[1] * h.w * sp + 4 * w[1], s[3] < 0.45 ? 0.5 : 0]); }
+    { const k = Math.floor(s[0] * 3), C = k < 0.5 ? [420, 560] : k < 1.5 ? [650, 760] : [440, 960], w = wob(1.4), sp = 0.6 + 0.8 * s[2];
+      const one = [800 + g[0] * 115 * sp + 4 * w[0], 520 + g[1] * 95 * sp + 4 * w[1]], cl = [C[0] + g[0] * 48 + 4 * w[0], C[1] + g[1] * 48 + 4 * w[1]];
+      const x = mx(one[0], cl[0], u.uSplit.value), y = mx(one[1], cl[1], u.uSplit.value) - (1 - u.uEnter.value) * 460;
       const melt = s[2] > 0.82 ? 0.5 + 0.5 * Math.sin(t * 0.9 + ph * 3) : 1;
       L.push([x, y, s[3] < 0.64 ? 0.7 * melt * smooth(300, 420, y) : 0]); }
-    { const w = wob(1), hz = [mx(300, 1100, s[1]) + 5 * w[0], mx(870, 950, s[2]) + 5 * w[1]], drop = s[3] < 0.05, st = u.uSettle.value;
-      const p = drop ? [mx(hz[0], mx(320, 1100, s[1]), st), mx(hz[1], LY - 1, st)] : hz;
-      L.push([p[0], p[1], drop ? mx(0.55, 0.85 * (1 - 0.8 * s[2]), st) : s[3] < 0.3 ? 0.22 : 0]); }
-    { const k = Math.floor(s[0] * 9), one = k < 4.5, q = one ? k / 4 : (k - 5) / 3, x = one ? mx(800, 380, q) : mx(400, 940, q), Ly = one ? L1 : L2;
-      const fall = one ? smooth(x + 40, x - 120, u.uBx1.value) : smooth(x - 40, x + 120, u.uBx2.value);
-      const land = [x + g[0] * 16, Ly - 1 - Math.abs(g[1]) * 1.5], sky = [x + 20 + g[0] * 9, 230 + g[1] * 14];
-      L.push([mx(sky[0], land[0], fall), mx(sky[1], land[1], fall), s[3] < 0.12 ? smooth(0, 0.05, fall) * 0.8 * (1 - 0.7 * u.uAbsorb.value * s[2]) : 0]); }
+    { const w = wob(1), sp = 0.55 + 0.9 * s[1], drop = s[3] < 0.05, m = u.uMelt.value;
+      L.push([700 + g[0] * 190 * sp + 5 * w[0], 840 + g[1] * 95 * sp + 5 * w[1], drop ? mx(0.55, 0.85 * (1 - 0.8 * s[2]), m) : s[3] < 0.3 ? 0.22 : 0]); }
+    { const k = Math.floor(s[0] * 9), one = k < 4.5, [rx, ry] = REST[k], sp = 0.6 + 0.8 * s[1];
+      const fall = one ? smooth(rx + 40, rx - 120, u.uBx1.value) : smooth(rx - 40, rx + 120, u.uBx2.value);
+      const rest = [rx + g[0] * 22 * sp, ry + g[1] * 22 * sp], sky = [rx + 20 + g[0] * 9, 230 + g[1] * 14];
+      L.push([mx(sky[0], rest[0], fall), mx(sky[1], rest[1], fall), s[3] < 0.12 ? smooth(0, 0.05, fall) * 0.8 * (1 - 0.7 * u.uAbsorb.value * s[2]) : 0]); }
     let S = 0, X = 0, Y = 0;
     for (let j = 0; j < 6; j++) { const w = u.uW.value[j] * L[j][2]; S += w; X += w * L[j][0]; Y += w * L[j][1]; }
     if (S < 1e-4) return null;
@@ -417,62 +358,21 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     return a > 0.02 ? [X, Y] : null;
   }
 
-  // the days (S2): brighter droplets running along the thread with uneven steps, flashing gold as they pass behind the
-  // bottle; no number is drawn or meant (no interval between the HAIR visits is in the sources)
-  const ND = 24, DAY = new Float32Array(ND * 3);
-  for (let i = 0, x = 0; i < ND; i++) { x += 0.6 + 0.8 * rng(); DAY[i * 3] = x; DAY[i * 3 + 1] = 0.028 + 0.01 * rng(); DAY[i * 3 + 2] = 5 + 2 * rng(); }
-  for (let i = 0; i < ND; i++) DAY[i * 3] /= DAY[(ND - 1) * 3] + 0.7;   // start places 0…1, uneven
-  const dg = quad(new THREE.InstancedBufferGeometry(), ND); dg.setAttribute('aD', new THREE.InstancedBufferAttribute(DAY, 3));
-  const DU = { uTime: MU.uTime, uPx: pxU, uOpacity: { value: 0 }, uT0: MU.uT0, uTC: MU.uTC, uT1: MU.uT1, uTB: MU.uTB };
-  const dayMat = new THREE.ShaderMaterial({ uniforms: DU, transparent: true, depthWrite: false, side: THREE.DoubleSide,
-    vertexShader: `attribute vec3 aD; uniform float uTime, uPx, uTB, uOpacity; uniform vec2 uT0, uTC, uT1; varying vec2 vQ; varying float vA, vF;
-      void main() { float t = fract(aD.x + uTime * aD.y), u = 1.0 - t; vec2 P = u * u * uT0 + 2.0 * u * t * uTC + t * t * uT1;
-        vF = 1.0 - smoothstep(0.0, 0.035, abs(t - uTB));
-        vA = smoothstep(0.0, 0.05, t) * (1.0 - smoothstep(0.93, 1.0, t)) * uOpacity;
-        float r = max(aD.z * (1.0 + 0.4 * vF) * 0.5, 0.75 / uPx); vQ = position.xy; vec2 q = P + position.xy * r;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(q.x - 1200.0, 750.0 - q.y, 0.0, 1.0); }`,
-    fragmentShader: `varying vec2 vQ; varying float vA, vF;
-      void main() { float r = length(vQ); if (r > 1.0) discard;
-        gl_FragColor = vec4(mix(vec3(0.965, 0.953, 0.925), vec3(0.847, 0.741, 0.494), vF), vA * mix(0.85, 1.0, vF) * smoothstep(1.0, 0.5, r)); }` });
-  const days = new THREE.Mesh(dg, dayMat); days.frustumCulled = false; days.renderOrder = 9; fx.add(days);
-
-  // S5: soft rings round the drops on the partings (massage, b4.label3), two per small cloud, flattened (the scalp seen
-  // at a slant); their radius grows 14 → 40 px and they fade; still keys hold each at its own stage
-  const RINGS = [];
-  for (let k = 0; k < 9; k++) {
-    const one = k < 5, q = one ? k / 4 : (k - 5) / 3, x = one ? lerp(800, 380, q) : lerp(400, 940, q), y = one ? L1 : L2;
-    RINGS.push(x, y, (k * 0.37) % 1, x, y, (k * 0.37 + 0.5) % 1);
-  }
-  const rg = quad(new THREE.InstancedBufferGeometry(), 18); rg.setAttribute('aR', new THREE.InstancedBufferAttribute(new Float32Array(RINGS), 3));
-  const ringMat = new THREE.ShaderMaterial({ uniforms: { uTime: MU.uTime, uPx: pxU, uOpacity: { value: 0 }, uC: { value: hex3(0xd8bd7e) } },
-    transparent: true, depthWrite: false, side: THREE.DoubleSide, ...ADD,
-    vertexShader: `attribute vec3 aR; uniform float uTime; varying vec2 vP; varying float vR, vA;
-      void main() { float pr = fract(aR.z + uTime * 0.22); vR = mix(14.0, 40.0, pr); vA = (1.0 - pr) * smoothstep(0.0, 0.08, pr);
-        vP = position.xy * vec2(44.0, 20.0); vec2 p = aR.xy + vP;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(p.x - 1200.0, 750.0 - p.y, 0.0, 1.0); }`,
-    fragmentShader: `uniform float uOpacity, uPx; uniform vec3 uC; varying vec2 vP; varying float vR, vA;
-      void main() { float d = abs(length(vec2(vP.x, vP.y / 0.45)) - vR), w = max(0.6, 0.75 / uPx);
-        float a = max(clamp((w - d) * uPx + 0.5, 0.0, 1.0), 0.25 * exp(-d * d / 9.0));
-        gl_FragColor = vec4(uC, a * vA * uOpacity * 0.8); }` });
-  const rings = new THREE.Mesh(rg, ringMat); rings.frustumCulled = false; rings.renderOrder = 7; rings.visible = false; fx.add(rings);
-
   // ---- poses (frame px): the bottle { x: its axis, y: the foot of its silhouette, H: its height, yaw° (0: the print
   // faces the camera), a: opacity }; the box { cx, cy: its front's centre, h: the front's height, a }. The kit and S1's
   // packshot poses first (the S1 mist keeps clear of that cap); the rest below the effects
   // S3 (p 2) close on the bottle: its top with the cap over the frame's top edge (cut through the cap: it stays on)
-  const BOT = [BOT0, { x: 790, y: 928, H: 500 }, { x: 1000, y: 1150, H: 1050 }, { x: 1090, y: 930, H: 340 }, { x: 1060, y: L2, H: 330 }, BOT5];
-  const BOT1_PH = { x: 1040, y: 800, H: 430 };   // the phone's S2: on its vertical thread, at t 0.5
+  const BOT = [BOT0, { x: 790, y: 928, H: 500 }, { x: 1000, y: 1150, H: 1050 }, { x: 1090, y: 930, H: 340 }, { x: 1060, y: P2, H: 330 }, BOT5];
+  const BOT1_PH = { x: 1040, y: 800, H: 430 };   // the phone's S2: below the HAIR packshot, at the right
   const ZOOM = { x: 905, y: 1185, H: 1150 };     // S1 → S2: the camera close on the bottle, its top over the edge
-  const PASS1 = { x: 1060, y: L1, H: 380 }, PASS2 = { x: 330, y: L2, H: 450 };   // S5's passes: the top cut by the edge
-  const BOX4 = { cx: 640, cy: 450, h: 250 };   // S5: deeper than the bottle, above the first parting, in its own colours
+  const PASS1 = { x: 1060, y: P1, H: 380 }, PASS2 = { x: 330, y: P2, H: 450 };   // S5's passes: the top cut by the edge
+  const BOX4 = { cx: 640, cy: 450, h: 250 };   // S5: deeper than the bottle, in its own colours
   const HAIR1 = { x0: 236, x1: 716, by: 760 }, HAIR1_PH = { x0: 190, x1: 838, by: 735 }, HAIR4 = { x0: 300, x1: 500, by: 575 };
   const GLOW = { dx: 178, dy: -110, rx: 125, ry: 265, a: 0.8 };   // the kit's backlight round the box (box 760 px): see pose()
   const SWAY = [10, 4, 3, 3, 2, 0];   // the bottle's slow idle turn per screen, ± degrees (within ±30° of the photographed front)
   // the state, written in place on every frame (nothing allocated per frame)
   const ST = { box: { cx: 0, cy: 0, h: 1, a: 0 }, bot: { x: 0, y: 0, H: 1, yaw: 0, a: 1 }, hair: { x0: 0, x1: 1, by: 0, a: 0 }, w: [0, 0, 0, 0, 0, 0],
-    cloud: [690, 180], wind: 0, split: 0, enter: 0, settle: 0, bx1: 1300, bx2: 0, absorb: 0, under: 0, days: 0, flash: 0,
-    line: [0, 1120, 1120], l1: [0, 680, 680], l2: [0, 680, 680], rings: 0, glow: 0 };
-  const LN = [ST.line, ST.l1, ST.l2];   // the three lines' [opacity, x0, x1]
+    cloud: [690, 180], split: 0, enter: 0, melt: 0, bx1: 1300, bx2: 0, absorb: 0, glow: 0 };
   const setB = (o, s, a = 1) => { o.x = s.x; o.y = s.y; o.H = s.H; o.yaw = s.yaw || 0; o.a = a; return o; };
   const mixB = (o, a, b, s) => { o.x = lerp(a.x, b.x, s); o.y = lerp(a.y, b.y, s); o.H = lerp(a.H, b.H, s); o.yaw = lerp(a.yaw || 0, b.yaw || 0, s); return o; };
   const setX = (o, s, a) => { o.cx = s.cx; o.cy = s.cy; o.h = s.h; o.a = a; return o; };
@@ -482,12 +382,11 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     const k = Math.min(4, Math.floor(p)), f = p - k, st = ST, ph = phone.matches, B1 = ph ? BOT1_PH : BOT[1];
     const b = st.box, o = st.bot, w = st.w;
     setX(b, BOX0, 0); setB(o, BOT[Math.min(5, Math.round(p))]); st.hair.a = 0;
-    w.fill(0); st.wind = st.split = st.enter = st.settle = st.absorb = st.under = st.days = st.flash = st.rings = st.glow = 0;
-    st.bx1 = 1300; st.bx2 = 0; st.line[0] = st.l1[0] = st.l2[0] = 0;
+    w.fill(0); st.split = st.enter = st.melt = st.absorb = st.glow = 0;
+    st.bx1 = 1300; st.bx2 = 0;
     if (k === 0) {   // S1 → S2, the first scroll as the «press»: the still mist goes; the camera comes close to the bottle,
-      // its top with the cap leaves the frame's top edge and a cloud comes in from there, beside it, and draws out to the
-      // left into the thread; the box recedes and fades; the camera pulls back and the bottle stands on the thread; the
-      // visits light, the HAIR packshot comes
+      // its top with the cap leaves the frame's top edge and a cloud comes in from there, beside it, and opens into a
+      // loose cloud low behind the bottle; the box recedes and fades; the camera pulls back; the HAIR packshot comes
       const g = smooth(0, 0.6, f), h = lerp(700, 520, g);
       setX(b, xt(lerp(620, 600, g), lerp(1140, 1000, g) - h / 2, h), 1 - smooth(0.1, 0.6, f));
       const zi = smooth(0, 0.3, f), zo = smooth(0.42, 0.85, f);
@@ -495,33 +394,28 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       w[0] = 1 - smooth(0, 0.25, f);
       const c = smooth(0.08, 0.42, f); st.cloud[0] = lerp(770, 650, c); st.cloud[1] = lerp(150, 400, c);
       w[1] = smooth(0.06, 0.16, f) * (1 - smooth(0.32, 0.72, f)); w[2] = smooth(0.32, 0.72, f);
-      st.under = smooth(0.5, 0.85, f); st.days = smooth(0.7, 1, f); st.flash = smooth(0.55, 0.85, f); st.hair.a = smooth(0.65, 1, f);
-    } else if (k === 1) {   // S2 → S3: the thread winds into the bottle's point and goes, the HAIR packshot dissolves; the
-      // camera comes close: the bottle grows, moves right and its top leaves the frame; a new cloud comes in through that
-      // edge beside it, opens down and left and parts into three
-      w[2] = 1 - smooth(0.45, 0.5, f); st.wind = smooth(0, 0.45, f);
-      st.under = 1 - smooth(0, 0.4, f); st.days = 1 - smooth(0, 0.3, f); st.flash = 1 - smooth(0, 0.4, f); st.hair.a = 1 - smooth(0, 0.45, f);
+      st.hair.a = smooth(0.65, 1, f);
+    } else if (k === 1) {   // S2 → S3: the cloud thins out and goes, the HAIR packshot dissolves; the camera comes close:
+      // the bottle grows, moves right and its top leaves the frame; a new cloud comes in through that edge beside it,
+      // drifts down and left and parts into three
+      w[2] = 1 - smooth(0.05, 0.45, f); st.hair.a = 1 - smooth(0, 0.45, f);
       mixB(o, B1, BOT[2], smooth(0.1, 0.7, f));
       w[3] = smooth(0.55, 0.7, f); st.enter = smooth(0.55, 0.85, f); st.split = smooth(0.7, 1, f);
-    } else if (k === 2) {   // S3 → S4: the three settle into a haze; the bottle steps back to the right, in its colours;
-      // the parting is drawn right to left; the haze's drops settle on it and melt
-      w[3] = 1 - smooth(0, 0.4, f); w[4] = smooth(0, 0.4, f); st.enter = st.split = 1; st.settle = smooth(0.6, 1, f);
+    } else if (k === 2) {   // S3 → S4: the three settle into a soft haze; the bottle steps back to the right, in its
+      // colours; a few drops in the haze melt
+      w[3] = 1 - smooth(0, 0.4, f); w[4] = smooth(0, 0.4, f); st.enter = st.split = 1; st.melt = smooth(0.6, 1, f);
       mixB(o, BOT[2], BOT[3], smooth(0.1, 0.6, f));
-      st.line[0] = 1; st.line[1] = lerp(1120, 300, smooth(0.3, 0.7, f)); st.line[2] = 1120;
-    } else if (k === 3) {   // S4 → S5, the protocol's three steps: the line goes; the first parting opens from its middle;
-      // the bottle, its top cut by the frame's edge, passes along it right to left as small clouds fall from beyond the
-      // edge behind it; the second opens, the bottle passes back along it; it steps back whole; the drops melt in rings;
-      // far behind, the HAIR packshot and the box come in (by opacity only)
-      st.line[0] = 1 - smooth(0, 0.1, f); st.line[1] = 300; st.line[2] = 1120; w[4] = 1 - smooth(0, 0.1, f); st.settle = 1;
-      const h1 = 380 * smooth(0.05, 0.3, f), h2 = 380 * smooth(0.5, 0.62, f);
-      st.l1[0] = 1; st.l1[1] = 650 - h1 * 350 / 380; st.l1[2] = 650 + h1 * 350 / 380; st.l2[0] = h2 > 0 ? 1 : 0; st.l2[1] = 680 - h2; st.l2[2] = 680 + h2;
+    } else if (k === 3) {   // S4 → S5, the protocol's three steps: the haze goes; the bottle, its top cut by the frame's
+      // edge, passes right to left as small clouds fall from beyond the edge behind it; it passes back as more fall; it
+      // steps back whole; the clouds melt where they rest; far behind, the HAIR packshot and the box come in (by opacity)
+      w[4] = 1 - smooth(0, 0.1, f); st.melt = 1;
       if (f < 0.25) mixB(o, BOT[3], PASS1, smooth(0, 0.25, f));
       else if (f < 0.5) { setB(o, PASS1); o.x = lerp(PASS1.x, PASS2.x, smooth(0.25, 0.5, f)); }
       else if (f < 0.6) { mixB(o, PASS1, PASS2, smooth(0.5, 0.6, f)); o.x = PASS2.x; }
       else if (f < 0.82) { setB(o, PASS2); o.x = lerp(PASS2.x, BOT[4].x, smooth(0.6, 0.82, f)); }
       else { mixB(o, PASS2, BOT[4], smooth(0.82, 0.95, f)); o.x = BOT[4].x; }
       st.bx1 = f < 0.25 ? 1300 : f < 0.5 ? o.x : 0; st.bx2 = f < 0.6 ? 0 : f < 0.82 ? o.x : 1300;
-      w[5] = smooth(0.2, 0.25, f); st.absorb = smooth(0.8, 1, f); st.rings = smooth(0.8, 0.9, f);
+      w[5] = smooth(0.2, 0.25, f); st.absorb = smooth(0.8, 1, f);
       Object.assign(st.hair, HAIR4); st.hair.a = smooth(0.7, 1, f);
       setX(b, BOX4, smooth(0.82, 1, f));
     } else {   // S5 → kit: the protocol goes; the box and the bottle hold while the page's step cards scroll up over the
@@ -529,7 +423,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       // comes forward from the depth, the bottle straightens, turns once to +30° and back (S6) and stands by the box with
       // the packshot's gap; a warm gold backlight comes up behind the pair and stays (S7: the page's brightest)
       const out = 1 - smooth(0, 0.3, f);
-      st.l1[0] = st.l2[0] = out; st.l1[1] = st.l2[1] = 300; st.l1[2] = 1000; st.l2[2] = 1060; w[5] = out; st.bx1 = 0; st.bx2 = 1300; st.absorb = 1; st.rings = out;
+      w[5] = out; st.bx1 = 0; st.bx2 = 1300; st.absorb = 1;
       Object.assign(st.hair, HAIR4); st.hair.a = out;
       const g = smooth(0.54, 0.85, f); setX(b, xt(lerp(BOX4.cx, BOX5.cx, g), lerp(BOX4.cy, BOX5.cy, g), lerp(BOX4.h, BOX5.h, g)), 1);
       mixB(o, BOT[4], BOT5, smooth(0.56, 0.9, f)); o.yaw = 30 * Math.sin(Math.PI * smooth(0.6, 0.95, f));
@@ -541,7 +435,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
 
   // ---- applying a state
   const tmp = new V3();
-  const last = { x: 0, y: 0, H: 0, yaw: 0, lines: 0, glow: 0, t: 0 };   // for QA
+  const last = { x: 0, y: 0, H: 0, yaw: 0, glow: 0, t: 0 };   // for QA
   function pose(p, t, still) {
     const st = story(p), live = still ? 0 : 1 - smooth(4.85, 5, p), ph = phone.matches;
     const k = Math.min(4, Math.floor(p)), o = st.bot, b = st.box;
@@ -572,39 +466,25 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     for (const m of bxParts) m.renderOrder = (boxFirst ? 100 : 110) + m.userData.layer;
     // the planes, behind the farthest product shown
     const Dfar = Math.max(bottle.visible ? Db + RW : 0, box.visible ? Dx + BD * HX : 0, 9);
-    place(fx, Dfar + 1); place(hp, Dfar + 2); place(ff, Dfar + 2.5);
+    place(fx, Dfar + 1); place(hp, Dfar + 2);
     // the HAIR packshot (S2, S5), as it is, facing the picture
     const hr = st.hair; hairBoard.visible = hr.a > 0.004;
     if (hairBoard.visible) { const wpx = hr.x1 - hr.x0; hairBoard.position.set((hr.x0 + hr.x1) / 2 - 1200, 750 - hr.by, 0); hairBoard.scale.set(wpx, wpx, 1); hairBoard.material.opacity = hr.a; }
-    // the thread, its days and flashes
-    const T = ph ? THREAD_PH : THREAD;
-    MU.uT0.value.set(T.p0[0], T.p0[1]); MU.uTC.value.set(T.c[0], T.c[1]); MU.uT1.value.set(T.p1[0], T.p1[1]); MU.uTB.value = T.tb;
-    under.geometry = underGeo[ph ? 1 : 0];
-    const uu = underMat.uniforms; uu.uOpacity.value = 0.45 * st.under;   // barely there: the droplets make the thread
-    uu.uU0.value = lerp(-1, T.tb, st.wind); uu.uU1.value = lerp(2, T.tb, st.wind); under.visible = st.under > 0.004;   // it winds in with them
-    DU.uOpacity.value = st.days; days.visible = st.days > 0.004; dg.instanceCount = ph ? ND / 2 : ND;
-    setSpot(farFlash, T.p0[0], T.p0[1], 110, 50, 0.5 * st.flash); setSpot(nearFlash, T.p1[0], T.p1[1], 110, 50, 0.5 * st.flash);
     // the mist
+    const hz = ph ? HAZE2_PH : HAZE2; MU.uHaze.value.set(hz[0], hz[1], hz[2], hz[3]);
     MU.uTime.value = t; for (let i = 0; i < 6; i++) MU.uW.value[i] = st.w[i];
     MU.uCloud.value.x = st.cloud[0]; MU.uCloud.value.y = st.cloud[1];
-    MU.uWind.value = st.wind; MU.uSplit.value = st.split; MU.uEnter.value = st.enter; MU.uSettle.value = st.settle;
+    MU.uSplit.value = st.split; MU.uEnter.value = st.enter; MU.uMelt.value = st.melt;
     MU.uBx1.value = st.bx1; MU.uBx2.value = st.bx2; MU.uAbsorb.value = st.absorb;
     mist.visible = false; for (let i = 0; i < 6; i++) if (st.w[i] > 0.004) mist.visible = true;
     mg.instanceCount = ph ? NM / 2 : NM;
-    // the partings and the rings
-    let nl = 0;
-    for (let i = 0; i < 3; i++) {
-      const L = LN[i], a = L[0], x0 = L[1], x1 = L[2], m = lines[i], u = m.material.uniforms;
-      u.uOpacity.value = a; u.uX0.value = x0; u.uX1.value = x1; m.visible = a > 0.004 && x1 - x0 > 30; if (m.visible) nl++;
-    }
-    ringMat.uniforms.uOpacity.value = 0.6 * st.rings; rings.visible = st.rings > 0.004;
     // the kit's backlight, on its own plane just behind the box, in the live pose, the keys and kit() alike: brightest in
     // the gap between the box and the bottle, round the bottle's cap and the box's right edge; its ellipse ends inside the
     // pair's outline (alpha 0 outside it), so the offer card's picture and kit.webp, cut to what has alpha, keep their size
     const gl = st.glow;
     if (gl > 0.004 && box.visible) { place(gb, Dx + BD * HX + 0.3); const s = b.h / 760; setSpot(glowBox, b.cx + GLOW.dx * s, b.cy + GLOW.dy * s, GLOW.rx * s, GLOW.ry * s, GLOW.a * gl); }
     else glowBox.visible = false;
-    last.x = o.x; last.y = o.y; last.H = o.H; last.yaw = o.yaw; last.lines = nl; last.glow = gl; last.t = t;
+    last.x = o.x; last.y = o.y; last.H = o.H; last.yaw = o.yaw; last.glow = gl; last.t = t;
   }
   function mistCount() {   // QA: the droplets shown now, those within 150 px of the cap's box
     if (!mist.visible) return { n: 0, nearCap: 0 };
@@ -654,13 +534,12 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     canvas.removeEventListener('webglcontextrestored', restored);
     const mats = new Set();
     scene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) mats.add(o.material); });
-    for (const g of underGeo) g.dispose();   // the phone's thread may not be the one in the scene
     for (const m of mats) m.dispose();
     for (const t of [faceTex, metalTex, printTex, hairTex, roomEnv, capEnv]) t.dispose();
     renderer.dispose();
   }
   const r1 = v => Math.round(v * 10) / 10, r2 = v => Math.round(v * 100) / 100;
   const state = () => ({ quality: pr, cap, capped, pixelRatio: renderer.getPixelRatio(), width: canvas.width, height: canvas.height, renders, loaded,
-    version, kits, lastP, hero: { x: r1(last.x), y: r1(last.y), H: r1(last.H), yaw: r1(last.yaw) }, mist: mistCount(), lines: last.lines, glow: r2(last.glow) });
+    version, kits, lastP, hero: { x: r1(last.x), y: r1(last.y), H: r1(last.H), yaw: r1(last.yaw) }, mist: mistCount(), glow: r2(last.glow) });
   return { draw, kit, dispose, state, animated: true };
 }

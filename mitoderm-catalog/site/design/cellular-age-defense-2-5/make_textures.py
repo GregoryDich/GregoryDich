@@ -20,13 +20,14 @@ rays, rms 0.23 px) is the print's own picture, 186 px on the photo: its smooth p
 angle, the bright inner rim, the disc's light and haze, the faint deeper strokes — are the photo's, ×4 (they hold no
 edge); its dark green spicules keep the photo's strokes (tips and crossings) with their soft edges made steep (their
 darkness against the disc's light through an S-curve, the light filled in under them: a ~3-texel edge, not ~8); the
-ring's outer band is its own colour round the angle up to a sharp circle. Where the box is largest (the kit pose, 800
-frame px in a 3840 key) the medallion is 1.25× the photo's size: not a redrawing. Tried and dropped: strokes re-inked
-at half contrast with a one-texel edge (heavier than the print, blobs at crossings, tips lost). The packaging's vector
-file would replace all of it.
+ring's outer band is its own colour round the angle up to a sharp circle. It is the photo's picture, not a redrawing:
+the scene keeps the opaque box at most 637 frame px tall (1019 px in a 3840 key, the photo's own front), so the
+medallion is never drawn above the photo's pixels. Tried and dropped: strokes re-inked at half contrast with a
+one-texel edge (heavier than the print, blobs at crossings, tips lost). The packaging's print (vector) file would
+replace all of it and let the box be shown larger.
 Writes into <out dir>:
-  box-face.png    the front's colours, RGB 1060×4076 (4 texels per photo px down, 4 / 0.988 across: square on the true
-                  front; ≈ 3.2 texels per key px where the box is largest): the paper #F4EAE1, the band #183322, the
+  box-face.webp   the front's colours, RGB 1060×4076, lossless (4 texels per photo px down, 4 / 0.988 across: square on
+                  the true front; 4 texels per key px where the box is largest): the paper #F4EAE1, the band #183322, the
                   inks and golds as pipetted (MITODERM #1D2A1D, the black #121108, the band's gold #D8CFA0, the frame
                   #BE9760 2 px, the M #C6A87F, the spicules' core #22311E)
   box-side.png    the plain right side, RGB 64×2048 (u: the front edge 0 → the back 1, v: top 0 → foot 1): the photo's
@@ -238,12 +239,12 @@ if __name__ == '__main__':
         i = int(np.floor(edge)); f = edge - i; face[i] = np.array(a, float) * f + np.array(b, float) * (1 - f)
     report = typeset(face, font)
     monogram(face, rect); medallion(face, rect); frame(face)
-    Image.fromarray(np.clip(np.round(face), 0, 255).astype(np.uint8)).save(f'{out}/box-face.png', optimize=True)
+    Image.fromarray(np.clip(np.round(face), 0, 255).astype(np.uint8)).save(f'{out}/box-face.webp', lossless=True, quality=100, method=6)
     side().save(f'{out}/box-side.png', optimize=True)
     renew = rectify(RENEW, [[-0.3, 2.2], [262.0, 1.0], [262.0, 1010.5], [-0.3, 1008.4]], (262.3, 1008.9), 1, PAPER)
     Image.fromarray(np.clip(np.round(renew[..., :3]), 0, 255).astype(np.uint8)).save(f'{out}/renew-face.webp', quality=92, method=6)
     derma = rectify(DERMA, [[11.6, 12.7], [624.0, 12.7], [624.0, 986.8], [11.6, 986.8]], (612.4, 974.1), 1, (243, 233, 223))
     Image.fromarray(np.clip(np.round(derma[..., :3]), 0, 255).astype(np.uint8)).save(f'{out}/derma-face.webp', quality=92, method=6)
     print('\n'.join(report))
-    for n in ('box-face.png', 'box-side.png', 'renew-face.webp', 'derma-face.webp'):
+    for n in ('box-face.webp', 'box-side.png', 'renew-face.webp', 'derma-face.webp'):
         im = Image.open(f'{out}/{n}'); print(n, im.size, os.path.getsize(f'{out}/{n}') // 1024, 'KB')

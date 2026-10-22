@@ -257,7 +257,9 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
 
   // ---- materials. The metal and the rose gold: satin metals (roughness ≈ 0.3, as the photo's soft band) whose F0 and a
   // small emissive floor were fitted so that the packshot pose shows the packshot's colours (lit band, middle, shadow);
-  // not tone mapped. The print: emissive 0.85 of its colour plus a neutral shading, not tone mapped (the 14/10 rule)
+  // not tone mapped. The rose gold: copper (hue ≈ 65°), its scallops' shadows not lifted. The button, a flat face: mostly
+  // emissive, so its colour holds in every pose (≤ ΔE 5 between the keys). The print: emissive 0.85 of its colour plus
+  // a neutral shading, not tone mapped (the 14/10 rule)
   const SW = { uSweepY: { value: 9 }, uSweepA: { value: 0 }, uRingFlash: { value: 0 } };   // the light sweep (S1, S3, S7)
   function penPatch(m, kind) {
     m.onBeforeCompile = sh => {
@@ -277,7 +279,7 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   // the hub, seen through the cartridge's wall: the same metal, as dim as the photo shows it there (#a8a28e)
   const hubMat = penPatch(new THREE.MeshPhysicalMaterial({ color: 0xb2ab93, metalness: 1, roughness: MET.roughness, emissive: 0x2e2c24, toneMapped: false }), 'hub');
   const ringMat = penPatch(new THREE.MeshPhysicalMaterial({ color: 0xd3b59a, metalness: 1, roughness: 0.3, emissive: 0x0a0705, toneMapped: false }), 'ring');
-  const buttonMat = penPatch(new THREE.MeshPhysicalMaterial({ color: 0xcfb3a0, metalness: 1, roughness: 0.25, emissive: 0x3a3029, toneMapped: false }), 'button');
+  const buttonMat = penPatch(new THREE.MeshPhysicalMaterial({ color: 0x705f53, metalness: 1, roughness: 0.25, emissive: 0xc4a994, toneMapped: false }), 'button');
   const dotMat = new THREE.MeshPhysicalMaterial({ color: 0x5c5f59, roughness: 0.15, clearcoat: 0.5, clearcoatRoughness: 0.05, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 });
   const gapMat = new THREE.MeshStandardMaterial({ color: 0x47443b, roughness: 0.6, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 });
   const markMat = new THREE.MeshStandardMaterial({ color: 0x3a3a36, roughness: 0.8, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 });
@@ -329,7 +331,7 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   }
   {   // the nose: per flat, a column just inside and just outside each edge (0.1°: the normals' differences stay on their
     // side), four across it; 64 columns round the back, 40 over the front between the flats
-    const half = (u, f) => {   // the flat's half angle on row u (0: no flat here)
+    const half = u => {   // a flat's half angle on row u (0: no flat here; the two are alike)
       if (u < FU0 - 1 || u > FU1 + 1) return 0;
       const d = dF(u), b = Math.acos(Math.min(1, d / R(u)));
       const w = u < CT ? Math.sqrt(Math.max(0, RT * RT - (CT - u) ** 2)) : u > CB ? Math.sqrt(Math.max(0, RB * RB - (u - CB) ** 2)) : Infinity;
@@ -337,7 +339,7 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     };
     const E = 0.1, flat = (o, f, b) => { o.push(f - b - E, f - b + E); for (const x of [-0.6, -0.2, 0.2, 0.6]) o.push(f + x * b); o.push(f + b - E, f + b + E); };
     const cols = u => {
-      const bl = half(u, -53), br = half(u, 53), o = [], s0 = 53 + br + E - 360, s1 = -53 - bl - E, f0 = -53 + bl + E, f1 = 53 - br - E;
+      const bl = half(u), br = bl, o = [], s0 = 53 + br + E - 360, s1 = -53 - bl - E, f0 = -53 + bl + E, f1 = 53 - br - E;
       for (let i = 0; i < 64; i++) o.push(s0 + (s1 - s0) * i / 64);
       flat(o, -53, bl);
       for (let i = 1; i < 40; i++) o.push(f0 + (f1 - f0) * i / 40);
@@ -359,10 +361,10 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   add(dot(741, 0, 0.8, 0.1), markMat, 1);          // a tiny mark on the nose's collar, on the same meridian
   // the print: x along the axis (u 432 → 286), y across (arc −13.7 … +13.7 px round its centre line α 6.5°)
   const PU0 = 432, PU1 = 286, PS0 = -13.7, PS1 = 13.7, PAC = 6.5;
-  add(patch(PU1, PU0, 146, u => [PAC + deg(PS0 / R(u)), PAC + deg(PS1 / R(u))], 24, 0.15,
+  add(patch(PU1, PU0, 73, u => [PAC + deg(PS0 / R(u)), PAC + deg(PS1 / R(u))], 12, 0.15,
     (u, a) => [(PU0 - u) / (PU0 - PU1), 1 - (rad(a - PAC) * R(u) - PS0) / (PS1 - PS0)]), printMat, 20);
-  // the engraved V: α −22…+18°, u 78…122
-  add(patch(78, 122, 88, () => [-22, 18], 80, 0.1, (u, a) => [(a + 22) / 40, 1 - (u - 78) / 44]), vMat, 20);
+  // the engraved V: α −22…+18°, u 78…122 (rows every px: it lies over the groove and the band under the cone)
+  add(patch(78, 122, 44, () => [-22, 18], 20, 0.1, (u, a) => [(a + 22) / 40, 1 - (u - 78) / 44]), vMat, 20);
   // inside the cartridge, the hub of the pen (champagne metal; a flat window on its front left, a small boss on its right)
   {
     const hubR = (u, a) => {
@@ -378,9 +380,9 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   }
   // the cartridge, light clear plastic: the tube (its far wall, then what is inside, then its near wall: one outer wall,
   // so the layers sort), the flange, the open end; inside, the clear carrier (its snaps under the flange as one clear
-  // band, its shell, its plate, the cup under it) and the needle plate with its ribbed edge, clear and silvery. The needles are not drawn
-  // (story3d: not readable on the packshot). As photographed, the cartridge leans 0.9° to the photo's left from u 750
-  // (its end 2.4 px off the pen's axis)
+  // band, its shell, its plate, the cup under it) and the needle plate with its ribbed edge, clear and silvery. The
+  // needles are not drawn (story3d: not readable on the packshot). As photographed, the cartridge leans 0.9° to the
+  // photo's left from u 750 (its end 2.4 px off the pen's axis)
   {
     const ab = rad(11 - 90), y0 = Y(750), k = 0.0157 / ((Y(900) - y0) / 150 * PXW), sa = Math.sin(ab) * k, ca = Math.cos(ab) * k;
     const tilt = new THREE.Matrix4().set(1, sa, 0, -sa * y0, 0, 1, 0, 0, 0, ca, 1, -ca * y0, 0, 0, 0, 1);
@@ -588,7 +590,7 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     return { quality: pr, cap, capped, pixelRatio: renderer.getPixelRatio(), width: canvas.width, height: canvas.height, renders, loaded, version, kits, lastP,
       pen: { cx: rp(L.cx), cy: rp(L.cy), Lp: rp(L.Lp), roll: rp(L.phi), az: rp(L.az), top: [rp(f1[0]), rp(f1[1])], tip: [rp(f2[0]), rp(f2[1])] },
       probes: { button: probe(167, 0, 1.5), text: [-7.5, -5, -2.5, 0, 2.5, 5, 7.5].map(s => probe(iu, PAC + deg(s / ri), 0.15)),
-        body: probe(450, L.az, 0), ring: probe(560, 12 + 24 * Math.round((L.az - 12) / 24), 0), cart: probe(885, L.az, 31.6 - R(885)) },
+        body: probe(450, L.az, 0), ring: probe(560, 12 + 24 * Math.round((L.az - 12) / 24), 0), cart: probe(885, L.az, 31.6 - R(885)), cart2: probe(812, L.az - 30, 31.8 - R(812)) },
       haze: { opacity: r2(L.haze), level: r2(L.level) }, partners: { vtech: r2(L.vtech), hair: r2(L.hair) }, sweep: r2(L.sweep), glow: r2(L.glow) };
   }
   return { draw, kit, dispose, state, animated: true };

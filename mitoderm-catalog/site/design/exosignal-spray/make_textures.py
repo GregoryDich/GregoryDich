@@ -14,15 +14,14 @@ clockwise (read from the top down, the letters' tops to the right), as are «S P
 on its measured centre, cap 0.43 of the logo's; «·» at mid-cap, as measured) beside it, left of the logo's baseline.
 The VM monogram is the HAIR box's three polygons, scaled to the mock-up's (V 19.0 px tall, the legs 21.7 px across).
 The lower block: «EXOSIGNAL SPRAY HOME» (Rubik 500, letter-spaced to its measured ink box); the four tiny lines, the
-line under the monogram and the line under the boxed label are unreadable (packaging-text: «[unreadable]») and drawn
-as thin lines at 0.4 strength (a line of small type averages well under its ink's full strength); the boxed label as a
-light plate with a darker line (its unreadable type) in it. The lower
-block sits 2 px left of the front's middle on the mock-up (the top block within 0.5 px of it): set as measured.
+line under the monogram, the small boxed label and the line under it are unreadable (packaging-text: «[unreadable]»):
+left out, as nothing is drawn that is not read there (no stand-in bars or plate). The lower block sits 2 px left of
+the front's middle on the mock-up (the top block within 0.5 px of it): set as measured.
 Colours: the paper #131417 and the seam #0d0e12 as the mock-up's palette has them; one foil for EXO, SIGNAL and
 «S P R A Y · H O M E», the mock-up's own: its solid EXO pixels are two palette entries, #c6a62e (48 px) and #b59931
 (70 px), set as the brighter one because the scene's foil renders about 5 % darker than its texture (SIGNAL and the
-spaced line are hairlines there, mixed with the paper, but print the same foil); the light ink (VM, the lower block,
-the plate) neutral #919496, as owner photo #34 shows the monogram (the mock-up's hairline VM reads darker, #727684,
+spaced line are hairlines there, mixed with the paper, but print the same foil); the light ink (VM, the lower block)
+neutral #919496, as owner photo #34 shows the monogram (the mock-up's hairline VM reads darker, #727684,
 from its small size). Both unverified until the owner's full-size photo: a question to the owner.
 Writes into <out dir>:
   box-face.png     the front's colours, RGB 1024×2572 (2.1 texels per px where the front is largest, 760 frame px tall,
@@ -63,13 +62,7 @@ SPRAY = [('S', 74.64), ('P', 89.10), ('R', 103.29), ('A', 118.00), ('Y', 132.78)
 SPRAY_CAPX, SPRAY_CAP, SPRAY_W = 160.75, 0.4303 * CAP, 420
 # the VM monogram: the HAIR polygons scaled (x, y) about its axis and its top
 VM_AXIS, VM_TOP, VM_K = 171.94, 20.16, (0.366, 0.3506)
-VM_LINE = (43.4, 159.2, 184.8, 1.3)                      # y, x0, x1, thickness: unreadable, a thin line
 TITLE = ('EXOSIGNAL SPRAY HOME', 500, 142.3, 194.5, 246.2, 249.5, 0.03)   # text, weight, ink x0, x1, cap line, baseline, thinning
-LINES = [(257.55, 144.9, 192.1), (262.87, 128.9, 208.1), (267.85, 126.9, 211.1), (273.0, 125.7, 212.1), (288.1, 150.2, 186.8)]
-LINE_T, LINE_A = 1.5, 0.4   # the unreadable lines (the four, the one under the label: y, x0, x1): thickness, strength (a
-# line of small type averages well under its ink's full strength: the mock-up's lines read 0.3–0.4 of its monogram's)
-LABEL = ((157.2, 279.0, 179.6, 284.8), (159.0, 281.2, 177.9, 282.5), 0.8, 0.3)   # the boxed label: its plate, the line
-# in it (its unreadable type), their strengths
 
 
 def lerp_table(t, y):
@@ -132,25 +125,6 @@ def place_text(canvas, parts, x0, x1, base, size=200, cap=None, value=1.0):
     HR.paste(canvas, a, x0 - ix0 * k, base - b * k, value)
 
 
-def words(x0, x1, t, seed):   # an unreadable line's rhythm: word lengths 3–10 of its height, gaps 0.6 (seeded; no letters)
-    r = np.random.default_rng(seed); ws, gap = [], 0.6 * t
-    while sum(ws) + gap * len(ws) < x1 - x0: ws.append(r.uniform(3, 10) * t)
-    k = (x1 - x0 - gap * (len(ws) - 1)) / sum(ws); segs, x = [], x0
-    for w in ws: segs.append((x, x + w * k)); x += w * k + gap
-    return segs
-
-
-def bar(canvas, x0, x1, yc, t, value, seed=None):
-    """an unreadable line of small type: a rounded bar, or with `seed` bars of word lengths (words()) filling x0…x1; drawn at 4×
-    and reduced"""
-    S4 = 4; pad = t + 4; X0, Y0 = int(x0 - pad), int(yc - pad)
-    im = Image.new('L', (int(x1 + pad - X0) * S4, int(2 * pad + 2) * S4)); d = ImageDraw.Draw(im)
-    for a, b in ([(x0, x1)] if seed is None else words(x0, x1, t, seed)):
-        d.rounded_rectangle(((a - X0) * S4, (yc - t / 2 - Y0) * S4, (b - X0) * S4, (yc + t / 2 - Y0) * S4), radius=t / 2 * S4, fill=255)
-    a = np.asarray(im.resize((im.width // S4, im.height // S4), Image.BOX)).astype(np.float32) / 255
-    HR.paste(canvas, a, X0, Y0, value)
-
-
 def vm(canvas, X, Y, axis, top, kx, ky, value=1.0):
     """the VM monogram (the HAIR box's polygons, HR.VM_*) with its axis at `axis` and its top at `top` (canvas px of
     the target, X / Y map the HAIR photo px offsets × (kx, ky)), drawn at 4× in its own region and reduced"""
@@ -184,19 +158,12 @@ def box_face():
     HR.paste(foil_a, al, x, y)
     h, w = al.shape; X0, Y0 = int(x), int(y)
     foil_c[Y0:Y0 + h, X0:X0 + w][idx > 0] = [int(FOIL[i:i + 2], 16) for i in (1, 3, 5)]
-    # the monogram and the line under it
+    # the monogram
     vm(ink_a, T, T, X(VM_AXIS, 30), Y(VM_TOP), *VM_K)
-    yl, a0, a1, t = VM_LINE; bar(ink_a, X(a0, yl), X(a1, yl), Y(yl), t * T, LINE_A, seed=1)
-    # the lower block
+    # the lower block: the title
     text, weight, x0, x1, top, base, thin = TITLE
     a, ox, oy = HR.fit_line([(text, RUBIK, weight, 1)], (X(x0, base), X(x1, base), Y(top), Y(base)), spaced=True, thin=thin)
     HR.paste(ink_a, a, ox, oy)
-    for i, (yl, a0, a1) in enumerate(LINES): bar(ink_a, X(a0, yl), X(a1, yl), Y(yl), LINE_T * T, LINE_A, seed=10 + i)
-    (px0, py0, px1, py1), (tx0, ty0, tx1, ty1), pa, ta = LABEL
-    im = Image.new('L', (W, H)); ImageDraw.Draw(im).rectangle((X(px0, py0), Y(py0), X(px1, py0), Y(py1)), fill=round(255 * pa))
-    for w0, w1 in words(X(tx0, ty0), X(tx1, ty0), Y(ty1) - Y(ty0), 30):   # its unreadable type, darker on the plate
-        ImageDraw.Draw(im).rectangle((w0, Y(ty0), w1, Y(ty1)), fill=round(255 * ta))
-    plate = np.asarray(im).astype(np.float32) / 255; ink_a = np.maximum(ink_a, plate)
     # the paper: its light top edge, the seam's dark band
     yy = TOP + (np.arange(H, dtype=np.float32) + 0.5) / H * FH
     paper = np.array(PAPER, np.float32)[None, :] * np.ones((H, 1), np.float32)
@@ -220,11 +187,10 @@ RB, BODY, PXB = 0.0804, 0.658, 4000
 BW, BH = round(np.radians(BT1 - BT0) * RB * PXB), round((BS1 - BS0) * BODY * PXB)
 # measured on the photo's thumbnail (s ± 0.02): the monogram s 0.130 (its V 0.055 of the body tall), the line under it;
 # the logo s 0.255…0.600, its cap's middle at θ +6°, «S P R A Y · H O M E» beside it as on the box; «EXOSIGNAL SPRAY
-# HOME» across ±42° at s 0.695, «Deep nourishing scalp serum» (Rubik 300) ±33° at 0.728 and three unreadable lines
-# under it; «HOME USE» (Rubik 700) ±24° at 0.866
+# HOME» across ±42° at s 0.695, «Deep nourishing scalp serum» (Rubik 300) ±33° at 0.728; «HOME USE» (Rubik 700) ±24°
+# at 0.866. The line under the monogram and the three under «Deep nourishing…» are unreadable: left out (no stand-in bars)
 B_VM, B_LOGO, B_LOGO_T = (0.130, 0.055), (0.255, 0.600), 6.0
 B_TITLE, B_DEEP, B_HOME = (0.695, 42.0), (0.728, 33.0), (0.866, 24.0)
-B_LINES = [(0.752, 36.0), (0.771, 31.0), (0.790, 34.0)]
 
 
 def bottle_print():
@@ -245,12 +211,10 @@ def bottle_print():
     letters += spray_letters(Tb, SPRAY_CAP * Tb, capd, places)
     al, idx, r0, d1 = column(letters, Tb)
     HR.paste(a, al, Xt(capx_deg) - d1 * Tb, Ys(B_LOGO[0]) + r0 * Tb)
-    # the monogram (the box's proportions) and the line under it
+    # the monogram (the box's proportions)
     vh = B_VM[1] * BODY * T                                 # its V's height, canvas px
     ky = vh / (HR.VM_TOP + HR.VM_V[0][0] / HR.VM_V[0][1] - HR.VM_TOP); kx = ky * VM_K[0] / VM_K[1]
     vm(a, 1, 1, Xt(0), Ys(B_VM[0]), kx, ky)
-    yl, x0, x1, t = VM_LINE; sv = vh / (19.04)              # box px → canvas px (the V is 19.04 px on the box)
-    bar(a, Xt(0) - (x1 - x0) / 2 * sv, Xt(0) + (x1 - x0) / 2 * sv, Ys(B_VM[0]) + (yl - VM_TOP) * sv, t * sv, LINE_A, seed=1)
     # the horizontal block: the title at the box title's proportions (its ink 16.0 caps long), the rest by width
     rub = RUBIK
     s, half = B_TITLE; w = np.radians(2 * half) * RB * T; cap = w / 16.0
@@ -258,7 +222,6 @@ def bottle_print():
     s, half = B_DEEP; im, b = HR.run([('Deep nourishing scalp serum', rub, 300, 1)], 200); ix0, _, ix1, _ = HR.ink(im)
     capd = np.radians(2 * half) * RB * T / (ix1 - ix0) * HR.cap_of(rub, 300) * 200
     place_text(a, [('Deep nourishing scalp serum', rub, 300, 1)], Xt(-half), Xt(half), Ys(s) + capd / 2)
-    for i, (s, half) in enumerate(B_LINES): bar(a, Xt(-half), Xt(half), Ys(s), 0.0024 * T, LINE_A, seed=20 + i)
     s, half = B_HOME; im, b = HR.run([('HOME USE', rub, 700, 1)], 200); ix0, _, ix1, _ = HR.ink(im)
     caph = np.radians(2 * half) * RB * T / (ix1 - ix0) * HR.cap_of(rub, 700) * 200
     place_text(a, [('HOME USE', rub, 700, 1)], Xt(-half), Xt(half), Ys(s) + caph / 2)
