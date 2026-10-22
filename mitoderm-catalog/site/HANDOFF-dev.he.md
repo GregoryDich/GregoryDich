@@ -1,6 +1,6 @@
 # MITODERM — אתר v2: מסירה למתכנת
 
-עודכן 21/10/2026.
+עודכן 23/10/2026.
 
 ## מאיפה מתחילים
 
@@ -11,7 +11,7 @@
    - תבנית עמוד מוצר;
    - טוקנים, טיפוגרפיה, פריסה ורכיבים;
    - מנוע ה-3D;
-   - מפת הדרכים.
+   - מפת הדרכים, נכון ל-23/10 — אותן שורות כמו בגיליון «מפת דרכים» בקובץ `MITODERM-3D-story.xlsx`.
 2. **עמודי הדוגמה ב-Figma:**
    - «V-TECH SYSTEM — 3D story (design)», ‏node-id=142-3;
    - «EXOCELL MASK — 3D story (design)», ‏node-id=98-2.
@@ -27,7 +27,7 @@
    אחר כך פותחים בדפדפן:
    - http://localhost:8000/vtech-live.html
    - http://localhost:8000/exocell-mask-3d.html
-4. **שלושת העמודים החיים, ב-HD, בלי התקנה.** הקישורים נפתחים אחרי שיתוף מצד הבעלים (Share → גישה לפי קישור):
+4. **העמודים החיים, ב-HD, בלי התקנה.** כל 12 עמודי המוצרים. הקישורים נפתחים אחרי שהמזמין/ה משתף/ת אותם (Share ← גישה לפי קישור):
    - V-TECH SYSTEM — https://claude.ai/artifact/NdQezU5bikrsuaWVVW5TBK
    - EXOCELL MASK — https://claude.ai/artifact/FA5ySxGihnDAmjQPvDftzn
    - EXOTECH GEL — https://claude.ai/artifact/LsJVky9GDssBuW1eQkLaTe
@@ -39,10 +39,11 @@
    - MITOPEN — https://claude.ai/artifact/KAn13gS9E2on2ZikQSz4eW
    - CELL RENEW 1.5% — https://claude.ai/artifact/2rVvsAFJ9NRUjymZDmANup
    - MITOSCAN — https://claude.ai/artifact/KD3L1gfgVA8twY7HBvYofp
+   - DERMA RECOVERY CREAM — https://claude.ai/artifact/7a3EpTpcTbYMWjTypNk2pV
 
    הקוד כולו: https://github.com/GregoryDich/GregoryDich/tree/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site
 
-   אותם שלושה עמודים, ב-HD ומוכנים לאחסון סטטי, נמצאים בתיקייה `site/public`. בה גם דף פתיחה עם קישורים לעמודים, למסמך הזה ולקובץ ה-Excel של הטקסטים. כל עמוד הוא `<slug>/index.html` ולידו `img/` ו-`seq/`. את התיקייה בונה `proto/stage-public.py`.
+   כל העמודים שפורסמו, ב-HD ומוכנים לאחסון סטטי, נמצאים בתיקייה `site/public`. בה גם דף פתיחה עם קישורים לעמודים, למסמך הזה ולקובץ ה-Excel של הטקסטים. כל עמוד הוא `<slug>/index.html`, ולידו `img/` עם התמונות שלו (ב-EXOCELL MASK התמונות נמצאות בתוך הדף), ו-`seq/` רק ב-V-TECH, שבנוי מפריימים. את התיקייה בונה `proto/stage-public.py`.
 
 ## סדר הבנייה
 
@@ -50,7 +51,7 @@
 2. שלד משותף: כותרת עליונה, תפריט צף, כפתורים, טופס פנייה, תחתית.
 3. עמוד V-TECH SYSTEM: סיפור 3D בפריימים.
 4. עמוד EXOCELL MASK: ‏3D חי ב-three.js.
-5. שאר עמודי המוצרים לפי התבנית. הטקסטים — מ-`MITODERM-3D-story.xlsx`. במקום ה-3D — תמונת המוצר, עד שה-3D שלו מוכן.
+5. שאר עמודי המוצרים לפי התבנית. הטקסטים — מ-`MITODERM-3D-story.xlsx`. לכל מוצר יש סצנת three.js משלו (`proto/scenes/<slug>.js`), והעמודים שפורסמו הם הדוגמה.
 6. דף הבית, הקטלוג, אודות ומדע.
 7. עמודי שירות.
 
@@ -61,12 +62,12 @@
 | נתיב (בתוך `mitoderm-catalog/site`) | מה יש שם |
 |---|---|
 | `proto/vtech-live.html`, `proto/img/`, `proto/seq/`, `proto/serve-local.py` | אב-טיפוס V-TECH לעבודה ושרת מקומי, עם פריימי הטיוטה ב-`seq/480`. העמוד ב-HD נמצא ב-`public/v-tech-system`. |
-| `public/`, `proto/stage-public.py` | האתר הסטטי ב-HD: שלושת העמודים ודף פתיחה. |
+| `public/`, `proto/stage-public.py` | האתר הסטטי ב-HD: כל העמודים שפורסמו ודף פתיחה. |
 | `proto/exocell-mask-3d.html` | אב-טיפוס MASK. ‏three.js 0.160 נטען מ-jsDelivr. |
 | `proto/vtech-live-template.html`, `proto/build-vtech.py` | התבנית והבונה של V-TECH |
 | `proto/engine/story.js` | מנוע הפריימים: מודול ES אחד, `createFrameStory`. ‏`build-vtech.py` מכניס אותו לתוך העמוד, כך שאב-הטיפוס של V-TECH ועמוד EXOTECH GEL רצים עליו. |
 | `proto/react/useFrameStory.js`, `proto/react/StoryPage.jsx`, `proto/react/demo/` | אותו מנוע ב-React: hook, דוגמת עמוד ודמו שרץ (ראו «React» למטה) |
-| `proto/scenes/exotech-gel.js`, `proto/scenes/render-keys.cjs` | סצנת three.js חיה של EXOTECH GEL: המנוע מצייר אותה במקום פריימים (`build-vtech.py --product exotech-gel --scene`). ‏`render-keys.cjs` מרנדר ממנה את תמונות המפתח: הסטילס לטלפון ותמונת הערכה. |
+| `proto/scenes/<slug>.js`, `proto/scenes/render-keys.cjs` | סצנת three.js חיה לכל מוצר מלבד V-TECH ו-MASK: המנוע מצייר אותה במקום פריימים (`build-vtech.py --product <slug> --scene`). ‏`render-keys.cjs` מרנדר ממנה את תמונות המפתח: הסטילס לטלפון ותמונת הערכה. |
 | `design/exotech-gel/make_textures.py` | ההדפסה על הצנצנת ועל הקופסה, מסודרת מחדש בגופן Jost לפי מדידות מתמונת המוצר, ולכן חדה בכל גודל |
 | `proto/story_content.py` | הטקסטים של מוצר אחר על אותה תבנית, מתוך המקורות המאושרים: `build-vtech.py --product <slug> --files <dir>`. לכל מוצר הקו שלו (V-TECH FACE, ‏HAIR, ‏PEELING, ‏BIOSPICULE, ‏DEVICES): תג הקו, הכותרת «עוד מקו …» וכרטיסי «משלימים את הטיפול». האגדה של האקסוזומים, התאים, מולקולות ה-PDRN וסליל ה-DNA מופיעים רק במוצר שהרכב שלו כולל אותם. |
 | `proto/exocell-3d-template.html`, `proto/build-exocell.py` | התבנית והבונה של MASK |
@@ -141,9 +142,13 @@
 
 ## מה עוד חסר
 
-- הרינדור הסופי של V-TECH.
+- רמת 3840px של V-TECH: רינדור על ה-Mac בעזרת `render_mac.sh`, לבחירת המזמין/ה. הרינדור הסופי ב-2400px כבר בעמוד.
 - חיבור טופס הפנייה: הפרטים נשלחים ל-CRM ול-WhatsApp, שכבר מוגדרים אצל המזמין/ה. את החיבור עושים בשלב מאוחר יותר. הטופס כולל שם, מקצוע, דוא״ל, טלפון ותיבת הסכמה לתנאים, שהיא חובה.
 - צילומי לפני/אחרי.
 - נתוני המומחים.
-- ‏3D לשאר המוצרים. דוגמת EXOTECH GEL ב-three.js מחכה לאישור המזמין/ה.
+- ההדפסה על צידי הקופסאות של BIOSPICULE ‏(CELLULAR AGE DEFENSE 2.5%, CELL RENEW 1.5%, MICRO BOOST 10%, DERMA RECOVERY CREAM): ממתינה לקבצים ולמידות במ״מ מהמזמין/ה.
+- כתובת משותפת לאתר (Vercel או GitHub Pages): ממתינה לגישה מהמזמין/ה.
+- שאלות פתוחות למזמין/ה: האם ב-EXOSIGNAL HAIR יש PDRN בריכוז 2%; האם להשאיר את סליל ה-DNA ומולקולות ה-PDRN ב-V-TECH, ב-EXOTECH GEL וב-EXOSIGNAL HAIR; האם הזהב נמצא ב-pH Normalizer או בפילינג של EXO-NAD.
+- «אוקיי» של המזמין/ה על עמוד EXOCELL MASK.
+- הצילומים של EXO-NAD כקבצים בגודל מלא, מהמזמין/ה.
 - תמונת מוצר אמיתית ל-EXOSIGNAL SPRAY.
