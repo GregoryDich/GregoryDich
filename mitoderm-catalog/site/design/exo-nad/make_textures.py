@@ -10,7 +10,7 @@ Typeface: Jost (SIL OFL, github.com/google/fonts ofl/jost), weights matched to t
 (stem 0.25 cap; N A D 0.916 / 1.040 / 0.891 cap wide on the packshot, Jost 700 0.921 / 1.050 / 0.893), «SKIN LONGEVITY
 PEELING» 500, each letter's ink centred on its measured centre; «VM corporation»: «VM» 700 at the x-height of
 «corporation» 400, fitted to its measured ink width. The VM monogram: three polygons traced on the packshot (threshold
-L 90, ±0.5 px of its 48 px), symmetric. The vials' «PH NORMALIZER» / «LONGEVITY SERUM»: Jost 700, each line fitted to its
+L 90, ±0.5 px of its 48 px; fitted by overlay), symmetric but for its right half, 0.5 px wider as traced. The vials' «PH NORMALIZER» / «LONGEVITY SERUM»: Jost 700, each line fitted to its
 measured ink box (the packshot prints them flat on the front, not wrapped round the glass: see the scene). The print is
 black on all four (packaging-text.json says «bold white» for the vials: the packshot and the owner's photo 27 show black).
 The packaging's vector file would replace all of it one for one.
@@ -19,14 +19,16 @@ Writes into <out dir>:
                    a 3840 key): the foil's colour and the black print
   lid-metal.png    its material, RGB 1024×898: G roughness (foil 0.30, ink 0.55), B metalness (foil 1, ink 0)
   foil-brush.jpg   the foil's fine horizontal brushing (bump), 512×512, tiling
-  peel-print.png   alpha of the peel bottle's print, L 1024×228: the lid's lockup ×0.255 (u −0.45…0.45 W_b of its axis ×
-                   0.60…0.70 H_b)
+  peel-print.png   alpha of the peel bottle's print, L 1024×293: the lid's lockup ×0.255 (x −0.45…0.45 W_b of its axis ×
+                   0.585…0.70 H_b: «EXO-NAD»'s cap line is at 0.594, so its tops keep a margin; no ink on an edge)
   peel-liquid.png  the peel's two phases as photographed (median colours, the peach left of the upper phase, the line
-                   between them, the light foot, a fine haze of gold), RGB 512×693 (the liquid's front, 0.755 W_b × 0.455 H_b)
-  vial-ph.png, vial-ls.png   alpha of the vials' print, L 1024×913 (x −R…R as seen from the front × 0.30…0.72 H_v); the
-                   unreadable line under the monogram as bars of word lengths at half strength (no letters)
+                   between them, the light foot, a fine haze of gold), RGB 512×693 (the liquid's front, 0.755 W_b × 0.455 H_b),
+                   ×1.22 in linear light (LIQ_GAIN: the scene's light and glass take that much; the ΔE probe lands ≤ 6)
+  vial-ph.png, vial-ls.png   alpha of the vials' print, L 1024×913 / 924 (x −R…R as seen from the front × 0.30…0.72 H_v); the
+                   unreadable line of small type under the monogram is left out (no placeholder marks for unknown text)
   tray-print.png   alpha of the tray's gold print, L 1024×256 (u 0.30…0.70 × v 0.77…0.87 of the front): the EXO-NAD logo
-                   (owner photos 29 and 32: not in packaging-text.json, question 2) and one unreadable line under it (bars)
+                   (owner photos 29 and 32: not in packaging-text.json, question 2). The tray's other print (①②③ step
+                   labels, «MADE IN ITALY») waits for the full-size photo 29: the thumbnail cannot place or size it
 usage: python3 -I make_textures.py <font dir with Jost[wght].ttf> <out dir>"""
 import os, sys
 import numpy as np
@@ -37,8 +39,9 @@ SS = 2                                    # drawn at 2× and reduced: smooth edg
 FX, FY, FW = 313.0, 5.0, 476.0            # the front on the packshot: its left and top edges, its width (= height)
 LID_V = 0.877                             # the sleeve's foot (the lid line: y 422)
 TW = 2048; TH = round(TW * LID_V)          # lid-face.png
-FOIL = (0xf2, 0xd2, 0x8f)                 # the foil's texture colour: renders as #e4c381 (the packshot's front, median of
-                                          # its bare foil) in the scene's light (calibrated on the 3840 keys)
+FOIL = (0xf2, 0xd2, 0x8f)                 # the foil's texture colour, calibrated on the 3840 keys: in the scene's light the
+                                          # ΔE probe (u 0.5, v 0.30, light 1.07) renders #ebcc8b, ΔE 3.3 to the packshot's
+                                          # #e4c381 (the median of its bare foil)
 INK = (0x05, 0x06, 0x07)
 # the lockup, in fractions of the front's width W: «EXO-NAD» (letter, weight, ink centre u), its cap and baseline (v)
 EXO = [('E', 280, 0.1933), ('X', 280, 0.2836), ('O', 280, 0.3824), ('N', 700, 0.5557), ('A', 700, 0.6733), ('D', 700, 0.7909)]
@@ -123,16 +126,6 @@ def lockup(canvas, X, Y, k, logo_only=False):
     if not logo_only: letters(canvas, [(ch, SKIN_W, u) for ch, u in SKIN], SKIN_CAP, SKIN_BASE, X, Y, k)
 
 
-def words(canvas, x0, x1, yc, t, value, seed):
-    """an unreadable line of small type (packaging-text «[unreadable]»): rounded bars of word lengths (3…9 of its height,
-    gaps 0.7; seeded, no letters) filling x0…x1 (canvas px) at its middle yc, t thick, at `value` strength"""
-    r = np.random.default_rng(seed); ws, gap = [], 0.7 * t
-    while sum(ws) + gap * len(ws) < x1 - x0: ws.append(r.uniform(3, 9) * t)
-    k = (x1 - x0 - gap * (len(ws) - 1)) / sum(ws); x = x0
-    for w in ws:
-        poly(canvas, [(x, yc - t / 2), (x + w * k, yc - t / 2), (x + w * k, yc + t / 2), (x, yc + t / 2)], value); x += w * k + gap
-
-
 def monogram(canvas, X, Y, value=1.0):   # X, Y: packshot px (x, y) → canvas px
     for P in (MONO_V, MONO_L, MONO_R):
         poly(canvas, [(X(MONO[0] + x), Y(MONO[1] + y)) for x, y in P], value)
@@ -176,9 +169,9 @@ def foil(n=512, seed=11):   # tiling fine brushing: grain stretched along x, a f
 
 
 # ---- the peel bottle: its label is the lid's lockup ×0.255 (its «EXO-NAD» 80 px wide = 0.85 W_b, cap 10 px, baseline
-# 0.642 H_b from the cap's top); the plane spans u −0.45…0.45 W_b of the axis × 0.60…0.70 H_b
+# 0.642 H_b from the cap's top, so its cap line at 0.594); the plane spans u −0.45…0.45 W_b of the axis × 0.585…0.70 H_b
 PEEL_WB, PEEL_HB = 94.0, 211.0
-PEEL_PLANE = (-0.45, 0.45, 0.60, 0.70)   # in W_b (x) and H_b (y from the top)
+PEEL_PLANE = (-0.45, 0.45, 0.585, 0.70)  # in W_b (x) and H_b (y from the top); = the scene's PP
 PEEL_W = 0.85                            # «EXO-NAD» ink width / W_b
 PEEL_BASE = 0.642                        # its baseline (H_b)
 PEEL_TW = 1024
@@ -241,7 +234,7 @@ def peel_liquid(w=512, seed=5):
 
 # ---- the vials: the print as seen from the front (x −R…R), rows 0.30…0.72 H_v from the cap's top. Each vial in its own
 # packshot px (the teal one stands nearer: ×1.04): its silhouette's left edge, width, top, height; the monogram's ink box,
-# the small line under it (y, width / W_v); the lines (text, cap / H_v, baseline / H_v, ink x0, x1 in packshot px)
+# the small line under it (y, width / W_v: measured, not drawn, its text unknown); the lines (text, cap / H_v, baseline / H_v, ink x0, x1 in packshot px)
 V_Y0, V_Y1 = 0.30, 0.72
 V_DY = 0.6                         # the whole print 0.6 px lower than the ink rows' edges say (fitted by overlay ×8: the
 VIAL_TW = 1024                     # ink's half-contrast edge of a 7 px line is that much inside its last row)
@@ -260,8 +253,6 @@ def vial_print(kind):
     a = np.zeros((H, W), np.float32)
     mx0, mx1, my0, my1 = d['mono']; sx, sy = (mx1 - mx0) / 48.0, (my1 - my0) / 44.0
     monogram(a, lambda x: X(mx0 + (x - MONO[0]) * sx), lambda y: Y(my0 + (y - MONO[1]) * sy))
-    yl, wl = d['line']; cx = d['x0'] + V_WV / 2   # the unreadable small line under it: word bars at half strength
-    words(a, X(cx - wl * V_WV / 2), X(cx + wl * V_WV / 2), Y(yl), 1.0 * k, 0.5, 3)
     for text, cap, base, x0, x1 in d['lines']:   # Jost 700, fitted to the measured ink box (its height: the cap)
         im, b = run([(text, 700, 1)], 400); ix0, iy0, ix1, iy1 = ink(im)
         sxl, syl = (X(x1) - X(x0)) / (ix1 - ix0), cap * V_HV * k / (cap_of(700) * 400)
@@ -270,10 +261,9 @@ def vial_print(kind):
     return Image.fromarray((np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8)).resize((VIAL_TW, H // SS), Image.LANCZOS)
 
 
-# ---- the tray: the EXO-NAD logo in gold, 0.286 W wide, centred, its baseline at v 0.83; one unreadable line under it
+# ---- the tray: the EXO-NAD logo in gold, 0.286 W wide, centred, its baseline at v 0.83
 TRAY = (0.30, 0.70, 0.77, 0.87)    # u0, u1, v0, v1 of the texture
 TRAY_LOGO = (0.286, 0.83)          # the logo's ink width (W), its baseline (v)
-TRAY_LINE = (0.855, 0.24, 0.0032, 0.4)   # v, width, thickness, strength
 
 
 def tray_print(w=1024):
@@ -281,8 +271,6 @@ def tray_print(w=1024):
     s = TRAY_LOGO[0] / 0.6596; k = k0 * s
     X = lambda u: (0.5 - u0) * k0 + (u - 0.5) * k; Y = lambda v: (TRAY_LOGO[1] - v0) * k0 + (v - EXO_BASE) * k
     a = np.zeros((H, W), np.float32); lockup(a, X, Y, k, logo_only=True)
-    v, lw, t, val = TRAY_LINE; XX = lambda u: (u - u0) * k0; YY = lambda vv: (vv - v0) * k0
-    words(a, XX(0.5 - lw / 2), XX(0.5 + lw / 2), YY(v), t * k0, val, 7)
     return Image.fromarray((np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8)).resize((w, H // SS), Image.LANCZOS)
 
 
