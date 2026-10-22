@@ -1,6 +1,7 @@
-"""The owner's folded exosome (22/10, ref-folded-2210.webp, 1024 px with alpha) as cell sprites f01…f04 next to the
-glassy c01…c10 in design/vtech-3d/cells: mirrored and turned so the four differ, then the same three focus levels as
-the glassy cells (sharp, soft, bokeh) by cells_scene.py post. build-vtech.py mixes them into the exosome field.
+"""The owner's folded exosome (22/10, ref-folded-2210.webp, 1024 px with alpha) as cell sprites f01…f08 next to the
+glassy c01…c10 in design/vtech-3d/cells: mirrored and turned so the eight differ, then the same three focus levels as
+the glassy cells (sharp, soft, bokeh) by cells_scene.py post. build-vtech.py fills the exosome field of every page
+made after 22/10 with them alone (the owner: new pages only with these).
 usage: python3 make_folded.py"""
 import os, subprocess, sys, tempfile
 from PIL import Image
@@ -8,7 +9,8 @@ from PIL import Image
 H = os.path.dirname(os.path.abspath(__file__))
 SRC, OUT = os.path.join(H, 'ref-folded-2210.webp'), os.path.normpath(os.path.join(H, '..', 'vtech-3d', 'cells'))
 POST = os.path.normpath(os.path.join(H, '..', 'vtech-3d', 'src', 'hd', 'cells_scene.py'))
-VARIANTS = {'f01': (False, 0), 'f02': (True, -28), 'f03': (False, 35), 'f04': (True, 62)}   # mirror, turn (degrees)
+VARIANTS = {'f01': (False, 0), 'f02': (True, -28), 'f03': (False, 35), 'f04': (True, 62),   # mirror, turn (degrees):
+            'f05': (False, -50), 'f06': (True, 20), 'f07': (False, 70), 'f08': (True, -60)}   # the light stays above
 
 ref = Image.open(SRC).convert('RGBA')
 with tempfile.TemporaryDirectory() as tmp:
