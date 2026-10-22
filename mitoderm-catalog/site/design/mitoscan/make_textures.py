@@ -9,9 +9,9 @@ reconstructed camera (scratchpad spec of 22/10: the glass's vanishing points; th
               #7c7c7c. Nothing else is on the screen in the photo, so nothing else is drawn (no UI, no picture).
   panel.png   the probe's black panel (a stadium, u 1.058…1.166 × v 0.052…0.262 gw), the same lockup in #e8e8e7 turned
               90° to read upward, as photographed.
-  badge.png   the cylinder's badge face (a stadium 0.135 × 0.031 gw, #f7f7f5) with «Mitoscan» in #3c3c3a.
+  badge.png   the cylinder's badge face inside its chrome frame (a stadium 0.128 × 0.025 gw, #f7f7f5; the frame,
+              0.137 × 0.034 outside, is modelled) with «Mitoscan» in #3c3c3a.
   grille.png  the cylinder end's perforated disc (holes in curved rows, as on the photo), its metal and holes.
-  brushed.png the aluminium's fine lengthwise grain (bump and roughness), tiling along the axis.
   haze.png    a soft shapeless cloud (luminance + alpha) for the silver haze of S2 (no edges, no rings).
 Typeface: Rubik 400 (SIL OFL; the screen's two-storey «a» and x-height 0.761 of the caps are Rubik's, Jost's are not):
 «Mitoscan» each glyph centred on its measured column, the grey line tracked to its measured width. The owner's vector
@@ -74,9 +74,14 @@ def by_angle(table, ang):   # a colour table {degrees: rgb} interpolated round t
     return np.stack([np.interp(t, a, c[:, i]) for i in range(3)], -1)
 
 
+def smoothstep(a, b, v): t = np.clip((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t)
+
+
 def target(img):   # draws the target into the float RGB glass image (px), vector by vector, no photo pixels
     cx, cy = DX0 + TC[0] * WD, DY0 + TC[1] * HD
-    R = int(0.12 * WD); x0, y0 = int(cx) - R, int(cy) - R
+    # the patch reaches past the halo: the halo is round and soft, gone (a smooth window to 0 between r 0.13 and 0.165,
+    # where it is under 2 levels) well inside the patch's square edge, so no edge of the patch shows
+    R = int(0.17 * WD); x0, y0 = int(cx) - R, int(cy) - R
     yy, xx = np.mgrid[y0:y0 + 2 * R, x0:x0 + 2 * R].astype(float) + 0.5
     dx, dy = (xx - cx) / WD, (yy - cy) / WD; r = np.hypot(dx, dy); ang = np.degrees(np.arctan2(-dy, dx)) % 360
     px = 1 / WD                                       # one texture px in W_d
@@ -88,7 +93,7 @@ def target(img):   # draws the target into the float RGB glass image (px), vecto
     w = np.clip((r - r_in + 0.004) / 0.008, 0, 1)[..., None]
     fill = fin * (1 - w) + fr * w
     fill *= (1 - 0.12 * np.clip((r - r_mid) / (r_out - r_mid), 0, 1))[..., None]   # a little darker toward the outer ring
-    halo = HALO_GAIN * by_angle(HALO, ang) * np.exp(-(r - r_out - HALO_D0) / HALO_L)[..., None]
+    halo = HALO_GAIN * by_angle(HALO, ang) * (np.exp(-(r - r_out - HALO_D0) / HALO_L) * (1 - smoothstep(0.13, 0.165, r)))[..., None]
     inside = np.clip((r_out - r) / px + 0.5, 0, 1)[..., None]
     col = inside * fill + (1 - inside) * (base + halo)
     # the lines: a crisp core (anti-aliased over one px) and a narrow glow of their own colour round it
@@ -214,13 +219,14 @@ def panel(fdir):
     return Image.fromarray(np.dstack([np.clip(img + 0.5, 0, 255), al * 255 + 0.5]).astype(np.uint8))
 
 
-# ---- the badge: a stadium 0.135 × 0.031 gw, face #f7f7f5, «Mitoscan» #3c3c3a 0.080 gw long, centred
-BW_, BH_, BK = 0.135, 0.031, 8148.0
+# ---- the badge: the face inside the chrome frame, a stadium 0.128 × 0.025 gw (its edge 0.001 under the frame), face
+# #f7f7f5, «Mitoscan» #3c3c3a 0.080 gw long, centred
+BW_, BH_, BK = 0.128, 0.025, 8148.0
 BADGE_LEN, FACE, BINK = 0.080, (247, 247, 245), (60, 60, 58)
 
 
 def badge(fdir):
-    W, H = round(BW_ * BK), round(BH_ * BK)   # 1100 × 253
+    W, H = round(BW_ * BK), round(BH_ * BK)   # 1043 × 204
     lx0, lx1 = COLS[0][1] / 1600, COLS[-1][2] / 1600
     k = BADGE_LEN * BK / ((lx1 - lx0) * WD)
     ox = W / 2 - (lx0 + lx1) / 2 * WD * k
@@ -240,12 +246,6 @@ def grille(n=512):   # the perforated end: holes on a sunflower (Vogel) spiral, 
         d.ellipse((x - hr, y - hr, x + hr, y + hr), fill=42)
     img = np.asarray(big.resize((n, n), Image.BOX), float)
     return Image.fromarray(np.clip(img + 0.5, 0, 255).astype(np.uint8))
-
-
-def brushed(w=1024, h=64, seed=3):   # fine grain along the axis (x): noise stretched along x, tiling
-    rng = np.random.default_rng(seed); a = rng.normal(0, 1, (h, w))
-    a = ndimage.gaussian_filter(a, (0.6, 18), mode='wrap'); a = (a - a.min()) / (a.max() - a.min())
-    return Image.fromarray((96 + a * 64 + 0.5).astype(np.uint8))
 
 
 def haze(n=512, seed=7):   # a shapeless cloud: three octaves of smooth noise under a soft round fall-off
@@ -268,9 +268,8 @@ if __name__ == '__main__':
     panel(fdir).save(f'{out}/panel.png', optimize=True)
     badge(fdir).save(f'{out}/badge.png', optimize=True)
     grille().save(f'{out}/grille.png', optimize=True)
-    brushed().save(f'{out}/brushed.png', optimize=True)
     haze().save(f'{out}/haze.png', optimize=True)
     total = 0
-    for n in ('glass.png', 'panel.png', 'badge.png', 'grille.png', 'brushed.png', 'haze.png'):
+    for n in ('glass.png', 'panel.png', 'badge.png', 'grille.png', 'haze.png'):
         im = Image.open(f'{out}/{n}'); s = os.path.getsize(f'{out}/{n}'); total += s; print(n, im.size, im.mode, s // 1024, 'KB')
     print('folder', total // 1024, 'KB')
