@@ -67,7 +67,7 @@ window.FISH_MANIFEST = {
     {
       id: "pufferfish",
       name: "Спинорог-клоун (Balistoides conspicillum)",
-      description: "Тёмный, с крупными белыми пятнами на брюхе и жёлтым «седлом» в леопардовую крапинку на спине, жёлтые губы. Звезда оригинального LMA2 — величаво плывёт в центре кадра.",
+      description: "Тёмный, с крупными белыми пятнами на брюхе и жёлтым «седлом» в леопардовую крапинку на спине, жёлтые губы. Звезда аквариума — величаво плывёт в центре кадра.",
       image: "fish/pufferfish.png",
       sizeMin: 150, sizeMax: 200, speedMin: 22, speedMax: 38, count: 1, fallback: "puffer",
       habit: "cruise", traits: { shy: 0.1, territorial: 0.4, darty: 0.1 }, zone: [0.15, 0.8], zRange: [1.05, 2.5], cruiseBL: [0.4, 0.75], turnTime: 0.65,
@@ -131,7 +131,7 @@ window.FISH_MANIFEST = {
     {
       id: "bicolor_angel",
       name: "Двухцветный ангел (Centropyge bicolor)",
-      description: "Передняя половина жёлтая, задняя синяя, хвост жёлтый, синяя полоска над глазом. Обитатель оригинального LMA2.",
+      description: "Передняя половина жёлтая, задняя синяя, хвост жёлтый, синяя полоска над глазом. Частый обитатель рифовых аквариумов.",
       image: "fish/bicolor_angel.png",
       sizeMin: 80, sizeMax: 115, speedMin: 28, speedMax: 48, count: 0, fallback: "damsel",
       habit: "hide", traits: { shy: 0.7, territorial: 0.4, darty: 0.4 }, zone: [0.4, 0.95], zRange: [1.05, 1.8], cruiseBL: [0.5, 0.9], turnTime: 0.4,
@@ -139,7 +139,7 @@ window.FISH_MANIFEST = {
     {
       id: "spanish_hogfish",
       name: "Испанская рыба-кабан (Bodianus rufus)",
-      description: "Пурпурно-красная спина, жёлтые брюхо и хвост. Ещё один герой оригинала — держится у самого рифа.",
+      description: "Пурпурно-красная спина, жёлтые брюхо и хвост. Яркий акцент сцены — держится у самого рифа.",
       image: "fish/spanish_hogfish.png",
       sizeMin: 95, sizeMax: 135, speedMin: 30, speedMax: 52, count: 0, fallback: "coralfish",
       habit: "cruise", traits: { shy: 0.2, territorial: 0.3, darty: 0.3 }, zone: [0.3, 0.9], zRange: [1.0, 1.8], cruiseBL: [0.6, 1.0], turnTime: 0.5,
