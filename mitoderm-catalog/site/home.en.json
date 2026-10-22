@@ -1,0 +1,315 @@
+{
+ "note": "EN texts of Figma frame 69:3 \"Home — Premium\" (KcOGIzO76mDODxjwIrkGyo).",
+ "items": [
+  {
+   "key": "home.nav",
+   "en": "Products",
+   "kind": "Home page, layer nav/Products at y=35"
+  },
+  {
+   "key": "home.nav-2",
+   "en": "Catalog",
+   "kind": "Home page, layer nav/Catalog at y=35"
+  },
+  {
+   "key": "home.nav-3",
+   "en": "Science",
+   "kind": "Home page, layer nav/Science at y=35"
+  },
+  {
+   "key": "home.nav-4",
+   "en": "About",
+   "kind": "Home page, layer nav/About at y=35"
+  },
+  {
+   "key": "home.nav-5",
+   "en": "Contact",
+   "kind": "Home page, layer nav/Contact at y=35"
+  },
+  {
+   "key": "home.eb",
+   "en": "MITODERM · ISRAEL",
+   "kind": "Home page, layer eb/MITODERM · ISRAEL at y=208"
+  },
+  {
+   "key": "home.where-science-meets-beauty",
+   "en": "Where science meets beauty",
+   "kind": "Home page, layer Where science meets beauty at y=242"
+  },
+  {
+   "key": "home.lead",
+   "en": "Professional exosome and BIOSPICULE™ solutions for clinics and aesthetic practitioners — in-clinic systems, home care and diagnostic equipment.",
+   "kind": "Home page, layer lead at y=422"
+  },
+  {
+   "key": "home.b1",
+   "en": "Contact us",
+   "kind": "Home page, layer b1/Contact us at y=537"
+  },
+  {
+   "key": "home.b2",
+   "en": "Professional products",
+   "kind": "Home page, layer b2/Professional products at y=537"
+  },
+  {
+   "key": "home.s",
+   "en": "IL",
+   "kind": "Home page, layer s/IL at y=939"
+  },
+  {
+   "key": "home.s-2",
+   "en": "IT · KR",
+   "kind": "Home page, layer s/IT · KR at y=939"
+  },
+  {
+   "key": "home.s-3",
+   "en": "100+",
+   "kind": "Home page, layer s/100+ at y=939"
+  },
+  {
+   "key": "home.s-4",
+   "en": "4",
+   "kind": "Home page, layer s/4 at y=939"
+  },
+  {
+   "key": "home.s-5",
+   "en": "Founded in Israel",
+   "kind": "Home page, layer s/Founded in Israel at y=996"
+  },
+  {
+   "key": "home.s-6",
+   "en": "Laboratory partners",
+   "kind": "Home page, layer s/Laboratory partners at y=996"
+  },
+  {
+   "key": "home.s-7",
+   "en": "Countries where VM is used",
+   "kind": "Home page, layer s/Countries where VM is used at y=996"
+  },
+  {
+   "key": "home.s-8",
+   "en": "Core principles",
+   "kind": "Home page, layer s/Core principles at y=996"
+  },
+  {
+   "key": "home.sl",
+   "en": "PROFESSIONAL",
+   "kind": "Home page, layer sl/PROFESSIONAL at y=1180"
+  },
+  {
+   "key": "home.h2",
+   "en": "For the treatment room",
+   "kind": "Home page, layer h2 at y=1216"
+  },
+  {
+   "key": "home.tg",
+   "en": "PRO",
+   "kind": "Home page, layer tg/PRO at y=1568"
+  },
+  {
+   "key": "home.sd",
+   "en": "Available",
+   "kind": "Home page, layer sd/Available at y=1568"
+  },
+  {
+   "key": "home.card",
+   "en": "V-TECH SYSTEM",
+   "kind": "Home page, layer card/V-TECH SYSTEM at y=1600"
+  },
+  {
+   "key": "home.card-2",
+   "en": "EXO-NAD",
+   "kind": "Home page, layer card/EXO-NAD at y=1600"
+  },
+  {
+   "key": "home.card-3",
+   "en": "EXOCELL MASK",
+   "kind": "Home page, layer card/EXOCELL MASK at y=1600"
+  },
+  {
+   "key": "home.card-4",
+   "en": "Professional synthetic-exosome kit for dermal regeneration.",
+   "kind": "Home page, layer card/desc at y=1644"
+  },
+  {
+   "key": "home.card-5",
+   "en": "3-step longevity peel with NAD⁺ and synthetic exosomes.",
+   "kind": "Home page, layer card/desc at y=1644"
+  },
+  {
+   "key": "home.card-6",
+   "en": "Bio-cellulose exosome mask — the post-treatment finish.",
+   "kind": "Home page, layer card/desc at y=1644"
+  },
+  {
+   "key": "home.card-7",
+   "en": "View product →",
+   "kind": "Home page, layer card/link at y=1700"
+  },
+  {
+   "key": "home.sl-2",
+   "en": "DEVICES",
+   "kind": "Home page, layer sl/DEVICES at y=1929"
+  },
+  {
+   "key": "home.h2-2",
+   "en": "Diagnostics and delivery",
+   "kind": "Home page, layer h2 at y=1965"
+  },
+  {
+   "key": "home.tg-2",
+   "en": "DEVICE",
+   "kind": "Home page, layer tg/DEVICE at y=2317"
+  },
+  {
+   "key": "home.tg-3",
+   "en": "NEW",
+   "kind": "Home page, layer tg/NEW at y=2317"
+  },
+  {
+   "key": "home.sd-2",
+   "en": "Coming soon",
+   "kind": "Home page, layer sd/Coming soon at y=2317"
+  },
+  {
+   "key": "home.card-8",
+   "en": "MITOPEN",
+   "kind": "Home page, layer card/MITOPEN at y=2349"
+  },
+  {
+   "key": "home.card-9",
+   "en": "MITOSCAN",
+   "kind": "Home page, layer card/MITOSCAN at y=2349"
+  },
+  {
+   "key": "home.card-10",
+   "en": "MITOTECH CELL BOOSTER",
+   "kind": "Home page, layer card/MITOTECH CELL BOOSTER at y=2349"
+  },
+  {
+   "key": "home.card-11",
+   "en": "Cordless microneedling pen, 0.25–2.5 mm.",
+   "kind": "Home page, layer card/desc at y=2393"
+  },
+  {
+   "key": "home.card-12",
+   "en": "×50 / ×200 scalp & hair diagnostics.",
+   "kind": "Home page, layer card/desc at y=2393"
+  },
+  {
+   "key": "home.card-13",
+   "en": "Two-vial cell booster for in-clinic protocols with MITOPEN or MICRO BOOST 10%.",
+   "kind": "Home page, layer card/desc at y=2393"
+  },
+  {
+   "key": "home.card-14",
+   "en": "Notify me →",
+   "kind": "Home page, layer card/link at y=2449"
+  },
+  {
+   "key": "home.sl-3",
+   "en": "HOME CARE",
+   "kind": "Home page, layer sl/HOME CARE at y=2678"
+  },
+  {
+   "key": "home.h2-3",
+   "en": "Between treatments",
+   "kind": "Home page, layer h2 at y=2714"
+  },
+  {
+   "key": "home.card-15",
+   "en": "CELL RENEW 1.5%",
+   "kind": "Home page, layer card/CELL RENEW 1.5% at y=3098"
+  },
+  {
+   "key": "home.card-16",
+   "en": "CELLULAR AGE DEFENSE 2.5%",
+   "kind": "Home page, layer card/CELLULAR AGE DEFENSE 2.5% at y=3098"
+  },
+  {
+   "key": "home.card-17",
+   "en": "DERMA RECOVERY CREAM",
+   "kind": "Home page, layer card/DERMA RECOVERY CREAM at y=3098"
+  },
+  {
+   "key": "home.card-18",
+   "en": "Spicule serum for renewal and brightening.",
+   "kind": "Home page, layer card/desc at y=3142"
+  },
+  {
+   "key": "home.card-19",
+   "en": "Snail-collagen barrier cream after every protocol.",
+   "kind": "Home page, layer card/desc at y=3142"
+  },
+  {
+   "key": "home.card-20",
+   "en": "Spicule serum with Bakuchiol and five peptides.",
+   "kind": "Home page, layer card/desc at y=3172"
+  },
+  {
+   "key": "home.sl-4",
+   "en": "WITH CLINICS",
+   "kind": "Home page, layer sl/WITH CLINICS at y=3427"
+  },
+  {
+   "key": "home.h2-4",
+   "en": "Bridging science and clinical practice",
+   "kind": "Home page, layer h2 at y=3463"
+  },
+  {
+   "key": "home.st",
+   "en": "Knowledge",
+   "kind": "Home page, layer st/Knowledge at y=3662"
+  },
+  {
+   "key": "home.st-2",
+   "en": "Protocols",
+   "kind": "Home page, layer st/Protocols at y=3662"
+  },
+  {
+   "key": "home.st-3",
+   "en": "Training",
+   "kind": "Home page, layer st/Training at y=3662"
+  },
+  {
+   "key": "home.st-4",
+   "en": "Founded on in-depth knowledge of skin biology and real clinical needs.",
+   "kind": "Home page, layer st/desc at y=3706"
+  },
+  {
+   "key": "home.st-5",
+   "en": "Precise treatment protocols and a clear understanding of mechanisms of action.",
+   "kind": "Home page, layer st/desc at y=3706"
+  },
+  {
+   "key": "home.st-6",
+   "en": "Professional training and scientific education alongside distribution.",
+   "kind": "Home page, layer st/desc at y=3706"
+  },
+  {
+   "key": "home.cta",
+   "en": "Looking for the right solution?",
+   "kind": "Home page, layer cta/h at y=4050"
+  },
+  {
+   "key": "home.cta-2",
+   "en": "Our specialist will help you choose products and protocols for your clinic.",
+   "kind": "Home page, layer cta/p at y=4115"
+  },
+  {
+   "key": "home.footer",
+   "en": "MITODERM",
+   "kind": "Home page, layer Footer/MITODERM at y=4448"
+  },
+  {
+   "key": "home.footer-2",
+   "en": "© 2026 Mitoderm — Where science meets beauty",
+   "kind": "Home page, layer Footer/copy at y=4451"
+  },
+  {
+   "key": "nav.blocks",
+   "en": "Meet · Why · Inside · Feel it · Protocol · Kit & facts · Offer",
+   "kind": "names of the 7 story blocks (section indicator / headings in the text document)"
+  }
+ ]
+}

@@ -1,0 +1,4 @@
+# transition clips stay local; only their WebP frames are committed
+mitoderm-catalog/site/proto/transitions/**/clip.mp4
+# Python bytecode caches (build-vtech.py imports story_content.py)
+__pycache__/

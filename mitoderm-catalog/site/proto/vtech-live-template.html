@@ -1,0 +1,542 @@
+<title>{{h1}} Live</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap">
+<script>document.documentElement.lang = 'he'; document.documentElement.dir = 'rtl'; document.documentElement.classList.add('js');</script>
+<style>
+/* V-TECH SYSTEM, Hebrew live page on pre-rendered Blender frames, screen for screen as the approved Figma design (page
+   142:3) with the owner's edits of 17/10: S1 meet → S5 protocol → the offer play as one scroll story on a fixed canvas
+   (five Cycles runs, the key frame held while each screen is read; the last run lands the kit in the offer card),
+   then the specialists and the related products without 3D. The copy keeps the RIGHT half on wide screens, the 3D
+   the left. From S1 to S3 exosome cells float in depth around the product (asteroid-like parallax on a deep plate).
+   Phone: no sequence; the product is a small HD still beside each heading. Blocks (steps, kit card, specialists,
+   cards, lead form) as on the EXOCELL MASK page. A committed single dark look (black and gold). */
+:root {
+  --bg: #0a0a0b; --ink: #111114; --charcoal: #1a1a1f;
+  --cream: #f6f3ec; --text: rgba(246,243,236,.78); --text-soft: rgba(246,243,236,.84); --text-faint: rgba(246,243,236,.72);
+  --gold: #c9a24b; --gold-soft: #d8bd7e; --gold-faint: rgba(201,162,75,.5); --gold-wash: rgba(201,162,75,.14);
+  --hairline: rgba(201,162,75,.22); --hairline-cream: rgba(246,243,236,.1); --on-gold: #0a0a0b; --error: #f0a595;
+  /* owner 17/10: Rubik in every role (Hebrew and Latin), no italics */
+  --display: 'Rubik', system-ui, sans-serif; --he-display: var(--display); --body: var(--display);
+  --gutter: clamp(18px, 5vw, 72px); --maxw: 1200px; --ease: cubic-bezier(.22,1,.36,1);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--cream); font: 300 clamp(15px, 1.15vw, 17px)/1.65 var(--body); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+@media (max-width: 1391px) { body { font-weight: 400; line-height: 1.6; } }   /* Hebrew at 16 px and below reads better at 400 */
+h1, h2, h3, h4 { margin: 0; font-weight: 400; text-wrap: balance; }
+p, ul, ol { margin: 0; }
+p { text-wrap: pretty; }
+a { color: inherit; }
+img { max-width: 100%; display: block; }
+bdi { unicode-bidi: isolate; }
+[hidden] { display: none !important; }
+.nw { white-space: nowrap; }
+svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+*, *::before, *::after { font-variant-numeric: lining-nums tabular-nums; font-style: normal; }
+.wrap { width: min(var(--maxw), 100% - 2 * var(--gutter)); margin-inline: auto; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* layers, back to front: the line's smoke and the deep plate (S2–S3), far cells, the Blender frames (faded out as the
+   offer arrives), near cells, the page */
+.bg, .plate { position: fixed; inset: -6vh -4vw; z-index: 0; background: url(img/bg.webp) center / cover no-repeat; will-change: transform; pointer-events: none; }
+.plate { background: var(--bg) center / cover no-repeat; opacity: 0; }
+#seq, .still, .cells { position: fixed; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none; }
+#seq { inset: auto; left: 0; top: 0; transform-origin: 0 0; }   /* sized and placed by the engine: its run's box of the cover-fitted frame */
+.js:not(.no-gl) .still { display: none; }   /* no-gl: a live scene could not start (no WebGL) */
+.still { overflow: hidden; }
+.still-f { position: absolute; left: 50%; top: 50%; width: max(100vw, 160vh); height: max(62.5vw, 100vh); transform: translate(-50%, -50%); }   /* the 16:10 frame, cover-fitted */
+.still-f img { position: absolute; max-width: none; }
+/* one composited layer per field, the sprites painted into it (a layer per sprite made every frame's commit slow) */
+.cells { overflow: hidden; contain: strict; will-change: transform; }
+/* S3: the DNA helix (PDRN) far behind the ampoules, an animated loop over black screened onto the plate; desktop only */
+.helix { position: fixed; z-index: 1; left: 1vw; top: 16vh; width: min(48vw, 80vh); height: auto; max-width: none; opacity: 0;
+  visibility: hidden; mix-blend-mode: screen; filter: blur(1.2px); pointer-events: none; will-change: opacity, transform; }
+.cells img { position: absolute; left: 0; top: 0; width: 256px; height: 256px; max-width: none; opacity: 0; visibility: hidden; }
+.cells i { position: absolute; left: 0; top: 0; width: 8px; height: 8px; border-radius: 50%; opacity: 0; visibility: hidden;
+  background: radial-gradient(circle, #fff1cf 0, rgba(232,196,120,.85) 30%, rgba(201,162,75,0) 70%); }
+main, .top, .foot, .dock, .bar { position: relative; z-index: 2; }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: rgba(10,10,11,.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hairline-cream); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; min-height: 72px; gap: 20px; }
+.top .logo img { height: 26px; width: auto; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 50px; padding: 0 28px; border-radius: 999px; font: 500 15px/1.2 var(--body); text-align: center; text-decoration: none; cursor: pointer; border: 1px solid transparent; white-space: nowrap; transition: transform .3s var(--ease), background-color .3s, color .3s; }
+.btn:hover { transform: scale(1.03); }
+.btn.primary { background: var(--gold); color: var(--on-gold); }
+.btn.ghost { border-color: var(--gold); color: var(--gold); background: transparent; }
+.btn.ghost:hover { background: var(--gold); color: var(--on-gold); }
+.top .btn { min-height: 42px; padding-inline: 18px; font-size: 14px; }
+@media (max-width: 460px) { .top .btn { display: none; } }
+
+/* story screens: a screen each, the copy in the right half (RTL: the start side; margin-inline-end: auto keeps it
+   there), the 3D on the left */
+.sec { min-height: 100svh; display: flex; align-items: center; padding-block: 72px; }
+.copy { width: min(540px, 100%); margin-inline-end: auto; display: grid; gap: 20px; justify-items: start; }
+@media (min-width: 900px) { .copy { width: min(540px, calc(50% - 32px)); } }
+.legend { display: flex; align-items: center; gap: 10px; font: 400 13px/1.4 var(--body); color: var(--text-faint); }
+.legend .dot { position: relative; width: 16px; height: 16px; flex: none; border-radius: 50%; border: 1px solid rgba(196,176,236,.75);
+  background: radial-gradient(circle, #f3cf86 0, #b98a3c 34%, rgba(60,36,12,.9) 52%, rgba(150,130,200,.18) 60%); box-shadow: 0 0 8px rgba(201,162,75,.35); }
+.badges { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.mark-line { font: 500 12px/1 var(--body); letter-spacing: .24em; color: var(--gold); }
+.badge { border-radius: 999px; padding: 4px 12px; font: 500 12px/1.4 var(--body); border: 1px solid var(--gold-faint); color: var(--gold-soft); }
+.badge.pro { background: var(--gold); color: var(--on-gold); border-color: var(--gold); }
+.kicker { display: flex; align-items: center; gap: 14px; font: 500 13px/1.3 var(--body); letter-spacing: .02em; color: var(--gold); }
+.kicker.line::after { content: ""; width: 40px; height: 1px; background: rgba(201,162,75,.3); }
+h1 { font: 500 clamp(48px, 5.8vw, 84px)/1 var(--display); letter-spacing: -.01em; }
+h2 { font: 500 clamp(30px, 3.2vw, 46px)/1.18 var(--he-display); letter-spacing: -.005em; }
+.tag { font: 400 clamp(20px, 1.9vw, 26px)/1.35 var(--he-display); color: var(--gold-soft); }
+.lead { color: var(--text); max-width: 480px; }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; padding: 0; list-style: none; }
+.chips li { border: 1px solid var(--hairline-cream); border-radius: 999px; padding: 6px 14px; font: 400 15px/1.3 var(--body); color: var(--text); background: rgba(10,10,11,.45); }
+.chips.gold li { border-color: var(--gold-faint); color: var(--gold-soft); }
+.cta { display: flex; flex-wrap: wrap; gap: 14px; }
+.note { font: 400 14px/1.5 var(--body); color: var(--text-faint); }
+.pill { padding: 10px 18px; border: 1px solid var(--gold-faint); border-radius: 22px; font: 400 15px/1.5 var(--body); color: var(--gold-soft); background: rgba(10,10,11,.45); max-width: 540px; }
+details { width: 100%; border-top: 1px solid var(--hairline-cream); }
+details summary { cursor: pointer; padding: 16px 0; font: 400 16px/1 var(--body); color: var(--cream); list-style: none; display: flex; justify-content: space-between; min-height: 48px; align-items: center; }
+details summary::-webkit-details-marker { display: none; }
+details summary::after { content: "+"; color: var(--gold); }
+details[open] summary::after { content: "–"; }
+details ul { padding: 0 0 18px; list-style: none; color: var(--text); display: grid; gap: 6px; }
+/* S4: the four sensations as pins */
+.pins { display: grid; gap: 10px; justify-items: start; padding: 0; list-style: none; }
+.pins li { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid var(--gold-faint); border-radius: 999px; background: rgba(10,10,11,.55); backdrop-filter: blur(8px); font: 400 14px/1.2 var(--body); color: var(--cream); }
+.pins li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px rgba(201,162,75,.22); }
+/* S5: three steps along the bottom, 01 on the right */
+.protocol.sec { display: block; }
+.protocol .copy { margin-block: 12px 0; }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: clamp(120px, 24vh, 260px) 0 0; padding: 0; list-style: none; }
+.step { display: grid; gap: 12px; align-content: start; min-width: 0; padding: 30px; border-radius: 24px; background: rgba(26,26,31,.92); border: 1px solid var(--hairline-cream); }
+.step .n { font: 300 22px/1 var(--display); color: var(--gold); }
+.step h3 { font: 500 21px/1.25 var(--display); color: var(--cream); }
+.step p { color: var(--text-faint); font: 400 15px/1.6 var(--body); }
+/* the offer: the copy on the right, the one card "what's in the box" on the left. With the story (desktop) the copy
+   arrives while the last run builds the kit and stays (sticky); the card rises after it and the 3D kit flies into the
+   card's picture. Phone order: heading → card → text → buttons → contacts. */
+.offer .wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: clamp(40px, 6vw, 96px); align-items: center; }
+.offer-copy { display: grid; gap: 20px; justify-items: start; min-width: 0; position: sticky; top: calc(72px + 5vh); }
+.offer .cta { flex-direction: column; align-items: flex-start; }
+.story .offer.sec { align-items: flex-start; }
+.story .offer .wrap { align-items: start; }
+.story .offer .kitcard { margin-top: 66vh; }   /* scroll room for the last run before the card covers the left half */
+@media (min-width: 900px) { .story #offer { scroll-margin-top: calc(-72px - 43vh); } }   /* the dock's «הצעה» lands where the kit has landed in the card */
+.contacts { display: grid; width: 100%; max-width: 420px; }
+.contacts a { display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 4px 2px; border-bottom: 1px solid var(--hairline-cream); color: var(--text-soft); text-decoration: none; font: 400 15px/1.3 var(--body); }
+.contacts svg { width: 20px; height: 20px; color: var(--gold); flex: none; }
+.offer .kitcard { justify-self: center; }
+.kitcard { width: min(100%, 540px); display: grid; gap: 14px; padding: 26px 30px 28px; border-radius: 28px; border: 1px solid var(--hairline); background: linear-gradient(160deg, rgba(28,27,31,.95), rgba(14,14,17,.95)); box-shadow: 0 30px 90px rgba(0,0,0,.5); }
+.kc-head { display: flex; align-items: center; gap: 14px; }
+.kc-head h3 { font: 500 26px/1.2 var(--he-display); color: var(--cream); }
+.kc-head .badge { letter-spacing: .14em; font-size: 11px; }
+.kc-pic, .kc-live { width: 100%; height: clamp(160px, 26vh, 250px); object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,.55)); }
+.kc-live { display: none; }
+.kc-fig { margin: 0; display: grid; justify-items: center; }
+.kc-call { display: flex; align-items: baseline; gap: 6px; font: 400 13px/1.2 var(--body); color: var(--gold-soft); position: relative; }
+.kc-call b { font: 500 15px/1 var(--display); color: var(--gold); }
+.kc-call::after { content: ''; position: absolute; left: 50%; width: 1px; height: 16px; background: var(--gold-faint); }
+.kc-call.top { margin-bottom: 18px; } .kc-call.top::after { top: calc(100% + 2px); }   /* down to the sachets at the far end */
+.kc-call.bot { margin-top: 18px; } .kc-call.bot::after { bottom: calc(100% + 2px); }   /* up to the ampoules */
+.kitcard.live .kc-live { display: block; }   /* desktop with the story: the engine draws the last frame of the kit run here */
+.kitcard.live .kc-pic { display: none; }
+.kc-qty { display: flex; align-items: baseline; gap: 12px; color: var(--text-soft); font: 400 15px/1.45 var(--body); }
+.kc-qty b { font: 300 32px/1 var(--display); color: var(--gold-soft); flex: none; }
+.kc-facts { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding-top: 12px; border-top: 1px solid var(--hairline-cream); font: 400 14px/1.4 var(--body); color: var(--text-faint); }
+.kc-facts b { font: 400 18px/1 var(--display); color: var(--gold-soft); }
+.kc-facts i { font-style: normal; color: var(--gold-faint); }
+/* S8: specialists (public: a monogram and the city) */
+.spec-sec.sec { display: block; min-height: 0; padding-block: 80px 92px; }
+.spec-sec .wrap { display: grid; gap: 12px; justify-items: start; }
+.spec-sec .wrap > * { max-width: 100%; }
+.filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 8px; }
+.filter .lbl { font: 400 14px/1 var(--body); color: var(--text-faint); margin-inline-end: 4px; }
+.fchip { min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(246,243,236,.2); background: rgba(10,10,11,.45); color: var(--text-soft); font: 400 14px/1 var(--body); cursor: pointer; }
+.fchip[aria-pressed="true"] { border-color: var(--gold); color: var(--gold-soft); background: rgba(201,162,75,.16); }
+.specs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; width: 100%; margin-top: 6px; }
+.spec { display: flex; flex-direction: column; min-width: 0; border-radius: 22px; background: rgb(24,24,28); border: 1px solid var(--hairline); }
+.spec .av { width: 58px; height: 58px; margin: 22px 22px 0; border-radius: 50%; border: 1px solid var(--gold); display: grid; place-items: center; font: 400 28px/1 var(--he-display); color: var(--gold-soft); background: rgba(10,10,11,.6); }
+.spec .sb { display: grid; gap: 8px; justify-items: start; padding: 14px 22px 12px; }
+.spec h3 { display: flex; align-items: center; gap: 8px; font: 500 21px/1.25 var(--he-display); color: var(--gold-soft); }
+.spec h3 svg { width: 17px; height: 17px; color: var(--gold); flex: none; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tags span { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font: 400 13px/1.2 var(--body); border: 1px solid var(--gold-faint); color: var(--gold-soft); }
+.tags svg { width: 15px; height: 15px; }
+.book { justify-self: stretch; display: flex; align-items: center; gap: 8px; min-height: 46px; padding-top: 6px; border-top: 1px solid var(--hairline-cream); color: var(--gold); text-decoration: none; font: 400 15px/1 var(--body); }
+.spec-empty { color: var(--text-soft); font: 400 15px/1.5 var(--body); }
+.spec-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px 28px; width: 100%; margin-top: 10px; }
+.join { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.join span { font: 400 24px/1.2 var(--he-display); color: var(--cream); }
+/* S9: related products */
+.related { padding-block: clamp(56px, 7vw, 96px) clamp(72px, 7vw, 104px); background: linear-gradient(to bottom, transparent, var(--ink) 18%); }
+.related h2 { font: 400 clamp(26px, 3vw, 36px)/1.15 var(--he-display); }
+.related h2 + .cards { margin-top: 28px; }
+.related .cards + h2 { margin-top: 64px; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+@media (max-width: 960px) { .cards, .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .cards, .specs { grid-template-columns: 1fr; } }
+.card { display: flex; flex-direction: column; overflow: hidden; border-radius: 24px; background: var(--charcoal); border: 1px solid var(--gold-wash); text-decoration: none; min-width: 0; }
+.card .pic { position: relative; height: 248px; }
+.card .pic img { position: absolute; inset: 20px 10% 24px; width: 80%; height: calc(100% - 44px); object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 16px 18px rgba(0,0,0,.45)); transition: transform .5s var(--ease); transform-origin: 50% 100%; }
+.card:hover .pic img { transform: scale(1.05); }
+.card .body { padding: 24px; display: grid; gap: 8px; justify-items: start; }
+.card .badge.home { border-color: rgba(246,243,236,.3); color: var(--text-soft); }
+.card h3 { font: 500 20px/1.2 var(--display); color: var(--cream); }
+.card p { font: 400 14px/1.6 var(--body); color: var(--text-faint); }
+.card .go { margin-top: 6px; font: 400 13px/1 var(--body); color: var(--gold-soft); }
+.foot { border-top: 1px solid var(--hairline-cream); padding-block: 36px calc(36px + 72px); color: var(--text-faint); font: 400 13px/1.5 var(--body); background: var(--bg); }
+.foot .wrap { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; align-items: center; }
+.foot img { height: 44px; width: auto; opacity: .9; }
+.legal { display: flex; flex-wrap: wrap; gap: 4px 22px; }
+.legal a { display: inline-flex; align-items: center; min-height: 44px; color: var(--text-soft); text-decoration: none; }
+/* section dock at the bottom, the active screen lit (Figma) */
+.dock { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 25; display: flex; gap: 4px; padding: 5px; border-radius: 999px; background: rgba(10,10,11,.66); backdrop-filter: blur(12px); border: 1px solid var(--hairline-cream); max-width: calc(100vw - 24px); }
+.dock a { padding: 13px 16px; border-radius: 999px; font: 400 13px/1 var(--body); color: var(--text-faint); text-decoration: none; white-space: nowrap; transition: background-color .3s, color .3s; }
+.dock a.on { background: var(--gold); color: var(--on-gold); }
+@media (max-width: 1000px) { .dock a { padding-inline: 10px; } }
+@media (max-width: 899px) { .dock { display: none; } }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom, 0px)); background: rgba(10,10,11,.86); backdrop-filter: blur(12px); border-top: 1px solid var(--hairline); display: none; align-items: center; justify-content: space-between; gap: 12px; transition: transform .35s var(--ease), visibility .35s; }
+.bar.away { transform: translateY(110%); visibility: hidden; }   /* the offer has its own buttons: the bar steps aside there */
+.bar b { font: 500 13px/1.3 var(--body); min-width: 0; display: grid; }
+.bar b small { font: 400 13px/1.3 var(--body); color: var(--text-faint); }
+.bar .btn { min-height: 44px; padding-inline: 18px; flex: none; font-size: 14px; }
+
+/* lead form (the blocks of the mitoderm.com form, in this design) */
+html.form-open { overflow: hidden; }
+dialog.lead { padding: 0; border: 0; background: transparent; color: var(--cream); width: min(1000px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); overflow: visible; }
+dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px); }
+.lead-in { position: relative; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); max-height: calc(100dvh - 32px); border-radius: 28px; overflow: hidden; border: 1px solid var(--hairline); background: #111114; box-shadow: 0 40px 120px rgba(0,0,0,.65); }
+.lead-x { position: absolute; z-index: 3; top: 14px; inset-inline-end: 14px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(246,243,236,.24); background: rgba(10,10,11,.55); color: var(--cream); display: grid; place-items: center; cursor: pointer; }
+.lead-x svg { width: 20px; height: 20px; }
+.lead-form { display: grid; align-content: center; padding: 48px 44px 34px; overflow-y: auto; }
+.lead-form h2 { font: 400 clamp(28px, 3vw, 38px)/1.12 var(--he-display); }
+.lead-form h2 .g, .lead-done .g { color: var(--gold-soft); }
+.lead-form .sub { margin-top: 10px; color: var(--text-soft); font: 400 15px/1.5 var(--body); }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 26px; }
+.f { display: grid; min-width: 0; }
+.f input { width: 100%; min-height: 52px; padding: 0 18px; border-radius: 14px; border: 1px solid rgba(246,243,236,.2); background: rgba(246,243,236,.05); color: var(--cream); font: 400 16px/1.2 var(--body); text-align: right; }
+.f input::placeholder { color: rgba(246,243,236,.62); }
+.f input[aria-invalid="true"] { border-color: var(--error); }
+.err { margin: 6px 4px 0; font: 400 13px/1.35 var(--body); color: var(--error); }
+.err:empty { display: none; }
+.consent { display: flex; align-items: center; gap: 12px; min-height: 44px; margin-top: 14px; font: 400 14px/1.4 var(--body); color: var(--text-soft); cursor: pointer; }
+.consent input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--gold); cursor: pointer; }
+.consent input[aria-invalid="true"] { outline: 2px solid var(--error); outline-offset: 2px; }
+.submit { width: 100%; margin-top: 14px; min-height: 54px; }
+.submit i { display: none; width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(201,162,75,.3); border-top-color: var(--gold); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.busy .fields, .busy .consent { opacity: .4; pointer-events: none; }
+.busy .submit { background: transparent; border-color: var(--gold); color: var(--gold); cursor: progress; transform: none; }
+.busy .submit i { display: block; }
+.privacy { display: flex; align-items: center; gap: 8px; margin-top: 14px; font: 400 13px/1.4 var(--body); color: var(--text-faint); }
+.privacy svg { width: 16px; height: 16px; flex: none; color: var(--gold); }
+.lead-fail { margin-top: 14px; }
+.fail-msg { margin-bottom: 10px; font: 400 15px/1.45 var(--body); color: var(--error); }
+.lead-fail .btn { width: 100%; }
+.lead-done { display: grid; gap: 18px; justify-items: start; align-content: center; min-height: 100%; outline: none; }
+.lead-done h2 { font: 400 clamp(32px, 3.6vw, 44px)/1.1 var(--he-display); }
+.lead-done .mob { display: none; font: 400 30px/1.1 var(--he-display); }
+.lead-panel { position: relative; display: grid; place-items: center; align-content: center; gap: 18px; padding: 56px 36px; background: url(img/bg.webp) 70% 50% / cover no-repeat, var(--bg); min-height: 560px; }
+.lead-panel img { width: min(100%, 420px); height: auto; filter: drop-shadow(0 26px 40px rgba(0,0,0,.55)); }
+.lead-panel p { font: 500 clamp(26px, 2.6vw, 34px)/1 var(--display); letter-spacing: .06em; }
+
+/* phone: the story plays in a stage under the header (smoke, plate and the 3D, the copy scrolls beneath it and the offer
+   pushes it away); without the story (no JS, reduced data) the product is a small HD still beside each heading */
+.head { display: contents; }
+.slot, .ph-cells { display: none; }
+@media (max-width: 899px) {
+  .still, .cells, .helix { display: none !important; }
+  html:not(.story) #seq, html:not(.story) .plate { display: none !important; }
+  html.story .bg, html.story .plate { inset: var(--stage-top, 60px) 0 auto 0; height: var(--stage-h, 46svh); z-index: 3;
+    transform: translate3d(0, calc(-1px * var(--push, 0)), 0) !important; }
+  html.story .bg::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 28px; background: linear-gradient(var(--bg), transparent); }
+  html.story #seq { z-index: 4; }
+  html.story .slot, html.story .ph-cells { display: none !important; }
+  html.story .head { grid-template-columns: minmax(0, 1fr); }
+  html.story #meet { padding-top: calc(var(--stage-h, 46svh) + 18px); }
+  /* a jump to a section (a button, a link) lands its heading just under the 3D stage, not behind it */
+  html.story .sec { scroll-margin-top: calc(var(--stage-top, 60px) + var(--stage-h, 46svh)); }
+  /* the copy, then room in which the run plays in the stage, so the next heading arrives under its own key frame */
+  html.story #meet, html.story #why, html.story #inside, html.story #feel, html.story #protocol { min-height: 0; padding-bottom: 64svh; }
+  /* S3: three still cells around the ampoules (no moving field on a phone) */
+  #inside .head { position: relative; }
+  #inside .slot { position: relative; z-index: 1; }
+  .ph-cells { display: block; position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  .ph-cells img { position: absolute; height: auto; }
+  .ph-cells img:nth-child(1) { width: 15%; left: 29%; top: 2%; opacity: .7; }
+  .ph-cells img:nth-child(2) { width: 10%; left: -2%; top: 74%; opacity: .9; }
+  .ph-cells img:nth-child(3) { width: 7%; left: 37%; top: 60%; opacity: .75; }
+  .sec { min-height: 0; padding-block: 34px 22px; }
+  .head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(118px, 38%); align-items: center; gap: 14px; width: 100%; }
+  .head > :not(.slot) { grid-column: 1; }
+  .slot { display: block; grid-column: 2; grid-row: 1 / span 2; width: 100%; height: auto; }
+  .slot.wide { grid-column: 1 / -1; grid-row: auto; margin-top: 6px; }   /* S5: the three stations on their line, a strip under the heading */
+  .offer .wrap { display: flex; flex-direction: column; align-items: flex-start; }
+  .offer-copy { display: contents; }
+  .offer-copy > * { margin: 0 0 20px; }
+  .offer-copy > .kicker { order: 1; } .offer-copy > h2 { order: 2; } .offer .kitcard { order: 3; }
+  .offer-copy > .lead { order: 4; } .offer-copy > .cta { order: 5; } .offer-copy > .contacts { order: 6; }
+  .offer .kitcard { align-self: stretch; width: 100%; margin: 4px 0 26px; padding: 22px 20px 24px; }
+  .steps { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 80%; gap: 12px; margin: 28px calc(-1 * var(--gutter)) 0; padding: 0 var(--gutter) 6px;
+    overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); scrollbar-width: none; overscroll-behavior-x: contain; }
+  .steps::-webkit-scrollbar { display: none; }
+  .step { scroll-snap-align: start; padding: 24px 22px; }
+  .spec-sec.sec { padding-block: 48px 40px; }
+  .spec-foot { flex-direction: column; align-items: stretch; }
+  .spec-foot .btn { width: 100%; white-space: normal; }
+  .related { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .bar { display: flex; }
+  dialog.lead { width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; }
+  .lead-in { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: 100dvh; max-height: 100dvh; border-radius: 0; border: 0; }
+  .lead-panel { order: -1; min-height: 0; grid-auto-flow: column; justify-content: center; gap: 14px; padding: 18px 64px 16px; }
+  .lead-panel img { width: auto; height: 104px; }
+  .lead-panel p { font-size: 22px; }
+  .lead-form { align-content: start; padding: 28px 20px 32px; }
+  .fields { grid-template-columns: 1fr; gap: 12px; margin-top: 22px; }
+  .lead-done .mob { display: block; }
+}
+@media (max-width: 380px) { .cta { flex-direction: column; align-items: stretch; } }
+/* reveal (0.6 s, 20 px, once); without JS everything shows */
+.js .rv { opacity: 0; transform: translateY(20px); transition: opacity .6s var(--ease), transform .6s var(--ease); transition-delay: var(--d, 0s); }
+.js .rv.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .js .rv { opacity: 1; transform: none; transition: none; }
+  .btn:hover, .card:hover .pic img { transform: none; }
+  .submit i { animation-duration: 2.4s; }
+}
+</style>
+
+<div class="bg" aria-hidden="true"></div>
+<div class="plate" aria-hidden="true"></div>
+__STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fetched) with JS -->
+<img class="helix" alt="" aria-hidden="true" decoding="async">
+<div class="cells back" aria-hidden="true"></div>
+<canvas id="seq" aria-hidden="true"></canvas>
+<div class="cells front" aria-hidden="true"></div>
+<header class="top"><div class="wrap">
+  <a class="logo" href="#meet" aria-label="MITODERM"><img src="img/logo-mark.png" alt="MITODERM"></a>
+  <a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener"{{{lead}}}>{{cta_price}}</a>
+</div></header>
+<main>
+  <section id="meet" class="sec" data-st="0"><div class="wrap"><div class="copy">
+    <div class="badges rv">{{{line_badges}}}<span class="badge{{{use_cls}}}">{{use_pro}}</span></div>
+    <p class="kicker rv" style="--d:.06s">{{eyebrow}}</p>
+    <div class="head">
+      <h1 class="rv" style="--d:.12s"><bdi>{{h1}}</bdi></h1>
+      <p class="tag rv" style="--d:.18s">{{tag}}</p>
+      <img class="slot" src="img/m1.webp" alt="" aria-hidden="true">
+    </div>
+    <p class="lead rv" style="--d:.24s">{{s1_lead}}</p>
+    <ul class="chips rv" style="--d:.3s">{{{s1_chips}}}</ul>
+    <div class="cta rv" style="--d:.36s"><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener"{{{lead}}}>{{cta_price}}</a><a class="btn ghost" href="#inside">{{s1_more}}</a></div>
+  </div></div></section>
+  <section id="why" class="sec" data-st="1"><div class="wrap"><div class="copy">
+    <p class="kicker line rv">{{nav1}}</p>
+    <div class="head">
+      <h2 class="rv" style="--d:.06s">{{s2_h2}}</h2>
+      <img class="slot" src="img/m2.webp" alt="" aria-hidden="true">
+    </div>
+    <p class="lead rv" style="--d:.12s">{{s2_p}}</p>
+    <p class="kicker rv" style="--d:.18s">{{s2_kicker}}</p>
+    <ul class="chips gold rv" style="--d:.24s">{{{s2_chips}}}</ul>
+  </div></div></section>
+  <section id="inside" class="sec" data-st="2"><div class="wrap"><div class="copy">
+    <p class="kicker line rv">{{nav2}}</p>
+    <div class="head">
+      <h2 class="rv" style="--d:.06s">{{s3_h2}}</h2>
+      <img class="slot" src="img/m3.webp" alt="" aria-hidden="true">
+      __PH_CELLS__
+    </div>
+    <p class="lead rv" style="--d:.12s">{{{s3_p}}}</p>
+    {{{s3_legend}}}
+    <p class="kicker rv" style="--d:.18s">{{s3_kicker}}</p>
+    <ul class="chips rv" style="--d:.24s">{{{s3_chips}}}</ul>
+    {{{s3_formula}}}
+  </div></div></section>
+  <section id="feel" class="sec" data-st="3"><div class="wrap"><div class="copy">
+    <p class="kicker line rv">{{nav3}}</p>
+    <div class="head">
+      <h2 class="rv" style="--d:.06s">{{s4_h2}}</h2>
+      <img class="slot" src="img/m4.webp" alt="" aria-hidden="true">
+    </div>
+    <p class="lead rv" style="--d:.12s">{{s4_p}}</p>
+    <ul class="pins rv" style="--d:.18s">{{{s4_pins}}}</ul>
+  </div></div></section>
+  <section id="protocol" class="sec protocol" data-st="4"><div class="wrap">
+    <div class="copy">
+      <p class="kicker line rv">{{nav4}}</p>
+      <div class="head">
+        <h2 class="rv" style="--d:.06s">{{s5_h2}}</h2>
+        <img class="slot wide" src="img/m5.webp" alt="" aria-hidden="true">
+      </div>
+      <p class="lead rv" style="--d:.12s">{{s5_p}}</p>
+      <p class="pill rv" style="--d:.18s">{{{s5_chip}}}</p>
+      {{{s5_note}}}
+    </div>
+    <ol class="steps">{{{s5_steps}}}</ol>
+  </div></section>
+  <section id="offer" class="sec offer" data-st="5"><div class="wrap">
+    <div class="offer-copy">
+      <p class="kicker line rv">{{nav5}}</p>
+      <h2 class="rv" style="--d:.06s">{{{s7_h2}}}</h2>
+      <p class="lead rv" style="--d:.12s">{{s7_p}}</p>
+      <div class="cta rv" style="--d:.18s"><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener"{{{lead}}}>{{cta_price}}</a>{{{offer_more}}}</div>
+      <div class="contacts rv" style="--d:.24s">
+        <a href="{{phone_href}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span>{{phone_label}} <bdi dir="ltr">{{phone}}</bdi></span></a>
+        <a href="{{email_href}}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg><span>{{email_label}} <bdi dir="ltr">{{email}}</bdi></span></a>
+      </div>
+    </div>
+    <aside class="kitcard rv" style="--d:.1s" aria-labelledby="kitcard-h">
+      <div class="kc-head"><h3 id="kitcard-h">{{s7_card_title}}</h3>{{{kit_line}}}</div>
+      <figure class="kc-fig">   <!-- owner 17/10: the box as in his photo, with what is in it named around it -->
+        {{{kit_call_top}}}
+        <canvas class="kc-live" role="img" aria-label="{{kit_alt}}"></canvas>
+        <img class="kc-pic" src="img/kit.webp" alt="{{kit_alt}}" {{{kit_size}}} loading="lazy">
+        {{{kit_call_bot}}}
+      </figure>
+      {{{s7_card_lines}}}
+      {{{s7_card_facts}}}
+      <ul class="chips gold">{{{s7_card_chips}}}</ul>
+    </aside>
+  </div></section>
+  <section id="specialists" class="sec spec-sec" data-st="6" aria-labelledby="spec-h"><div class="wrap">
+    <p class="kicker line rv">{{s8_kicker}}</p>
+    <h2 class="rv" id="spec-h" style="--d:.06s">{{{s8_h2}}}</h2>
+    <p class="lead rv" style="--d:.12s">{{{s8_p}}}</p>
+    <div class="filter rv" style="--d:.18s" role="group" aria-labelledby="spec-f"><span class="lbl" id="spec-f">{{s8_filter}}</span>{{{s8_chips}}}</div>
+    <div class="specs" aria-live="polite">{{{s8_cards}}}</div>
+    <p class="spec-empty" role="status" hidden>{{spec_empty}}</p>
+    <div class="spec-foot rv">
+      <a class="btn primary" href="https://www.mitoderm.com/he" target="_blank" rel="noopener">{{s8_list}}</a>
+      <div class="join"><span>{{s8_join}}</span><a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{s8_join_cta}}</a></div>
+    </div>
+  </div></section>
+  {{{s9}}}
+</main>
+<footer class="foot"><div class="wrap"><img src="img/logo.png" alt="MITODERM — Where Science Meets Beauty"><span>{{footer}}</span><span class="legal"><a href="#">{{foot_access}}</a><a href="#">{{foot_privacy}}</a></span></div></footer>
+<nav class="dock" aria-label="{{nav_label}}">{{{dock}}}</nav>
+<div class="bar"><b><bdi>{{bar_name}}</bdi><small>{{bar_note}}</small></b><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener"{{{lead}}}>{{cta_price}}</a></div>
+
+<!-- Lead form. This page is a static preview and cannot send data: the submit handler prevents the default and only
+     simulates the request. In production the form POSTs JSON {name, phone, email, profession, source: '{{h1}} page'}
+     to data-endpoint (/api/leads), as mitoderm.com does. -->
+<dialog class="lead" id="lead" aria-labelledby="lead-h">
+  <div class="lead-in">
+    <button type="button" class="lead-x" data-close aria-label="{{close_label}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <form class="lead-form" novalidate data-endpoint="/api/leads">
+      <div class="lead-body">
+        <h2 id="lead-h">{{form_p1}} <span class="g">{{form_p2}}</span> {{form_p3}}</h2>
+        <p class="sub">{{form_sub}}</p>
+        <div class="fields">
+          <div class="f"><input name="name" type="text" autocomplete="name" placeholder="{{f_name}}" aria-label="{{f_name}}" aria-describedby="e-name" required><p class="err" id="e-name"></p></div>
+          <div class="f"><input name="profession" type="text" autocomplete="organization-title" placeholder="{{f_prof}}" aria-label="{{f_prof}}" aria-describedby="e-profession" required><p class="err" id="e-profession"></p></div>
+          <div class="f"><input name="email" type="email" dir="ltr" autocomplete="email" inputmode="email" placeholder="{{f_email}}" aria-label="{{f_email}}" aria-describedby="e-email" required><p class="err" id="e-email"></p></div>
+          <div class="f"><input name="phone" type="tel" dir="ltr" autocomplete="tel" inputmode="tel" placeholder="{{f_phone}}" aria-label="{{f_phone}}" aria-describedby="e-phone" required><p class="err" id="e-phone"></p></div>
+        </div>
+        <label class="consent"><input type="checkbox" name="consent" aria-describedby="e-consent" required><span>{{f_consent}}</span></label><p class="err" id="e-consent"></p>
+        <button class="btn primary submit" type="submit"><span>{{f_submit}}</span><i aria-hidden="true"></i></button>
+        <p class="privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>{{f_privacy}}</span></p>
+        <div class="lead-fail" role="alert" hidden><p class="fail-msg">{{{form_fail}}}</p><a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener"><bdi dir="ltr">WhatsApp</bdi></a></div>
+      </div>
+      <div class="lead-done" role="status" tabindex="-1" hidden>
+        <p class="mob">{{f_sent_mob}}</p>
+        <h2>{{f_sent}} <span class="g">{{f_sent_gold}}</span></h2>
+        <button type="button" class="btn ghost" data-close>{{f_more}}</button>
+      </div>
+    </form>
+    <div class="lead-panel" aria-hidden="true"><img src="img/kit.webp" alt=""><p><bdi>{{h1}}</bdi></p></div>
+  </div>
+</dialog>
+<script type="application/json" id="lead-errors">{{{form_errors}}}</script>
+
+<script type="module">
+// The scroll story on pre-rendered frames: engine/story.js (build-vtech.py inlines it here), the same module a React
+// app mounts (react/useFrameStory.js). A product with a live three.js scene (build-vtech.py --scene) draws it instead.
+import { createFrameStory } from './engine/story.js';
+__SCENE_JS__
+const $ = id => document.getElementById(id), q = s => document.querySelector(s);
+const story = createFrameStory({
+  config: __SEQ__, scene: __SCENE__, canvas: $('seq'), sections: ['meet', 'why', 'inside', 'feel', 'protocol', 'offer'].map($), header: q('.top'),
+  card: q('.kitcard'), bg: q('.bg'), plate: q('.plate'), helix: q('.helix'), cellLayers: [q('.cells.back'), q('.cells.front')],
+  tier: window.__SEQ_TIER, noWorker: !!window.__SEQ_NO_WORKER });
+window.__seq = story.state;   // for the QA script
+</script>
+<script type="module">   // a module, as it always was; it does not use the story module (which, on a 3D-scene page, waits for three.js)
+// page: reveal on scroll, the dock, the specialists filter and the lead form
+(function () {
+  var root = document.documentElement, reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var secs = Array.prototype.slice.call(document.querySelectorAll('[data-st]')), dock = Array.prototype.slice.call(document.querySelectorAll('.dock a'));
+  function onScroll() {
+    var mid = window.innerHeight / 2, best = 0;
+    secs.forEach(function (s) { if (s.getBoundingClientRect().top <= mid) best = +s.dataset.st; });
+    best = Math.min(best, dock.length - 1);
+    dock.forEach(function (a) { var on = +a.dataset.i === best; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current'); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  var bar = document.querySelector('.bar'), offer = document.getElementById('offer');   // phone: the bar steps aside at the offer
+  if (bar && offer && 'IntersectionObserver' in window) new IntersectionObserver(function (es) { bar.classList.toggle('away', es[0].isIntersecting); }).observe(offer);
+  var rv = document.querySelectorAll('.rv');
+  if (reduce || !('IntersectionObserver' in window)) rv.forEach(function (el) { el.classList.add('in'); });
+  else {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -80px 0px' });
+    rv.forEach(function (el) { io.observe(el); });
+  }
+  var chips = Array.prototype.slice.call(document.querySelectorAll('.fchip')), cards = Array.prototype.slice.call(document.querySelectorAll('.spec'));
+  function filter(tag) {
+    chips.forEach(function (c) { c.setAttribute('aria-pressed', String(c.dataset.tag === tag)); });
+    cards.forEach(function (c) { c.hidden = !(tag === '*' || c.dataset.tags.split('|').indexOf(tag) >= 0); });
+    document.querySelector('.spec-empty').hidden = cards.some(function (c) { return !c.hidden; });
+  }
+  chips.forEach(function (c) { c.addEventListener('click', function () { filter(c.dataset.tag); }); });
+
+  var dlg = document.getElementById('lead');
+  if (!dlg || typeof dlg.showModal !== 'function') return;   // no dialog support: the buttons stay WhatsApp links
+  var form = dlg.querySelector('form'), body = dlg.querySelector('.lead-body'), done = dlg.querySelector('.lead-done');
+  var fail = dlg.querySelector('.lead-fail'), submit = form.querySelector('.submit'), consent = form.elements.consent;
+  var ERR = JSON.parse(document.getElementById('lead-errors').textContent), NAMES = ['name', 'profession', 'email', 'phone'];
+  var opener = null, tried = false, sending = false;
+  function phoneOk(v) { var d = v.replace(/[\s\-().]/g, ''); return /^0\d{8,9}$/.test(d) || /^\+972[1-9]\d{7,8}$/.test(d); }
+  function check(name) {
+    var el = form.elements[name], v = el.value.trim(), msg = '';
+    if (name === 'name') msg = !v ? ERR.name_required : v.length < 3 ? ERR.name_length : '';
+    if (name === 'profession') msg = !v ? ERR.profession_required : v.length < 3 ? ERR.profession_length : '';
+    if (name === 'email') msg = !v ? ERR.email_required : !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) ? ERR.email_invalid : '';
+    if (name === 'phone') msg = !v ? ERR.phone_required : !phoneOk(v) ? ERR.phone_length : '';
+    el.setAttribute('aria-invalid', String(!!msg)); document.getElementById('e-' + name).textContent = msg;
+    return !msg;
+  }
+  function checkConsent() {
+    consent.setAttribute('aria-invalid', String(!consent.checked));
+    document.getElementById('e-consent').textContent = consent.checked ? '' : ERR.consent_required;
+    return consent.checked;
+  }
+  NAMES.forEach(function (n) { form.elements[n].addEventListener('input', function () { if (tried) check(n); }); });
+  consent.addEventListener('change', function () { if (tried) checkConsent(); });
+  function setBusy(on) {
+    sending = on; form.classList.toggle('busy', on); submit.disabled = on; consent.disabled = on;
+    if (on) form.setAttribute('aria-busy', 'true'); else form.removeAttribute('aria-busy');
+    NAMES.forEach(function (n) { form.elements[n].readOnly = on; });
+  }
+  function sendLead(payload) {   // preview: waits 1.2 s and succeeds (window.__leadFail = true shows the error state)
+    return new Promise(function (resolve, reject) { setTimeout(function () { if (window.__leadFail) reject(new Error('preview')); else resolve(payload); }, 1200); });
+  }
+  form.addEventListener('submit', function (e) {
+    e.preventDefault(); if (sending) return; tried = true;
+    var ok = NAMES.map(check).every(Boolean); ok = checkConsent() && ok;
+    if (!ok) { var bad = form.querySelector('[aria-invalid="true"]'); if (bad) bad.focus(); return; }
+    var payload = { name: form.elements.name.value.trim(), phone: form.elements.phone.value.trim(), email: form.elements.email.value.trim(), profession: form.elements.profession.value.trim(), source: '{{h1}} page' };
+    fail.hidden = true; setBusy(true);
+    sendLead(payload).then(function () { setBusy(false); body.hidden = true; done.hidden = false; done.focus(); }, function () { setBusy(false); fail.hidden = false; });
+  });
+  function reset() {
+    form.reset(); tried = false; body.hidden = false; done.hidden = true; fail.hidden = true;
+    NAMES.forEach(function (n) { form.elements[n].removeAttribute('aria-invalid'); document.getElementById('e-' + n).textContent = ''; });
+    consent.removeAttribute('aria-invalid'); document.getElementById('e-consent').textContent = '';
+  }
+  function open(e) { e.preventDefault(); opener = e.currentTarget; if (!done.hidden) reset(); dlg.showModal(); root.classList.add('form-open'); form.elements.name.focus(); }
+  function finish() { if (!root.classList.contains('form-open')) return; root.classList.remove('form-open'); if (opener) opener.focus(); }
+  function close() { if (dlg.open) dlg.close(); finish(); }
+  document.querySelectorAll('[data-lead]').forEach(function (a) { a.addEventListener('click', open); });
+  dlg.querySelectorAll('[data-close]').forEach(function (b) { b.addEventListener('click', close); });
+  dlg.addEventListener('click', function (e) { if (e.target === dlg) close(); });
+  dlg.addEventListener('cancel', function (e) { e.preventDefault(); close(); });
+  dlg.addEventListener('close', finish);
+})();
+</script>

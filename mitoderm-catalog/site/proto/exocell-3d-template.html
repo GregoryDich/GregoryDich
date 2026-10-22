@@ -1,0 +1,1389 @@
+<title>{{page_title}}</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap">
+<script>document.documentElement.lang = 'he'; document.documentElement.dir = 'rtl'; document.documentElement.classList.add('js');</script>
+<style>
+/* EXOCELL MASK, Hebrew, 3D scroll version, screen for screen as the approved Figma design (page 98:2). Two layers, as
+   on the reference site the owner sent: a far background (moving teal smoke and particles) whose angle follows the
+   pointer, and the product in front of it: the real carton as a 3D box with a hinged lid, the sheet mask, five
+   printed sachets and serum drops, posed per block as you scroll. The copy keeps the left half on wide screens; the
+   objects live on the right. A committed single dark look. */
+:root {
+  --bg: #0a0a0b; --ink: #111114; --charcoal: #1a1a1f;
+  --cream: #f6f3ec; --text: rgba(246,243,236,.74); --text-soft: rgba(246,243,236,.84); --text-faint: rgba(246,243,236,.72);
+  --gold: #c9a24b; --gold-soft: #d8bd7e; --gold-faint: rgba(201,162,75,.5); --gold-wash: rgba(201,162,75,.14);
+  --hairline: rgba(201,162,75,.22); --hairline-cream: rgba(246,243,236,.1); --on-gold: #0a0a0b;
+  --drop: #6fb7ba; --drop-soft: #9fd6d8; --error: #f0a595;
+  --display: 'Rubik', system-ui, sans-serif; --body: var(--display);   /* owner 17/10: Rubik in every role, no italics; 18/10: one type scale with V-TECH */
+  --gutter: clamp(18px, 5vw, 72px); --maxw: 1200px; --ease: cubic-bezier(.22,1,.36,1);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--cream); font: 300 clamp(15px, 1.15vw, 17px)/1.65 var(--body); -webkit-font-smoothing: antialiased; overflow-x: clip;
+  font-feature-settings: "lnum" 1; }  /* lining figures everywhere: Cormorant's old-style figures read «1o%», «o1» */
+@media (max-width: 1391px) { body { font-weight: 400; line-height: 1.6; } }  /* Hebrew at 16 px and below reads better at 400 */
+h1, h2, h3, h4 { margin: 0; font-family: var(--display); font-weight: 500; font-style: normal; text-wrap: balance; }
+p { margin: 0; text-wrap: pretty; }
+a { color: inherit; }
+img { max-width: 100%; display: block; }
+bdi { unicode-bidi: isolate; }
+[hidden] { display: none !important; }
+.nw { white-space: nowrap; }
+svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.wrap { width: min(var(--maxw), 100% - 2 * var(--gutter)); margin-inline: auto; }
+.kicker { display: flex; align-items: center; gap: 14px; font: 500 13px/1.3 var(--body); letter-spacing: .02em; color: var(--gold); }
+.kicker::after { content: ""; width: 40px; height: 1px; background: rgba(201,162,75,.3); }
+.badges { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.badge { border-radius: 999px; padding: 4px 12px; font: 500 12px/1.4 var(--body); border: 1px solid var(--gold-faint); color: var(--gold-soft); }
+.badge.pro { background: var(--gold); color: var(--on-gold); border-color: var(--gold); }
+.mark-line { font: 500 12px/1 var(--body); letter-spacing: .24em; color: var(--gold); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 30px; border-radius: 999px; font: 500 15px/1.2 var(--body); text-align: center; text-decoration: none; cursor: pointer; border: 1px solid transparent; transition: transform .3s var(--ease), background-color .3s, color .3s; }
+.btn:hover { transform: scale(1.03); }
+.btn.primary { background: var(--gold); color: var(--on-gold); }
+.btn.ghost { border-color: var(--gold); color: var(--gold); background: transparent; }
+.btn.ghost:hover { background: var(--gold); color: var(--on-gold); }
+.btn svg { width: 20px; height: 20px; flex: none; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip { padding: 6px 14px; border: 1px solid rgba(246,243,236,.18); border-radius: 999px; font: 400 15px/1.3 var(--body); color: var(--text-soft); background: rgba(10,10,11,.45); backdrop-filter: blur(6px); }
+.chip.drop { border-color: rgba(111,183,186,.55); color: var(--drop-soft); }
+.chip.gold { border-color: var(--gold-faint); color: var(--gold-soft); }
+ul.plain, ol.plain { list-style: none; margin: 0; padding: 0; }
+
+/* the 3D layer sits behind everything; sections are transparent so it shows through. Until the first 3D frame (and
+   for good when there is no WebGL or three.js cannot load) the still packshot stands in, then fades out. */
+#gl { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
+.still-fallback { position: fixed; inset: 0; z-index: 0; background: radial-gradient(60% 60% at 28% 50%, rgba(111,183,186,.22), transparent 70%), var(--bg); transition: opacity .8s var(--ease), visibility 0s linear .8s; }
+.still-fallback img { position: absolute; left: 6%; top: 50%; transform: translateY(-50%); width: min(40vw, 520px); }
+.gl-on .still-fallback { opacity: 0; visibility: hidden; }
+.nogl #gl { display: none; }
+.ph-gl { position: absolute; left: -16px; top: -16px; z-index: 1; display: block; pointer-events: none; }   /* phone: the product inside its slot (sized by the script) */
+.ph-slot > .lyr { position: absolute; }
+main, .top, .foot, .dock, .bar { position: relative; z-index: 1; }
+
+/* header: logo and the price button; the section menu is the dock at the bottom, as on the reference */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: rgba(10,10,11,.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hairline-cream); }  /* never text under the logo */
+.top .wrap { display: flex; align-items: center; justify-content: space-between; min-height: 72px; gap: 20px; }
+.top .logo img { height: 26px; width: auto; }
+.top .btn { min-height: 44px; padding-inline: 20px; font-size: 14px; background: rgba(10,10,11,.4); backdrop-filter: blur(8px); }
+@media (max-width: 460px) { .top .btn { display: none; } }
+
+/* sections: copy in the right half, the objects take the left (owner 17/10, as V-TECH); each block a screen of its own */
+.sec { min-height: 82svh; display: grid; align-items: center; padding-block: clamp(56px, 8vh, 96px); }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); direction: rtl; }
+.split > * { direction: rtl; min-width: 0; }
+.split > .col { display: grid; gap: 18px; justify-items: start; align-content: center; max-width: 540px; }
+.sec h2 { font: 500 clamp(30px, 3.2vw, 46px)/1.18 var(--display); letter-spacing: -.005em; color: var(--cream); }
+.sec p { color: var(--text); max-width: 46ch; }
+.hero h1 { font: 500 clamp(48px, 5.8vw, 84px)/1 var(--display); letter-spacing: -.01em; }
+.hero .tag { font: 400 clamp(20px, 1.9vw, 26px)/1.35 var(--display); color: var(--gold-soft); }
+.cta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }
+.hint { position: absolute; left: 25%; bottom: 150px; transform: translateX(-50%); color: var(--gold-soft); font: 400 12px/1 var(--body); display: grid; justify-items: center; gap: 6px; }
+.hint i { display: block; width: 1px; height: 22px; background: var(--gold-soft); animation: bob 2s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(8px); } }
+.hero { position: relative; }
+.feel.sec { min-height: 0; padding-block: clamp(48px, 7vh, 80px); }  /* no 3D here: no empty smoke above and below */
+details { margin-top: 6px; border-top: 1px solid var(--hairline-cream); width: 100%; }
+details summary { cursor: pointer; padding: 16px 0; font: 400 16px/1 var(--body); color: var(--cream); list-style: none; display: flex; justify-content: space-between; min-height: 48px; align-items: center; }
+details summary::-webkit-details-marker { display: none; }
+details summary::after { content: "+"; color: var(--gold); }
+details[open] summary::after { content: "–"; }
+details ol { margin: 0 0 18px; padding-inline-start: 22px; color: var(--text); display: grid; gap: 6px; background: rgba(10,10,11,.5); }
+
+/* phone: the product sits small in a slot beside the heading, inside the copy (wide screens: no slot) */
+.head { display: contents; }
+.ph-slot, .ph-still { display: none; }
+
+/* 3 · Feel: the treatment photo in a rounded frame on the right, the four sensations as pins under the copy */
+.pins { display: grid; gap: 10px; justify-items: start; }
+.mark { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid rgba(111,183,186,.45); border-radius: 999px; background: rgba(10,10,11,.55); backdrop-filter: blur(8px); font: 400 14px/1.2 var(--body); color: var(--cream); }
+.mark::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--drop); box-shadow: 0 0 0 4px rgba(111,183,186,.22); }
+.shot { margin: 0; align-self: center; justify-self: end; width: min(100%, 600px); aspect-ratio: 1088 / 608; border-radius: 26px; overflow: hidden; border: 1px solid rgba(111,183,186,.32); box-shadow: 0 30px 90px rgba(0,0,0,.6), 0 0 70px rgba(111,183,186,.12); background: var(--ink); }
+.shot img { width: 100%; height: 100%; object-fit: cover; }
+
+/* 4 · Kit & facts: four facts; the caption about the two-layer mask follows the two masks on screen */
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 28px; width: 100%; margin-top: 8px; }
+.fact { display: grid; gap: 8px; padding-top: 16px; border-top: 1px solid var(--hairline); min-width: 0; }
+.fact b { font: 400 clamp(26px, 3vw, 38px)/1.1 var(--display); color: var(--cream); font-variant-numeric: tabular-nums; }
+.fact span { font: 400 14px/1.4 var(--body); color: var(--text-faint); }
+.sec .dbl, .dbl.fl { display: inline-flex; align-items: center; gap: 10px; max-width: min(86vw, 460px); margin: 0; padding: 10px 16px; border: 1px solid rgba(111,183,186,.45); border-radius: 18px; background: rgba(10,10,11,.72); backdrop-filter: blur(8px); font: 400 14px/1.4 var(--body); color: var(--cream); }
+.sec .dbl::before, .dbl.fl::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--drop); box-shadow: 0 0 0 4px rgba(111,183,186,.22); }
+/* the floating copy (made by the 3D script) sits in a free spot next to the masks; the one in the copy is kept for
+   screen readers and shows whenever no free spot exists at this screen size */
+.dbl.fl { position: fixed; left: 0; top: 0; z-index: 2; pointer-events: none; opacity: 0; visibility: hidden; will-change: transform, opacity; }
+.dbl.fl.v1 { max-width: 270px; }
+.dbl.fl.v2 { max-width: 190px; }
+.dbl.fl.on { opacity: var(--do, 1); visibility: visible; }
+.gl-on .kit .dbl.away { visibility: hidden; }
+
+/* 5 · Protocol: copy and the finishing chip on the left, the three steps along the bottom (01 on the right) */
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 24px; margin: 44px 0 0; padding: 0; list-style: none; direction: rtl; }
+.step { display: grid; gap: 12px; align-content: start; min-width: 0; padding: 32px; border-radius: 24px; background: rgba(26,26,31,.95); border: 1px solid var(--hairline-cream); }
+.step .n { font: 300 22px/1 var(--display); color: var(--gold); }
+.step h3 { font: 500 21px/1.25 var(--display); color: var(--cream); }
+.step p { color: var(--text-faint); font: 400 15px/1.6 var(--body); }
+.step .chip.sm { justify-self: start; padding: 6px 14px; font-size: 14px; }
+
+/* 6 · Offer: copy, buttons and contacts on the left; the "what's in the box" card on the right */
+.offer .cta { flex-direction: column; align-items: flex-start; }
+.contacts { display: grid; width: 100%; max-width: 420px; margin-top: 6px; }
+.contacts a { display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 4px 2px; border-bottom: 1px solid var(--hairline-cream); color: var(--text-soft); text-decoration: none; font: 400 15px/1.3 var(--body); }
+.contacts a:hover { color: var(--cream); }
+.contacts svg { width: 20px; height: 20px; color: var(--gold); flex: none; }
+.sec p.hours { margin-top: 4px; font: 400 13px/1.6 var(--body); color: var(--text-faint); }
+.sec p.hours span { display: block; }
+.kitcard { justify-self: end; align-self: center; width: min(100%, 540px); display: grid; gap: 12px; padding: 26px 30px 28px; border-radius: 28px; border: 1px solid var(--hairline); background: linear-gradient(160deg, rgba(28,27,31,.95), rgba(14,14,17,.95)); box-shadow: 0 30px 90px rgba(0,0,0,.5); }
+.kc-head { display: flex; align-items: center; gap: 14px; }
+.kc-head h3 { font: 500 26px/1.2 var(--display); color: var(--cream); }
+.kc-head .badge { letter-spacing: .14em; font-size: 11px; }
+.kc-pic { width: 100%; height: clamp(150px, 24vh, 230px); object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,.55)); }
+.kc-qty { display: flex; align-items: baseline; gap: 12px; max-width: none !important; color: var(--text-soft) !important; font: 400 15px/1.45 var(--body); }
+.kc-qty b { font: 300 32px/1 var(--display); color: var(--gold-soft); flex: none; }
+.kitcard .facts { margin-top: 0; gap: 12px 20px; }   /* the kit's facts live in the card (one «מה באריזה» block, owner 17/10) */
+.kitcard .fact { padding-top: 10px; } .kitcard .fact b { font-size: 22px; } .kitcard .fact span { font-size: 13px; }
+/* the two layers named on the kit screen, over each layer (made visible by the 3D script) */
+.lyr { position: fixed; left: 0; top: 0; z-index: 2; margin: 0; pointer-events: none; padding: 6px 14px; border-radius: 999px; background: rgba(10,10,11,.7); border: 1px solid rgba(111,183,186,.45); font: 400 13px/1.2 var(--body); color: var(--cream); white-space: nowrap; opacity: 0; visibility: hidden; will-change: transform, opacity; }
+.lyr.on { opacity: var(--lo, 1); visibility: visible; }
+.kc-net { font: 400 13px/1 var(--body); color: var(--text-faint) !important; }
+.kitcard h4 { padding-top: 14px; border-top: 1px solid var(--hairline-cream); font: 500 13px/1.2 var(--body); letter-spacing: .04em; color: var(--gold); }
+.kc-act { columns: 2; column-gap: 26px; margin: 0; padding: 0; list-style: none; font: 400 14px/1.5 var(--body); color: var(--text-soft); }
+.kc-act li { break-inside: avoid; margin-bottom: 4px; }
+.kitcard .chip { justify-self: start; padding: 8px 16px; font-size: 14px; }
+
+/* 7 · Specialists: who performs the treatment (Make design); full width, no 3D objects */
+.spec-sec.sec { padding-block: 80px 92px; }
+.spec-sec .wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; justify-items: start; }
+.spec-sec .wrap > * { max-width: 100%; }
+.spec-sec p.intro { max-width: min(60ch, 100%); }
+.spec-sec h2 { font-size: clamp(34px, 4vw, 52px); }
+.filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 8px; }
+.filter .lbl { font: 400 14px/1 var(--body); color: var(--text-faint); letter-spacing: .04em; margin-inline-end: 4px; }
+.fchip { min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(246,243,236,.2); background: rgba(10,10,11,.45); color: var(--text-soft); font: 400 14px/1 var(--body); cursor: pointer; transition: background-color .3s, color .3s, border-color .3s; }
+.fchip[aria-pressed="true"] { border-color: var(--gold); color: var(--gold-soft); background: rgba(201,162,75,.16); }
+.specs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; width: 100%; margin-top: 6px; }
+.spec { --card: rgb(24,24,28); display: flex; flex-direction: column; min-width: 0; overflow: hidden; border-radius: 22px; background: var(--card); border: 1px solid var(--hairline); }
+.spec[hidden] { display: none; }
+.spec .pic { position: relative; height: 228px; background: var(--ink); }
+.spec .pic img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+.spec .pic::after { content: ""; position: absolute; inset: 28% 0 -1px; background: linear-gradient(to bottom, rgba(24,24,28,0) 0%, rgba(24,24,28,.06) 22%, rgba(24,24,28,.22) 44%, rgba(24,24,28,.5) 64%, rgba(24,24,28,.82) 84%, var(--card) 100%); }
+.spec .sb { display: grid; gap: 6px; justify-items: start; padding: 2px 22px 12px; }
+.spec.mono .sb { padding-top: 14px; }
+.spec .av { width: 58px; height: 58px; margin: 22px 22px 0; border-radius: 50%; border: 1px solid var(--gold); display: grid; place-items: center; font: 400 28px/1 var(--display); color: var(--gold-soft); background: rgba(10,10,11,.6); }
+.spec h3 { font: 400 26px/1.15 var(--display); color: var(--cream); }
+.spec .city { display: flex; align-items: center; gap: 8px; color: var(--gold-soft); font: 400 15px/1.4 var(--body); }
+.spec h3.city { font: 400 24px/1.2 var(--display); }
+.spec .city svg { width: 17px; height: 17px; flex: none; color: var(--gold); }
+.spec .tel { font: 400 15px/1.4 var(--body); color: var(--text-soft); }
+.spec .tel a { text-decoration: none; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tags .tag, .tags .ok { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font: 400 13px/1.2 var(--body); }
+.tags .tag { border: 1px solid rgba(111,183,186,.5); color: var(--drop-soft); }
+.tags .ok { border: 1px solid var(--gold-faint); color: var(--gold-soft); }
+.tags .ok svg { width: 15px; height: 15px; }
+.book { justify-self: stretch; display: flex; align-items: center; gap: 8px; min-height: 46px; margin-top: 2px; padding-top: 6px; border-top: 1px solid var(--hairline-cream); color: var(--gold); text-decoration: none; font: 400 15px/1 var(--body); letter-spacing: .02em; }
+.spec-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px 28px; width: 100%; margin-top: 10px; }
+.join { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.join span { font: 400 24px/1.2 var(--display); color: var(--cream); }
+
+.related { padding-block: clamp(56px, 7vw, 96px) clamp(72px, 7vw, 104px); background: linear-gradient(to bottom, transparent, var(--ink) 18%); }
+.related h2 { font: 400 clamp(26px, 3vw, 36px)/1.15 var(--display); color: var(--cream); }
+.related h2 + .cards { margin-top: 28px; }
+.related .cards + h2 { margin-top: 64px; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+@media (max-width: 960px) { .cards, .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .cards, .specs { grid-template-columns: 1fr; } }
+.card { display: flex; flex-direction: column; overflow: hidden; border-radius: 24px; background: var(--charcoal); border: 1px solid var(--gold-wash); text-decoration: none; min-width: 0; }
+.card .pic { position: relative; height: 248px; }
+.card .pic::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: 14px; height: 18px; border-radius: 50%; background: radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.6), transparent 70%); }
+.card .pic img { position: absolute; z-index: 1; inset: 20px 10% 24px; width: 80%; height: calc(100% - 44px); max-width: none; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 16px 18px rgba(0,0,0,.45)); transform-origin: 50% 100%; transition: transform .5s var(--ease); }
+.card:hover .pic img { transform: scale(1.05); }
+.card .body { padding: 24px; display: grid; gap: 8px; justify-items: start; }
+.card h3 { font: 500 22px/1.15 var(--display); color: var(--cream); }
+.card p { font: 400 14px/1.6 var(--body); color: var(--text-faint); }
+.card .go { margin-top: 6px; font: 400 13px/1 var(--body); color: var(--gold-soft); }
+.foot { border-top: 1px solid var(--hairline-cream); padding-block: 36px calc(36px + 72px); color: var(--text-faint); font: 400 13px/1.5 var(--body); background: var(--bg); }
+.foot .wrap { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; align-items: center; }
+.foot img { height: 44px; width: auto; opacity: .9; }
+.legal { display: flex; flex-wrap: wrap; gap: 4px 22px; }
+.legal a { display: inline-flex; align-items: center; min-height: 44px; color: var(--text-soft); text-decoration: none; }
+.legal a:hover { color: var(--gold-soft); }
+
+/* section dock at the bottom (as on the reference): the active block is lit */
+.dock { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 25; display: flex; gap: 4px; padding: 5px; border-radius: 999px; background: rgba(10,10,11,.66); backdrop-filter: blur(12px); border: 1px solid var(--hairline-cream); max-width: calc(100vw - 24px); }
+.dock a { padding: 13px 16px; border-radius: 999px; font: 400 13px/1 var(--body); color: var(--text-faint); text-decoration: none; white-space: nowrap; transition: background-color .3s, color .3s; }
+.dock a.on { background: var(--gold); color: var(--on-gold); }
+@media (max-width: 900px) { .dock a { padding-inline: 12px; } }
+@media (max-width: 760px) { .dock { display: none; } }
+
+/* sticky mobile action */
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom, 0px)); background: rgba(10,10,11,.86); backdrop-filter: blur(12px); border-top: 1px solid var(--hairline); display: none; align-items: center; justify-content: space-between; gap: 12px; }
+.bar b { font: 500 13px/1.3 var(--body); min-width: 0; display: grid; }
+.bar b small { font: 400 13px/1.3 var(--body); color: var(--text-faint); }
+.bar .btn { min-height: 44px; padding-inline: 18px; white-space: nowrap; flex: none; font-size: 14px; }
+
+/* ---- lead form (the blocks of the mitoderm.com form, in this design) */
+html.form-open { overflow: hidden; }
+.form-open .bar { display: none; }
+dialog.lead { padding: 0; border: 0; background: transparent; color: var(--cream); width: min(1000px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); overflow: visible; }
+dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px); }
+.lead-in { position: relative; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); max-height: calc(100dvh - 32px); border-radius: 28px; overflow: hidden; border: 1px solid var(--hairline); background: #111114; box-shadow: 0 40px 120px rgba(0,0,0,.65); }
+.lead-x { position: absolute; z-index: 3; top: 14px; inset-inline-end: 14px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(246,243,236,.24); background: rgba(10,10,11,.55); color: var(--cream); display: grid; place-items: center; cursor: pointer; }
+.lead-x svg { width: 20px; height: 20px; }
+.lead-form { display: grid; align-content: center; gap: 0; padding: 48px 44px 34px; overflow-y: auto; }
+.lead-form h2 { font: 400 clamp(28px, 3vw, 38px)/1.12 var(--display); color: var(--cream); }
+.lead-form h2 .g, .lead-done .g { color: var(--gold-soft); }
+.lead-form .sub { margin-top: 10px; color: var(--text-soft); font: 400 15px/1.5 var(--body); }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 26px; transition: opacity .3s; }
+.f { display: grid; min-width: 0; }
+.f input { width: 100%; min-height: 52px; padding: 0 18px; border-radius: 14px; border: 1px solid rgba(246,243,236,.2); background: rgba(246,243,236,.05); color: var(--cream); font: 400 16px/1.2 var(--body); text-align: right; }
+.f input::placeholder { color: rgba(246,243,236,.62); }
+.f input:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; border-color: transparent; }
+.f input[aria-invalid="true"] { border-color: var(--error); }
+.err { margin: 6px 4px 0; font: 400 13px/1.35 var(--body); color: var(--error); }
+.err:empty { display: none; }
+.consent { display: flex; align-items: center; gap: 12px; min-height: 44px; margin-top: 14px; font: 400 14px/1.4 var(--body); color: var(--text-soft); cursor: pointer; transition: opacity .3s; }
+.consent input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--gold); cursor: pointer; }
+.consent input[aria-invalid="true"] { outline: 2px solid var(--error); outline-offset: 2px; }
+.consent input[aria-invalid="true"] + span { color: var(--error); }
+.submit { width: 100%; margin-top: 14px; min-height: 54px; }
+.submit i { display: none; width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(201,162,75,.3); border-top-color: var(--gold); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.busy .fields, .busy .consent { opacity: .4; pointer-events: none; }
+.busy .submit { background: transparent; border-color: var(--gold); color: var(--gold); cursor: progress; transform: none; }
+.busy .submit i { display: block; }
+.privacy { display: flex; align-items: center; gap: 8px; margin-top: 14px; font: 400 13px/1.4 var(--body); color: var(--text-faint); }
+.privacy svg { width: 16px; height: 16px; flex: none; color: var(--gold); }
+.lead-fail { margin-top: 14px; }
+.fail-msg { margin-bottom: 10px; font: 400 15px/1.45 var(--body); color: var(--error); }
+.fail-msg:empty { display: none; }
+.spec-empty { color: var(--text-soft); font: 400 15px/1.5 var(--body); }
+.lead-fail .btn { width: 100%; }
+.lead-done { display: grid; gap: 18px; justify-items: start; align-content: center; min-height: 100%; outline: none; }
+.lead-done h2 { font: 400 clamp(32px, 3.6vw, 44px)/1.1 var(--display); }
+.lead-done .mob { display: none; font: 400 30px/1.1 var(--display); color: var(--cream); }
+.lead-panel { position: relative; overflow: hidden; display: grid; place-items: center; align-content: center; gap: 18px; padding: 56px 36px; background: #0b1213; min-height: 560px; }
+.lead-panel canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lead-panel img { position: relative; width: min(100%, 420px); height: auto; filter: drop-shadow(0 26px 40px rgba(0,0,0,.55)); }
+.lead-panel p { position: relative; font: 500 clamp(26px, 2.6vw, 34px)/1 var(--display); letter-spacing: .06em; color: var(--cream); }
+
+/* phone: the objects take the upper part of the screen, the copy sits under them */
+@media (max-width: 760px) {
+  .top { background: rgba(10,10,11,.94); }
+  .still-fallback { background: radial-gradient(80% 40% at 50% 26%, rgba(111,183,186,.22), transparent 70%), var(--bg); }
+  .still-fallback img { right: 50%; top: 30%; transform: translate(50%, -50%); width: min(58vw, 270px); }
+  .chip.duo { display: inline-grid; justify-items: center; text-align: center; border-radius: 20px; }
+  .chip.duo .sep { display: none; }
+  .split { grid-template-columns: 1fr; }
+  .split > .col { max-width: none; }
+  .still-fallback img { display: none; }
+  /* compact flow: no empty screens; the 3D product follows the slot beside each heading */
+  .sec { min-height: 0; align-items: start; padding-block: 30px 18px; }
+  .sec h1, .sec h2, .sec p { text-shadow: 0 1px 14px rgba(10,10,11,.9); }
+  .hero.sec { padding-top: 22px; }
+  .hero h1 { font-size: 40px; }
+  .head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(118px, 38%); column-gap: 14px; row-gap: 12px; align-items: center; justify-items: start; width: 100%; }
+  .head > :not(.ph-slot) { grid-column: 1; }
+  .head > .ph-slot { display: block; position: relative; grid-column: 2; grid-row: 1 / span 2; align-self: stretch; justify-self: stretch; min-height: 172px; }
+  .head.three > .kicker { grid-column: 1 / -1; }  /* the hero eyebrow is one line over the carton and the name, never into the slot */
+  .head.three > .ph-slot { grid-row: 2 / span 2; min-height: 176px; }
+  .head.tall > .ph-slot { min-height: 214px; }
+  .head > .kicker { align-self: end; }  /* the eyebrow sits on its heading, not halfway up the slot */
+  .head > h1, .head > h2, .head > .tag { align-self: start; }
+  .ph-slot.wide { display: block; position: relative; width: calc(100% + 2 * var(--gutter) - 12px); margin-inline: calc(6px - var(--gutter)); height: min(92vw, 360px); }
+  .ph-slot .ph-still { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity .6s var(--ease); }
+  .gl-on .ph-slot .ph-still { opacity: 0; }
+  .hero .cta { flex-wrap: nowrap; gap: 10px; }
+  .hero .cta .btn { min-height: 48px; padding-inline: 16px; font-size: 14px; white-space: nowrap; }
+  .hero .chip { padding: 8px 14px; font-size: 14px; }
+  .feel .shot { order: -1; justify-self: stretch; width: 100%; margin-bottom: 24px; border-radius: 20px; }
+  .offer.sec, .spec-sec.sec { min-height: auto; align-items: start; padding-block: 48px 40px; }
+  .related { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .kitcard { justify-self: stretch; margin-top: 36px; padding: 22px 20px 24px; }
+  .kc-act { columns: 1; }
+  /* the three steps swipe sideways (the next card peeks in), instead of three screens of stacked cards */
+  .steps { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 80%; gap: 12px; margin: 28px calc(-1 * var(--gutter)) 0; padding: 0 var(--gutter) 6px;
+    overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); scrollbar-width: none; overscroll-behavior-x: contain; }
+  .steps::-webkit-scrollbar { display: none; }
+  .step { scroll-snap-align: start; padding: 24px 22px; }
+  .spec-foot { flex-direction: column; align-items: stretch; }
+  .spec-foot .btn { width: 100%; }
+  .hint { display: none; }
+  .bar { display: flex; }
+  /* the form opens as a full-height sheet */
+  dialog.lead { width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; }
+  .lead-in { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: 100dvh; max-height: 100dvh; border-radius: 0; border: 0; }
+  .lead-panel { order: -1; min-height: 0; grid-auto-flow: column; justify-content: center; gap: 14px; padding: 18px 64px 16px; }
+  .lead-panel img { width: auto; height: 104px; }
+  .lead-panel p { font-size: 22px; }
+  .lead-form { align-content: start; padding: 28px 20px 32px; }
+  .fields { grid-template-columns: 1fr; gap: 12px; margin-top: 22px; }
+  .lead-done .mob { display: block; }
+}
+
+/* reveal as in Make (0.6 s, 20 px, once); without JS everything shows */
+.js .rv { opacity: 0; transform: translateY(20px); transition: opacity .6s var(--ease), transform .6s var(--ease); transition-delay: var(--d, 0s); }
+.js .rv.in { opacity: 1; transform: none; }
+@media (max-width: 380px) { .hero .cta { flex-direction: column; align-items: stretch; } }
+.kicker .sep { white-space: pre; }
+/* lining figures win over every `font` shorthand (which resets the numeric variant): Cormorant's old-style «5», «1o%» */
+*, *::before, *::after { font-variant-numeric: lining-nums !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .js .rv { opacity: 1; transform: none; transition: none; }
+  .hint i { animation: none; }
+  .btn:hover, .card:hover .pic img { transform: none; }
+  .still-fallback { transition: none; }
+  .submit i { animation-duration: 2.4s; }
+}
+</style>
+
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="still-fallback" aria-hidden="true"><img src="__FALLBACK__" alt=""></div>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="MITODERM"><img src="__LOGO_MARK__" alt="MITODERM"></a>
+    <a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{cta_price}}</a>
+  </div>
+</header>
+
+<p class="lyr" aria-hidden="true">{{layer_white}}</p><p class="lyr" aria-hidden="true">{{layer_blue}}</p>
+<main>
+<!-- 0 · Meet: the box in front of the moving background -->
+<section class="sec hero" id="top" data-st="0">
+  <div class="wrap split">
+    <div class="col">
+      <div class="badges rv"><span class="mark-line"><bdi>{{line_mark}}</bdi></span><span class="badge">{{line_name}}</span><span class="badge pro">{{use_pro}}</span></div>
+      <div class="head three">
+        <div class="kicker rv" style="--d:.06s"><span>{{{hero_eyebrow}}}</span></div>
+        <h1 class="rv" style="--d:.12s"><bdi>{{hero_h1}}</bdi></h1>
+        <p class="tag rv" style="--d:.18s">{{hero_tag}}</p>
+        <div class="ph-slot" aria-hidden="true"><img class="ph-still" src="__FALLBACK__" alt=""></div>
+      </div>
+      <p class="rv" style="--d:.24s">{{hero_lead}}</p>
+      <div class="chips rv" style="--d:.3s">{{{hero_chips}}}</div>
+      <div class="cta rv" style="--d:.36s"><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{cta_price}}</a><a class="btn ghost" href="#inside">{{hero_more}}</a></div>
+    </div>
+    <div></div>
+  </div>
+  <div class="hint" aria-hidden="true">{{scroll_hint}}<i></i></div>
+</section>
+
+<!-- 1 · Why: the box tilts and its lid opens, the edge of the mask shows -->
+<section class="sec" id="why" data-st="1">
+  <div class="wrap split">
+    <div class="col">
+      <div class="head">
+        <div class="kicker rv">{{nav_why}}</div>
+        <h2 class="rv" style="--d:.06s">{{why_h2}}</h2>
+        <div class="ph-slot" aria-hidden="true"></div>
+      </div>
+      <p class="rv" style="--d:.12s">{{why_p}}</p>
+      <div class="kicker rv" style="--d:.18s;margin-top:6px">{{why_kicker}}</div>
+      <div class="chips rv" style="--d:.24s">{{{why_chips}}}</div>
+    </div>
+    <div></div>
+  </div>
+</section>
+
+<!-- 2 · What's inside: the mask rises out of the open box -->
+<section class="sec" id="inside" data-st="2">
+  <div class="wrap split">
+    <div class="col">
+      <div class="head tall">
+        <div class="kicker rv">{{nav_inside}}</div>
+        <h2 class="rv" style="--d:.06s">{{inside_h2}}</h2>
+        <div class="ph-slot" aria-hidden="true"></div>
+      </div>
+      <p class="rv" style="--d:.12s">{{{inside_p}}}</p>
+      <div class="kicker rv" style="--d:.18s">{{inside_head}}</div>
+      <div class="chips rv" style="--d:.24s">{{{inside_chips}}}</div>
+      <details class="rv" style="--d:.3s">
+        <summary>{{inside_formula}}</summary>
+        <ol>{{{inside_formula_list}}}</ol>
+      </details>
+    </div>
+    <div></div>
+  </div>
+</section>
+
+<!-- 3 · Feel: the objects recede; the treatment frame appears on the right -->
+<section class="sec feel" id="feel" data-st="3">
+  <div class="wrap split">
+    <div class="col">
+      <div class="kicker rv">{{nav_feel}}</div>
+      <h2 class="rv" style="--d:.06s">{{feel_h2}}</h2>
+      <p class="rv" style="--d:.12s">{{feel_p}}</p>
+      <ul class="pins plain rv" style="--d:.18s">{{{feel_pins}}}</ul>
+    </div>
+    <figure class="shot rv" style="--d:.1s"><img src="__MIRROR__" alt="" width="1088" height="608" loading="lazy"></figure>
+  </div>
+</section>
+
+<!-- 4 · Kit & facts: the box is back, five sachets burst around it, the white and the blue mask in front -->
+<section class="sec kit" id="kit" data-st="4">
+  <div class="wrap split">
+    <div class="col">
+      <div class="kicker rv">{{nav_kit}}</div>
+      <h2 class="rv" style="--d:.06s">{{kit_h2}}</h2>
+      <p class="rv" style="--d:.12s">{{kit_p}}</p>
+      <div class="ph-slot wide" aria-hidden="true"></div>
+      <p class="dbl">{{kit_double}}</p>
+    </div>
+    <div></div>
+  </div>
+</section>
+
+<!-- 5 · Protocol: three steps; the objects far back and dim -->
+<section class="sec protocol" id="protocol" data-st="5">
+  <div class="wrap">
+    <div class="split"><div class="col">
+      <div class="head">
+        <div class="kicker rv">{{nav_protocol}}</div>
+        <h2 class="rv" style="--d:.06s">{{protocol_h2}}</h2>
+        <div class="ph-slot" aria-hidden="true"></div>
+      </div>
+      <p class="rv" style="--d:.12s">{{{protocol_p}}}</p>
+      <div class="chips rv" style="--d:.18s"><span class="chip gold duo">{{{protocol_chip}}}</span></div>
+    </div><div></div></div>
+    <ol class="steps">{{{protocol_steps}}}</ol>
+  </div>
+</section>
+
+<!-- 6 · Offer: the 3D objects step aside for the card "what's in the box" -->
+<section class="sec offer" id="offer" data-st="6">
+  <div class="wrap split">
+    <div class="col">
+      <div class="kicker rv">{{nav_offer}}</div>
+      <h2 class="rv" style="--d:.06s">{{{offer_h2}}}</h2>
+      <p class="rv" style="--d:.12s">{{offer_p}}</p>
+      <div class="cta rv" style="--d:.18s"><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{cta_price}}</a><a class="btn ghost" href="__WA_BUNDLE__" target="_blank" rel="noopener">{{offer_bundle}}</a></div>
+      <div class="contacts rv" style="--d:.24s">
+        <a href="{{phone_href}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span>{{phone_label}} <bdi dir="ltr">{{phone}}</bdi></span></a>
+        <a href="__WA_PRICE__" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 8.6c0 3.4 3 6.4 6.4 6.4l1-1.6-2-1-1 .8a5 5 0 0 1-2.6-2.6l.8-1-1-2z"/></svg><span><bdi dir="ltr">WhatsApp</bdi> <bdi dir="ltr">{{wa_display}}</bdi></span></a>
+        <a href="{{email_href}}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg><span>{{email_label}} <bdi dir="ltr">{{email}}</bdi></span></a>
+      </div>
+      <p class="hours rv" style="--d:.3s">{{{hours}}}</p>
+    </div>
+    <aside class="kitcard rv" style="--d:.1s" aria-labelledby="kitcard-h">
+      <div class="kc-head"><h3 id="kitcard-h">{{card_title}}</h3><span class="badge"><bdi>{{line_mark}}</bdi></span></div>
+      <img class="kc-pic" src="__KIT__" alt="{{kitshot_alt}}" width="760" height="794" loading="lazy">
+      <p class="kc-qty"><b><bdi dir="ltr">{{card_qty}}</bdi></b><span>{{card_line}}</span></p>
+      <div class="facts">{{{kit_facts}}}</div>
+      <p class="kc-net"><bdi dir="ltr">{{card_net}}</bdi></p>
+      <h4>{{card_actives_h}}</h4>
+      <ul class="kc-act">{{{card_actives}}}</ul>
+      <span class="chip gold">{{card_chip}}</span>
+    </aside>
+  </div>
+</section>
+
+<!-- 7 · Specialists: who performs the treatment -->
+<section class="sec spec-sec" id="specialists" data-st="7" aria-labelledby="spec-h">
+  <div class="wrap">
+    <div class="kicker rv">{{spec_kicker}}</div>
+    <h2 class="rv" id="spec-h" style="--d:.06s">{{spec_h2}}</h2>
+    <p class="intro rv" style="--d:.12s">{{{spec_p}}}</p>
+    <div class="filter rv" style="--d:.18s" role="group" aria-labelledby="spec-f"><span class="lbl" id="spec-f">{{spec_filter}}</span>{{{spec_chips}}}</div>
+    <div class="specs" aria-live="polite">{{{spec_cards}}}</div>
+    <p class="spec-empty" role="status" hidden>{{spec_empty}}</p>
+    <div class="spec-foot rv">
+      <a class="btn primary" href="https://www.mitoderm.com/he" target="_blank" rel="noopener">{{spec_list}}</a>
+      <div class="join"><span>{{spec_join_h}}</span><a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{spec_join_cta}}</a></div>
+    </div>
+  </div>
+</section>
+
+<section class="related" data-st="8">
+  <div class="wrap">
+    <h2 class="rv">{{related_line_h}}</h2>
+    <div class="cards">{{{related_line}}}</div>
+    <h2 class="rv">{{related_more_h}}</h2>
+    <div class="cards">{{{related_more}}}</div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="wrap"><img src="__LOGO_FULL__" alt="MITODERM — Where Science Meets Beauty"><span>{{footer}}</span><span class="legal"><a href="#">{{foot_access}}</a><a href="#">{{foot_privacy}}</a></span></div>
+</footer>
+
+<nav class="dock" aria-label="{{nav_label}}"><a href="#top" data-i="0">{{nav_meet}}</a><a href="#why" data-i="1">{{nav_why}}</a><a href="#inside" data-i="2">{{nav_inside}}</a><a href="#feel" data-i="3">{{nav_feel}}</a><a href="#kit" data-i="4">{{nav_kit}}</a><a href="#protocol" data-i="5">{{nav_protocol}}</a><a href="#offer" data-i="6">{{nav_offer}}</a><a href="#specialists" data-i="7">{{nav_spec}}</a></nav>
+
+<div class="bar"><b><bdi>{{bar_name}}</bdi><small>{{bar_note}}</small></b><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{cta_price}}</a></div>
+
+<!-- Lead form. This page is a static preview and cannot send data: the submit handler prevents the default and only
+     simulates the request. In production the form POSTs JSON {name, phone, email, profession, source: 'EXOCELL MASK page'}
+     to data-endpoint (/api/leads), as mitoderm.com does. -->
+<dialog class="lead" id="lead" aria-labelledby="lead-h">
+  <div class="lead-in">
+    <button type="button" class="lead-x" data-close aria-label="{{close_label}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <form class="lead-form" novalidate data-endpoint="/api/leads">
+      <div class="lead-body">
+        <h2 id="lead-h">{{form_p1}} <span class="g">{{form_p2}}</span> {{form_p3}}</h2>
+        <p class="sub">{{form_sub}}</p>
+        <div class="fields">
+          <div class="f"><input name="name" type="text" autocomplete="name" placeholder="{{f_name}}" aria-label="{{f_name}}" aria-describedby="e-name" required><p class="err" id="e-name"></p></div>
+          <div class="f"><input name="profession" type="text" autocomplete="organization-title" placeholder="{{f_prof}}" aria-label="{{f_prof}}" aria-describedby="e-profession" required><p class="err" id="e-profession"></p></div>
+          <div class="f"><input name="email" type="email" dir="ltr" autocomplete="email" inputmode="email" placeholder="{{f_email}}" aria-label="{{f_email}}" aria-describedby="e-email" required><p class="err" id="e-email"></p></div>
+          <div class="f"><input name="phone" type="tel" dir="ltr" autocomplete="tel" inputmode="tel" placeholder="{{f_phone}}" aria-label="{{f_phone}}" aria-describedby="e-phone" required><p class="err" id="e-phone"></p></div>
+        </div>
+        <label class="consent"><input type="checkbox" name="consent" aria-describedby="e-consent" required><span>{{f_consent}}</span></label><p class="err" id="e-consent"></p>
+        <button class="btn primary submit" type="submit"><span>{{f_submit}}</span><i aria-hidden="true"></i></button>
+        <p class="privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>{{f_privacy}}</span></p>
+        <div class="lead-fail" role="alert" hidden><p class="fail-msg">{{{form_fail}}}</p><a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 8.6c0 3.4 3 6.4 6.4 6.4l1-1.6-2-1-1 .8a5 5 0 0 1-2.6-2.6l.8-1-1-2z"/></svg><bdi dir="ltr">WhatsApp</bdi></a></div>
+      </div>
+      <div class="lead-done" role="status" tabindex="-1" hidden>
+        <p class="mob">{{f_sent_mob}}</p>
+        <h2>{{f_sent}} <span class="g">{{f_sent_gold}}</span></h2>
+        <button type="button" class="btn ghost" data-close>{{f_more}}</button>
+      </div>
+    </form>
+    <div class="lead-panel" aria-hidden="true"><canvas></canvas><img alt=""><p><bdi>{{hero_h1}}</bdi></p></div>
+  </div>
+</dialog>
+<script type="application/json" id="lead-errors">{{{form_errors}}}</script>
+
+<script>
+// page script: reveal on scroll, the dock, the specialists filter and the lead form; works with or without the 3D layer
+(function () {
+  var root = document.documentElement;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var secs = Array.prototype.slice.call(document.querySelectorAll('[data-st]'));
+  var dock = Array.prototype.slice.call(document.querySelectorAll('.dock a'));
+  function stageNow() {
+    var mid = window.innerHeight / 2, best = 0;
+    secs.forEach(function (s) { var r = s.getBoundingClientRect(); if (r.top <= mid) best = +s.dataset.st; });
+    return best;
+  }
+  function onScroll() {
+    var i = Math.min(stageNow(), dock.length - 1);
+    dock.forEach(function (a) { var on = +a.dataset.i === i; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current'); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  var rv = document.querySelectorAll('.rv');
+  if (reduce || !('IntersectionObserver' in window)) rv.forEach(function (el) { el.classList.add('in'); });
+  else {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -80px 0px' });
+    rv.forEach(function (el) { io.observe(el); });
+  }
+
+  // specialists: the profession chips filter the cards by their data-tags
+  var chips = Array.prototype.slice.call(document.querySelectorAll('.fchip'));
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.spec'));
+  function filter(tag) {
+    chips.forEach(function (c) { c.setAttribute('aria-pressed', String(c.dataset.tag === tag)); });
+    cards.forEach(function (c) { c.hidden = !(tag === '*' || c.dataset.tags.split('|').indexOf(tag) >= 0); });
+    var empty = document.querySelector('.spec-empty');
+    if (empty) empty.hidden = !empty.textContent.trim() || cards.some(function (c) { return !c.hidden; });
+  }
+  chips.forEach(function (c) { c.addEventListener('click', function () { filter(c.dataset.tag); }); });
+  var pressed = chips.filter(function (c) { return c.getAttribute('aria-pressed') === 'true'; })[0];
+  if (pressed) filter(pressed.dataset.tag);
+
+  // ---- lead form: every price button opens it instead of WhatsApp (the links keep WhatsApp as the no-JS fallback)
+  var dlg = document.getElementById('lead');
+  if (!dlg || typeof dlg.showModal !== 'function') return;
+  var form = dlg.querySelector('form'), body = dlg.querySelector('.lead-body'), done = dlg.querySelector('.lead-done');
+  var fail = dlg.querySelector('.lead-fail'), submit = form.querySelector('.submit'), consent = form.elements.consent;
+  var ERR = JSON.parse(document.getElementById('lead-errors').textContent);
+  var NAMES = ['name', 'profession', 'email', 'phone'], opener = null, tried = false, sending = false, painted = false;
+
+  function phoneOk(v) {  // 9–10 digits starting with 0, or +972 and the number without its 0
+    var d = v.replace(/[\s\-().]/g, '');
+    return /^0\d{8,9}$/.test(d) || /^\+972[1-9]\d{7,8}$/.test(d);
+  }
+  function check(name) {
+    var el = form.elements[name], v = el.value.trim(), msg = '';
+    if (name === 'name') msg = !v ? ERR.name_required : v.length < 3 ? ERR.name_length : '';
+    if (name === 'profession') msg = !v ? ERR.profession_required : v.length < 3 ? ERR.profession_length : '';
+    if (name === 'email') msg = !v ? ERR.email_required : !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) ? ERR.email_invalid : '';
+    if (name === 'phone') msg = !v ? ERR.phone_required : !phoneOk(v) ? ERR.phone_length : '';
+    el.setAttribute('aria-invalid', String(!!msg));
+    document.getElementById('e-' + name).textContent = msg;
+    return !msg;
+  }
+  function checkConsent() {
+    consent.setAttribute('aria-invalid', String(!consent.checked));
+    document.getElementById('e-consent').textContent = consent.checked ? '' : (ERR.consent_required || '');
+    return consent.checked;
+  }
+  NAMES.forEach(function (n) { form.elements[n].addEventListener('input', function () { if (tried) check(n); }); });
+  consent.addEventListener('change', function () { if (tried) checkConsent(); });
+
+  function setBusy(on) {
+    sending = on; form.classList.toggle('busy', on);
+    if (on) form.setAttribute('aria-busy', 'true'); else form.removeAttribute('aria-busy');
+    submit.disabled = on;
+    NAMES.forEach(function (n) { form.elements[n].readOnly = on; });
+    consent.disabled = on;
+  }
+  function sendLead(payload) {
+    // Production: return fetch(form.dataset.endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(payload) }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); });
+    // This preview cannot send anything: it waits 1.2 s and succeeds (window.__leadFail = true shows the error state).
+    return new Promise(function (resolve, reject) {
+      setTimeout(function () { if (window.__leadFail) reject(new Error('preview')); else resolve(payload); }, 1200);
+    });
+  }
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();  // never navigates: see sendLead
+    if (sending) return;
+    tried = true;
+    var ok = NAMES.map(check).every(Boolean);
+    ok = checkConsent() && ok;
+    if (!ok) { var bad = form.querySelector('[aria-invalid="true"]'); if (bad) bad.focus(); return; }
+    var payload = { name: form.elements.name.value.trim(), phone: form.elements.phone.value.trim(), email: form.elements.email.value.trim(),
+                    profession: form.elements.profession.value.trim(), source: 'EXOCELL MASK page' };
+    fail.hidden = true;
+    setBusy(true);
+    sendLead(payload).then(function () {
+      setBusy(false); body.hidden = true; done.hidden = false; done.focus();
+    }, function () {
+      setBusy(false); fail.hidden = false;  // keeps what was typed; WhatsApp as the way out
+    });
+  });
+
+  function reset() {
+    form.reset(); tried = false; body.hidden = false; done.hidden = true; fail.hidden = true;
+    NAMES.forEach(function (n) { form.elements[n].removeAttribute('aria-invalid'); document.getElementById('e-' + n).textContent = ''; });
+    consent.removeAttribute('aria-invalid'); document.getElementById('e-consent').textContent = '';
+  }
+  function paintPanel() {  // the far smoke of the page, full-bleed, painted once (same noise as the 3D background)
+    if (painted) return; painted = true;
+    var panel = dlg.querySelector('.lead-panel'), img = panel.querySelector('img'), kit = document.querySelector('.kc-pic');
+    if (kit && !img.src) img.src = kit.currentSrc || kit.src;
+    var cv = panel.querySelector('canvas'), W = 220, H = 280, x = cv.getContext('2d');
+    cv.width = W; cv.height = H;
+    var im = x.createImageData(W, H), fr = function (v) { return v - Math.floor(v); };
+    function hs(px, py) { return fr(Math.sin(px * 127.1 + py * 311.7) * 43758.5453); }
+    function n(px, py) {
+      var ix = Math.floor(px), iy = Math.floor(py), fx = px - ix, fy = py - iy, ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+      var a = hs(ix, iy), b = hs(ix + 1, iy), c = hs(ix, iy + 1), d = hs(ix + 1, iy + 1), ab = a + (b - a) * ux;
+      return ab + (c + (d - c) * ux - ab) * uy;
+    }
+    function fbm(px, py) { var v = 0, a = 0.5; for (var k = 0; k < 5; k++) { v += a * n(px, py); px *= 2.03; py *= 2.03; a *= 0.5; } return v; }
+    function ss(e0, e1, v) { var t = Math.min(1, Math.max(0, (v - e0) / (e1 - e0))); return t * t * (3 - 2 * t); }
+    var t = 23;
+    for (var j = 0; j < H; j++) for (var i = 0; i < W; i++) {
+      var px = (0.4 + 0.3 * i / W) * 3.2, py = (0.28 + 0.44 * (1 - j / H)) * 1.9;
+      var A = fbm(px + t * 0.018, py - t * 0.011), B = fbm(px * 1.7 - t * 0.012 + A * 1.6, py * 1.7 - t * 0.02 + A * 1.6);
+      var sm = ss(0.42, 0.88, B), s3 = sm * sm * sm * 0.55, g = ss(0.7, 0.95, A) * 0.07, o = (j * W + i) * 4;
+      im.data[o] = 255 * (0.039 + 0.07 * sm * 1.6 + 0.30 * s3 + 0.79 * g);
+      im.data[o + 1] = 255 * (0.039 + 0.19 * sm * 1.6 + 0.62 * s3 + 0.64 * g);
+      im.data[o + 2] = 255 * (0.043 + 0.21 * sm * 1.6 + 0.64 * s3 + 0.29 * g);
+      im.data[o + 3] = 255;
+    }
+    x.putImageData(im, 0, 0);
+  }
+  function open(e) {
+    e.preventDefault();
+    opener = e.currentTarget;
+    if (!done.hidden) reset();
+    paintPanel();
+    dlg.showModal();
+    root.classList.add('form-open');
+    form.elements.name.focus();
+  }
+  function finish() {  // runs at once on every way out (button, backdrop, Esc), and again on the dialog's close event
+    if (!root.classList.contains('form-open')) return;
+    root.classList.remove('form-open');
+    if (opener) opener.focus();
+  }
+  function close() { if (dlg.open) dlg.close(); finish(); }
+  document.querySelectorAll('[data-lead]').forEach(function (a) { a.addEventListener('click', open); });
+  dlg.querySelectorAll('[data-close]').forEach(function (b) { b.addEventListener('click', close); });
+  dlg.addEventListener('click', function (e) { if (e.target === dlg) close(); });  // a click on the backdrop
+  dlg.addEventListener('cancel', function (e) { e.preventDefault(); close(); });    // Esc
+  dlg.addEventListener('close', finish);
+  dlg.addEventListener('keydown', function (e) {  // keep Tab inside the dialog
+    if (e.key !== 'Tab') return;
+    var f = Array.prototype.filter.call(dlg.querySelectorAll('button, [href], input, [tabindex]:not([tabindex="-1"])'), function (el) { return !el.disabled && el.offsetParent !== null; });
+    if (!f.length) return;
+    var first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && (document.activeElement === first || !dlg.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+})();
+</script>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js';
+
+const canvas = document.getElementById('gl');
+const root = document.documentElement;
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const phoneQ = window.matchMedia('(max-width: 760px)');
+let renderer;
+// alpha: the build renders stills on a transparent ground (the page itself clears to opaque black)
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' }); }
+catch (e) { root.classList.add('nogl'); throw e; }
+let quality = 2;   // desktop pixel-ratio cap: 2, stepping down to 1.5 (the old cap) if frames run long; set in resize()
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.setClearColor(0x0a0a0b, 1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 80);
+camera.position.set(0, 0, 7);
+camera.layers.enable(1);   // desktop: one pass draws the far layer (layer 1) and the product (layer 0)
+
+// environment for reflections: a small dark room with soft neutral white panels, baked once. The product is lit only by
+// neutral light, so it keeps the colours of its real print at every pose; the teal is only around it (smoke, specks,
+// drops, glow) — owner, 11/10
+function makeEnv(r) {   // one per renderer: a PMREM texture belongs to its WebGL context
+  const pm = new THREE.PMREMGenerator(r), room = new THREE.Scene();
+  room.add(new THREE.Mesh(new THREE.BoxGeometry(12, 8, 12), new THREE.MeshBasicMaterial({ color: 0x0b0d0e, side: THREE.BackSide })));
+  const panel = (c, i, x, y, z, w, h, ry) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(i) })); m.position.set(x, y, z); m.rotation.y = ry; room.add(m); };
+  panel(0xffffff, 3.2, 4.5, 2.4, 1, 3, 2.2, -Math.PI / 2);   // the room mirrored with the composition (objects on the left)
+  panel(0xffffff, 1.8, -4.8, 0.5, -1, 3, 4, Math.PI / 2);
+  panel(0xffffff, 1.2, 0, 3.8, -4, 6, 1, 0);
+  const tex = pm.fromScene(room, 0.04).texture;
+  pm.dispose(); return tex;
+}
+let env1 = makeEnv(renderer); scene.environment = env1;
+canvas.addEventListener('webglcontextrestored', () => {   // a lost context: three.js restores image textures, not the
+  const old = env1; env1 = makeEnv(renderer); old.dispose(); if (!phone) scene.environment = env1;   // rendered environment
+  renderer.setClearColor(0x0a0a0b, 1); if (reduce) schedule();   // (a restore resets the clear colour; reduced motion: draw now)
+});
+scene.add(new THREE.HemisphereLight(0xffffff, 0x202022, 0.55));
+const key = new THREE.DirectionalLight(0xffffff, 1.25); key.position.set(3, 4, 5); scene.add(key);
+const rim = new THREE.PointLight(0xffffff, 10, 12); rim.position.set(-3.6, 1.2, 1.5); scene.add(rim);
+
+// ---- far layer: moving smoke on a big plane plus drifting specks; the camera's sway reveals its depth
+const bgMat = new THREE.ShaderMaterial({
+  uniforms: { t: { value: 0 }, glow: { value: 1 } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+  fragmentShader: `
+    varying vec2 vUv; uniform float t; uniform float glow;
+    float h(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
+    float n(vec2 p){ vec2 i=floor(p), f=fract(p); vec2 u=f*f*(3.0-2.0*f);
+      return mix(mix(h(i),h(i+vec2(1,0)),u.x), mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x), u.y); }
+    float fbm(vec2 p){ float v=0.0, a=0.5; for(int k=0;k<5;k++){ v+=a*n(p); p*=2.03; a*=0.5; } return v; }
+    void main(){
+      vec2 p = vUv * vec2(3.2, 1.9);
+      float a = fbm(p + vec2(t*0.018, -t*0.011));
+      float b = fbm(p*1.7 - vec2(t*0.012, t*0.02) + a*1.6);
+      vec3 col = vec3(0.039, 0.039, 0.043);
+      vec3 teal = vec3(0.30, 0.62, 0.64), deep = vec3(0.07, 0.19, 0.21), gold = vec3(0.79, 0.64, 0.29);
+      float smoke = smoothstep(0.42, 0.88, b);
+      col += deep * smoke * 1.6 * glow;
+      col += teal * pow(smoke, 3.0) * 0.55 * glow;
+      col += gold * smoothstep(0.7, 0.95, a) * 0.07 * glow;
+      float v = smoothstep(1.15, 0.25, length((vUv - 0.5) * vec2(1.4, 1.0)));
+      gl_FragColor = vec4(col * (0.35 + 0.65 * v), 1.0);
+    }`,
+  depthWrite: false
+});
+const bg = new THREE.Mesh(new THREE.PlaneGeometry(48, 28), bgMat);
+bg.position.z = -14; bg.layers.set(1); scene.add(bg);
+
+const dust = (() => {
+  const N = 420, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), c1 = new THREE.Color(0x9fd6d8), c2 = new THREE.Color(0xd8bd7e);
+  for (let i = 0; i < N; i++) {
+    pos[i * 3] = (Math.random() - 0.5) * 22; pos[i * 3 + 1] = (Math.random() - 0.5) * 13; pos[i * 3 + 2] = -12 + Math.random() * 13;
+    const c = Math.random() < 0.8 ? c1 : c2; col.set([c.r, c.g, c.b], i * 3);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const dot = document.createElement('canvas'); dot.width = dot.height = 32;
+  const x = dot.getContext('2d'), gr = x.createRadialGradient(16, 16, 0, 16, 16, 16);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, 32, 32);
+  const m = new THREE.PointsMaterial({ size: 0.06, map: new THREE.CanvasTexture(dot), vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending });
+  const p = new THREE.Points(g, m); p.layers.set(1); scene.add(p); return p;
+})();
+
+// ---- the product
+const loader = new THREE.TextureLoader();
+const tex = (src) => { const t = loader.load(src); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+const front = tex('__BOX_FRONT__'), frontSm = tex('__BOX_FRONT_SM__'), side = tex('__BOX_SIDE__'), sachetTex = tex('__SACHET__');
+const sideR = side.clone(); sideR.wrapS = THREE.RepeatWrapping; sideR.repeat.x = -1; sideR.needsUpdate = true;
+// colours of the plain faces are sampled from the print photos (front #60a7ac, sachet #5cc4d1); toneMapped false keeps
+// the print's hue exactly, the emissive copy of the print keeps it from going dark or changing as the box turns
+// (most of the colour comes from the print itself, a quarter from the neutral light, which only adds shape)
+const TRUE = 0.85, SHADE = 0.25;
+const shade = (c) => new THREE.Color(c).multiplyScalar(SHADE);
+const carton = (o) => { const tint = o.color != null ? o.color : 0x60a7ac;
+  return new THREE.MeshStandardMaterial(Object.assign({}, o, { color: shade(tint), roughness: 0.62, metalness: 0.0, toneMapped: false,
+    emissive: tint, emissiveMap: o.map || null, emissiveIntensity: TRUE })); };
+const OFF = new THREE.MeshBasicMaterial({ visible: false }); OFF.userData.off = true;  // the open top: the lid is a separate flap
+
+// the carton: body without its top, a pale inner tray, and the lid on a hinge at the back top edge (with its tuck flap)
+// face order: +x, -x, +y, -y, +z (front), -z
+const box = new THREE.Group(), frontMat = carton({ map: front, color: 0xffffff });
+box.add(new THREE.Mesh(new THREE.BoxGeometry(1.48, 2.0, 0.27), [
+  carton({ map: sideR, color: 0xffffff }), carton({ map: side, color: 0xffffff }), OFF,
+  carton({ color: 0x5b9fa4 }), frontMat, carton({ color: 0x5ea3a8 })
+]));
+box.add(new THREE.Mesh(new THREE.BoxGeometry(1.44, 1.96, 0.23), new THREE.MeshStandardMaterial({ color: shade(0xe9eeee), emissive: 0xe9eeee, emissiveIntensity: 0.75, roughness: 0.8, side: THREE.BackSide, toneMapped: false })));
+const hinge = new THREE.Group(); hinge.position.set(0, 1.0, -0.135); box.add(hinge);
+const lid = new THREE.Mesh(new THREE.BoxGeometry(1.48, 0.012, 0.27), carton({ color: 0x60a7ac })); lid.position.set(0, 0, 0.135); hinge.add(lid);
+const tuck = new THREE.Mesh(new THREE.BoxGeometry(1.44, 0.2, 0.01), carton({ color: 0x60a7ac })); tuck.position.set(0, -0.1, 0.235); tuck.rotation.x = 0.25; hinge.add(tuck);
+scene.add(box);
+
+// the sheet mask: a translucent sheet with eye, nose and mouth openings, curved like a face
+function maskTexture(plain) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 660; const x = c.getContext('2d');
+  const W = 512, H = 660;
+  x.beginPath();
+  x.moveTo(W * .5, H * .02);
+  x.bezierCurveTo(W * .9, H * .02, W * .99, H * .3, W * .95, H * .52);
+  x.bezierCurveTo(W * .9, H * .8, W * .68, H * .98, W * .5, H * .99);
+  x.bezierCurveTo(W * .32, H * .98, W * .1, H * .8, W * .05, H * .52);
+  x.bezierCurveTo(W * .01, H * .3, W * .1, H * .02, W * .5, H * .02);
+  const g = x.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, '#fcfcfb'); g.addColorStop(1, '#ecedec');
+  x.fillStyle = plain ? '#ffffff' : g; x.fill();
+  if (!plain) for (let i = 0; i < 2600; i++) { x.fillStyle = 'rgba(255,255,255,' + (Math.random() * .05) + ')'; x.fillRect(Math.random() * W, Math.random() * H, 1.5, 1.5); }
+  x.globalCompositeOperation = 'destination-out'; x.fillStyle = '#000';  // openings must be fully cut
+  const hole = (cx, cy, rx, ry, rot) => { x.beginPath(); x.ellipse(cx, cy, rx, ry, rot, 0, Math.PI * 2); x.fill(); };
+  hole(W * .32, H * .42, W * .11, H * .042, .08); hole(W * .68, H * .42, W * .11, H * .042, -.08);
+  hole(W * .5, H * .76, W * .14, H * .04, 0);
+  x.beginPath(); x.moveTo(W * .44, H * .62); x.quadraticCurveTo(W * .5, H * .66, W * .56, H * .62); x.lineTo(W * .5, H * .64); x.closePath(); x.fill();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const maskGeo = new THREE.PlaneGeometry(1.5, 1.94, 64, 80);
+{
+  const p = maskGeo.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i);
+    let z = -0.42 * Math.pow(x / 0.75, 2) - 0.14 * Math.pow(y / 0.97, 2);
+    z += 0.11 * Math.exp(-(x * x) / 0.012 - Math.pow(y + 0.05, 2) / 0.09);
+    p.setZ(i, z);
+  }
+  maskGeo.computeVertexNormals();
+}
+const maskMap = maskTexture(false), maskPlain = maskTexture(true);
+// opaque sheets (the openings are cut by alphaTest), lit like the carton: the print colour itself plus a little neutral shade
+const maskMat = (color, map, matte) => new THREE.MeshPhysicalMaterial({ map, color: shade(color), alphaTest: 0.5, side: THREE.DoubleSide,
+  roughness: matte ? 0.6 : 0.35, specularIntensity: matte ? 0.2 : 1, sheen: matte ? 0 : 0.4, sheenColor: new THREE.Color(0xffffff),
+  emissive: color, emissiveMap: map, emissiveIntensity: TRUE, toneMapped: false });  // matte: white highlights would wash the blue out
+// the mask that leaves the box (becomes the white layer in the kit), and the blue layer that joins it there
+const mask = new THREE.Mesh(maskGeo, maskMat(0xf0f1f0, maskMap)); scene.add(mask);
+const mask2 = new THREE.Mesh(maskGeo, maskMat(0x3a62b0, maskPlain, true)); mask2.renderOrder = 1; scene.add(mask2);
+
+// five sachets: the real turquoise print on the front, turquoise foil behind
+const foil = new THREE.MeshPhysicalMaterial({ color: shade(0xffffff), map: sachetTex, metalness: 0.0, roughness: 0.5, clearcoat: 0.18, clearcoatRoughness: 0.35,
+  emissive: 0xffffff, emissiveMap: sachetTex, emissiveIntensity: TRUE, toneMapped: false });
+const foilBack = new THREE.MeshPhysicalMaterial({ color: shade(0x5cc4d1), metalness: 0.0, roughness: 0.5, clearcoat: 0.18, emissive: 0x5cc4d1, emissiveIntensity: TRUE, toneMapped: false });
+const sachetGeo = new THREE.BoxGeometry(1.0, 1.17, 0.035);
+const sachets = [0, 1, 2, 3, 4].map(() => { const b = foilBack.clone(), f = foil.clone(); const m = new THREE.Mesh(sachetGeo, [b, b, b, b, f, b]); scene.add(m); return m; });
+
+// serum drops
+const DROPS = 22, drops = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 28, 20), new THREE.MeshPhysicalMaterial({ color: 0xbfeef0, roughness: 0.05, metalness: 0, transmission: 0.92, thickness: 0.6, ior: 1.33, clearcoat: 1 }), DROPS);
+const dropSeed = Array.from({ length: DROPS }, (_, i) => ({ a: Math.random() * Math.PI * 2, r: 0.9 + Math.random() * 1.1, y: (Math.random() - 0.5) * 2.4, z: (Math.random() - 0.3) * 1.4, s: 0.03 + Math.random() * 0.07, sp: 0.15 + Math.random() * 0.35 }));
+scene.add(drops);
+const dropGlass = drops.material, dropPhone = new THREE.MeshPhysicalMaterial({ color: 0xbfeef0, roughness: 0.05, metalness: 0, clearcoat: 1, transparent: true, opacity: 0.55, depthWrite: false });
+// (phone: the slot canvas is transparent, and three.js's transmission pass refracts a white half-alpha clear there —
+// the drops went milky; on the phone they are glossy see-through beads without transmission)
+
+// ---- choreography: one pose per block (0 Meet, 1 Why, 2 Inside, 3 Feel, 4 Kit, 5 Protocol, 6 Offer, 7 Specialists,
+// 8 related); poses blend as the page scrolls. Desktop poses are the Figma stills (render.html d1–d6); in the kit the
+// five sachets stand in two rows facing the viewer so their print reads (owner 11/10: the burst read as blank paper).
+// pose = [x, y, z, rotX, rotY, rotZ, scale, opacity] + extras (lid angle, attachment to the box)
+const P = (x, y, z, rx, ry, rz, s, o, e = {}) => Object.assign({ x, y, z, rx, ry, rz, s, o }, e);
+const AWAY = P(3.4, 1.6, -6, 0.1, -0.5, 0.08, 0.6, 0, { lid: 0 });
+const KITBOX = P(2.45, 0.8, -1.9, 0.06, -0.4, 0.03, 0.78, 1, { lid: 0 });
+const BOX = [
+  P(1.75, -0.05, 0.2, 0.06, -0.55, 0.07, 1, 1, { lid: 0 }),          // d1 meet
+  P(1.75, -0.55, 0.3, 0.62, -0.58, 0.05, 1, 1, { lid: 2.45 }),       // d2 the lid opens (well back), the mask's edge shows
+  P(1.75, -0.68, 0.1, 0.38, -0.5, 0.03, 0.92, 1, { lid: 2.2 }),      // d3 the mask is out (box kept clear of the dock)
+  P(3.0, -0.3, -4.2, 0.25, -0.3, 0.08, 0.8, 0, { lid: 1.2 }),        // feel: recedes behind the photo
+  KITBOX,                                                            // kit: the box behind the sachets
+  P(3.3, 1.35, -3.6, 0.1, -0.7, 0.08, 0.7, 1, { lid: 0 }),           // d6 protocol: far back
+  AWAY, AWAY, AWAY
+];
+// the mask: inside the box (attached, att 1) until it rises out (render.html d3); in the kit the white layer and the
+// blue layer (owner 11/10: the second layer is blue) stand beside the box; gone after
+const OUT = P(1.55, 0.85, 0.55, -0.42, -0.42, 0.06, 0.8, 1, { att: 0, ly: 0.78, ls: 0.88 });
+const MASK = [
+  Object.assign({}, OUT, { o: 0, att: 1, ly: 0 }),
+  Object.assign({}, OUT, { att: 1 }),
+  OUT,
+  P(2.6, 1.2, -2.5, -0.2, -0.6, 0.1, 0.6, 0, { att: 0, ly: 0.78, ls: 0.88 }),
+  P(3.3, 0.86, -0.7, 0.04, -0.42, -0.06, 0.5, 1, { att: 0, ly: 0.78, ls: 0.88 }),
+  P(2.3, -1.25, -2.8, 0.1, -0.5, 0.1, 0.62, 0, { att: 0, ly: 0.78, ls: 0.88 })  // gone on the protocol: it must not show through the steps
+];
+while (MASK.length < 9) MASK.push(MASK[5]);
+const BLUE_IN = P(2.45, 0.6, -2.0, 0, -0.5, 0, 0.45, 0), BLUE_OFF = P(2.3, -1.25, -2.8, 0.1, -0.5, 0.1, 0.6, 0);
+const MASK2 = [BLUE_IN, BLUE_IN, BLUE_IN, BLUE_IN, P(4.3, 0.8, -0.7, 0.04, -0.48, 0.05, 0.5, 1), BLUE_OFF, BLUE_OFF, BLUE_OFF, BLUE_OFF];
+// sachets: in the box until the kit, then two rows in front of it, each turned to face the camera; back into the far box
+const face = (x, y, z, s, dz = 0) => [x, y, z, Math.atan(y / (7 - z)) * 0.9, -Math.atan(x / (7 - z)) + 0.08, dz, s];
+const KIT = [face(1.7, -1.0, 0.6, 0.71, 0.04), face(2.52, -1.04, 0.64, 0.71, -0.01), face(3.34, -1.0, 0.6, 0.71, -0.04),
+             face(2.1, -0.26, 0.1, 0.74, 0.03), face(2.94, -0.26, 0.1, 0.74, -0.03)];
+const SACH = KIT.map(a => {
+  const inBox = P(2.45, 0.8, -2.0, 0.06, -0.4, 0.03, 0.5, 0), back = P(3.3, 1.35, -3.7, 0.1, -0.7, 0.08, 0.4, 0);
+  return [inBox, inBox, inBox, inBox, P(...a, 1), back, back, back, back];
+});
+const DROPC = [ // centre and spread of the drop cloud (kit: behind the sachets, so it never covers their print)
+  P(1.6, 0, 0.2, 0, 0, 0, 1, 1), P(1.75, 0.2, 0, 0, 0, 0, 1.15, 1), P(1.8, 0.1, -0.2, 0, 0, 0, 1.1, 0.8),
+  P(2.3, 0.2, -1, 0, 0, 0, 1.3, 0.5), P(2.6, 0.3, -2.2, 0, 0, 0, 1.3, 0.85), P(2.6, 0.3, -2.4, 0, 0, 0, 1.4, 0.35),
+  P(2.4, 0.6, -3, 0, 0, 0, 1, 0), P(2.4, 0.6, -3, 0, 0, 0, 1, 0), P(2.4, 0.6, -3, 0, 0, 0, 1, 0)
+];
+const GLOW = [1, 1, 1, 1, 1, 1, 1, 0.68, 0.68];  // the smoke calms down under the specialists
+
+// phone (owner 11/10: the carton small and set into the words): the product sits in a slot beside each heading (the
+// kit: a wide slot under its copy) and moves with it. Poses here are in the slot's own space, centred on the slot;
+// PFIT / PFITW = the height / width of the composition the slot holds. Blocks without a slot keep the neighbour's.
+const PB = [
+  P(0, 0, 0.2, 0.06, -0.55, 0.07, 1, 1, { lid: 0 }),
+  P(0, -0.22, 0.3, 0.62, -0.58, 0.05, 1, 1, { lid: 2.45 }),
+  P(0, -0.82, 0.1, 0.38, -0.5, 0.03, 0.82, 1, { lid: 2.2 }),
+  P(0, -0.82, -1.5, 0.25, -0.3, 0.08, 0.7, 0, { lid: 1.2 }),
+  P(0, 0.8, -1.4, 0.06, -0.3, 0.03, 0.62, 1, { lid: 0 }),
+  P(0, 0, 0, 0.1, -0.6, 0.08, 1, 1, { lid: 0 }),
+  P(0, 0, -1, 0.1, -0.6, 0.08, 0.8, 0, { lid: 0 })
+];
+while (PB.length < 9) PB.push(PB[6]);
+const POUT = P(-0.05, 0.74, 0.5, -0.42, -0.42, 0.06, 0.74, 1, { att: 0, ly: 0.78, ls: 0.88 });
+const PM = [Object.assign({}, POUT, { o: 0, att: 1, ly: 0 }), Object.assign({}, POUT, { att: 1 }), POUT,
+  P(0, 0.6, -1.5, -0.2, -0.6, 0.1, 0.6, 0, { att: 0, ly: 0.78, ls: 0.88 }),
+  P(-1.12, 0.78, 0.2, 0.04, -0.2, -0.06, 0.48, 1, { att: 0, ly: 0.78, ls: 0.88 }),
+  P(0, 0, -1.5, 0.1, -0.5, 0.1, 0.5, 0, { att: 0, ly: 0.78, ls: 0.88 })];
+while (PM.length < 9) PM.push(PM[5]);
+const PBLUE_IN = P(0, 0.6, -1.5, 0, -0.5, 0, 0.4, 0), PBLUE_OFF = P(0, 0, -1.5, 0.1, -0.5, 0.1, 0.5, 0);
+const PM2 = [PBLUE_IN, PBLUE_IN, PBLUE_IN, PBLUE_IN, P(1.12, 0.72, 0.25, 0.04, -0.25, 0.05, 0.48, 1), PBLUE_OFF, PBLUE_OFF, PBLUE_OFF, PBLUE_OFF];
+const PK = [[-1.06, -0.86, 0.5, -0.05, 0.12, 0.04, 0.95], [0, -0.9, 0.55, -0.05, 0, -0.01, 0.95], [1.06, -0.86, 0.5, -0.05, -0.12, -0.04, 0.95],
+            [-0.54, -0.12, -0.1, -0.03, 0.06, 0.03, 0.9], [0.54, -0.12, -0.1, -0.03, -0.06, -0.03, 0.9]];
+const PSACH = PK.map(a => {
+  const inBox = P(0, 0.8, -1.6, 0.06, -0.3, 0.03, 0.4, 0), back = P(0, 0, -1, 0.1, -0.6, 0.08, 0.4, 0);
+  return [inBox, inBox, inBox, inBox, P(...a, 1), back, back, back, back];
+});
+const PDROP = [P(0, 0, 0.2, 0, 0, 0, 0.7, 1), P(0, 0.1, 0, 0, 0, 0, 0.75, 1), P(0, 0.1, -0.2, 0, 0, 0, 0.8, 0.8), P(0, 0, -1, 0, 0, 0, 0.8, 0.5),
+  P(0, 0.4, -1.8, 0, 0, 0, 1.0, 0.8), P(0, 0, -1.5, 0, 0, 0, 0.8, 0.35), P(0, 0, -2, 0, 0, 0, 0.8, 0), P(0, 0, -2, 0, 0, 0, 0.8, 0), P(0, 0, -2, 0, 0, 0, 0.8, 0)];
+const PFIT = [2.5, 3.0, 3.3, 3.3, 3.0, 2.4, 2.4, 2.4, 2.4], PFITW = [1.9, 2.1, 2.0, 2.0, 3.2, 1.9, 1.9, 1.9, 1.9];
+const DESK = { BOX, MASK, MASK2, SACH, DROPC }, PHONE = { BOX: PB, MASK: PM, MASK2: PM2, SACH: PSACH, DROPC: PDROP };
+
+const ease = t => t * t * (3 - 2 * t);
+function pose(track, s) {
+  const i = Math.max(0, Math.min(track.length - 1, Math.floor(s))), j = Math.min(track.length - 1, i + 1), t = ease(Math.max(0, Math.min(1, (s - i - 0.15) / 0.7)));
+  const a = track[i], b = track[j];
+  if (typeof a === 'number') return a + (b - a) * t;
+  const r = {};
+  for (const k in a) r[k] = a[k] + (b[k] - a[k]) * t;
+  return r;
+}
+let phone = false;
+const mats = (obj) => obj.userData.mats || (obj.userData.mats = (() => {
+  const set = new Set();
+  obj.traverse(o => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (!m.userData.off) set.add(m); }); });
+  return [...set];
+})());
+// phone anchor: the slot on screen for stage s (blended between neighbours), px per composition unit, and its rect
+const SLOT = Array.from({ length: 9 }, (_, i) => document.querySelector(`[data-st="${i}"] .ph-slot`));
+const PH = { ax: 0, ay: 0, u: 60, r: [0, 0, 0, 0], fade: 1 };
+// phone (owner 19/10: the product swam against the copy and was soft): the product is drawn by its own renderer on a small
+// canvas inside the slot that holds it, so it scrolls with the copy natively (a fixed canvas lags the compositor's
+// scroll by a frame), at the phone's full pixel ratio. It renders that slot's part of the full-screen phone view
+// (setViewOffset), the slot placed at mid-height: the same poses, sizes and perspective, whatever the scroll. The fixed
+// canvas keeps only the far layer (smoke and specks, layer 1).
+const M = 16, pcv = document.createElement('canvas'); pcv.className = 'ph-gl'; pcv.setAttribute('aria-hidden', 'true');
+const bgCam = new THREE.PerspectiveCamera(48, 1, 0.1, 80); bgCam.layers.set(1);
+let pr2 = null, env2 = null, host = null, FW = 1, FH = 1, PHL = [0, 0, 0, 0], ML = M;   // PHL: the slot in the slot canvas (px)
+function phoneRenderer() {
+  if (!pr2) {
+    pr2 = new THREE.WebGLRenderer({ canvas: pcv, antialias: true, alpha: true, powerPreference: 'high-performance' });
+    pr2.outputColorSpace = renderer.outputColorSpace; pr2.toneMapping = renderer.toneMapping; pr2.toneMappingExposure = renderer.toneMappingExposure;
+    pr2.setClearColor(0x000000, 0); env2 = makeEnv(pr2);
+    pcv.addEventListener('webglcontextrestored', () => { const old = env2; env2 = makeEnv(pr2); old.dispose(); pr2.setClearColor(0x000000, 0); if (phone) scene.environment = env2; if (reduce) schedule(); });
+  }
+  return pr2;
+}
+function mountIn(el) {   // the slot canvas and the two layer captions move into the slot that holds the product
+  if (host === el) return;
+  host = el; el.appendChild(pcv); LYR.forEach(l => el.appendChild(l));
+}
+function unmount() {   // desktop: back to one full-screen canvas; the captions back before <main>
+  if (!host) return;
+  host = null; pcv.remove(); document.querySelector('main').before(...LYR); camera.clearViewOffset();
+}
+function slotView(r) {   // r: the slot's rect on screen → the slot canvas's size, its view offset; returns the slot's top in the view
+  const ml = Math.max(0, Math.min(M, Math.floor(r[0]))), mr = Math.max(0, Math.min(M, Math.floor(FW - r[2])));   // never past the screen's sides
+  const w = r[2] - r[0], h = r[3] - r[1], cw = Math.round(w + ml + mr), ch = Math.round(h + 2 * M), top = Math.round(FH / 2 - h / 2);
+  const R2 = phoneRenderer(), pr = Math.min(window.devicePixelRatio || 1, 3);
+  if (W !== cw || Hh !== ch || ML !== ml || R2.getPixelRatio() !== pr) {
+    R2.setPixelRatio(pr); R2.setSize(cw, ch, false); W = cw; Hh = ch; ML = ml;
+    pcv.style.left = -ml + 'px'; pcv.style.width = cw + 'px'; pcv.style.height = ch + 'px';
+  }
+  camera.setViewOffset(FW, FH, Math.round(r[0]) - ml, top - M, cw, ch);
+  PHL = [ml, M, ml + w, M + h];
+  return top;
+}
+function slotAt(i) {
+  const el = SLOT[i]; if (!el) return null;
+  const r = el.getBoundingClientRect(); if (!r.height) return null;
+  return { el, ax: r.left + r.width / 2, ay: r.top + r.height / 2, u: Math.min(r.height / PFIT[i], r.width / PFITW[i]), r: [r.left, r.top, r.right, r.bottom] };
+}
+function phoneAnchor(s) {
+  const i = Math.max(0, Math.min(8, Math.floor(s))), j = Math.min(8, i + 1), t = ease(Math.max(0, Math.min(1, s - i)));
+  let a = slotAt(i), b = slotAt(j);
+  if (!a && !b) return;  // between blocks without a slot the objects are faded out: keep the last anchor
+  a = a || b; b = b || a;
+  const f = Math.max(0, Math.min(1, s - i)), two = a !== b, use = two && f >= 0.5 ? b : a;
+  mountIn(use.el); const top = slotView(use.r), h = use.r[3] - use.r[1];   // the slot at mid-height of the full view
+  PH.ax = use.ax; PH.ay = top + h / 2; PH.u = use.u; PH.r = [use.r[0], top, use.r[2], top + h]; PH.sr = use.r;
+  PH.fade = two ? ease(Math.min(1, Math.abs(1 - 2 * f) * 2.2)) : 1;
+}
+function toPhone(cx, cy, z) {  // a point of the slot composition → world at depth z; k = world units per composition unit
+  const hh = (camera.position.z - z) * Math.tan(camera.fov * Math.PI / 360);
+  const sx = PH.ax + cx * PH.u, sy = PH.ay - cy * PH.u;
+  return { x: camera.position.x + (sx / FW * 2 - 1) * hh * camera.aspect, y: camera.position.y + (1 - sy / FH * 2) * hh, k: PH.u * 2 * hh / FH };   // the full view
+}
+// owner 17/10: the copy on the right, the objects on the left (as V-TECH). The poses are authored for the right; the
+// composition is mirrored here (x, and the turns about y and z) while the objects themselves are not: the print reads
+function place(obj, p, extra = {}) {
+  let x = -p.x, y = p.y, s = p.s, k = 1;
+  if (phone) { const m = toPhone(-p.x, p.y, p.z); x = m.x; y = m.y; k = m.k; s *= k; }
+  obj.position.set(x - (extra.x || 0) * k, y + (extra.y || 0) * k, p.z);
+  obj.rotation.set(p.rx, -(p.ry + (extra.ry || 0)), -p.rz);
+  obj.scale.setScalar(s);
+  fade(obj, phone ? p.o * PH.fade : p.o);
+}
+function fade(obj, o) {  // only a fading object is drawn as transparent, so solid ones keep correct depth order
+  mats(obj).forEach(m => { const want = obj.userData.alwaysT || o < 0.999; if (m.transparent !== want) { m.transparent = want; m.needsUpdate = true; } m.opacity = o; m.visible = o > 0.01; });
+}
+
+// scroll → stage: a block that fits the screen is a whole stage when centred; a taller one when its top is at the top
+const secs = Array.from(document.querySelectorAll('[data-st]'));
+let anchors = [];
+// (phone: the visible band is between the solid header and the bottom bar; a block that fits is centred in it)
+function measure() {
+  const top = document.querySelector('.top'), bar = document.querySelector('.bar');
+  const hdr = phone && top ? top.offsetHeight : 0, low = phone && bar && bar.offsetParent ? bar.offsetHeight : 0;
+  anchors = secs.map(el => {
+    const r = el.getBoundingClientRect(), vh = FH - hdr - low;   // FH: the large viewport on a phone (see resize)
+    return { st: +el.dataset.st, y: r.top + window.scrollY - hdr + Math.min(0, (r.height - vh) / 2) };
+  });
+  if (anchors.length) anchors[0].y = Math.max(0, anchors[0].y);  // the page opens on the first block, whole
+}
+window.__anchorY = st => { const a = anchors.find(x => x.st === st); return a ? a.y : null; };  // test hook
+function stage() {
+  const y = window.scrollY;
+  if (y <= anchors[0].y) return 0;
+  for (let i = 0; i < anchors.length - 1; i++) {
+    const a = anchors[i], b = anchors[i + 1];
+    if (y < b.y) return a.st + (b.st - a.st) * (y - a.y) / Math.max(1, b.y - a.y);
+  }
+  return anchors[anchors.length - 1].st;
+}
+
+const pointer = { x: 0, y: 0 }, sway = { x: 0, y: 0 };
+window.addEventListener('pointermove', e => { pointer.x = e.clientX / window.innerWidth * 2 - 1; pointer.y = e.clientY / window.innerHeight * 2 - 1; }, { passive: true });
+
+const m4 = new THREE.Matrix4(), mL = new THREE.Matrix4(), q = new THREE.Quaternion(), qA = new THREE.Quaternion(), v3 = new THREE.Vector3(), vA = new THREE.Vector3(), sc = new THREE.Vector3(), sA = new THREE.Vector3();
+// all near objects in their pose for stage s at time t (also used to test the kit layout at stage 4)
+function poseScene(s, t) {
+  camera.position.set(sway.x * 0.9, -sway.y * 0.45, 7);
+  if (phone) camera.lookAt(camera.position.x, camera.position.y, 0);  // straight ahead: the slot mapping is exact
+  else camera.lookAt(-0.9, 0, 0);
+  camera.updateMatrixWorld();
+  if (phone) phoneAnchor(s);
+  const T = phone ? PHONE : DESK;
+  const bp = pose(T.BOX, s);
+  place(box, bp, { y: Math.sin(t * 0.9) * 0.05, ry: Math.sin(t * 0.45) * 0.07 });
+  hinge.rotation.x = -bp.lid;
+  box.updateMatrixWorld();
+  const sp = T.SACH.map((tr, i) => { const p = pose(tr, s); place(sachets[i], p, { y: Math.sin(t * 0.8 + i) * 0.025 }); return p; });
+  // the mask: its own pose, blended with a pose inside the box while it is attached (stages 0–1)
+  const mp = pose(T.MASK, s);
+  place(mask, mp, { y: Math.sin(t * 0.7 + 1) * 0.04, ry: Math.sin(t * 0.35) * 0.05 });
+  if (mp.att > 0.001) {
+    mL.compose(vA.set(0, mp.ly, 0), qA.identity(), sA.setScalar(mp.ls));
+    m4.multiplyMatrices(box.matrixWorld, mL).decompose(vA, qA, sA);
+    mask.position.lerp(vA, mp.att); mask.quaternion.slerp(qA, mp.att); mask.scale.lerp(sA, mp.att);
+    mask.scale.z *= 1 - 0.8 * mp.att;  // in the box the sheet lies flat (its face curve is deeper than the carton)
+  }
+  const m2p = pose(T.MASK2, s);
+  place(mask2, m2p, { y: Math.sin(t * 0.7 + 2.2) * 0.035 });
+  // owner 17/10: one mask of two layers — the blue rides right behind the white one (its edge just shows); only on the
+  // kit screen do they part and stand side by side, named («שכבה לבנה» / «שכבה כחולה»)
+  const w4 = ease(Math.max(0, Math.min(1, 1 - Math.abs(s - 4) * 1.4)));
+  if (w4 < 0.999) {
+    vA.copy(mask2.position); qA.copy(mask2.quaternion); sA.copy(mask2.scale);   // the kit pose
+    v3.set(0, -0.025, -0.04).multiply(mask.scale).applyQuaternion(mask.quaternion).add(mask.position);   // no sideways shift: on the
+    // curved sides a shifted copy comes out in front of the white sheet
+    mask2.position.copy(v3).lerp(vA, w4); mask2.quaternion.copy(mask.quaternion).slerp(qA, w4); mask2.scale.copy(mask.scale).lerp(sA, w4);
+    m2p.o = mp.o * (1 - w4) + m2p.o * w4;
+    fade(mask2, phone ? m2p.o * PH.fade : m2p.o);
+  }
+  return { bp, sp, mp, m2p, w4 };
+}
+
+// The caption about the two-layer mask: a floating copy sits next to the masks in a free spot of the kit screen, never
+// over an object, inside the screen, clear of the copy, the header and the dock. Whether such a spot exists is decided
+// per screen size at the kit pose; if not, the caption stays in the copy (the in-copy one also serves screen readers).
+const dbl = document.querySelector('.kit .dbl'), kick = document.querySelector('.kit .kicker'), LYR = [...document.querySelectorAll('.lyr')];
+const fl = dbl ? dbl.cloneNode(true) : null;
+if (fl) { fl.classList.add('fl'); fl.setAttribute('aria-hidden', 'true'); document.body.appendChild(fl); }
+const flSize = [[0, 0], [0, 0], [0, 0]], cap = { on: false, r: [0, 0, 0, 0] };  // one, two and three lines
+let flPos = null, capFits = false, W = 1, Hh = 1;
+function sizeFl() {
+  if (!fl) return;
+  for (let v = 0; v < 3; v++) { fl.classList.toggle('v1', v === 1); fl.classList.toggle('v2', v === 2); flSize[v] = [fl.offsetWidth, fl.offsetHeight]; }
+  fl.classList.remove('v1', 'v2');
+}
+const cv = new THREE.Vector3();
+function rectOf(obj) {  // screen rectangle of an object: the corners of each part's own (rotated) box, projected
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  obj.updateWorldMatrix(true, true);
+  obj.traverse(o => {
+    if (!o.isMesh) return;
+    const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox();
+    const b = g.boundingBox;
+    for (let i = 0; i < 8; i++) {
+      cv.set(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z).applyMatrix4(o.matrixWorld).project(camera);
+      const px = (cv.x + 1) / 2 * W, py = (1 - cv.y) / 2 * Hh;
+      x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py);
+    }
+  });
+  return [x0, y0, x1, y1];
+}
+function findSpot(p, copyTop, keepLast) {
+  const obs = [];
+  if (p.bp.o > 0.05) obs.push(rectOf(box));
+  p.sp.forEach((sp, i) => { if (sp.o > 0.05) obs.push(rectOf(sachets[i])); });
+  const mR = rectOf(mask), m2R = rectOf(mask2);
+  obs.push(mR, m2R);
+  const ax = (Math.min(mR[0], m2R[0]) + Math.max(mR[2], m2R[2])) / 2, ay = Math.min(mR[1], m2R[1]);  // top centre of the masks
+  const wr = document.querySelector('main .wrap').getBoundingClientRect().right;  // the content's right edge (logo line)
+  const wl = document.querySelector('main .wrap').getBoundingClientRect().left;
+  const L = phone ? 12 : Math.max(12, wl), R = phone ? Math.min(W - 12, wr) : W / 2 - 16, T = 88, B = phone ? Math.min(Hh - 80, copyTop - 14) : Hh - 100;
+  LYR.forEach(el => { if (el.classList.contains('on')) { const r = el.getBoundingClientRect(); obs.push([r.left, r.top, r.right, r.bottom]); } });
+  const free = (x, y, w, h) => x >= L && x + w <= R && y >= T && y + h <= B &&
+    obs.every(o => x > o[2] + 8 || x + w < o[0] - 8 || y > o[3] + 8 || y + h < o[1] - 8);
+  if (keepLast && flPos) {
+    const [w, h] = flSize[flPos[2]], x = ax + flPos[0], y = ay + flPos[1];
+    if (free(x, y, w, h)) return [x, y, flPos[2]];
+  }
+  let best = null, bd = Infinity;
+  for (let v = 0; v < 3; v++) {
+    const [w, h] = flSize[v];
+    if (!w) continue;
+    for (let y = T; y + h <= B; y += 8) for (let x = L; x + w <= R; x += 8) {
+      if (!free(x, y, w, h)) continue;
+      const d = Math.hypot(x + w / 2 - ax, y + h - ay) + v * 80;  // nearest to the masks; one line preferred
+      if (d < bd) { bd = d; best = [x, y, v]; }
+    }
+  }
+  flPos = best ? [best[0] - ax, best[1] - ay, best[2]] : null;
+  return best;
+}
+// test hook: screen rectangles of the visible near objects (the verification checks them against copy, header, dock)
+const onScreen = r => { if (!host) return r; const c = pcv.getBoundingClientRect(); return [r[0] + c.left, r[1] + c.top, r[2] + c.left, r[3] + c.top]; };   // phone: slot canvas → screen
+const productRenderer = () => (phone && pr2 ? pr2 : renderer);
+window.__objRects = () => [box, ...sachets, mask, mask2].filter(o => mats(o).some(m => m.visible && m.opacity > 0.05)).map(o => onScreen(rectOf(o)));
+// test hooks: the rendered colour of the carton's plain front (the print must keep its colour at every pose), and per
+// visible sachet its screen rect, the band of its EXOCELL wordmark, depth and angle to the camera (the print must read)
+const bbox = pts => [Math.min(...pts.map(p => p[0])), Math.min(...pts.map(p => p[1])), Math.max(...pts.map(p => p[0])), Math.max(...pts.map(p => p[1]))];
+const proj = (o, pts, z) => pts.map(([a, b]) => { cv.set(a, b, z).applyMatrix4(o.matrixWorld).project(camera); return [(cv.x + 1) / 2 * W, (1 - cv.y) / 2 * Hh]; });
+// build hook: a still of the kit with this page's own light and materials on a transparent ground — the buy-card picture
+// ('kit': carton + 5 sachets) and the no-WebGL still ('still': the kit with the white and the blue mask). Returns a PNG URL.
+window.__renderStill = (what, w, h) => {
+  const keep = { phone, pr: renderer.getPixelRatio(), cam: camera.position.clone(), fov: camera.fov, aspect: camera.aspect };
+  phone = false; unmount(); scene.environment = env1; poseScene(4, 0);
+  bg.visible = dust.visible = drops.visible = false;
+  if (what === 'kit') { mask.visible = mask2.visible = false; }
+  renderer.setPixelRatio(1); renderer.setSize(w, h, false); renderer.setClearColor(0x000000, 0);
+  camera.fov = 30; camera.aspect = w / h; camera.position.set(what === 'kit' ? -2.5 : -2.75, 0.15, 7.2); camera.lookAt(camera.position.x, 0.15, 0); camera.updateProjectionMatrix();
+  renderer.render(scene, camera);
+  const url = renderer.domElement.toDataURL('image/png');
+  bg.visible = dust.visible = drops.visible = mask.visible = mask2.visible = true;
+  renderer.setClearColor(0x0a0a0b, 1); renderer.setPixelRatio(keep.pr); phone = keep.phone;
+  camera.fov = keep.fov; camera.position.copy(keep.cam); resize(true);
+  return url;
+};
+window.__maskState = () => [mask, mask2].map(m => ({ o: m.material.opacity, transparent: m.material.transparent, visible: m.material.visible && m.visible }));
+window.__maskPixel = (i) => {  // rendered colour of a mask's forehead (no openings there)
+  const m = i ? mask2 : mask, R0 = productRenderer(); R0.render(scene, camera); m.updateWorldMatrix(true, false);
+  const [[x, y]] = proj(m, [[0, 0.62]], 0.0), dpr = R0.getPixelRatio(), g = R0.getContext(), px = new Uint8Array(100);
+  g.readPixels(Math.round(x * dpr) - 2, Math.round((Hh - y) * dpr) - 2, 5, 5, g.RGBA, g.UNSIGNED_BYTE, px);
+  const med = k => { const v = []; for (let j = 0; j < 25; j++) v.push(px[j * 4 + k]); v.sort((p, q) => p - q); return v[12]; };
+  return { x, y, rgb: [med(0), med(1), med(2)] };
+};
+window.__frontPixel = () => {
+  const R0 = productRenderer(); R0.render(scene, camera);
+  box.updateWorldMatrix(true, false);
+  const [[x, y]] = proj(box, [[0, -0.14]], 0.137), dpr = R0.getPixelRatio(), g = R0.getContext(), px = new Uint8Array(100);
+  g.readPixels(Math.round(x * dpr) - 2, Math.round((Hh - y) * dpr) - 2, 5, 5, g.RGBA, g.UNSIGNED_BYTE, px);
+  const med = k => { const v = []; for (let i = 0; i < 25; i++) v.push(px[i * 4 + k]); v.sort((m, n) => m - n); return v[12]; };
+  return { x, y, rgb: [med(0), med(1), med(2)] };
+};
+window.__sachetInfo = () => [...sachets, mask, mask2].filter(o => mats(o).some(m => m.visible && m.opacity > 0.5)).map(o => {
+  o.updateWorldMatrix(true, false);
+  const n = new THREE.Vector3(0, 0, 1).transformDirection(o.matrixWorld), c = o.getWorldPosition(new THREE.Vector3());
+  const rect = onScreen(o.isMesh && o.geometry === sachetGeo ? bbox(proj(o, [[-0.5, -0.585], [0.5, -0.585], [-0.5, 0.585], [0.5, 0.585]], 0.02)) : rectOf(o));
+  return { sachet: o.geometry === sachetGeo, rect, band: o.geometry === sachetGeo ? onScreen(bbox(proj(o, [[-0.34, -0.08], [0.34, -0.08], [-0.34, 0.07], [0.34, 0.07]], 0.02))) : null,
+    z: c.z, angle: Math.acos(Math.min(1, n.dot(camera.position.clone().sub(c).normalize()))) };
+});
+function checkFit() {  // at this screen size, is there a free spot at the kit pose (no sway, no bob)?
+  if (!fl || !anchors.length) return;
+  if (phone) { capFits = false; dbl.classList.remove('away'); if (reduce) schedule(); return; }  // phone: in the copy
+  sizeFl();
+  const sw = [sway.x, sway.y]; sway.x = sway.y = 0;
+  const a4 = anchors.find(a => a.st === 4);
+  const copyTop = kick ? kick.getBoundingClientRect().top + window.scrollY - (a4 ? a4.y : 0) : Hh;
+  capFits = !!findSpot(poseScene(4, 0), copyTop, false);
+  sway.x = sw[0]; sway.y = sw[1];
+  dbl.classList.toggle('away', capFits);
+  if (reduce) schedule();
+}
+
+function largeH() {   // the large viewport (browser toolbars retracted) for this orientation, from CSS 100lvh
+  if (!largeH.el) { const d = largeH.el = document.createElement('div'); d.className = 'lvh-probe'; d.setAttribute('aria-hidden', 'true');
+    d.style.cssText = 'position:fixed;left:0;top:0;width:0;height:100vh;height:100lvh;visibility:hidden;pointer-events:none'; document.body.appendChild(d); }
+  return largeH.el.offsetHeight;
+}
+function resize(force) {   // force === true: rebuild the view whatever changed (after a still render)
+  // phone: the browser's toolbars collapse and expand while scrolling (and a keyboard opens): the layout keeps the large
+  // viewport at this width, so the anchors, the poses and the slot canvas stay as they are
+  const w = window.innerWidth, was = phone;
+  phone = phoneQ.matches;
+  const h = phone ? Math.max(window.innerHeight, largeH()) : window.innerHeight;   // phone: the large viewport, per orientation
+  if (phone && was && w === FW && h === FH && force !== true) {   // a toolbar or a keyboard: not a new layout. A rotation can
+    clearTimeout(resize.t); resize.t = setTimeout(() => { if (window.innerWidth !== FW) resize(); }, 300);   // report the old size
+    return;   // at first (iOS): look again once it has settled
+  }
+  FW = w; FH = h; if (!phone || !host) { W = w; Hh = h; }   // phone with a slot: W, Hh hold the slot canvas's size (slotView)
+  canvas.style.height = phone ? FH + 'px' : '';   // the far layer covers the large viewport too
+  // phone: the fixed canvas draws only the far layer, at 1 px per CSS px (soft smoke); desktop: everything, up to 2
+  renderer.setPixelRatio(phone ? 1 : Math.min(window.devicePixelRatio || 1, quality));
+  if (phone) { camera.layers.set(0); phoneRenderer(); scene.environment = env2; }   // the slot view is sized in the next frame
+  else { camera.layers.set(0); camera.layers.enable(1); unmount(); scene.environment = env1; }
+  drops.material = phone ? dropPhone : dropGlass;
+  const fm = phone ? frontSm : front;  // phone: the print pre-scaled to its size on screen, so thin letters stay readable
+  if (frontMat.map !== fm) { frontMat.map = fm; frontMat.emissiveMap = fm; frontMat.needsUpdate = true; }
+  renderer.setSize(FW, FH, false);
+  // narrower than 16:10 (tablets, small windows): widen the vertical view so the scene keeps its 16:10 framing and the
+  // objects stay in the right half, clear of the copy
+  camera.aspect = FW / FH;
+  camera.fov = phone ? 48 : Math.max(35, 2 * Math.atan(Math.tan(17.5 * Math.PI / 180) * 1.6 / camera.aspect) * 180 / Math.PI);
+  camera.updateProjectionMatrix();
+  measure(); checkFit();
+  if (reduce) schedule();
+}
+const relayout = () => { measure(); checkFit(); };
+window.addEventListener('resize', resize); resize();
+window.addEventListener('load', relayout);
+if ('ResizeObserver' in window) new ResizeObserver(relayout).observe(document.body);
+if (document.fonts) document.fonts.ready.then(relayout);
+
+let s = 0, last = performance.now(), visible = true, slotRenders = 0;
+window.__slotRenders = () => slotRenders;   // test hook: frames the phone's slot renderer drew
+// desktop: fewer pixels when frames run long. A 90-frame median over 24 ms steps 2 → 1.5; the next window keeps it only
+// if frames got at least 20 % shorter, else the rate is a cap (a low-power 30 Hz), not the GPU: back to 2, no more tries
+let paceT = 0, paceTrial = null, paceCapped = false; const paceWin = [];
+const setQuality = q => { quality = q; renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality)); renderer.setSize(FW, FH, false); };
+function pace(now) {   // (not under reduced motion — frames follow the scroll there — nor where 1.5 changes nothing)
+  if (reduce || (window.devicePixelRatio || 1) <= 1.5) return;
+  const d = paceT ? now - paceT : 0; paceT = now;
+  if (paceCapped || !d || d > 400) return;   // a pause (hidden, the form), not a frame
+  paceWin.push(d); if (paceWin.length < 90) return;
+  const m = paceWin.slice().sort((a, b) => a - b)[45], mean = paceWin.reduce((a, v) => a + Math.min(v, 100), 0) / paceWin.length; paceWin.length = 0;
+  if (paceTrial) { if (mean > paceTrial.mean * 0.8) { setQuality(paceTrial.q); paceCapped = true; } paceTrial = null; return; }   // the mean:
+  if (m > 24 && quality > 1.5) { paceTrial = { q: quality, mean }; setQuality(1.5); }   // vsync-quantised medians hide gains
+}
+window.__quality = () => ({ quality, capped: paceCapped });   // test hooks: the step-down, the view sizes, the drops' material
+window.__view = () => ({ FW, FH, W, Hh, phone });
+window.__drops = () => ({ transmission: drops.material.transmission, depthWrite: drops.material.depthWrite });
+document.addEventListener('visibilitychange', () => { visible = !document.hidden; if (visible) { last = performance.now(); schedule(); } });
+// every frame request goes through one guard: a page hidden and shown again used to run one more frame loop each
+// time (the callback still queued from before plus a new one), doubling the work per vsync (owner 19/10: not smooth)
+function schedule() { if (!schedule.id) schedule.id = requestAnimationFrame(t => { schedule.id = 0; frame(t); }); }
+window.__frames = () => frame.n || 0;   // test hook: frames drawn
+function frame(now) {
+  frame.n = (frame.n || 0) + 1;
+  now = now || performance.now();
+  if (root.classList.contains('form-open') && window.__glReady) {  // the lead form covers the page: no 3D work meanwhile
+    last = now; if (visible && !reduce) schedule(); return;
+  }
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  const t = reduce ? 0 : now / 1000;
+  const target = stage();
+  if (reduce) s = Math.round(target);  // reduced motion: whole stages, no in-between poses
+  else if (phone || window.__snap) s = target;   // phone: the pose follows the scroll exactly (__snap: test hook)
+  else s += (target - s) * Math.min(1, dt * 6);
+  // the far layer turns with the pointer (camera sways around the product), the near objects keep their place
+  if (!reduce) { sway.x += (pointer.x - sway.x) * 0.05; sway.y += (pointer.y - sway.y) * 0.05; }
+  bg.rotation.set(sway.y * 0.05, sway.x * 0.08, 0);  // the far layer turns a little more than the scene
+  bgMat.uniforms.t.value = t;
+  bgMat.uniforms.glow.value = pose(GLOW, s);
+  dust.rotation.y = t * 0.01; dust.position.y = Math.sin(t * 0.1) * 0.2;
+  const p = poseScene(s, t);
+
+  // the two layers named, over each, while they stand apart on the kit screen
+  [[LYR[0], mask], [LYR[1], mask2]].forEach(([el, obj]) => {
+    if (!el) return;
+    const on = p.w4 * (p.mp.o > 0.05 ? 1 : 0) * (phone ? PH.fade : 1);
+    if (on > 0.02) {
+      const r = rectOf(obj), x = (r[0] + r[2]) / 2, y = Math.max(phone ? (PHL[1] + el.offsetHeight + 4) : 96 + el.offsetHeight, r[1] - 8);
+      const ox = phone ? ML : 0, oy = phone ? M : 0;   // phone: slot-canvas → slot coordinates
+      el.style.transform = `translate(${(x - ox - el.offsetWidth / 2).toFixed(1)}px, ${(y - oy - el.offsetHeight).toFixed(1)}px)`;
+      el.style.setProperty('--lo', on.toFixed(3));
+    }
+    el.classList.toggle('on', on > 0.02);
+  });
+
+  // the floating caption, while the kit block is on screen
+  cap.on = false;
+  if (fl) {
+    const on = capFits ? Math.max(0, 1 - Math.abs(s - 4) * 3) * (p.mp.o > 0.05 ? 1 : 0) : 0;
+    const spot = on > 0.01 ? findSpot(p, kick ? kick.getBoundingClientRect().top : Hh, true) : null;
+    if (spot) {
+      const [w, h] = flSize[spot[2]];
+      fl.classList.toggle('v1', spot[2] === 1); fl.classList.toggle('v2', spot[2] === 2);
+      fl.style.transform = `translate(${spot[0].toFixed(1)}px, ${spot[1].toFixed(1)}px)`;
+      fl.style.setProperty('--do', on.toFixed(3));
+      cap.on = true; cap.r = [spot[0], spot[1], spot[0] + w, spot[1] + h];
+    }
+    fl.classList.toggle('on', !!spot);
+  }
+
+  const c = pose(phone ? PDROP : DROPC, s);
+  const br = p.bp.o > 0.05 ? rectOf(box) : null;  // the carton on screen: drops keep off its face
+  const mr = [p.mp.o > 0.05 ? rectOf(mask) : null, p.m2p.o > 0.05 ? rectOf(mask2) : null].filter(Boolean);  // and off the masks
+  let cx = c.x, cy = c.y, cs = c.s, unit = 1;
+  cx = -c.x;   // mirrored with the composition
+  if (phone) { const m = toPhone(-c.x, c.y, c.z); cx = m.x; cy = m.y; unit = m.k; cs *= unit; }
+  dropSeed.forEach((d, i) => {
+    const a = d.a + t * d.sp * 0.25;
+    v3.set(cx + Math.cos(a) * d.r * cs, cy + d.y * cs * 0.8 + Math.sin(t * d.sp + i) * 0.08 * unit, c.z + (d.z + Math.sin(a) * 0.4) * (phone ? 0.5 : 1));
+    // drops never cross the copy: they shrink away before the text column (desktop) or outside the slot (phone),
+    // and around the floating caption
+    vA.copy(v3).project(camera);
+    let edge;
+    if (phone) {
+      const px = (vA.x + 1) / 2 * W, py = (1 - vA.y) / 2 * Hh, r = PHL;
+      edge = ease(Math.max(0, Math.min(1, 1 - Math.hypot(Math.max(r[0] - px, 0, px - r[2]), Math.max(r[1] - py, 0, py - r[3])) / 18)));
+    } else edge = ease(Math.max(0, Math.min(1, (0.06 - vA.x) / 0.16)));   // the left half only
+    for (const r of br ? [br, ...mr] : mr) {
+      const px = (vA.x + 1) / 2 * W, py = (1 - vA.y) / 2 * Hh;
+      edge *= ease(Math.max(0, Math.min(1, Math.hypot(Math.max(r[0] - px, 0, px - r[2]), Math.max(r[1] - py, 0, py - r[3])) / 14)));
+    }
+    if (cap.on) {
+      const px = (vA.x + 1) / 2 * W, py = (1 - vA.y) / 2 * Hh;
+      const gx = Math.max(cap.r[0] - px, 0, px - cap.r[2]), gy = Math.max(cap.r[1] - py, 0, py - cap.r[3]);
+      edge *= ease(Math.min(1, Math.hypot(gx, gy) / 46));
+    }
+    const k = d.s * (phone ? 0.8 * unit * PH.fade : 1) * c.o * edge; sc.set(k, k * 1.08, k);  // drops fade by shrinking
+    drops.setMatrixAt(i, m4.compose(v3, q, sc));
+  });
+  drops.instanceMatrix.needsUpdate = true;
+  drops.visible = c.o > 0.01;
+
+  if (phone) {   // the far layer full screen, the product in its slot
+    bgCam.position.copy(camera.position); bgCam.quaternion.copy(camera.quaternion);
+    bgCam.fov = camera.fov; bgCam.aspect = FW / FH; bgCam.updateProjectionMatrix();
+    renderer.render(scene, bgCam);
+    const sr = PH.sr;   // the slot on screen: not drawn while it is scrolled away
+    if (host && sr && sr[3] > -120 && sr[1] < window.innerHeight + 120) { pr2.render(scene, camera); slotRenders++; }   // a fling's margin
+  } else {
+    renderer.render(scene, camera);
+    pace(now);
+  }
+  if (!window.__glReady) { window.__glReady = true; root.classList.add('gl-on'); checkFit(); }
+  if (visible && !reduce) schedule();
+}
+schedule();
+if (reduce) window.addEventListener('scroll', schedule, { passive: true });
+</script>

@@ -1,0 +1,215 @@
+<!doctype html><meta charset="utf-8">
+<style>html,body{margin:0;background:transparent;overflow:hidden}canvas{display:block}</style>
+<canvas id="c"></canvas>
+<script type="module">
+// V-TECH SYSTEM 3D scene for the Figma storyboard: mirror-gold carton (real print), 5 amber V-TECH SERUM vials,
+// gold GEL MASK sachets with a nozzle, in the V-TECH FACE line environment (black + gold smoke). Hash = shot[@part].
+import * as THREE from './three/build/three.module.js';
+const V5 = (x0, y, z, dx, s = 0.95, ry = -0.3) => [0, 1, 2, 3, 4].map(i => [x0 + i * dx, y, z, 0.0, ry, 0, s]);
+const SHOTS = {
+  // desktop 1440x900: camera as on the MASK page (z 7, fov 35, looking at x 0.9); objects live in the right half
+  'v1-meet':     { w: 1440, h: 900, bg: true, box: { p: [1.8, -0.05, 0.2], r: [0.06, -0.48, 0.05] } },
+  'v2-why':      { w: 1440, h: 900, bg: true, dim: 0.9, box: { p: [2.85, 0.55, -2.2], r: [0.04, -0.72, 0.02], s: 0.9 },
+                   skin: { p: [2.05, -1.2, 0.5], r: [-1.12, 0, 0.1], w: 4.2, h: 2.4, dots: 1 } },
+  'v3-inside':   { w: 1440, h: 900, bg: true, drops: 1, box: { p: [2.6, 0.5, -1.9], r: [0.04, -0.42, 0.01], s: 0.95 },
+                   tray: { p: [2.1, -1.0, 0.0], r: [0.38, -0.36, 0.0], s: 1.05, holes: 5, pouches: 1, vialsIn: 1, lift: { i: 2, dy: 0.78, dz: 0.75, s: 1.25, rx: 0.05, ry: -0.2 } },
+                   dropAt: [2.02, 0.8, 1.1] },
+  'v4-feel':     { w: 1440, h: 900, bg: true, dim: 1.15, box: { p: [3.3, 0.75, -3.0], r: [0.04, -0.5, 0.0], s: 0.8 },
+                   skin: { p: [2.0, -1.3, 0.6], r: [-1.18, 0, 0.08], w: 4.4, h: 2.4, dots: 0.35, gel: 1 },
+                   pouches: [[2.15, 0.25, 1.05, 0.28, -0.32, 0.12, 1.5]] },
+  'v5-protocol': { w: 1440, h: 900, bg: true, dim: 0.85,
+                   skin: { p: [3.25, -0.95, 0.4], r: [-1.05, 0, 0], w: 1.25, h: 1.25, dots: 1, disk: true },
+                   vials: [[2.05, -1.0, 0.45, 0.04, -0.3, 0, 1.0]], dropAt: [2.05, -0.05, 0.45],
+                   pouches: [[0.95, -0.72, 0.5, 0.15, -0.35, 0.1, 0.95]], line: [[0.3, -1.45, 0.3], [3.9, -1.45, 0.3]] },
+  'v6-kit':      { w: 1440, h: 900, bg: true, look: [1.2, 0, 0], box: { p: [2.25, 0.55, -1.8], r: [0.04, -0.36, 0.01], s: 0.95 },
+                   tray: { p: [2.0, -0.95, -0.2], r: [0.36, -0.36, 0], s: 1.0, holes: 5, pouches: 0, vialsIn: 1 },
+                   pouches: [0, 1, 2, 3, 4].map(i => [3.0 + i * 0.1, -0.3 - i * 0.05, -0.75 + i * 0.2, 0.12, -0.62, -0.2 + i * 0.09, 0.68]) },
+  'bg-wide':     { w: 1728, h: 1080, bg: true },
+  // purchase card: the whole kit on transparent background, bright, HD
+  'kit-hd':      { w: 1400, h: 1100, bg: false, exposure: 1.4, key: 2.2, look: [2.35, -0.25, 0], cam: [2.35, 0.35, 6.0],
+                   box: { p: [2.25, 0.55, -1.8], r: [0.04, -0.36, 0.01], s: 0.95 },
+                   tray: { p: [2.0, -0.95, -0.2], r: [0.36, -0.36, 0], s: 1.0, holes: 5, pouches: 0, vialsIn: 1 },
+                   pouches: [0, 1, 2, 3, 4].map(i => [3.0 + i * 0.1, -0.3 - i * 0.05, -0.75 + i * 0.2, 0.12, -0.62, -0.2 + i * 0.09, 0.68]) },
+  'm4-feel':     { w: 390, h: 844, bg: true, phone: true, dim: 1.15, cam: [0, 0, 7], look: [0, 0.9, 0],
+                   skin: { p: [0, 1.45, 0.3], r: [-0.78, 0, 0.05], w: 3.0, h: 1.6, dots: 0.35, gel: 1 },
+                   pouches: [[0.05, 2.45, 0.9, 0.25, -0.3, 0.1, 0.8]], gelScale: 0.62 },
+  'm7-bg':       { w: 390, h: 844, bg: true, phone: true, cam: [0, 0, 7], look: [0, 0.9, 0] },
+  'm1-meet':     { w: 390, h: 844, bg: true, phone: true, cam: [0, 0, 7], look: [0, 0.9, 0], box: { p: [0.05, 2.55, 0], r: [0.06, -0.42, 0.04], s: 0.62 } },
+};const [name, part] = location.hash.slice(1).split('@'), S = Object.assign({}, SHOTS[name]);
+const want = (k) => !part || part === k || (k === 'drops' && part.startsWith('drops'));
+if (part && part !== 'bg' && part !== 'dropsfull') S.bg = false;
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: !S.bg, preserveDrawingBuffer: true });
+renderer.setPixelRatio(2); renderer.setSize(S.w, S.h);
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = S.exposure || 1.1;
+renderer.setClearColor(0x0a0a0b, S.bg ? 1 : 0);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(S.phone ? 44 : 35, S.w / S.h, 0.1, 80);
+camera.position.set(...(S.cam || [0, 0, 7])); camera.lookAt(...(S.look || [0.9, 0, 0]));
+{ // reflections: dark room with a white softbox left, warm gold right and a gold strip above
+  const pm = new THREE.PMREMGenerator(renderer), room = new THREE.Scene();
+  room.add(new THREE.Mesh(new THREE.BoxGeometry(12, 8, 12), new THREE.MeshBasicMaterial({ color: 0x0c0b09, side: THREE.BackSide })));
+  const panel = (c, i, x, y, z, w, h, ry, rx = 0) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(i), side: THREE.DoubleSide })); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); room.add(m); };
+  panel(0xffffff, 3.0, -4.5, 1.6, 1, 3, 3, Math.PI / 2); panel(0xe9c27a, 2.2, 4.8, 0.4, -0.5, 3, 4, -Math.PI / 2); panel(0xc9a24b, 1.8, 0, 3.8, -2, 7, 1.2, 0, Math.PI / 2); panel(0xf2c878, 1.7, -1.2, 0.8, 5.8, 5, 3.4, Math.PI); panel(0xffe2a6, 1.4, 2.5, -1.5, 5, 3, 2, Math.PI);
+  scene.environment = pm.fromScene(room, 0.03).texture;
+}
+scene.add(new THREE.HemisphereLight(0xfff3dc, 0x0a0a0b, 0.45));
+const key = new THREE.DirectionalLight(0xffffff, S.key || 1.5); key.position.set(-3, 4, 5); scene.add(key);
+const rim = new THREE.PointLight(0xd8bd7e, 26, 12); rim.position.set(3.8, 1.4, 1.2); scene.add(rim);
+const warm = new THREE.PointLight(0xc9a24b, 12, 10); warm.position.set(-1, -2.2, 2.5); scene.add(warm);
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+if (S.bg && (!part || part === 'bg' || part === 'dropsfull')) {  // far layer in the V-TECH FACE line colours: slow gold smoke and gold specks on black
+  const bgMat = new THREE.ShaderMaterial({ uniforms: { t: { value: 31 }, glow: { value: S.dim || 1 } },
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+    fragmentShader: `varying vec2 vUv; uniform float t; uniform float glow;
+      float h(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
+      float n(vec2 p){ vec2 i=floor(p), f=fract(p); vec2 u=f*f*(3.0-2.0*f); return mix(mix(h(i),h(i+vec2(1,0)),u.x), mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x), u.y); }
+      float fbm(vec2 p){ float v=0.0, a=0.5; for(int k=0;k<5;k++){ v+=a*n(p); p*=2.03; a*=0.5; } return v; }
+      void main(){ vec2 p = vUv * vec2(3.2, 1.9); float a = fbm(p + vec2(t*0.018, -t*0.011)); float b = fbm(p*1.7 - vec2(t*0.012, t*0.02) + a*1.6);
+        vec3 col = vec3(0.039,0.036,0.032), gold = vec3(0.79,0.62,0.27), deep = vec3(0.17,0.12,0.04), pale = vec3(0.85,0.74,0.49);
+        float smoke = smoothstep(0.42, 0.88, b); col += deep*smoke*1.7*glow; col += gold*pow(smoke,3.0)*0.42*glow; col += pale*smoothstep(0.72,0.96,a)*0.06*glow;
+        float v = smoothstep(1.15, 0.25, length((vUv-0.5)*vec2(1.4,1.0))); gl_FragColor = vec4(col*(0.35+0.65*v), 1.0); }`, depthWrite: false });
+  const bg = new THREE.Mesh(new THREE.PlaneGeometry(48, 28), bgMat); bg.position.z = -14; scene.add(bg);
+  const N = 460, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), c1 = new THREE.Color(0xd8bd7e), c2 = new THREE.Color(0xfff1d0);
+  for (let i = 0; i < N; i++) { pos[i*3] = (rnd()-0.5)*22; pos[i*3+1] = (rnd()-0.5)*13; pos[i*3+2] = -12 + rnd()*13; const c = rnd() < 0.85 ? c1 : c2; col.set([c.r, c.g, c.b], i*3); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const dot = document.createElement('canvas'); dot.width = dot.height = 32; const x = dot.getContext('2d'), gr = x.createRadialGradient(16,16,0,16,16,16);
+  gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(1,'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0,0,32,32);
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ size: 0.055, map: new THREE.CanvasTexture(dot), vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false, blending: THREE.AdditiveBlending })));
+}
+const mgr = new THREE.LoadingManager(), loader = new THREE.TextureLoader(mgr);
+const tex = (src, srgb = true) => { const t = loader.load(src); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+const front = tex('vtech-box-front.png'), frontMR = tex('vtech-box-front-mr.png', false), side = tex('vtech-box-side.png');
+const pouchTex = tex('vtech-sachet-front.png'), pouchMR = tex('vtech-sachet-front-mr.png', false), label = tex('vtech-vial-label.png');
+const GOLD = { color: 0xffffff, metalness: 1, roughness: 1, envMapIntensity: 1.6, clearcoat: 0.35, clearcoatRoughness: 0.2 };
+const gold = (o) => new THREE.MeshPhysicalMaterial(Object.assign({}, GOLD, o));
+const black = new THREE.MeshStandardMaterial({ color: 0x0b0b0c, roughness: 0.55, metalness: 0.2 });
+// carton: 0.95 x 2.31 x 0.40, faces +x, -x, +y, -y, +z (front), -z
+function makeBox(b) {
+  const grp = new THREE.Group(), W = 0.95, H = 2.31, D = 0.40;
+  const sideMat = gold({ map: side, metalness: 0.7, roughness: 0.28, emissive: 0x241604, emissiveIntensity: 0.3 });
+  const mats = [sideMat, sideMat, black, black, gold({ map: front, metalnessMap: frontMR, roughnessMap: frontMR, metalness: 0.62, roughness: 0.75, emissive: 0x2a1a04, emissiveIntensity: 0.35 }), gold({ color: 0xd9b25a, metalness: 1, roughness: 0.25 })];
+  if (b.lid) mats[2] = new THREE.MeshBasicMaterial({ visible: false });
+  grp.add(new THREE.Mesh(new THREE.BoxGeometry(W, H, D), mats));
+  if (b.lid) {
+    grp.add(new THREE.Mesh(new THREE.BoxGeometry(W - 0.03, H - 0.03, D - 0.03), new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.8, side: THREE.BackSide })));
+    const hinge = new THREE.Group(); hinge.position.set(0, H / 2, -D / 2); grp.add(hinge);
+    const lid = new THREE.Mesh(new THREE.BoxGeometry(W, 0.012, D), black); lid.position.set(0, 0, D / 2); hinge.add(lid);
+    hinge.rotation.x = -b.lid;
+  }
+  grp.position.set(...b.p); grp.rotation.set(...b.r); grp.scale.setScalar(b.s || 1); scene.add(grp); return grp;
+}
+// vial: amber glass (lathe), aluminium crimp, flip-off top, white print label wrapped on the glass
+const glass = new THREE.MeshPhysicalMaterial({ color: 0x9a4310, roughness: 0.05, metalness: 0, transmission: 0.5, thickness: 0.4, ior: 1.5, attenuationColor: new THREE.Color(0x4a1802), attenuationDistance: 0.22, clearcoat: 1, envMapIntensity: 1.2 });
+const alu = new THREE.MeshPhysicalMaterial({ color: 0xd6d6d4, metalness: 1, roughness: 0.28, envMapIntensity: 1.1 });
+const flip = new THREE.MeshPhysicalMaterial({ color: 0xc8c8c4, metalness: 0.7, roughness: 0.38, envMapIntensity: 1.1 });  // silver flip-off top, as on the vial photo (#79)
+const vialGeo = new THREE.LatheGeometry([[0,0],[0.15,0],[0.16,0.015],[0.16,0.43],[0.15,0.47],[0.1,0.505],[0.086,0.53],[0.086,0.55]].map(([x, y]) => new THREE.Vector2(x, y)), 48);
+const labelMat = new THREE.MeshStandardMaterial({ map: label, transparent: true, roughness: 0.5, depthWrite: false });
+function makeVial(a, parent = scene) {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(vialGeo, glass));
+  const lab = new THREE.Mesh(new THREE.CylinderGeometry(0.1615, 0.1615, 0.34, 64, 1, true, Math.PI, Math.PI * 2), labelMat); lab.position.y = 0.23; g.add(lab);
+  const crimp = new THREE.Mesh(new THREE.CylinderGeometry(0.104, 0.104, 0.1, 40), alu); crimp.position.y = 0.585; g.add(crimp);
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(0.094, 0.094, 0.035, 40), flip); top.position.y = 0.652; g.add(top);
+  g.position.set(a[0], a[1], a[2]); g.rotation.set(a[3], a[4], a[5]); g.scale.setScalar(a[6]); parent.add(g); return g;
+}
+// gel mask sachet: gold foil pillow with the real print, white nozzle on the left edge
+function pillow(w, h, depth, flipZ) {
+  const geo = new THREE.PlaneGeometry(w, h, 48, 28), p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) { const x = p.getX(i) / (w / 2), y = p.getY(i) / (h / 2); p.setZ(i, (flipZ ? -1 : 1) * depth * (1 - Math.pow(Math.abs(x), 6)) * (1 - Math.pow(Math.abs(y), 6))); }
+  geo.computeVertexNormals(); return geo;
+}
+const pouchFront = gold({ map: pouchTex, metalnessMap: pouchMR, roughnessMap: pouchMR, side: THREE.FrontSide });
+const pouchBack = gold({ color: 0xe0b955, metalness: 1, roughness: 0.3, side: THREE.BackSide });
+const plastic = new THREE.MeshPhysicalMaterial({ color: 0xf4f4f2, roughness: 0.3, clearcoat: 0.5 });
+function makePouch(a, parent = scene) {
+  const g = new THREE.Group(), W = 1.0, H = 0.58;
+  g.add(new THREE.Mesh(pillow(W, H, 0.035, false), pouchFront)); g.add(new THREE.Mesh(pillow(W, H, 0.035, true), pouchBack));
+  const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.034, 0.09, 24), plastic); spout.rotation.z = Math.PI / 2; spout.position.set(-W / 2 - 0.04, 0, 0); g.add(spout);
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.048, 0.08, 24), plastic); cap.rotation.z = Math.PI / 2; cap.position.set(-W / 2 - 0.12, 0, 0); g.add(cap);
+  g.position.set(a[0], a[1], a[2]); g.rotation.set(a[3], a[4], a[5]); g.scale.setScalar(a[6]); parent.add(g); return g;
+}
+// black insert (lozhement) lying in front: 5 vial wells and a sachet bed, as in the owner's photo #44
+function makeTray(t) {
+  const g = new THREE.Group(), W = 2.15, H = 0.16, D = 1.0;
+  const mat = new THREE.MeshPhysicalMaterial({ color: 0x0d0d0e, roughness: 0.42, metalness: 0.1, clearcoat: 0.4, clearcoatRoughness: 0.5 });
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), mat); g.add(slab);
+  const well = new THREE.MeshStandardMaterial({ color: 0x030303, roughness: 0.9 });
+  for (let i = 0; i < (t.holes || 0); i++) { const h = new THREE.Mesh(new THREE.CylinderGeometry(0.165, 0.165, 0.01, 40), well); h.position.set(-0.78 + i * 0.39, H / 2 + 0.002, -0.2); g.add(h);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.168, 0.008, 8, 48), new THREE.MeshPhysicalMaterial({ color: 0x1a1a1b, roughness: 0.3, metalness: 0.4 })); ring.rotation.x = Math.PI / 2; ring.position.copy(h.position); g.add(ring); }
+  const bed = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.012, 0.32), well); bed.position.set(0, H / 2 + 0.004, 0.27); g.add(bed);
+  g.position.set(...t.p); g.rotation.set(...t.r); g.scale.setScalar(t.s || 1); scene.add(g);
+  if (t.pouches) { const p = makePouch([0, 0, 0, 0, 0, 0, 0.78], g); p.rotation.set(-Math.PI / 2, 0, 0); p.position.set(0.05, H / 2 + 0.04, 0.27); }
+  if (t.vialsIn && want('vials')) for (let i = 0; i < 5; i++) {   // vials standing in the wells; 'lift' takes one out towards the viewer
+    const L = t.lift && t.lift.i === i ? t.lift : null;
+    makeVial([-0.78 + i * 0.39 + (L ? L.dx || 0 : 0), H / 2 - 0.02 + (L ? L.dy : 0), -0.2 + (L ? L.dz : 0), L ? -t.r[0] + (L.rx || 0) : 0, L ? L.ry || 0 : 0, 0, (L ? L.s : 0.9)], g);
+  }
+  return g;
+}
+// abstract skin: warm dark micro-relief lit by the line's gold; microchannels = rows of gold points (no device shown)
+function skinTextures(dots, disk) {
+  const N = 1024, mk = () => { const c = document.createElement('canvas'); c.width = c.height = N; return c; };
+  const col = mk(), bump = mk(), em = mk(), cx = col.getContext('2d'), bx = bump.getContext('2d'), ex = em.getContext('2d');
+  let sd = 5; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const grd = cx.createRadialGradient(N * 0.5, N * 0.45, 40, N * 0.5, N * 0.5, N * 0.75); grd.addColorStop(0, '#6b4430'); grd.addColorStop(1, '#2a1a12');
+  cx.fillStyle = grd; cx.fillRect(0, 0, N, N); bx.fillStyle = '#808080'; bx.fillRect(0, 0, N, N); ex.fillStyle = '#000'; ex.fillRect(0, 0, N, N);
+  for (let i = 0; i < 5200; i++) { const x = r() * N, y = r() * N, s = 1 + r() * 2.6;  // pores
+    bx.fillStyle = 'rgba(40,40,40,' + (0.25 + r() * 0.4) + ')'; bx.beginPath(); bx.ellipse(x, y, s, s * 0.8, r() * 3, 0, 7); bx.fill();
+    cx.fillStyle = 'rgba(30,16,10,' + (0.12 + r() * 0.15) + ')'; cx.beginPath(); cx.ellipse(x, y, s, s * 0.8, 0, 0, 7); cx.fill(); }
+  bx.lineWidth = 1.2; for (let i = 0; i < 70; i++) { let x = r() * N, y = r() * N; bx.strokeStyle = 'rgba(60,60,60,0.5)'; bx.beginPath(); bx.moveTo(x, y);  // fine lines
+    for (let k = 0; k < 6; k++) { x += (r() - 0.3) * 60; y += (r() - 0.5) * 22; bx.lineTo(x, y); } bx.stroke(); }
+  if (dots) for (let y = 70; y < N - 40; y += 46) for (let x = 60 + ((y / 46) % 2) * 23; x < N - 40; x += 46) {
+    const jx = x + (r() - 0.5) * 8, jy = y + (r() - 0.5) * 8, a = dots * (0.55 + r() * 0.45);
+    const gr = ex.createRadialGradient(jx, jy, 0, jx, jy, 9); gr.addColorStop(0, `rgba(255,214,140,${a})`); gr.addColorStop(0.35, `rgba(201,162,75,${a * 0.7})`); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    ex.fillStyle = gr; ex.fillRect(jx - 10, jy - 10, 20, 20); bx.fillStyle = 'rgba(20,20,20,0.9)'; bx.beginPath(); bx.arc(jx, jy, 2.2, 0, 7); bx.fill(); }
+  if (disk) for (const c of [cx, bx, ex]) { c.globalCompositeOperation = 'destination-in'; const m = c.createRadialGradient(N / 2, N / 2, N * 0.42, N / 2, N / 2, N * 0.5); m.addColorStop(0, '#fff'); m.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = m; c.fillRect(0, 0, N, N); }
+  const T = (c, srgb) => { const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+  return { map: T(col, true), bumpMap: T(bump, false), emissiveMap: T(em, true) };
+}
+function makeSkin(k) {
+  const tx = skinTextures(k.dots || 0, k.disk);
+  const mat = new THREE.MeshPhysicalMaterial({ ...tx, bumpScale: 2.2, roughness: 0.62, sheen: 0.6, sheenColor: new THREE.Color(0xd8bd7e), sheenRoughness: 0.5,
+    emissive: 0xffffff, emissiveIntensity: 1.6 });
+  const fade = document.createElement('canvas'); fade.width = fade.height = 256; const fx = fade.getContext('2d');  // soft edges so the plane melts into the smoke
+  const fg = fx.createRadialGradient(128, 128, k.disk ? 90 : 60, 128, 128, 128); fg.addColorStop(0, '#fff'); fg.addColorStop(1, '#000'); fx.fillStyle = fg; fx.fillRect(0, 0, 256, 256);
+  mat.alphaMap = new THREE.CanvasTexture(fade); mat.transparent = true;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(k.w, k.h, 1, 1), mat); m.position.set(...k.p); m.rotation.set(...k.r); scene.add(m);
+  if (k.gel) {  // a ribbon of clear gel laid on the skin, no rinsing
+    const pts = [[-1.3, 0.02], [-0.75, 0.16], [-0.15, 0.04], [0.45, -0.1], [1.05, 0.0]].map(([x, y]) => new THREE.Vector3(x, y, 0.025));
+    const curve = new THREE.CatmullRomCurve3(pts);
+    // a flat, wide ribbon of clear gel: glossy surface with bright highlights, the skin seen through it (no transmission pass, the skin is transparent)
+    const tube = new THREE.TubeGeometry(curve, 160, 0.16, 32, false); tube.scale(1, 1, 0.16);
+    const gs = S.gelScale || 1;
+    const gel = new THREE.Mesh(tube, new THREE.MeshPhysicalMaterial({ color: 0xfff1d6, transparent: true, opacity: 0.32, roughness: 0.04, metalness: 0,
+      clearcoat: 1, clearcoatRoughness: 0.02, specularIntensity: 1, envMapIntensity: 3.2, depthWrite: false }));
+    gel.scale.set(gs, gs, 1); m.add(gel);
+    const sheen = new THREE.Mesh(new THREE.TubeGeometry(curve, 160, 0.035, 12, false), new THREE.MeshBasicMaterial({ color: 0xfff6e6, transparent: true, opacity: 0.55, depthWrite: false }));
+    sheen.position.set(0.0, 0.05 * gs, 0.03); sheen.scale.set(gs, gs, 0.3); m.add(sheen);
+  }
+  return m;
+}
+// serum: clear drops with a faint amber tint (drop above the vial; part 'dropsmask' = silhouette for cutting)
+function makeDrops(at) {
+  const mask = part === 'dropsmask';
+  const clear = mask ? new THREE.MeshBasicMaterial({ color: 0xffffff }) : new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.02, transmission: 1, thickness: 0.35, ior: 1.33, clearcoat: 1, envMapIntensity: 2.2, attenuationColor: new THREE.Color(0xf4f7ff), attenuationDistance: 3 });
+  const pearl = mask ? clear : new THREE.MeshPhysicalMaterial({ color: 0xf6f2ff, roughness: 0.25, metalness: 0.1, iridescence: 1, iridescenceIOR: 1.6, iridescenceThicknessRange: [200, 600], clearcoat: 1, transparent: true, opacity: 0.85 });
+  const geo = new THREE.SphereGeometry(1, 48, 32); const p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) { const y = p.getY(i); if (y > 0) { const k = 1 - y * 0.55; p.setX(i, p.getX(i) * k); p.setZ(i, p.getZ(i) * k); p.setY(i, y * 1.35); } }  // tear shape
+  geo.computeVertexNormals();
+  const d = new THREE.Mesh(geo, clear); d.position.set(...at); d.scale.setScalar(0.16); scene.add(d);
+  let ds = 3; const dr = () => (ds = (ds * 16807) % 2147483647) / 2147483647;
+  if (!mask) for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), pearl); const a = dr() * 6.28, r = dr() * 0.09;
+    m.position.set(at[0] + Math.cos(a) * r, at[1] - 0.04 + dr() * 0.14, at[2] + Math.sin(a) * r * 0.6); m.scale.setScalar(0.012 + dr() * 0.014); scene.add(m); }
+}
+if (S.box && want('box')) makeBox(S.box);
+if (S.tray && (want('tray') || (S.tray.vialsIn && want('vials')))) { const tg = makeTray(S.tray); if (!want('tray')) tg.children.filter(c => c.type === 'Mesh').forEach(c => c.visible = false); }
+if (want('vials')) (S.vials || []).forEach(a => makeVial(a));
+if (want('pouches')) (S.pouches || []).forEach(a => makePouch(a));
+if (S.skin && want('skin')) makeSkin(S.skin);
+if (S.dropAt && want('drops')) makeDrops(S.dropAt);
+if (S.line && want('skin')) {  // the protocol's gold line
+  const geo = new THREE.BufferGeometry().setFromPoints(S.line.map(v => new THREE.Vector3(...v)));
+  scene.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xc9a24b, transparent: true, opacity: 0.8 })));
+}
+mgr.onLoad = () => { renderer.render(scene, camera); requestAnimationFrame(() => { renderer.render(scene, camera); window.__done = true; }); };
+</script>
