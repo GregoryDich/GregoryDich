@@ -121,7 +121,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       gl_FragColor.a *= smoothstep(${EDGE_Y0}.0, ${EDGE_Y1}.0, uEdge.x + (uEdge.y - gl_FragCoord.y) / uEdge.z);`);
   };
   // the frosted glass: as photographed on black (#a9a7a5) where it faces the camera, opaque there; toward the limb it
-  // darkens (10 % on the key's side, 20 % on the shadow side, as owner photo #2 falls off) under a thin lighter edge
+  // darkens (≈ 12 % on the key's side, 22 % on the shadow side, as owner photo #2 falls off) under a thin lighter edge
   // (the glass's thickness); the rounded foot and the shoulder are thick glass: a little lighter and more translucent;
   // Fresnel lets its rim show the page a little (no transmission: on a transparent canvas it would not see the page's
   // smoke, and a phone pays a pass for it). Facing the camera within 35° nothing changes (ΔE target: θ −35°, s 0.45)
