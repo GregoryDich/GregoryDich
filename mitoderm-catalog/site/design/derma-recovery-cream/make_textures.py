@@ -17,11 +17,14 @@ widths; every glyph's ink centroid (not its box's middle: L, E, r, 1 are not sym
 glyph within 0.5 photo px). The weights are fitted on the rendered key, not on the texture: the GPU's linear-light
 minification and the shading thin the small black lines by a quarter, so a weight fitted on the texture alone (the
 first fit: ink 0.97–1.02 there) drew them 26–30 % light; on the key (the front 960 px tall, rectified onto the
-packshot's pixels) every dark line's half-contrast ink area is now 0.99–1.07 of the packshot's and its ink sum 0.86–0.96
-(the rest: the print's near-black cores, which a minified texture cannot reach). The estimate sign ℮ is DejaVu Sans set
-into its measured ink box (the print's ℮ is wider than Rubik's).
+packshot's pixels) every dark line's half-contrast ink area is now 0.99–1.06 of the packshot's and its ink sum 0.87–0.97
+(the rest: the print's near-black cores, which a minified texture cannot reach; one step heavier, 600, ran the
+'for healthy-looking glow' letters together). The estimate sign ℮ is DejaVu Sans set into its measured ink box (the
+print's ℮ is wider than Rubik's).
 Colours pipetted (inner pixels of each stroke): the paper #F3E9DF, the band #889881, MITODERM #0F1C13, SNAIL COLLAGEN
-#122B1B, the thin black lines #0A0805. The band's gold and the frame's gold are not flat on the print: both run lighter
+#122B1B. The thin black lines are the packshot's darkest pixels of them, #030200: their inner pixels (#0A0805) are the
+photo's own blur on 3 px strokes, and with them the key's letter cores drew 14–20 levels, the packshot's 0–4 (now
+7–15). The band's gold and the frame's gold are not flat on the print: both run lighter
 to darker from left to right (the paper beside them does not: it is the print, not light), set as measured per 50 and
 40 photo px (the band's letters #F4D990 → #EDC56B, the frame #D1B68C → #9C6A30).
 The gold monogram M is the owner's file site/img/mitoderm-m-gold.png (566×600, reduced), fitted to the printed M's ink
@@ -39,7 +42,8 @@ MITODERM (columns 22–25: φ −42.8°, cap 0.080 Ø) and BIOSPICULE SYSTEM (co
 y 0.089…0.721; the gold M (φ +1°, y 0.665, 0.067 Ø tall); DERMA / RECOVERY / CREAM (cap 0.035, baselines 0.558 /
 0.512 / 0.466); SNAIL COLLAGEN (cap 0.031, baseline 0.389, φ −2.5°); the thin frame (51.3° wide about φ +1.2°,
 y 0.232…0.332, 0.004 Ø) with its two lines; MADE IN KOREA (cap 0.028, baseline 0.154); 50 ml ℮ 1.69 fl.oz. (cap
-0.025, baseline 0.080). All black (#121212 on the photo) but the M.
+0.025, baseline 0.080). All in the box's black but the M (#121212 on the 88 px photo: its 2 px strokes never reach the
+ink; the lines share the box's weights, fitted on the rendered key).
 
 The S5 neighbours (the line's other boxes, as photographed): CELL RENEW 1.5%, CELLULAR AGE DEFENSE 2.5% and
 MICRO BOOST 10%, each rectified from its largest packshot (protocols/print/img/*.webp, the corners as their own pages'
@@ -70,7 +74,7 @@ DEJAVU = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
 XL, XR, YT, YB = 11.6, 627.4, 12.8, 987.0           # the front on the packshot (photo px)
 H = 2430; K = H / (YB - YT); W = round((XR - XL) * K)  # 2.4944 texels per photo px: 1536 × 2430
 PAPER, BAND = (243.5, 232.7, 222.8), (136.0, 151.6, 129.0)
-MITO, SNAIL, BLACK = (15, 28, 19), (18, 43, 27), (10, 8, 5)
+MITO, SNAIL, BLACK = (15, 28, 19), (18, 43, 27), (3, 2, 0)
 BAND_Y = (325.1, 482.0)                               # the band's edges (half contrast, both margins agree ±0.03)
 # the band's gold: inner pixels (eroded 1 px) per 50 photo px across, at the bins' middles
 GOLD = [(120, (244, 217, 144)), (170, (243, 216, 142)), (220, (243, 214, 138)), (270, (242, 211, 132)), (320, (241, 207, 125)),
@@ -231,7 +235,7 @@ TJ = 2048; PHI0, PHI1, YLO, YHI = -50.0, 34.0, 0.04, 0.76
 JW, JH = round(0.5 * np.radians(PHI1 - PHI0) * TJ), round((YHI - YLO) * TJ)
 jx = lambda phi: (0.5 * np.radians(phi) - 0.5 * np.radians(PHI0)) * TJ   # φ (deg) → texel x
 jy = lambda y: (YHI - y) * TJ                                             # height (Ø) → texel y
-INK = (18, 18, 18)
+INK = BLACK
 
 
 def ink_box(text, centres, widths):   # a measured line's ink extent (photo px)

@@ -8,17 +8,22 @@
 // 0.632 : 1 : 0.632, the depth assumed) and the 50 ml jar (no packshot: the owner's two small photos, Figma photo 1 the
 // closed jar, photo 73 the open jar with its lid beside it; Ø : H 1 : 1.31 with the lid, a white body, a black collar
 // and a frosted lid over a white top).
+// The DERMA box's width: canonical is this page's W : H = 615.8 : 974.2 = 0.6321 (the front on the assets packshot at
+// half alpha, the dark rounded right edge's last 2 px left out so the print's own axis is the front's middle; the typeset
+// print fits it within 0.5 photo px). The sibling pages' S5 (cell-renew-1-5.js, cellular-age-defense-2-5.js) draw the
+// same box at 612.4 : 974.1 = 0.6287, 0.5 % narrower, from the same packshot: theirs to align to this one.
 // The story (site/story3d.json; scratchpad spec pages/derma-recovery-cream/spec.md), as far as the owner's rule of 22/10
 // lets it («only what exists»):
 //   S1 meet     the box as on the packshot, a soft green light behind it, turning a little toward its left side (the
 //               side the old ¾ packshot shows: plain board)
-//   S2 why      no package: a few spicules (the line's ingredient, as site/img/spicules-macro.png: grey-olive porous
-//               spindles) drift loose in the dark, far back
+//   S2 why      no package: a few spicules (the line's ingredient, drawn as on the sibling pages) drift loose in the
+//               dark, far back, scattered with no figure among them
 //   S3 inside   the jar comes from the dark; its lid lifts straight up and comes to rest beside it, as on photo 73;
 //               under it the jar's plain white top (nothing drawn inside: the photos show no cream)
 //   S4 feel     (no people: the owner's rule) the lid back on, the jar alone in an even, wider light
 //   S5 protocol the line's green haze; the home branch, CELL RENEW 1.5% and CELLULAR AGE DEFENSE 2.5% taking turns on one
-//               place («או»), the clinic's MICRO BOOST 10% beside it, and the DERMA box a step nearer: their packshots'
+//               place («או»: one goes fully out before the other comes in, never two prints at once), the clinic's
+//               MICRO BOOST 10% beside it, and the DERMA box a step nearer: their packshots'
 //               fronts and sides as photographed. On a desktop all go back into the dark as the step cards scroll up
 //               over the scene
 //   S6–S7 kit   the box and the closed jar side by side, the green light behind them: the picture that flies into the
@@ -113,8 +118,9 @@ export function createScene(THREE, { canvas, base, onLoad }) {
 
   // ---- materials. The products in their print's colours: emissive 0.85 of the colour plus a neutral shading (a diffuse
   // 0.2 of it under the key and the room), not tone mapped; a dense glossy paper (roughness 0.5, a soft highlight). They
-  // come and go by opacity only, never dimmed or tinted. A printed face keeps only a trace of the highlight
-  // (specular 0.05): on the paper it never showed (ΔE 0.0), on black ink it lifted the letters' cores by 8 levels
+  // come and go by opacity only, never dimmed or tinted. A printed face (the boxes, the jar's print) keeps only a trace
+  // of the highlight (specular 0.05): on the paper it never showed (0.3 level), on black ink a specular of 0.3 lifted
+  // the letters' cores by 8–10 levels (the v1 key at 3840)
   const SHADE = 0.2;
   const P = (hex, opts = {}) => new THREE.MeshPhysicalMaterial(Object.assign({ color: new THREE.Color(hex).multiplyScalar(SHADE), emissive: hex,
     emissiveIntensity: 0.85, roughness: 0.5, specularIntensity: 0.3, toneMapped: false, transparent: true }, opts));
@@ -151,7 +157,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     addFace(g, uvSpan(new THREE.PlaneGeometry(D, 1), f, 1), mats[1], W / 2, 0, -D / 2, 0, Math.PI / 2, order);
     return { g, W, D, mats, a: 0, x: 0, y: 0, H: 0, yaw: 0, view: 0 };
   };
-  const renew = mkNext(renewTex, 0.8506, 1048 / 4032, 1048 / 4032, 92);   // drawn after the 2.5% (it fades over it)
+  const renew = mkNext(renewTex, 0.8506, 1048 / 4032, 1048 / 4032, 92);
   const cad = mkNext(cadTex, 0.8534, 0.26, 0.26, 90);
   const mb = mkNext(mbTex, 0.7937, 0.2376, 0.2376 * 1.21, 91);
   const NEXT = [renew, cad, mb];
@@ -193,54 +199,57 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   { const inner = new THREE.Mesh(new THREE.CylinderGeometry(0.481, 0.481, 0.3, SEG, 1, true), jLidIn); inner.position.y = 0.15; inner.renderOrder = 115; lid.add(inner);
     const wall = new THREE.Mesh(new THREE.CylinderGeometry(0.495, 0.495, 0.32, SEG, 1, true), jLid); wall.position.y = 0.16; wall.renderOrder = 116; lid.add(wall);
     const cap = new THREE.Mesh(new THREE.CircleGeometry(0.495, SEG).rotateX(-Math.PI / 2), jLidTop); cap.position.y = 0.32; cap.renderOrder = 117; lid.add(cap); }
-  const JAR_MATS = [jBody, jCollar, jTop, jPrint];
+  const JAR_MATS = [jBody, jCollar, jTop, jPrint], LID_MATS = [jLid, jLidIn, jLidTop];
   const LID0 = 0.99;   // the lid's foot on the closed jar
 
-  // ---- the spicules (S2: BIOSPICULE, the catalogue's needles of a marine sponge, as site/img/spicules-macro.png):
-  // glassy spindles pointed at both ends (length : width 14), grey-olive with darker pores, lighter at their rims, the
-  // studio's highlights on their glaze. One instanced draw; every instance's place, axis and size set per frame
+  // ---- the spicules (S2: BIOSPICULE, the catalogue's needles of a marine sponge, as site/img/spicules-macro.png): the
+  // line's spicule as its sibling pages draw it (scenes/cell-renew-1-5.js, cellular-age-defense-2-5.js: the same
+  // geometry and material, so the ingredient looks the same on every BIOSPICULE page): glassy spindles pointed at both
+  // ends (length : width 18), dark green in their core, light and clear at their rims, the studio's highlights on their
+  // glaze. Here they are alone in the dark, so two things are added: each one's depth thins it (its alpha 0.55 far …
+  // 1 near: the short ones are the far ones), and all fade out over the scene box's last 48 px as they come and go. One
+  // instanced draw; every instance's place, axis and size set per frame
   const spiGeo = (() => {
-    const pts = []; for (let i = 0; i <= 16; i++) { const t = i / 16; pts.push(new THREE.Vector2(0.5 * Math.pow(Math.sin(Math.PI * t), 0.8), t - 0.5)); }
-    return new THREE.LatheGeometry(pts, 12);
+    const pts = []; for (let i = 0; i <= 12; i++) { const t = i / 12; pts.push(new THREE.Vector2(0.5 * Math.pow(Math.sin(Math.PI * t), 0.85), t - 0.5)); }
+    return new THREE.LatheGeometry(pts, 10);
   })();
-  const spiMat = new THREE.MeshPhysicalMaterial({ color: 0x8e8a6c, emissive: 0x5d5b45, emissiveIntensity: 1, roughness: 0.35, metalness: 0,
-    clearcoat: 0.7, clearcoatRoughness: 0.15, envMapIntensity: 1, transparent: true, toneMapped: false });
-  // the frame position of every fragment (the camera without the box's offset), for the scene box's soft edge: the
-  // spicules fade out over its last 48 px on every side as they come and go
+  const NS = 14, NS_PH = 7;   // a phone: half of them
+  const spiNear = new THREE.InstancedBufferAttribute(new Float32Array(NS).fill(1), 1); spiGeo.setAttribute('aNear', spiNear);
+  const spiMat = new THREE.MeshPhysicalMaterial({ color: 0x1b2911, roughness: 0.32, metalness: 0, clearcoat: 0.7, clearcoatRoughness: 0.12,
+    envMapIntensity: 1.1, transparent: true, toneMapped: false });
+  // the frame position of every fragment (the camera without the box's offset), for the scene box's soft edge
   const layVP = new THREE.Matrix4().multiplyMatrices(lay.projectionMatrix, lay.matrixWorldInverse);
-  spiMat.onBeforeCompile = sh => {   // the pores (a cell pattern along the spindle), the light glassy rim, the edge fade
+  spiMat.onBeforeCompile = sh => {   // as the siblings': a thin lighter rim; then the depth's alpha and the edge fade
     sh.uniforms.uLayVP = { value: layVP };
-    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vSp, vFr; uniform mat4 uLayVP;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvSp = uv;')
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aNear; varying float vNear; varying vec2 vFr; uniform mat4 uLayVP;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvNear = aNear;')
       .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
         { vec4 lp = uLayVP * modelMatrix * instanceMatrix * vec4(transformed, 1.0); vFr = vec2((lp.x / lp.w + 1.0) * 1200.0, (1.0 - lp.y / lp.w) * 750.0); }`);
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
-      varying vec2 vSp, vFr;
-      float hsh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-      float vno(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
-        return mix(mix(hsh(i), hsh(i + vec2(1.0, 0.0)), f.x), mix(hsh(i + vec2(0.0, 1.0)), hsh(i + vec2(1.0, 1.0)), f.x), f.y); }`).replace('#include <opaque_fragment>', `#include <opaque_fragment>
-      { vec2 q = vec2(fract(vSp.x) * 3.14159, vSp.y * 14.0) * 4.0;   // isotropic on the spindle; wraps once round it
-        mat2 R = mat2(0.8, 0.6, -0.6, 0.8);                           // a porous mottle: irregular, no grid, no dots
-        float n = 0.5 * vno(q) + 0.3 * vno(R * q * 2.1 + 5.1) + 0.2 * vno(R * R * q * 4.3 + 1.7);
-        float pore = smoothstep(0.52, 0.72, n) * smoothstep(0.04, 0.16, vSp.y) * (1.0 - smoothstep(0.84, 0.96, vSp.y));
-        float F = pow(1.0 - clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), 3.0);
-        gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.075, 0.09, 0.045), 0.45 * pore);
-        gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.58, 0.51, 0.32), 0.5 * F);
-        gl_FragColor.a *= smoothstep(168.0, 216.0, vFr.x) * (1.0 - smoothstep(1200.0, 1248.0, vFr.x)) * smoothstep(285.0, 333.0, vFr.y) * (1.0 - smoothstep(1167.0, 1215.0, vFr.y)); }`);
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vNear; varying vec2 vFr;').replace('#include <opaque_fragment>', `#include <opaque_fragment>
+      { float F = pow(1.0 - clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), 4.0);
+        gl_FragColor.rgb = mix(gl_FragColor.rgb + vec3(0.004, 0.010, 0.002), vec3(0.30, 0.35, 0.25), 0.45 * F);
+        gl_FragColor.a *= vNear * smoothstep(168.0, 216.0, vFr.x) * (1.0 - smoothstep(1200.0, 1248.0, vFr.x)) * smoothstep(285.0, 333.0, vFr.y) * (1.0 - smoothstep(1167.0, 1215.0, vFr.y)); }`);
   };
   spiMat.customProgramCacheKey = () => 'derma-spicule';
-  const NS = 14, NS_PH = 7;   // a phone: half of them
   const spicules = new THREE.InstancedMesh(spiGeo, spiMat, NS);
   spicules.instanceMatrix.setUsage(THREE.DynamicDrawUsage); spicules.renderOrder = 30; spicules.frustumCulled = false; spicules.visible = false;
   scene.add(spicules);
-  // their places (frame px), each with its axis's angle in the picture (−: rising to the right, as on the macro), its tilt
-  // into depth, its length, its depth behind the field's, its phase: scattered by hand over the scene box, no two closer
-  // than 150 px, none in a row with two others, the tips ≥ 60 px inside the box (the phone keeps every other one)
-  const SPI = [[330, 470, -0.62, 0.3, 230, 0.6, 0.1], [610, 425, -0.38, -0.4, 300, 1.4, 1.7], [905, 455, -0.75, 0.2, 210, -0.4, 3.1],
-    [1055, 640, -0.5, -0.3, 250, 0.9, 4.2], [450, 700, -0.86, 0.45, 330, -0.8, 2.3], [760, 640, -0.55, 0.1, 190, 2.0, 5.0],
-    [335, 905, -0.42, -0.2, 200, 1.1, 0.7], [600, 905, -0.68, 0.35, 280, -0.2, 3.7], [930, 870, -0.3, -0.5, 230, 0.4, 2.9],
-    [1110, 1040, -0.72, 0.2, 170, 1.8, 1.2], [420, 1075, -0.25, 0.4, 180, 2.2, 4.6], [780, 1080, -0.6, -0.25, 210, 0.7, 6.0],
-    [1100, 405, -0.45, 0.3, 140, 2.4, 2.0], [285, 650, -0.95, -0.3, 150, 1.6, 5.5]];
+  // their places (frame px), each with its axis's angle in the picture (−: rising to the right), its tilt into depth, its
+  // length, its depth behind the field's (the long ones near, the short ones far: 95…340 px), its phase. Scattered by
+  // annealing against the owner's rule (22/10: particles never gather into a line, row, grid, ring or figure): no three
+  // centres within 40 px of one straight line over a span under 800 px (5 % of the span beyond; the phone's seven, the
+  // even ones, twice that), no three in a 70 px band across or up, no centre within 75 px of another's axis line (no
+  // dashed line), neighbours under 400 px apart turned ≥ 0.22 rad from each other (no hatching), no empty circle over
+  // 235 px among them (no hollow, no ring); centres ≥ 150 px apart, spindles ≥ 50 px clear of each other at rest and
+  // ≥ 32 px all the way in and out (none crossing into an X, + or T), the tips ≥ 60 px inside the scene box
+  const SPI = [[554, 703, -0.85, 0.37, 340, -1.0, 0.5], [821, 1101, -0.94, 0.23, 95, 3.5, 2.6],
+    [1001, 548, -0.08, 0.46, 279, 0.1, 5.3], [736, 899, -1.44, -0.43, 141, 2.7, 1.2],
+    [459, 1132, 0.2, -0.26, 155, 2.4, 3.5], [907, 708, -0.33, -0.31, 253, 0.6, 6.0],
+    [535, 985, -0.05, 0.34, 189, 1.8, 2.3], [309, 829, -1.09, 0.37, 308, -0.4, 4.8],
+    [1136, 812, -0.98, 0.23, 128, 2.9, 0.7], [1025, 368, 0.2, -0.17, 171, 2.1, 2.8],
+    [437, 411, -0.25, 0.33, 230, 1.0, 5.7], [662, 439, -0.61, -0.37, 208, 1.4, 1.6],
+    [350, 552, -0.01, -0.32, 105, 3.3, 3.7], [1122, 1015, -0.7, -0.22, 116, 3.1, 0.2]];
+  const NEAR = dz => 1 - 0.45 * clamp((dz + 1) / 4.5);   // depth −1 (the longest, near) → 1 … +3.5 (the shortest, far) → 0.55
 
   // ---- the line's light, flat to the camera in frame pixels (a plane far behind; local x = px − 1200, y = 750 − py),
   // drawn first: soft shapeless glows, nothing drawn. A glow adds its colour (× its alpha) and keeps a true alpha, a
@@ -282,24 +291,31 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const HOME = [400, 600, 380], CLINIC = [600, 612, 400];   // S5: the home branch's place (CELL RENEW ↔ 2.5%), MICRO BOOST
   const HOME_PH = [380, 620, 420], CLINIC_PH = [600, 630, 440], HERO4_PH = [920, 660, 500];   // a phone: a little larger
   const KIT_GLOW = 0.7;   // the kit's light behind the pair
+  const JAR5_IN = [JAR[5][0], JAR[5][1], JAR[5][2] * 0.94, 4, 0];   // the kit's jar as it comes in (a step back, closed)
   const ST = { hero: [0, 0, 0, 0], jar: [0, 0, 0, 0, 0, 0], next: [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], spi: 0, sd: 0, glow: [0, 0, 0, 0], veil: 0, kitGlow: 0 };
   const set4 = (o, x, y, H, a) => { o[0] = x; o[1] = y; o[2] = H; o[3] = a; return o; };
   const mixPose = (o, A, B, s, a) => set4(o, lerp(A[0], B[0], s), lerp(A[1], B[1], s), lerp(A[2], B[2], s), a);
   const setJar = (o, A, B, s, a, lidS) => { for (let i = 0; i < 4; i++) o[i] = lerp(A[i], B[i], s); o[4] = a; o[5] = lidS === undefined ? lerp(A[4], B[4], s) : lidS; return o; };
-  // the home branch: CELL RENEW 1.5% and the 2.5% take turns on one place (7 s: each holds 2.5 s, 1 s to change); a still
-  // frame (the key, reduced motion) shows CELL RENEW. The 2.5% stands a hair behind, opaque while it shows at all, and
-  // CELL RENEW fades over it: the place never turns see-through
-  const turn = (t, live) => { if (!live) return 0; const c = (t % 7 + 7) % 7; return c < 2.5 ? 0 : c < 3.5 ? smooth(2.5, 3.5, c) : c < 6 ? 1 : 1 - smooth(6, 7, c); };
+  // the home branch: CELL RENEW 1.5% and the 2.5% take turns on one place (7 s). One goes fully out (0.5 s) before the
+  // other comes in (0.5 s): the place stands empty for a moment, in the haze, and the two prints are never on screen
+  // together (theirs differ in layout: a crossfade showed both). A still frame (the key, reduced motion) shows CELL RENEW
+  const SWAP = [1, 0];   // [CELL RENEW, the 2.5%]: their share of the routine's opacity
+  function swap(t, live) {
+    const c = live ? (t % 7 + 7) % 7 : 0;
+    SWAP[0] = c < 2.5 ? 1 : c < 3 ? 1 - smooth(2.5, 3, c) : c < 6.5 ? 0 : smooth(6.5, 7, c);
+    SWAP[1] = c < 3 ? 0 : c < 3.5 ? smooth(3, 3.5, c) : c < 6 ? 1 : c < 6.5 ? 1 - smooth(6, 6.5, c) : 0;
+    return SWAP;
+  }
+  function s5(st, a, ga, HM, CL, t, live) {   // the routine at S5, all × a: the haze, the home branch (taking turns), MICRO BOOST
+    const w = swap(t, live);
+    set4(st.next[0], HM[0], HM[1], HM[2], a * w[0]); set4(st.next[1], HM[0], HM[1], HM[2], a * w[1]); set4(st.next[2], CL[0], CL[1], CL[2], a);
+    st.veil = 0.5 * ga; st.glow[2] = 0.45 * ga; st.glow[3] = 0.45 * ga;
+  }
   function story(p, ph, t, live) {
     const k = Math.min(4, Math.floor(p)), f = p - k, st = ST;
     set4(st.hero, 0, 0, 1, 0); st.jar[4] = 0; for (const n of st.next) set4(n, 0, 0, 1, 0);
     st.spi = 0; st.sd = 0; st.glow[0] = st.glow[1] = st.glow[2] = st.glow[3] = 0; st.veil = 0; st.kitGlow = 0;
     const HM = ph ? HOME_PH : HOME, CL = ph ? CLINIC_PH : CLINIC, H4 = ph ? HERO4_PH : HERO[4];
-    const s5 = (a, ga) => {   // the routine at S5, all × a: the haze, the home branch (taking turns), MICRO BOOST, DERMA
-      const w = turn(t, live);
-      set4(st.next[0], HM[0], HM[1], HM[2], a * (1 - w)); set4(st.next[1], HM[0], HM[1], HM[2], w > 0.001 ? a : 0); set4(st.next[2], CL[0], CL[1], CL[2], a);
-      st.veil = 0.5 * ga; st.glow[2] = 0.45 * ga; st.glow[3] = 0.45 * ga;
-    };
     if (p >= 5) {   // the kit: exactly the pose
       mixPose(st.hero, HERO[5], HERO[5], 0, 1); setJar(st.jar, JAR[5], JAR[5], 0, 1); st.kitGlow = KIT_GLOW; return st;
     }
@@ -323,25 +339,25 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       // BOOST and the DERMA box come in from the dark
       const j = smooth(0, 0.35, f); setJar(st.jar, JAR[3], JAR[4], j, 1 - j);
       st.glow[1] = 0.75 * (1 - smooth(0, 0.3, f));
-      s5(smooth(0.4, 0.75, f), smooth(0.2, 0.6, f));
+      s5(st, smooth(0.4, 0.75, f), smooth(0.2, 0.6, f), HM, CL, t, live);
       for (const n of st.next) n[2] *= 0.9 + 0.1 * smooth(0.4, 0.75, f);
       const d = smooth(0.45, 0.85, f); set4(st.hero, H4[0], H4[1], H4[2] * (0.9 + 0.1 * d), d); st.glow[0] = 0.6 * d;
     } else if (ph) {   // S5 → kit on a phone (the copy scrolls under the stage): the routine goes, DERMA steps to the kit's
       // place and the jar comes in beside it
-      const o = smooth(0.1, 0.45, f); s5(1 - o, 1 - o);
+      const o = smooth(0.1, 0.45, f); s5(st, 1 - o, 1 - o, HM, CL, t, live);
       mixPose(st.hero, H4, HERO[5], smooth(0.35, 0.85, f), 1); st.glow[0] = 0.6 * (1 - smooth(0.3, 0.6, f));
-      const j = smooth(0.7, 0.95, f); setJar(st.jar, [JAR[5][0], JAR[5][1], JAR[5][2] * 0.94, 4, 0], JAR[5], j, j);   // after the box has passed
+      const j = smooth(0.7, 0.95, f); setJar(st.jar, JAR5_IN, JAR[5], j, j);   // after the box has passed
       st.kitGlow = KIT_GLOW * smooth(0.6, 1, f);
     } else {   // S5 → kit on a desktop: the page's three step cards scroll up over the scene's whole width (their top meets
       // the boxes' feet as the hold at p = 4 ends at 1920×1080, by f ≈ 0.05 at 1440×900; their foot clears the kit's top
       // by f ≈ 0.42–0.63, as on the sibling pages). So all go back into the dark as the cards come, and the kit (the box
       // and the closed jar) comes forward once the cards have passed
       const out = smooth(0, 0.06, f), back = smooth(0.64, 0.85, f);
-      s5(1 - out, 1 - out); for (const n of st.next) n[2] *= 1 - 0.06 * out;
+      s5(st, 1 - out, 1 - out, HM, CL, t, live); for (const n of st.next) n[2] *= 1 - 0.06 * out;
       if (f < 0.3) { set4(st.hero, H4[0], H4[1], H4[2] * (1 - 0.06 * out), 1 - out); st.glow[0] = 0.6 * (1 - out); }
       else {
         set4(st.hero, HERO[5][0], HERO[5][1], HERO[5][2] * (0.94 + 0.06 * back), back);
-        setJar(st.jar, [JAR[5][0], JAR[5][1], JAR[5][2] * 0.94, 4, 0], JAR[5], back, back);
+        setJar(st.jar, JAR5_IN, JAR[5], back, back);
         st.kitGlow = KIT_GLOW * back;
       }
     }
@@ -383,16 +399,18 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     const o = s[5], up = smooth(0, 0.4, o), side = smooth(0.3, 0.75, o), down = smooth(0.65, 1, o);
     lid.position.set(1.22 * side, LID0 + 0.34 * up - (LID0 + 0.34) * down, 0.04 * side);
     for (const m of JAR_MATS) m.opacity = s[4];
-    for (const m of [jLid, jLidIn, jLidTop]) m.opacity = m.userData.a * s[4];
+    for (const m of LID_MATS) m.opacity = m.userData.a * s[4];
     J.x = s[0]; J.y = s[1]; J.D = s[2]; J.tilt = s[3]; J.yaw = deg(yaw); J.lid = o;
   }
   // the instances: a spindle's matrix from its middle, its axis (unit), its length and width (world units)
   const qa = new THREE.Quaternion(), Y = new V3(0, 1, 0), sc = new V3(), mat4 = new THREE.Matrix4();
   const pos = new V3(), dir = new V3(), mq = new THREE.Quaternion();
+  let spiPh = null;   // the set whose depths the instances hold (a phone keeps the even ones)
   function placeSpicules(st, ph, t, live) {
     spicules.visible = st.spi > 0.004;
     if (!spicules.visible) return;
-    const n = ph ? NS_PH : NS; spicules.count = n; spiMat.opacity = 0.92 * st.spi;
+    const n = ph ? NS_PH : NS; spicules.count = n; spiMat.opacity = st.spi;
+    if (spiPh !== ph) { for (let j = 0; j < n; j++) spiNear.array[j] = NEAR(SPI[ph ? j * 2 : j][5]); spiNear.needsUpdate = true; spiPh = ph; }
     for (let j = 0; j < n; j++) {
       const s = SPI[ph ? j * 2 : j], D = D_FIELD + s[5], u = world(1, D);
       // a slow drift along its own axis while the page lives; on the way in and out 140 px further along it
@@ -401,7 +419,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       at(cx, cy, D, pos);
       dir.set(0, 0, 0).addScaledVector(RIGHT, Math.cos(a)).addScaledVector(UP, -Math.sin(a)).addScaledVector(BACK, s[3]).normalize();
       const L = s[4] * u * Math.hypot(1, s[3]);   // its length in the picture stays s[4] px whatever its tilt
-      qa.setFromUnitVectors(Y, dir); sc.set(L / 14, L, L / 14); mat4.compose(pos, qa, sc); spicules.setMatrixAt(j, mat4);
+      qa.setFromUnitVectors(Y, dir); sc.set(L / 18, L, L / 18); mat4.compose(pos, qa, sc); spicules.setMatrixAt(j, mat4);
     }
     spicules.instanceMatrix.needsUpdate = true;
   }
@@ -411,8 +429,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     const hs = st.hero, sway = rad(2.5) * (1 - Math.cos(t * 2 * Math.PI / 9)) * live;
     hs[1] += 0.006 * hs[2] * Math.sin(t * 2 * Math.PI / 6) * live;
     placeBox(hero, hs, D_BOX, 0, sway);
-    for (let i = 0; i < 3; i++) placeBox(NEXT[i], st.next[i], D_NEXT + (i === 1 ? 0.05 : 0), R_SIDE[i]);
-    for (const m of renew.mats) m.depthWrite = renew.a > 0.99;   // fading over the 2.5%: no depth of its own
+    for (let i = 0; i < 3; i++) placeBox(NEXT[i], st.next[i], D_NEXT, R_SIDE[i]);   // the home branch's two never at once
     placeJar(st.jar, t, live);
     placeSpicules(st, ph, t, live);
     // the light: behind the box (its front's width and more either side, 0.62 of its height), the jar, the routine;
