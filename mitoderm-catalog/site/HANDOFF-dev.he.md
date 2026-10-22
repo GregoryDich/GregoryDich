@@ -38,6 +38,7 @@
    - CELLULAR AGE DEFENSE 2.5% — https://claude.ai/artifact/RhFJsLyLDinq2HcizL1hvq
    - MITOPEN — https://claude.ai/artifact/KAn13gS9E2on2ZikQSz4eW
    - CELL RENEW 1.5% — https://claude.ai/artifact/2rVvsAFJ9NRUjymZDmANup
+   - MITOSCAN — https://claude.ai/artifact/KD3L1gfgVA8twY7HBvYofp
 
    הקוד כולו: https://github.com/GregoryDich/GregoryDich/tree/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site
 
