@@ -5,14 +5,18 @@
 // for the story position into the box. Objects are placed by frame pixel (2400×1500), measured on the only packshot,
 // protocols/print/img/exo-nad.webp (795×488): the brushed gold box seen square on (476 px), the square glass peel bottle
 // with its gold cap and two phases, the pH Normalizer and Longevity Serum vials with silver crimp caps: clear glass, the
-// amber and the blue liquid filling about 70 % of them, the print small, as on the owner's photos of 22/10.
+// amber-brown and the blue liquid filling about 70 % of them, dark against the black as photographed, the print small
+// and quiet, as on the owner's photos of 22/10.
 // The story (site/story3d.json; scratchpad spec pages/exo-nad/spec.md): S1 the closed box, champagne glow behind it;
 // S2 the box deeper, its glow lower; S3 the three liquids come out from behind the box one by one and stand in a row,
-// 1-2-3 right to left (peel, pH, serum); S3 → S4 a soft light rises behind them and a shapeless champagne haze; the
-// three go small, low right, in a backlight; S4 → S5 the haze sinks, the three rise and grow in their row, each lit from
-// behind in turn as its step is read; S6–S7 the box comes forward and its sleeve lifts straight up 0.56 of its width
-// (owner photos 26 and 32, photo A of 22/10), the black tray shows the peel bottle and the rows of 5 + 5 vials (photo 29): the pose that
-// flies into the offer card. Nothing else opens: no photo shows the caps off. The product keeps its print's colours
+// 1-2-3 right to left (peel, pH, serum), the box going away into the dark behind them; S3 → S4 a soft light rises
+// behind them and a shapeless champagne haze; the three go small, low right, in a backlight; S4 → S5 the haze sinks,
+// the three rise and grow in their row, each lit from behind in turn as its step is read; S6–S7 the box comes forward,
+// its sleeve lifts straight up until its foot is at 57 % of the open kit's height (photo A of 22/10) and the camera
+// steps in to the box as a hand-held photo is taken (wider, the box kept in place and size: the base's gold walls
+// show their insides, the tray lies deep, the sleeve's edge shades it); the black tray shows the peel bottle and the
+// rows of 5 + 5 vials, the pH caps under the sleeve's edge: the pose that flies into the offer card. Nothing else
+// opens: no photo shows the caps off. The product keeps its print's colours
 // (emissive ≈ 85 % + neutral shading, toneMapped off); the line's champagne (#d8c48a) lives only around it, as soft
 // shapeless glow and haze. Only what exists is drawn (the owner, 22/10): the products and their packaging, the gold
 // flakes inside the peel; no lines, rings, dots or particles of anything the kit does not hold. No text is drawn but the
@@ -46,7 +50,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   }
   const world = (px, depth) => px / 1500 * 2 * depth * TAN;   // frame pixels → world units at that depth
   const toCam = new V3();
-  const facing = o => { toCam.copy(lay.position).sub(o.position).applyQuaternion(layInv); return Math.atan2(toCam.x, toCam.z); };
+  const facing = o => { toCam.copy(camera.position).sub(o.position).applyQuaternion(layInv); return Math.atan2(toCam.x, toCam.z); };
 
   // ---- light: a neutral studio for reflections (PMREM), as the HAIR scenes': dark above and below, an even horizon, two
   // tall narrow softboxes either side of the camera, rims behind; the glass has its own room without the front softboxes
@@ -80,7 +84,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const restored = () => {
     const old = [roomEnv, glassEnv]; roomEnv = makeEnv(false); glassEnv = makeEnv(true); scene.environment = roomEnv.texture;
     for (const m of glassMats) m.envMap = glassEnv.texture;
-    old.forEach(t => t.dispose()); sizeW = -1;
+    old.forEach(t => t.dispose()); sizeW = -1; lastId = '';
     version++; if (onLoad) onLoad();
   };
   canvas.addEventListener('webglcontextrestored', restored);
@@ -136,23 +140,42 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // the box moves and the sleeve slides through it). Faces turned away (the walls' insides) do not see it. Normalised to
   // 1 at the ΔE probe's reflection in every pose (S1 r ≈ (0.24, 0.04), the kit (0.25, 0.12)): it moves no print colour
   // (the face's own normal, not the brushing's: the brushing stays fine)
-  const SHEEN = 'vec3 rv = reflect(normalize(-vViewPosition), nonPerturbedNormal); float shn = rv.z > 0.0 ? exp(-pow((rv.x - 0.19) / 0.17, 2.0) - pow((rv.y - 0.08) / 0.13, 2.0)) : 0.0;\n'
+  const SHEEN = 'vec3 rv = uToLay * reflect(normalize(uEyeOff - vViewPosition), nonPerturbedNormal); float shn = rv.z > 0.0 ? exp(-pow((rv.x - 0.19) / 0.17, 2.0) - pow((rv.y - 0.08) / 0.13, 2.0)) : 0.0;\n'
     + '        gl_FragColor.rgb *= (1.0 + 0.45 * shn) / 1.36;';
-  const foilLight = sh => {
-    edgeFade(sh);
+  // the foil is lit and mirrors the studio as the story's camera sees it, also while the kit's lens (lens()) steps the
+  // drawn camera in: its colour does not move with the lens (uEyeOff: the story camera's eye in the drawn camera's view)
+  const EYE = { value: new V3() }, TOLAY = { value: new THREE.Matrix3() };
+  const eyeFixed = sh => {
+    sh.uniforms.uEyeOff = EYE; sh.uniforms.uToLay = TOLAY;
+    sh.fragmentShader = 'uniform vec3 uEyeOff;\nuniform mat3 uToLay;\n' + sh.fragmentShader.replace('#include <lights_fragment_begin>',
+      THREE.ShaderChunk.lights_fragment_begin.replace(/normalize\( vViewPosition \)/g, 'normalize( vViewPosition - uEyeOff )'));
+  };
+  // the faces that turn from the studio take less of it (the print's colour is emissive, so its own shading is slight):
+  // the sleeve's rounded foot darkens toward its underside (the board's edge, as photographed: a light line over a dark
+  // one), the base's walls' insides are in the walls' own shade (the left one turned from the key the more) and darken
+  // into the tray, as the band's top edge does (part: 'sleeve', 'base'; the printed face has neither)
+  const foilLight = (sh, part) => {
+    edgeFade(sh); eyeFixed(sh);
+    const IW = (WX - WALL).toFixed(4), YL = (yv(LIDV) + RLIP).toFixed(4), Z = (-REC).toFixed(4);
     sh.vertexShader = 'varying vec3 vBoxP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vBoxP = position;');
     sh.fragmentShader = 'varying vec3 vBoxP;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
       { float u = vBoxP.x + 0.5, v = 0.5 - vBoxP.y, du = (u - 0.36) / 0.38, dv = (v - 0.42) / 0.55;
         gl_FragColor.rgb *= (0.82 + 0.30 * exp(-(du * du + dv * dv))) * (v > 0.879 ? 0.86 : 1.0);
+        ${part === 'sleeve' ? `if (vBoxP.y < ${YL} + 0.0001 && abs(vBoxP.x) < 0.499) {   // the rounded foot: 1 facing forward … 0 facing down
+          float c = clamp(vBoxP.z / ${RLIP.toFixed(4)}, 0.0, 1.0);
+          gl_FragColor.rgb *= mix(mix(0.3, 1.7, smoothstep(0.15, 0.7, c)), 1.0, smoothstep(0.88, 0.99, c)); }` : ''}
+        ${part === 'base' ? `float deep = clamp(vBoxP.z / ${Z}, 0.0, 1.0);
+        if (vBoxP.z < -0.0005 && abs(abs(vBoxP.x) - ${IW}) < 0.0008) gl_FragColor.rgb *= (vBoxP.x < 0.0 ? 0.62 : 0.8) * mix(1.0, 0.7, deep);
+        else if (vBoxP.z < -0.0005 && abs(vBoxP.x) < ${IW}) gl_FragColor.rgb *= mix(1.08, 0.8, deep);` : ''}
         ${SHEEN} }`);
   };
   const lidMat = P(0xffffff, Object.assign({}, FOIL_OPTS, { color: new THREE.Color(SHADE, SHADE, SHADE), map: lidTex, emissiveMap: lidTex,
     metalnessMap: lidMetal, roughnessMap: lidMetal, roughness: 1, bumpMap: brush, bumpScale: 0.6 }), 'lid');
-  const foilMats = () => P(FOIL, FOIL_OPTS, 'foil');
-  lidMat.onBeforeCompile = foilLight;
+  const foilMats = part => { const m = P(FOIL, FOIL_OPTS, 'foil-' + part); m.onBeforeCompile = sh => foilLight(sh, part); return m; };
+  lidMat.onBeforeCompile = sh => foilLight(sh);
   const velvet = () => P(0x1c1d1b, { roughness: 0.9, specularIntensity: 0.1, sheen: 0.4, sheenRoughness: 0.6, sheenColor: 0x3a3a38 }, 'velvet');
   const trayGold = () => { const m = P(FOIL, Object.assign({}, FOIL_OPTS, { alphaMap: trayInk, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }), 'traygold');
-    m.onBeforeCompile = sh => { edgeFade(sh); sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
+    m.onBeforeCompile = sh => { edgeFade(sh); eyeFixed(sh); sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
       { ${SHEEN} }`); }; return m; };   // the same foil, the same gloss
   // glass (HAIR's): no transmission (on a transparent canvas it cannot see the page's smoke, and a phone pays a pass for
   // it); its opacity follows Fresnel and its own highlights, so its edges and highlights read and the body stays clear
@@ -174,10 +197,11 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     m.customProgramCacheKey = () => 'exonad-glass' + k.join() + color + (lit ? 'lit' : ''); glassMats.push(m);
     return m;
   }
-  // the vials' liquids, clear and coloured: the packshot's front colour where the body faces the camera (within ±30°
-  // nothing changes: the ΔE probe), toward the right limb the light behind it shines through (#f18535 / #41dee1), the
-  // left limb in shadow; thinner toward the limbs, so what is behind shows there (alpha 0.9 → 0.55); its surface (seen
-  // from a little above, a thin ellipse) and the meniscus light
+  // the vials' liquids, clear and coloured as the owner's photos of 22/10 show them against the black tray and glove:
+  // amber-brown and blue, dark where the black shows through them. The front colour where the body faces the camera
+  // (within ±30° nothing changes: the ΔE probe), toward the right limb the light behind it comes through, brighter, the
+  // left limb in shadow; lit through the foot, a little darker up the column; thinner toward the limbs, so what is
+  // behind shows there (alpha 0.9 → 0.55); its surface (seen from a little above, a thin ellipse) and the meniscus light
   function liquidMat(hex, limb, shade) {
     const m = P(hex, { roughness: 0.5, specularIntensity: 0.2, depthWrite: false }, 'liq' + hex);
     const L = new THREE.Color(limb), S = new THREE.Color(shade);
@@ -189,7 +213,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       { float nx = normal.x, ax = abs(nx);
         gl_FragColor.rgb = mix(gl_FragColor.rgb, uLimb, 0.85 * smoothstep(0.55, 0.85, nx) * (1.0 - smoothstep(0.93, 1.0, nx)));
         gl_FragColor.rgb = mix(gl_FragColor.rgb, uShade, 0.8 * smoothstep(-0.55, -0.9, nx));
-        gl_FragColor.rgb *= 1.0 + 0.16 * (1.0 - smoothstep(0.04, 0.15, vLy)) - 0.14 * smoothstep(0.15, ${(FILL - 0.03).toFixed(3)}, vLy);   // lit through the foot
+        gl_FragColor.rgb *= 1.0 + 0.3 * (1.0 - smoothstep(0.04, 0.14, vLy)) - 0.12 * smoothstep(0.16, ${(FILL - 0.03).toFixed(3)}, vLy);   // lit through the foot
         float top = smoothstep(${(FILL - 0.016).toFixed(3)}, ${(FILL - 0.001).toFixed(3)}, vLy);
         gl_FragColor.rgb = mix(gl_FragColor.rgb, mix(uLimb, vec3(1.0), 0.35), 0.55 * top);
         gl_FragColor.a *= mix(0.9, 0.55, smoothstep(0.5, 0.97, ax)) + 0.1 * top; }`);
@@ -213,6 +237,32 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const upL = new V3(0, 1, 0).applyQuaternion(lay.quaternion), m4 = new THREE.Matrix4();
   const ink = (map, hex = 0x070707) => P(hex, { alphaMap: map, depthWrite: false, roughness: 0.45, polygonOffset: true, polygonOffsetFactor: -2 }, 'ink');
   const neckMat = (hex, opts, key) => { const m = P(hex, opts, key); m.onBeforeCompile = sh => { edgeFade(sh); noGlint(sh); }; return m; };
+  // the tray's light, on its contents and its print: the sleeve's foot shades what lies under it, the deeper the longer
+  // (the studio's light comes from above and before it: the shade ends 0.7 × the depth under the edge, softer the deeper),
+  // and the velvet darkens into the corners with the walls and the band it lies between. In the box's own units (uBoxInv:
+  // world → box; uLidY: the sleeve's foot), also for the instanced vials
+  const BOXINV = { value: new THREE.Matrix4() }, LIDY = { value: 0 };
+  function trayLight(m, corners = false) {
+    const ob = m.onBeforeCompile, key = m.customProgramCacheKey;
+    m.onBeforeCompile = (sh, r) => {
+      ob.call(m, sh, r); sh.uniforms.uBoxInv = BOXINV; sh.uniforms.uLidY = LIDY;
+      sh.vertexShader = 'uniform mat4 uBoxInv;\nvarying vec3 vBoxL;\n' + sh.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
+      { vec4 lp = vec4(transformed, 1.0);
+        #ifdef USE_INSTANCING
+        lp = instanceMatrix * lp;
+        #endif
+        vBoxL = (uBoxInv * modelMatrix * lp).xyz; }`);
+      sh.fragmentShader = 'uniform float uLidY;\nvarying vec3 vBoxL;\n' + sh.fragmentShader.replace('#include <tonemapping_fragment>', `{
+        float g = max(0.003 - vBoxL.z, 0.0), d = uLidY - vBoxL.y;
+        float k = mix(0.42, 1.0, smoothstep(0.2 * g - 0.003, 1.2 * g + 0.003, d));
+        ${corners ? `float e = min(${(WX - WALL).toFixed(4)} - abs(vBoxL.x), vBoxL.y - ${yv(BANDV).toFixed(4)});
+        k *= mix(0.5, 1.0, smoothstep(0.0, 0.05, e));` : ''}
+        gl_FragColor.rgb *= k; }
+      #include <tonemapping_fragment>`);
+    };
+    m.customProgramCacheKey = () => key.call(m) + '-tray' + (corners ? 'c' : '');
+    return m;
+  }
 
   // one geometry out of several parts (each [geometry, matrix]): fewer draws for the box's flat faces
   const M = (x, y, z, rx = 0, ry = 0) => new THREE.Matrix4().compose(new V3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, 0)), new V3(1, 1, 1));
@@ -237,16 +287,20 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // ---- the box, its front W × W (W = 1, scaled per pose; origin the front's centre, y up, the front at z 0): a sleeve
   // over the top 0.877 (the packshot's lid line) that lifts straight up, as in the owner's photos 26 and 32; under it
   // the base: its front band (v 0.881…1), gold side walls up to the top (0.028 W: photo A shows them as gold strips either
-  // side of the tray), the black tray 0.05 deeper with the peel bottle and the rows of five vials (photo 29: left the peel,
-  // centres u 0.129; the rows at u 0.317 + 0.139 k, their feet at v 0.470 and 0.740); depth 0.28 W (unknown: an
-  // assumption, spec §5). The sleeve's face stands 0.006 before the base's;
-  // between its foot (v 0.877) and the band (0.881) the dark of the tray shows: the lid line
-  const BD = 0.28, LIDV = 0.877, BANDV = 0.881, WALL = 0.028, WX = 0.494, REC = 0.05;
+  // side of the tray, their insides too), the black tray 0.09 deeper (the vials, 0.1 W across, lie half sunk in it) with
+  // the peel bottle and the rows of five vials (photo 29: left the peel, centres u 0.129; the rows at u 0.317 + 0.139 k);
+  // depth 0.28 W (unknown: an assumption, spec §5). The sleeve's face stands 0.006 before the base's, its foot's edge
+  // rounded (r 0.006, the board's thickness: it catches the light above and goes dark below); between its foot (v 0.877)
+  // and the band (0.881) the dark of the tray shows: the lid line
+  const BD = 0.28, LIDV = 0.877, BANDV = 0.881, WALL = 0.028, WX = 0.494, REC = 0.09, RLIP = 0.006;
   const box = new THREE.Group(), sleeve = new THREE.Group(), trayG = new THREE.Group(); box.add(sleeve); box.add(trayG); scene.add(box);
   const yv = v => 0.5 - v;   // the front's v (0 top … 1 foot) → local y
-  const foilBox = foilMats(), foilSleeve = foilMats(), velvetMat = velvet(), trayGoldMat = trayGold();
-  foilBox.onBeforeCompile = foilSleeve.onBeforeCompile = foilLight;   // (their geometry is in the box's own units: u, v)
-  mesh(plane(1, LIDV).translate(0, yv(LIDV / 2), 0.006), lidMat, sleeve, 101);
+  const foilBox = foilMats('base'), foilSleeve = foilMats('sleeve'), velvetMat = velvet(), trayGoldMat = trayGold();   // (their
+  // geometry is in the box's own units: u, v)
+  // the printed face down to the rounded edge (its texture spans v 0…0.877: the last 0.006, bare foil, goes round it)
+  const faceGeo = plane(1, LIDV - RLIP), fuv = faceGeo.attributes.uv;
+  for (let i = 0; i < fuv.count; i++) fuv.setY(i, RLIP / LIDV + fuv.getY(i) * (1 - RLIP / LIDV));
+  mesh(faceGeo.translate(0, yv((LIDV - RLIP) / 2), 0.006), lidMat, sleeve, 101);
   // the lid line: the dark under the sleeve's lip between its foot (v 0.877) and the band (0.881); it goes as the sleeve lifts
   const lidLine = P(0x161617, { roughness: 0.9, specularIntensity: 0.1 }, 'lidline');
   const lidGap = mesh(plane(1, BANDV - LIDV).translate(0, yv((LIDV + BANDV) / 2), 0.003), lidLine, box, 101);
@@ -254,7 +308,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     [plane(BD + 0.006, LIDV), M(-0.5, yv(LIDV / 2), (0.006 - BD) / 2, 0, -Math.PI / 2)],                 // sides
     [plane(BD + 0.006, LIDV), M(0.5, yv(LIDV / 2), (0.006 - BD) / 2, 0, Math.PI / 2)],
     [plane(1, LIDV), M(0, yv(LIDV / 2), -BD, 0, Math.PI)],                                               // back
-    [plane(1, 0.006), M(0, yv(LIDV), 0.003, Math.PI / 2)]]), foilSleeve, sleeve, 100);                   // the lip
+    [new THREE.CylinderGeometry(RLIP, RLIP, 1, 8, 1, true, 0, Math.PI / 2).rotateZ(-Math.PI / 2), M(0, yv(LIDV) + RLIP, 0.006 - RLIP)]]),   // the edge
+    foilSleeve, sleeve, 100);
   const bandH = 1 - BANDV, wallH = BANDV;
   mesh(merge([[plane(1, bandH), M(0, yv(BANDV + bandH / 2), 0)],                                          // the band
     [plane(BD, bandH), M(-0.5, yv(BANDV + bandH / 2), -BD / 2, 0, -Math.PI / 2)], [plane(BD, bandH), M(0.5, yv(BANDV + bandH / 2), -BD / 2, 0, Math.PI / 2)],
@@ -290,17 +345,18 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     [new THREE.BoxGeometry((WB - LW) / 2 - 0.02 * WB, LIQ1 - LIQ0, DB - 0.03 * WB), M(-(LW + (WB - LW) / 2) / 2, (LIQ0 + LIQ1) / 2, 0)],   // the walls
     [new THREE.BoxGeometry((WB - LW) / 2 - 0.02 * WB, LIQ1 - LIQ0, DB - 0.03 * WB), M((LW + (WB - LW) / 2) / 2, (LIQ0 + LIQ1) / 2, 0)]]);
   const topGeo = new THREE.BoxGeometry(WB - 0.03 * WB, 0.611 - LIQ1 - 0.006, DB - 0.03 * WB).translate(0, (LIQ1 + 0.605) / 2, 0);
-  // the thick foot and walls carry the liquid's light (it runs through the glass by total internal reflection): a cream
-  // (the liquid's #e5d9ba) rising toward the liquid, the foot's bottom edge lit too; dark glass away from it, so on the
-  // black page the bottle reads as clear glass round a lit liquid
+  // the thick foot and walls: clear glass, dark on the black page or tray as photographed, carrying the liquid's light
+  // (the liquid's #e5d9ba, run through the glass by total internal reflection) in narrow lines: the walls' inner edge
+  // beside the liquid and their outer edge, the foot's top under the liquid and its bottom edge; a breath of it between
   const f3 = v => v.toFixed(4);
   const slabLit = sh => {
     sh.vertexShader = 'varying vec3 vSlab;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vSlab = position;');
     sh.fragmentShader = 'varying vec3 vSlab;\n' + sh.fragmentShader.replace(/(gl_FragColor\.a = clamp\([^\n]*\n)/, `$1
-      { float tw = 1.0 - smoothstep(${f3(LW / 2)}, ${f3(WB / 2)}, abs(vSlab.x));
-        float t = vSlab.y < ${f3(LIQ0 - 0.002)} ? smoothstep(0.0, ${f3(LIQ0)}, vSlab.y) * (0.55 + 0.45 * tw) + 0.35 * (1.0 - smoothstep(0.0, 0.03, vSlab.y)) : tw;
-        gl_FragColor.rgb += vec3(0.784, 0.694, 0.491) * (0.10 + 0.50 * t);   // added to the glass's own highlights
-        gl_FragColor.a = max(gl_FragColor.a, (0.16 + 0.52 * t) * opacity); }`);
+      { float y = vSlab.y, ax = abs(vSlab.x), t = y < ${f3(LIQ0 - 0.002)}
+          ? 0.06 + 0.25 * smoothstep(${f3(0.5 * LIQ0)}, ${f3(LIQ0)}, y) + 0.6 * exp(-pow((y - ${f3(LIQ0 - 0.01)}) / 0.01, 2.0)) + 0.45 * exp(-pow((y - 0.017) / 0.006, 2.0))
+          : 0.06 + 0.55 * exp(-pow((ax - ${f3(LW / 2 + 0.005)}) / 0.008, 2.0)) + 0.45 * exp(-pow((ax - ${f3(WB / 2 - 0.009)}) / 0.004, 2.0));
+        gl_FragColor.rgb += vec3(0.784, 0.694, 0.491) * 0.6 * t;   // added to the glass's own highlights
+        gl_FragColor.a = max(gl_FragColor.a, 0.62 * t * opacity); }`);
   };
   const neckGeo = new THREE.CylinderGeometry(0.235 * WB, 0.235 * WB, 0.048, 64).translate(0, 0.654, 0);
   const RCAP = 0.319 * WB, RTOP = 0.024;
@@ -341,7 +397,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   }
   function peelMats(capU) {
     return { back: glassMat(THREE.BackSide, 0.02, 0.3, 0.7), front: glassMat(THREE.FrontSide, 0.04, 0.55, 1.0),
-      slab: glassMat(THREE.FrontSide, 0.07, 0.6, 1.2, 0xa4a8ac, slabLit), top: glassMat(THREE.FrontSide, 0.72, 0.3, 0.6, 0x3b3b3c),
+      slab: glassMat(THREE.FrontSide, 0.03, 0.45, 1.0, 0x0b0b0c, slabLit), top: glassMat(THREE.FrontSide, 0.45, 0.3, 0.6, 0x3b3b3c),
       liquid: P(0xffffff, { color: new THREE.Color(SHADE, SHADE, SHADE), map: peelLiq, emissiveMap: peelLiq, roughness: 0.45, specularIntensity: 0.25 }, 'peelliq'),
       flakes: P(0xd1b55d, { metalness: 0.7, roughness: 0.3, specularIntensity: 1, side: THREE.DoubleSide }, 'flake'),
       neck: neckMat(0x0c0c0d, { roughness: 0.2, specularIntensity: 1, envMapIntensity: 1.2 }, 'neck'),
@@ -359,9 +415,10 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // crimp cap 0.855…1 (0.89 W_v, its top rounded), the dark neck and stopper 0.76…0.848 (0.65 W_v), the shoulder from
   // 0.68 W_v at 0.754 rounding out to the body at 0.652, the body (R 0.2355) to 0.094, the rounded foot (0.78 W_v). Clear
   // glass, as the owner's photos of 22/10 show it: the liquid fills about 70 % of the body (to FILL, its meniscus climbing
-  // the wall), the glass above it empty, the tray or the page seen through it; the print small, black, wrapped round the
-  // glass over the liquid (VPR: 0.62 of the packshot's flat print, which spans the whole front)
-  const R = 0.2355, V2 = (r, y) => new THREE.Vector2(r, y), FILL = 0.54, VPR = [0.232, 0.492];
+  // the wall), the glass above it empty, the tray or the page seen through it; the print small and quiet (photo A), black
+  // on the dark liquid, wrapped round the glass over the liquid's middle (VPR: 0.36 of the packshot's flat print, which
+  // spans the whole front: the names a third of the body's width)
+  const R = 0.2355, V2 = (r, y) => new THREE.Vector2(r, y), FILL = 0.54, VPR = [0.214, 0.365];
   const arc = (cx, cy, r, a0, a1, n) => Array.from({ length: n + 1 }, (_, i) => { const a = a0 + (a1 - a0) * i / n; return V2(cx + r * Math.cos(a), cy + r * Math.sin(a)); });
   const shoulder = new THREE.SplineCurve([V2(R, 0.652), V2(R - 0.004, 0.69), V2(R - 0.03, 0.725), V2(0.19, 0.745), V2(0.16, 0.754), V2(0.153, 0.762)]).getPoints(24);
   const vialGlass = new THREE.LatheGeometry([V2(0, 0), V2(0.1837, 0)].concat(arc(R - 0.052, 0.052, 0.052, -Math.PI / 2 + 0.25, 0, 8), shoulder, [V2(0.153, 0.86), V2(0, 0.86)]), 72);
@@ -372,7 +429,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const RV = 0.2096, RT = 0.022;
   const vialCap = new THREE.LatheGeometry([V2(0, 0.852), V2(RV - 0.003, 0.852), V2(RV, 0.856)].concat(arc(RV - RT, 1 - RT, RT, 0, Math.PI / 2, 8), [V2(0, 1)]), 72);
   // the print wrapped round the glass (u by angle), its arc as wide as the texture's proportions (1024 × 913 / 924 for
-  // 2R × 0.42) at the band's height: ±35° of the front
+  // 2R × 0.42) at the band's height: ±21° of the front
   const vialPrint = (() => {
     const h = VPR[1] - VPR[0], half = 0.5 * (2 * R / 0.42) * h / R;
     return new THREE.CylinderGeometry(R * 1.003, R * 1.003, h, 64, 1, true, -half, 2 * half).translate(0, (VPR[0] + VPR[1]) / 2, 0);
@@ -388,11 +445,11 @@ export function createScene(THREE, { canvas, base, onLoad }) {
         float rim = 0.38 * pow(1.0 - clamp(abs(dot(nonPerturbedNormal, normalize(vViewPosition))), 0.0, 1.0), 3.0) * (1.0 - smoothstep(0.76, 0.80, vVy));
         s += rim; gl_FragColor.rgb += vec3(s); gl_FragColor.a = max(gl_FragColor.a, s * opacity); }`);
   };
-  const LIQ = { ph: [0xcf792c, 0xf18535, 0x6a3f1e], ls: [0x2491ad, 0x41dee1, 0x22495c] };   // front, lit limb, shaded limb
+  const LIQ = { ph: [0x704829, 0xa8692f, 0x2a190d], ls: [0x3a547d, 0x5a7db8, 0x151f33] };   // front, lit limb, shaded limb
   function vialMats(kind, alU) {
     return { back: glassMat(THREE.BackSide, 0.02, 0.3, 0.7), front: glassMat(THREE.FrontSide, 0.03, 0.55, 1.0, 0x0b0b0c, vialLit),
-      // the packshot's #b16b2c and #277e95 as the liquids' colour, as the scene renders them (through the glass, the
-      // liquid not quite opaque: calibrated on the keys)
+      // the photographed amber-brown #5e3d24 and blue #30476b (photo A against the black tray; the packshot's bright opaque
+      // #b16b2c / #277e95 is a composite), as the scene renders them through the glass: calibrated on the keys
       liquid: liquidMat(...LIQ[kind]),
       neck: neckMat(0x1d1f1f, { roughness: 0.3, specularIntensity: 0.8 }, 'vneck'), cap: metalMat(0xd9d7d3, 0.25, 0.12, alU),
       ink: ink(kind === 'ph' ? phInk : lsInk, 0x0a0908), U: alU };
@@ -408,17 +465,23 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const heroes = [makePeel(scene, peelMats(faceU()), 0), makeVial(scene, vialMats('ph', faceU()), 0), makeVial(scene, vialMats('ls', faceU()), 0)];
   const H_W = [WB, 2 * R, 2 * R];   // width of each hero per unit height
   const trayU = faceU(), trayPeel = makePeel(trayG, peelMats(trayU), 104);
-  // its foot a little below the serum row's (photo 29), its cap's top just under the circled 1 (v 0.343) that shows below
-  // the lifted sleeve's edge (photo A: v 0.877 − LIFT)
-  const PEEL_U = 0.129, PEEL_FOOT = 0.772, PEEL_K = 0.41, PEEL_PROBE = 0.165;
-  trayPeel.g.position.set(PEEL_U - 0.5, yv(PEEL_FOOT), -0.07); trayPeel.g.scale.setScalar(PEEL_K);
+  // the tray's vessels as the photos 26 and 32 measure them (spec §1.5: a vial ≈ 0.21 W tall; the peel 1.53 of it, as on
+  // the packshot), lying half sunk in the tray (their axes 0.075 under the walls' edges): in the kit's pose (photo A) the
+  // sleeve's foot (v 0.337) hides the pH caps only, so the empty glass over the amber shows; the serum row under them
+  // whole, then the print. The peel's foot a little above the serum's, its cap's top (v 0.385) under the circled 1 that
+  // shows below the sleeve's edge
+  const VH = 0.215, VZ = -0.075, PH_FOOT = 0.518, LS_FOOT = 0.755;
+  const PEEL_U = 0.129, PEEL_FOOT = 0.714, PEEL_K = 1.53 * VH, PEEL_PROBE = 0.165;
+  trayPeel.g.position.set(PEEL_U - 0.5, yv(PEEL_FOOT), VZ); trayPeel.g.scale.setScalar(PEEL_K);
   // the rows of five: one instanced draw per part (the glass, neck and cap of all ten; each kind's liquid and print)
-  const ROWS = [0.317, 0.456, 0.595, 0.734, 0.873], VH = 0.265;
+  const ROWS = [0.317, 0.456, 0.595, 0.734, 0.873];
   const tvm = vialMats('ph', trayU), tvLs = { liquid: liquidMat(...LIQ.ls), ink: ink(lsInk, 0x0a0908) };
   const trayMats = Object.values(trayPeel.mats).filter(m => m.isMaterial).concat(Object.values(tvm).filter(m => m.isMaterial), [tvLs.liquid, tvLs.ink]);
+  for (const m of trayMats.concat([trayGoldMat])) trayLight(m);
+  trayLight(velvetMat, true);
   const inst = (geo, mat, rows, order) => {
     const m = new THREE.InstancedMesh(geo, mat, rows.length * 5); m.renderOrder = order; m.frustumCulled = false; trayG.add(m); let i = 0;
-    for (const r of rows) for (const u of ROWS) m.setMatrixAt(i++, m4.compose(tmpP.set(u - 0.5, yv(r ? 0.740 : 0.470), -0.07), tmpQ, tmpS.setScalar(VH)));
+    for (const r of rows) for (const u of ROWS) m.setMatrixAt(i++, m4.compose(tmpP.set(u - 0.5, yv(r ? LS_FOOT : PH_FOOT), VZ), tmpQ, tmpS.setScalar(VH)));
     return m;
   };
   const tmpP = new V3(), tmpQ = new THREE.Quaternion(), tmpS = new V3();
@@ -471,10 +534,13 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // ---- poses (frame px). The box { cx, cy: its front's centre, W: the front's width, yaw° (+: toward the copy), lift
   // (of W), a, D: depth }; a vessel { x: its axis, y: its foot, H: its height, a, D } (0 peel, 1 pH, 2 serum)
   const B = (cx, cy, W, D, lift = 0) => ({ cx, cy, W, yaw: 4, lift, a: 1, D });
-  // the kit (photo A): the sleeve slid up until its foot is at 0.56 of the open box's height (0.877 / (1 + LIFT))
-  const LIFT = 0.56;
-  // S3: the closed box far behind the row, small, upper right of the peel with a gap (its left edge 900, the peel's right 838)
-  const BOX = [B(760, 790, 660, DIST + 1), B(745, 805, 607, DIST + 1), B(1000, 815, 200, DIST + 8), null, null, B(720, 900, 500, DIST + 1, LIFT)];
+  // the kit (photo A): the sleeve slid up until its foot is at 57 % of the open box's height (0.877 / (1 + LIFT)), the
+  // box all but square to the camera (1.5° toward the copy: both walls show their insides)
+  const LIFT = 0.54;
+  // S2 → S3: the closed box goes far behind the row, upper right of the peel, and out into the dark as the last vessel
+  // clears it (at its true size beside them it would fill the frame; small and still there it read as a miniature)
+  const BOX = [B(760, 790, 660, DIST + 1), B(745, 805, 607, DIST + 1), B(1000, 815, 200, DIST + 8), null, null,
+    B(720, 900, 500, DIST + 1, LIFT)];
   const BOX_IN = B(720, 850, 200, DIST + 6);   // S5 → kit: from the depth
   const VS = (x, y, H) => ({ x, y, H });
   const ROW2 = [VS(760, 1010, 350), VS(570, 1010, 229), VS(400, 1010, 229)];
@@ -488,7 +554,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // the state, written in place on every frame (nothing allocated per frame)
   const ves = () => ({ x: 0, y: 0, H: 1, a: 0, D: DIST, cur: 0 });
   const ST = { box: { cx: 0, cy: 0, W: 1, yaw: 4, lift: 0, a: 0, D: DIST + 1 }, v: [ves(), ves(), ves()], glow: 0,
-    vglow: 0, back: 0, haze: 0 };
+    vglow: 0, back: 0, haze: 0, zoom: 0 };
   const setBox = (o, s, a = 1) => { o.cx = s.cx; o.cy = s.cy; o.W = s.W; o.yaw = s.yaw; o.lift = s.lift; o.D = s.D; o.a = a; return o; };
   const mixBox = (o, a, b, s) => { o.cx = lerp(a.cx, b.cx, s); o.cy = lerp(a.cy, b.cy, s); o.W = lerp(a.W, b.W, s); o.D = lerp(a.D, b.D, s); o.yaw = lerp(a.yaw, b.yaw, s); o.lift = lerp(a.lift, b.lift, s); return o; };
   const setV = (o, s, a = 1, D = DIST) => { o.x = s.x; o.y = s.y; o.H = s.H; o.a = a; o.D = D; o.cur = 0; return o; };
@@ -498,7 +564,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   function story(p) {   // the state at story position p
     const k = Math.min(4, Math.floor(p)), f = p - k, st = ST, b = st.box;
     setBox(b, BOX[0], 0); for (let i = 0; i < 3; i++) setV(st.v[i], ROW2[i], 0);
-    st.glow = st.vglow = st.back = st.haze = 0;
+    st.glow = st.vglow = st.back = st.haze = st.zoom = 0;
     if (k === 0) {   // S1 → S2: the box steps back (0.92), still closed, its colours unchanged; the glow behind it to 40 %
       mixBox(b, BOX[0], BOX[1], smooth(0, 1, f)); b.a = 1;
       st.glow = 1 - 0.6 * smooth(0, 0.6, f);
@@ -506,7 +572,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       // it): each starts hidden behind the box's back and takes its opacity there, moves sideways (still behind) until its
       // silhouette clears the box's left edge, and only then comes forward and down to its place in the row: it never
       // crosses the box's front while inside the box's outline
-      mixBox(b, BOX[1], BOX[2], smooth(0, 0.4, f)); b.a = 1;
+      mixBox(b, BOX[1], BOX[2], smooth(0, 0.4, f)); b.a = 1 - smooth(0.75, 1, f);   // gone once the serum is clear of it
       st.glow = 0.4 * (1 - smooth(0, 0.4, f));
       const left = b.cx - b.W * 0.535 - 12;   // the box's silhouette (its left side shows: yaw, sway)
       for (let i = 0; i < 3; i++) {
@@ -518,8 +584,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
         o.D = lerp(Db, DIST, sb); o.H = e.H; o.a = smooth(0, 0.15, s); o.cur = 0;   // H: its size at the row's depth
       }
     } else if (k === 2) {   // S3 → S4 (the line's light): a soft champagne light comes up behind the three (their colours stay)
-      // and a shapeless haze; the box goes; the three go small, low right, into a backlight
-      setBox(b, BOX[2], 1 - smooth(0, 0.35, f));
+      // and a shapeless haze; the three go small, low right, into a backlight (the box has gone)
       st.haze = smooth(0.4, 0.9, f);
       const g = smooth(0.45, 1, f);
       for (let i = 0; i < 3; i++) mixV(setV(st.v[i], ROW2[i]), ROW2[i], ROW3[i], g);
@@ -533,8 +598,10 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     } else {   // S5 → kit: the three hold while the page's step cards pass (to f ≈ 0.5), the current step lit from behind by
       // the line's light (1, 2, 3 in turn: the product itself is never dimmed); the closed box comes forward from the
       // depth; the three step back to its middle, behind it, and dissolve; the sleeve lifts straight up LIFT W (photos 26
-      // and 32). No glow round the open box: the card's picture is cut to what has alpha, and the kit is the product alone
+      // and 32) as the camera steps in to the box (lens). No glow round the open box: the card's picture is cut to what
+      // has alpha, and the kit is the product alone
       const g = smooth(0.5, 0.7, f); mixBox(b, BOX_IN, BOX[5], g); b.lift = LIFT * smooth(0.72, 0.95, f); b.a = smooth(0.5, 0.6, f);
+      st.zoom = smooth(0.72, 0.95, f);
       const r = smooth(0.55, 0.75, f), Db = boxBack(b) + 0.4;
       for (let i = 0; i < 3; i++) {
         const o = setV(st.v[i], ROW4[i], 1 - r); o.x = lerp(ROW4[i].x, b.cx, r); o.y = lerp(ROW4[i].y, b.cy + b.W * 0.3, r); o.D = lerp(DIST, Db, r);
@@ -542,9 +609,39 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       }
     }
     if (p >= 5) {   // the kit: exactly the pose, nothing in flight
-      setBox(b, BOX[5], 1); for (let i = 0; i < 3; i++) st.v[i].a = 0;
+      setBox(b, BOX[5], 1); st.zoom = 1; for (let i = 0; i < 3; i++) st.v[i].a = 0;
     }
     return st;
+  }
+
+  // ---- the kit's camera (photo A was taken by hand, close to the kit): over the sleeve's lift it steps in along its line
+  // of sight to the box, turns to stand square before it and widens (LENS_FOV), the box kept in place and size in the
+  // frame (its front's scale; its centre's frame pixel, by shifting the picture as a shift lens does, so its edges stay
+  // upright and square). The deeper parts then fall back in perspective: the base's walls show their insides either
+  // side, the band's top edge below, the tray lies deep. The box faces the camera as before (on the same line), and the
+  // foil keeps the light it had (eyeFixed). Only the box is drawn then (the glows are out, the three gone)
+  const LENS_FOV = 50, ndc0 = new V3(), ndc1 = new V3(), rayL = new V3(), axC = new V3(), YAX = new V3(0, 1, 0);
+  const qY = new THREE.Quaternion(), qI = new THREE.Quaternion();
+  function lens(z, P0) {
+    camera.position.copy(lay.position); camera.quaternion.copy(lay.quaternion); camera.fov = FOV;
+    camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    if (z > 1e-4) {
+      ndc0.copy(P0).project(camera);
+      toCam.copy(lay.position).sub(P0).applyQuaternion(layInv); const phi = Math.atan2(toCam.x, toCam.z);   // as facing()
+      const d0 = rayL.copy(P0).sub(lay.position).dot(fwd), L = rayL.length(); rayL.divideScalar(L);
+      const c1 = rayL.dot(axC.set(0, 0, -1).applyQuaternion(qY.setFromAxisAngle(YAX, phi).premultiply(lay.quaternion)));   // square to the box
+      const s = lerp(L, d0 * TAN / (Math.tan(rad(LENS_FOV / 2)) * c1), z);   // its distance along the line of sight
+      camera.quaternion.copy(lay.quaternion).multiply(qY.setFromAxisAngle(YAX, phi * z));
+      camera.position.copy(P0).addScaledVector(rayL, -s);
+      const c = rayL.dot(axC.set(0, 0, -1).applyQuaternion(camera.quaternion));
+      camera.fov = 2 * THREE.MathUtils.radToDeg(Math.atan(d0 * TAN / (s * c)));
+      camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+      ndc1.copy(P0).project(camera); const e = camera.projectionMatrix.elements;   // the shift: the box's centre back on its pixel
+      e[8] -= ndc0.x - ndc1.x; e[9] -= ndc0.y - ndc1.y; camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+    }
+    qI.copy(camera.quaternion).invert();
+    EYE.value.copy(camera.position).sub(lay.position).applyQuaternion(qI);   // the story camera's eye, in the drawn camera's view
+    TOLAY.value.setFromMatrix4(m4.makeRotationFromQuaternion(qY.copy(camera.quaternion).premultiply(layInv)));   // drawn view → story view
   }
 
   // ---- applying a state
@@ -564,14 +661,15 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     if (box.visible) {
       const S = world(b.W, b.D) * breathe;
       at(b.cx, b.cy, b.D, box.position); box.scale.setScalar(S); box.quaternion.copy(lay.quaternion);
+      lens(st.zoom, box.position);
       box.rotateY(facing(box) + rad(b.yaw + 1.5 * Math.sin(t * 0.4 + 1) * live));
       sleeve.position.y = b.lift; trayG.visible = b.lift > 0.004;   // the contents only once the sleeve lifts
       lidGap.visible = b.lift < 0.002;
       for (const m of boxMats) { m.opacity = b.a; m.depthWrite = b.a > 0.99 && m !== trayGoldMat; }
-    }
-    if (trayG.visible) {   // the tray's contents take the box's opacity
+    } else lens(0);
+    if (trayG.visible) {   // the tray's contents take the box's opacity; the sleeve's foot shades them (trayLight)
       for (const m of trayMats) m.opacity = b.a;
-      capFaceSet(trayU, box);
+      capFaceSet(trayU, box); BOXINV.value.copy(box.matrixWorld).invert(); LIDY.value = yv(LIDV) + b.lift;
     }
     // the three, drawn back to front; each faces the camera, swaying ±3° (the peel is square: its sides barely show)
     for (let i = 0; i < 3; i++) {
@@ -613,13 +711,19 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     return { foil: box.visible && b.a > 0.99 ? [b.cx, b.cy - W * (0.2 + b.lift)] : null,
       // the peel's on its clear liquid under the label's last line (0.205 from the foot with its descenders)
       peel: pt(v[0], PEEL_PROBE), ph: pt(v[1], 0.15), ls: pt(v[2], 0.15),
-      trayPeel: tray ? [b.cx + (PEEL_U - 0.5) * W, b.cy + (PEEL_FOOT - PEEL_K * PEEL_PROBE - 0.5) * W] : null,
-      trayPh: tray ? [b.cx + (ROWS[2] - 0.5) * W, b.cy + (0.470 - 0.15 * VH - 0.5) * W] : null,
-      trayLs: tray ? [b.cx + (ROWS[2] - 0.5) * W, b.cy + (0.740 - 0.15 * VH - 0.5) * W] : null };
+      // the tray's on the vessels' fronts, projected as drawn (the kit's lens)
+      trayPeel: tray ? toFrame(PEEL_U - 0.5, yv(PEEL_FOOT) + PEEL_K * PEEL_PROBE, VZ + PEEL_K * DB / 2) : null,
+      trayPh: tray ? toFrame(ROWS[2] - 0.5, yv(PH_FOOT) + 0.15 * VH, VZ + VH * R) : null,
+      trayLs: tray ? toFrame(ROWS[2] - 0.5, yv(LS_FOOT) + 0.15 * VH, VZ + VH * R) : null };
+  }
+  const VO = [0, 0, 2400, 1500], pv = new V3();   // the canvas's box in frame px (fit())
+  function toFrame(x, y, z) {   // a point in the box's units → frame px
+    pv.set(x, y, z).applyMatrix4(box.matrixWorld).project(camera);
+    return [r1(VO[0] + (pv.x + 1) / 2 * VO[2]), r1(VO[1] + (1 - pv.y) / 2 * VO[3])];
   }
   function capFaceSet(U, o) {   // a metal's reflection turned with the object as it faces the camera
     o.updateMatrixWorld(); tmp.setFromMatrixPosition(o.matrixWorld);
-    toCam.copy(lay.position).sub(tmp).applyQuaternion(layInv);
+    toCam.copy(camera.position).sub(tmp).applyQuaternion(layInv);
     U.value.setFromMatrix4(m4.makeRotationAxis(upL, -Math.atan2(toCam.x, toCam.z)));
   }
   function flakesOutside(t) {   // QA: flakes whose disc leaves the liquid's front (x, y) or its layer (z)
@@ -656,13 +760,24 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     camera.updateProjectionMatrix();
     pxU = pr * view.cover.w / 2400;   // device px per frame px: the flakes keep ≥ 1.5 device px
     EDGE.value.set((view.box.y - view.cover.y) * 2400 / view.cover.w, canvas.height, pxU);   // the frame's top edge
+    const k = 2400 / view.cover.w; VO[0] = (view.box.x - view.cover.x) * k; VO[1] = (view.box.y - view.cover.y) * k; VO[2] = view.box.w * k; VO[3] = view.box.h * k;
   }
-  function render(p, view) { pr = Math.min(full(view), cap); fit(view, pr); pose(p, view.still ? 0 : view.t, view.still); renderer.render(scene, camera); renders++; }
-  function draw(p, view) { pace(performance.now(), view.still); lastP = p; lastView = view; render(p, view); }
+  // the kit (from p 4.85, where the motion fades out, and every still) carries the small print: it draws at the screen's
+  // full density whatever the pace's cap, and the pace takes no measure there. A pose that does not move (p ≥ 5, a
+  // still) is drawn once: drawing it again would change nothing
+  let lastId = '';
+  function render(p, view) {
+    const fixed = view.still || p >= 5, kitAt = fixed || p >= 4.85;
+    pr = kitAt ? full(view) : Math.min(full(view), cap);
+    const id = fixed ? [p, view.box.x, view.box.y, view.box.w, view.box.h, view.cover.x, view.cover.y, view.cover.w, pr, version].join() : '';
+    if (id && id === lastId) return;
+    lastId = id; fit(view, pr); pose(p, view.still ? 0 : view.t, view.still); renderer.render(scene, camera); renders++;
+  }
+  function draw(p, view) { pace(performance.now(), view.still || p >= 4.85); lastP = p; lastView = view; render(p, view); }
   let kits = 0;   // kit pictures rendered (QA: none on a phone, none for a toolbar)
   function kit(view) {   // the kit pose rendered once into a picture (the offer card, the flight into it), then the current pose again
     kits++;
-    fit(view, view.dpr); pose(5, 0, true); renderer.render(scene, camera);
+    fit(view, view.dpr); pose(5, 0, true); renderer.render(scene, camera); lastId = '';
     const c = document.createElement('canvas'); c.width = canvas.width; c.height = canvas.height; c.getContext('2d').drawImage(canvas, 0, 0);
     if (lastView) render(lastP, lastView);
     return c;

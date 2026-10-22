@@ -11,8 +11,8 @@ Typeface: Jost (SIL OFL, github.com/google/fonts ofl/jost), weights matched to t
 PEELING» 500, each letter's ink centred on its measured centre; «VM corporation»: «VM» 700 at the x-height of
 «corporation» 400, fitted to its measured ink width. The VM monogram: three polygons traced on the packshot (threshold
 L 90, ±0.5 px of its 48 px; fitted by overlay), symmetric but for its right half, 0.5 px wider as traced. The vials' «PH NORMALIZER» / «LONGEVITY SERUM»: Jost 700, each line fitted to its
-measured ink box as the packshot shows them flat on the front; the scene wraps this print round the clear glass at 0.62
-of that size (±35° of the front), small, as the owner's photos of 22/10 show it. The print is
+measured ink box as the packshot shows them flat on the front; the scene wraps this print round the clear glass at 0.36
+of that size (±21° of the front, over the dark liquid), small and quiet, as the owner's photos of 22/10 show it. The print is
 black on all four (packaging-text.json says «bold white» for the vials: the packshot and the owner's photo 27 show black).
 The print the packshot lacks follows the owner's photos of 22/10 as packaging-text.json transcribes them: the lid's small
 block, the peel bottle's label, the tray's gold print; placed on the thumbnails (26, 28, 29, 32), the lines Jost (bold:
@@ -317,24 +317,24 @@ def vial_print(kind):
     return Image.fromarray((np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8)).resize((VIAL_TW, H // SS), Image.LANCZOS)
 
 
-# ---- the tray's gold print, as on the owner's photos of the open kit (22/10; packaging-text.json), placed on the thumbnail
-# 29 (1 px = 0.0159 W both ways, from the rows' pitch; ±0.01 W) round the scene's vessels (the peel: axis u 0.129, cap's top
-# v 0.362; the first column u 0.317: the pH caps' top v 0.205, the serum feet v 0.740): at the top the monogram and «VM
-# corporation» (the lid's pair ×0.55); over the peel «EXO-NAD PEELING», a short vertical leader down to a circled 1 (in the
-# kit's pose, photo A, the sleeve's foot is at v 0.317: the ring and the leader's last 0.012 W show under it); over
-# the first pH vial «PH NORMALIZER», a leader, a circled 2; under the first serum vial a circled 3, a leader, «LONGEVITY
-# SERUM»; at the foot the lid's lockup, 0.30 W wide as photographed (photo A 0.30, photo 29 0.26–0.28: it reads at the
-# offer card's size), with its «SKIN LONGEVITY PEELING», and «MADE IN ITALY» under it, centred a little right of the middle
-# (u 0.56, as on photo 29: clear of the serum's label), all above the base's band (v 0.881). The labels Jost 500, the
-# numerals 500 in rings of 0.0115 W (stroke 0.0016)
+# ---- the tray's gold print, as on the owner's photos of the open kit (22/10; packaging-text.json), round the scene's
+# vessels, which stand as on the photos 26 and 32 (vials 0.215 W tall, the sleeve's foot at v 0.337 in the kit's pose,
+# photo A: the pH caps under it): the peel's axis u 0.129, its cap's top v 0.385; the first column u 0.317, the pH caps'
+# top v 0.303, the serum feet v 0.755. At the top the monogram and «VM corporation» (the lid's pair ×0.55); over the peel
+# «EXO-NAD PEELING», a vertical leader down to a circled 1 just above the cap (photo A: the ring and the leader's last
+# 0.013 W show under the sleeve); over the first pH vial «PH NORMALIZER», a leader, a circled 2 (under the sleeve in the
+# kit's pose); under the first serum vial a circled 3, a short leader, «LONGEVITY SERUM»; at the foot the lid's lockup in
+# the middle (photo 29: «EXO-NAD» u 0.37…0.66 blurred, ≈ 0.25 W of ink, centred), its «SKIN LONGEVITY PEELING» and
+# «MADE IN ITALY» under it, beside the serum's label and clear of it, all above the base's band (v 0.881). The labels
+# Jost 500, the numerals 500 in rings of 0.0115 W (stroke 0.0016)
 TRAY = (0.03, 0.97, 0.03, 0.88)    # u0, u1, v0, v1 of the texture (the tray's face: u 0.026…0.974, v 0…0.881)
 TRAY_TW = 2048
 TRAY_MONO = (0.055, 0.062)         # the monogram's ink width (W), its top (v)
-TRAY_LABELS = [('EXO-NAD PEELING', 0.129, 0.310, 0.343, '1'), ('PH NORMALIZER', 0.317, 0.150, 0.183, '2'),
-               ('LONGEVITY SERUM', 0.317, 0.803, 0.7625, '3')]   # text, axis u, its baseline v, the ring's centre v, numeral
-TRAY_CAP, TRAY_RING, TRAY_STROKE, TRAY_NUM = 0.0068, 0.0115, 0.0016, 0.0105
-TRAY_LOGO = (0.30, 0.815, 0.56)    # the lockup's «EXO-NAD» ink width (W), its baseline (v), its centre (u)
-TRAY_MADE = (0.866, 0.0085)        # «MADE IN ITALY»: its baseline (v) and cap (W), Jost 500
+TRAY_LABELS = [('EXO-NAD PEELING', 0.129, 0.318, 0.3635, '1'), ('PH NORMALIZER', 0.317, 0.255, 0.2875, '2'),
+               ('LONGEVITY SERUM', 0.317, 0.810, 0.7715, '3')]   # text, axis u, its baseline v, the ring's centre v, numeral
+TRAY_CAP, TRAY_RING, TRAY_STROKE, TRAY_NUM = 0.0062, 0.0115, 0.0016, 0.0105
+TRAY_LOGO = (0.25, 0.818, 0.50)    # the lockup's «EXO-NAD» ink width (W), its baseline (v), its centre (u)
+TRAY_MADE = (0.864, 0.0075)        # «MADE IN ITALY»: its baseline (v) and cap (W), Jost 500
 
 
 def tray_print():
