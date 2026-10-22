@@ -224,8 +224,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // their colour as emission (never black where they mirror the dark). Their reflection is turned with the object as it
   // faces the camera (uFace, as the spray's cap), so a cap reads the same anywhere in the frame
   const faceU = () => ({ value: new THREE.Matrix3() });
-  function metalMat(hex, rough, emi, U) {
-    const m = new THREE.MeshPhysicalMaterial({ color: hex, metalness: 1, roughness: rough, emissive: hex, emissiveIntensity: emi,
+  function metalMat(hex, rough, emi, U, metal = 1) {   // metal 0: the vials' white plastic flip-off tops
+    const m = new THREE.MeshPhysicalMaterial({ color: hex, metalness: metal, roughness: rough, emissive: hex, emissiveIntensity: emi,
       envMapIntensity: 1, toneMapped: false, transparent: true });
     m.onBeforeCompile = sh => {
       edgeFade(sh); sh.uniforms.uFace = U;
@@ -445,13 +445,13 @@ export function createScene(THREE, { canvas, base, onLoad }) {
         float rim = 0.38 * pow(1.0 - clamp(abs(dot(nonPerturbedNormal, normalize(vViewPosition))), 0.0, 1.0), 3.0) * (1.0 - smoothstep(0.76, 0.80, vVy));
         s += rim; gl_FragColor.rgb += vec3(s); gl_FragColor.a = max(gl_FragColor.a, s * opacity); }`);
   };
-  const LIQ = { ph: [0x704829, 0xa8692f, 0x2a190d], ls: [0x3a547d, 0x5a7db8, 0x151f33] };   // front, lit limb, shaded limb
+  const LIQ = { ph: [0x8a5a18, 0xc8923a, 0x2e1c06], ls: [0x2f3f58, 0x8296b8, 0x121824] };   // front, lit limb, shaded limb
   function vialMats(kind, alU) {
     return { back: glassMat(THREE.BackSide, 0.02, 0.3, 0.7), front: glassMat(THREE.FrontSide, 0.03, 0.55, 1.0, 0x0b0b0c, vialLit),
-      // the photographed amber-brown #5e3d24 and blue #30476b (photo A against the black tray; the packshot's bright opaque
-      // #b16b2c / #277e95 is a composite), as the scene renders them through the glass: calibrated on the keys
+      // as on the owner's top-down photo of the open kit (22/10): a clear golden amber and a pale clear blue over the black
+      // tray (the packshot's bright opaque #b16b2c / #277e95 is a composite), as the scene renders them through the glass
       liquid: liquidMat(...LIQ[kind]),
-      neck: neckMat(0x1d1f1f, { roughness: 0.3, specularIntensity: 0.8 }, 'vneck'), cap: metalMat(0xd9d7d3, 0.25, 0.12, alU),
+      neck: neckMat(0x1d1f1f, { roughness: 0.3, specularIntensity: 0.8 }, 'vneck'), cap: metalMat(0xf1f0ec, 0.5, 0.35, alU, 0),   // white plastic flip-off tops, as photographed
       ink: ink(kind === 'ph' ? phInk : lsInk, 0x0a0908), U: alU };
   }
   function makeVial(parent, mats, base) {
