@@ -972,15 +972,16 @@ const THREE = await Promise.race([import('https://cdn.jsdelivr.net/npm/three@0.1
 // The product keeps its own colours (pipetted on the packshot: champagne metal #b8af95, never the line's #d8c48a; copper
 // rose gold #d8bba6 / #dcb49c; white print #f3f2ea; the cartridge #cbccc4), lit by a neutral studio like the packshot's;
 // the camera rolls with the pen, so the studio's light keeps its place on the pen in every pose. The DEVICES line's
-// silver (#d9d4cc) lives only round it, as a soft shapeless glow: behind the pen (live only) and under its tip (S3, S5).
+// silver (#d9d4cc) lives only round it, as one soft shapeless glow behind the pen (live only).
 // Story (story3d S1–S7, as the template places it: the scene left, the copy right): S1 the packshot's pose; S2 the pen
-// stands upright; S3 the silver glow under its tip brightens in five steps (b2.line: five speeds); S4 the working tilt,
-// quiet; S5 three even passes over the plane, the glow going with the tip, V-TECH SYSTEM (right) and EXOSIGNAL HAIR
-// (left) rise as their packshots; S6–S7 the pen lies across, its print upright (the kit card).
+// stands upright; S3 it steps back and leans a little, quiet; S4 the working tilt, quiet; S5 the pen makes three even
+// passes, as it works (right to left, back, right to left), V-TECH SYSTEM (right) and EXOSIGNAL HAIR (left) rise as
+// their packshots; S6–S7 the pen lies across, its print upright (the kit card).
 // Left out (spec §6 and the owner's rule of 22/10, «only what exists», which is stronger than the story spec): the dots
-// and grids of microchannels, the drop and its wave, the zone outlines (people), the depth scale and the speed dial
-// (numbers: the scene draws no text but the pen's own print), the procedure photo, a pedestal (not in the kit), any
-// mechanism.
+// and grids of microchannels, the drop and its wave, any light under the tip (it read as a pool on a floor), a light
+// band running down the pen (not on the packshot), the zone outlines (people), the depth scale and the speed dial
+// (numbers: the scene draws no text but the pen's own print), the procedure photo, a surface or pedestal (not in the
+// kit), any mechanism.
 //
 // createScene(THREE, { canvas, base, onLoad }) → { draw(p, view), kit(view) → canvas, animated, state(), dispose() }
 //   p: the story position 0…5 (run index + progress); view: { cover, box, dpr, t, still } from the engine
@@ -1219,35 +1220,29 @@ function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   // small emissive floor were fitted so that the packshot pose shows the packshot's colours (lit band, middle, shadow);
   // not tone mapped. The rose gold: copper (hue ≈ 65°), its scallops' shadows not lifted. The button, a flat face: mostly
   // emissive, so its colour holds in every pose (≤ ΔE 5 between the keys). The print: emissive 0.85 of its colour plus
-  // a neutral shading, not tone mapped (the 14/10 rule)
-  const SW = { uSweepY: { value: 9 }, uSweepA: { value: 0 }, uRingFlash: { value: 0 } };   // the light sweep (S1, S3, S7)
-  function penPatch(m, kind) {
-    m.onBeforeCompile = sh => {
-      Object.assign(sh.uniforms, SW);
-      sh.vertexShader = 'varying float vPenY;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vPenY = position.y;');
-      let f = 'uniform float uSweepY, uSweepA, uRingFlash; varying float vPenY;\n' + sh.fragmentShader;
-      if (kind === 'v') f = f.replace('#include <alphamap_fragment>', '#include <alphamap_fragment>\n  float cav = texture2D( alphaMap, vAlphaMapUv ).b;\n  diffuseColor.rgb *= 1.0 - 0.55 * cav;');
-      f = f.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n  { float q = (vPenY - uSweepY) / 0.03; totalEmissiveRadiance += vec3(uSweepA * exp(-q * q)); }'
-        + (kind === 'ring' ? '\n  totalEmissiveRadiance *= 1.0 + uRingFlash;' : '') + (kind === 'v' ? '\n  totalEmissiveRadiance *= 1.0 - 0.55 * cav;' : ''));
-      sh.fragmentShader = f;
-    };
-    m.customProgramCacheKey = () => 'mitopen-' + kind;
-    return m;
-  }
+  // a neutral shading, not tone mapped (the 14/10 rule). The light on the pen is the studio's alone: no band runs down
+  // it, the ring does not flash (the packshot shows neither)
   const MET = { color: 0xd4ccb1, emissive: 0x4a4639, roughness: 0.3 };
-  const metal = penPatch(new THREE.MeshPhysicalMaterial({ color: MET.color, metalness: 1, roughness: MET.roughness, emissive: MET.emissive, toneMapped: false }), 'metal');
+  const metal = new THREE.MeshPhysicalMaterial({ color: MET.color, metalness: 1, roughness: MET.roughness, emissive: MET.emissive, toneMapped: false });
   // the hub, seen through the cartridge's wall: the same metal, as dim as the photo shows it there (#a8a28e)
-  const hubMat = penPatch(new THREE.MeshPhysicalMaterial({ color: 0xb2ab93, metalness: 1, roughness: MET.roughness, emissive: 0x2e2c24, toneMapped: false }), 'hub');
-  const ringMat = penPatch(new THREE.MeshPhysicalMaterial({ color: 0xd3b59a, metalness: 1, roughness: 0.3, emissive: 0x0a0705, toneMapped: false }), 'ring');
-  const buttonMat = penPatch(new THREE.MeshPhysicalMaterial({ color: 0x705f53, metalness: 1, roughness: 0.25, emissive: 0xc4a994, toneMapped: false }), 'button');
+  const hubMat = new THREE.MeshPhysicalMaterial({ color: 0xb2ab93, metalness: 1, roughness: MET.roughness, emissive: 0x2e2c24, toneMapped: false });
+  const ringMat = new THREE.MeshPhysicalMaterial({ color: 0xd3b59a, metalness: 1, roughness: 0.3, emissive: 0x0a0705, toneMapped: false });
+  const buttonMat = new THREE.MeshPhysicalMaterial({ color: 0x705f53, metalness: 1, roughness: 0.25, emissive: 0xc4a994, toneMapped: false });
   const dotMat = new THREE.MeshPhysicalMaterial({ color: 0x5c5f59, roughness: 0.15, clearcoat: 0.5, clearcoatRoughness: 0.05, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 });
   const gapMat = new THREE.MeshStandardMaterial({ color: 0x47443b, roughness: 0.6, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 });
   const markMat = new THREE.MeshStandardMaterial({ color: 0x3a3a36, roughness: 0.8, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 });
   const SHADE = 0.2;
-  const printMat = penPatch(new THREE.MeshPhysicalMaterial({ color: new THREE.Color(0xf3f2ea).multiplyScalar(SHADE), emissive: 0xf3f2ea, emissiveIntensity: 0.85,
-    roughness: 0.7, specularIntensity: 0.3, toneMapped: false, alphaMap: printTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }), 'print');
-  const vMat = penPatch(new THREE.MeshPhysicalMaterial({ color: MET.color, metalness: 1, roughness: MET.roughness, emissive: MET.emissive, toneMapped: false,
-    bumpMap: vTex, bumpScale: 0.0006, alphaMap: vTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }), 'v');
+  const printMat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color(0xf3f2ea).multiplyScalar(SHADE), emissive: 0xf3f2ea, emissiveIntensity: 0.85,
+    roughness: 0.7, specularIntensity: 0.3, toneMapped: false, alphaMap: printTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
+  // the V: the metal, its engraving darker (the relief map's blue channel: the cavity)
+  const vMat = new THREE.MeshPhysicalMaterial({ color: MET.color, metalness: 1, roughness: MET.roughness, emissive: MET.emissive, toneMapped: false,
+    bumpMap: vTex, bumpScale: 0.0006, alphaMap: vTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
+  vMat.onBeforeCompile = sh => {
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <alphamap_fragment>', '#include <alphamap_fragment>\n  float cav = texture2D( alphaMap, vAlphaMapUv ).b;\n  diffuseColor.rgb *= 1.0 - 0.55 * cav;')
+      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n  totalEmissiveRadiance *= 1.0 - 0.55 * cav;');
+  };
+  vMat.customProgramCacheKey = () => 'mitopen-v';
   // the cartridge: light clear plastic, as the packshot shows it (#cbccc4 on the tube, lighter at its open end), the
   // parts inside it a little darker through its walls. Its colour is pipetted and held as the print's is (emissive 0.8 of
   // it, a neutral shading, not tone mapped); no transmission (on a transparent canvas it could not see the page's smoke,
@@ -1369,10 +1364,8 @@ function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     fragmentShader: SPOT_F, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, uniforms: { uC: { value: hex3(c) }, uOpacity: { value: 0 } } });
   const spot = (parent, c, cx, cy, rx, ry, order) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), spotMat(c)); m.position.set(cx - 1200, 750 - cy, 0); m.scale.set(rx, ry, 1); m.renderOrder = order; parent.add(m); return m; };
   const SILVER = 0xd9d4cc;
-  // the glow under the tip (S3, S5): faint silver, shapeless, on a plane behind the pen, following the tip. On S3 it
-  // brightens in five steps (b2.line: five speeds); on S5 it goes with the tip over the plane
-  const D_HAZE = 34, hp = plane(), haze = spot(hp, SILVER, 0, 0, 200, 110, 2), HAZE3 = 0.16, HAZE5 = 0.1;
-  // the passes (S5): the tip goes three times over the plane, right to left, left to right, right to left (frame px)
+  // the passes (S5): the pen moves three times across the frame, its tip right to left, left to right, right to left
+  // (frame px; nothing is drawn under it)
   const PASS = [[0.25, 870, 490, 788], [0.43, 490, 870, 844], [0.61, 870, 490, 900]], PD = 0.14, TURN = 0.04;
   // the partners (S5): their packshots as they are (no dimming, no tint), rising; V-TECH SYSTEM right, EXOSIGNAL HAIR left
   const D_PART = 31, pp = plane();
@@ -1393,7 +1386,7 @@ function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   };
   const mixP = (a, b, s, o) => { for (let i = 0; i < 6; i++) o[i] = lerp(a[i], b[i], s); return o; };
   const PASS_IN = fromTip(PASS[0][1], PASS[0][3], 480, 30, []), PASS_OUT = fromTip(PASS[2][2], PASS[2][3], 480, 30, []);
-  function tipAt(f, out) {   // the tip over the plane: three even passes, a short arc at each turn
+  function tipAt(f, out) {   // the tip's path: three even passes, a short arc at each turn
     for (let k = 0; k < 3; k++) {
       const Q = PASS[k], f0 = Q[0], xa = Q[1], xb = Q[2], y = Q[3];
       if (f <= f0 + PD || k === 2) { const s = clamp((f - f0) / PD); out[0] = lerp(xa, xb, s); out[1] = y; return out; }
@@ -1402,37 +1395,33 @@ function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     return out;
   }
   const SWAY = [1, 1, 0.6, 0.25, 0.5, 1], GLOW = [0.3, 0.35, 0.25, 0.18, 0.25, 0.4];
-  const ST = { pose: [0, 0, 0, 0, 0, 0], sway: 0, glow: 0, glowOff: 0, haze: 0, hazeY: 0, level: 0, vtech: 0, vtechY: 0, hair: 0, hairY: 0 };
+  const ST = { pose: [0, 0, 0, 0, 0, 0], sway: 0, glow: 0, glowOff: 0, vtech: 0, vtechY: 0, hair: 0, hairY: 0 };
   const tip = [0, 0];
   function story(p) {   // the state at story position p
     const k = Math.min(4, Math.floor(p)), f = p - k, st = ST, P = st.pose;
-    st.haze = st.hazeY = st.level = st.vtech = st.vtechY = st.hair = st.hairY = st.glowOff = 0;
+    st.vtech = st.vtechY = st.hair = st.hairY = st.glowOff = 0;
     st.sway = lerp(SWAY[k], SWAY[k + 1], smooth(0, 1, f));
     if (k === 0) {   // S1 → S2: the pen stands upright; the glow sinks toward the cartridge («the smoke thickens at the tip»)
       mixP(POSE[0], POSE[1], smooth(0, 0.85, f), P);
       st.glow = lerp(GLOW[0], GLOW[1], smooth(0, 1, f)); st.glowOff = 260 * smooth(0.3, 1, f);
-    } else if (k === 1) {   // S2 → S3: the glow comes under the tip and brightens in five steps (five speeds)
+    } else if (k === 1) {   // S2 → S3: the glow comes back up behind the pen
       mixP(POSE[1], POSE[2], smooth(0.05, 0.6, f), P);
       st.glow = lerp(GLOW[1], GLOW[2], smooth(0, 0.6, f)); st.glowOff = 260 * (1 - smooth(0.05, 0.6, f));
-      st.level = 1; for (let i = 0; i < 4; i++) st.level += smooth(0.45 + 0.1 * i, 0.5 + 0.1 * i, f);
-      st.haze = HAZE3 * smooth(0.35, 0.5, f) * st.level / 5;
-    } else if (k === 2) {   // S3 → S4: the glow sinks into the smoke and dissolves; the working tilt, quiet
+    } else if (k === 2) {   // S3 → S4: the working tilt, quiet
       mixP(POSE[2], POSE[3], smooth(0.2, 0.9, f), P);
-      st.glow = lerp(GLOW[2], GLOW[3], smooth(0.2, 0.9, f)); st.level = 5;
-      st.haze = HAZE3 * (1 - smooth(0.05, 0.45, f)); st.hazeY = 120 * smooth(0, 0.45, f);
-    } else if (k === 3) {   // S4 → S5: three even passes over the plane, the glow going with the tip; the partners rise
+      st.glow = lerp(GLOW[2], GLOW[3], smooth(0.2, 0.9, f));
+    } else if (k === 3) {   // S4 → S5: three even passes; the partners rise
       if (f < 0.25) mixP(POSE[3], PASS_IN, smooth(0, 0.25, f), P);
       else if (f < 0.75) { tipAt(f, tip); fromTip(tip[0], tip[1], 480, 30, P); }
       else mixP(PASS_OUT, POSE[4], smooth(0.75, 0.9, f), P);
       st.sway *= 1 - smooth(0.15, 0.25, f) * (1 - smooth(0.75, 0.9, f));
       st.glow = lerp(GLOW[3], GLOW[4], smooth(0.75, 0.95, f));
-      st.haze = HAZE5 * smooth(0.2, 0.3, f);
       st.vtech = smooth(0.7, 0.9, f); st.vtechY = -60 * (1 - st.vtech); st.hair = smooth(0.76, 0.96, f); st.hairY = -60 * (1 - st.hair);
-    } else {   // S5 → kit: the glow and the partners go down into the smoke; the pen lies across, its print upright
+    } else {   // S5 → kit: the partners go down into the smoke; the pen lies across, its print upright
       const out = 1 - smooth(0, 0.3, f);
       mixP(POSE[4], POSE[5], smooth(0.1, 0.7, f), P);
       st.glow = lerp(GLOW[4], GLOW[5], smooth(0.5, 0.9, f));
-      st.haze = HAZE5 * out; st.hazeY = 80 * (1 - out); st.vtech = st.hair = out; st.vtechY = st.hairY = 80 * (1 - out);
+      st.vtech = st.hair = out; st.vtechY = st.hairY = 80 * (1 - out);
     }
     return st;
   }
@@ -1441,7 +1430,7 @@ function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   const camPos = new V3(), qRay = new THREE.Quaternion(), qTilt = new THREE.Quaternion(), qAz = new THREE.Quaternion(), XAX = new V3(1, 0, 0), YAX = new V3(0, 1, 0), MZ = new V3(0, 0, -1);
   const vT = new V3(0, YT, 0), vB = new V3(0, YB, 0), w1 = new V3(), w2 = new V3(), f1 = [0, 0], f2 = [0, 0];
   // the last drawn pose's numbers, for state() (QA only: it builds its objects there, never per frame)
-  const last = { cx: 0, cy: 0, Lp: 0, phi: 0, az: 0, haze: 0, level: 0, vtech: 0, hair: 0, sweep: 0, glow: 0 };
+  const last = { cx: 0, cy: 0, Lp: 0, phi: 0, az: 0, vtech: 0, hair: 0, glow: 0 };
   function placePen(cx, cy, Lp, phi, az, el) {
     roll(phi); camPos.copy(camera.position);
     qTilt.setFromAxisAngle(XAX, -rad(el)); qAz.setFromAxisAngle(YAX, -rad(az));
@@ -1465,19 +1454,6 @@ function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     const az = q[4] + 4 * Math.sin(t * 0.45) * sw, phi = q[3] + 0.8 * Math.sin(t * 0.37 + 1) * sw, cy = q[1] - 3 * Math.sin(t * 0.8) * sw;
     const D = placePen(q[0], cy, q[2], phi, az, q[5]);
     const g = qa ? null : st;
-    // the sweep: a soft white band runs down the body from the cone to the cartridge, every 6.5 s (S1–S3, S7); on S1 the
-    // ring flashes as it passes
-    const act = still || qa ? 0 : clamp(1 - smooth(2.2, 2.4, p) + smooth(4.5, 4.7, p));
-    const tt = t % 6.5, sy = 0.55 - tt;
-    SW.uSweepY.value = sy; SW.uSweepA.value = tt < 1.1 ? 0.22 * act * smooth(0, 0.15, tt) * (1 - smooth(0.95, 1.1, tt)) : 0;
-    SW.uRingFlash.value = SW.uSweepA.value > 0 ? 0.35 * Math.exp(-(((sy - Y(558)) / 0.05) ** 2)) * (1 - smooth(0.4, 0.9, p)) : 0;
-    // the glow under the tip: 40 px past it along the pen
-    const hz = g ? g.haze : 0; haze.visible = hz > 0.004;
-    if (haze.visible) {
-      place(hp, D_HAZE);
-      const dx = f2[0] - f1[0], dy = f2[1] - f1[1], l = Math.hypot(dx, dy) || 1;
-      haze.position.set(f2[0] + 40 * dx / l - 1200, 750 - (f2[1] + 40 * dy / l + g.hazeY), 0); haze.material.uniforms.uOpacity.value = hz;
-    }
     // the partners
     place(pp, D_PART);
     showBoard(vtech, g ? g.vtech : 0, g ? g.vtechY : 0); showBoard(hair, g ? g.hair : 0, g ? g.hairY : 0);
@@ -1489,7 +1465,7 @@ function createScene(THREE, { canvas, base, onLoad, qa = null }) {
       glow.rotation.z = -a; glow.scale.set(130, 0.31 * q[2], 1); glow.material.uniforms.uOpacity.value = gl;
     }
     const L = last; L.cx = q[0]; L.cy = cy; L.Lp = q[2]; L.phi = phi; L.az = az;
-    L.haze = hz; L.level = g ? g.level : 0; L.vtech = g ? g.vtech : 0; L.hair = g ? g.hair : 0; L.glow = gl; L.sweep = SW.uSweepA.value;
+    L.vtech = g ? g.vtech : 0; L.hair = g ? g.hair : 0; L.glow = gl;
   }
 
   // ---- drawing into the engine's box: the full frame is the cover; the canvas shows the box's part of it
@@ -1551,7 +1527,7 @@ function createScene(THREE, { canvas, base, onLoad, qa = null }) {
       pen: { cx: rp(L.cx), cy: rp(L.cy), Lp: rp(L.Lp), roll: rp(L.phi), az: rp(L.az), top: [rp(f1[0]), rp(f1[1])], tip: [rp(f2[0]), rp(f2[1])] },
       probes: { button: probe(167, 0, 1.5), text: [-7.5, -5, -2.5, 0, 2.5, 5, 7.5].map(s => probe(iu, PAC + deg(s / ri), 0.15)),
         body: probe(450, L.az, 0), ring: probe(560, 12 + 24 * Math.round((L.az - 12) / 24), 0), cart: probe(885, L.az, 31.6 - R(885)), cart2: probe(812, L.az - 30, 31.8 - R(812)) },
-      haze: { opacity: r2(L.haze), level: r2(L.level) }, partners: { vtech: r2(L.vtech), hair: r2(L.hair) }, sweep: r2(L.sweep), glow: r2(L.glow) };
+      partners: { vtech: r2(L.vtech), hair: r2(L.hair) }, glow: r2(L.glow) };
   }
   return { draw, kit, dispose, state, animated: true };
 }
