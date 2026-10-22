@@ -7,10 +7,11 @@
 // (385×1252): the tall ivory box seen from the camera's height (its horizon at 0.42 of the box from the top, so neither
 // its top nor its foot shows), its right side a narrow plain strip; true proportions H : W : D = 4.21 : 1 : 1.21.
 // The story (site/story3d.json; scratchpad spec pages/micro-boost-10/spec.md, BIOSPICULE line):
-//   S1 meet     a stream of spicules flows from the medallion on the box up and over into the tip of a 3 ml syringe
-//   S2 why      the box and the syringe smaller on the left; a gold skin line: a flat glint slides along it and stops
-//               on it (a peel works on the surface), then the spicules pass through it and stand under it, short ones
-//               shallow, long ones deeper, thin gold channels left under the line
+//   S1 meet     a stream of spicules flows from the medallion on the box up, over and down into the tip of a 3 ml
+//               syringe and on into its barrel, where it gathers and fades
+//   S2 why      the box and the syringe smaller on the left; a gold skin line across the scene (behind the box): a flat
+//               glint slides along it and stops on it (a peel works on the surface), then the spicules pass through it
+//               and stand under it, short ones shallow, long ones deeper, thin gold channels left under the line
 //   S3 inside   the syringe turns level, a drop swells at its nozzle and grows into the scene: inside it the spicules
 //               sort into two rows, short above, long below
 //   S4 feel     (no people: the owner's rule) a schematic cut of the epidermis rises, frosted, two layers, the short
@@ -117,10 +118,12 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     emissiveIntensity: 0.85, roughness: 0.7, specularIntensity: 0.15, toneMapped: false, transparent: true }, opts));
   const facade = P(0xffffff, { color: new THREE.Color(SHADE, SHADE, SHADE), map: faceTex, emissiveMap: faceTex, metalnessMap: metalTex,
     roughnessMap: metalTex, metalness: 1, roughness: 1, envMapIntensity: 0.35 });
-  // the right side: the same paper (#F8EEE4) in the packshot's shade, neutral (the photo's #BDAC99 is that shade under
-  // its warm light: the product is lit white only); no print reaches it. The faces never seen: the paper, darker
-  const SIDE = 0xb5aea7, SIDE_GAIN = 1.0;
-  const side = P(SIDE, { emissiveIntensity: 0.85 * SIDE_GAIN });
+  // the right side: no print reaches it; its colour is the packshot's side as pipetted there (5×5 medians ≈ #BEAD99 at
+  // the front probe's height), raised by what the shading takes off it in this light (≈ 0.9 in linear light at θmax), so
+  // the side drawn reads as the photo's (the owner's rule: every flat face of the product within ΔE 8 of its packshot).
+  // The faces never seen: the paper, darker
+  const SIDE = 0xc8b6a0;
+  const side = P(SIDE);
   const hidden = P(new THREE.Color(0xf8eee4).multiplyScalar(0.7));
   const boxMats = [facade, side, hidden];
 
@@ -208,8 +211,9 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const dropB = new THREE.Mesh(dropGeo, dropBack), dropF = new THREE.Mesh(dropGeo, dropFront);
   dropB.renderOrder = 20; dropF.renderOrder = 50; scene.add(dropB, dropF);
 
-  // ---- the line's graphics, flat to the camera in frame pixels (a plane: local x = px − 1200, y = 750 − py), drawn
-  // over the box by order (they never pass behind it): strokes ≥ 1.5 device px wide with a soft edge
+  // ---- the line's graphics, flat to the camera in frame pixels (a plane: local x = px − 1200, y = 750 − py), by order:
+  // the skin before the box (S2's line runs across the whole scene, behind the box and the glass), the spicules and the
+  // gold over it: strokes ≥ 1.5 device px wide with a soft edge
   const pxU = { value: 1 };   // device px per frame px
   const fx = new THREE.Group(); scene.add(fx);
   at(1200, 750, DIST, fx.position); fx.scale.setScalar(world(1, DIST));
@@ -249,7 +253,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
         gl_FragColor = vec4(c.rgb, c.a * uO * edgeFade(vF));
       }` });
   const skin = new THREE.Mesh(new THREE.PlaneGeometry(BOXF[2] - BOXF[0], BOXF[3] - BOXF[1]).translate((BOXF[0] + BOXF[2]) / 2 - 1200, 750 - (BOXF[1] + BOXF[3]) / 2, 0), skinMat);
-  skin.renderOrder = 10; skin.frustumCulled = false; fx.add(skin);
+  skin.renderOrder = 0.5; skin.frustumCulled = false; fx.add(skin);   // before the box's faces (1, 2): it hides the line
   // the kit's backlight: a soft glow of the line's green behind the box (S6–S7 and the offer card's picture), its
   // ellipse within the box's height (the card's picture, cut to what has alpha, keeps the box's size); no ring
   const GL = { uC: { value: hex3(0x24573f) }, uA: { value: 0 }, uR: { value: new THREE.Vector4(600, 812, 330, 360) } };
@@ -324,19 +328,18 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const SHORT = 0.27;   // the short ones' length: 90 / 330 µm (b2.label1–2)
 
   // ---- poses (frame px). The box [cx, h, opacity, k]: k the horizon's place on it from the top (0.42 as on the
-  // packshot; within 0.2…0.8 its top and foot never show), θ always the packshot's angle (θmax, the sway aside);
-  // the syringe [x, y of its middle, angle° (0 nozzle up, 90 nozzle right), length px, opacity]: its length is
-  // 0.758 of the box's height in the world (it is nearer: 0.8 of the box's px height where both stand).
+  // packshot; its top and foot never show while both stay ≥ 5 % of its height off the horizon: k ≤ 0.95), θ always the
+  // packshot's angle (θmax, the sway aside); the syringe [x, y of its middle, angle° (0 nozzle up, 90 nozzle right),
+  // length px, opacity]: its length is 0.758 of the box's height in the world (it is nearer: 0.8 of the box's px height
+  // where both stand).
   // S5 keeps above the page's three step cards: while the story holds there they come up to frame y ≈ 925 on a 16:10
-  // screen and ≈ 790 on 1920×1080, so the box stands lower on its horizon (k 0.8: its foot at 842) and the cut is high
-  const BOX = [[520, 780, 1, 0.42], [330, 560, 1, 0.42], [330, 560, 0, 0.42], [330, 560, 0, 0.42], [360, 460, 1, 0.8], [600, 780, 1, 0.42]];
-  const SYR = [[790, 883, 0, 624, 1], [480, 841, 0, 448, 1], [60, 750, 90, 448, 0], [60, 750, 90, 448, 0], [530, 654, 0, 368, 1], [530, 654, 0, 368, 0]];
-  // S2's line and S4–S5's cut: [x0, x1, edge y, height, top's depth px]
-  const LINE = [600, 1235, 1010], CUT3 = [278, 1138, 790, 230, 100], CUT4 = [700, 1220, 560, 150, 64];
+  // screen and ≈ 800 on 1920×1080, so the box stands high on its horizon (k 0.94: its foot at 775, the syringe's pad at
+  // 772) and the cut is high
+  const BOX = [[520, 780, 1, 0.42], [330, 560, 1, 0.42], [330, 560, 0, 0.42], [330, 560, 0, 0.42], [360, 420, 1, 0.94], [600, 780, 1, 0.42]];
+  const SYR = [[790, 883, 0, 624, 1], [480, 841, 0, 448, 1], [60, 750, 90, 448, 0], [60, 750, 90, 448, 0], [530, 604, 0, 336, 1], [530, 604, 0, 336, 0]];
+  // S2's line (across the whole scene box: its edges fade it) and S4–S5's cut: [x0, x1, edge y, height, top's depth px]
+  const LINE = [BOXF[0], BOXF[2], 1010], CUT3 = [278, 1138, 790, 230, 100], CUT4 = [700, 1220, 560, 150, 64];
   const DROP = [708, 750, 300];
-  // the stream's ends: the medallion of the S1 / S2 box, the syringe's nozzle (S1)
-  const M0 = [0, 0], M1 = [0, 0], T0 = [SYR[0][0], SYR[0][1] - SYR[0][3] / 2 + 14];   // just inside the nozzle
-  for (const [b, M] of [[BOX[0], M0], [BOX[1], M1]]) { placeBox(b[0], b[1], b[3], thetaMax(b[0], b[1], b[3])); local((MED[0] - 0.5) * BW, (0.5 - MED[1]) * BH, 0, M); }
 
   // the layouts of the spicules: [x, y, angle, length, opacity] of spicule i at time t (still: the cycle's last state)
   const LS = [1, 0.12, 0.25, 0.10, 0.07, 0];   // the share of the spicules each layout shows (S1 all; a phone 360 of 600)
@@ -344,27 +347,59 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const bezT = (a, c, b, s) => Math.atan2(2 * (1 - s) * (c[1] - a[1]) + 2 * s * (b[1] - c[1]), 2 * (1 - s) * (c[0] - a[0]) + 2 * s * (b[0] - c[0]));
   const bez3 = (a, b, c, d, s, o) => { const u = 1 - s, A = u * u * u, B = 3 * u * u * s, C = 3 * u * s * s, D = s * s * s;
     o[0] = A * a[0] + B * b[0] + C * c[0] + D * d[0]; o[1] = A * a[1] + B * b[1] + C * c[1] + D * d[1]; return o; };
-  const bez3T = (a, b, c, d, s) => { const u = 1 - s; return Math.atan2(3 * u * u * (b[1] - a[1]) + 6 * u * s * (c[1] - b[1]) + 3 * s * s * (d[1] - c[1]),
-    3 * u * u * (b[0] - a[0]) + 6 * u * s * (c[0] - b[0]) + 3 * s * s * (d[0] - c[0])); };
-  // S1's stream leaves the medallion to the right (clear of the box's print above it), rises past the nozzle and comes
-  // down into its tip
-  const P1 = [M0[0] + 230, M0[1] + 10], P2 = [T0[0] + 10, T0[1] - 230], bp = [0, 0];
+  // S1's stream, laid out in the S1 poses' frame px: it leaves the medallion to the right, level (its spread inside the
+  // disc; over the front it keeps ≥ 35 px below «SPICULE SERUM»), turns up only past the box's side, rises in the gap
+  // left of the syringe to an apex 126 px above the nozzle, comes straight down into it and on into the barrel (behind its
+  // front glass), where it gathers and fades: story3d screen 1, «собирается в нём». Sampled by run time: a spicule's speed
+  // goes as 1 / the stream's width^0.8 (a narrowing stream runs faster), so spicules spread evenly in time never pile up
+  // at the tip. Per frame the path is moved onto the medallion and the nozzle as they are then (S1 → S2 both move);
+  // without the syringe it ends at the tip, where the small drop gathers it
+  const M0 = [0, 0], T0 = [SYR[0][0], SYR[0][1] - SYR[0][3] / 2];   // the S1 medallion, the S1 nozzle's mouth
+  placeBox(BOX[0][0], BOX[0][1], BOX[0][3], thetaMax(BOX[0][0], BOX[0][1], BOX[0][3]));
+  local((MED[0] - 0.5) * BW, (0.5 - MED[1]) * BH, 0, M0);
+  const PN = 256, PX_ = new Float32Array(PN), PY_ = new Float32Array(PN), PA_ = new Float32Array(PN), PW_ = new Float32Array(PN), PO_ = new Float32Array(PN);
+  {
+    const R = 0.10256 * BOX[0][1], T = (dx, dy) => [T0[0] + dx, T0[1] + dy];   // the medallion's radius (the texture's MED_R)
+    const segs = [[M0, [M0[0] + 120, M0[1] - 5], T(-122, 149), T(-90, 39)], [T(-90, 39), T(-66, -46), T(-55, -126), T(-15, -126)],
+      [T(-15, -126), T(3, -126), T(0, -71), T(0, 0)]];
+    if (SYRINGE) segs.push([T(0, 0), T(0, 40), T(0, 85), T(0, 130)]);   // down the nozzle into the barrel
+    // per segment, its half width and opacity along it (u 0…1): 0.55 R at the disc, 4.5 px down the nozzle (its bore
+    // ≈ 12 px), a little wider again in the barrel, fading there (or at the tip, without the syringe)
+    const wOf = (k, u) => k === 0 ? lerp(0.55 * R, 30, smooth(0, 1, u)) : k === 1 ? lerp(30, 16, u) : k === 2 ? lerp(16, 4.5, u) : lerp(4.5, 13, smooth(0.3, 1, u));
+    const oOf = (k, u) => k === 0 ? smooth(0, 0.08, u) : k === 1 ? 1 : k === 2 ? (SYRINGE ? 1 : 1 - smooth(0.6, 1, u)) : 1 - smooth(0.3, 1, u);
+    const raw = [], q = [0, 0], q1 = [0, 0]; let run = 0;
+    segs.forEach((g, k) => { bez3(g[0], g[1], g[2], g[3], 0, q1); for (let i = 1; i <= 400; i++) {
+      const u = i / 400; bez3(g[0], g[1], g[2], g[3], u, q); const ds = Math.hypot(q[0] - q1[0], q[1] - q1[1]), w = wOf(k, u);
+      run += ds * Math.pow(w, 0.8); raw.push([q[0], q[1], Math.atan2(q[1] - q1[1], q[0] - q1[0]), w, oOf(k, u), run]); q1[0] = q[0]; q1[1] = q[1]; } });
+    for (let j = 0, r = 0; j < PN; j++) {   // resampled evenly in run time
+      const tt = j / (PN - 1) * run; while (r < raw.length - 2 && raw[r + 1][5] < tt) r++;
+      const a = raw[r], b = raw[r + 1], u = clamp((tt - a[5]) / Math.max(b[5] - a[5], 1e-9));
+      PX_[j] = lerp(a[0], b[0], u); PY_[j] = lerp(a[1], b[1], u); PA_[j] = lerp(a[2], b[2], u); PW_[j] = lerp(a[3], b[3], u); PO_[j] = lerp(a[4], b[4], u);
+    }
+  }
+  // where the stream's ends are now (pose() sets them each frame): the medallion of the box drawn, the syringe's nozzle;
+  // S1's path is moved and stretched onto them (x and y apart: the syringe stays upright)
+  const MC = [0, 0], TC = [0, 0], PM = [1, 1, 1];   // PM: x scale, y scale, length scale
+  const E1 = [0, 0], C1 = [0, 0], bp = [0, 0];   // layout 1's scratch: its end and control points, the point on it
   function layout(k, i, t, still, o) {
     const s = SEED[i]; o[4] = 0;
-    if (k === 0) {   // S1: a stream from the medallion up and over into the nozzle, each spicule at its own phase
-      const q = still ? s.ph : (s.ph + t * 0.11) % 1, sg = 5 + 73 * Math.pow(1 - q, 1.4);
-      bez3(M0, P1, P2, T0, q, bp); const a = bez3T(M0, P1, P2, T0, q);
-      o[0] = bp[0] - Math.sin(a) * s.g0 * sg * 0.75 + Math.cos(a) * s.g1 * sg * 0.3; o[1] = bp[1] + Math.cos(a) * s.g0 * sg * 0.75 + Math.sin(a) * s.g1 * sg * 0.3;
-      o[2] = a + s.g1 * 0.45 * (1 - q); o[3] = (s.long ? 44 : 44 * SHORT) * (0.85 + 0.3 * s.w);
-      o[4] = smooth(0, 0.07, q) * (1 - smooth(0.93, 1.0, q)) * 0.95;   // gone inside the tip
+    if (k === 0) {   // S1: down the stream, each spicule at its own phase
+      const tau = still ? s.ph : (s.ph + t * 0.11) % 1, fj = tau * (PN - 1), j = Math.min(PN - 2, fj | 0), u = fj - j;
+      const a = lerp(PA_[j], PA_[j + 1], u), w = lerp(PW_[j], PW_[j + 1], u), b0 = Math.tanh(0.55 * s.g0), b1 = Math.tanh(0.55 * s.g1);
+      const ca = Math.cos(a), sa = Math.sin(a), x = lerp(PX_[j], PX_[j + 1], u) - sa * b0 * w + ca * b1 * 6, y = lerp(PY_[j], PY_[j + 1], u) + ca * b0 * w + sa * b1 * 6;
+      const aj = a + b1 * 0.5 * (1 - tau) * (1 - tau);   // a little astray at the start, in line by the nozzle
+      o[0] = MC[0] + (x - M0[0]) * PM[0]; o[1] = MC[1] + (y - M0[1]) * PM[1]; o[2] = Math.atan2(Math.sin(aj) * PM[1], Math.cos(aj) * PM[0]);
+      o[3] = (s.long ? 44 : 44 * SHORT) * (0.85 + 0.3 * s.w) * PM[2]; o[4] = lerp(PO_[j], PO_[j + 1], u) * 0.95;
     } else if (k === 1) {   // S2: through the line, then standing under it: short ones shallow, long ones deeper
       const tau = still ? 6 : t % 7, x = 700 + 450 * s.w, L = (s.long ? 80 : 80 * SHORT) * (0.85 + 0.3 * s.ph);
-      const q = still ? 1 : smooth(2.5 + s.lag * 4, 4.6 + s.lag * 4, tau), end = [x + 6 * s.g1, LINE[2] + L / 2 + 1];
-      const c = [(M1[0] + x) / 2, 700 + 40 * s.g0];
+      const q = still ? 1 : smooth(2.5 + s.lag * 4, 4.6 + s.lag * 4, tau);
+      E1[0] = x + 6 * s.g1; E1[1] = LINE[2] + L / 2 + 1; C1[0] = (MC[0] + x) / 2; C1[1] = 700 + 40 * s.g0;
       const lean = rad(90 + clamp(s.g1, -1.8, 1.8) * 9);   // standing under it, leaning as it went in
-      bez(M1, c, end, q, bp); const a = q < 1 ? lerp(bezT(M1, c, end, q), lean, smooth(0.8, 1, q)) : lean;
+      bez(MC, C1, E1, q, bp); const a = q < 1 ? lerp(bezT(MC, C1, E1, q), lean, smooth(0.8, 1, q)) : lean;
       o[0] = bp[0]; o[1] = bp[1]; o[2] = a; o[3] = L;
-      o[4] = smooth(0, 0.04, q) * (1 - smooth(6.0, 6.8, tau)) * 0.95;
+      // those still on their way go with the box when it fades (S2 → S3): none leave a medallion no longer there; the
+      // ones standing under the line stay and flow on into the drop
+      o[4] = smooth(0, 0.04, q) * (1 - smooth(6.0, 6.8, tau)) * 0.95 * lerp(ST.box[2], 1, smooth(0.7, 1, q));
     } else if (k === 2) {   // S3: in the drop, two rows: short above, long below, nearly level
       const L = s.long ? 150 : 150 * SHORT, sw = still ? 0 : Math.sin(t * 0.4 + s.ph * 6.28);
       o[0] = s.long ? 520 + 376 * s.w : 530 + 356 * s.w; o[1] = (s.long ? 840 : 660) + 35 * (2 * s.ph - 1) + 3 * sw;
@@ -382,19 +417,21 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const ST = { box: [0, 0, 0, 0], syr: [0, 0, 0, 0, 0], drop: [0, 0, 0, 0], cut: [0, 0, 0, 0, 0], top: 0, sec: 0, line: 0, draw: 1, hair: 0, cutO: 0, glow: 0,
     sw: [0, 0, 0, 0, 0], glint: 0, chan1: 0, sparks: 0, chan4: 0 };   // sw: layout k → k1, its blend window [a, b], f
   const mixA = (o, a, b, s) => { for (let i = 0; i < o.length; i++) o[i] = lerp(a[i], b[i], s); return o; };
+  const setSw = (st, ka, kb, wa, wb, f) => { const w = st.sw; w[0] = ka; w[1] = kb; w[2] = wa; w[3] = wb; w[4] = f; };
+  const setCut = (st, x0, x1, y, hs, dt) => { const c = st.cut; c[0] = x0; c[1] = x1; c[2] = y; c[3] = hs; c[4] = dt; };
   function story(p) {
     const k = Math.min(4, Math.floor(p)), f = p - k, st = ST;
     st.top = st.sec = st.line = st.hair = st.cutO = st.glint = st.chan1 = st.sparks = st.chan4 = st.glow = 0; st.draw = 1;
     st.drop[3] = 0; mixA(st.box, BOX[k], BOX[k + 1], smooth(0, 1, f)); mixA(st.syr, SYR[k], SYR[k + 1], smooth(0, 1, f));
     if (k === 0) {   // S1 → S2: the pair recedes left and smaller; the stream turns from the nozzle to the line, drawn left to right
-      st.sw = [0, 1, 0.1, 0.9, f];
-      st.line = 1; st.draw = smooth(0.3, 1, f); st.top = 0.04 * st.draw; st.cut[0] = LINE[0]; st.cut[1] = LINE[1]; st.cut[2] = LINE[2]; st.cut[3] = 0; st.cut[4] = 60;
+      setSw(st, 0, 1, 0.1, 0.9, f);
+      st.line = 1; st.draw = smooth(0.3, 1, f); st.top = 0.04 * st.draw; setCut(st, LINE[0], LINE[1], LINE[2], 0, 60);
       st.glint = st.chan1 = smooth(0.6, 1, f); st.cutO = 1;
       if (!SYRINGE) { st.drop[0] = T0[0]; st.drop[1] = T0[1]; st.drop[2] = 18 * (1 - smooth(0, 0.5, f)); st.drop[3] = 1; }
     } else if (k === 1) {   // S2 → S3: the line goes, the box goes; the syringe turns level and rises, a drop swells at its
       // nozzle and grows into the scene (the camera goes into it), the syringe leaves left; the spicules gather in two rows
-      st.sw = [1, 2, 0.4, 1, f];
-      st.line = 1 - smooth(0, 0.3, f); st.top = 0.04 * st.line; st.cut[0] = LINE[0]; st.cut[1] = LINE[1]; st.cut[2] = LINE[2]; st.cut[3] = 0; st.cut[4] = 60; st.cutO = 1;
+      setSw(st, 1, 2, 0.5, 1, f);   // the rows gather as the drop grows round them (0.5–0.9)
+      st.line = 1 - smooth(0, 0.3, f); st.top = 0.04 * st.line; setCut(st, LINE[0], LINE[1], LINE[2], 0, 60); st.cutO = 1;
       st.glint = st.chan1 = 1 - smooth(0, 0.3, f);
       st.box[2] = 1 - smooth(0, 0.35, f);
       const turn = smooth(0, 0.4, f), away = smooth(0.5, 0.85, f);
@@ -405,19 +442,21 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       st.drop[0] = lerp(nx, DROP[0], grow); st.drop[1] = lerp(ny, DROP[1], grow);
       st.drop[2] = SYRINGE ? lerp(r0, DROP[2], grow) : DROP[2] * smooth(0.3, 0.9, f); st.drop[3] = 1;
     } else if (k === 2) {   // S3 → S4: the cut rises from below; the rows run down and right into it; the drop widens and goes
-      st.sw = [2, 3, 0.2, 1, f];
-      const up = smooth(0, 0.6, f); st.cut[0] = CUT3[0]; st.cut[1] = CUT3[1]; st.cut[2] = CUT3[2] + 260 * (1 - up); st.cut[3] = CUT3[3]; st.cut[4] = CUT3[4];
+      setSw(st, 2, 3, 0.2, 1, f);
+      const up = smooth(0, 0.6, f); setCut(st, CUT3[0], CUT3[1], CUT3[2] + 260 * (1 - up), CUT3[3], CUT3[4]);
       st.cutO = up; st.top = 0.10; st.sec = 0.16; st.line = 1; st.hair = 0.4;
       const gone = smooth(0.3, 0.7, f); st.drop[0] = DROP[0]; st.drop[1] = DROP[1]; st.drop[2] = DROP[2] * (1 + 0.15 * gone); st.drop[3] = 1 - gone;
       st.sparks = smooth(0.7, 1, f);
     } else if (k === 3) {   // S4 → S5: the cut shrinks and moves right, its channels light; box and syringe come back left
-      st.sw = [3, 4, 0.1, 0.9, f];
+      setSw(st, 3, 4, 0.1, 0.9, f);
       mixA(st.cut, CUT3, CUT4, smooth(0, 0.6, f)); st.cutO = 1; st.top = 0.10; st.sec = 0.16; st.line = 1; st.hair = 0.4;
       st.sparks = 1 - smooth(0, 0.3, f); st.chan4 = smooth(0.5, 1, f);   // (the cut clears the left before the pair comes)
-      st.box = [BOX[4][0], BOX[4][1], smooth(0.45, 0.9, f), BOX[4][3]]; st.syr = SYR[4].slice(0, 4).concat(smooth(0.45, 0.9, f));
+      const back = smooth(0.45, 0.9, f);
+      for (let i = 0; i < 4; i++) { st.box[i] = BOX[4][i]; st.syr[i] = SYR[4][i]; }
+      st.box[2] = back; st.syr[4] = back;
     } else {   // S5 → kit: the cut sinks and goes, the syringe goes; the box comes forward into the packshot's pose
-      st.sw = [4, 5, 0, 0.5, f];
-      const down = smooth(0, 0.5, f); st.cut[0] = CUT4[0]; st.cut[1] = CUT4[1]; st.cut[2] = CUT4[2] + 200 * down; st.cut[3] = CUT4[3]; st.cut[4] = CUT4[4];
+      setSw(st, 4, 5, 0, 0.5, f);
+      const down = smooth(0, 0.5, f); setCut(st, CUT4[0], CUT4[1], CUT4[2] + 200 * down, CUT4[3], CUT4[4]);
       st.cutO = 1 - down; st.top = 0.10; st.sec = 0.16; st.line = 1; st.hair = 0.4; st.chan4 = 1 - smooth(0, 0.4, f);
       st.syr[4] = 1 - smooth(0, 0.4, f); st.glow = smooth(0.5, 1, f);   // the backlight comes up as the box arrives
       mixA(st.box, BOX[4], BOX[5], smooth(0.45, 1, f));   // it waits for the step cards to pass over the scene
@@ -426,17 +465,23 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     return st;
   }
 
-  // ---- applying a state
-  const tmp = new V3(), Lk = [0, 0, 0, 0, 0], Lk1 = [0, 0, 0, 0, 0];
-  const last = { th: 0, ratio: 0, top: 0, bottom: 0, swarm: 0, glints: 0, probe: null, t: 0 };
+  // ---- applying a state (in place: no garbage per frame; the QA probes are worked out in state() only)
+  const Lk = [0, 0, 0, 0, 0], Lk1 = [0, 0, 0, 0, 0], thC = [NaN, NaN, NaN, 0];   // thC: θmax's last pose and value
+  const last = { th: 0, ratio: 0, top: 0, bottom: 0, swarm: 0, glints: 0, t: 0, drop: 0, cut: 0 };
+  let gN = 0;   // the gold instances written this frame
+  function put(x, y, a, len, w, al, kind, phs) {
+    if (gN >= NG || al < 0.003) return;
+    const j = gN * 4; GA[j] = x; GA[j + 1] = y; GA[j + 2] = a; GA[j + 3] = len; GB[j] = al; GB[j + 1] = w; GB[j + 2] = kind; GB[j + 3] = phs; gN++;
+  }
   function pose(p, t, still) {
     const st = story(p), live = still ? 0 : 1 - smooth(4.85, 5, p), ph = phone.matches;
     // the box: θ the packshot's at rest, swaying toward 4° and back (9 s) while it lives; the side never wider than photographed
-    const [cx, h, bo, kh] = st.box;
+    const cx = st.box[0], h = st.box[1], bo = st.box[2], kh = st.box[3];
     box.visible = bo > 0.004;
-    const thm = thetaMax(cx, h, kh), th = thm - (thm - rad(4)) * (0.5 - 0.5 * Math.cos(t * 2 * Math.PI / 9)) * live;
+    if (cx !== thC[0] || h !== thC[1] || kh !== thC[2]) { thC[0] = cx; thC[1] = h; thC[2] = kh; thC[3] = thetaMax(cx, h, kh); }
+    const thm = thC[3], th = thm - (thm - rad(4)) * (0.5 - 0.5 * Math.cos(t * 2 * Math.PI / 9)) * live;
     placeBox(cx, h, kh, th);
-    for (const m of boxMats) m.opacity = bo;
+    for (let i = 0; i < boxMats.length; i++) boxMats[i].opacity = bo;
     last.th = th; last.ratio = sideRatio();
     glow.visible = st.glow > 0.004 && box.visible;
     if (glow.visible) {   // centred on the box (front and side), 0.92 of its half height, 1.6 × its width either side
@@ -444,36 +489,42 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       GL.uR.value.set((l + r) / 2, c[1], 1.6 * (r - l), 0.46 * h); GL.uA.value = 0.55 * st.glow;
     }
     last.top = local(0, BH / 2, 0, out2)[1]; last.bottom = local(0, -BH / 2, 0, out2)[1];
-    // the syringe: its middle at (x, y), turned in the picture's plane, a little turned about its axis (the flange)
-    const [sx, sy, sa, sl, so] = st.syr;
+    // the stream's ends as they are now: the medallion of the box as placed, the syringe's nozzle; S1's path onto them
+    local((MED[0] - 0.5) * BW, (0.5 - MED[1]) * BH, 0, MC);
+    const sx = st.syr[0], sy = st.syr[1], sa = st.syr[2], sl = st.syr[3], so = st.syr[4];
+    TC[0] = sx + Math.sin(rad(sa)) * sl / 2; TC[1] = sy - Math.cos(rad(sa)) * sl / 2;
+    PM[0] = (TC[0] - MC[0]) / (T0[0] - M0[0]); PM[1] = (TC[1] - MC[1]) / (T0[1] - M0[1]); PM[2] = Math.sqrt(Math.abs(PM[0] * PM[1]));
+    // the syringe: its middle at (x, y), turned in the picture's plane
     syr.visible = SYRINGE && so > 0.004;
     if (syr.visible) {
       at(sx, sy, D_SYR, syr.position); const L = world(sl, D_SYR); syr.scale.setScalar(L);
       syr.rotation.set(0, 0, -rad(sa)); syr.translateY(-0.5 * L);   // its middle, not its pad, at (x, y)
-      for (const m of [glassBack, glassFront]) m.userData.u.uFade.value = so; rodMat.opacity = 0.55 * so;
+      glassBack.userData.u.uFade.value = glassFront.userData.u.uFade.value = so; rodMat.opacity = 0.55 * so;
       glassFront.clearcoat = ph ? 0 : 0.6;
     }
     // the drop
-    const [dx, dy, dr, dop] = st.drop;
+    const dx = st.drop[0], dy = st.drop[1], dr = st.drop[2], dop = st.drop[3];
     dropB.visible = dropF.visible = dr > 0.5 && dop > 0.004;
     if (dropB.visible) {
       at(dx, dy, D_DROP, dropB.position); dropF.position.copy(dropB.position); dropB.scale.setScalar(world(dr, D_DROP)); dropF.scale.copy(dropB.scale);
       dropBack.userData.u.uFade.value = dropFront.userData.u.uFade.value = dop * (1 + 0.02 * Math.sin(t * 0.8) * live);
       dropFront.clearcoat = ph ? 0 : 0.5;
     }
-    // the skin: the line, the cut
+    // the skin: the line, the cut; drawn only when it shows something (S1 holds it with the line not yet drawn)
     SK.uE.value.set(st.cut[0], st.cut[1], st.cut[2], st.cut[3]); SK.uT.value.set(st.cut[4], st.top, st.sec, 0);
     SK.uL.value.set(st.line, st.draw, 2.5, st.hair); SK.uO.value = st.cutO;
-    skin.visible = st.cutO > 0.004 && (st.line > 0.004 || st.sec > 0.004);
+    skin.visible = st.cutO > 0.004 && (st.line * st.draw > 0.004 || st.top > 0.004 || st.sec > 0.004 || st.hair > 0.004);
     // the spicules: each one's place in the two layouts of this transition, mixed (weighted by its opacity in each, so a
-    // spicule only in one fades where it is, one in both flows between them), each a little late or early
-    const n = ph ? NS_PH : NS, [ka, kb, wa, wb, f] = st.sw, fw = clamp((f - wa) / (wb - wa));
+    // spicule only in one fades where it is, one in both flows between them), each a little late or early; a layout whose
+    // weight is nil is not worked out
+    const n = ph ? NS_PH : NS, ka = st.sw[0], kb = st.sw[1], fw = clamp((st.sw[4] - st.sw[2]) / (st.sw[3] - st.sw[2]));
     swU.uTime.value = t; swU.uSpin.value = (ka === 2 ? 1 - fw : kb === 2 ? fw : 0) * (still ? 0 : 1);
     let shown = 0;
     for (let i = 0; i < n; i++) {
       const s = SEED[i], q = smooth(0, 1, clamp((fw - s.lag) / 0.75));
-      layout(ka, i, t, still, Lk); layout(kb, i, t, still, Lk1);
-      const A = s.rank < LS[ka] ? (1 - q) * Lk[4] : 0, B = s.rank < LS[kb] ? q * Lk1[4] : 0, W = A + B;
+      if (q < 1 && s.rank < LS[ka]) layout(ka, i, t, still, Lk); else Lk[4] = 0;
+      if (q > 0 && s.rank < LS[kb]) layout(kb, i, t, still, Lk1); else Lk1[4] = 0;
+      const A = (1 - q) * Lk[4], B = q * Lk1[4], W = A + B;
       const j = i * 4;
       if (W < 0.003) { SB[j] = 0; continue; }
       SA[j] = (A * Lk[0] + B * Lk1[0]) / W; SA[j + 1] = (A * Lk[1] + B * Lk1[1]) / W;
@@ -486,8 +537,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     swarm.geometry.instanceCount = n; swarm.geometry.attributes.iA.needsUpdate = swarm.geometry.attributes.iB.needsUpdate = true;
     swarm.visible = shown > 0; last.swarm = shown;
     // the gold: S2's glint and channels, S4's sparks, S5's micro-channels
-    let g = 0;
-    const put = (x, y, a, len, w, al, kind, phs) => { if (g >= NG || al < 0.003) return; const j = g * 4; GA[j] = x; GA[j + 1] = y; GA[j + 2] = a; GA[j + 3] = len; GB[j] = al; GB[j + 1] = w; GB[j + 2] = kind; GB[j + 3] = phs; g++; };
+    gN = 0;
     if (st.glint > 0.004) {   // the peel: a flat glint slides along the line and stops on it (0–2 s of the 7 s beat)
       const tau = still ? 6 : t % 7, gx = lerp(620, 900, smooth(0, 2, tau)), ga = smooth(0, 0.3, tau) * (1 - smooth(6.2, 6.9, tau));
       put(gx, LINE[2], 0, 120, 9, 0.9 * ga * st.glint, 1, 0.1);
@@ -514,13 +564,17 @@ export function createScene(THREE, { canvas, base, onLoad }) {
         put(x, C[2] + 2 + L / 2, rad(90 + 8 * s.g0), L, 1.6, pulse * st.chan4 * st.cutO, 0, s.ph);
       }
     }
-    goldFx.geometry.instanceCount = g; goldFx.visible = g > 0; goldFx.geometry.attributes.iA.needsUpdate = goldFx.geometry.attributes.iB.needsUpdate = true;
-    last.glints = g; last.t = t; last.drop = dropB.visible ? dr : 0; last.cut = skin.visible && st.sec > 0.004 ? st.cutO : 0;
-    // QA: where to pipette the print (frame px): the front's empty paper (u .50 / .25, v .70), the band (u .50, v .30), the side
-    last.probe = box.visible ? {
-      face: local(0, (0.5 - 0.70) * BH, 0, [0, 0]).map(Math.round), face2: local(-0.25 * BW, (0.5 - 0.70) * BH, 0, [0, 0]).map(Math.round),
-      band: local(0, (0.5 - 0.30) * BH, 0, [0, 0]).map(Math.round), side: local(BW / 2, (0.5 - 0.70) * BH, -BD / 2, [0, 0]).map(Math.round),
-      front: [[-1, 1], [1, 1], [1, -1], [-1, -1]].map(([x, y]) => local(x * BW / 2, y * BH / 2, 0, [0, 0]).map(v => Math.round(v * 10) / 10)) } : null;   // its corners: TL TR BR BL
+    goldFx.geometry.instanceCount = gN; goldFx.visible = gN > 0; goldFx.geometry.attributes.iA.needsUpdate = goldFx.geometry.attributes.iB.needsUpdate = true;
+    last.glints = gN; last.t = t; last.drop = dropB.visible ? dr : 0; last.cut = skin.visible && st.sec > 0.004 ? st.cutO : 0;
+  }
+  // QA: where to pipette the print (frame px) in the pose drawn last: the front's empty paper (u .50 / .25, v .70), the
+  // band (u .50, v .30), the side; the front's corners TL TR BR BL
+  function probe() {
+    if (!box.visible) return null;
+    const pt = (x, y, z) => local(x, y, z, [0, 0]).map(Math.round);
+    return { face: pt(0, (0.5 - 0.70) * BH, 0), face2: pt(-0.25 * BW, (0.5 - 0.70) * BH, 0), band: pt(0, (0.5 - 0.30) * BH, 0),
+      side: pt(BW / 2, (0.5 - 0.70) * BH, -BD / 2),
+      front: [[-1, 1], [1, 1], [1, -1], [-1, -1]].map(([x, y]) => local(x * BW / 2, y * BH / 2, 0, [0, 0]).map(v => Math.round(v * 10) / 10)) };
   }
 
   // ---- drawing into the engine's box: the full frame is the cover; the canvas shows the box's part of it
@@ -575,6 +629,6 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const r1 = v => Math.round(v * 10) / 10, r3 = v => Math.round(v * 1000) / 1000;
   const state = () => ({ quality: pr, cap, capped, pixelRatio: renderer.getPixelRatio(), width: canvas.width, height: canvas.height, renders, loaded,
     version, kits, lastP, yawEff: r1(deg(last.th)), sideRatio: r3(last.ratio), boxTop: r1(last.top), boxBottom: r1(last.bottom), boxOp: r3(boxMats[0].opacity * (box.visible ? 1 : 0)),
-    syringeOn: syr.visible, swarm: last.swarm, dropR: r1(last.drop || 0), slabOn: r3(last.cut || 0), glints: last.glints, probe: last.probe });
+    syringeOn: syr.visible, swarm: last.swarm, dropR: r1(last.drop || 0), slabOn: r3(last.cut || 0), glints: last.glints, probe: probe() });
   return { draw, kit, dispose, state, animated: true };
 }
