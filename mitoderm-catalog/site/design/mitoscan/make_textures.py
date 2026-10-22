@@ -250,11 +250,11 @@ def brushed(w=1024, h=64, seed=3):   # fine grain along the axis (x): noise stre
 
 def haze(n=512, seed=7):   # a shapeless cloud: three octaves of smooth noise under a soft round fall-off
     rng = np.random.default_rng(seed); v = np.zeros((n, n))
-    for s, w in ((48, 1.0), (20, 0.5), (8, 0.25)):
+    for s, w in ((70, 1.0), (30, 0.35)):
         v += w * ndimage.gaussian_filter(rng.normal(0, 1, (n, n)), s, mode='wrap')
     v = (v - v.mean()) / v.std()
     yy, xx = (np.mgrid[0:n, 0:n] + 0.5) / n * 2 - 1; r2 = xx ** 2 + yy ** 2
-    a = np.exp(-2.6 * r2) * np.clip(1 + 0.45 * v, 0, None) * (1 - np.clip((r2 - 0.55) / 0.45, 0, 1)) ** 2
+    a = np.exp(-2.4 * r2) * np.clip(1 + 0.3 * v, 0, None) * (1 - np.clip((r2 - 0.55) / 0.45, 0, 1)) ** 2
     a = a / a.max()
     lum = np.full((n, n), 255.0)
     return Image.fromarray(np.dstack([lum, a * 255 + 0.5]).astype(np.uint8), 'LA')

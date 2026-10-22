@@ -78,8 +78,9 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
       const x = q.getX(i) / 30, y = q.getY(i) / 30, z = q.getZ(i) / 30;
       const az = Math.abs(deg(Math.atan2(x, z))), el = deg(Math.asin(clamp(y, -1, 1)));
       let v = lin(METAL_EL, el);
-      v *= lerp(1, 0.12 + 0.88 * smooth(20, 45, az), plateau(el, -35, 40, 10));   // the dark wall behind the camera
+      v *= lerp(1, 0.4 + 0.6 * smooth(15, 35, az), plateau(el, -35, 40, 10));     // the dimmer wall behind the camera
       v *= 1 - 0.65 * smooth(-25, -40, el) * smooth(95, 130, az);              // darker below, behind the system
+      v *= lerp(1, 0.06, plateau(el, -25, 25, 10) * smooth(70, 100, az));   // dark sides and back at eye level (the chrome's black)
       c.setRGB(v, v, v); col.push(c.r, c.g, c.b);
     }
     dome.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
@@ -114,10 +115,22 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
 
   // ---- materials, one set per part that fades on its own: T the tablet and its stand's top, C the cylinder and the
   // stand's base (behind it), H the probe, its cradle and tail, K the cable (its first stretch under the tail goes with H)
-  const groups = { T: [], C: [], H: [], K: [] };
-  const reg = (g, m) => { m.transparent = true; groups[g].push(m); return m; };
+  // every surface fades out over the last 60 frame px before the canvas's edge (the scene box): a part passing it in a
+  // transition is never cut hard (the glow and the haze too)
+  const EDGE = { uRes: { value: new THREE.Vector2(1, 1) }, uFade: { value: 60 } };
+  const EDGE_F = 'uniform vec2 uRes; uniform float uFade; float edgeFade() { vec2 q = gl_FragCoord.xy; float e = min(min(q.x, uRes.x - q.x), min(q.y, uRes.y - q.y)); return smoothstep(0.12 * uFade, uFade, e); }';
+  const edgy = (m, key = 'plain') => {
+    const prev = m.onBeforeCompile;
+    m.onBeforeCompile = (sh, r) => {
+      prev.call(m, sh, r); Object.assign(sh.uniforms, EDGE);
+      sh.fragmentShader = sh.fragmentShader.replace('void main() {', EDGE_F + '\nvoid main() {').replace('#include <opaque_fragment>', '#include <opaque_fragment>\n  gl_FragColor.a *= edgeFade();');
+    };
+    m.customProgramCacheKey = () => 'mitoscan-' + key; return m;
+  };
+  const groups = { T: [], C: [], H: [], K: [], B: [] };   // B: the bracket between the tablet and the cradle (with both)
+  const reg = (g, m, key) => { m.transparent = true; groups[g].push(m); return edgy(m, key); };
   // white plastic: the packshot's neutral greys hold in every pose (a fitted emissive floor, not tone mapped)
-  const PLASTIC = { color: 0xbdbdbb, emissive: 0x6c6c6b, roughness: 0.42, clearcoat: 0.3, clearcoatRoughness: 0.28 };
+  const PLASTIC = { color: 0x8e8e8c, emissive: 0x9d9d9c, roughness: 0.42, clearcoat: 0.3, clearcoatRoughness: 0.28 };
   const plastic = (g, k = 1) => reg(g, new THREE.MeshPhysicalMaterial({ ...PLASTIC, color: new THREE.Color(PLASTIC.color).multiplyScalar(k),
     emissive: new THREE.Color(PLASTIC.emissive).multiplyScalar(k), toneMapped: false }));
   const metal = m => { m.envMap = metalEnv.texture; metals.push(m); return m; };
@@ -125,8 +138,8 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   // contrast is raised (dark stays dark, the light clips white), its colour neutral
   const chrome = g => {
     const m = metal(new THREE.MeshPhysicalMaterial({ color: 0xf2f2f2, metalness: 1, roughness: 0.12, toneMapped: false }));
-    m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_maps>', '#include <lights_fragment_maps>\n  radiance = pow(radiance, vec3(2.2)) * 1.35;'); };
-    m.customProgramCacheKey = () => 'mitoscan-chrome'; return reg(g, m);
+    m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_maps>', '#include <lights_fragment_maps>\n  radiance = smoothstep(vec3(0.5), vec3(1.45), radiance) * 1.3;'); };
+    return reg(g, m, 'chrome');
   };
   const SHADE = 0.2;
   const print = (g, map, extra = {}) => reg(g, new THREE.MeshPhysicalMaterial({ color: new THREE.Color(1, 1, 1).multiplyScalar(SHADE), map,
@@ -139,6 +152,7 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     badge: print('C', badgeTex), base: plastic('C', 0.97) };
   const mH = { body: plastic('H'), cradle: plastic('H', 1.22), chrome: chrome('H'), panel: print('H', panelTex),
     button: reg('H', new THREE.MeshPhysicalMaterial({ color: 0x3a3a3a, roughness: 0.4, toneMapped: false })) };
+  const mB = plastic('B');
   // the cable: one tube from the tail to the stand; its alpha follows H near the tail and K further on (by arc length)
   const CAB = { uAH: { value: 1 }, uAK: { value: 1 } };
   const mK = new THREE.MeshPhysicalMaterial({ ...PLASTIC, color: 0xe6e7e4, emissive: 0x525351, roughness: 0.55, clearcoat: 0, toneMapped: false, transparent: true });
@@ -148,7 +162,7 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     sh.fragmentShader = 'uniform float uAH, uAK; varying float vArc;\n' + sh.fragmentShader.replace('#include <alphamap_fragment>',
       '#include <alphamap_fragment>\n  diffuseColor.a *= mix(uAH, uAK, smoothstep(0.04, 0.22, vArc));');
   };
-  mK.customProgramCacheKey = () => 'mitoscan-cable';
+  edgy(mK, 'cable');
 
   // ---- geometry helpers (gw)
   function rrect(w, h, r) {   // a rounded rectangle centred on the origin
@@ -217,26 +231,24 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   }
   // the buttons: two chrome ovals on the left side (v 0.150–0.170, 0.2025–0.2275), a dark one on the right (v 0.25–0.295)
   const pill = (sx, sy, sz) => new THREE.SphereGeometry(1, 24, 16).scale(sx, sy, sz);
-  mesh(pill(0.007, 0.010, 0.007).translate(-PW - 0.006, 0.354 - 0.160, -PD / 2), mH.chrome, prb);
-  mesh(pill(0.007, 0.0125, 0.007).translate(-PW - 0.006, 0.354 - 0.215, -PD / 2), mH.chrome, prb);
-  mesh(pill(0.004, 0.0225, 0.008).translate(PW + 0.0055, 0.354 - 0.2725, -PD / 2), mH.button, prb);
-  // the cradle: a U round the probe's lower part (v 0.30 down, under its bottom), its walls 0.006 outside the probe,
-  // narrow lips over the front edges widening a little downward (left x −0.066 → −0.052, right 0.070 → 0.056 at
-  // v 0.31 → 0.62), open over the probe's rounded bottom (only the wall's rim shows below it)
+  mesh(pill(0.007, 0.010, 0.007).translate(-PW - 0.011, 0.354 - 0.160, -PD / 2), mH.chrome, prb);
+  mesh(pill(0.007, 0.0125, 0.007).translate(-PW - 0.011, 0.354 - 0.215, -PD / 2), mH.chrome, prb);
+  mesh(pill(0.004, 0.0225, 0.008).translate(PW + 0.0075, 0.354 - 0.2725, -PD / 2), mH.button, prb);
+  // the cradle: two wings round the probe's lower part (v 0.30 → 0.645, joined behind it, never seen), their walls
+  // 0.006 outside the probe, narrow lips over the front edges widening a little downward (left x −0.066 → −0.050,
+  // right 0.070 → 0.054), tapering with the probe's rounded bottom
   {
-    const TOP = 0.055, out = outline(-0.012).filter(([, y]) => y <= TOP), lipL = [-0.066, -0.052], lipR = [0.070, 0.056], y1 = 0.354 - 0.62;
-    const right = out.filter(([x]) => x >= 0), left = out.filter(([x]) => x < 0);
-    const inner = [];   // left lip down, round under the probe's bottom (just outside its outline), right lip up
-    for (let i = 0; i <= 10; i++) { const t = i / 10; inner.push([lerp(lipL[0], lipL[1], t), lerp(TOP, y1, t)]); }
-    const bot = outline(-0.008).filter(([, y]) => y < y1 - 0.004).sort((a, b) => a[0] - b[0]);
-    for (const q of bot) inner.push(q);
-    for (let i = 10; i >= 0; i--) { const t = i / 10; inner.push([lerp(lipR[0], lipR[1], t), lerp(TOP, y1, t)]); }
-    const pts = [[right[0][0], TOP]].concat(right, left, [[left[left.length - 1][0], TOP]], inner);
-    const g = new THREE.ExtrudeGeometry(shapeOf(pts), { depth: PD + 0.02 - 0.008, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.003, bevelSegments: 4 });
-    mesh(g.translate(0, 0, -PD - 0.014 + 0.004), mH.cradle, prb);
+    const TOP = 0.055, BOT = 0.354 - 0.645, out = outline(-0.012).filter(([, y]) => y <= TOP && y >= BOT);
+    for (const [side, lip] of [[1, [0.070, 0.054]], [-1, [-0.066, -0.050]]]) {
+      const edge = out.filter(([x]) => x * side > 0).sort((a, b) => b[1] - a[1]);   // the outer edge, top to bottom
+      const pts = [[edge[0][0], TOP]].concat(edge);
+      for (let i = 10; i >= 0; i--) { const t = i / 10; pts.push([lerp(lip[0], lip[1], t), lerp(TOP, BOT, t)]); }
+      const g = new THREE.ExtrudeGeometry(shapeOf(pts), { depth: PD + 0.02 - 0.008, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.003, bevelSegments: 4 });
+      mesh(g.translate(0, 0, -PD - 0.014 + 0.004), mH.cradle, prb);
+    }
   }
   // the bracket from the cradle's left wall to the tablet's right side (u 1.00…1.03, v 0.335…0.50)
-  mesh(rbox(0.495, 0.535, 0.31425 - 0.50, 0.31425 - 0.335, -0.028, -0.008, 0.003, 0.004), mT.body, tab);
+  mesh(rbox(0.495, 0.535, 0.31425 - 0.50, 0.31425 - 0.335, -0.028, -0.008, 0.003, 0.004), mB, tab);   // shown only with both parts
   // the tail: ribbed, under the probe's bottom (5 ribs, 0.045 long, radius 0.014 → 0.012)
   const TAIL_L = 0.045;
   {
@@ -310,24 +322,25 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
 
   // ---- the line's silver round the system (live only): a soft shapeless glow behind it, the haze of S2. Flat to the
   // camera in frame px (a plane at a depth; local x = px − PPX… as placed), faded toward the canvas's edges
+  // (their fade toward the canvas's edges is wider, 240 frame px: soft light never shows the box's straight edges)
   const hex3 = h => new V3(((h >> 16) & 255) / 255, ((h >> 8) & 255) / 255, (h & 255) / 255);
-  const SILVER = 0xd9d4cc, EDGE = { uRes: { value: new THREE.Vector2(1, 1) }, uFade: { value: 60 } };
+  const SILVER = 0xd9d4cc, SOFT = { uRes: EDGE.uRes, uFade: { value: 240 } };
+  const SOFT_F = 'uniform vec2 uRes; uniform float uFade; float edgeFade() { vec2 q = gl_FragCoord.xy; float e = min(min(q.x, uRes.x - q.x), min(q.y, uRes.y - q.y)) / uFade; return smoothstep(0.0, 1.0, e); }';
   const VS = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }';
-  const EDGE_F = 'uniform vec2 uRes; uniform float uFade; float edgeFade() { vec2 q = gl_FragCoord.xy; float e = min(min(q.x, uRes.x - q.x), min(q.y, uRes.y - q.y)); return smoothstep(0.0, uFade, e); }';
   const glowMat = new THREE.ShaderMaterial({ vertexShader: VS, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    uniforms: { ...EDGE, uC: { value: hex3(SILVER) }, uOpacity: { value: 0 } },
-    fragmentShader: `uniform vec3 uC; uniform float uOpacity; varying vec2 vUv; ${EDGE_F}
+    uniforms: { ...SOFT, uC: { value: hex3(SILVER) }, uOpacity: { value: 0 } },
+    fragmentShader: `uniform vec3 uC; uniform float uOpacity; varying vec2 vUv; ${SOFT_F}
       void main() { vec2 q = vUv * 2.0 - 1.0; float r2 = dot(q, q); gl_FragColor = vec4(uC, uOpacity * exp(-3.0 * r2) * (1.0 - smoothstep(0.5, 1.0, r2)) * edgeFade()); }` });
   const hazeMat = new THREE.ShaderMaterial({ vertexShader: VS, transparent: true, depthWrite: false,
-    uniforms: { ...EDGE, uMap: { value: hazeTex }, uC: { value: hex3(SILVER) }, uOpacity: { value: 0 } },
-    fragmentShader: `uniform sampler2D uMap; uniform vec3 uC; uniform float uOpacity; varying vec2 vUv; ${EDGE_F}
+    uniforms: { ...SOFT, uMap: { value: hazeTex }, uC: { value: hex3(SILVER) }, uOpacity: { value: 0 } },
+    fragmentShader: `uniform sampler2D uMap; uniform vec3 uC; uniform float uOpacity; varying vec2 vUv; ${SOFT_F}
       void main() { float a = texture2D(uMap, vUv).a; gl_FragColor = vec4(uC, uOpacity * a * edgeFade()); }` });
   const quad = new THREE.PlaneGeometry(1, 1);
   const glow = new THREE.Mesh(quad, glowMat); glow.renderOrder = -2; scene.add(glow);
   // the haze: clubs where the tablet was and round the probe's foot on S2, behind the probe (its front stays clear);
   // [frame x, y, size px, drift phase]; a phone draws the first three
-  const HAZE = [[330, 640, 760, 0], [520, 470, 620, 1.7], [420, 980, 700, 3.1], [210, 820, 560, 4.4], [640, 1120, 600, 2.2], [880, 1080, 520, 5.3]];
-  const hazes = HAZE.map(() => { const m = new THREE.Mesh(quad, hazeMat.clone()); m.material.uniforms = { ...EDGE, uMap: { value: hazeTex }, uC: { value: hex3(SILVER) }, uOpacity: { value: 0 } }; m.renderOrder = -1; scene.add(m); return m; });
+  const HAZE = [[450, 660, 700, 0], [560, 500, 560, 1.7], [480, 930, 640, 3.1], [360, 800, 520, 4.4], [720, 1060, 540, 2.2], [880, 960, 480, 5.3]];
+  const hazes = HAZE.map(() => { const m = new THREE.Mesh(quad, hazeMat.clone()); m.material.uniforms = { ...SOFT, uMap: { value: hazeTex }, uC: { value: hex3(SILVER) }, uOpacity: { value: 0 } }; m.renderOrder = -1; scene.add(m); return m; });
   const flat = (m, cx, cy, D, w, h) => {   // a camera-facing quad at depth D whose centre shows at frame (cx, cy), w × h frame px
     m.position.set((cx - PPX) / F * D, -(cy - 750) / F * D, -D); m.scale.set(w / F * D, h / F * D, 1);
   };
@@ -363,7 +376,7 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     POSE[1] = P1;
   }
   // the parts' opacities (T C H K), the haze, the glow's level and the sway per key
-  const GLOW = [0.2, 0.08, 0.16, 0.24, 0.12, 0.2], SWAY = [1, 1, 0.4, 1, 0.6, 1];
+  const GLOW = [0.3, 0.12, 0.24, 0.32, 0.2, 0.3], SWAY = [1, 1, 0.4, 1, 0.6, 1];
   const ST = { pose: [0, 0, 0, 0, 0], a: { T: 1, C: 1, H: 1, K: 1 }, haze: 0, hazeOut: 0, glow: 0, glint: 0, sway: 1, down: 1 };
   function story(p) {
     const k = Math.min(4, Math.floor(p)), f = p - k, s = smooth(0, 1, f), st = ST, A = POSE[k], B = POSE[k + 1], P = st.pose, a = st.a;
@@ -377,8 +390,8 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     } else if (k === 1) {   // S2 → S3: the haze thins and drifts apart, the screen and the cylinder come forward, the probe goes
       a.T = a.C = smooth(0.3, 0.7, f); a.H = 1 - smooth(0.35, 0.75, f); a.K = 0;
       st.haze = 1 - smooth(0.15, 0.65, f); st.hazeOut = smooth(0.1, 0.7, f);
-    } else if (k === 2) {   // S3 → S4: back to the whole system; the probe and its cable return
-      a.H = smooth(0.25, 0.65, f); a.K = smooth(0.3, 0.7, f);
+    } else if (k === 2) {   // S3 → S4: back to the whole system; the probe and its cable return once left of the copy
+      a.H = smooth(0.6, 0.9, f); a.K = smooth(0.74, 1, f);
       st.sway *= smooth(0.65, 1, f) * 0.6 + 0.4;
     } else if (k === 3) {   // S4 → S5: the system steps back; a white glint passes the probe (step 1: the scan)
       st.glint = 0.7 * smooth(0.6, 1, f);
@@ -398,7 +411,7 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     const az = q[3] + 2.5 * sw * lerp(u, -(0.5 + 0.5 * u), st.down), gy = q[1] - 3 * Math.sin(t * 0.8) * sw;
     const D = place(q[0], gy, q[2], az, q[4]);
     const a = qa ? { T: 1, C: 1, H: 1, K: 1 } : st.a;
-    setGroup('T', a.T); setGroup('C', a.C); setGroup('H', a.H);
+    setGroup('T', a.T); setGroup('C', a.C); setGroup('H', a.H); setGroup('B', Math.min(a.T, a.H));
     CAB.uAH.value = a.H; CAB.uAK.value = a.K; mK.visible = Math.max(a.H, a.K) > 0.004;
     // the glow behind the system (live only)
     const gl = live * st.glow; glow.visible = gl > 0.004;
@@ -409,11 +422,11 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
       const H = HAZE[i], on = i < n && hz > 0.004; m.visible = on; if (!on) return;
       const dx = H[0] - POSE[2][0], dy = H[1] - POSE[2][1], l = Math.hypot(dx, dy) || 1, out = 180 * st.hazeOut;
       const x = H[0] + dx / l * out + 24 * Math.sin(t * 0.17 + H[3]), y = H[1] + dy / l * out + 10 * Math.sin(t * 0.23 + 2 * H[3]);
-      flat(m, x, y, D + 0.35, H[2], H[2]); m.material.uniforms.uOpacity.value = 0.32 * hz;
+      flat(m, x, y, D + 0.35, H[2], H[2]); m.material.uniforms.uOpacity.value = 0.26 * hz;
     });
     // the glint: down the probe's front every 7 s
     const gA = live * st.glint * a.H, tt = t % 7;
-    glint.intensity = tt < 1.8 ? 0.9 * gA * Math.sin(Math.PI * tt / 1.8) : 0;
+    glint.intensity = tt < 1.8 ? 0.7 * gA * Math.sin(Math.PI * tt / 1.8) : 0;
     glint.position.set(0.05, lerp(0.30, -0.30, tt / 1.8), 0.10);
     const L = last; L.G[0] = q[0]; L.G[1] = gy; L.S = q[2]; L.az = az; L.el = q[4]; L.camX = D * Math.cos(rad(q[4])) * Math.sin(rad(az));
     Object.assign(L.a, a); L.haze = hz; L.glow = gl; L.glint = glint.intensity;
@@ -440,7 +453,7 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     camera.aspect = FW / 1500;
     camera.setViewOffset(FW * k, 1500 * k, OFF * k + view.box.x - view.cover.x, view.box.y - view.cover.y, view.box.w, view.box.h);
     camera.updateProjectionMatrix();
-    EDGE.uRes.value.set(canvas.width, canvas.height); EDGE.uFade.value = 60 * k * pr;
+    EDGE.uRes.value.set(canvas.width, canvas.height); EDGE.uFade.value = 60 * k * pr; SOFT.uFade.value = 240 * k * pr;
   }
   let maskMat = null;
   function render(p, view) {
@@ -476,7 +489,8 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
       G: [r1(L.G[0]), r1(L.G[1])], S: r1(L.S), az: r2(L.az), el: r2(L.el), camX: r2(L.camX), a: { T: r2(L.a.T), C: r2(L.a.C), H: r2(L.a.H), K: r2(L.a.K) },
       haze: r2(L.haze), glow: r2(L.glow), glint: r2(L.glint),
       probes: { probeFront: probe(prb, 0, 0.354 - 0.32, 0.0), panel: probe(prb, 0.03, 0.354 - 0.245, 0.0045), screen: probe(tab, -0.35, 0.194, 0.0006),
-        bezelSide: probe(tab, 0.507, 0.10, -0.015), cylinder: probe(cyl, 0.25, Math.sin(rad(10)) * CR, Math.cos(rad(10)) * CR), anchor: probe(prb, 0, 0, 0) } };
+        bezelSide: probe(tab, 0.507, 0.10, -0.015), cylinder: probe(cyl, 0.25, Math.sin(rad(10)) * CR, Math.cos(rad(10)) * CR), anchor: probe(prb, 0, 0, 0),
+        probeTop: probe(prb, 0, PT + 0.006, -0.03), probeBottom: probe(prb, 0, PB - 0.006, -0.03) } };
   }
   return { draw, kit, dispose, state, animated: true };
 }

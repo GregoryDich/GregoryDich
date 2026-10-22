@@ -11,7 +11,8 @@
 // is slowed 4× and the story is scrolled down and up twice: memory window, long tasks, frame on time after a stop.
 // Screenshots per screen, mid-run, during the landing. Any product page built by build-vtech.py: the kit callouts are
 // expected when the card lists two kinds (V-TECH), and a home-care page («טיפוח ביתי», no .badge.pro on S1) must send
-// every «איפה לקנות» to WhatsApp, not to the price form, with the offer's second button going to the specialists.
+// every «איפה לקנות» to WhatsApp, not to the price form, with the offer's second button doing what its label says (a
+// price quote: the price form, WhatsApp without JS; «WhatsApp»: WhatsApp; otherwise the specialists).
 // A page with a live three.js scene (build-vtech.py --scene): no frames are fetched or decoded; the canvas is checked
 // for drawing at the screen's pixel density instead.
 // usage: [SYNTH=<webp>] FONTDIR=<dir with Rubik[wght].ttf> NODE_PATH=$(npm root -g) node verify-live.cjs <page.html> <files dir> <out dir>
@@ -263,8 +264,12 @@ async function synthRun(browser, tag, assert) {
     if (home) {   // home care: «איפה לקנות» opens WhatsApp everywhere, the lead form only for professionals (join)
       const b = await p.evaluate(() => ['.top .btn', '#meet .cta .btn.primary', '#offer .cta .btn.primary', '.bar .btn', '#offer .cta .btn.ghost'].map(q => {
         const a = document.querySelector(q); return { h: a.getAttribute('href'), lead: a.hasAttribute('data-lead'), t: a.textContent.trim() }; }));
-      ok('desktop: home care, «איפה לקנות» opens WhatsApp (not the form), the second offer button the specialists',
-        b.slice(0, 4).every(x => /^https:\/\/wa\.me\/\d+\?text=/.test(x.h) && !x.lead && x.t === b[0].t) && b[4].h === '#specialists' && !b[4].lead, JSON.stringify(b.map(x => x.t + ' → ' + x.h.slice(0, 24))));
+      // the second offer button does what its label says (build-vtech.py offer_more, 21/10): a price quote («מחיר») opens
+      // the lead form (WhatsApp its no-JS fallback), «WhatsApp» opens WhatsApp, any other label the specialists
+      const waRe = /^https:\/\/wa\.me\/\d+\?text=/, price = /מחיר/.test(b[4].t), wa = !price && /WhatsApp/.test(b[4].t);
+      const second = price ? waRe.test(b[4].h) && b[4].lead : wa ? waRe.test(b[4].h) && !b[4].lead : b[4].h === '#specialists' && !b[4].lead;
+      ok(`desktop: home care, «איפה לקנות» opens WhatsApp (not the form), the second offer button ${price ? 'the price form' : wa ? 'WhatsApp' : 'the specialists'}`,
+        b.slice(0, 4).every(x => waRe.test(x.h) && !x.lead && x.t === b[0].t) && second, JSON.stringify(b.map(x => x.t + ' → ' + x.h.slice(0, 24) + (x.lead ? ' [form]' : ''))));
     }
     await scrollTo(p, 0); await p.click('[data-lead]');   // the first in the page: the header (pro) or the join button (home)
     const opened = await p.evaluate(() => document.getElementById('lead').open);
