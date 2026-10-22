@@ -34,6 +34,7 @@
    - EXOSIGNAL HAIR — https://claude.ai/artifact/2ws7qr1xL7Y7wp5xdbE1jh
    - EXOSIGNAL SPRAY — https://claude.ai/artifact/GAUwhjxzqdk7jEg7JgSBJz
    - EXO-NAD — https://claude.ai/artifact/NcP4v3p7KAdvqZGTnoGK8S
+   - MICRO BOOST 10% — https://claude.ai/artifact/3hwRLR8RxjcQV2oGTynari
    - CELLULAR AGE DEFENSE 2.5% — https://claude.ai/artifact/RhFJsLyLDinq2HcizL1hvq
    - MITOPEN — https://claude.ai/artifact/KAn13gS9E2on2ZikQSz4eW
    - CELL RENEW 1.5% — https://claude.ai/artifact/2rVvsAFJ9NRUjymZDmANup
