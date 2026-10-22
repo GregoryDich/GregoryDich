@@ -32,6 +32,7 @@
    - EXOCELL MASK — https://claude.ai/artifact/FA5ySxGihnDAmjQPvDftzn
    - EXOTECH GEL — https://claude.ai/artifact/LsJVky9GDssBuW1eQkLaTe
    - EXOSIGNAL HAIR — https://claude.ai/artifact/2ws7qr1xL7Y7wp5xdbE1jh
+   - EXOSIGNAL SPRAY — https://claude.ai/artifact/GAUwhjxzqdk7jEg7JgSBJz
 
    הקוד כולו: https://github.com/GregoryDich/GregoryDich/tree/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site
 
