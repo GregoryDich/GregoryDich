@@ -4,13 +4,14 @@
 // story geometry (the cover-fitted 16:10 frame, the run's box, the phone stage, the kit card); this module draws the pose
 // for the story position into the box. Objects are placed by frame pixel (2400×1500), measured on the only packshot,
 // protocols/print/img/exo-nad.webp (795×488): the brushed gold box seen square on (476 px), the square glass peel bottle
-// with its gold cap and two phases, the amber pH Normalizer and teal Longevity Serum vials with silver crimp caps.
+// with its gold cap and two phases, the pH Normalizer and Longevity Serum vials with silver crimp caps: clear glass, the
+// amber and the blue liquid filling about 70 % of them, the print small, as on the owner's photos of 22/10.
 // The story (site/story3d.json; scratchpad spec pages/exo-nad/spec.md): S1 the closed box, champagne glow behind it;
 // S2 the box deeper, its glow lower; S3 the three liquids come out from behind the box one by one and stand in a row,
 // 1-2-3 right to left (peel, pH, serum); S3 → S4 a soft light rises behind them and a shapeless champagne haze; the
 // three go small, low right, in a backlight; S4 → S5 the haze sinks, the three rise and grow in their row, each lit from
-// behind in turn as its step is read; S6–S7 the box comes forward and its sleeve lifts straight up 0.60 of its width
-// (owner photos 26 and 32), the black tray shows the peel bottle and the rows of 5 + 5 vials (photo 29): the pose that
+// behind in turn as its step is read; S6–S7 the box comes forward and its sleeve lifts straight up 0.56 of its width
+// (owner photos 26 and 32, photo A of 22/10), the black tray shows the peel bottle and the rows of 5 + 5 vials (photo 29): the pose that
 // flies into the offer card. Nothing else opens: no photo shows the caps off. The product keeps its print's colours
 // (emissive ≈ 85 % + neutral shading, toneMapped off); the line's champagne (#d8c48a) lives only around it, as soft
 // shapeless glow and haze. Only what exists is drawn (the owner, 22/10): the products and their packaging, the gold
@@ -130,19 +131,29 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // same in every pose: a broad soft highlight left of the middle, falling off to the right (the packshot's lemon to
   // bronze, at a third of its strength: there the right edge is 0.1–0.3 of the middle's luminance), the band under the
   // lid line in the sleeve's shadow (the packshot's band is darker: #a48957). The ΔE probe (u 0.5, v 0.30) sits at 1.07
+  // and its gloss (the owner's photos: a glossy foil with soft reflections): a broad softbox behind the camera, up and to
+  // the left, mirrored by the foil (the reflected view ray, in the camera's space: fixed to the studio, so it stays put as
+  // the box moves and the sleeve slides through it). Faces turned away (the walls' insides) do not see it. Normalised to
+  // 1 at the ΔE probe's reflection in every pose (S1 r ≈ (0.24, 0.04), the kit (0.25, 0.12)): it moves no print colour
+  // (the face's own normal, not the brushing's: the brushing stays fine)
+  const SHEEN = 'vec3 rv = reflect(normalize(-vViewPosition), nonPerturbedNormal); float shn = rv.z > 0.0 ? exp(-pow((rv.x - 0.19) / 0.17, 2.0) - pow((rv.y - 0.08) / 0.13, 2.0)) : 0.0;\n'
+    + '        gl_FragColor.rgb *= (1.0 + 0.45 * shn) / 1.36;';
   const foilLight = sh => {
     edgeFade(sh);
     sh.vertexShader = 'varying vec3 vBoxP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vBoxP = position;');
     sh.fragmentShader = 'varying vec3 vBoxP;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
       { float u = vBoxP.x + 0.5, v = 0.5 - vBoxP.y, du = (u - 0.36) / 0.38, dv = (v - 0.42) / 0.55;
-        gl_FragColor.rgb *= (0.82 + 0.30 * exp(-(du * du + dv * dv))) * (v > 0.879 ? 0.86 : 1.0); }`);
+        gl_FragColor.rgb *= (0.82 + 0.30 * exp(-(du * du + dv * dv))) * (v > 0.879 ? 0.86 : 1.0);
+        ${SHEEN} }`);
   };
   const lidMat = P(0xffffff, Object.assign({}, FOIL_OPTS, { color: new THREE.Color(SHADE, SHADE, SHADE), map: lidTex, emissiveMap: lidTex,
     metalnessMap: lidMetal, roughnessMap: lidMetal, roughness: 1, bumpMap: brush, bumpScale: 0.6 }), 'lid');
   const foilMats = () => P(FOIL, FOIL_OPTS, 'foil');
   lidMat.onBeforeCompile = foilLight;
   const velvet = () => P(0x1c1d1b, { roughness: 0.9, specularIntensity: 0.1, sheen: 0.4, sheenRoughness: 0.6, sheenColor: 0x3a3a38 }, 'velvet');
-  const trayGold = () => P(FOIL, Object.assign({}, FOIL_OPTS, { alphaMap: trayInk, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }), 'traygold');
+  const trayGold = () => { const m = P(FOIL, Object.assign({}, FOIL_OPTS, { alphaMap: trayInk, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }), 'traygold');
+    m.onBeforeCompile = sh => { edgeFade(sh); sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
+      { ${SHEEN} }`); }; return m; };   // the same foil, the same gloss
   // glass (HAIR's): no transmission (on a transparent canvas it cannot see the page's smoke, and a phone pays a pass for
   // it); its opacity follows Fresnel and its own highlights, so its edges and highlights read and the body stays clear
   function glassMat(side, a0, aF, aS, color = 0x0b0b0c, lit = null) {
@@ -163,18 +174,25 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     m.customProgramCacheKey = () => 'exonad-glass' + k.join() + color + (lit ? 'lit' : ''); glassMats.push(m);
     return m;
   }
-  // the vials' liquids: the packshot's front colour where the body faces the camera (within ±35° nothing changes: the
-  // ΔE probe), toward the right limb the light behind it shines through (#f18535 / #41dee1), the left limb in shadow
+  // the vials' liquids, clear and coloured: the packshot's front colour where the body faces the camera (within ±30°
+  // nothing changes: the ΔE probe), toward the right limb the light behind it shines through (#f18535 / #41dee1), the
+  // left limb in shadow; thinner toward the limbs, so what is behind shows there (alpha 0.9 → 0.55); its surface (seen
+  // from a little above, a thin ellipse) and the meniscus light
   function liquidMat(hex, limb, shade) {
-    const m = P(hex, { roughness: 0.5, specularIntensity: 0.2 }, 'liq' + hex);
+    const m = P(hex, { roughness: 0.5, specularIntensity: 0.2, depthWrite: false }, 'liq' + hex);
     const L = new THREE.Color(limb), S = new THREE.Color(shade);
     m.onBeforeCompile = sh => {
       edgeFade(sh);
       sh.uniforms.uLimb = { value: new V3(L.r, L.g, L.b) }; sh.uniforms.uShade = { value: new V3(S.r, S.g, S.b) };
-      sh.fragmentShader = 'uniform vec3 uLimb, uShade;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
-      { float nx = normal.x;
+      sh.vertexShader = 'varying float vLy;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vLy = position.y;');
+      sh.fragmentShader = 'uniform vec3 uLimb, uShade;\nvarying float vLy;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
+      { float nx = normal.x, ax = abs(nx);
         gl_FragColor.rgb = mix(gl_FragColor.rgb, uLimb, 0.85 * smoothstep(0.55, 0.85, nx) * (1.0 - smoothstep(0.93, 1.0, nx)));
-        gl_FragColor.rgb = mix(gl_FragColor.rgb, uShade, 0.8 * smoothstep(-0.55, -0.9, nx)); }`);
+        gl_FragColor.rgb = mix(gl_FragColor.rgb, uShade, 0.8 * smoothstep(-0.55, -0.9, nx));
+        gl_FragColor.rgb *= 1.0 + 0.16 * (1.0 - smoothstep(0.04, 0.15, vLy)) - 0.14 * smoothstep(0.15, ${(FILL - 0.03).toFixed(3)}, vLy);   // lit through the foot
+        float top = smoothstep(${(FILL - 0.016).toFixed(3)}, ${(FILL - 0.001).toFixed(3)}, vLy);
+        gl_FragColor.rgb = mix(gl_FragColor.rgb, mix(uLimb, vec3(1.0), 0.35), 0.55 * top);
+        gl_FragColor.a *= mix(0.9, 0.55, smoothstep(0.5, 0.97, ax)) + 0.1 * top; }`);
     };
     return m;
   }
@@ -218,11 +236,12 @@ export function createScene(THREE, { canvas, base, onLoad }) {
 
   // ---- the box, its front W × W (W = 1, scaled per pose; origin the front's centre, y up, the front at z 0): a sleeve
   // over the top 0.877 (the packshot's lid line) that lifts straight up, as in the owner's photos 26 and 32; under it
-  // the base: its front band (v 0.881…1), gold side walls up to the top, the black tray 0.05 deeper with the peel bottle
-  // and the rows of five vials (photo 29: left the peel, centres u 0.125; the rows at u 0.317 + 0.139 k, their feet at
-  // v 0.470 and 0.740); depth 0.28 W (unknown: an assumption, spec §5). The sleeve's face stands 0.006 before the base's;
+  // the base: its front band (v 0.881…1), gold side walls up to the top (0.028 W: photo A shows them as gold strips either
+  // side of the tray), the black tray 0.05 deeper with the peel bottle and the rows of five vials (photo 29: left the peel,
+  // centres u 0.129; the rows at u 0.317 + 0.139 k, their feet at v 0.470 and 0.740); depth 0.28 W (unknown: an
+  // assumption, spec §5). The sleeve's face stands 0.006 before the base's;
   // between its foot (v 0.877) and the band (0.881) the dark of the tray shows: the lid line
-  const BD = 0.28, LIDV = 0.877, BANDV = 0.881, WALL = 0.02, WX = 0.494, REC = 0.05;
+  const BD = 0.28, LIDV = 0.877, BANDV = 0.881, WALL = 0.028, WX = 0.494, REC = 0.05;
   const box = new THREE.Group(), sleeve = new THREE.Group(), trayG = new THREE.Group(); box.add(sleeve); box.add(trayG); scene.add(box);
   const yv = v => 0.5 - v;   // the front's v (0 top … 1 foot) → local y
   const foilBox = foilMats(), foilSleeve = foilMats(), velvetMat = velvet(), trayGoldMat = trayGold();
@@ -338,27 +357,43 @@ export function createScene(THREE, { canvas, base, onLoad }) {
 
   // ---- the 5 ml vial, height H_v = 1 (origin its foot's centre): a lathe of the packshot's profile (65 × 138 px): the
   // crimp cap 0.855…1 (0.89 W_v, its top rounded), the dark neck and stopper 0.76…0.848 (0.65 W_v), the shoulder from
-  // 0.68 W_v at 0.754 rounding out to the body at 0.652, the body (R 0.2355) to 0.094, the rounded foot (0.78 W_v); the
-  // liquid fills it from the shoulder; the print a band ±75° round the front, mapped flat as the packshot prints it
-  const R = 0.2355, V2 = (r, y) => new THREE.Vector2(r, y);
+  // 0.68 W_v at 0.754 rounding out to the body at 0.652, the body (R 0.2355) to 0.094, the rounded foot (0.78 W_v). Clear
+  // glass, as the owner's photos of 22/10 show it: the liquid fills about 70 % of the body (to FILL, its meniscus climbing
+  // the wall), the glass above it empty, the tray or the page seen through it; the print small, black, wrapped round the
+  // glass over the liquid (VPR: 0.62 of the packshot's flat print, which spans the whole front)
+  const R = 0.2355, V2 = (r, y) => new THREE.Vector2(r, y), FILL = 0.54, VPR = [0.232, 0.492];
   const arc = (cx, cy, r, a0, a1, n) => Array.from({ length: n + 1 }, (_, i) => { const a = a0 + (a1 - a0) * i / n; return V2(cx + r * Math.cos(a), cy + r * Math.sin(a)); });
   const shoulder = new THREE.SplineCurve([V2(R, 0.652), V2(R - 0.004, 0.69), V2(R - 0.03, 0.725), V2(0.19, 0.745), V2(0.16, 0.754), V2(0.153, 0.762)]).getPoints(24);
   const vialGlass = new THREE.LatheGeometry([V2(0, 0), V2(0.1837, 0)].concat(arc(R - 0.052, 0.052, 0.052, -Math.PI / 2 + 0.25, 0, 8), shoulder, [V2(0.153, 0.86), V2(0, 0.86)]), 72);
-  const vialLiquid = new THREE.LatheGeometry([V2(0, 0.032), V2(0.17, 0.032)].concat(arc(0.94 * R - 0.04, 0.072, 0.04, -Math.PI / 2, 0, 6),
-    shoulder.filter(p => p.y < 0.75).map(p => V2(p.x * 0.94, p.y)), [V2(0, 0.748)]), 72);
+  const RL = 0.94 * R;   // the liquid inside the wall; its top a meniscus 0.008 high at the glass
+  const vialLiquid = new THREE.LatheGeometry([V2(0, 0.032), V2(0.17, 0.032)].concat(arc(RL - 0.04, 0.072, 0.04, -Math.PI / 2, 0, 6),
+    [V2(RL, FILL + 0.008), V2(RL - 0.004, FILL + 0.003), V2(RL - 0.014, FILL + 0.0005), V2(RL - 0.03, FILL), V2(0, FILL)]), 72);
   const vialNeck = new THREE.CylinderGeometry(0.148, 0.148, 0.1, 48).translate(0, 0.805, 0);
   const RV = 0.2096, RT = 0.022;
   const vialCap = new THREE.LatheGeometry([V2(0, 0.852), V2(RV - 0.003, 0.852), V2(RV, 0.856)].concat(arc(RV - RT, 1 - RT, RT, 0, Math.PI / 2, 8), [V2(0, 1)]), 72);
-  const vialPrint = (() => {   // ±75°, h 0.28…0.70; u = x / 2R + 0.5 (flat, as seen from the front)
-    const g = new THREE.CylinderGeometry(R * 1.002, R * 1.002, 0.42, 120, 1, true, rad(-75), rad(150)).translate(0, 0.49, 0);
-    const p = g.attributes.position, uv = g.attributes.uv;
-    for (let i = 0; i < p.count; i++) uv.setX(i, 0.5 + p.getX(i) / (2 * R * 1.002));
-    return g;
+  // the print wrapped round the glass (u by angle), its arc as wide as the texture's proportions (1024 × 913 / 924 for
+  // 2R × 0.42) at the band's height: ±35° of the front
+  const vialPrint = (() => {
+    const h = VPR[1] - VPR[0], half = 0.5 * (2 * R / 0.42) * h / R;
+    return new THREE.CylinderGeometry(R * 1.003, R * 1.003, h, 64, 1, true, -half, 2 * half).translate(0, (VPR[0] + VPR[1]) / 2, 0);
   })();
+  // the vial's glass: clear, its edges and two soft tall reflections of the studio's softboxes (the key's left of the
+  // axis, the fill's right: as on the photographed vials), never over the ΔE probe on the axis
+  const vialLit = sh => {
+    sh.vertexShader = 'varying float vVy;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vVy = position.y;');
+    sh.fragmentShader = 'varying float vVy;\n' + sh.fragmentShader.replace(/(gl_FragColor\.a = clamp\([^\n]*\n)/, `$1
+      { float nx = normal.x, body = smoothstep(0.05, 0.11, vVy) * (1.0 - smoothstep(0.70, 0.76, vVy));
+        float s = body * (0.55 * exp(-pow((nx + 0.42) / 0.10, 2.0)) + 0.26 * exp(-pow((nx - 0.52) / 0.06, 2.0)));
+        // its outline: the glass seen edge-on (the walls, the shoulder) catches the room's light, so clear glass on black reads
+        float rim = 0.38 * pow(1.0 - clamp(abs(dot(nonPerturbedNormal, normalize(vViewPosition))), 0.0, 1.0), 3.0) * (1.0 - smoothstep(0.76, 0.80, vVy));
+        s += rim; gl_FragColor.rgb += vec3(s); gl_FragColor.a = max(gl_FragColor.a, s * opacity); }`);
+  };
+  const LIQ = { ph: [0xcf792c, 0xf18535, 0x6a3f1e], ls: [0x2491ad, 0x41dee1, 0x22495c] };   // front, lit limb, shaded limb
   function vialMats(kind, alU) {
-    return { back: glassMat(THREE.BackSide, 0.02, 0.3, 0.7), front: glassMat(THREE.FrontSide, 0.04, 0.55, 1.0),
-      // the packshot's #b16b2c and #277e95, as the scene renders them (its light and glass take a little: calibrated on the keys)
-      liquid: kind === 'ph' ? liquidMat(0xbd6f28, 0xf18535, 0x7c4d27) : liquidMat(0x23859f, 0x41dee1, 0x365b6f),
+    return { back: glassMat(THREE.BackSide, 0.02, 0.3, 0.7), front: glassMat(THREE.FrontSide, 0.03, 0.55, 1.0, 0x0b0b0c, vialLit),
+      // the packshot's #b16b2c and #277e95 as the liquids' colour, as the scene renders them (through the glass, the
+      // liquid not quite opaque: calibrated on the keys)
+      liquid: liquidMat(...LIQ[kind]),
       neck: neckMat(0x1d1f1f, { roughness: 0.3, specularIntensity: 0.8 }, 'vneck'), cap: metalMat(0xd9d7d3, 0.25, 0.12, alU),
       ink: ink(kind === 'ph' ? phInk : lsInk, 0x0a0908), U: alU };
   }
@@ -373,10 +408,13 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const heroes = [makePeel(scene, peelMats(faceU()), 0), makeVial(scene, vialMats('ph', faceU()), 0), makeVial(scene, vialMats('ls', faceU()), 0)];
   const H_W = [WB, 2 * R, 2 * R];   // width of each hero per unit height
   const trayU = faceU(), trayPeel = makePeel(trayG, peelMats(trayU), 104);
-  trayPeel.g.position.set(0.125 - 0.5, yv(0.732), -0.07); trayPeel.g.scale.setScalar(0.41);
+  // its foot a little below the serum row's (photo 29), its cap's top just under the circled 1 (v 0.343) that shows below
+  // the lifted sleeve's edge (photo A: v 0.877 − LIFT)
+  const PEEL_U = 0.129, PEEL_FOOT = 0.772, PEEL_K = 0.41, PEEL_PROBE = 0.165;
+  trayPeel.g.position.set(PEEL_U - 0.5, yv(PEEL_FOOT), -0.07); trayPeel.g.scale.setScalar(PEEL_K);
   // the rows of five: one instanced draw per part (the glass, neck and cap of all ten; each kind's liquid and print)
   const ROWS = [0.317, 0.456, 0.595, 0.734, 0.873], VH = 0.265;
-  const tvm = vialMats('ph', trayU), tvLs = { liquid: liquidMat(0x23859f, 0x41dee1, 0x365b6f), ink: ink(lsInk, 0x0a0908) };
+  const tvm = vialMats('ph', trayU), tvLs = { liquid: liquidMat(...LIQ.ls), ink: ink(lsInk, 0x0a0908) };
   const trayMats = Object.values(trayPeel.mats).filter(m => m.isMaterial).concat(Object.values(tvm).filter(m => m.isMaterial), [tvLs.liquid, tvLs.ink]);
   const inst = (geo, mat, rows, order) => {
     const m = new THREE.InstancedMesh(geo, mat, rows.length * 5); m.renderOrder = order; m.frustumCulled = false; trayG.add(m); let i = 0;
@@ -433,8 +471,10 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // ---- poses (frame px). The box { cx, cy: its front's centre, W: the front's width, yaw° (+: toward the copy), lift
   // (of W), a, D: depth }; a vessel { x: its axis, y: its foot, H: its height, a, D } (0 peel, 1 pH, 2 serum)
   const B = (cx, cy, W, D, lift = 0) => ({ cx, cy, W, yaw: 4, lift, a: 1, D });
+  // the kit (photo A): the sleeve slid up until its foot is at 0.56 of the open box's height (0.877 / (1 + LIFT))
+  const LIFT = 0.56;
   // S3: the closed box far behind the row, small, upper right of the peel with a gap (its left edge 900, the peel's right 838)
-  const BOX = [B(760, 790, 660, DIST + 1), B(745, 805, 607, DIST + 1), B(1000, 815, 200, DIST + 8), null, null, B(720, 900, 500, DIST + 1, 0.6)];
+  const BOX = [B(760, 790, 660, DIST + 1), B(745, 805, 607, DIST + 1), B(1000, 815, 200, DIST + 8), null, null, B(720, 900, 500, DIST + 1, LIFT)];
   const BOX_IN = B(720, 850, 200, DIST + 6);   // S5 → kit: from the depth
   const VS = (x, y, H) => ({ x, y, H });
   const ROW2 = [VS(760, 1010, 350), VS(570, 1010, 229), VS(400, 1010, 229)];
@@ -492,9 +532,9 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       st.v[0].cur = smooth(0.82, 1, f);   // step 1 is the current one as S5 settles
     } else {   // S5 → kit: the three hold while the page's step cards pass (to f ≈ 0.5), the current step lit from behind by
       // the line's light (1, 2, 3 in turn: the product itself is never dimmed); the closed box comes forward from the
-      // depth; the three step back to its middle, behind it, and dissolve; the sleeve lifts straight up 0.60 W (photos 26
+      // depth; the three step back to its middle, behind it, and dissolve; the sleeve lifts straight up LIFT W (photos 26
       // and 32). No glow round the open box: the card's picture is cut to what has alpha, and the kit is the product alone
-      const g = smooth(0.5, 0.7, f); mixBox(b, BOX_IN, BOX[5], g); b.lift = 0.6 * smooth(0.72, 0.95, f); b.a = smooth(0.5, 0.6, f);
+      const g = smooth(0.5, 0.7, f); mixBox(b, BOX_IN, BOX[5], g); b.lift = LIFT * smooth(0.72, 0.95, f); b.a = smooth(0.5, 0.6, f);
       const r = smooth(0.55, 0.75, f), Db = boxBack(b) + 0.4;
       for (let i = 0; i < 3; i++) {
         const o = setV(st.v[i], ROW4[i], 1 - r); o.x = lerp(ROW4[i].x, b.cx, r); o.y = lerp(ROW4[i].y, b.cy + b.W * 0.3, r); o.D = lerp(DIST, Db, r);
@@ -568,13 +608,14 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     last.t = t;   // QA (state()): the flakes outside the liquid at this time
   }
   function probes() {   // QA: the probe points of the ΔE checks (frame px) in the last pose drawn (state() only: no garbage per frame)
-    const b = ST.box, v = ST.v, W = lastW, tray = trayG.visible && b.lift > 0.59;
+    const b = ST.box, v = ST.v, W = lastW, tray = trayG.visible && b.lift > LIFT - 0.01;
     const pt = (o, fr) => (o.a > 0.99 ? [o.x, o.y - o.H * DIST / o.D * fr] : null);   // fr of its height above its foot
     return { foil: box.visible && b.a > 0.99 ? [b.cx, b.cy - W * (0.2 + b.lift)] : null,
-      peel: pt(v[0], LIQ1 - 0.8 * (LIQ1 - LIQ0)), ph: pt(v[1], 0.25), ls: pt(v[2], 0.25),
-      trayPeel: tray ? [b.cx + (0.125 - 0.5) * W, b.cy + (0.732 - 0.41 * (LIQ1 - 0.8 * (LIQ1 - LIQ0)) - 0.5) * W] : null,
-      trayPh: tray ? [b.cx + (ROWS[2] - 0.5) * W, b.cy + (0.470 - 0.25 * VH - 0.5) * W] : null,
-      trayLs: tray ? [b.cx + (ROWS[2] - 0.5) * W, b.cy + (0.740 - 0.25 * VH - 0.5) * W] : null };
+      // the peel's on its clear liquid under the label's last line (0.205 from the foot with its descenders)
+      peel: pt(v[0], PEEL_PROBE), ph: pt(v[1], 0.15), ls: pt(v[2], 0.15),
+      trayPeel: tray ? [b.cx + (PEEL_U - 0.5) * W, b.cy + (PEEL_FOOT - PEEL_K * PEEL_PROBE - 0.5) * W] : null,
+      trayPh: tray ? [b.cx + (ROWS[2] - 0.5) * W, b.cy + (0.470 - 0.15 * VH - 0.5) * W] : null,
+      trayLs: tray ? [b.cx + (ROWS[2] - 0.5) * W, b.cy + (0.740 - 0.15 * VH - 0.5) * W] : null };
   }
   function capFaceSet(U, o) {   // a metal's reflection turned with the object as it faces the camera
     o.updateMatrixWorld(); tmp.setFromMatrixPosition(o.matrixWorld);
