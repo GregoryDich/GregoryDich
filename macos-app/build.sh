@@ -3,6 +3,7 @@
 #   ./build.sh                  — собрать
 #   ./build.sh --run            — собрать и запустить
 #   ./build.sh --sign "Developer ID Application: ВАШЕ ИМЯ (TEAMID)"   — собрать и подписать
+#   ./scripts/release.sh        — выпуск для сайта: подпись, DMG, нотаризация, «скрепка», проверки (--help)
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -48,12 +49,18 @@ rm -rf build/bin
 
 echo "✓ Готово: $OUT"
 
-# Опциональная подпись вашим Developer ID (Apple-аккаунт разработчика)
+# Опциональная подпись вашим Developer ID (Apple-аккаунт разработчика) — только подпись, для проверки на своём
+# Mac. Выпуск для раздачи (подпись + DMG + нотаризация + «скрепка» + проверки) — scripts/release.sh.
 if [ "${1:-}" = "--sign" ]; then
   IDENTITY="${2:?Укажите Developer ID: ./build.sh --sign \"Developer ID Application: ... (TEAMID)\"}"
   echo "▸ Подпись: $IDENTITY"
-  codesign --force --deep --options runtime --sign "$IDENTITY" "$OUT"
-  codesign --verify --strict --verbose=2 "$OUT" || true
+  # Те же флаги, что в scripts/release.sh. Расширенные атрибуты (Finder, карантин) ломают подпись ресурсов.
+  # Без --deep: вложенного кода в бандле нет. Hardened runtime (--options runtime) и метка времени Apple
+  # (--timestamp, нужен интернет) обязательны для нотаризации. Исключений (entitlements) не нужно: JavaScript
+  # WKWebView исполняется в отдельном процессе WebKit (WebContent) со своими правами, а не в нашем.
+  xattr -cr "$OUT"
+  codesign --force --options runtime --timestamp --sign "$IDENTITY" "$OUT"
+  codesign --verify --deep --strict --verbose=2 "$OUT"
   echo "✓ Подписано"
 fi
 
