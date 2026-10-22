@@ -234,21 +234,24 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const spicules = new THREE.InstancedMesh(spiGeo, spiMat, NS);
   spicules.instanceMatrix.setUsage(THREE.DynamicDrawUsage); spicules.renderOrder = 30; spicules.frustumCulled = false; spicules.visible = false;
   scene.add(spicules);
-  // their places (frame px), each with its axis's angle in the picture (−: rising to the right), its tilt into depth, its
-  // length, its depth behind the field's (the long ones near, the short ones far: 95…340 px), its phase. Scattered by
-  // annealing against the owner's rule (22/10: particles never gather into a line, row, grid, ring or figure): no three
-  // centres within 40 px of one straight line over a span under 800 px (5 % of the span beyond; the phone's seven, the
-  // even ones, twice that), no three in a 70 px band across or up, no centre within 75 px of another's axis line (no
-  // dashed line), neighbours under 400 px apart turned ≥ 0.22 rad from each other (no hatching), no empty circle over
-  // 235 px among them (no hollow, no ring); centres ≥ 150 px apart, spindles ≥ 50 px clear of each other at rest and
-  // ≥ 32 px all the way in and out (none crossing into an X, + or T), the tips ≥ 60 px inside the scene box
-  const SPI = [[554, 703, -0.85, 0.37, 340, -1.0, 0.5], [821, 1101, -0.94, 0.23, 95, 3.5, 2.6],
-    [1001, 548, -0.08, 0.46, 279, 0.1, 5.3], [736, 899, -1.44, -0.43, 141, 2.7, 1.2],
-    [459, 1132, 0.2, -0.26, 155, 2.4, 3.5], [907, 708, -0.33, -0.31, 253, 0.6, 6.0],
-    [535, 985, -0.05, 0.34, 189, 1.8, 2.3], [309, 829, -1.09, 0.37, 308, -0.4, 4.8],
-    [1136, 812, -0.98, 0.23, 128, 2.9, 0.7], [1025, 368, 0.2, -0.17, 171, 2.1, 2.8],
-    [437, 411, -0.25, 0.33, 230, 1.0, 5.7], [662, 439, -0.61, -0.37, 208, 1.4, 1.6],
-    [350, 552, -0.01, -0.32, 105, 3.3, 3.7], [1122, 1015, -0.7, -0.22, 116, 3.1, 0.2]];
+  // their places (frame px), each with its axis's angle in the picture (−: rising to the right; −1.45…+0.24 rad), its
+  // tilt into depth, its length (95…340 px), its depth behind the field's (the long ones near: −1, the short ones far:
+  // +3.5), its phase. Scattered by annealing against the owner's rule (22/10: particles never gather into a line, row,
+  // grid, ring or figure), measured on this table: no three centres nearer than 36.8 px to one straight line over a
+  // span under 800 px (the 40 px asked for is past what 14 needles allow here with the rules below; over the longer
+  // spans, 826…985 px across most of the box, the thinnest is 21 px), the phone's seven (the even ones) ≥ 55 px; no
+  // three in a 60 px band across or up (no row, no column); no centre within 49 px of the axis line of another within
+  // 450 px (no dashed line); neighbours under 400 px apart turned ≥ 0.2 rad from each other (no hatching); no empty
+  // circle over 204 px among them (no hollow, no ring); centres ≥ 191 px apart; spindles ≥ 80 px clear of each other at
+  // rest (their drift included) and ≥ 50 px all the way in and out (none crossing into an X, + or T); the tips ≥ 60 px
+  // inside the scene box
+  const SPI = [[801, 361, -0.22, 0.37, 105, 3.3, 0.5], [973, 1080, -0.72, 0.23, 171, 2.1, 2.6],
+    [377, 404, -0.26, 0.46, 230, 1.0, 5.3], [1176, 968, -1.45, -0.43, 141, 2.7, 1.2],
+    [911, 649, -1.44, -0.26, 189, 1.8, 3.5], [1111, 783, -0.33, -0.31, 116, 3.1, 6.0],
+    [569, 798, 0.24, 0.34, 279, 0.1, 2.3], [264, 856, -1.08, 0.37, 95, 3.5, 4.8],
+    [539, 544, -0.02, 0.23, 128, 2.9, 0.7], [351, 1026, -0.62, -0.17, 253, 0.6, 2.8],
+    [744, 965, -0.34, 0.33, 340, -1.0, 5.7], [258, 632, -1.34, -0.37, 208, 1.4, 1.6],
+    [1142, 439, -1.15, -0.32, 155, 2.4, 3.7], [509, 1153, -0.01, -0.22, 308, -0.4, 0.2]];
   const NEAR = dz => 1 - 0.45 * clamp((dz + 1) / 4.5);   // depth −1 (the longest, near) → 1 … +3.5 (the shortest, far) → 0.55
 
   // ---- the line's light, flat to the camera in frame pixels (a plane far behind; local x = px − 1200, y = 750 − py),
