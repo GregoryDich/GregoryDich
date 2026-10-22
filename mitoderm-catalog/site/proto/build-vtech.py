@@ -76,6 +76,7 @@ EXO, PDRN = v.get('exo', True), v.get('pdrn', True)   # synthetic exosomes, PDRN
 GLASS = {'v-tech-system', 'exotech-gel', 'exosignal-hair'}   # published with the glassy cells before 22/10; every later
 CELL = 'c' if PRODUCT in GLASS else 'f'                       # page: the owner's folded exosomes only (owner 22/10)
 FOLDED_DOT = ' style="background:url(img/cells/f01-0.webp) center/120% no-repeat;border-color:transparent"'   # the S3 legend's dot
+HERO = {'hero': [[1, [0.12, 0.25, 0.46, 0.85]], [2, [0.12, 0.25, 0.40, 0.85]]]} if CELL == 'f' else {}   # no near cell over the product on S2–S3
 LINE = v.get('line', 'V-TECH FACE')   # the line's smoke: V-TECH FACE and HAIR are black and gold (design-rules), the others
 SMOKE = (f'{SITE}/design/vtech-3d/layers/vt-bg-wide.jpg' if LINE in ('V-TECH FACE', 'HAIR')   # recoloured by tools/line_smoke.py
          else f'{SITE}/design/lines/{LINE.lower()}-smoke.jpg')
@@ -225,8 +226,10 @@ if FILES:   # the page's images: smoke, logos, kit card, related products, phone
             im = Image.open(f); cap = (1024, 640, 512)[int(f[-6])]
             if im.width > cap: save(im.convert('RGBA'), f'{FILES}/img/cells/{os.path.basename(f)}', cap, quality=88, alpha_quality=92, method=6)
             else: shutil.copyfile(f, f'{FILES}/img/cells/{os.path.basename(f)}')
-    if EXO and os.path.exists(f'{src}/plate.webp'):
-        save(Image.open(f'{src}/plate.webp').convert('RGB'), f'{FILES}/img/plate.webp', 2592, quality=82, method=6)
+    plate_src = f'{SITE}/design/lines/{LINE.lower()}-plate.webp'   # the deep plate in the line's colour (tools/line_smoke.py)
+    if CELL == 'c' or LINE in ('V-TECH FACE', 'HAIR') or not os.path.exists(plate_src): plate_src = f'{src}/plate.webp'
+    if EXO and os.path.exists(plate_src):
+        save(Image.open(plate_src).convert('RGB'), f'{FILES}/img/plate.webp', 2592, quality=82, method=6)
     if EXO and PDRN and os.path.exists(f'{src}/helix.webp'):   # the DNA helix loop (animated, over black: the page screens it)
         shutil.copyfile(f'{src}/helix.webp', f'{FILES}/img/helix.webp')
     if SCENE:   # the scene's textures; the first key frame as the still (no JS, no WebGL)
@@ -265,7 +268,7 @@ ASSETS = {'__WA_PRICE__': esc(WA_MAIN), '__STILL__': STILL,
                            "  new Promise(r => setTimeout(r, 8000, null))]);\n"
                            f'// scenes/{PRODUCT}.js, inlined by build-vtech.py\n' + SRC.replace('export function createScene(', 'function createScene(', 1)) if SCENE else '',
           '__SCENE__': SCENE_INIT if SCENE else 'null',
-          '__SEQ__': json.dumps({'runs': RUNS, 'tiers': TIERS, 'cells': CELLS, 'mols': MOLS, 'helix': HELIX}, separators=(',', ':')),
+          '__SEQ__': json.dumps({'runs': RUNS, 'tiers': TIERS, 'cells': CELLS, 'mols': MOLS, 'helix': HELIX, **HERO}, separators=(',', ':')),
           # phone: three still cells around the S3 ampoules (soft and bokeh sprites, small)
           '__PH_CELLS__': ('<span class="ph-cells" aria-hidden="true">' + ''.join(
               f'<img src="img/cells/{CELLS[j % len(CELLS)]}-{s}.webp" alt="" loading="lazy" decoding="async">' for j, s in ((0, 2), (3, 1), (6, 1)))

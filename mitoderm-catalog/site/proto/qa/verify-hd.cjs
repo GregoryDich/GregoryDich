@@ -21,7 +21,7 @@ const FONT_CSS = "@font-face{font-family:'Rubik';src:url(https://fonts.gstatic.c
 const TYPES = { '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.json': 'application/json' };
 const SIZES = [{ name: 'phone 390×844 @3', w: 390, h: 844, dpr: 3 }, { name: 'laptop 1440×900 @2', w: 1440, h: 900, dpr: 2 },
   { name: 'desktop 1920×1080 @2', w: 1920, h: 1080, dpr: 2 }];
-const SOFT = (it, size) => /cells\/[cm]\d\d-[12]\.webp|plate\.webp|img\/bg\.webp/.test(it.src) || (size.w < 900 && it.el === 'canvas#gl')
+const SOFT = (it, size) => /cells\/[cmf]\d\d-[12]\.webp|plate\.webp|img\/bg\.webp/.test(it.src) || (size.w < 900 && it.el === 'canvas#gl')
   || /^canvas$/.test(it.el) && it.y === 'form';   // the form panel's smoke (MASK), painted small on purpose
 // the frame story's crop boxes, as build-vtech.py wrote them into the page ({"runs": […], "tiers": …})
 const RUNS = (() => { const i = html.indexOf('{"runs":'); if (i < 0) return [];

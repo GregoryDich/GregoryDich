@@ -10,7 +10,7 @@
 // from S1 to S3 (far ones behind the product, near ones in front of it but never over the copy or the S3 hero).
 //
 // createFrameStory({
-//   config,        // what build-vtech.py writes: { runs: [{ a, b, n, box }], tiers: [480, …], cells: ['c01', …], mols, helix }
+//   config,        // what build-vtech.py writes: { runs: [{ a, b, n, box }], tiers: [480, …], cells: ['c01', …], mols, helix, hero? }
 //   base,          // the folder that holds seq/ and img/, absolute or relative to the page ('/v-tech/'; default: the page's own)
 //   canvas,        // the fixed canvas the frames are drawn on (#seq)
 //   sections,      // the story screens in order, runs.length + 1 of them (meet, why, inside, feel, protocol, offer);
@@ -331,7 +331,7 @@ onmessage = async e => {
     ['m0', -0.56, -0.40, 4.2, 0.20, 0, 0, 18], ['m1', 0.12, 0.24, 5.8, 0.17, 0, 0, -22], ['m2', -0.30, 0.50, 3.6, 0.15, 1, 0, 26],
     ['m3', -0.88, -0.02, 6.2, 0.21, 0, 1.5, -15]];
   const VP = [0.26, 0.52], ZC = 4.2, FAR = 9, FRONT_IN = [1.9, 2.7];
-  const HERO = [[2, [0.12, 0.25, 0.40, 0.85]]];   // [screen, viewport box]: no near cell over the S3 ampoules
+  const HERO = CFG.hero || [[2, [0.12, 0.25, 0.40, 0.85]]];   // [screen, viewport box]: no near cell over the product (S3 by default)
   let cellEls = null, cellsOn = false;
   function buildCells() {
     if (cellEls || !SPRITES.length || mode === 'off' || saveData || stage || !(o.cellLayers && o.cellLayers[0] && o.cellLayers[1])) return;   // phone: no field yet (the stage clips it)
