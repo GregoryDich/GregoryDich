@@ -14,19 +14,21 @@ spacing is the photo's, not the font's. The gold monogram M is the owner's file 
   ring   the photo's colours in polar coordinates (radius × angle), smoothed along the angle (σ 3°): a smooth field (the
          drawn bevel: light at the left, dark at the lower left, is part of the print), its edges drawn sharp on the
          fitted circles (outer R = 0.10256 H, the disc's edge 0.80 R)
-  disc   the photo's silver disc with its dark strokes taken out (filled from the surrounding silver) and blurred
-         (σ 1.5 px): a soft field that keeps the faint grey «ghost» spicules
-  strokes the dark green spicules (#243523) traced as the half-contrast iso-line of the photo's stroke map: each
-         stroke's ink, measured against the local silver, is sampled smoothly at the texture's scale and cut sharp at
-         half of its own ridge's darkness (so the thin tapering ends keep their length, lighter); centre lines within
-         a pixel of the photo by construction, edges sharp at any size
+  disc   the photo's silver disc with its dark strokes taken out (filled from the silver round them) and blurred
+         (σ 1.0 px): a soft field that keeps the faint grey «ghost» spicules
+  strokes the dark green spicules (#243523) traced on the photo and drawn as vectors: each stroke found in turn (a
+         Hough vote of the stroke map, each pixel voting only along its own stroke's direction), its centre line
+         refitted to the ink (straight, or a parabola where it bends), its tips out to where the ink fades, its width
+         from the ink across it; pieces cut by crossings joined; drawn as spindles (pointed at both ends) with edges
+         anti-aliased at the texture's scale. About 60 strokes, centre lines on the photo's ink; the photo's tangle has
+         more: its faintest lines stay in the soft disc, pieces under 15 px are left out; a hand check by overlay remains
 The packaging's vector file would replace all of it one for one (a question to the owner).
 Writes into <out dir>:
   box-face.png   the front's colours, RGB 960×4040 (3.1 texels per px where the box is largest, 820 frame px in a 3840
                  key; ≤ 4096 for phones): the paper #F8EEE4, the band #132A1C, the inks and golds as pipetted
   box-metal.png  the front's material, RGB 480×2020: G roughness (paper 0.70, ink and band 0.60, gold 0.28), B metalness
                  (gold 0.60)
-usage: python3 -I make_textures.py <font dir with Rubik[wght].ttf> <out dir>"""
+usage: python3 -I make_textures.py <font dir with Rubik[wght].ttf, DejaVuSans-Bold.ttf> <out dir>"""
 import os, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -44,29 +46,33 @@ TOP, FOOT = (5.25, -0.01317), (1245.58, 0.01844)         # its top and foot: y =
 PAPER, BAND = '#F8EEE4', '#132A1C'
 BAND_V = (0.2221, 0.3102)
 # the lines: (units, weight, narrowing, cap height (H), baseline (v), colour); a unit is (glyphs, ink centre u): a
-# pair the photo merges («AT», «.1», «fl») is set as one run with the font's kerning, its ink centred on the measure
+# pair the photo merges («AT», «.1», «fl») is set as one run with the font's kerning, its ink centred on the measure.
+# Weight, narrowing, cap height and baseline of the four small lines are fitted by overlay on the photo (correlation
+# of the ink on the photo's grid ×4: 0.79–0.92 → 0.91–0.94); the lower-case lines' cap height is what their x-height
+# (0.0119 H) is in Rubik (0.75 of a cap): 0.0158
 LINES = [
     ([('M', .1576), ('I', .2468), ('T', .3232), ('O', .4230), ('D', .5285), ('E', .6277), ('R', .7297), ('M', .8434)],
      500, 0.95, 0.0219, 0.1653, '#2E3829'),
     ([(c, u) for c, u in zip('BIOSPICULEPROFESSIONAL', (.1512, .1782, .2044, .2409, .2754, .3014, .3260, .3657, .3962, .4319,
                                                          .4810, .5187, .5565, .5888, .6233, .6600, .6954, .7203, .7462, .7851, .8236, .8544))],
-     400, 0.935, 0.0102, 0.1843, '#0F0C03'),
+     440, 0.97, 0.0102, 0.1843, '#0F0C03'),
     ([(c, u) for c, u in zip('MICROBOOST10%', (.0883, .1464, .1946, .2662, .3365, .4316, .5025, .5743, .6433, .7068, .7926, .8474, .9223))],
      500, 0.88, 0.0191, 0.2766, '#CEC296'),
     ([(c, u) for c, u in zip('SPICULESERUM', (.1351, .1965, .2457, .2915, .3639, .4218, .4862, .5801, .6382, .7064, .7781, .8555))],
      400, 0.925, 0.0185, 0.3748, '#0B0900'),
     ([(c, u) for c, u in zip('Concentrated', (.2562, .3105, .3602, .4084, .4564, .5065, .5488, .5812, .6245, .6644, .7045, .7574))],
-     500, 0.845, 0.0152, 0.8004, '#222014'),
+     500, 0.875, 0.0158, 0.8004, '#222014'),
     ([(c, u) for c, u in zip('SpiculeSystem', (.2251, .2748, .3133, .3468, .3974, .4330, .4666, .5374, .5860, .6312, .6698, .7102, .7722))],
-     550, 0.835, 0.0152, 0.8262, '#232217'),
+     500, 0.88, 0.0159, 0.8262, '#232217'),
     ([(c, u) for c, u in zip('PROFESSIONAL', (.1537, .1904, .2269, .2590, .2932, .3283, .3630, .3881, .4132, .4510, .4891, .5208))]
      + [('T', .5671), ('R', .6002), ('E', .6343), ('AT', .6843), ('M', .7394), ('E', .7773), ('N', .8146), ('T', .8508)],
-     500, 0.81, 0.0104, 0.8920, '#191109'),
-    ([('3', .3000), ('m', .3533), ('l', .3853), ('℮', .4319), ('0', .4943), ('.1', .5342), ('0', .5638), ('fl', .6125),
+     440, 0.865, 0.0108, 0.8917, '#191109'),
+    ([('3', .3000), ('m', .3533), ('l', .3853), ('℮', .4319, 'sign'), ('0', .4943), ('.1', .5342), ('0', .5638), ('fl', .6125),
       ('.', .6370), ('o', .6601), ('z', .6901), ('.', .7127)],
-     400, 0.93, 0.0104, 0.9508, '#1A1209'),
+     440, 0.89, 0.0108, 0.9508, '#1A1209'),
 ]
-ESTIMATED_H = 0.0111                                     # «℮»'s ink height (H): as tall as the digits (Rubik's is 0.89 of a cap)
+ESTIMATED_H = 0.0111                                     # «℮»'s ink height (H): as tall as the digits; its shape is the
+# classic estimated sign of the photo (wide, thick and thin), DejaVu Sans Bold's, not Rubik's plain «e»
 RULES = [((0.1121, 0.8914), 0.8700), ((0.1117, 0.8912), 0.9030)]   # (u from, to), axis v; 0.0016 H of the text's ink
 RULE_T, RULE_C = 0.0016, '#191109'
 FRAME = ((0.1339, 0.8682), (0.7697, 0.8394), 0.0026, '#CDB28C')    # centre lines u, v; line width (H); gold
@@ -76,7 +82,9 @@ MED_UV, MED_R = (0.5006, 0.5171), 0.10256
 MED_PX, MED_AX = (153.07, 647.22), (131.2, 127.7)
 DISC_EDGE, RING_SMOOTH, DISC_BLUR = 0.80, 3.0, 1.0     # the disc's edge (of R), the ring's smoothing (°), the disc's blur (px)
 STROKE, STROKE_L = '#243523', 140                       # the strokes' ink; lighter than that (mean RGB) is silver
-WMAX, TIP = 3.2, 2.2                                     # a stroke's widest (photo px); its spindle: w(t) = w (1 − |2t − 1|^TIP)
+WMAX, TIP, WK, MINLEN = 4.0, 2.2, 1.35, 15             # a stroke's widest (photo px); its spindle w(t) = w (1 − |2t − 1|^TIP);
+# WK: the GPU averages light, so a thin dark line reduced in a key reads lighter than the photo's: drawn 35 % wider;
+# MINLEN: shorter pieces are a crossing's leftovers, not strokes (drawn, they read as leaves): left out
 GOLD_ROUGH, GOLD_METAL, PAPER_ROUGH, INK_ROUGH = 0.28, 0.60, 0.70, 0.60
 
 
@@ -114,7 +122,9 @@ FS = 400
 def font(path, weight):
     k = (path, weight)
     if k not in _fonts:
-        f = ImageFont.truetype(path, FS, layout_engine=ImageFont.Layout.BASIC); f.set_variation_by_axes([weight]); _fonts[k] = f
+        f = ImageFont.truetype(path, FS, layout_engine=ImageFont.Layout.BASIC)   # no ligatures: «fl» letter by letter
+        if weight: f.set_variation_by_axes([weight])
+        _fonts[k] = f
     return _fonts[k]
 
 
@@ -153,11 +163,12 @@ def place(layer, path, text, weight, cu, base, cap, narrow, ink_h=None, T=(TW, T
     np.maximum(reg, g, out=reg)
 
 
-def typeset_line(path, line, W=TW, H=TH, layer=None):
+def typeset_line(fonts, line, W=TW, H=TH, layer=None):
     units, weight, narrow, cap, base, col = line
     layer = np.zeros((H, W), np.float32) if layer is None else layer
-    for text, cu in units:
-        place(layer, path, text, weight, cu, base, cap, narrow, ink_h=ESTIMATED_H if text == '℮' else None, T=(W, H))
+    for text, cu, *f in units:
+        if f: place(layer, fonts[f[0]], text, None, cu, base, cap, 1.0, ink_h=ESTIMATED_H, T=(W, H))
+        else: place(layer, fonts['rubik'], text, weight, cu, base, cap, narrow, T=(W, H))
     return layer
 
 
@@ -193,7 +204,7 @@ def trace_strokes(D, limit=260):
         acc = np.zeros((rho.max() - off + 1, len(TH_)))
         for j in range(len(TH_)): np.add.at(acc[:, j], rho[:, j] - off, vote[:, j])
         i, j = np.unravel_index(acc.argmax(), acc.shape)
-        if acc[i, j] < 5: break
+        if acc[i, j] < 4: break
         n = np.array([C[j], S[j]]); d = np.array([-S[j], C[j]]); p0 = n * (i + off); k = np.zeros(3)
         p0 = p0 + d * ((np.array(MED_PX) - p0) @ d)   # the line's origin by the disc's centre
         prof = lambda p0, d, n, k: _profile(W, O, p0, d, n, ss, oo, k)
@@ -224,13 +235,13 @@ def trace_strokes(D, limit=260):
         if s1 - s0 < 10 or m.sum() < 3: _erase(W, p0, d, n, s0, s1, k, 1.6); continue
         integ = _integral(D, p0, d, n, ss[m], k)   # on the whole map: the pieces left between crossings are honest
         dark = float(np.clip(np.median(pk[m]), 0.45, 1.0))
-        width = float(np.clip(np.percentile(integ, 40) / dark, 1.2, WMAX))   # the ink across ÷ its darkness
+        width = float(np.clip(WK * np.percentile(integ, 50) / dark, 1.3, WMAX))   # the ink across ÷ its darkness
         out.append((p0.copy(), d.copy(), n.copy(), float(s0), float(s1), k.copy(), width, dark))
         _erase(W, p0, d, n, s0, s1, k, width / 2 + 0.5)
     return merge_strokes(out)
 
 
-def merge_strokes(st, ang=5.0, across=2.0, gap=30.0):
+def merge_strokes(st, ang=7.0, across=2.5, gap=40.0):
     """pieces of one stroke (cut where others cross it) joined: nearly the same direction, within `across` px of each
     other's line and `gap` px apart along it; the joined stroke is straight through both pieces' centre lines"""
     st = list(st); changed = True
@@ -270,7 +281,7 @@ def _profile(W, O, p0, d, n, ss, oo, k):   # along the centre line: the ridge (m
 
 def _best_run(ss, pk, gap=10.0, minlen=9.0):   # the run along the line with the most ink (gaps ≤ gap px)
     runs, s, last = [], None, None
-    for q, on in zip(ss, pk > 0.4):
+    for q, on in zip(ss, pk > 0.36):
         if not on: continue
         if s is None or q - last > gap:
             if s is not None: runs.append((s, last))
@@ -340,12 +351,13 @@ def medallion(rgb, metal):
     J = np.array([TW / XW, TH / (FOOT[0] - TOP[0] + (FOOT[1] - TOP[1]) * cxp)])
     keepa = np.ones(d.shape, np.float32)
     for p0, dd, nn, s0, s1, k, wd, dark in trace_strokes(D):
+        if s1 - s0 < MINLEN: continue   # a crossing's leftover, not a stroke: drawn it reads as a leaf
         P = np.stack([pxx - p0[0], pyy - p0[1]], -1)
         sx = P @ dd; o = P @ nn - _off(sx, k)
         m = (sx > s0 - 1) & (sx < s1 + 1) & (np.abs(o) < wd)
         if not m.any(): continue
         t_ = np.clip((sx[m] - s0) / (s1 - s0), 0, 1); hw = wd / 2 * (1 - np.abs(2 * t_ - 1) ** TIP)
-        a = np.clip(0.5 - (np.abs(o[m]) - hw) * np.linalg.norm(J * nn), 0, 1) * min(1.0, dark / 0.6)
+        a = np.clip(0.5 - (np.abs(o[m]) - hw) * np.linalg.norm(J * nn), 0, 1) * min(1.0, dark / 0.5)
         keepa[m] *= 1 - a
     cov = (1 - keepa) * np.clip((DISC_EDGE - 0.02) * R - d + 0.5, 0, 1)
     # compose: disc inside DISC_EDGE (its edge sharp), the ring field to the outer edge, the strokes on the disc
@@ -392,7 +404,7 @@ def monogram(rgb, metal):
     m[..., 1] = m[..., 1] * (1 - al) + GOLD_ROUGH * al; m[..., 2] = np.maximum(m[..., 2], GOLD_METAL * al)
 
 
-def box_face(rubik):
+def box_face(fonts):
     rgb = np.ones((TH, TW, 3), np.float32) * hexrgb(PAPER)
     metal = np.zeros((TH, TW, 3), np.float32); metal[..., 1] = PAPER_ROUGH
     full = np.ones(TW, np.float32)
@@ -400,7 +412,7 @@ def box_face(rubik):
     bv = cover1(BAND_V[0] * TH, BAND_V[1] * TH, TH)
     over(rgb, bv[:, None] * full[None, :], hexrgb(BAND)); metal[..., 1] -= (PAPER_ROUGH - INK_ROUGH) * bv[:, None]
     for line in LINES:
-        a = typeset_line(rubik, line)
+        a = typeset_line(fonts, line)
         over(rgb, a, hexrgb(line[5]))
         if line[5] == '#CEC296':   # the band's gold letters: foil
             metal[..., 1] = metal[..., 1] * (1 - a) + GOLD_ROUGH * a; metal[..., 2] = np.maximum(metal[..., 2], GOLD_METAL * a)
@@ -426,7 +438,7 @@ def box_face(rubik):
 
 if __name__ == '__main__':
     fdir, out = sys.argv[1:3]; os.makedirs(out, exist_ok=True)
-    face, mat = box_face(os.path.join(fdir, 'Rubik[wght].ttf'))
+    face, mat = box_face({'rubik': os.path.join(fdir, 'Rubik[wght].ttf'), 'sign': os.path.join(fdir, 'DejaVuSans-Bold.ttf')})
     face.save(f'{out}/box-face.png', optimize=True); mat.save(f'{out}/box-metal.png', optimize=True)
     for n in ('box-face.png', 'box-metal.png'):
         im = Image.open(f'{out}/{n}'); print(n, im.size, im.mode, os.path.getsize(f'{out}/{n}') // 1024, 'KB')
