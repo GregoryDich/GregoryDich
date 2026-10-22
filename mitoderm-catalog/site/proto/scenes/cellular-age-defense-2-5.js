@@ -14,7 +14,7 @@
 //   S2 why      CELL RENEW 1.5% (its own packshot, the same box) comes in lower left; the 2.5% box higher right
 //   S3 inside   the 1.5% box goes; the camera nears the 2.5% box's medallion, the box fades and its spicules leave the
 //               print: a shapeless cloud of spicules (site/img/spicules-macro.png's needles in the medallion's dark green)
-//               turning slowly in a green haze
+//               swaying slowly in a green haze (never turned edge-on: its needles keep their length)
 //   S4 feel     the 2.5% box comes back from the dark on the left, the cloud drifts back to its right, smaller (no drop,
 //               no skin, no people)
 //   S5 protocol the cloud goes; the 2.5% box (step 1, lower left) and DERMA RECOVERY CREAM (its packshot; step 2, higher
@@ -162,22 +162,31 @@ export function createScene(THREE, { canvas, base, onLoad }) {
         gl_FragColor.rgb = mix(gl_FragColor.rgb + vec3(0.004, 0.010, 0.002), vec3(0.30, 0.35, 0.25), 0.45 * F); }`);
   };
   spiMat.customProgramCacheKey = () => 'cad25-spicule';
-  const NS = 180, NS_PH = 90;   // all, on a phone
+  const NS = 180;   // a phone draws them all too: half of them left the cloud's edge thin enough for lone pairs
   const spicules = new THREE.InstancedMesh(spiGeo, spiMat, NS);
   spicules.instanceMatrix.setUsage(THREE.DynamicDrawUsage); spicules.renderOrder = 30; spicules.frustumCulled = false; spicules.visible = false;
   scene.add(spicules);
-  // their seeds: a soft uneven cloud (four overlapping gaussian lobes, one of them on the centre so no hollow opens
-  // there and no wreath forms round it, cut within 280 px across and 255 px up and down: no figure, no edge), an axis
-  // leaning into the picture's plane so the length reads, a length 70…220 px (more short than long), a lag
+  // their seeds: a soft uneven cloud with no stragglers. Four overlapping gaussian lobes (one on the centre, so no
+  // hollow opens there and no wreath forms round it) set its body: the needles fill the lobes' envelope (density ≥ 0.5,
+  // within 280 px across and 255 px up and down), thinning toward its edge, and each lies wholly inside it: shortened
+  // till both its ends are in, and placed again if that leaves it under 50 px (no stubs at the edge to knot into a
+  // star). So none sticks out alone and no pair crosses apart from the bunch into a drawn X, + or T (22/10). An axis
+  // leaning into the picture's plane so the length reads, a length 70…220 px (more short than long; 50 at the edge),
+  // a small lag (the needles leave the print together: stragglers in flight crossed apart too)
   const rng = (s => () => { s |= 0; s = s + 0x6d2b79f5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; })(20261023);
   const gau = () => Math.sqrt(-2 * Math.log(Math.max(1e-6, rng()))) * Math.cos(2 * Math.PI * rng());
   const unit = (zk) => { let x, y, z, n; do { x = gau(); y = gau(); z = gau() * zk; n = Math.hypot(x, y, z); } while (n < 1e-3 || Math.abs(z) > 0.6 * n); return [x / n, y / n, z / n]; };
   const LOBES = [[-170, 85, -30, 90], [140, -95, 40, 95], [-10, 10, 0, 105], [70, 135, 20, 70]];   // a drift, not a ball
+  const dens = (x, y, z) => LOBES.reduce((a, c) => { const u = (x - c[0]) / c[3], v = (y - c[1]) / (0.9 * c[3]), w = (z - c[2]) / (0.8 * c[3]); return a + Math.exp(-0.5 * (u * u + v * v + w * w)); }, 0);
   const SEED = Array.from({ length: NS }, () => {
-    let o; do { const c = LOBES[Math.floor(rng() * LOBES.length)]; o = [c[0] + gau() * c[3], c[1] + gau() * c[3] * 0.9, c[2] + gau() * c[3] * 0.8]; }
-    while (Math.hypot(o[0], o[2]) > 280 || Math.abs(o[1]) > 255);
-    const L = 70 + 150 * Math.pow(rng(), 1.6);
-    return { o, d: unit(0.4), L, lag: rng() * 0.4, ph: rng() * 6.283,
+    let o, d, h; const out = k => dens(o[0] + k * d[0], o[1] + k * d[1], o[2] + k * d[2]) < 0.5;
+    do {
+      let r; do { o = [(rng() * 2 - 1) * 280, (rng() * 2 - 1) * 255, (rng() * 2 - 1) * 280]; r = dens(...o); }
+      while (r < 0.5 || Math.hypot(o[0], o[2]) > 280 || rng() > Math.sqrt(Math.min(1, r)));
+      d = unit(0.4); h = (70 + 150 * Math.pow(rng(), 1.6)) / 2;   // half the length
+      while (h > 25 && (out(h) || out(-h))) h -= 2;
+    } while (out(h) || out(-h));
+    return { o, d, L: 2 * h, lag: rng() * 0.05, ph: rng() * 6.283,
       m: [Math.sqrt(rng()) * 0.62, rng() * 6.283, rng() * 6.283, 0.6 + 0.4 * rng()] };   // m: on the medallion: r, angle, axis angle, length
   });
   // the cloud's centre (frame px) and scale: S3 close in the middle, S4 back to the right of the box
@@ -295,7 +304,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // the instances: a spindle's matrix from its middle, its axis (unit), its length and width (world units)
   const qa = new THREE.Quaternion(), Y = new V3(0, 1, 0), sc = new V3(), mat4 = new THREE.Matrix4();
   const pos = new V3(), dir = new V3(), p0 = new V3(), d0 = new V3(), p1 = new V3(), d1 = new V3(), mq = new THREE.Quaternion();
-  function inField(s, phi, t, live, P, Dv) {   // a spicule in the cloud, turning about the upright through its centre
+  function inField(s, phi, t, live, P, Dv) {   // a spicule in the cloud, turned by phi about the upright through its centre
     const C = ST.cloud, c = Math.cos(phi), sn = Math.sin(phi), u = world(1, D_FIELD) * C[2], bob = 4 * Math.sin(t * 0.7 + s.ph) * live;
     const ox = s.o[0] * c + s.o[2] * sn, oz = -s.o[0] * sn + s.o[2] * c;
     at(C[0], C[1], D_FIELD, P); P.addScaledVector(RIGHT, ox * u).addScaledVector(UP, -(s.o[1] + bob) * u).addScaledVector(BACK, oz * u);
@@ -324,7 +333,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     // the spicules
     spicules.visible = st.mode > 0 && st.o > 0.004;
     if (spicules.visible) {
-      const n = ph ? NS_PH : NS, phi = live * t * 2 * Math.PI / 90;
+      // the cloud sways ±20° about its upright (40 s): a full turn showed its needles end-on, short strokes in a column
+      const n = NS, phi = live * rad(20) * Math.sin(t * 2 * Math.PI / 40);
       spiMat.opacity = st.o; spicules.count = n;
       for (let i = 0; i < n; i++) {
         const s = SEED[i];

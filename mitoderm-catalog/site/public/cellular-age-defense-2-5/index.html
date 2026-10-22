@@ -959,7 +959,7 @@ const THREE = await Promise.race([import('https://cdn.jsdelivr.net/npm/three@0.1
 // scenes/cellular-age-defense-2-5.js, inlined by build-vtech.py
 // CELLULAR AGE DEFENSE 2.5% live in three.js: the product page's scroll story (engine/story.js, option `scene`) drawn as a
 // real 3D scene, as the approved sample EXOTECH GEL (scenes/exotech-gel.js) and the later pages (exo-nad.js: the line's
-// light as soft shapeless glows; micro-boost-10.js: the print as one typeset face texture, the clear glass). The engine
+// light as soft shapeless glows; micro-boost-10.js: the print as one typeset face texture). The engine
 // keeps the story geometry (the cover-fitted 16:10 frame, the run's box, the phone stage, the kit card); this module draws
 // the pose for the story position into the box. Objects are placed by frame pixel (2400×1500) inside the page's scene box
 // (x 168…1248, y 285…1215: the scene left, the copy right), measured on the largest packshot,
@@ -973,9 +973,10 @@ const THREE = await Promise.race([import('https://cdn.jsdelivr.net/npm/three@0.1
 //   S2 why      CELL RENEW 1.5% (its own packshot, the same box) comes in lower left; the 2.5% box higher right
 //   S3 inside   the 1.5% box goes; the camera nears the 2.5% box's medallion, the box fades and its spicules leave the
 //               print: a shapeless cloud of spicules (site/img/spicules-macro.png's needles in the medallion's dark green)
-//               turning slowly in a green haze
-//   S4 feel     the cloud gathers into one clear drop of the serum, a few spicules suspended in it (no skin, no people)
-//   S5 protocol the drop sinks; the 2.5% box (step 1, lower left) and DERMA RECOVERY CREAM (its packshot; step 2, higher
+//               swaying slowly in a green haze (never turned edge-on: its needles keep their length)
+//   S4 feel     the 2.5% box comes back from the dark on the left, the cloud drifts back to its right, smaller (no drop,
+//               no skin, no people)
+//   S5 protocol the cloud goes; the 2.5% box (step 1, lower left) and DERMA RECOVERY CREAM (its packshot; step 2, higher
 //               right), the routine's two products, above the page's step cards; on a phone the pair centred and larger.
 //               On a desktop both go back into the dark as the cards scroll up over the scene, and the 2.5% comes forward
 //               again in the kit's pose once they have passed
@@ -983,7 +984,8 @@ const THREE = await Promise.race([import('https://cdn.jsdelivr.net/npm/three@0.1
 //               offer card
 // Left out from the spec (the owner's rule overrides it): the steps and their gold edges, the blurred floating M, the
 // contact shadow, the enlarged medallion ring and the milky disc behind the field, the five gold peptide threads and the
-// two light particles, the warm surface, the sparks and the ring wave. The boxes never open and turn only as far as the
+// two light particles, the warm surface, the sparks and the ring wave, the drop of serum (none is photographed: the
+// spec's own colour note says the product has no drop of its own). The boxes never open and turn only as far as the
 // packshots show their sides (the 2.5% and 1.5%: their right side, the view angle never above the packshot's 10°;
 // DERMA faces the camera, ≤ 0.5°); their tops stay above the horizon (frame y 601.5) and their feet below it in every
 // frame, so no unphotographed face shows. The products keep their print's colours (emissive ≈ 85 % + neutral shading,
@@ -1119,53 +1121,35 @@ function createScene(THREE, { canvas, base, onLoad }) {
         gl_FragColor.rgb = mix(gl_FragColor.rgb + vec3(0.004, 0.010, 0.002), vec3(0.30, 0.35, 0.25), 0.45 * F); }`);
   };
   spiMat.customProgramCacheKey = () => 'cad25-spicule';
-  const NS = 180, NS_PH = 90, N_IN = 50;   // all, on a phone, suspended in the drop (the first 50: a phone has them too)
+  const NS = 180;   // a phone draws them all too: half of them left the cloud's edge thin enough for lone pairs
   const spicules = new THREE.InstancedMesh(spiGeo, spiMat, NS);
   spicules.instanceMatrix.setUsage(THREE.DynamicDrawUsage); spicules.renderOrder = 30; spicules.frustumCulled = false; spicules.visible = false;
   scene.add(spicules);
-  // their seeds: a soft uneven cloud (four overlapping gaussian lobes, cut within 280 px across and 255 px up and down:
-  // no figure, no edge), an axis leaning into the picture's
-  // plane so the length reads, a length 70…220 px (more short than long), a lag; inside the drop a place and a shorter length
-  const rng = (s => () => { s |= 0; s = s + 0x6d2b79f5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; })(20261022);
+  // their seeds: a soft uneven cloud with no stragglers. Four overlapping gaussian lobes (one on the centre, so no
+  // hollow opens there and no wreath forms round it) set its body: the needles fill the lobes' envelope (density ≥ 0.5,
+  // within 280 px across and 255 px up and down), thinning toward its edge, and each lies wholly inside it: shortened
+  // till both its ends are in, and placed again if that leaves it under 50 px (no stubs at the edge to knot into a
+  // star). So none sticks out alone and no pair crosses apart from the bunch into a drawn X, + or T (22/10). An axis
+  // leaning into the picture's plane so the length reads, a length 70…220 px (more short than long; 50 at the edge),
+  // a small lag (the needles leave the print together: stragglers in flight crossed apart too)
+  const rng = (s => () => { s |= 0; s = s + 0x6d2b79f5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; })(20261023);
   const gau = () => Math.sqrt(-2 * Math.log(Math.max(1e-6, rng()))) * Math.cos(2 * Math.PI * rng());
   const unit = (zk) => { let x, y, z, n; do { x = gau(); y = gau(); z = gau() * zk; n = Math.hypot(x, y, z); } while (n < 1e-3 || Math.abs(z) > 0.6 * n); return [x / n, y / n, z / n]; };
-  const LOBES = [[-130, 50, -30, 95], [100, -70, 40, 105], [40, 110, 0, 90], [-40, -120, 60, 80]];   // a drift, not a ball
+  const LOBES = [[-170, 85, -30, 90], [140, -95, 40, 95], [-10, 10, 0, 105], [70, 135, 20, 70]];   // a drift, not a ball
+  const dens = (x, y, z) => LOBES.reduce((a, c) => { const u = (x - c[0]) / c[3], v = (y - c[1]) / (0.9 * c[3]), w = (z - c[2]) / (0.8 * c[3]); return a + Math.exp(-0.5 * (u * u + v * v + w * w)); }, 0);
   const SEED = Array.from({ length: NS }, () => {
-    let o; do { const c = LOBES[Math.floor(rng() * LOBES.length)]; o = [c[0] + gau() * c[3], c[1] + gau() * c[3] * 0.9, c[2] + gau() * c[3] * 0.8]; }
-    while (Math.hypot(o[0], o[2]) > 280 || Math.abs(o[1]) > 255);
-    const L = 70 + 150 * Math.pow(rng(), 1.6);
-    let q; do { q = [rng() * 2 - 1, rng() * 2 - 1, rng() * 2 - 1]; } while (Math.hypot(q[0], q[1], q[2]) > 1);
-    return { o, d: unit(0.4), L, lag: rng() * 0.4, ph: rng() * 6.283, in: q.map(v => v * 0.62), Lin: Math.min(0.45 * L, 0.72),   // Lin: of the drop's R
-      din: unit(0.6), m: [Math.sqrt(rng()) * 0.62, rng() * 6.283, rng() * 6.283, 0.6 + 0.4 * rng()] };   // m: on the medallion: r, angle, axis angle, length
+    let o, d, h; const out = k => dens(o[0] + k * d[0], o[1] + k * d[1], o[2] + k * d[2]) < 0.5;
+    do {
+      let r; do { o = [(rng() * 2 - 1) * 280, (rng() * 2 - 1) * 255, (rng() * 2 - 1) * 280]; r = dens(...o); }
+      while (r < 0.5 || Math.hypot(o[0], o[2]) > 280 || rng() > Math.sqrt(Math.min(1, r)));
+      d = unit(0.4); h = (70 + 150 * Math.pow(rng(), 1.6)) / 2;   // half the length
+      while (h > 25 && (out(h) || out(-h))) h -= 2;
+    } while (out(h) || out(-h));
+    return { o, d, L: 2 * h, lag: rng() * 0.05, ph: rng() * 6.283,
+      m: [Math.sqrt(rng()) * 0.62, rng() * 6.283, rng() * 6.283, 0.6 + 0.4 * rng()] };   // m: on the medallion: r, angle, axis angle, length
   });
-  const FIELD = [680, 750], DROP = [690, 720, 220];   // the cloud's centre (frame px), the drop's centre and radius
-
-  // ---- the drop of serum: clear, without transmission (on the transparent canvas it would not see the page's smoke;
-  // a phone pays a pass for it), no clearcoat (one program on a phone and a desktop alike). Almost no body of its own:
-  // what shows is the studio's bright panels and the key in it (the dim dome's reflection, which ran round the whole
-  // edge as a closed ring, is held back: its threshold rises with the Fresnel term) and a faint light gathered low on
-  // the side away from the key, as a clear drop focuses it; no outline is drawn
-  const glass = (base0, rim, glow) => {
-    const u = { uFade: { value: 1 }, uBase: { value: base0 }, uRim: { value: rim }, uGlow: { value: glow } };
-    const m = new THREE.MeshPhysicalMaterial({ color: 0x000000, metalness: 0, roughness: 0.22, specularIntensity: 1,
-      envMapIntensity: 1.3, transparent: true, depthWrite: false, toneMapped: false });
-    m.onBeforeCompile = sh => {
-      Object.assign(sh.uniforms, u);
-      sh.fragmentShader = 'uniform float uFade, uBase, uRim, uGlow;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
-        { float c = clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), F = pow(1.0 - c, 3.0);
-          vec3 spec = gl_FragColor.rgb; float k = smoothstep(0.05 + 0.4 * F, 0.22 + 0.8 * F, max(max(spec.r, spec.g), spec.b));
-          spec *= k;   // the panels and the key only
-          float body = uBase + uRim * F * k + uGlow * pow(max(dot(normal, vec3(0.45, -0.6, 0.66)), 0.0), 4.0) * (1.0 - F);
-          float a = clamp(body + 0.9 * max(max(spec.r, spec.g), spec.b), 0.0, 0.95);
-          gl_FragColor = vec4((spec + vec3(0.93, 0.95, 0.94) * body) / max(a, 1e-3), a * uFade); }`);
-    };
-    m.customProgramCacheKey = () => 'cad25-glass'; m.userData.u = u; return m;
-  };
-  const dropBack = glass(0, 0.1, 0), dropFront = glass(0, 0.25, 0.1);
-  dropBack.side = THREE.BackSide; dropFront.side = THREE.FrontSide;
-  const dropGeo = new THREE.SphereGeometry(1, 64, 48);
-  const dropB = new THREE.Mesh(dropGeo, dropBack), dropF = new THREE.Mesh(dropGeo, dropFront);
-  dropB.renderOrder = 20; dropF.renderOrder = 50; dropB.visible = dropF.visible = false; scene.add(dropB, dropF);
+  // the cloud's centre (frame px) and scale: S3 close in the middle, S4 back to the right of the box
+  const FIELD = [680, 750, 1], FIELD4 = [870, 690, 0.6];
 
   // ---- the line's light, flat to the camera in frame pixels (a plane far behind; local x = px − 1200, y = 750 − py),
   // drawn first: soft shapeless glows, nothing drawn. Each glow adds its colour (× its alpha) and keeps a true alpha, a
@@ -1192,14 +1176,14 @@ function createScene(THREE, { canvas, base, onLoad }) {
     const u = m.material.uniforms; u.uS.value.set(cx, cy, rx, ry); u.uB.value.set(cx - rx, cy - ry, cx + rx, cy + ry); u.uA.value = a; m.visible = a > 0.004;
   };
   const glows = [spot(1), spot(1), spot(1)];   // behind each box shown (the 2.5%, the 1.5%, DERMA)
-  const haze = spot(2);                        // behind the spicules' cloud and the drop
+  const haze = spot(2);                        // behind the spicules' cloud
 
   // ---- poses (frame px). A box [cx, cy: its front's middle, H: its front's height]; every top above the horizon
   // (601.5) and every foot below it in every frame (the poses and their straight mixes keep them so). Where the 2.5%
   // box stands opaque its front is at most 637 frame px tall: 1019 px in a 3840 key (a 1920 px wide screen at DPR 2),
   // the packshot's own front, so its medallion (the print's picture, from the photo) is never drawn above the photo's
   // pixels; a larger box waits for the packaging's print file
-  const HERO = [[660, 700, 637], [800, 700, 560], null, null, [420, 555, 430], [680, 740, 637]];
+  const HERO = [[660, 700, 637], [800, 700, 560], null, [440, 700, 600], [420, 555, 430], [680, 740, 637]];
   // S5, the routine's two products: the 2.5% (step 1) lower left, DERMA (step 2) higher right, its foot 0.17 of the
   // 2.5%'s height above the 2.5%'s foot. DERMA: 0.65 of the 2.5% box's height (assumed)
   const RENEW = [450, 810, 560], DERMA = [700, 555, 280];
@@ -1211,14 +1195,15 @@ function createScene(THREE, { canvas, base, onLoad }) {
   // the kit's glow (S6–S7 and the offer card's picture, which is cut to what has alpha): within the box's height, about
   // twice its width, so the card's picture is the box in its light, not a narrow strip in an empty card
   const KIT_GLOW = 0.6;
-  const ST = { hero: [0, 0, 0, 0], renew: [0, 0, 0, 0], derma: [0, 0, 0, 0], mode: 0, e: 0, g: 0, o: 0, drop: [0, 0, 0, 0],
-    glow: [0, 0, 0], haze: 0, hazeAt: [0, 0, 0, 0] };   // mode: 0 none, 1 leaving the medallion (e), 2 the cloud gathering into the drop (g), 3 in the drop
+  const ST = { hero: [0, 0, 0, 0], renew: [0, 0, 0, 0], derma: [0, 0, 0, 0], mode: 0, e: 0, o: 0, cloud: [0, 0, 1],
+    glow: [0, 0, 0], haze: 0, hazeAt: [0, 0, 0, 0] };   // mode: 0 none, 1 leaving the medallion (e), 2 the cloud (at `cloud`: x, y, scale)
   const set4 = (o, x, y, H, a) => { o[0] = x; o[1] = y; o[2] = H; o[3] = a; return o; };
   const mixPose = (o, A, B, s, a) => set4(o, lerp(A[0], B[0], s), lerp(A[1], B[1], s), lerp(A[2], B[2], s), a);
+  const setCloud = (A, B, s) => { const c = ST.cloud; for (let i = 0; i < 3; i++) c[i] = lerp(A[i], B[i], s); return c; };
   function story(p, ph) {
     const k = Math.min(4, Math.floor(p)), f = p - k, st = ST, H4 = ph ? HERO4_PH : HERO[4], DM = ph ? DERMA_PH : DERMA;
-    set4(st.hero, 0, 0, 1, 0); set4(st.renew, 0, 0, 1, 0); set4(st.derma, 0, 0, 1, 0); set4(st.drop, DROP[0], DROP[1], DROP[2], 0);
-    st.mode = 0; st.e = st.g = st.o = 0; st.glow[0] = st.glow[1] = st.glow[2] = 0; st.haze = 0;
+    set4(st.hero, 0, 0, 1, 0); set4(st.renew, 0, 0, 1, 0); set4(st.derma, 0, 0, 1, 0); setCloud(FIELD, FIELD, 0);
+    st.mode = 0; st.e = st.o = 0; st.glow[0] = st.glow[1] = st.glow[2] = 0; st.haze = 0;
     if (p >= 5) { mixPose(st.hero, HERO[5], HERO[5], 0, 1); st.glow[0] = KIT_GLOW; return st; }   // the kit: exactly the pose
     if (k === 0) {   // S1 → S2: the 2.5% box steps back and up right; the 1.5% comes in from the left, from the dark
       mixPose(st.hero, HERO[0], HERO[1], smooth(0.05, 0.8, f), 1);
@@ -1234,18 +1219,19 @@ function createScene(THREE, { canvas, base, onLoad }) {
       st.mode = 1; st.e = clamp((f - 0.12) / 0.7); st.o = st.e > 0 ? 1 : 0;   // they leave while the box is still there
       st.glow[0] = 0.55 * (1 - smooth(0, 0.4, f)); st.glow[1] = 0.55 * (1 - s);
       st.haze = 0.75 * smooth(0.35, 1, f); set4(st.hazeAt, FIELD[0], FIELD[1], 480, 450);
-    } else if (k === 2) {   // S3 → S4: the cloud gathers into a clear drop: fifty spicules stay suspended in it, the rest go in
-      st.mode = 2; st.g = f; st.o = 1;
-      const a = smooth(0.3, 0.75, f); set4(st.drop, DROP[0], DROP[1], DROP[2] * (0.75 + 0.25 * smooth(0.3, 0.9, f)), a);
-      st.haze = 0.75; set4(st.hazeAt, lerp(FIELD[0], DROP[0], f), lerp(FIELD[1], DROP[1], f), lerp(480, 400, f), lerp(450, 400, f));
-    } else if (k === 3) {   // S4 → S5: the drop sinks and goes; the 2.5% box and DERMA come in from the dark, side by side
-      const s = smooth(0, 0.35, f); st.mode = 3; st.o = 1 - s;
-      set4(st.drop, DROP[0], DROP[1] + 100 * s, DROP[2], 1 - s);
-      st.haze = 0.75 * (1 - s); set4(st.hazeAt, DROP[0], DROP[1] + 100 * s, 400, 400);
-      const h = smooth(0.3, 0.7, f), d = smooth(0.45, 0.8, f);
-      set4(st.hero, H4[0], H4[1], H4[2] * (0.9 + 0.1 * h), h);
+    } else if (k === 2) {   // S3 → S4: the cloud drifts back to the right, smaller; then the 2.5% box comes back from the
+      // dark on its left (clear of the cloud: the box enters once the cloud has moved)
+      const s = smooth(0, 0.6, f), h = smooth(0.4, 0.9, f), c = setCloud(FIELD, FIELD4, s);
+      st.mode = 2; st.o = 1;
+      set4(st.hero, HERO[3][0] - 100 * (1 - h), HERO[3][1], HERO[3][2], h); st.glow[0] = 0.6 * h;
+      st.haze = lerp(0.75, 0.5, s); set4(st.hazeAt, c[0], c[1], 480 * c[2], 450 * c[2]);
+    } else if (k === 3) {   // S4 → S5: the cloud fades where it is; the 2.5% box takes step 1 and DERMA comes in from the dark
+      const s = smooth(0, 0.35, f), d = smooth(0.45, 0.8, f), c = setCloud(FIELD4, FIELD4, 0);
+      st.mode = 2; st.o = 1 - s;
+      st.haze = 0.5 * (1 - s); set4(st.hazeAt, c[0], c[1], 480 * c[2], 450 * c[2]);
+      const m = smooth(0.1, 0.7, f); mixPose(st.hero, HERO[3], H4, m, 1);
       set4(st.derma, DM[0], DM[1], DM[2] * (0.9 + 0.1 * d), d);
-      st.glow[0] = 0.5 * smooth(0.5, 1, f); st.glow[2] = 0.5 * smooth(0.6, 1, f);
+      st.glow[0] = lerp(0.6, 0.5, m); st.glow[2] = 0.5 * smooth(0.6, 1, f);
     } else if (ph) {   // S5 → kit on a phone (the copy scrolls under the stage): both hold, DERMA goes, the 2.5% comes forward
       const d = smooth(0.45, 0.7, f); set4(st.derma, DM[0], DM[1], DM[2] * (1 - 0.1 * d), 1 - d);
       mixPose(st.hero, H4, HERO[5], smooth(0.5, 1, f), 1);
@@ -1276,23 +1262,14 @@ function createScene(THREE, { canvas, base, onLoad }) {
   const local = (B, x, y, z, out) => frameOf(tmp.set(x, y, z).applyMatrix4(B.g.matrixWorld), out);
   // the instances: a spindle's matrix from its middle, its axis (unit), its length and width (world units)
   const qa = new THREE.Quaternion(), Y = new V3(0, 1, 0), sc = new V3(), mat4 = new THREE.Matrix4();
-  const pos = new V3(), dir = new V3(), p0 = new V3(), d0 = new V3(), p1 = new V3(), d1 = new V3(), cen = new V3(), mq = new THREE.Quaternion();
-  const ends = { n: 0, box: [0, 0, 0, 0] };   // QA: the cloud's projected tips, the last frame drawn
-  function inField(s, phi, t, live, P, Dv) {   // a spicule in the cloud, turning about the upright through its centre
-    const c = Math.cos(phi), sn = Math.sin(phi), u = world(1, D_FIELD), bob = 4 * Math.sin(t * 0.7 + s.ph) * live;
+  const pos = new V3(), dir = new V3(), p0 = new V3(), d0 = new V3(), p1 = new V3(), d1 = new V3(), mq = new THREE.Quaternion();
+  function inField(s, phi, t, live, P, Dv) {   // a spicule in the cloud, turned by phi about the upright through its centre
+    const C = ST.cloud, c = Math.cos(phi), sn = Math.sin(phi), u = world(1, D_FIELD) * C[2], bob = 4 * Math.sin(t * 0.7 + s.ph) * live;
     const ox = s.o[0] * c + s.o[2] * sn, oz = -s.o[0] * sn + s.o[2] * c;
-    at(FIELD[0], FIELD[1], D_FIELD, P); P.addScaledVector(RIGHT, ox * u).addScaledVector(UP, -(s.o[1] + bob) * u).addScaledVector(BACK, oz * u);
+    at(C[0], C[1], D_FIELD, P); P.addScaledVector(RIGHT, ox * u).addScaledVector(UP, -(s.o[1] + bob) * u).addScaledVector(BACK, oz * u);
     const dx = s.d[0] * c + s.d[2] * sn, dz = -s.d[0] * sn + s.d[2] * c;
     Dv.set(0, 0, 0).addScaledVector(RIGHT, dx).addScaledVector(UP, -s.d[1]).addScaledVector(BACK, dz).normalize();
     return s.L * u;
-  }
-  function inDrop(s, phi, P, Dv, dy) {   // a spicule suspended in the drop, turning with it
-    const c = Math.cos(phi), sn = Math.sin(phi), R = ST.drop[2], u = world(1, D_FIELD);
-    const ox = (s.in[0] * c + s.in[2] * sn) * R, oz = (-s.in[0] * sn + s.in[2] * c) * R;
-    at(DROP[0], DROP[1] + dy, D_FIELD, P); P.addScaledVector(RIGHT, ox * u).addScaledVector(UP, -s.in[1] * R * u).addScaledVector(BACK, oz * u);
-    const dx = s.din[0] * c + s.din[2] * sn, dz = -s.din[0] * sn + s.din[2] * c;
-    Dv.set(0, 0, 0).addScaledVector(RIGHT, dx).addScaledVector(UP, -s.din[1]).addScaledVector(BACK, dz).normalize();
-    return s.Lin * R * u;
   }
   function onPrint(s, P, Dv) {   // a spicule lying on the 2.5% box's medallion, as printed
     const r = s.m[0] * MED[2], x = (MED[0] - 0.5) * BW + r * Math.cos(s.m[1]), y = (0.5 - MED[1]) + r * Math.sin(s.m[1]);
@@ -1312,38 +1289,20 @@ function createScene(THREE, { canvas, base, onLoad }) {
       if (a > 0.004 && B.g.visible) setSpot(glows[i], B.x, B.y, 1.9 * B.W * B.H, 0.62 * B.H, a); else glows[i].visible = false;
     }
     setSpot(haze, st.hazeAt[0], st.hazeAt[1], st.hazeAt[2], st.hazeAt[3], st.haze);
-    // the drop
-    const dr = st.drop[2], da = st.drop[3];
-    dropB.visible = dropF.visible = da > 0.004;
-    if (dropB.visible) {
-      at(st.drop[0], st.drop[1], D_FIELD, dropB.position); dropF.position.copy(dropB.position);
-      const R = world(dr, D_FIELD), w = 0.012 * Math.sin(t * 1.3) * live;
-      dropB.scale.set(R * (1 + w), R * (1.05 - w), R * (1 + w)); dropF.scale.copy(dropB.scale);
-      dropBack.userData.u.uFade.value = dropFront.userData.u.uFade.value = da;
-    }
     // the spicules
     spicules.visible = st.mode > 0 && st.o > 0.004;
-    ends.n = 0; ends.box[0] = ends.box[1] = Infinity; ends.box[2] = ends.box[3] = -Infinity;
     if (spicules.visible) {
-      const n = ph ? NS_PH : NS, phi = live * t * 2 * Math.PI / 90, phiD = live * t * 2 * Math.PI / 40, dy = st.drop[1] - DROP[1];
+      // the cloud sways ±20° about its upright (40 s): a full turn showed its needles end-on, short strokes in a column
+      const n = NS, phi = live * rad(20) * Math.sin(t * 2 * Math.PI / 40);
       spiMat.opacity = st.o; spicules.count = n;
       for (let i = 0; i < n; i++) {
-        const s = SEED[i], inner = i < N_IN;
+        const s = SEED[i];
         let L, vis = 1;
         if (st.mode === 1) {
           const q = smooth(0, 1, (st.e - s.lag) / 0.6);
           const La = onPrint(s, p0, d0), Lb = inField(s, phi, t, live, p1, d1);
           pos.lerpVectors(p0, p1, q); dir.lerpVectors(d0, d1, q).normalize(); L = lerp(La, Lb, q); vis = smooth(0, 0.12, q);
-        } else if (st.mode === 2) {
-          const g = smooth(0, 1, (st.g - 0.05 - s.lag * 0.5) / 0.55);
-          const La = inField(s, phi, t, live, p0, d0);
-          let Lb = 0;
-          if (inner) Lb = inDrop(s, phiD, p1, d1, dy); else { at(DROP[0], DROP[1], D_FIELD, p1); d1.copy(d0); }
-          pos.lerpVectors(p0, p1, g); dir.lerpVectors(d0, d1, g).normalize(); L = lerp(La, Lb, g); vis = inner ? 1 : 1 - smooth(0.55, 1, g);
-        } else {
-          if (!inner) { mat4.makeScale(0, 0, 0); spicules.setMatrixAt(i, mat4); continue; }
-          L = inDrop(s, phiD, pos, dir, dy);
-        }
+        } else L = inField(s, phi, t, live, pos, dir);
         L *= vis;
         if (L < 1e-5) { mat4.makeScale(0, 0, 0); spicules.setMatrixAt(i, mat4); continue; }
         qa.setFromUnitVectors(Y, dir); sc.set(L / 18, L, L / 18); mat4.compose(pos, qa, sc); spicules.setMatrixAt(i, mat4);
@@ -1431,7 +1390,6 @@ function createScene(THREE, { canvas, base, onLoad }) {
   const state = () => ({ quality: pr, cap, capped, pixelRatio: renderer.getPixelRatio(), width: canvas.width, height: canvas.height, renders, loaded,
     version, kits, lastP, horizon: r1(HORIZON), hero: boxState(hero), renew: boxState(renew), derma: boxState(derma),
     field: { n: last.n, o: r2(spicules.visible ? spiMat.opacity : 0), bbox: cloudBox() },
-    drop: dropB.visible ? { x: r1(ST.drop[0]), y: r1(ST.drop[1]), R: r1(ST.drop[2]), a: r2(ST.drop[3]) } : null,
     glow: glows.map(g => r2(g.visible ? g.material.uniforms.uA.value : 0)), haze: r2(haze.visible ? haze.material.uniforms.uA.value : 0),
     probes: { hero: probes(hero, [0.30, 0.70, 0.47, 0.505], [0.10, 0.90, 0.335, 0.352]), renew: probes(renew, [0.30, 0.70, 0.485, 0.51], [0.06, 0.20, 0.30, 0.34]),
       derma: probes(derma, [0.05, 0.25, 0.58, 0.72], [0.03, 0.11, 0.37, 0.46]) } });
