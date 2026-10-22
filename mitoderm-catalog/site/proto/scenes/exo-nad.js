@@ -345,10 +345,18 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const H_W = [WB, 2 * R, 2 * R];   // width of each hero per unit height
   const trayU = faceU(), trayPeel = makePeel(trayG, peelMats(trayU), 104);
   trayPeel.g.position.set(0.125 - 0.5, yv(0.732), -0.07); trayPeel.g.scale.setScalar(0.41);
+  // the rows of five: one instanced draw per part (the glass, neck and cap of all ten; each kind's liquid and print)
   const ROWS = [0.317, 0.456, 0.595, 0.734, 0.873], VH = 0.265;
-  const trayVials = ['ph', 'ls'].map((kind, r) => ROWS.map(u => {
-    const v = makeVial(trayG, vialMats(kind, trayU), 104); v.g.position.set(u - 0.5, yv(r ? 0.740 : 0.470), -0.07); v.g.scale.setScalar(VH); return v;
-  })).flat();
+  const tvm = vialMats('ph', trayU), tvLs = { liquid: liquidMat(0x23859f, 0x41dee1, 0x365b6f), ink: ink(lsInk, 0x0a0908) };
+  const trayMats = Object.values(trayPeel.mats).filter(m => m.isMaterial).concat(Object.values(tvm).filter(m => m.isMaterial), [tvLs.liquid, tvLs.ink]);
+  const inst = (geo, mat, rows, order) => {
+    const m = new THREE.InstancedMesh(geo, mat, rows.length * 5); m.renderOrder = order; m.frustumCulled = false; trayG.add(m); let i = 0;
+    for (const r of rows) for (const u of ROWS) m.setMatrixAt(i++, m4.compose(tmpP.set(u - 0.5, yv(r ? 0.740 : 0.470), -0.07), tmpQ, tmpS.setScalar(VH)));
+    return m;
+  };
+  const tmpP = new V3(), tmpQ = new THREE.Quaternion(), tmpS = new V3();
+  [[vialGlass, tvm.back, [0, 1]], [vialLiquid, tvm.liquid, [0]], [vialLiquid, tvLs.liquid, [1]], [vialNeck, tvm.neck, [0, 1]], [vialCap, tvm.cap, [0, 1]],
+    [vialGlass, tvm.front, [0, 1]], [vialPrint, tvm.ink, [0]], [vialPrint, tvLs.ink, [1]]].forEach(([g, m, rows], j) => inst(g, m, rows, 112 + j));
 
   // ---- the line's graphics, flat to the camera in frame pixels (a plane at a depth; local x = px − 1200, y = 750 − py),
   // always behind the products and drawn before them; the spray's strokes (a soft edge, ≥ 1.5 device px) and glows
@@ -490,7 +498,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // the state, written in place on every frame (nothing allocated per frame)
   const ves = () => ({ x: 0, y: 0, H: 1, a: 0, D: DIST });
   const ST = { box: { cx: 0, cy: 0, W: 1, yaw: 4, lift: 0, a: 0, D: DIST + 1 }, v: [ves(), ves(), ves()], halo: 0, haloExt: 0.08,
-    dust: 0, fade: 0, wave: 0, line: 0, pa: 0, vglow: 0, back: 0, veil: 0, draw: 0, marks: 0, ringA: 0, circ: 0, strokesA: 0 };
+    dust: 0, fade: 0, wave: 0, line: 0, pa: 0, vglow: 0, back: 0, veil: 0, draw: 0, marks: 0, circ: 0, strokesA: 0 };
   const setBox = (o, s, a = 1) => { o.cx = s.cx; o.cy = s.cy; o.W = s.W; o.yaw = s.yaw; o.lift = s.lift; o.D = s.D; o.a = a; return o; };
   const mixBox = (o, a, b, s) => { o.cx = lerp(a.cx, b.cx, s); o.cy = lerp(a.cy, b.cy, s); o.W = lerp(a.W, b.W, s); o.D = lerp(a.D, b.D, s); o.yaw = lerp(a.yaw, b.yaw, s); o.lift = lerp(a.lift, b.lift, s); return o; };
   const setV = (o, s, a = 1, D = DIST) => { o.x = s.x; o.y = s.y; o.H = s.H; o.a = a; o.D = D; return o; };
@@ -500,7 +508,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   function story(p) {   // the state at story position p
     const k = Math.min(4, Math.floor(p)), f = p - k, st = ST, b = st.box;
     setBox(b, BOX[0], 0); for (let i = 0; i < 3; i++) setV(st.v[i], ROW2[i], 0);
-    st.halo = st.dust = st.fade = st.wave = st.line = st.vglow = st.back = st.veil = st.draw = st.marks = st.ringA = st.circ = st.strokesA = 0;
+    st.halo = st.dust = st.fade = st.wave = st.line = st.vglow = st.back = st.veil = st.draw = st.marks = st.circ = st.strokesA = 0;
     st.pa = 0; st.haloExt = 0.08;
     if (k === 0) {   // S1 → S2: the box steps back (0.92), still closed, its colours unchanged; the glow behind it to 40 %; the
       // sparks dull to grey dust and begin to settle; the rest of the dust comes in
@@ -571,7 +579,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       for (const m of boxMats) { m.opacity = b.a; m.depthWrite = b.a > 0.99 && m !== trayGoldMat; }
     }
     if (trayG.visible) {   // the tray's contents take the box's opacity
-      for (const v of [trayPeel, ...trayVials]) for (const k in v.mats) if (v.mats[k].isMaterial) v.mats[k].opacity = b.a;
+      for (const m of trayMats) m.opacity = b.a;
       capFaceSet(trayU, box);
     }
     // the three, drawn back to front; each faces the camera, swaying ±3° (the peel is square: its sides barely show)
