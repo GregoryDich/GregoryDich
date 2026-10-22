@@ -466,7 +466,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 // from S1 to S3 (far ones behind the product, near ones in front of it but never over the copy or the S3 hero).
 //
 // createFrameStory({
-//   config,        // what build-vtech.py writes: { runs: [{ a, b, n, box }], tiers: [480, …], cells: ['c01', …], mols, helix }
+//   config,        // what build-vtech.py writes: { runs: [{ a, b, n, box }], tiers: [480, …], cells: ['c01', …], mols, helix, hero? }
 //   base,          // the folder that holds seq/ and img/, absolute or relative to the page ('/v-tech/'; default: the page's own)
 //   canvas,        // the fixed canvas the frames are drawn on (#seq)
 //   sections,      // the story screens in order, runs.length + 1 of them (meet, why, inside, feel, protocol, offer);
@@ -787,7 +787,7 @@ onmessage = async e => {
     ['m0', -0.56, -0.40, 4.2, 0.20, 0, 0, 18], ['m1', 0.12, 0.24, 5.8, 0.17, 0, 0, -22], ['m2', -0.30, 0.50, 3.6, 0.15, 1, 0, 26],
     ['m3', -0.88, -0.02, 6.2, 0.21, 0, 1.5, -15]];
   const VP = [0.26, 0.52], ZC = 4.2, FAR = 9, FRONT_IN = [1.9, 2.7];
-  const HERO = [[2, [0.12, 0.25, 0.40, 0.85]]];   // [screen, viewport box]: no near cell over the S3 ampoules
+  const HERO = CFG.hero || [[2, [0.12, 0.25, 0.40, 0.85]]];   // [screen, viewport box]: no near cell over the product (S3 by default)
   let cellEls = null, cellsOn = false;
   function buildCells() {
     if (cellEls || !SPRITES.length || mode === 'off' || saveData || stage || !(o.cellLayers && o.cellLayers[0] && o.cellLayers[1])) return;   // phone: no field yet (the stage clips it)
@@ -963,14 +963,15 @@ const THREE = await Promise.race([import('https://cdn.jsdelivr.net/npm/three@0.1
 // box. Objects are placed by frame pixel (2400×1500), measured on the only packshot, protocols/print/img/exosignal-hair.webp:
 // the matte black box seen square on and five glass ampoules before its lower right corner, 1 + 2 + 2 (scale 0.885, the
 // photo's origin at (215, 435)). The story (site/story3d.json, as revised for the page): S1 the packshot; S2 the left
-// ampoule steps out, a gold measuring target (the MITOSCAN screen's mark) over faint falling hairs, a hair that crosses
-// it flashes gold; S3 the ampoule close, turned to its small print (the page draws the exosomes, PDRN and the DNA helix);
-// S4 a gold scalp line, four strands grow from it, the fourth tallest; S5 the line becomes the protocol's: MITOSCAN and
-// MITOPEN (their packshots, dimmed, neutral) and the ampoule on it with the line's gold under it; S6–S7 the box comes back,
-// the five ampoules stand in a row before it, then one by one go back into the packshot's pose (the kit card's picture).
-// Nothing is opened: the photos show no ampoule opened (story3d's open question). The product keeps its print's colours
-// (emissive ≈ 85 % + neutral shading, toneMapped off); the line's gold lives only around it (target, hairs, strands,
-// line, glows). No text is drawn but the package's own print (design/exosignal-hair/make_textures.py).
+// ampoule steps out alone into the clear right of the box (the page's exosome field fills its left); S3 the ampoule
+// close, turned to its small print (the page draws the exosomes, PDRN and the DNA helix); S4 the ampoule alone, upright,
+// in the middle of the box; S5 the protocol: the ampoule with MITOPEN and MITOSCAN beside it (their packshots, dimmed,
+// neutral); S6–S7 the box comes back, the five ampoules stand in a row before it, then one by one go back into the
+// packshot's pose (the kit card's picture). Nothing is opened: the photos show no ampoule opened (story3d's open
+// question). Only what exists is drawn (the owner, 22/10): the box, the ampoules, the two devices' packshots and a soft
+// shapeless glow behind the box; no lines, rings, marks, hairs or props. The product keeps its print's colours
+// (emissive ≈ 85 % + neutral shading, toneMapped off); the line's gold lives only in that glow. No text is drawn but the
+// package's own print (design/exosignal-hair/make_textures.py).
 //
 // createScene(THREE, { canvas, base, onLoad }) → { draw(p, view), kit(view) → canvas, animated, state(), dispose() }
 //   p: the story position 0…5 (run index + progress); view: { cover, box, dpr, t, still } from the engine
@@ -1072,13 +1073,19 @@ function createScene(THREE, { canvas, base, onLoad }) {
   const paper = P(0x161516, { specularIntensity: 0.08 });   // the box's other sides: the same black paper, no print
   const boxMats = [facade, paper];
   // glass: no transmission (on a transparent canvas it cannot see the page's smoke, and a phone pays a pass for it):
-  // its opacity follows Fresnel and its own highlights, so edges and highlights read and the body stays clear
+  // its opacity follows Fresnel and its own highlights, so edges and highlights read and the body stays clear. The key
+  // leaves no glint on it (a white dot or dash at the head, the shoulder and the foot, which the photo does not have):
+  // its highlights come from its own room only
   function glassMat(side, a0, aF, aS) {
     const m = new THREE.MeshPhysicalMaterial({ color: 0x0b0b0c, roughness: 0.04, ior: 1.5, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.6,
       envMap: glassEnv, transparent: true, depthWrite: false, side });
     const k = [a0, aF, aS].map(v => v.toFixed(3));
     m.onBeforeCompile = sh => {
-      sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
+      sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+      reflectedLight.directSpecular = vec3(0.0);
+      #ifdef USE_CLEARCOAT
+      clearcoatSpecularDirect = vec3(0.0);
+      #endif`).replace('#include <opaque_fragment>', `#include <opaque_fragment>
       { float F = pow(1.0 - clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), 5.0);
         vec3 sp = reflectedLight.directSpecular + reflectedLight.indirectSpecular;
         #ifdef USE_CLEARCOAT
@@ -1136,152 +1143,25 @@ function createScene(THREE, { canvas, base, onLoad }) {
   const FH0 = 564.2, KF = FH0 * (DIST + 1.2), FHW = world(FH0, DIST + 1.2);   // the front FH0 px tall stands at DIST + 1.2
   box.scale.setScalar(FHW);
 
-  // ---- the line's graphics, flat to the camera in frame pixels (a plane at a depth; local x = px − 1200, y = 750 − py):
-  // strokes with a soft edge, at least 1.5 device px wide, drawn up to a time (uDraw); gold of the HAIR line only
-  const pxU = { value: 1 };   // device px per frame px
+  // ---- flat pictures and glows, flat to the camera in frame pixels (a plane at a depth; local x = px − 1200,
+  // y = 750 − py): the two devices' packshots (S5) and the soft glow behind the box
   const plane = D => { const g = new THREE.Group(); scene.add(g); place(g, D); return g; };
   const place = (g, D) => { at(1200, 750, D, g.position); g.quaternion.copy(lay.quaternion); g.scale.setScalar(world(1, D)); };
   const hex3 = h => new THREE.Vector3(((h >> 16) & 255) / 255, ((h >> 8) & 255) / 255, (h & 255) / 255);   // sRGB as drawn
-  const STROKE_V = `attribute float aSide, aHalf, aCore, aT, aU; uniform float uSway;
-    varying float vSide, vHalf, vCore, vT, vU, vPx;
-    void main() { vSide = aSide; vHalf = aHalf; vCore = aCore; vT = aT; vU = aU; vec3 p = position; p.x += uSway * aU * aU; vPx = p.x + 1200.0;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0); }`;
-  const STROKE_F = `uniform vec3 uA, uB, uCreamCol; uniform float uOpacity, uDraw, uPx, uGlow, uGlowA, uXL, uSplit, uCream;
-    varying float vSide, vHalf, vCore, vT, vU, vPx;
-    void main() {
-      float d = abs(vSide) * vHalf, c = max(vCore * uPx, 0.75);
-      float a = clamp(c + 0.5 - d * uPx, 0.0, 1.0);
-      if (uGlow > 0.0) a = max(a, uGlowA * exp(-(d * d) / (uGlow * uGlow)));
-      a *= clamp((uDraw - vT) * 60.0, 0.0, 1.0) * uOpacity;
-      vec3 col = mix(uA, uB, vU);
-      #ifdef LINE
-      a *= smoothstep(uXL, uXL + 24.0, vPx) * (1.0 - smoothstep(1170.0, 1200.0, vPx));
-      float cr = uCream * smoothstep(uSplit - 50.0, uSplit + 50.0, vPx);
-      col = mix(col, uCreamCol, cr); a *= mix(1.0, 0.35, cr);
-      #endif
-      gl_FragColor = vec4(col, a);
-    }`;
-  function strokeMat(a, b, o = {}) {
-    return new THREE.ShaderMaterial({ vertexShader: STROKE_V, fragmentShader: STROKE_F, transparent: true, depthWrite: false, side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending, defines: o.line ? { LINE: 1 } : {},
-      uniforms: { uA: { value: hex3(a) }, uB: { value: hex3(b) }, uCreamCol: { value: hex3(0xf6f3ec) }, uOpacity: { value: 1 }, uDraw: { value: 1 },
-        uPx: pxU, uGlow: { value: o.glow || 0 }, uGlowA: { value: o.glowA || 0 }, uXL: { value: 0 }, uSplit: { value: 600 }, uCream: { value: 0 }, uSway: { value: 0 } } });
-  }
-  function strokes(list) {   // [{ pts: [[x, y] frame px], core: s → half width px, t: s → draw time, ext: geometry half width }]
-    const pos = [], side = [], half = [], core = [], tt = [], uu = [], idx = [];
-    for (const s of list) {
-      const n = s.pts.length, b0 = pos.length / 3;
-      for (let i = 0; i < n; i++) {
-        const [x, y] = s.pts[i], [xa, ya] = s.pts[Math.max(0, i - 1)], [xb, yb] = s.pts[Math.min(n - 1, i + 1)];
-        const l = Math.hypot(xb - xa, yb - ya) || 1, nx = -(yb - ya) / l, ny = (xb - xa) / l, u = i / (n - 1);
-        for (const sd of [-1, 1]) { pos.push(x + nx * s.ext * sd - 1200, 750 - (y + ny * s.ext * sd), 0); side.push(sd); half.push(s.ext); core.push(s.core(u)); tt.push(s.t(u)); uu.push(u); }
-        if (i) { const a = b0 + (i - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
-      }
-    }
-    const g = new THREE.BufferGeometry(); g.setIndex(idx);
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    for (const [k, v] of [['aSide', side], ['aHalf', half], ['aCore', core], ['aT', tt], ['aU', uu]]) g.setAttribute(k, new THREE.Float32BufferAttribute(v, 1));
-    return g;
-  }
   const SPOT_F = `uniform vec3 uC; uniform float uOpacity; varying vec2 vUv;
     void main() { vec2 q = vUv * 2.0 - 1.0; float r2 = dot(q, q); gl_FragColor = vec4(uC, uOpacity * exp(-3.0 * r2) * (1.0 - smoothstep(0.5, 1.0, r2))); }`;
   const spotMat = c => new THREE.ShaderMaterial({ vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
     fragmentShader: SPOT_F, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, uniforms: { uC: { value: hex3(c) }, uOpacity: { value: 0 } } });
   const spot = (parent, c, cx, cy, rx, ry, order) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), spotMat(c)); m.position.set(cx - 1200, 750 - cy, 0); m.scale.set(rx, ry, 1); m.renderOrder = order; parent.add(m); return m; };
 
-  // S2: the measuring target (the MITOSCAN screen's mark: three rings, a cross through them with gaps at the rings, a dot;
-  // 72 ticks every 5° round the outer ring, every fourth longer), drawn rings first by angle, then ticks, then the arms
-  // out from the centre; over it faint hairs fall, and one whose middle enters the inner circle flashes gold for 0.4 s.
-  // S2 stands right in the 3D box: the page's exosome field fills its left part there (measured on the built page at
-  // 1440×900, 1512×982 and 1920×1080 while S2 is read: no cell over the target, none over the hero's head)
-  const TX = 1000, TY = 760, TR = 170, D_FX = 11;
-  const fx = plane(D_FX);
-  const tlist = [];
-  [1, 0.74, 0.55].forEach((k, j) => {
-    const r = TR * k, ga = 0.04 * TR / r;
-    for (let q = 0; q < 4; q++) {
-      const a0 = q * Math.PI / 2 + ga, a1 = (q + 1) * Math.PI / 2 - ga, pts = [];
-      for (let i = 0; i <= 24; i++) { const a = a0 + (a1 - a0) * i / 24; pts.push([TX + Math.cos(a) * r, TY - Math.sin(a) * r]); }
-      tlist.push({ pts, core: () => 1.1, ext: 5, t: u => 0.03 * j + 0.42 * (a0 + (a1 - a0) * u) / (2 * Math.PI) });
-    }
-  });
-  for (let i = 0; i < 72; i++) {
-    if (i % 18 === 0) continue;   // not under the arms
-    const a = i * Math.PI / 36, L = i % 4 === 0 ? 16 : 8, r0 = TR + 6;
-    tlist.push({ pts: [[TX + Math.cos(a) * r0, TY - Math.sin(a) * r0], [TX + Math.cos(a) * (r0 + L), TY - Math.sin(a) * (r0 + L)]], core: () => 0.8, ext: 4, t: () => 0.5 + 0.25 * i / 72 });
-  }
-  for (let q = 0; q < 4; q++) {
-    const c = Math.cos(q * Math.PI / 2), s = Math.sin(q * Math.PI / 2);
-    for (const [r0, r1] of [[0.08, 0.51], [0.59, 0.70], [0.78, 0.96], [1.04, 1.18]]) {
-      const pts = [0, 1, 2, 3, 4].map(i => { const r = TR * (r0 + (r1 - r0) * i / 4); return [TX + c * r, TY - s * r]; });
-      tlist.push({ pts, core: () => (r0 < 0.3 ? 1.3 : 1.1), ext: 5, t: u => 0.75 + 0.25 * (r0 + (r1 - r0) * u) / 1.18 });
-    }
-  }
-  const dot = []; for (let i = 0; i <= 24; i++) dot.push([TX + 3 * Math.cos(i * Math.PI / 12), TY + 3 * Math.sin(i * Math.PI / 12)]);
-  tlist.push({ pts: dot, core: () => 3, ext: 6, t: () => 0.75 });
-  const targetMat = strokeMat(0xd8bd7e, 0xc9a24b);
-  const target = new THREE.Mesh(strokes(tlist), targetMat); target.renderOrder = 7; fx.add(target);
-  // the hairs: one instanced strip, all motion in the vertex shader (no matrices on the CPU); a seeded field
-  const NT = 36, TB = [800, 1200, 320, 1180], SPEED = 60;
-  const rng = (s => () => { s |= 0; s = s + 0x6d2b79f5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; })(20261021);
-  const hairs = [];
-  for (let i = 0; i < NT; i++) hairs.push([TB[0] + ((i * 0.618034) % 1) * (TB[1] - TB[0]), rng(), 40 + 70 * rng(), rng() * 2 - 1, SPEED * (0.85 + 0.3 * rng()), rng() * 6.283]);
-  const hg = new THREE.InstancedBufferGeometry(), hs = [], hidx = [];
-  for (let i = 0; i <= 12; i++) { hs.push(i / 12, -1, i / 12, 1); if (i) hidx.push((i - 1) * 2, (i - 1) * 2 + 1, i * 2, (i - 1) * 2 + 1, i * 2 + 1, i * 2); }
-  hg.setIndex(hidx); hg.setAttribute('position', new THREE.Float32BufferAttribute(new Array(26 * 3).fill(0), 3));
-  hg.setAttribute('aS', new THREE.Float32BufferAttribute(hs, 2));
-  hg.setAttribute('aI', new THREE.InstancedBufferAttribute(new Float32Array(hairs.flatMap(h => h.slice(0, 4))), 4));
-  hg.setAttribute('aJ', new THREE.InstancedBufferAttribute(new Float32Array(hairs.flatMap(h => h.slice(4))), 2));
-  hg.instanceCount = NT;
-  const hairMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide,
-    uniforms: { uTime: { value: 0 }, uPx: pxU, uT: { value: new V3(TX, TY, 0.55 * TR) }, uOpacity: { value: 0 }, uFlashOn: { value: 0 } },
-    vertexShader: `attribute vec2 aS; attribute vec4 aI; attribute vec2 aJ; uniform float uTime, uPx; uniform vec3 uT;
-      varying float vSide, vHalf, vA, vFlash;
-      void main() {
-        float span = ${TB[3] - TB[2]}.0 + aI.z, head = ${TB[2]}.0 - aI.z + mod(aI.y * span + uTime * aJ.x, span);
-        float y = head + aS.x * aI.z, hw = 0.8 + 2.0 / max(uPx, 0.3);
-        float x = aI.x + aI.w * 8.0 * sin(3.14159 * aS.x) + 4.0 * sin(uTime * 0.7 + aJ.y) * aS.x + aS.y * hw;
-        vSide = aS.y; vHalf = hw; vA = smoothstep(${TB[2]}.0, ${TB[2] + 60}.0, y) * (1.0 - smoothstep(${TB[3] - 60}.0, ${TB[3]}.0, y));
-        float dx = aI.x - uT.x, f = 0.0;
-        if (abs(dx) < uT.z) { float ts = (head + 0.5 * aI.z - (uT.y - sqrt(uT.z * uT.z - dx * dx))) / aJ.x; f = ts >= 0.0 && ts < 0.4 ? 1.0 - ts / 0.4 : 0.0; }
-        vFlash = f;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(x - 1200.0, 750.0 - y, 0.0, 1.0);
-      }`,
-    fragmentShader: `uniform float uOpacity, uPx, uFlashOn; varying float vSide, vHalf, vA, vFlash;
-      void main() {
-        float a = clamp(max(0.8 * uPx, 0.75) + 0.5 - abs(vSide) * vHalf * uPx, 0.0, 1.0) * vA, fl = vFlash * uFlashOn;
-        gl_FragColor = vec4(mix(vec3(0.965, 0.953, 0.925), vec3(0.847, 0.741, 0.494), fl), a * mix(0.3, 0.9, fl) * uOpacity);
-      }` });
-  const hairMesh = new THREE.Mesh(hg, hairMat); hairMesh.frustumCulled = false; hairMesh.renderOrder = 6; fx.add(hairMesh);
-  let seenN = 0, flashN = 0;
-  function hairCount(t) {   // what the shader draws, counted for QA: hairs in the band, hairs flashing
-    seenN = flashN = 0; const n = phone.matches ? NT / 2 : NT, r = 0.55 * TR;
-    for (let i = 0; i < n; i++) {
-      const h = hairs[i], x = h[0], len = h[2], sp = h[4], span = TB[3] - TB[2] + len, head = TB[2] - len + ((h[1] * span + t * sp) % span + span) % span;
-      if (head + len > TB[2] + 30 && head < TB[3] - 30) seenN++;
-      const dx = x - TX; if (Math.abs(dx) < r) { const ts = (head + len / 2 - (TY - Math.sqrt(r * r - dx * dx))) / sp; if (ts >= 0 && ts < 0.4) flashN++; }
-    }
-  }
-
-  // S4–S5: the scalp line (core 2.4 px, a soft glow ±9 px, drawn right to left), four strands growing from it (the
-  // fourth, left, tallest: the longer anagen phase), the roots' points; on S5 the same line is the protocol's, gold under
-  // the ampoule and cream toward the devices; MITOPEN and MITOSCAN on it (their packshots, dimmed to about 40 % as seen,
-  // no gold; MITOPEN, photographed diagonally with its needle lowest, floats a little above the line)
-  const LY = 975, D_LINE = 12.4, ln = plane(D_LINE);   // (the page's three step cards on S5 start at frame y ≈ 1050)
-  const lineMat = strokeMat(0xe0c98c, 0xd8bd7e, { line: true, glow: 4.5, glowA: 0.35 });
-  const lpts = []; for (let i = 0; i <= 90; i++) lpts.push([1200 - 900 * i / 90, LY]);
-  const line = new THREE.Mesh(strokes([{ pts: lpts, core: () => 1.2, ext: 16, t: () => 0 }]), lineMat); line.renderOrder = 8; ln.add(line);
-  const SX = [1110, 950, 790, 630], SH = [300, 330, 360, 460];
-  const strands = SX.map((x, i) => {
-    const pts = [], b = i % 2 ? 1 : -1; for (let k = 0; k <= 48; k++) { const s = k / 48; pts.push([x + b * SH[i] * 0.06 * Math.sin(Math.PI * s * 1.1), LY - s * SH[i]]); }
-    const m = new THREE.Mesh(strokes([{ pts, core: s => 1.5 - s, ext: 6, t: s => s }]), strokeMat(0x9c7a2f, 0xd8bd7e)); m.renderOrder = 7; ln.add(m); return m;
-  });
-  const roots = SX.map(x => spot(ln, 0xd8bd7e, x, LY, 14, 14, 7));
-  const heroSpot = spot(ln, 0xc9a24b, 440, LY + 2, 140, 35, 6);   // the line's gold under the ampoule (S5)
+  // S5: MITOPEN and MITOSCAN beside the ampoule (their packshots, dimmed to about 40 % as seen, no gold), their feet at
+  // the ampoule's foot height LY with nothing drawn under them; MITOPEN, photographed diagonally with its needle lowest,
+  // stands a little higher (the page's three step cards on S5 start at frame y ≈ 1050)
+  const LY = 975, dev = plane(12.4);
   const DIM = new THREE.Color().setRGB(0.4, 0.4, 0.4, THREE.SRGBColorSpace);   // 0.4 as seen (0.13 in linear light)
-  const board = (map, w, h, cx, lift) => {   // a device's packshot over the line, bottom centre at (cx, LY − lift)
+  const board = (map, w, h, cx, lift) => {   // a device's packshot, bottom centre at (cx, LY − lift)
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h).translate(0, h / 2, 0), new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, toneMapped: false, color: DIM }));
-    m.position.set(cx - 1200, 750 - LY + lift, 0); m.renderOrder = 5; ln.add(m); return m;
+    m.position.set(cx - 1200, 750 - LY + lift, 0); m.renderOrder = 5; dev.add(m); return m;
   };
   const scan = board(scanTex, 398, 270, 1010, 0), pen = board(penTex, 400 * 273 / 891, 400, 680, 24);
   // the box's glow (S1 alive, mid-way to the kit): its own plane just behind the box, never in a key picture
@@ -1302,11 +1182,13 @@ function createScene(THREE, { canvas, base, onLoad }) {
   const BOX5 = { ...BOX0, cx: KC[0] + (BOX0.cx - KC[0]) * KS, cy: KC[1] + (BOX0.cy - KC[1]) * KS, h: BOX0.h * KS };
   const BOX1 = { cx: 950, cy: 520, h: 282, yaw: 0, a: 0 };
   // S2 and S3 stand clear of the page's own layers there (measured on the built page at 1440×900, 1512×982 and
-  // 1920×1080): on S2 the exosome field fills the left of the 3D box, so the hero and the target stand right of it; on S3
-  // the DNA helix crosses the left of the box from low left to high right, so the hero stands right of it and below,
-  // and the helix passes behind its neck, not its label. A phone has neither layer: there S3's hero fills the stage
-  const HERO = [PACK[0], A(440, 1050, 500), A(960, 1172, 680, -26, 0, 6), A(330, LY, 600), A(440, LY, 420), KIT[0]];   // S4, S5 on the line
-  const HERO2_PHONE = A(708, 1168, 820, -26, 0, 6);
+  // 1920×1080): on S2 the exosome field fills the left of the 3D box, so the hero stands alone right of it, in the part
+  // the cells leave clear (frame x 830–1170); on S3 the DNA helix crosses the left of the box from low left to high
+  // right, so the hero stands right of it and below, and the helix passes behind its neck, not its label. S4 has the
+  // hero alone in the middle of the scene box. A phone has neither layer: there S2's and S3's hero stand in the middle
+  // of the stage
+  const HERO = [PACK[0], A(1000, 1100, 600), A(960, 1172, 680, -26, 0, 6), A(708, 1110, 640), A(440, LY, 420), KIT[0]];
+  const HERO1_PHONE = A(708, 1130, 700), HERO2_PHONE = A(708, 1168, 820, -26, 0, 6);
   const ROW = [440, 535, 630, 725, 820].map(x => A(x, 1075, 375));   // S6: five sessions in a row before the box
   const SWAY = [0, 2, 4, 6, 2, 0];   // the hero's slow idle turn per screen, ± degrees (within ±30° of the photographed)
   // S6: the row stands whole f 0.50–0.60; then the five go into the packshot one at a time from the right (A5, A4, A3,
@@ -1315,8 +1197,7 @@ function createScene(THREE, { canvas, base, onLoad }) {
   const DEPART = [4, 3, 2, 1, 0], PACK_W = 0.15, PACK_STEP = 0.055, PACK_T0 = 0.6;
   // the state, written in place on every frame (nothing allocated per frame)
   const amp = () => ({ x: 0, y: 0, H: 1, yaw: 0, lean: 0, pitch: 0, a: 0 });
-  const ST = { box: { cx: 0, cy: 0, h: 1, yaw: 0, a: 0 }, amps: [amp(), amp(), amp(), amp(), amp()], glowBox: 0, target: 0, targetA: 0,
-    hairs: 0, lineXL: 1200, lineA: 0, cream: 0, grow: [0, 0, 0, 0], roots: 0, pen: 0, scan: 0, back: 0, spot: 0 };
+  const ST = { box: { cx: 0, cy: 0, h: 1, yaw: 0, a: 0 }, amps: [amp(), amp(), amp(), amp(), amp()], glowBox: 0, pen: 0, scan: 0, back: 0 };
   const setA = (o, s, a = s.a) => { o.x = s.x; o.y = s.y; o.H = s.H; o.yaw = s.yaw; o.lean = s.lean; o.pitch = s.pitch; o.a = a; return o; };
   const mixA = (o, a, b, s) => { o.x = lerp(a.x, b.x, s); o.y = lerp(a.y, b.y, s); o.H = lerp(a.H, b.H, s); o.yaw = lerp(a.yaw, b.yaw, s);
     o.lean = lerp(a.lean, b.lean, s); o.pitch = lerp(a.pitch, b.pitch, s); o.a = lerp(a.a, b.a, s); return o; };
@@ -1325,40 +1206,32 @@ function createScene(THREE, { canvas, base, onLoad }) {
   };
 
   function story(p) {   // the state at story position p
-    const k = Math.min(4, Math.floor(p)), f = p - k, st = ST, b = st.box, H2 = phone.matches ? HERO2_PHONE : HERO[2];
+    const k = Math.min(4, Math.floor(p)), f = p - k, st = ST, b = st.box;
+    const H1 = phone.matches ? HERO1_PHONE : HERO[1], H2 = phone.matches ? HERO2_PHONE : HERO[2];
     b.cx = BOX0.cx; b.cy = BOX0.cy; b.h = BOX0.h; b.yaw = 0; b.a = 0;
     for (let i = 0; i < 5; i++) setA(st.amps[i], PACK[i], 0);
-    st.glowBox = st.target = st.targetA = st.hairs = st.lineA = st.cream = st.roots = st.pen = st.scan = st.back = st.spot = 0; st.lineXL = 1200;
-    st.grow[0] = st.grow[1] = st.grow[2] = st.grow[3] = 0;
+    st.glowBox = st.pen = st.scan = st.back = 0;
     if (k === 0) {   // S1 → S2: the box and four ampoules recede and fade; the left ampoule rises and arcs to its place
       const g = smooth(0.05, 0.7, f), al = 1 - smooth(0.1, 0.65, f);
       b.cx = lerp(BOX0.cx, BOX1.cx, g); b.cy = lerp(BOX0.cy, BOX1.cy, g); b.h = lerp(BOX0.h, BOX1.h, g); b.a = al;
       const s = b.h / BOX0.h;
       for (let i = 1; i < 5; i++) { const a = PACK[i], o = setA(st.amps[i], a, al); o.x = b.cx + (a.x - BOX0.cx) * s; o.y = b.cy + (a.y - BOX0.cy) * s; o.H = a.H * s; }
-      const m = smooth(0, 0.85, f), S = PACK[0], E = HERO[1], q = smooth(0.15, 0.85, f), o = st.amps[0];
+      const m = smooth(0, 0.85, f), S = PACK[0], E = H1, q = smooth(0.15, 0.85, f), o = st.amps[0];
       o.x = (1 - m) ** 2 * S.x + 2 * m * (1 - m) * 880 + m * m * E.x; o.y = (1 - m) ** 2 * S.y + 2 * m * (1 - m) * 880 + m * m * E.y;
       o.H = lerp(S.H, E.H, q); o.yaw = lerp(S.yaw, E.yaw, q); o.lean = o.pitch = 0; o.a = 1;
-      // the glow behind the box goes while the box is still whole (through a fading box it would tint the box), the
-      // hairs come once the box has nearly gone
+      // the glow behind the box goes while the box is still whole (through a fading box it would tint the box)
       st.glowBox = 0.6 * (1 - smooth(0, 0.08, f));
-      st.hairs = smooth(0.5, 0.85, f); st.target = smooth(0.55, 1, f); st.targetA = 1;
-    } else if (k === 1) {   // S2 → S3: the target and the hairs go, the ampoule comes close and turns to its small print
-      st.hairs = 1 - smooth(0, 0.4, f); st.target = 1; st.targetA = 1 - smooth(0, 0.4, f);
-      mixA(st.amps[0], HERO[1], H2, smooth(0.2, 1, f));
-    } else if (k === 2) {   // S3 → S4: the line drawn right to left, the roots light, the strands grow one by one
-      mixA(st.amps[0], H2, HERO[3], smooth(0, 0.6, f));
-      st.lineXL = lerp(1200, 470, smooth(0.2, 0.6, f)); st.lineA = 1;
-      st.roots = smooth(0.45, 0.6, f); for (let i = 0; i < 4; i++) st.grow[i] = smooth(0.5 + i * 0.0833, 0.75 + i * 0.0833, f);
-    } else if (k === 3) {   // S4 → S5: the strands go back into the line, it runs on to the left and turns cream toward
-      const g = 1 - smooth(0, 0.35, f);   // the devices; the ampoule steps onto it; MITOPEN, then MITOSCAN come forward
-      st.grow[0] = st.grow[1] = st.grow[2] = st.grow[3] = g; st.roots = 1 - smooth(0.2, 0.4, f);
-      st.lineXL = lerp(470, 300, smooth(0.1, 0.4, f)); st.lineA = 1; st.cream = smooth(0.1, 0.4, f);
+    } else if (k === 1) {   // S2 → S3: the ampoule comes close and turns to its small print
+      mixA(st.amps[0], H1, H2, smooth(0.2, 1, f));
+    } else if (k === 2) {   // S3 → S4: it turns back to face the camera and stands in the middle of the box
+      mixA(st.amps[0], H2, HERO[3], smooth(0.1, 0.9, f));
+    } else if (k === 3) {   // S4 → S5: the ampoule steps left; MITOPEN, then MITOSCAN come forward beside it
       mixA(st.amps[0], HERO[3], HERO[4], smooth(0.2, 0.7, f));
-      st.pen = smooth(0.35, 0.8, f); st.scan = smooth(0.45, 0.9, f); st.spot = smooth(0.6, 1, f);
+      st.pen = smooth(0.35, 0.8, f); st.scan = smooth(0.45, 0.9, f);
     } else {   // S5 → kit: the protocol goes back; the box comes from the depth; the ampoules stand in a row before it (the
       // four from behind its right edge: no room left of it), then one by one go into the packshot's places
       const out = 1 - smooth(0, 0.3, f);
-      st.lineXL = 300; st.lineA = out; st.cream = 1; st.pen = st.scan = st.spot = out; st.back = 1 - out;
+      st.pen = st.scan = out; st.back = 1 - out;
       const g = smooth(0.05, 0.38, f);
       b.cx = BOX5.cx; b.cy = lerp(BOX5.cy - 40, BOX5.cy, g); b.h = lerp(BOX5.h * 0.5, BOX5.h, g); b.a = smooth(0.05, 0.33, f);
       st.glowBox = 0.6 * smooth(0.38, 0.55, f) * (1 - smooth(0.7, 0.95, f));   // only behind a whole box
@@ -1377,7 +1250,7 @@ function createScene(THREE, { canvas, base, onLoad }) {
 
   // ---- applying a state
   const camAt = new V3(), DEPTH = new Float32Array(5), RANK = [0, 1, 2, 3, 4], farFirst = (i, j) => DEPTH[j] - DEPTH[i];
-  const last = { hx: 0, hy: 0, hH: 0, hyaw: 0, threads: 0, flashes: 0, strands: 0, inPlace: 0, glow: 0 };   // for QA
+  const last = { hx: 0, hy: 0, hH: 0, hyaw: 0, inPlace: 0, glow: 0 };   // for QA
   function pose(p, t, still) {
     const st = story(p), live = still ? 0 : 1 - smooth(4.85, 5, p);
     const k = Math.min(4, Math.floor(p)), sw = lerp(SWAY[k], SWAY[k + 1], p - k) * Math.sin(t * 0.45) * live, h0 = st.amps[0];
@@ -1400,14 +1273,7 @@ function createScene(THREE, { canvas, base, onLoad }) {
     }
     RANK.sort(farFirst);
     for (let r = 0; r < 5; r++) { const L = amps[RANK[r]].layer; for (let j = 0; j < L.length; j++) L[j].renderOrder = 100 + r * 10 + j; }
-    // the graphics
-    targetMat.uniforms.uDraw.value = st.target; targetMat.uniforms.uOpacity.value = st.targetA; target.visible = st.target > 0 && st.targetA > 0.004;
-    hairMat.uniforms.uOpacity.value = st.hairs; hairMat.uniforms.uTime.value = t; hairMesh.visible = st.hairs > 0.004;
-    hairMat.uniforms.uFlashOn.value = smooth(0.8, 1, st.target) * st.targetA; hg.instanceCount = phone.matches ? NT / 2 : NT;
-    const lu = lineMat.uniforms; lu.uXL.value = st.lineXL; lu.uCream.value = st.cream; lu.uOpacity.value = st.lineA; line.visible = st.lineA > 0.004 && st.lineXL < 1190;
-    for (let i = 0; i < 4; i++) { const m = strands[i]; m.visible = st.grow[i] > 0.002; m.material.uniforms.uDraw.value = st.grow[i]; m.material.uniforms.uSway.value = 6 * Math.sin(t * 0.6 + i * 1.7) * live; }
-    for (const m of roots) { m.material.uniforms.uOpacity.value = 0.8 * st.roots; m.visible = st.roots > 0.004; }
-    heroSpot.material.uniforms.uOpacity.value = 0.55 * st.spot; heroSpot.visible = st.spot > 0.004;
+    // the devices and the glow
     pen.visible = st.pen > 0.004; pen.material.opacity = st.pen; pen.scale.setScalar(lerp(0.6, 1, Math.min(1, st.pen + st.back)) * (1 - 0.2 * st.back));
     scan.visible = st.scan > 0.004; scan.material.opacity = st.scan; scan.scale.setScalar(lerp(0.6, 1, Math.min(1, st.scan + st.back)) * (1 - 0.2 * st.back));
     const gl = still ? 0 : st.glowBox; glowBox.visible = gl > 0.004;
@@ -1415,9 +1281,7 @@ function createScene(THREE, { canvas, base, onLoad }) {
       place(gb, KF / b.h + 0.5); const s = b.h / FH0;
       glowBox.position.set(b.cx + 60 * s - 1200, 750 - b.cy, 0); glowBox.scale.set(500 * s, 400 * s, 1); glowBox.material.uniforms.uOpacity.value = gl;
     }
-    if (st.hairs > 0.004) hairCount(t); else seenN = flashN = 0;
-    last.hx = h0.x; last.hy = h0.y - h0.H / 2; last.hH = h0.H; last.hyaw = h0.yaw; last.threads = seenN;
-    last.flashes = hairMat.uniforms.uFlashOn.value > 0.5 ? flashN : 0; last.strands = (st.grow[0] + st.grow[1] + st.grow[2] + st.grow[3]) / 4;
+    last.hx = h0.x; last.hy = h0.y - h0.H / 2; last.hH = h0.H; last.hyaw = h0.yaw;
     last.inPlace = 0; for (let i = 0; i < 5; i++) { const s = st.amps[i]; if (Math.abs(s.x - KIT[i].x) + Math.abs(s.H - KIT[i].H) < 0.5 && s.a > 0.99) last.inPlace++; }
     last.glow = gl;
   }
@@ -1444,7 +1308,6 @@ function createScene(THREE, { canvas, base, onLoad }) {
     camera.aspect = view.cover.w / view.cover.h;
     camera.setViewOffset(view.cover.w, view.cover.h, view.box.x - view.cover.x, view.box.y - view.cover.y, view.box.w, view.box.h);
     camera.updateProjectionMatrix();
-    pxU.value = pr * view.cover.w / 2400;   // device px per frame px: the strokes keep ≥ 1.5 device px
   }
   function render(p, view) { pr = Math.min(full(view), cap); fit(view, pr); pose(p, view.still ? 0 : view.t, view.still); renderer.render(scene, camera); renders++; }
   function draw(p, view) { pace(performance.now(), view.still); lastP = p; lastView = view; render(p, view); }
@@ -1466,8 +1329,7 @@ function createScene(THREE, { canvas, base, onLoad }) {
   }
   const r1 = v => Math.round(v * 10) / 10, r2 = v => Math.round(v * 100) / 100;
   const state = () => ({ quality: pr, cap, capped, pixelRatio: renderer.getPixelRatio(), width: canvas.width, height: canvas.height, renders, loaded,
-    version, kits, lastP, hero: { x: r1(last.hx), y: r1(last.hy), H: r1(last.hH), yaw: r1(last.hyaw) }, threads: last.threads,
-    flashes: last.flashes, strands: r2(last.strands), inPlace: last.inPlace, glow: r2(last.glow) });
+    version, kits, lastP, hero: { x: r1(last.hx), y: r1(last.hy), H: r1(last.hH), yaw: r1(last.hyaw) }, inPlace: last.inPlace, glow: r2(last.glow) });
   return { draw, kit, dispose, state, animated: true };
 }
 
