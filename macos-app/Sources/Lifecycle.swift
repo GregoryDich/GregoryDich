@@ -28,6 +28,10 @@ enum AppSettings {
     /// Safari ▸ Develop ▸ <Mac> ▸ wallpaper page (macOS 13.3+). Read when a page is created:
     ///   defaults write com.gregorydich.aquariumwallpaper inspectable -bool YES   (then restart the app)
     static let inspectableKey = "inspectable"
+    /// R12, no menu item: pause a display behind a full-screen or maximised window (window list, CoverageMonitor).
+    /// On unless set to NO — the way out if that check ever misjudges a Mac (the pause on occlusion stays):
+    ///   defaults write com.gregorydich.aquariumwallpaper aq.fullscreenCheck -bool NO   (then restart the app)
+    static let fullscreenCheckKey = "aq.fullscreenCheck"
 
     static var hud: Bool {
         get { UserDefaults.standard.bool(forKey: hudKey) }
@@ -47,6 +51,10 @@ enum AppSettings {
         set { UserDefaults.standard.set(newValue, forKey: vlayerKey) }
     }
     static var inspectable: Bool { UserDefaults.standard.bool(forKey: inspectableKey) }
+    static var fullscreenCheck: Bool {
+        let d = UserDefaults.standard
+        return d.object(forKey: fullscreenCheckKey) == nil || d.bool(forKey: fullscreenCheckKey)   // "NO" string too
+    }
 
     /// "1.0 (1)" — CFBundleShortVersionString (CFBundleVersion).
     static var appVersion: String {

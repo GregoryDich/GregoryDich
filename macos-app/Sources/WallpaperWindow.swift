@@ -10,6 +10,8 @@ import WebKit
 /// hidden and paused for a while (`park()`), so a monitor waking from standby gets the same page back.
 /// A WebContent crash/kill or a failed load is reloaded with a backoff: 1 / 5 / 15 s, then every
 /// 10 min and on wake or a screen change — never black forever, never a reload storm.
+/// R12: the window watches its own occlusion — not `.visible` for more than 2 s → `isCovered`, and AppDelegate pauses
+/// this page only (`pauseReason` "covered"); visible again → resumed at once.
 final class WallpaperWindow: NSObject, WKNavigationDelegate {
     enum State: String {
         case loading            // navigation in flight
@@ -50,12 +52,29 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     /// A page killed while a ping has waited this long was hung already (a healthy page answers in milliseconds,
     /// a 1-s stall at most delays it): the termination closes an episode dated from the send.
     private static let pingLateAtDeath: TimeInterval = 2
+    /// R12: the desktop not `.visible` for longer than this → covered (a window dragged across, a Space swipe or
+    /// Mission Control do not pause the page); visible again → resumed at once.
+    static let coverGrace: TimeInterval = 2
 
     let displayID: CGDirectDisplayID
     private let window: NSWindow
     private let webView: WKWebView
     private let contentController: WKUserContentController
+    /// The mode the page runs in (sent to it): "high" | "low" | "paused".
     private(set) var power: String
+    /// R12: why the page is paused, nil while it runs: sleep | layersTest | covered | fullscreen | parked.
+    private(set) var pauseReason: String?
+    private var pausedSince: Date?
+    private var pauseCounts: [String: Int] = [:]      // this run, by reason
+    private var pausedTotals: [String: TimeInterval] = [:]   // this run, finished pauses, by reason
+    /// The desktop has not been `.visible` for more than coverGrace (never while parked).
+    private(set) var isCovered = false
+    private var occludedSince: Date?                 // not visible since (grace running or covered)
+    private var occlusionEvents = 0                  // didChangeOcclusionState notifications this run
+    private var parkedNow = false
+    /// AppDelegate: an occlusion notification, or covered after the grace → re-decide this page's mode and check the
+    /// window list soon. `visibleAgain`: visible after not being visible (e.g. back from a full-screen Space).
+    var onOcclusionChange: ((WallpaperWindow, _ visibleAgain: Bool) -> Void)?
     /// Low Power Mode or thermal pressure: the smaller pixel budget (on top of power "low").
     private(set) var constrained: Bool
     private(set) var isMain: Bool
@@ -84,12 +103,18 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
 
     private var loaded: Bool { state == .ready }
 
-    /// `reason` — why this page is being created: "launch" | "displayAdded".
+    /// `reason` — why this page is being created: "launch" | "displayAdded"; `pauseReason` — why `power` is "paused".
     init(screen: NSScreen, displayID: CGDirectDisplayID, isMain: Bool, power: String, constrained: Bool,
-         reason: String) {
+         pauseReason: String? = nil, reason: String) {
         self.displayID = displayID
         self.isMain = isMain
         self.power = power
+        if power == "paused" {
+            let why = pauseReason ?? "paused"
+            self.pauseReason = why
+            pausedSince = Date()
+            pauseCounts[why] = 1
+        }
         self.constrained = constrained
         self.loadReason = reason
         screenInfo = ScreenInfo(screen)
@@ -132,6 +157,9 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
 
         super.init()
         webView.navigationDelegate = self
+        // Posted for this window only, on the main thread.
+        NotificationCenter.default.addObserver(self, selector: #selector(occlusionChanged(_:)),
+                                               name: NSWindow.didChangeOcclusionStateNotification, object: window)
         load(reason: reason)
         armHeartbeat()
     }
@@ -228,7 +256,12 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     }
 
     // MARK: Window
-    func show() { window.orderFrontRegardless() }
+    /// Ordered in (first time, or back from parking); the occlusion state is read again right away.
+    func show() {
+        parkedNow = false
+        window.orderFrontRegardless()
+        refreshOcclusion()
+    }
 
     /// False while other windows cover this whole display: WebKit then hides the page and draws no frames.
     var isDesktopVisible: Bool { window.occlusionState.contains(.visible) }
@@ -236,7 +269,9 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     /// The display disappeared (maybe only for a moment: standby, re-enumeration): hide and pause,
     /// keep the page. AppDelegate re-shows it if the display returns, or closes it after 15 min.
     func park() {
-        setPower("paused", constrained: constrained)
+        parkedNow = true                                 // ordered out = occluded: that is not "covered"
+        refreshOcclusion()
+        setPower("paused", constrained: constrained, reason: "parked")
         window.orderOut(nil)
         Log.info("display \(displayID) gone — window parked (hidden, paused)")
     }
@@ -247,6 +282,9 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         endUnresponsive("closed")                        // before `closed`: the episode must not stay open
         closed = true
         NSObject.cancelPreviousPerformRequests(withTarget: self)
+        NotificationCenter.default.removeObserver(self, name: NSWindow.didChangeOcclusionStateNotification,
+                                                  object: window)
+        onOcclusionChange = nil
         webView.navigationDelegate = nil
         webView.stopLoading()
         window.orderOut(nil)
@@ -264,25 +302,124 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         }
     }
 
+    // MARK: Occlusion (R12)
+    /// NSWindow.didChangeOcclusionStateNotification for this window. Logged: whether it fires at all for a window at
+    /// desktop level is one of the things the owner's test checks (`log show`, `occlusionEvents` in the diagnostics).
+    @objc private func occlusionChanged(_ note: Notification) {
+        guard !closed else { return }
+        occlusionEvents += 1
+        let visible = isDesktopVisible
+        Log.info("display \(displayID) occlusion: \(visible ? "visible" : "not visible")" + (parkedNow ? " (parked)" : ""))
+        let visibleAgain = visible && occludedSince != nil
+        refreshOcclusion()
+        onOcclusionChange?(self, visibleAgain)
+    }
+
+    /// Re-reads occlusionState: on its notification, on show/park and on every coverage poll (a missed "visible
+    /// again" notification must not keep the page paused). Not visible → covered after coverGrace; visible → at once.
+    /// The caller re-decides the page's mode (AppDelegate.applyPower).
+    func refreshOcclusion() {
+        guard !closed else { return }
+        if parkedNow || isDesktopVisible {
+            NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(coverGraceEnded), object: nil)
+            occludedSince = nil
+            isCovered = false
+        } else if occludedSince == nil {
+            occludedSince = Date()
+            perform(#selector(coverGraceEnded), with: nil, afterDelay: WallpaperWindow.coverGrace, inModes: [.common])
+        }
+    }
+
+    @objc private func coverGraceEnded() {
+        guard !closed, !parkedNow, !isCovered else { return }
+        if isDesktopVisible {                            // visible again, its notification not here yet: no pause
+            occludedSince = nil
+            return
+        }
+        isCovered = true
+        onOcclusionChange?(self, false)
+    }
+
     // MARK: Page controls
-    /// `mode`: "high" (60 fps) | "low" (30 fps: battery, Low Power Mode, heat) | "paused" (display asleep,
-    /// parked, layers test open). `constrained`: Low Power Mode or heat → 1.8 MP budget.
+    /// `mode`: "high" (60 fps) | "low" (30 fps: battery, Low Power Mode, heat) | "paused". `reason` — why "paused"
+    /// (R12): sleep | layersTest | covered | fullscreen | parked; the page is told (`window.__AQ_PAUSE`, HUD line).
+    /// `constrained`: Low Power Mode or heat → 1.8 MP budget.
     /// Sent only on a real change (every IOPS event, e.g. a battery-percent tick, used to reset the
     /// engine's frame-rate governor); re-sent after every (re)load in didFinish.
-    func setPower(_ mode: String, constrained c: Bool) {
+    func setPower(_ mode: String, constrained c: Bool, reason: String? = nil) {
+        let why = mode == "paused" ? (reason ?? "paused") : nil
+        let reasonChanged = why != pauseReason
+        if reasonChanged { notePause(why) }
         let modeChanged = mode != power, budgetChanged = c != constrained
-        guard modeChanged || budgetChanged else { return }
-        let wasPaused = power == "paused"
-        power = mode
-        if (mode == "paused") != wasPaused { armHeartbeat() }   // no 10-s wakeups while paused (display asleep, parked)
-        constrained = c
-        installBootScript()
-        if modeChanged { sendPower() }
-        if budgetChanged { applyBudget() }
+        if modeChanged || budgetChanged {
+            let wasPaused = power == "paused"
+            power = mode
+            if (mode == "paused") != wasPaused { armHeartbeat() }   // no 10-s wakeups (and no pings) while paused, any reason
+            constrained = c
+            installBootScript()
+            if modeChanged { sendPower() }
+            if budgetChanged { applyBudget() }
+        }
+        if reasonChanged { sendPauseNote() }             // after the power call: the HUD is already frozen then
     }
 
     private func sendPower() {
         evaluate("window.aquariumSetPower && window.aquariumSetPower(\(PageScript.literal(power)))")
+    }
+
+    /// A pause starts, ends or changes its reason: log and this run's counters (setPower then sends the page's note).
+    private func notePause(_ why: String?) {
+        let now = Date()
+        if let old = pauseReason, let since = pausedSince {
+            let lasted = Int(now.timeIntervalSince(since).rounded())
+            pausedTotals[old, default: 0] += now.timeIntervalSince(since)
+            if let why = why {
+                Log.info("display \(displayID) pause reason \(old) → \(why) after \(lasted) s")
+            } else {
+                Log.info("display \(displayID) resumed after \(lasted) s paused (\(old))")
+            }
+        } else if let why = why {
+            Log.info("display \(displayID) paused: \(why)")
+        }
+        if let why = why {
+            pauseCounts[why, default: 0] += 1
+            pausedSince = now
+        } else {
+            pausedSince = nil
+        }
+        pauseReason = why
+    }
+
+    private static let pauseLabels: [String: String] = [
+        "covered": "рабочий стол закрыт окнами", "fullscreen": "окно во весь экран", "sleep": "дисплей спит",
+        "layersTest": "открыт «Тест слоёв»", "parked": "экран отключён",
+    ]
+    private static let clock: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm:ss"
+        return f
+    }()
+
+    /// R12: `window.__AQ_PAUSE` = {reason, since} | null, and the HUD's first line "⏸ paused: covered — …": the engine
+    /// stops updating the HUD while paused, so its last text stays below the line; its first update after the resume
+    /// replaces it all (the line is also removed here). Nothing happens without a HUD element.
+    private func sendPauseNote() {
+        var note: Any = NSNull()
+        var line: Any = NSNull()
+        if let why = pauseReason {
+            let since = pausedSince ?? Date()
+            note = ["reason": why, "since": FBDate.string(since)]
+            line = "⏸ paused: \(why) — \(WallpaperWindow.pauseLabels[why] ?? why), с \(WallpaperWindow.clock.string(from: since))"
+        }
+        evaluate("""
+        (() => { try {
+          window.__AQ_PAUSE = \(PageScript.literal(note));
+          const el = document.getElementById("aqhud"), line = \(PageScript.literal(line));
+          if (!el) return;
+          const rest = el.textContent.replace(/^⏸[^\\n]*\\n/, "");
+          el.textContent = line ? line + "\\n" + rest : rest;
+        } catch (e) {} })()
+        """)
     }
 
     /// The display became (or stopped being) the one with the menu bar.
@@ -303,6 +440,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     func setHUD(_ on: Bool) {
         installBootScript()
         evaluate("window.aquariumSetDebug && window.aquariumSetDebug(\(PageScript.literal(on)))")
+        if on, pauseReason != nil { sendPauseNote() }    // a paused page does not fill its new HUD: say why
     }
 
     /// «Тема аквариума» (AppSettings.theme, already saved): the page crossfades (≈3 s) to it now; later loads
@@ -328,7 +466,16 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
             "loadsThisRun": loadCount, "terminationsThisRun": terminationCount,
             "loadFailuresThisRun": loadFailureCount, "slowRetry": gaveUp,
             "unresponsiveThisRun": unresponsiveCount,
+            // R12: why paused (null: running), occlusion as AppKit reports it, pauses this run by reason.
+            "pauseReason": pauseReason ?? NSNull(), "occlusionVisible": isDesktopVisible, "covered": isCovered,
+            "occlusionEvents": occlusionEvents, "pausesThisRun": pauseCounts,
         ]
+        var totals = pausedTotals
+        if let why = pauseReason, let since = pausedSince {
+            d["pausedForSec"] = Int(Date().timeIntervalSince(since))
+            totals[why, default: 0] += Date().timeIntervalSince(since)
+        }
+        d["pausedSecThisRun"] = totals.mapValues { Int($0.rounded()) }
         if let t = loadStartedAt { d["loadedAgoSec"] = Int(Date().timeIntervalSince(t)) }
         // Copied during a freeze: the page's snapshot times out, this says for how long it has been hung.
         if let u = unresponsiveSince { d["unresponsiveForSec"] = Int(Date().timeIntervalSince(u)) }
@@ -409,6 +556,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         if budgetLiteral != loadBudget { applyBudget() }
         evaluate("window.aquariumSetDebug && window.aquariumSetDebug(\(PageScript.literal(AppSettings.hud)))")
         sendTheme(AppSettings.theme)                     // as at boot: a no-op; chosen while loading: crossfade
+        if pauseReason != nil { sendPauseNote() }        // reloaded while paused (e.g. a crash behind a full-screen app)
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
@@ -498,12 +646,15 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     // MARK: Heartbeat
     private static var uptime: TimeInterval { ProcessInfo.processInfo.systemUptime }
 
-    /// Pinged only while a reply is due promptly: loaded, not paused (display asleep, parked, layers test),
-    /// desktop not covered (WebKit hides the page and may throttle it — a slow reply there is no hang).
+    /// Pinged only while a reply is due promptly: loaded, not paused (display asleep, parked, layers test, desktop
+    /// covered for > 2 s, a full-screen window — R12), desktop not covered even within the 2-s grace (WebKit hides
+    /// the page at once and may throttle it — a slow reply there is no hang). So a paused page never opens an
+    /// "unresponsive" episode, and a resumed one is first pinged 10 s after the resume.
     private var pingWanted: Bool { loaded && power != "paused" && isDesktopVisible }
 
     /// The 10-s tick runs only while the page is not paused: a paused window (display asleep all night, parked
-    /// up to 15 min) does not wake the app 6 times a minute (perform timers have no tolerance, not coalesced).
+    /// up to 15 min, behind a full-screen app for hours) does not wake the app 6 times a minute (perform timers have
+    /// no tolerance, not coalesced).
     /// .common: keeps running while a menu or an alert is open; close() cancels it. A ping already in flight
     /// at a pause is dropped by pingOverdue (pingWanted false) without a verdict.
     private func armHeartbeat() {

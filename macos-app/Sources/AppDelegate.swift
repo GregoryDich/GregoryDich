@@ -7,6 +7,8 @@ import ServiceManagement
 /// click-through window (hosting the aquarium WebView) on every screen, and
 /// throttles rendering for battery, Low Power Mode, heat and sleep. No pause/settings UI by design;
 /// the menu has diagnostics for the 60-fps work (P1.1), the aquarium theme and the feedback form.
+/// R12: a display nobody can see is paused on its own — desktop covered by windows for > 2 s (occlusion), a
+/// full-screen or maximised window on it (CoverageMonitor) — and resumed as soon as it can be seen again.
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// One window per display, keyed by CGDirectDisplayID (stable across resolution/arrangement
     /// changes and wake), so a screen-parameter change never reloads the aquarium needlessly.
@@ -34,11 +36,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var displaysAsleep = false
     private var started = false                      // first applyScreens done: later pages are "displayAdded"
     private var probeRunning = false
+    /// The display aquariumPerfProbe runs on: never paused as covered / full-screen meanwhile (R12).
+    private var probeDisplay: CGDirectDisplayID?
     private var layersTest: LayersTestWindow?
+    /// R12: displays behind a full-screen or maximised window (the fallback for occlusion).
+    private let coverage = CoverageMonitor()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
         updatePowerMode()
+        coverage.onCheck = { [weak self] in self?.coverageChecked() }
         applyScreens()
         started = true
 
@@ -56,6 +63,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let ws = NSWorkspace.shared.notificationCenter
         ws.addObserver(self, selector: #selector(displaySleep), name: NSWorkspace.screensDidSleepNotification, object: nil)
         ws.addObserver(self, selector: #selector(displayWake),  name: NSWorkspace.screensDidWakeNotification,  object: nil)
+        // R12: what covers the displays may have changed — a window-list check soon (at most one a second).
+        ws.addObserver(self, selector: #selector(spaceChanged), name: NSWorkspace.activeSpaceDidChangeNotification,
+                       object: nil)
+        ws.addObserver(self, selector: #selector(appActivated), name: NSWorkspace.didActivateApplicationNotification,
+                       object: nil)
 
         startPowerMonitoring()
         Log.info("started: \(AppSettings.appVersion), macOS \(Diagnostics.osVersion), power \(powerMode)")
@@ -186,8 +198,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         let onlyMain = AppSettings.onlyMainScreen
         let wanted = Set(order.filter { !onlyMain || $0 == primary })
-        let mode = currentMode()
-        let constrained = powerConstrained
         var kept = 0, added = 0, restored = 0, parkedNow = 0, closed = 0
 
         for id in order where wanted.contains(id) {
@@ -202,13 +212,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 windows[id] = w
                 w.update(screen: screen)
                 w.setRole(isMain: isMain)
-                w.setPower(mode, constrained: constrained)
-                w.show()
+                w.show()                                 // re-reads occlusion: not "covered" from its time ordered out
+                applyPower(to: w)
                 restored += 1
                 Log.info("display \(id) is back after \(Int(Date().timeIntervalSince(p.since))) s — window restored, no reload")
             } else {
-                let w = WallpaperWindow(screen: screen, displayID: id, isMain: isMain, power: mode,
-                                        constrained: constrained, reason: started ? "displayAdded" : "launch")
+                let why = pauseReason(display: id, covered: false)
+                let w = WallpaperWindow(screen: screen, displayID: id, isMain: isMain,
+                                        power: why == nil ? powerMode : "paused", constrained: powerConstrained,
+                                        pauseReason: why, reason: started ? "displayAdded" : "launch")
+                w.onOcclusionChange = { [weak self] w, visibleAgain in self?.occlusionChanged(w, visibleAgain: visibleAgain) }
                 windows[id] = w
                 w.show()
                 added += 1
@@ -232,6 +245,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         purgeParked()
         windows.values.forEach { $0.retryIfGaveUp() }    // never black forever
+        updateCoverageMonitor()
+        coverage.request()                               // geometry changed: what covers which display, again
         Log.info("screens: \(order.count) present, kept \(kept), added \(added), restored \(restored), " +
                  "parked \(parkedNow), closed \(closed), waiting \(parked.count)")
     }
@@ -287,14 +302,65 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
     @objc private func displayWake() {
         displaysAsleep = false
-        applyPowerState()
+        windows.values.forEach { $0.refreshOcclusion() } // covered before the sleep and not any more: no stale pause
+        applyPowerState()                                // also restarts the coverage checks (one in 0.3 s)
         windows.values.forEach { $0.retryIfGaveUp() }
     }
 
-    /// "paused" while the displays sleep or the layers test is open; else the power mode.
-    private func currentMode() -> String {
-        (displaysAsleep || layersTest != nil) ? "paused" : powerMode
+    // MARK: Pauses (R12)
+    /// Why the page on display `id` should be paused, nil = run (high/low by power). First the global pauses —
+    /// displays asleep, the layers test open — then, never for the page the performance test runs on (a pause would
+    /// stall it), the per-display ones: a full-screen or maximised window on that display (window list; named first:
+    /// behind a full-screen app occlusion may say "covered" too, a moment later) and the desktop not visible for
+    /// > 2 s (occlusion: screen saver, lock screen, a window over the whole screen including the menu bar strip).
+    private func pauseReason(display id: CGDirectDisplayID, covered: Bool) -> String? {
+        if displaysAsleep { return "sleep" }
+        if layersTest != nil { return "layersTest" }
+        if id == probeDisplay { return nil }
+        if coverage.covered.contains(id) { return "fullscreen" }
+        if covered { return "covered" }
+        return nil
     }
+
+    private func applyPower(to w: WallpaperWindow) {
+        let why = pauseReason(display: w.displayID, covered: w.isCovered)
+        w.setPower(why == nil ? powerMode : "paused", constrained: powerConstrained, reason: why)   // no-op unless changed
+    }
+
+    /// Every shown page's mode from the current state (parked pages stay paused: "parked").
+    private func applyPauses() {
+        updateCoverageMonitor()
+        windows.values.forEach { applyPower(to: $0) }
+    }
+
+    /// The window list is read while some page is shown and could be seen: not while the displays sleep or the
+    /// layers test is open (everything is paused then anyway). `aq.fullscreenCheck` NO: occlusion only.
+    private func updateCoverageMonitor() {
+        coverage.windowListEnabled = AppSettings.fullscreenCheck
+        coverage.setActive(!displaysAsleep && layersTest == nil && !windows.isEmpty)
+    }
+
+    /// A page's occlusion changed (a notification, or covered after the 2-s grace). Visible again after not being
+    /// visible — e.g. back from a full-screen Space — drops the window list's verdict for that display at once (resume
+    /// now, not at the next check); the check soon decides again (a maximised window there re-pauses in ≈ 1–2 s).
+    /// Parked pages are not ours to decide.
+    private func occlusionChanged(_ w: WallpaperWindow, visibleAgain: Bool) {
+        guard windows[w.displayID] === w else { return }
+        if visibleAgain { coverage.forget(w.displayID) }
+        applyPower(to: w)
+        coverage.request()
+    }
+
+    /// After every window-list check (≤ every 3 s while active): occlusion is re-read too, so a lost "visible
+    /// again" notification costs at most one poll, never a page paused for good.
+    private func coverageChecked() {
+        windows.values.forEach { $0.refreshOcclusion() }
+        applyPauses()
+    }
+
+    /// The Space animation settles first; entering a full-screen Space is confirmed by a second look ≥ 1 s later.
+    @objc private func spaceChanged() { coverage.request(after: 0.5) }
+    @objc private func appActivated() { coverage.request(after: 0.3) }
 
     /// Low Power Mode or heat: on top of "low", the pages get the 1.8 MP budget (ROADMAP P1.3).
     private var powerConstrained: Bool {
@@ -319,8 +385,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func applyPowerState() {
         updatePowerMode()
-        let mode = currentMode(), constrained = powerConstrained
-        windows.values.forEach { $0.setPower(mode, constrained: constrained) }   // no-op unless something changed
+        applyPauses()
     }
 
     // MARK: Menu actions
@@ -392,6 +457,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             "vlayer": AppSettings.vlayer,                // ⌥ «Задник слоями (тест)»; in use per page: snapshot.vlayer
             "inspectable": AppSettings.inspectable,
             "layersTestOpen": layersTest != nil,
+            "probeRunning": probeRunning,
+            // R12: full-screen / maximised windows per display (shares of the usable area, timings; no names).
+            "coverage": coverage.snapshot(),
+            "fullscreenCheck": AppSettings.fullscreenCheck,
             "primaryDisplay": primary.map { Int($0) } ?? -1,
             "parkedDisplays": parked.map { ["display": Int($0.key), "parkedAgoSec": Int(Date().timeIntervalSince($0.value.since))] },
         ]
@@ -451,11 +520,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return
         }
         probeRunning = true
+        probeDisplay = primary
+        applyPauses()                                    // resumed if a full-screen check had paused it (R12)
         refreshMenu(optionHeld: true)
         Log.info("perf probe started on display \(primary)")
         w.perfProbe { [weak self] result, error in
             guard let self = self else { return }
             self.probeRunning = false
+            self.probeDisplay = nil
+            self.applyPauses()                           // covered / full-screen meanwhile: paused now
             self.refreshMenu(optionHeld: false)
             // The page answers {error} when it has no aquariumPerfProbe (an older engine).
             let pageError = (result as? [String: Any])?["error"] as? String
