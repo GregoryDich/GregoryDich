@@ -22,7 +22,8 @@ ABOUT = {'v-tech-system': ('V-TECH SYSTEM', 'סיפור 3D בגלילה: פרי�
          'cellular-age-defense-2-5': ('CELLULAR AGE DEFENSE 2.5%', 'סיפור 3D חי ב-three.js'),
          'mitopen': ('MITOPEN', 'סיפור 3D חי ב-three.js'),
          'cell-renew-1-5': ('CELL RENEW 1.5%', 'סיפור 3D חי ב-three.js'),
-         'mitoscan': ('MITOSCAN', 'סיפור 3D חי ב-three.js')}
+         'mitoscan': ('MITOSCAN', 'סיפור 3D חי ב-three.js'),
+         'derma-recovery-cream': ('DERMA RECOVERY CREAM', 'סיפור 3D חי ב-three.js')}
 
 pages = []
 for arg in sys.argv[1:]:
