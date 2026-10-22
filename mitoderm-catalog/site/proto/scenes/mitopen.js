@@ -140,7 +140,13 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     return u => { const x = (u - a) / h; if (x <= 0) return T[0]; if (x >= n - 1) return T[n - 1]; const i = x | 0; return T[i] + (T[i + 1] - T[i]) * (x - i); };
   }
   // the silhouette: cone (straight, fitted), its sharp rim, the undercut, a groove, a band; the body fitted with two
-  // cubics (rms 0.22 px); the ring's envelope over its ridges; the nose (fitted), its neck and collar
+  // cubics (rms 0.22 px); the ring's envelope over its ridges (u 526…572 one cubic through the measured radii, ≤ 0.4 px
+  // off them: its knots would show as lines in the scallops' reflections); the nose (fitted), its neck and collar
+  const SCAL = [];
+  for (let u = 528; u <= 572; u += 2) {
+    const t = (u - 526) / 46, t2 = t * t, t3 = t2 * t;
+    SCAL.push([u, (2 * t3 - 3 * t2 + 1) * 70.3 - (t3 - 2 * t2 + t) * 0.45 * 46 + (3 * t2 - 2 * t3) * 58.9]);
+  }
   const R = tab(pchip([[4.3, 22.6], [4.5, 24.1], [5.0, 25.2], [5.8, 26.2], [9, 28.35], [20, 34.35], [30, 39.8], [40, 45.25], [50, 50.7], [57, 54.5],
     [60, 56.2], [63, 57.9], [66, 59.3], [68, 59.8], [70, 59.4], [72, 57.9], [74, 55.8], [76, 53.3], [78, 50.1], [80, 48.1], [82, 48.1], [84, 49.7],
     [86, 50.3], [91, 50.3], [94, 49.8], [98, 49.01], [104, 48.09], [110, 47.09], [116, 46.05], [122, 44.98], [128, 43.92], [134, 42.88],
@@ -150,8 +156,7 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     [320, 51.86], [326, 52.44], [332, 53.02], [338, 53.6], [344, 54.18], [350, 54.75], [356, 55.32], [362, 55.89], [368, 56.46], [374, 57.03],
     [380, 57.6], [386, 58.16], [392, 58.72], [398, 59.28], [404, 59.84], [410, 60.4], [416, 60.95], [422, 61.51], [428, 62.06], [434, 62.61],
     [440, 63.15], [446, 63.7], [452, 64.25], [458, 64.79], [464, 65.33], [470, 65.87], [476, 66.41], [482, 66.94], [488, 67.47], [494, 68.01],
-    [500, 68.54], [506, 69.07], [510, 69.3], [514, 69.65], [520, 70.2], [524, 70.7], [526, 70.3], [530, 68.5], [540, 64.5], [550, 61.4], [560, 60.0],
-    [567, 58.9], [591, 58.9], [594, 57.3], [600, 55.8], [603, 54.3], [606, 52.8], [609, 50.1], [612, 49.67], [620, 48.32], [640, 45.04],
+    [500, 68.54], [506, 69.07], [510, 69.3], [514, 69.65], [520, 70.2], [524, 70.7], [526, 70.3], ...SCAL, [591, 58.9], [594, 57.3], [600, 55.8], [603, 54.3], [606, 52.8], [609, 50.1], [612, 49.67], [620, 48.32], [640, 45.04],
     [660, 41.92], [680, 38.95], [700, 36.12], [705, 36.0], [710, 36.2], [716, 36.9], [720, 37.4], [724, 38.5], [726, 38.85], [729, 38.85],
     [732, 37.9], [735, 36.4], [738, 35.4], [741, 34.8], [745, 33.6]]), 0, 910, 0.05);
   const dR = u => (R(u + 0.2) - R(u - 0.2)) / 0.4;
@@ -269,7 +274,9 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   }
   const MET = { color: 0xd4ccb1, emissive: 0x4a4639, roughness: 0.3 };
   const metal = penPatch(new THREE.MeshPhysicalMaterial({ color: MET.color, metalness: 1, roughness: MET.roughness, emissive: MET.emissive, toneMapped: false }), 'metal');
-  const ringMat = penPatch(new THREE.MeshPhysicalMaterial({ color: 0xd4b49b, metalness: 1, roughness: 0.3, emissive: 0x0a0705, toneMapped: false }), 'ring');
+  // the hub, seen through the cartridge's wall: the same metal, as dim as the photo shows it there (#a8a28e)
+  const hubMat = penPatch(new THREE.MeshPhysicalMaterial({ color: 0xb2ab93, metalness: 1, roughness: MET.roughness, emissive: 0x2e2c24, toneMapped: false }), 'hub');
+  const ringMat = penPatch(new THREE.MeshPhysicalMaterial({ color: 0xd3b59a, metalness: 1, roughness: 0.3, emissive: 0x0a0705, toneMapped: false }), 'ring');
   const buttonMat = penPatch(new THREE.MeshPhysicalMaterial({ color: 0xcfb3a0, metalness: 1, roughness: 0.25, emissive: 0x3a3029, toneMapped: false }), 'button');
   const dotMat = new THREE.MeshPhysicalMaterial({ color: 0x5c5f59, roughness: 0.15, clearcoat: 0.5, clearcoatRoughness: 0.05, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 });
   const gapMat = new THREE.MeshStandardMaterial({ color: 0x47443b, roughness: 0.6, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 });
@@ -298,8 +305,8 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     m.customProgramCacheKey = () => 'clear' + k.join() + side;
     return m;
   }
-  const tubeBack = clear(0xeeefe8, 0.9, 0.1, 0.75, THREE.BackSide), tubeFront = clear(0xf0f1eb, 0.1, 0.5, 0.55);
-  const partMat = clear(0xa3a49d, 0.12, 0.75, 0.6), snapMat = clear(0x9c9c94, 0.35, 0.5, 0.6), plateMat = clear(0x8f8d84, 0.7, 0.3, 0.7);
+  const tubeBack = clear(0xeeefe8, 0.9, 0.1, 0.6, THREE.BackSide), tubeFront = clear(0xf0f1eb, 0.1, 0.5, 0.55);
+  const partMat = clear(0xa3a49d, 0.12, 0.75, 0.6), snapMat = clear(0x8e8e87, 0.6, 0.3, 0.6), plateMat = clear(0x8f8d84, 0.7, 0.3, 0.7);
 
   // ---- the pen
   const pen = new THREE.Group(); scene.add(pen);
@@ -364,10 +371,10 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
       if (Math.abs(da) < 60) { const m = smooth(743, 744, u) * (1 - smooth(759, 760, u)); r = Math.min(r, lerp(r, 20.5 / Math.cos(rad(da)), m)); }
       return r;
     };
-    add(surface(range(744, 770, 1), range(-180, 180, 2), hubR), metal);
-    add(new THREE.CircleGeometry(24 / PXW, 64).rotateX(Math.PI / 2).translate(0, Y(770), 0), metal);
+    add(surface(range(744, 770, 1), range(-180, 180, 2), hubR), hubMat);
+    add(new THREE.CircleGeometry(24 / PXW, 64).rotateX(Math.PI / 2).translate(0, Y(770), 0), hubMat);
     const boss = new THREE.SphereGeometry(2.6 / PXW, 16, 12), ab = rad(63);
-    boss.translate(Math.sin(ab) * 23.6 / PXW, Y(751), Math.cos(ab) * 23.6 / PXW); add(boss, metal);
+    boss.translate(Math.sin(ab) * 23.6 / PXW, Y(751), Math.cos(ab) * 23.6 / PXW); add(boss, hubMat);
   }
   // the cartridge, light clear plastic: the tube (its far wall, then what is inside, then its near wall: one outer wall,
   // so the layers sort), the flange, the open end; inside, the clear carrier (its snaps under the flange as one clear

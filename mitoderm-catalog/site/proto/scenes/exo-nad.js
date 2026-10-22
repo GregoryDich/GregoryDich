@@ -390,8 +390,11 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // ---- the line's light, flat to the camera in frame pixels (a plane at a depth; local x = px − 1200, y = 750 − py),
   // always behind the products and drawn before them: soft shapeless glows, nothing drawn
   let pxU = 1;   // device px per frame px
-  // the glows add their colour (× their alpha, premultiplied in the shader) and keep a true alpha (it adds too): a picture
-  // read back (the keys, the phone stills, the kit picture) un-premultiplies to the glow's own champagne, not to lemon
+  // the glows add their colour (× their alpha, premultiplied in the shader). Drawn for a picture read back (the keys, the
+  // phone stills, the kit picture: `still`) they keep a true alpha (it adds too), which un-premultiplies to the glow's own
+  // champagne, not to lemon. Live their alpha is 0: the page composites them as added light, exactly. With an alpha of a
+  // level or two, a compositor that truncates (headless Chromium's does) takes up to a level off every channel of the
+  // page behind the canvas: round a faint glow, a ring below the backdrop, warm where its blue (the least) is lost first
   const ADD = { blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor,
     blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneFactor };
   const place = (g, D) => { at(1200, 750, D, g.position); g.quaternion.copy(lay.quaternion); g.scale.setScalar(world(1, D)); };
@@ -408,14 +411,15 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   };
   // soft spots: the glow behind the box (S1–S2), the light behind the three on S3 → S4, the current step's on S5 and S4's
   // backlight; the haze (S3 → S5). A gaussian (exp(−k q²)) that fades out over the outer 40 % of its ellipse with no slope
-  // at its end: no edge, no disc, no rim. Its colour and alpha (premultiplied) are dithered by half a level each
-  // (interleaved gradient noise): on the 8-bit canvas a faint glow neither bands into flat ellipses nor gets a red fringe
-  // (where it fades out, the red of its champagne would round up a level before the green and blue)
-  const SPOT_F = `uniform vec4 uS; uniform float uA, uK; uniform vec3 uC; varying vec2 vP;
+  // at its end: no edge, no disc, no rim. It is dithered by half a level (interleaved gradient noise), so on the 8-bit
+  // canvas a faint glow does not band into flat ellipses and its colour is right on average (unrounded, the red of its
+  // champagne would come up a level before the green and blue: a warm fringe)
+  const SPOT_F = `uniform vec4 uS; uniform float uA, uK, uT; uniform vec3 uC; varying vec2 vP;
     void main() { vec2 q = (vP - uS.xy) / uS.zw; float r = length(q), a = uA * exp(-uK * r * r) * (1.0 - smoothstep(0.6, 1.0, r));
       float n = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) - 0.5;
-      gl_FragColor = a > 0.0 ? max(vec4(uC * a, a) + n / 255.0, 0.0) : vec4(0.0); }`;
-  const spot = (c, order, k = 4) => flat(SPOT_F, { uS: { value: new THREE.Vector4() }, uA: { value: 0 }, uK: { value: k }, uC: { value: hex3(c) } }, order);
+      gl_FragColor = a > 0.0 ? max(vec4(uC * a, a) + n / 255.0, 0.0) * vec4(1.0, 1.0, 1.0, uT) : vec4(0.0); }`;
+  const TRUE_A = { value: 1 };   // 1: a true alpha (a picture read back); 0: live, added light only
+  const spot = (c, order, k = 4) => flat(SPOT_F, { uS: { value: new THREE.Vector4() }, uA: { value: 0 }, uK: { value: k }, uT: TRUE_A, uC: { value: hex3(c) } }, order);
   const setSpot = (m, cx, cy, rx, ry, a) => {
     const u = m.material.uniforms; u.uS.value.set(cx, cy, rx, ry); u.uB.value.set(cx - rx, cy - ry, cx + rx, cy + ry); u.uA.value = a; m.visible = a > 0.004;
   };
@@ -511,6 +515,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   let lastW = 1;   // the box's front width drawn (with its breath): the ΔE probes (state()) are placed by it
   function pose(p, t, still) {
     const st = story(p), live = still ? 0 : 1 - smooth(4.85, 5, p), ph = phone.matches;
+    TRUE_A.value = still ? 1 : 0;
     const b = st.box;
     // the box: its front parallel to the picture's vertical, turned to face the camera, then toward the copy (4°; the idle
     // sway ±1.5°: within 5.5°, its sides are not photographed); on S1 it breathes ±1.5 %
