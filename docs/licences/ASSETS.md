@@ -40,14 +40,14 @@ Enhanced licence (video; confirm the type in License History — ROADMAP §2).
 
 | | files |
 |---|---|
-| Media files in `aquarium/` | **78** |
-| Std — photo cut-outs and derivatives (24 stock photos) | 55 |
+| Media files in `aquarium/` | **79** |
+| Std — photo cut-outs and derivatives (25 stock photos) | 56 |
 | Enh — video 188049047 loop, posters and derived masks | 8 |
 | Procedural / own (Blender renders, **not bundled**) | 14 |
 | UNKNOWN — verify (**not bundled**) | 1 |
-| Bundled into the `.app` | 63 (55 Std + 8 Enh) |
-| Distinct stock IDs used | 25 (24 photos + 1 video) |
-| Licensed but not used | 38 IDs (22 photos + 16 videos) — see last section |
+| Bundled into the `.app` | 64 (56 Std + 8 Enh) |
+| Distinct stock IDs used | 26 (25 photos + 1 video) |
+| Licensed but not used | 56 IDs (40 photos + 16 videos) — see last section |
 
 Licence-date caveat: the scratch index records the A0 photos (264961754 backdrop and the five fish
 photos 177282746, 138368184, 647601394, 1132472143, 317344814) as licensed on 2026-10-16, but their
@@ -130,7 +130,7 @@ white balance to backdrop sand (70 %), local black/white point (60 %), top light
 | `scene/props/starfish_floor.png` | 262×126 | derived from `starfish.png` (275155162) | Std | 2026-10-16 | R2c `art/r2c_assets.py`: lying star — vertical squash to 0.56, far edge 8 % narrower (perspective on premultiplied alpha) | Yes |
 | `scene/props/tube_sponges.png` | 508×489 | Adobe Stock **413607513** "Colorful yellow tube sponge in caribbean sea" | Std | 2026-10-16 | cut-out keyed "yellow vs blue-teal", big tube + mirrored second tube behind (×0.70, darker); V5 `art/sponge_retouch.py`: lime → ochre-yellow, despill, 1 px alpha erosion (photo scene only) | Yes |
 
-## 4. Coral colony library — `aquarium/scene/corals/` (V3 2026-10-17, "corals-2" 2026-10-18, R2c 2026-10-21)
+## 4. Coral colony library — `aquarium/scene/corals/` (V3 2026-10-17, "corals-2" 2026-10-18, R2c 2026-10-21, batch 3 2026-10-22)
 
 Common derivation (scene/README.txt, V3): rembg (isnet / birefnet) rough mask → edge refinement by
 "projection on F−B" key, edge colour unmixed and decontaminated, neighbours/fish/rocks removed by
@@ -158,6 +158,7 @@ darkened base). `sourceId` per colony is also recorded in `corals/catalog.js`.
 | `scene/corals/sps_purple.png` | 718×513 | Adobe Stock **823216913** (purple branching SPS foreground) | Std | 2026-10-17 | actinic → daylight purple-crimson; cut along the natural contour (QA) | Yes |
 | `scene/corals/seawhip_orange.png` | 836×961 | Adobe Stock **428884773** (orange sea whips Ellisella, natural light) | Std | 2026-10-17 | "orange vs water/reef" colour key | Yes |
 | `scene/corals/gorgonian_bush_red.png` | 1191×577 | Adobe Stock **444143131** (white-red gorgonian bush on blue water) | Std | 2026-10-17 | "fan vs water" key; brown fan, crinoid, fish, sponges and cave removed (QA) | Yes |
+| `scene/corals/cauliflower_yellow.png` | 923×701 | Adobe Stock **347525870** ("typical red sea coral structure with anthias fish", Red Sea, natural light) | Std | 2026-10-22 | yellow cauliflower coral (Pocillopora verrucosa) cut on blue water; fish replaced by silhouette patches of the same texture; QA rebuild ad9fbfe (lower-right lobe recovered). In the catalogue, not placed in the scene; fallback/benchmark for the own 3D yellow coral (ROADMAP R2b) | Yes |
 
 ## 5. Scene masks, occluders and patches — `aquarium/scene/`
 
@@ -179,14 +180,14 @@ darkened base). `sourceId` per colony is also recorded in `corals/catalog.js`.
 
 The depth grid, spots, lanes and all placement data live in `scene/scene.js` (code, no stock content).
 
-## 6. Stock IDs used (25)
+## 6. Stock IDs used (26)
 
-Photos (24, all Std): 264961754, 177282746, 138368184, 647601394, 1132472143, 317344814, 892154672,
+Photos (25, all Std): 264961754, 177282746, 138368184, 647601394, 1132472143, 317344814, 892154672,
 555478310, 275155162, 318496474, 413607513, 191997240, 616540286, 506270057, 733928665, 824786923,
-180252895, 157134933, 327247064, 418791796, 192532117, 823216913, 428884773, 444143131.
+180252895, 157134933, 327247064, 418791796, 192532117, 823216913, 428884773, 444143131, 347525870.
 Video (1, Enh): 188049047.
 
-## 7. Licensed (free collection, $0) but NOT used in the build — 38 IDs
+## 7. Licensed (free collection, $0) but NOT used in the build — 56 IDs
 
 Nothing from these is in `aquarium/`; the originals exist only in the agent's scratch folder. They
 still appear in the owner's License History, so they are listed here to avoid confusion. If any of
@@ -209,6 +210,31 @@ them is used later, move it to the tables above.
 | 504265139 | zoanthid carpet, actinic macro | no silhouette, daylight colour unrecoverable |
 | 483500043 | polyp macro under blue light | no silhouette |
 | 1430578512 | decorator crab | algae over shell, flash colours — not separable |
+
+**Photos (18), licensed 2026-10-22 (stock batch 3 — yellow branching coral and barrel sponge search):**
+
+| ID | What it is | Why unused |
+|---|---|---|
+| 315953314 | Marsa Alam fire-coral thicket with anthias | soft, chromatic fringing at 100 %, fish everywhere |
+| 440175833, 440175889 | Acropora millepora on black, actinic LED | neon colours |
+| 440175816 | Acropora tenuis frag on black | tiny frag |
+| 216917159 | purple Acropora, blue LED | LED colours |
+| 348678194 | Montipora digitata "Forest Fire", blue LED | LED colours |
+| 314939252 | staghorn frags hanging on lines | separate branches, not a colony |
+| 376592491 | staghorn branch macro | single branch |
+| 524620950 | elkhorn coral, Curaçao, backlit | brown, merges with the reef behind |
+| 164718346 | Red Sea Porites knobs | not branching |
+| 286762658 | pillar coral + sponge, Curaçao | brown pillars, no barrel |
+| 390097845, 74185524 | coral skeletons on white | dead skeletons |
+| 273568208 | Eilat table corals | murky |
+| 335220660 | Maldives brown Acropora tables | wrong form/colour |
+| 1175331122 | Bonaire reefscape with parrotfish | no separable colony |
+| 1175705008 | coral farm frags on a PVC frame | frags, not colonies |
+| 302861284 | Egypt reef, portrait | no separable colony |
+
+281527531 (barrel sponge, licensed 2026-10-16, above) was retried in batch 3: the clean half is too small and a mirrored
+composite looked synthetic — still unused. The missing yellow branching coral and barrel sponge are being made as
+**own procedural 3D assets** (ROADMAP R2b), which will get their own rows here as "Procedural / own".
 
 **Videos (16), full-resolution downloads dated 2026-10-17:**
 
