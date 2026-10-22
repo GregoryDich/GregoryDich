@@ -16,6 +16,9 @@
 // for drawing at the screen's pixel density instead.
 // usage: [SYNTH=<webp>] FONTDIR=<dir with Rubik[wght].ttf> NODE_PATH=$(npm root -g) node verify-live.cjs <page.html> <files dir> <out dir>
 // A scene page: THREE=<three.module.min.js of three@0.160.0> serves the CDN file locally and turns on software WebGL.
+// The story layers follow the product's composition (build-vtech.py writes them into the page): the exosome cells with
+// their deep plate and S3 legend, the PDRN molecules, the DNA helix. A layer the page does not have is SKIPped (not
+// counted) and checked once to be absent instead: nothing of it fetched or shown.
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 const [pagePath, filesDir, out] = process.argv.slice(2);
@@ -30,6 +33,8 @@ const FONT_CSS = FONTS.map(([f], i) => `@font-face{font-family:'${f}';src:url(ht
 const STORY = ['meet', 'why', 'inside', 'feel', 'protocol', 'offer'];   // the anchors of the five runs
 const checks = [];
 const ok = (name, pass, info = '') => { checks.push({ name, pass, info }); console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? '  ' + info : '')); };
+const skip = name => console.log('SKIP ' + name + '  (not in this product)');
+const HAS = { cells: /"cells":\["/.test(html), mols: /"mols":\["/.test(html), helix: /"helix":true/.test(html) };
 const TYPES = { '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg' };
 const MB = b => (b / 1e6).toFixed(1) + ' MB';
 
@@ -203,17 +208,29 @@ async function synthRun(browser, tag, assert) {
       await p.screenshot({ path: `${out}/desk-s${k + 1}.jpg`, type: 'jpeg', quality: 82 });
     }
     ok('desktop: each screen holds its key frame while read', !holds.includes('!'), holds.join(' '));
-    ok('desktop: exosome cells float in S2–S3, none from S4 on', cellsAt.why >= 4 && cellsAt.inside >= 4 && !cellsAt.feel && !cellsAt.protocol && !cellsSeen.after,
-      Object.entries(cellsAt).map(([k, v]) => `${k}:${v}`).join(' ') + ` · after S4 max ${cellsSeen.after}`);
-    ok('desktop: the deep plate behind S2–S3 only', plateAt.why > 0.95 && plateAt.inside > 0.95 && plateAt.meet < 0.05 && plateAt.feel < 0.05,
-      Object.entries(plateAt).map(([k, v]) => `${k}:${v.toFixed(2)}`).join(' '));
-    ok('desktop: cells never over the copy (faint bokeh only) nor the S3 ampoules', !cellBad.length, cellBad.slice(0, 4).join(' | '));
-    ok('desktop: PDRN molecules float with the cells in S2–S3', molsAt.why + molsAt.inside >= 2 && !molsAt.feel && !molsAt.protocol,
-      Object.entries(molsAt).map(([k, v]) => `${k}:${v}`).join(' '));
-    ok('desktop: the DNA helix shows behind S3 only, in the 3D half', hxAt.inside.o > 0.3 && hxAt.inside.loaded && hxAt.inside.right <= 1440 * 0.5 && hxAt.meet.o === 0 && hxAt.feel.o < 0.05 && hxAt.protocol.o === 0,
-      Object.entries(hxAt).map(([k, v]) => `${k}:${v.o.toFixed(2)}`).join(' ') + ` · right edge ${hxAt.inside.right.toFixed(0)}`);
     const legend = await p.evaluate(() => { const l = document.querySelector('#inside .legend'); return l && l.textContent.trim(); });
-    ok('desktop: S3 legend for the cells', legend === 'אקסוזומים סינתטיים — המחשה', legend);
+    if (HAS.cells) {
+      ok('desktop: exosome cells float in S2–S3, none from S4 on', cellsAt.why >= 4 && cellsAt.inside >= 4 && !cellsAt.feel && !cellsAt.protocol && !cellsSeen.after,
+        Object.entries(cellsAt).map(([k, v]) => `${k}:${v}`).join(' ') + ` · after S4 max ${cellsSeen.after}`);
+      ok('desktop: the deep plate behind S2–S3 only', plateAt.why > 0.95 && plateAt.inside > 0.95 && plateAt.meet < 0.05 && plateAt.feel < 0.05,
+        Object.entries(plateAt).map(([k, v]) => `${k}:${v.toFixed(2)}`).join(' '));
+      ok('desktop: cells never over the copy (faint bokeh only) nor the S3 ampoules', !cellBad.length, cellBad.slice(0, 4).join(' | '));
+      ok('desktop: S3 legend for the cells', legend === 'אקסוזומים סינתטיים — המחשה', legend);
+    } else ['desktop: exosome cells in S2–S3', 'desktop: the deep plate behind S2–S3', 'desktop: cells never over the copy', 'desktop: S3 legend for the cells'].forEach(skip);
+    if (HAS.mols) ok('desktop: PDRN molecules float with the cells in S2–S3', molsAt.why + molsAt.inside >= 2 && !molsAt.feel && !molsAt.protocol,
+      Object.entries(molsAt).map(([k, v]) => `${k}:${v}`).join(' '));
+    else skip('desktop: PDRN molecules in S2–S3');
+    if (HAS.helix) ok('desktop: the DNA helix shows behind S3 only, in the 3D half', hxAt.inside.o > 0.3 && hxAt.inside.loaded && hxAt.inside.right <= 1440 * 0.5 && hxAt.meet.o === 0 && hxAt.feel.o < 0.05 && hxAt.protocol.o === 0,
+      Object.entries(hxAt).map(([k, v]) => `${k}:${v.o.toFixed(2)}`).join(' ') + ` · right edge ${hxAt.inside.right.toFixed(0)}`);
+    else skip('desktop: the DNA helix behind S3');
+    if (!HAS.cells || !HAS.mols || !HAS.helix) {   // what the product does not contain is not on the page either
+      const sprites = [...req.cells], vals = o => Object.values(o);
+      const gone = { cells: HAS.cells || (!sprites.some(r => /\/c\d\d-/.test(r)) && vals(cellsAt).every(v => !v) && vals(plateAt).every(v => v < 0.05) && !legend),
+        mols: HAS.mols || (!sprites.some(r => /\/m\d\d-/.test(r)) && vals(molsAt).every(v => !v)),
+        helix: HAS.helix || (!req.helix && vals(hxAt).every(h => !h.o)) };
+      ok('desktop: the layers this product does not contain are absent (nothing fetched or shown)', gone.cells && gone.mols && gone.helix,
+        Object.keys(HAS).filter(k => !HAS[k]).map(k => `${k}: ${gone[k] ? 'absent' : 'PRESENT'}`).join(' · ') + ` · ${sprites.length} sprite files, ${req.helix} helix requests`);
+    }
     for (let k = 0; k < R; k++) {   // mid-run frames, to look at
       const y = await p.evaluate(([a, b, last]) => last ? (document.getElementById(a).offsetTop + document.querySelector('.kitcard').getBoundingClientRect().top + scrollY - innerHeight * 0.85) / 2 + innerHeight * 0.1
         : (document.getElementById(a).offsetTop + document.getElementById(b).offsetTop) / 2 + innerHeight * 0.05, [STORY[k], STORY[k + 1], k === R - 1]);
