@@ -13,23 +13,24 @@ PEELING» 500, each letter's ink centred on its measured centre; «VM corporatio
 L 90, ±0.5 px of its 48 px; fitted by overlay), symmetric but for its right half, 0.5 px wider as traced. The vials' «PH NORMALIZER» / «LONGEVITY SERUM»: Jost 700, each line fitted to its
 measured ink box (the packshot prints them flat on the front, not wrapped round the glass: see the scene). The print is
 black on all four (packaging-text.json says «bold white» for the vials: the packshot and the owner's photo 27 show black).
-The packaging's vector file would replace all of it one for one.
+The print the packshot lacks follows the owner's photos of 22/10 as packaging-text.json transcribes them: the lid's small
+block, the peel bottle's label, the tray's gold print; placed on the thumbnails (26, 28, 29, 32), the lines Jost (bold:
+600), «℮» from DejaVu Sans Bold; lines unreadable in the photos are left out. The packaging's vector file would replace
+all of it one for one.
 Writes into <out dir>:
   lid-face.png     the sleeve's front, RGB 2048×1796 (u 0…1 × v 0…0.877; 1.9 texels per px of the largest front, 1056 px in
                    a 3840 key): the foil's colour and the black print
   lid-metal.png    its material, RGB 1024×898: G roughness (foil 0.30, ink 0.55), B metalness (foil 1, ink 0)
   foil-brush.jpg   the foil's fine horizontal brushing (bump), 512×512, tiling
-  peel-print.png   alpha of the peel bottle's print, L 1024×293: the lid's lockup ×0.255 (x −0.45…0.45 W_b of its axis ×
-                   0.585…0.70 H_b: «EXO-NAD»'s cap line is at 0.594, so its tops keep a margin; no ink on an edge)
+  peel-print.png   alpha of the peel bottle's print, L 1024×(x −0.45…0.45 W_b of its axis × 0.525…0.80 H_b): the monogram,
+                   «EXO-NAD» / «PEELING», the four-language description; no ink on an edge
   peel-liquid.png  the peel's two phases as photographed (median colours, the peach left of the upper phase, the line
                    between them, the light foot, a fine haze of gold), RGB 512×693 (the liquid's front, 0.755 W_b × 0.455 H_b),
                    ×1.22 in linear light (LIQ_GAIN: the scene's light and glass take that much; the ΔE probe lands ≤ 6)
   vial-ph.png, vial-ls.png   alpha of the vials' print, L 1024×913 / 924 (x −R…R as seen from the front × 0.30…0.72 H_v); the
                    unreadable line of small type under the monogram is left out (no placeholder marks for unknown text)
-  tray-print.png   alpha of the tray's gold print, L 1024×256 (u 0.30…0.70 × v 0.77…0.87 of the front): the EXO-NAD logo
-                   (owner photos 29 and 32: not in packaging-text.json, question 2). The tray's other print (①②③ step
-                   labels, «MADE IN ITALY») waits for the full-size photo 29: the thumbnail cannot place or size it
-usage: python3 -I make_textures.py <font dir with Jost[wght].ttf> <out dir>"""
+  tray-print.png   alpha of the tray's gold print, L 2048×(u 0.03…0.97 × v 0.03…0.88 of the front): see tray_print
+usage: python3 -I make_textures.py <font dir with Jost[wght].ttf, DejaVuSans-Bold.ttf> <out dir>"""
 import os, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -56,11 +57,25 @@ MONO = (527.0, 37.0)                      # the monogram's frame on the packshot
 MONO_V = [(4.75, 0), (12.25, 0), (23.7, 31), (35.25, 0), (42.75, 0), (23.7, 44)]
 MONO_L = [(3.8, 11.2), (7.6, 25), (6.9, 36.5), (0, 36.5), (0.9, 23)]
 MONO_R = [(47.6 - x, y) for x, y in MONO_L]   # the right half 0.5 px wider than the left, as traced
-JOST = None
+# the small block under the lockup (owner photos of 22/10, packaging-text.json; not on the packshot): centred, its print in
+# two groups at v 0.73…0.77 and 0.81…0.84 and 0.21 W wide (measured on the thumbnails 26 and 32: ±0.01 W); every line at
+# the cap height that fits the first to that width. Its Arabic line is unreadable in the photos: its place stays empty
+LID_BLOCK_W = 0.21
+LID_BLOCK = [(('Professional Cosmetic Kit – Three-Step Revitalizing System',), 0.738),
+             (('', 'Kit Cosmetico Professionale Trifase Rivitalizzante'), 0.7465),
+             (('', 'Kit Cosmético Profesional Trifásico Revitalizante'), 0.755),
+             (('', 'Kit Cosmétique Professionnel Triphasé Revitalisant'), 0.7635),
+             (('FACE & BODY',), 0.810),
+             (('EXO-NAD PEELING:', ' 15 ml ℮ 0.51 fl.oz.'), 0.8215),
+             (('PH NORMALIZER:', ' 5 x 5 ml ℮ 5 x 0.17 fl.oz.'), 0.830),
+             (('LONGEVITY SERUM:', ' 5 x 5 ml ℮ 5 x 0.17 fl.oz.'), 0.8385)]
+JOST = DEJAVU = None
 
 
-def font(size, weight):
-    f = ImageFont.truetype(JOST, size, layout_engine=ImageFont.Layout.BASIC); f.set_variation_by_axes([weight]); return f
+def font(size, weight, path=None):   # Jost at a weight, or another face (path: «℮» from DejaVu Sans Bold)
+    f = ImageFont.truetype(path or JOST, size, layout_engine=ImageFont.Layout.BASIC)
+    if not path: f.set_variation_by_axes([weight])
+    return f
 
 
 def ink(img, thr=127):   # the ink box of an L image: x0, y0, x1, y1
@@ -68,8 +83,8 @@ def ink(img, thr=127):   # the ink box of an L image: x0, y0, x1, y1
     return xs.min(), ys.min(), xs.max() + 1, ys.max() + 1
 
 
-def run(parts, size, track=0.0):   # a line of (text, weight, scale) on its baseline at row 2·size; with `track` px between letters
-    fonts = [(t, font(round(size * k), w)) for t, w, k in parts]
+def run(parts, size, track=0.0):   # a line of (text, weight, scale[, font file]) on its baseline at row 2·size; with `track` px between letters
+    fonts = [(t, font(round(size * k), w, *f)) for t, w, k, *f in parts]
     m = int(np.ceil(size)); width = int(sum(f.getlength(t) + track * len(t) for t, f in fonts)) + m * 2
     im = Image.new('L', (width, m * 3)); d = ImageDraw.Draw(im); x = m
     for t, f in fonts:
@@ -79,10 +94,10 @@ def run(parts, size, track=0.0):   # a line of (text, weight, scale) on its base
 
 
 _caps = {}
-def cap_of(weight):   # the H's ink height per px of size
-    if weight not in _caps:
-        im, _ = run([('H', weight, 1)], 400); x0, y0, x1, y1 = ink(im); _caps[weight] = (y1 - y0) / 400
-    return _caps[weight]
+def cap_of(weight, path=None):   # the H's ink height per px of size
+    if (weight, path) not in _caps:
+        im, _ = run([('H', weight, 1) + ((path,) if path else ())], 400); x0, y0, x1, y1 = ink(im); _caps[weight, path] = (y1 - y0) / 400
+    return _caps[weight, path]
 
 
 def glyph(ch, weight, cap):   # one letter at cap height `cap` px: its ink (float), the ink's top relative to the cap line
@@ -118,12 +133,12 @@ def letters(canvas, items, cap, base, X, Y, k):   # letters (ch, weight, ink cen
         paste(canvas, a, X(u) - a.shape[1] / 2, Y(base) - cap * k + top)
 
 
-def lockup(canvas, X, Y, k, logo_only=False):
+def lockup(canvas, X, Y, k):
     """the lid's «EXO-NAD» and «SKIN LONGEVITY PEELING» with X(u), Y(v) mapping the lid's fractions to canvas px and k
-    canvas px per W (the same lockup scaled: the peel bottle's label, the tray's logo)"""
+    canvas px per W (the same lockup scaled: the tray's)"""
     letters(canvas, EXO, EXO_CAP, EXO_BASE, X, Y, k)
     u, v, w, h = DASH; poly(canvas, [(X(u - w / 2), Y(v - h / 2)), (X(u + w / 2), Y(v - h / 2)), (X(u + w / 2), Y(v + h / 2)), (X(u - w / 2), Y(v + h / 2))])
-    if not logo_only: letters(canvas, [(ch, SKIN_W, u) for ch, u in SKIN], SKIN_CAP, SKIN_BASE, X, Y, k)
+    letters(canvas, [(ch, SKIN_W, u) for ch, u in SKIN], SKIN_CAP, SKIN_BASE, X, Y, k)
 
 
 def monogram(canvas, X, Y, value=1.0):   # X, Y: packshot px (x, y) → canvas px
@@ -146,6 +161,40 @@ def vmcorp(canvas, x0, x1, base):   # «VM corporation»: «VM» 700 at the x-he
     paste(canvas, a, ox, oy)
 
 
+def mono_at(canvas, cx, top, width):   # the monogram, its ink `width` canvas px wide, centred on cx, its top at `top`
+    s = width / 47.6
+    monogram(canvas, lambda x: cx + (x - MONO[0] - 23.8) * s, lambda y: top + (y - MONO[1]) * s)
+
+
+def parts_of(text, weight):   # Jost, a «℮» set from DejaVu Sans Bold at the height of the capitals around it
+    if '℮' not in text: return [(text, weight, 1)]
+    a, b = text.split('℮')
+    return [(a, weight, 1), ('℮', None, cap_of(weight) / cap_of(None, DEJAVU), DEJAVU), (b, weight, 1)]
+
+
+def label(bold, rest='', wb=600, wr=400):   # a line of small print: its bold label, then the rest
+    return ([(bold, wb, 1)] if bold else []) + (parts_of(rest, wr) if rest else [])
+
+
+def ink_w(parts, cap):   # a line's ink width at cap height `cap`
+    im, _ = run(parts, 400); x0, _, x1, _ = ink(im, 0)
+    return (x1 - x0) * cap / (cap_of(400) * 400)
+
+
+def set_line(canvas, parts, cap, cx, base):   # a line at cap height `cap` canvas px on baseline `base`, its ink centred on cx
+    im, b = run(parts, 400); x0, _, x1, _ = ink(im, 0); s = cap / (cap_of(400) * 400)
+    a = np.asarray(im.resize((max(1, round(im.width * s)), max(1, round(im.height * s))), Image.LANCZOS)).astype(np.float32) / 255
+    paste(canvas, a, cx - (x0 + x1) / 2 * s, base - b * s)
+
+
+def ring(canvas, cx, cy, r, w, S4=4):   # a circle's stroke (radius r to the stroke's middle, w wide), drawn at 4× and reduced
+    ox, oy = int(cx - r - w) - 2, int(cy - r - w) - 2; n = int(2 * (r + w)) + 6
+    reg = Image.new('L', (n * S4, n * S4)); d = ImageDraw.Draw(reg)
+    for R, fill in ((r + w / 2, 255), (r - w / 2, 0)):
+        d.ellipse([((cx - ox) - R) * S4, ((cy - oy) - R) * S4, ((cx - ox) + R) * S4, ((cy - oy) + R) * S4], fill=fill)
+    paste(canvas, np.asarray(reg.resize((n, n), Image.BOX)).astype(np.float32) / 255, ox, oy)
+
+
 def lid_face():
     W, H = TW * SS, TH * SS; k = W                              # canvas px per W
     X = lambda u: u * k; Y = lambda v: v * k
@@ -153,7 +202,9 @@ def lid_face():
     lockup(a, X, Y, k)
     monogram(a, lambda x: X((x - FX) / FW), lambda y: Y((y - FY) / FW))
     u0, u1, vb = VMCORP; vmcorp(a, X(u0), X(u1), Y(vb))
-    rgb = np.array(FOIL, np.float32)[None, None, :] + (np.array(INK, np.float32) - FOIL)[None, None, :] * a[..., None]
+    cap = LID_BLOCK_W * k / ink_w(label(*LID_BLOCK[0][0]), 1)
+    for text, vb in LID_BLOCK: set_line(a, label(*text), cap, X(0.5), Y(vb))
+    rgb =np.array(FOIL, np.float32)[None, None, :] + (np.array(INK, np.float32) - FOIL)[None, None, :] * a[..., None]
     face = Image.fromarray(np.clip(rgb + 0.5, 0, 255).astype(np.uint8)).resize((TW, TH), Image.LANCZOS)
     m = np.asarray(Image.fromarray((a * 255).astype(np.uint8)).resize((TW // 2, TH // 2), Image.BOX)).astype(np.float32) / 255
     mat = np.stack([np.zeros_like(m), 255 * (0.30 + (0.55 - 0.30) * m), 255 * (1 - m)], -1)
@@ -168,26 +219,30 @@ def foil(n=512, seed=11):   # tiling fine brushing: grain stretched along x, a f
     return Image.fromarray(np.clip(128 + v * 22, 0, 255).astype(np.uint8))
 
 
-# ---- the peel bottle: its label is the lid's lockup ×0.255 (its «EXO-NAD» 80 px wide = 0.85 W_b, cap 10 px, baseline
-# 0.642 H_b from the cap's top, so its cap line at 0.594); the plane spans u −0.45…0.45 W_b of the axis × 0.585…0.70 H_b
+# ---- the peel bottle: its label as on the owner's photo of the bottle (22/10; packaging-text.json), placed by the photo
+# (the thumbnail 28: ±0.01 H_b), sized in the packshot's proportions (W_b = 0.4455 H_b): the monogram, «EXO-NAD» / «PEELING»
+# bold on two lines (0.70 W_b wide, as photographed), four lines of the description under them; its fifth line is
+# unreadable in the photos and is left out. The plane spans x −0.45…0.45 W_b of the axis × 0.525…0.80 H_b from the cap's top
 PEEL_WB, PEEL_HB = 94.0, 211.0
-PEEL_PLANE = (-0.45, 0.45, 0.585, 0.70)  # in W_b (x) and H_b (y from the top); = the scene's PP
-PEEL_W = 0.85                            # «EXO-NAD» ink width / W_b
-PEEL_BASE = 0.642                        # its baseline (H_b)
-PEEL_TW = 1024
+PEEL_PLANE = (-0.45, 0.45, 0.525, 0.80)  # in W_b (x) and H_b (y from the top); = the scene's PP
+PEEL_MONO = (0.10, 0.532)                # the monogram's ink width (W_b), its top (H_b)
+PEEL_NAME = (0.045, [('EXO-NAD', 0.6325), ('PEELING', 0.7065)])   # Jost 700: cap (H_b), lines and baselines (H_b)
+PEEL_DESC = (0.66, [('Exfoliating and revitalizing cosmetic solution', 0.738), ('Soluzione cosmetica esfoliante e rivitalizzante', 0.754),
+                    ('Solución cosmética exfoliante y revitalizante', 0.770), ('Solution cosmétique exfoliante et revitalisante', 0.786)])
+PEEL_TW = 1024                           # (Jost 400: the longest line's ink width (W_b); every line at its cap height)
 LIQ_GAIN = 1.22                          # peel-liquid.png in linear light: the scene renders it at ≈ 0.8 (see peel_liquid)
 
 
 def peel_print():
     x0, x1, y0, y1 = PEEL_PLANE
-    W = PEEL_TW * SS; kb = W / (x1 - x0)                  # canvas px per W_b
-    H = round(kb * (y1 - y0) * PEEL_HB / PEEL_WB)
-    s = PEEL_W / 0.6596                                   # W_b per lid W (the lockup's ink u 0.1702…0.8298 → 0.85 W_b)
-    k = kb * s                                            # canvas px per lid W
-    X = lambda u: (-x0) * kb + (u - 0.5) * k
-    yb = (PEEL_BASE - y0) * kb * PEEL_HB / PEEL_WB        # the baseline, canvas px
-    Y = lambda v: yb + (v - EXO_BASE) * k
-    a = np.zeros((H, W), np.float32); lockup(a, X, Y, k)
+    W = PEEL_TW * SS; kb = W / (x1 - x0); kh = kb * PEEL_HB / PEEL_WB   # canvas px per W_b, per H_b
+    H = round(kh * (y1 - y0)); X = lambda x: (x - x0) * kb; Y = lambda y: (y - y0) * kh
+    a = np.zeros((H, W), np.float32)
+    mono_at(a, X(0), Y(PEEL_MONO[1]), PEEL_MONO[0] * kb)
+    cap, lines = PEEL_NAME
+    for text, yb in lines: set_line(a, [(text, 700, 1)], cap * kh, X(0), Y(yb))
+    w, lines = PEEL_DESC; cap = w * kb / max(ink_w([(t, 400, 1)], 1) for t, _ in lines)
+    for text, yb in lines: set_line(a, [(text, 400, 1)], cap, X(0), Y(yb))
     return Image.fromarray((np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8)).resize((PEEL_TW, H // SS), Image.LANCZOS)
 
 
@@ -261,22 +316,46 @@ def vial_print(kind):
     return Image.fromarray((np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8)).resize((VIAL_TW, H // SS), Image.LANCZOS)
 
 
-# ---- the tray: the EXO-NAD logo in gold, 0.286 W wide, centred, its baseline at v 0.83
-TRAY = (0.30, 0.70, 0.77, 0.87)    # u0, u1, v0, v1 of the texture
-TRAY_LOGO = (0.286, 0.83)          # the logo's ink width (W), its baseline (v)
+# ---- the tray's gold print, as on the owner's photos of the open kit (22/10; packaging-text.json), placed on the thumbnail
+# 29 (1 px = 0.0159 W both ways, from the rows' pitch; ±0.01 W) round the scene's vessels (the peel: axis u 0.125, cap's top
+# v 0.322; the first column u 0.317: the pH caps' top v 0.205, the serum feet v 0.740): at the top the monogram and «VM
+# corporation» (the lid's pair ×0.55); over the peel «EXO-NAD PEELING», a short vertical leader down to a circled 1; over
+# the first pH vial «PH NORMALIZER», a leader, a circled 2; under the first serum vial a circled 3, a leader, «LONGEVITY
+# SERUM»; at the foot, centred, the lid's lockup (0.23 W wide, with its «SKIN LONGEVITY PEELING») and «MADE IN ITALY», all
+# above the base's band (v 0.881). The labels Jost 500, the numerals 500 in rings of 0.0115 W (stroke 0.0016)
+TRAY = (0.03, 0.97, 0.03, 0.88)    # u0, u1, v0, v1 of the texture (the tray's face: u 0.026…0.974, v 0…0.881)
+TRAY_TW = 2048
+TRAY_MONO = (0.055, 0.062)         # the monogram's ink width (W), its top (v)
+TRAY_LABELS = [('EXO-NAD PEELING', 0.125, 0.267, 0.300, '1'), ('PH NORMALIZER', 0.317, 0.150, 0.183, '2'),
+               ('LONGEVITY SERUM', 0.317, 0.803, 0.7625, '3')]   # text, axis u, its baseline v, the ring's centre v, numeral
+TRAY_CAP, TRAY_RING, TRAY_STROKE, TRAY_NUM = 0.0068, 0.0115, 0.0016, 0.0105
+TRAY_LOGO = (0.23, 0.826)          # the lockup's «EXO-NAD» ink width (W), its baseline (v)
+TRAY_MADE = 0.866                  # «MADE IN ITALY»: its baseline (v), Jost 400 at the labels' cap height
 
 
-def tray_print(w=1024):
-    u0, u1, v0, v1 = TRAY; W = w * SS; k0 = W / (u1 - u0); H = round(k0 * (v1 - v0))
-    s = TRAY_LOGO[0] / 0.6596; k = k0 * s
-    X = lambda u: (0.5 - u0) * k0 + (u - 0.5) * k; Y = lambda v: (TRAY_LOGO[1] - v0) * k0 + (v - EXO_BASE) * k
-    a = np.zeros((H, W), np.float32); lockup(a, X, Y, k, logo_only=True)
-    return Image.fromarray((np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8)).resize((w, H // SS), Image.LANCZOS)
+def tray_print():
+    u0, u1, v0, v1 = TRAY; W = TRAY_TW * SS; k0 = W / (u1 - u0); H = round(k0 * (v1 - v0))
+    X = lambda u: (u - u0) * k0; Y = lambda v: (v - v0) * k0
+    a = np.zeros((H, W), np.float32)
+    w, top = TRAY_MONO; s = w / (47.6 / FW)                      # ×0.55 of the lid's monogram and its «VM corporation»
+    mono_at(a, X(0.5), Y(top), w * k0)
+    u0c, u1c, vb = VMCORP; mtop = (MONO[1] - FY) / FW
+    vmcorp(a, X(0.5 + (u0c - 0.5) * s), X(0.5 + (u1c - 0.5) * s), Y(top + (vb - mtop) * s))
+    cap, r, sw, lw = TRAY_CAP * k0, TRAY_RING * k0, TRAY_STROKE * k0, 0.0014 * k0
+    for text, u, vb, vr, n in TRAY_LABELS:
+        set_line(a, [(text, 500, 1)], cap, X(u), Y(vb))
+        ring(a, X(u), Y(vr), r, sw); set_line(a, [(n, 500, 1)], TRAY_NUM * k0, X(u), Y(vr) + TRAY_NUM * k0 / 2)
+        y0, y1 = (Y(vb) + 0.004 * k0, Y(vr) - r - 0.002 * k0) if vr > vb else (Y(vr) + r + 0.002 * k0, Y(vb) - cap - 0.004 * k0)
+        poly(a, [(X(u) - lw / 2, y0), (X(u) + lw / 2, y0), (X(u) + lw / 2, y1), (X(u) - lw / 2, y1)])
+    k = k0 * TRAY_LOGO[0] / 0.6596
+    lockup(a, lambda u: X(0.5) + (u - 0.5) * k, lambda v: Y(TRAY_LOGO[1]) + (v - EXO_BASE) * k, k)
+    set_line(a, [('MADE IN ITALY', 400, 1)], cap, X(0.5), Y(TRAY_MADE))
+    return Image.fromarray((np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8)).resize((TRAY_TW, H // SS), Image.LANCZOS)
 
 
 if __name__ == '__main__':
     fdir, out = sys.argv[1:3]; os.makedirs(out, exist_ok=True)
-    JOST = os.path.join(fdir, 'Jost[wght].ttf')
+    JOST, DEJAVU = os.path.join(fdir, 'Jost[wght].ttf'), os.path.join(fdir, 'DejaVuSans-Bold.ttf')
     face, metal, _ = lid_face()
     face.save(f'{out}/lid-face.png', optimize=True); metal.save(f'{out}/lid-metal.png', optimize=True)
     foil().save(f'{out}/foil-brush.jpg', quality=88)

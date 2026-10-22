@@ -1,21 +1,21 @@
 // EXO-NAD live in three.js: the product page's scroll story (engine/story.js, option `scene`) drawn as a real 3D scene, as
 // the approved sample EXOTECH GEL (scenes/exotech-gel.js) and the HAIR line's pages (exosignal-hair.js, exosignal-spray.js,
-// whose light, print materials, strokes, edge fade, pace, state and dispose this module follows). The engine keeps the
+// whose light, print materials, edge fade, pace, state and dispose this module follows). The engine keeps the
 // story geometry (the cover-fitted 16:10 frame, the run's box, the phone stage, the kit card); this module draws the pose
 // for the story position into the box. Objects are placed by frame pixel (2400×1500), measured on the only packshot,
 // protocols/print/img/exo-nad.webp (795×488): the brushed gold box seen square on (476 px), the square glass peel bottle
 // with its gold cap and two phases, the amber pH Normalizer and teal Longevity Serum vials with silver crimp caps.
-// The story (site/story3d.json; scratchpad spec pages/exo-nad/spec.md): S1 the closed box, champagne glow behind it,
-// rare sparks far behind; S2 the box deeper, the sparks dull to grey dust that settles; S3 the three liquids come out
-// from behind the box one by one and stand in a row, 1-2-3 right to left (peel, pH, serum); S3 → S4 a soft light rises
-// behind them and a wave runs through the dust, which turns into an even champagne veil; the three go small, low right,
-// in a backlight; S4 → S5 the veil sinks and draws into one gold line, the three step onto it, markers under them, a
-// finish ring, a circle of the 3–4 week rhythm; S6–S7 the box comes forward and its sleeve lifts straight up 0.60 of
-// its width (owner photos 26 and 32), the black tray shows the peel bottle and the rows of 5 + 5 vials (photo 29): the
-// pose that flies into the offer card. Nothing else opens: no photo shows the caps off. The product keeps its print's
-// colours (emissive ≈ 85 % + neutral shading, toneMapped off); the line's champagne (#d8c48a) and the brand gold live
-// only around it (sparks, dust, veil, glows, strokes). No text is drawn but the package's own print
-// (design/exo-nad/make_textures.py). No exosomes: the story shows none in the scene.
+// The story (site/story3d.json; scratchpad spec pages/exo-nad/spec.md): S1 the closed box, champagne glow behind it;
+// S2 the box deeper, its glow lower; S3 the three liquids come out from behind the box one by one and stand in a row,
+// 1-2-3 right to left (peel, pH, serum); S3 → S4 a soft light rises behind them and a shapeless champagne haze; the
+// three go small, low right, in a backlight; S4 → S5 the haze sinks, the three rise and grow in their row, each lit from
+// behind in turn as its step is read; S6–S7 the box comes forward and its sleeve lifts straight up 0.60 of its width
+// (owner photos 26 and 32), the black tray shows the peel bottle and the rows of 5 + 5 vials (photo 29): the pose that
+// flies into the offer card. Nothing else opens: no photo shows the caps off. The product keeps its print's colours
+// (emissive ≈ 85 % + neutral shading, toneMapped off); the line's champagne (#d8c48a) lives only around it, as soft
+// shapeless glow and haze. Only what exists is drawn (the owner, 22/10): the products and their packaging, the gold
+// flakes inside the peel; no lines, rings, dots or particles of anything the kit does not hold. No text is drawn but the
+// package's own print (design/exo-nad/make_textures.py, from the packshot and the owner's photos of 22/10). No exosomes.
 //
 // createScene(THREE, { canvas, base, onLoad }) → { draw(p, view), kit(view) → canvas, animated, state(), dispose() }
 //   p: the story position 0…5 (run index + progress); view: { cover, box, dpr, t, still } from the engine
@@ -239,14 +239,15 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     foilBox, box, 100);
   // the tray and its print belong to the contents (trayG): shown only once the sleeve lifts, never through a fading sleeve
   const tray = mesh(plane(2 * (WX - WALL), wallH), velvetMat, trayG, 102); tray.position.set(0, yv(wallH / 2), -REC);
-  const trayPrint = mesh(plane(0.40, 0.10), trayGoldMat, trayG, 103); trayPrint.position.set(0, yv(0.82), -REC + 0.0005);
+  // its gold print (owner photos 22/10): the plane u 0.03…0.97 × v 0.03…0.88 = make_textures TRAY
+  const trayPrint = mesh(plane(0.94, 0.85), trayGoldMat, trayG, 103); trayPrint.position.set(0, yv(0.455), -REC + 0.0005);
   const boxMats = [lidMat, foilSleeve, foilBox, velvetMat, trayGoldMat, lidLine];
 
   // ---- the peel bottle, height H_b = 1 (scaled per pose; origin its foot's centre): measured on the packshot (94 × 211
   // px): the square body W_b 0.4455 × 0.611, its corners rounded 0.05 W_b, 0.66 W_b deep (at least the cap's diameter);
   // the dark top glass 0.578…0.611, the liquid 0.123…0.578 (0.755 W_b wide, its two phases and gold in peel-liquid.png),
   // the thick glass foot and walls; the dark neck ring 0.630…0.678 (0.47 W_b), the polished gold cap 0.682…1 (0.638 W_b,
-  // its top edge rounded 0.024); the label on the front, the lid's lockup ×0.255 (peel-print.png)
+  // its top edge rounded 0.024); the label on the front as on the owner's photo (peel-print.png)
   const WB = 0.4455, DB = 0.66 * WB, RB = 0.05 * WB, LIQ0 = 0.123, LIQ1 = 0.578, LW = 0.755 * WB, LD = DB - 0.2 * WB;
   const bodyGeo = (() => {   // the outline inset by RB (corners 0.004), extruded along y; the bevel (RB out, RB high) gives
     // the full outline with its corners rounded RB, the foot and the shoulder rounded too
@@ -263,8 +264,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const topGeo = new THREE.BoxGeometry(WB - 0.03 * WB, 0.611 - LIQ1 - 0.006, DB - 0.03 * WB).translate(0, (LIQ1 + 0.605) / 2, 0);
   // the thick foot and walls carry the liquid's light (it runs through the glass by total internal reflection): a cream
   // (the liquid's #e5d9ba) rising toward the liquid, the foot's bottom edge lit too; dark glass away from it, so on the
-  // black page the bottle reads as clear glass round a lit liquid, and the label's E (half on the wall, as photographed)
-  // keeps its contrast
+  // black page the bottle reads as clear glass round a lit liquid
   const f3 = v => v.toFixed(4);
   const slabLit = sh => {
     sh.vertexShader = 'varying vec3 vSlab;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vSlab = position;');
@@ -279,7 +279,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const capGeo = new THREE.LatheGeometry([new THREE.Vector2(0, 0.682), new THREE.Vector2(RCAP - 0.004, 0.682), new THREE.Vector2(RCAP, 0.686)]
     .concat(Array.from({ length: 9 }, (_, i) => { const a = i / 8 * Math.PI / 2; return new THREE.Vector2(RCAP - RTOP + RTOP * Math.cos(a), 1 - RTOP + RTOP * Math.sin(a)); }))
     .concat([new THREE.Vector2(0, 1)]), 96);
-  const PP = [-0.45 * WB, 0.45 * WB, 1 - 0.70, 1 - 0.585];   // the label plane: x, y (from the foot); = make_textures PEEL_PLANE
+  const PP = [-0.45 * WB, 0.45 * WB, 1 - 0.80, 1 - 0.525];   // the label plane: x, y (from the foot); = make_textures PEEL_PLANE
   const labelGeo = new THREE.PlaneGeometry(PP[1] - PP[0], PP[3] - PP[2]).translate(0, (PP[2] + PP[3]) / 2, DB / 2 + 0.0008);
   // the gold flakes: discs 0.010…0.034 W_b (most small) in a thin layer just before the liquid's front, in a cloud down
   // the middle as photographed (the packshot's gold is densest a little left of the axis, through the middle of the
@@ -378,9 +378,9 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   [[vialGlass, tvm.back, [0, 1]], [vialLiquid, tvm.liquid, [0]], [vialLiquid, tvLs.liquid, [1]], [vialNeck, tvm.neck, [0, 1]], [vialCap, tvm.cap, [0, 1]],
     [vialGlass, tvm.front, [0, 1]], [vialPrint, tvm.ink, [0]], [vialPrint, tvLs.ink, [1]]].forEach(([g, m, rows], j) => inst(g, m, rows, 112 + j));
 
-  // ---- the line's graphics, flat to the camera in frame pixels (a plane at a depth; local x = px − 1200, y = 750 − py),
-  // always behind the products and drawn before them; the spray's strokes (a soft edge, ≥ 1.5 device px) and glows
-  const pxU = { value: 1 };   // device px per frame px
+  // ---- the line's light, flat to the camera in frame pixels (a plane at a depth; local x = px − 1200, y = 750 − py),
+  // always behind the products and drawn before them: soft shapeless glows, nothing drawn
+  let pxU = 1;   // device px per frame px
   // the glows add their colour (× their alpha) and keep a true alpha (it adds too): a picture read back (the keys, the
   // phone stills, the kit picture) un-premultiplies to the glow's own champagne, not to lemon
   const ADD = { blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneFactor,
@@ -392,133 +392,29 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // glow shades only the pixels it lights
   const QUAD_V = `uniform vec4 uB; varying vec2 vP;
     void main() { vP = mix(uB.xy, uB.zw, position.xy * 0.5 + 0.5); gl_Position = projectionMatrix * modelViewMatrix * vec4(vP.x - 1200.0, 750.0 - vP.y, 0.0, 1.0); }`;
-  const flat = (frag, uniforms, order, vert = QUAD_V, geo = new THREE.PlaneGeometry(2, 2)) => {   // a shader in frame px (vP)
-    const m = new THREE.Mesh(geo, new THREE.ShaderMaterial(Object.assign({ vertexShader: vert, fragmentShader: frag,
+  const flat = (frag, uniforms, order) => {   // a shader in frame px (vP)
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial(Object.assign({ vertexShader: QUAD_V, fragmentShader: frag,
       uniforms: Object.assign({ uB: { value: new THREE.Vector4() } }, uniforms), transparent: true, depthWrite: false, side: THREE.DoubleSide }, ADD)));
     m.renderOrder = order; m.visible = false; m.frustumCulled = false; fx.add(m); return m;
   };
-  // the box's halo: champagne round the box's outline (a rounded rectangle), nothing beyond `ext` px from it (alpha
+  // the box's halo: champagne light from behind the box, round its outline, nothing beyond `ext` px from it (alpha
   // < 8/255 past 0.08 W on S1; 0.035 W on the kit pose, so the card's picture, cut to what has alpha, keeps its size)
   const halo = flat(`uniform vec4 uR; uniform float uExt, uA; uniform vec3 uC; varying vec2 vP;
     void main() { vec2 q = abs(vP - uR.xy) - uR.zw; float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);
       float a = d < 0.0 ? 1.0 : exp(-3.5 * d / uExt) * (1.0 - smoothstep(0.6 * uExt, uExt, d));
       gl_FragColor = vec4(uC, uA * a); }`, { uR: { value: new THREE.Vector4() }, uExt: { value: 40 }, uA: { value: 0 }, uC: { value: hex3(0xd8c48a) } }, 3);
-  // soft spots: the light behind the three on S3 → S4, the current step's on S5 and S4's backlight; the veil's even glow
+  // soft spots: the light behind the three on S3 → S4, the current step's on S5 and S4's backlight; the haze (S3 → S5). A
+  // gaussian that reaches 0 at its ellipse with a slope of 2 % of its peak: no edge, no disc
   const SPOT_F = `uniform vec4 uS; uniform float uA; uniform vec3 uC; varying vec2 vP;
-    void main() { vec2 q = (vP - uS.xy) / uS.zw; float r2 = dot(q, q); gl_FragColor = vec4(uC, uA * exp(-3.0 * r2) * (1.0 - smoothstep(0.5, 1.0, r2))); }`;
+    void main() { vec2 q = (vP - uS.xy) / uS.zw; float g = (exp(-4.0 * dot(q, q)) - 0.018316) / 0.981684;
+      gl_FragColor = vec4(uC, uA * max(g, 0.0)); }`;
   const spot = (c, order) => flat(SPOT_F, { uS: { value: new THREE.Vector4() }, uA: { value: 0 }, uC: { value: hex3(c) } }, order);
   const setSpot = (m, cx, cy, rx, ry, a) => {
     const u = m.material.uniforms; u.uS.value.set(cx, cy, rx, ry); u.uB.value.set(cx - rx, cy - ry, cx + rx, cy + ry); u.uA.value = a; m.visible = a > 0.004;
   };
-  const vSpots = [0, 1, 2].map(() => spot(0xd8c48a, 2)), backGlow = spot(0xd8c48a, 2), veilGlow = spot(0xd8c48a, 1);
-  // the wave's front: a thin light ring from the row's middle (590, 900), inside the far layer's ellipse; drawn as an
-  // annulus ±32 px round its radius (its light is nothing past ±25 px)
-  const C0 = [690, 750], AX = [470, 420], WC = [590, 900], RING_N = 160;
-  const ringGeo = (() => {
-    const g = new THREE.BufferGeometry(), pos = [], ang = [], sd = [], idx = [];
-    for (let i = 0; i <= RING_N; i++) for (const s of [-1, 1]) { pos.push(0, 0, 0); ang.push(i / RING_N * 2 * Math.PI); sd.push(s); }
-    for (let i = 0; i < RING_N; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
-    g.setIndex(idx); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    g.setAttribute('aAng', new THREE.Float32BufferAttribute(ang, 1)); g.setAttribute('aSide', new THREE.Float32BufferAttribute(sd, 1)); return g;
-  })();
-  const ring = flat(`uniform float uR, uA; varying vec2 vP;
-    void main() { float d = length(vP - vec2(${WC[0]}.0, ${WC[1]}.0)), e = length((vP - vec2(${C0[0]}.0, ${C0[1]}.0)) / vec2(${AX[0]}.0, ${AX[1]}.0));
-      gl_FragColor = vec4(0.95, 0.91, 0.78, uA * exp(-(d - uR) * (d - uR) / 50.0) * (1.0 - smoothstep(0.6, 1.0, e))); }`, { uR: { value: 0 }, uA: { value: 0 } }, 4,
-    `attribute float aAng, aSide; uniform float uR; varying vec2 vP;
-    void main() { vP = vec2(${WC[0]}.0, ${WC[1]}.0) + max(0.0, uR + 32.0 * aSide) / cos(${(Math.PI / RING_N).toFixed(6)}) * vec2(cos(aAng), sin(aAng));
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(vP.x - 1200.0, 750.0 - vP.y, 0.0, 1.0); }`, ringGeo);
-
-  // the far layer: one instanced quad per particle, all motion in the vertex shader (the spray's mist): sparks (S1) →
-  // matte grey-beige dust settling (S2–S3) → past the wave's front an even champagne veil (S4) → drawn down into the
-  // protocol's line (S4 → S5). Inside the ellipse (690, 750) 470 × 420 (fading from 0.6 of it out), so it thins before
-  // the frame's edges and stays out of the copy (x > 1128); at least 1.5 device px; live only (the keys, the phone
-  // stills and the kit picture are cut to what has alpha); a phone draws half
-  const NPT = 900, PS = new Float32Array(NPT * 4), PG = new Float32Array(NPT * 2), PZ = new Float32Array(NPT);
-  for (let i = 0; i < NPT; i++) { for (let j = 0; j < 4; j++) PS[i * 4 + j] = rng(); PG[i * 2] = rng() * 6.283; PG[i * 2 + 1] = rng() * 6.283; PZ[i] = rng(); }
-  const pg = new THREE.InstancedBufferGeometry();
-  pg.setIndex([0, 1, 2, 0, 2, 3]); pg.setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], 3)); pg.instanceCount = NPT;
-  pg.setAttribute('aS', new THREE.InstancedBufferAttribute(PS, 4)); pg.setAttribute('aG', new THREE.InstancedBufferAttribute(PG, 2)); pg.setAttribute('aZ', new THREE.InstancedBufferAttribute(PZ, 1));
-  const PU = { uTime: { value: 0 }, uPx: pxU, uDust: { value: 0 }, uFade: { value: 0 }, uWave: { value: 0 }, uLine: { value: 0 }, uAlpha: { value: 1 } };
-  const v2 = a => `vec2(${a[0].toFixed(1)}, ${a[1].toFixed(1)})`;
-  const PART_V = `attribute vec4 aS; attribute vec2 aG; attribute float aZ;
-    uniform float uTime, uPx, uDust, uFade, uWave, uLine, uAlpha;
-    varying vec2 vQ; varying float vA, vSoft; varying vec3 vC;
-    void main() {
-      float ang = aS.x * 6.28318, rr = sqrt(aS.y);
-      vec2 P0 = ${v2(C0)} + ${v2(AX)} * rr * vec2(cos(ang), sin(ang));
-      vec2 wob = vec2(sin(uTime * 0.21 + aG.x), cos(uTime * 0.17 + aG.y));
-      vec2 ps = P0 + 6.0 * wob;                                                  // sparks drift
-      float fall = fract(aS.z + uTime * (0.004 + 0.006 * aS.w));                 // dust settles, the frame's height in 2–4 min
-      vec2 pd = vec2(P0.x + 3.0 * wob.x, ${C0[1] - AX[1]}.0 + fall * ${2 * AX[1]}.0);
-      float dw = smoothstep(0.0, 0.06, fall) * (1.0 - smoothstep(0.92, 1.0, fall));
-      vec2 p = mix(ps, pd, uDust);
-      float dv = length(P0 - ${v2(WC)}), kv = 1.0 - smoothstep(uWave - 60.0, uWave, dv);   // past the wave: the veil
-      vec2 pv = P0 + 9.0 * wob;
-      p = mix(p, pv, kv);
-      float k = smoothstep(0.0, 1.0, clamp(uLine * 1.3 - aS.z * 0.3, 0.0, 1.0));            // drawn into the line
-      p = mix(p, vec2(mix(330.0, 1090.0, aS.y), 640.0 + 2.0 * wob.y), k);
-      float vis = aS.w < 0.25 ? 1.0 : smoothstep(0.3 + 0.3 * aS.z, 0.6 + 0.3 * aS.z, uFade);   // S1: a quarter, rare sparks
-      float spark = vis * (0.55 + 0.45 * sin(uTime * 1.1 + aG.x * 3.0)), dust = vis * dw;
-      float veil = 0.24 * (0.7 + 0.3 * sin(P0.x * 0.006 + P0.y * 0.004 - uTime * 0.35));   // a slow shimmer runs across it
-      float a = mix(mix(0.8 * spark, 0.5 * dust, uDust), veil, kv);
-      a += 0.5 * exp(-(dv - uWave) * (dv - uWave) / 400.0) * step(1.0, uWave) * (1.0 - step(899.0, uWave));   // the front
-      float e = length((p - ${v2(C0)}) / ${v2(AX)});
-      vA = a * (1.0 - smoothstep(0.6, 1.0, e)) * uAlpha;
-      vC = mix(mix(vec3(0.847, 0.769, 0.541), vec3(0.478, 0.455, 0.416), uDust), vec3(0.88, 0.80, 0.58), kv);
-      float dev = mix(mix(1.5 + 1.5 * aZ, 2.0 + 2.0 * aZ, uDust), (6.0 + 10.0 * aZ) * uPx, kv);   // device px across
-      float r = max(dev, 1.5) * 0.5 / uPx; vSoft = kv; vQ = position.xy;
-      vec2 q = p + position.xy * r;
-      gl_Position = vA > 0.002 ? projectionMatrix * modelViewMatrix * vec4(q.x - 1200.0, 750.0 - q.y, 0.0, 1.0) : vec4(2.0, 2.0, 2.0, 1.0);
-    }`;
-  const PART_F = `varying vec2 vQ; varying float vA, vSoft; varying vec3 vC;
-    void main() { float r = length(vQ); if (r > 1.0) discard;
-      gl_FragColor = vec4(vC, vA * mix(1.0 - smoothstep(0.55, 1.0, r), exp(-3.0 * r * r), vSoft)); }`;
-  const partMat = new THREE.ShaderMaterial(Object.assign({ vertexShader: PART_V, fragmentShader: PART_F, uniforms: PU, transparent: true, depthWrite: false, side: THREE.DoubleSide }, ADD));
-  const parts = new THREE.Mesh(pg, partMat); parts.frustumCulled = false; parts.renderOrder = 5; parts.visible = false; fx.add(parts);
-
-  // the protocol (S5): the steps' line (core 1.2 px, a soft glow ±4.5 px, drawn right to left from step 1), the markers
-  // under the three (dots, r 6) and the finish (an empty ring, r 11) lighting in turn, the circle of the rhythm (every
-  // 3–4 weeks: drawn clockwise from its top, closing at p = 4); brand gold #d8bd7e → #c9a24b. All of S5 stays above
-  // frame y 700: the page's step cards come up over the scene's lower part while S5 is read
-  const STROKE_V = `attribute float aSide, aHalf, aCore, aT, aU;
-    varying float vSide, vHalf, vCore, vT, vU;
-    void main() { vSide = aSide; vHalf = aHalf; vCore = aCore; vT = aT; vU = aU; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
-  const STROKE_F = `uniform vec3 uA, uB; uniform float uOpacity, uDraw, uPx, uGlow, uGlowA;
-    varying float vSide, vHalf, vCore, vT, vU;
-    void main() {
-      float d = abs(vSide) * vHalf, c = max(vCore * uPx, 0.75);
-      float a = clamp(c + 0.5 - d * uPx, 0.0, 1.0);
-      if (uGlow > 0.0) a = max(a, uGlowA * exp(-(d * d) / (uGlow * uGlow)));
-      a *= clamp((uDraw - vT) * 60.0, 0.0, 1.0) * uOpacity;
-      gl_FragColor = vec4(mix(uA, uB, vU), a);
-    }`;
-  const strokeMat = (a, b, o = {}) => new THREE.ShaderMaterial(Object.assign({ vertexShader: STROKE_V, fragmentShader: STROKE_F, transparent: true, depthWrite: false, side: THREE.DoubleSide,
-    uniforms: { uA: { value: hex3(a) }, uB: { value: hex3(b) }, uOpacity: { value: 0 }, uDraw: { value: 1 }, uPx: pxU, uGlow: { value: o.glow || 0 }, uGlowA: { value: o.glowA || 0 } } }, ADD));
-  function strokes(list) {   // [{ pts: [[x, y] frame px], core: s → half width px, t: s → draw time, ext: geometry half width }]
-    const pos = [], side = [], half = [], core = [], tt = [], uu = [], idx = [];
-    for (const s of list) {
-      const n = s.pts.length, b0 = pos.length / 3;
-      for (let i = 0; i < n; i++) {
-        const [x, y] = s.pts[i], [xa, ya] = s.pts[Math.max(0, i - 1)], [xb, yb] = s.pts[Math.min(n - 1, i + 1)];
-        const l = Math.hypot(xb - xa, yb - ya) || 1, nx = -(yb - ya) / l, ny = (xb - xa) / l, u = i / (n - 1);
-        for (const sd of [-1, 1]) { pos.push(x + nx * s.ext * sd - 1200, 750 - (y + ny * s.ext * sd), 0); side.push(sd); half.push(s.ext); core.push(s.core(u)); tt.push(s.t(u)); uu.push(u); }
-        if (i) { const a = b0 + (i - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
-      }
-    }
-    const g = new THREE.BufferGeometry(); g.setIndex(idx);
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    for (const [k, v] of [['aSide', side], ['aHalf', half], ['aCore', core], ['aT', tt], ['aU', uu]]) g.setAttribute(k, new THREE.Float32BufferAttribute(v, 1));
-    return g;
-  }
-  const LY = 640, LX0 = 330, LX1 = 1090, CIRC = [760, 480, 160], FIN = [380, 11];
-  const circlePts = (cx, cy, r, n) => Array.from({ length: n + 1 }, (_, i) => { const a = i / n * 2 * Math.PI; return [cx + r * Math.sin(a), cy - r * Math.cos(a)]; });
-  const lineM = new THREE.Mesh(strokes([{ pts: Array.from({ length: 91 }, (_, i) => [LX1 - (LX1 - LX0) * i / 90, LY]), core: () => 1.2, ext: 16, t: u => u }]),
-    strokeMat(0xe0c98c, 0xd8bd7e, { glow: 4.5, glowA: 0.35 }));
-  const MARK_X = [960, 760, 560], MARK_Y = LY + 14;   // under step 1, 2, 3, just below their feet (whole); then the finish ring
-  const markM = new THREE.Mesh(strokes(MARK_X.map((x, i) => ({ pts: circlePts(x, MARK_Y, 3, 24), core: () => 3, ext: 7, t: () => i / 4 }))
-    .concat([{ pts: circlePts(FIN[0], LY, FIN[1], 72), core: () => 1.2, ext: 7, t: () => 0.75 }])), strokeMat(0xd8bd7e, 0xd8bd7e, { glow: 3, glowA: 0.3 }));
-  const circM = new THREE.Mesh(strokes([{ pts: circlePts(CIRC[0], CIRC[1], CIRC[2], 180), core: () => 1.0, ext: 12, t: u => u }]), strokeMat(0xd8bd7e, 0xc9a24b, { glow: 4, glowA: 0.25 }));
-  for (const [m, o] of [[circM, 6], [lineM, 7], [markM, 8]]) { m.renderOrder = o; m.visible = false; fx.add(m); }
+  const vSpots = [0, 1, 2].map(() => spot(0xd8c48a, 2)), backGlow = spot(0xd8c48a, 2), haze = spot(0xd8c48a, 1);
+  const HAZE = [690, 750, 470, 420];   // the haze's ellipse (frame px: centre, radii): it thins before the frame's edges
+                                       // and stays out of the copy (x > 1128)
 
   // ---- poses (frame px). The box { cx, cy: its front's centre, W: the front's width, yaw° (+: toward the copy), lift
   // (of W), a, D: depth }; a vessel { x: its axis, y: its foot, H: its height, a, D } (0 peel, 1 pH, 2 serum)
@@ -529,15 +425,16 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const VS = (x, y, H) => ({ x, y, H });
   const ROW2 = [VS(760, 1010, 350), VS(570, 1010, 229), VS(400, 1010, 229)];
   const ROW3 = [VS(1025, 1120, 210), VS(915, 1120, 137), VS(820, 1120, 137)];
-  const ROW4 = [VS(960, LY, 300), VS(760, LY, 196), VS(560, LY, 196)];
+  // S5: the three larger in their row, all above frame y 700 (the page's step cards come up over the scene's lower part
+  // while S5 is read), the peel's cap just clear of the top edge's fade (frame y 340)
+  const ROW4 = [VS(960, 640, 300), VS(760, 640, 196), VS(560, 640, 196)];
   const OUT = [[0.25, 0.65], [0.4, 0.8], [0.55, 0.95]];   // S2 → S3: each one's way out from behind the box (the box settles by 0.4)
   const SIDE = 0.45;   // of its way: sideways behind the box until clear of its left edge; then out, forward, down to the row
-  const ARRIVE = [0.62, 0.7, 0.78];   // S4 → S5: its marker lights as it stands
   const STEP = [0.15, 0.32, 0.5];     // S5 → kit, while the page's step cards pass: step 1 current to f 0.15, 2 to 0.32, 3 to 0.5
   // the state, written in place on every frame (nothing allocated per frame)
   const ves = () => ({ x: 0, y: 0, H: 1, a: 0, D: DIST, cur: 0 });
   const ST = { box: { cx: 0, cy: 0, W: 1, yaw: 4, lift: 0, a: 0, D: DIST + 1 }, v: [ves(), ves(), ves()], halo: 0, haloExt: 0.08,
-    dust: 0, fade: 0, wave: 0, line: 0, pa: 0, vglow: 0, back: 0, veil: 0, draw: 0, marks: 0, circ: 0, strokesA: 0 };
+    vglow: 0, back: 0, haze: 0 };
   const setBox = (o, s, a = 1) => { o.cx = s.cx; o.cy = s.cy; o.W = s.W; o.yaw = s.yaw; o.lift = s.lift; o.D = s.D; o.a = a; return o; };
   const mixBox = (o, a, b, s) => { o.cx = lerp(a.cx, b.cx, s); o.cy = lerp(a.cy, b.cy, s); o.W = lerp(a.W, b.W, s); o.D = lerp(a.D, b.D, s); o.yaw = lerp(a.yaw, b.yaw, s); o.lift = lerp(a.lift, b.lift, s); return o; };
   const setV = (o, s, a = 1, D = DIST) => { o.x = s.x; o.y = s.y; o.H = s.H; o.a = a; o.D = D; o.cur = 0; return o; };
@@ -547,18 +444,16 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   function story(p) {   // the state at story position p
     const k = Math.min(4, Math.floor(p)), f = p - k, st = ST, b = st.box;
     setBox(b, BOX[0], 0); for (let i = 0; i < 3; i++) setV(st.v[i], ROW2[i], 0);
-    st.halo = st.dust = st.fade = st.wave = st.line = st.vglow = st.back = st.veil = st.draw = st.marks = st.circ = st.strokesA = 0;
-    st.pa = 0; st.haloExt = 0.08;
-    if (k === 0) {   // S1 → S2: the box steps back (0.92), still closed, its colours unchanged; the glow behind it to 40 %; the
-      // sparks dull to grey dust and begin to settle; the rest of the dust comes in
+    st.halo = st.vglow = st.back = st.haze = 0; st.haloExt = 0.08;
+    if (k === 0) {   // S1 → S2: the box steps back (0.92), still closed, its colours unchanged; the glow behind it to 40 %
       mixBox(b, BOX[0], BOX[1], smooth(0, 1, f)); b.a = 1;
-      st.halo = 1 - 0.6 * smooth(0, 0.6, f); st.dust = smooth(0.2, 0.8, f); st.fade = f; st.pa = 1;
+      st.halo = 1 - 0.6 * smooth(0, 0.6, f);
     } else if (k === 1) {   // S2 → S3: the box goes deeper, to the right; the three come out from behind it one by one (not out of
       // it): each starts hidden behind the box's back and takes its opacity there, moves sideways (still behind) until its
       // silhouette clears the box's left edge, and only then comes forward and down to its place in the row: it never
       // crosses the box's front while inside the box's outline
       mixBox(b, BOX[1], BOX[2], smooth(0, 0.4, f)); b.a = 1;
-      st.halo = 0.4 * (1 - smooth(0, 0.4, f)); st.dust = 1; st.fade = 1; st.pa = 1;
+      st.halo = 0.4 * (1 - smooth(0, 0.4, f));
       const left = b.cx - b.W * 0.535 - 12;   // the box's silhouette (its left side shows: yaw, sway)
       for (let i = 0; i < 3; i++) {
         const s = smooth(OUT[i][0], OUT[i][1], f), o = st.v[i], e = ROW2[i], y0 = b.cy + b.W * 0.44;
@@ -568,30 +463,23 @@ export function createScene(THREE, { canvas, base, onLoad }) {
         o.x = lerp(lerp(b.cx + 40 * (1 - i), xc, sa), e.x, sb); o.y = lerp(y0, e.y, sb) - 60 * Math.sin(Math.PI * sb);
         o.D = lerp(Db, DIST, sb); o.H = e.H; o.a = smooth(0, 0.15, s); o.cur = 0;   // H: its size at the row's depth
       }
-    } else if (k === 2) {   // S3 → S4 (the line's light): a soft champagne light comes up behind the three (their colours stay);
-      // a wave from the row runs out through the dust and turns it into an even veil; the box goes; the three go small,
-      // low right, into a backlight
+    } else if (k === 2) {   // S3 → S4 (the line's light): a soft champagne light comes up behind the three (their colours stay)
+      // and a shapeless haze; the box goes; the three go small, low right, into a backlight
       setBox(b, BOX[2], 1 - smooth(0, 0.35, f));
-      st.dust = 1; st.fade = 1; st.pa = 1; st.wave = 900 * smooth(0.15, 0.75, f); st.veil = smooth(0.4, 0.9, f);
+      st.haze = smooth(0.4, 0.9, f);
       const g = smooth(0.45, 1, f);
       for (let i = 0; i < 3; i++) mixV(setV(st.v[i], ROW2[i]), ROW2[i], ROW3[i], g);
       st.vglow = smooth(0, 0.2, f) * (1 - smooth(0.6, 1, f)); st.back = smooth(0.45, 1, f);
-    } else if (k === 3) {   // S4 → S5: the veil sinks and draws into one gold line, drawn right to left from step 1; the three
-      // rise onto it and grow; each marker lights as its vessel stands; the finish ring; the rhythm's circle
-      st.dust = 1; st.fade = 1; st.wave = 2000; st.veil = 1 - smooth(0.2, 0.5, f);
-      st.line = smooth(0.05, 0.45, f); st.pa = 1 - smooth(0.3, 0.55, f);
+    } else if (k === 3) {   // S4 → S5: the haze sinks; the three rise and grow in their row; the backlight goes
+      st.haze = 1 - smooth(0.2, 0.5, f);
       const g = smooth(0.3, 0.8, f);
       for (let i = 0; i < 3; i++) mixV(setV(st.v[i], ROW3[i]), ROW3[i], ROW4[i], g);
-      st.back = 1 - smooth(0.3, 0.6, f); st.strokesA = 1; st.draw = 1.02 * smooth(0.25, 0.6, f);   // (past 1: the ends whole)
-      st.marks = 0.26 * smooth(ARRIVE[0] - 0.02, ARRIVE[0], f) + 0.25 * smooth(ARRIVE[1] - 0.02, ARRIVE[1], f)
-        + 0.25 * smooth(ARRIVE[2] - 0.02, ARRIVE[2], f) + 0.25 * smooth(0.78, 0.8, f);   // the dots (aT 0, ¼, ½), the ring (¾)
-      st.circ = 1.02 * smooth(0.55, 1, f);
+      st.back = 1 - smooth(0.3, 0.6, f);
       st.v[0].cur = smooth(0.82, 1, f);   // step 1 is the current one as S5 settles
     } else {   // S5 → kit: the three hold while the page's step cards pass (to f ≈ 0.5), the current step lit from behind by
-      // the line's light (1, 2, 3 in turn: the product itself is never dimmed); the protocol stays under them till they
-      // go; the closed box comes forward from the depth; the three step back to its middle, behind it, and dissolve; the
-      // sleeve lifts straight up 0.60 W (photos 26 and 32); the champagne round the box grows (S7: the page's strongest)
-      st.strokesA = 1 - smooth(0.5, 0.65, f); st.draw = 1.02; st.marks = 1.01; st.circ = 1.02;
+      // the line's light (1, 2, 3 in turn: the product itself is never dimmed); the closed box comes forward from the
+      // depth; the three step back to its middle, behind it, and dissolve; the sleeve lifts straight up 0.60 W (photos 26
+      // and 32); the champagne round the box grows (S7: the page's strongest)
       const g = smooth(0.5, 0.7, f); mixBox(b, BOX_IN, BOX[5], g); b.lift = 0.6 * smooth(0.72, 0.95, f); b.a = smooth(0.5, 0.6, f);
       const r = smooth(0.55, 0.75, f), Db = boxBack(b) + 0.4;
       for (let i = 0; i < 3; i++) {
@@ -601,7 +489,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       st.halo = smooth(0.75, 1, f); st.haloExt = 0.035;
     }
     if (p >= 5) {   // the kit: exactly the pose, nothing in flight
-      setBox(b, BOX[5], 1); for (let i = 0; i < 3; i++) st.v[i].a = 0; st.halo = 1; st.haloExt = 0.035; st.strokesA = 0;
+      setBox(b, BOX[5], 1); for (let i = 0; i < 3; i++) st.v[i].a = 0; st.halo = 1; st.haloExt = 0.035;
     }
     return st;
   }
@@ -643,10 +531,10 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     RANK.sort(farFirst);
     for (let r = 0; r < 3; r++) { const L = heroes[RANK[r]].parts; for (let j = 0; j < L.length; j++) L[j].renderOrder = 120 + r * 10 + (L[j].isInstancedMesh ? 3.5 : j); }
     if (heroes[0].g.visible) {   // ≥ 1.5 device px: the bottle is st.v[0].H frame px tall at the row's depth
-      flakeMin = 1.5 / Math.max(1, st.v[0].H * DIST / st.v[0].D * pxU.value);
+      flakeMin = 1.5 / Math.max(1, st.v[0].H * DIST / st.v[0].D * pxU);
       setFlakes(heroes[0].flakes, t, flakeMin); heroes[0].flakes.count = ph ? 460 : NF;
     }
-    // the graphics: the far layer behind everything shown
+    // the glows: behind everything shown
     let Dfar = 9;
     if (box.visible) Dfar = Math.max(Dfar, boxBack(b));
     for (let i = 0; i < 3; i++) if (heroes[i].g.visible) Dfar = Math.max(Dfar, st.v[i].D + 1);
@@ -664,13 +552,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       else setSpot(vSpots[i], s.x, s.y - s.H * 0.5, s.H * H_W[i] * 1.6, s.H * 0.75, 0.45 * st.vglow * s.a);
     }
     setSpot(backGlow, 930, 1060, 230, 110, 0.5 * st.back);
-    setSpot(veilGlow, C0[0], C0[1], AX[0], AX[1], still ? 0 : 0.14 * st.veil);
-    ring.material.uniforms.uR.value = st.wave; ring.material.uniforms.uA.value = 0.25; ring.visible = !still && st.wave > 1 && st.wave < 899;   // (an annulus: no uB)
-    PU.uTime.value = t; PU.uDust.value = st.dust; PU.uFade.value = st.fade; PU.uWave.value = st.wave; PU.uLine.value = st.line; PU.uAlpha.value = st.pa;
-    parts.visible = !still && st.pa > 0.004; pg.instanceCount = ph ? NPT / 2 : NPT;
-    lineM.material.uniforms.uDraw.value = st.draw; lineM.material.uniforms.uOpacity.value = st.strokesA; lineM.visible = st.strokesA > 0.004 && st.draw > 0.002;
-    markM.material.uniforms.uDraw.value = st.marks; markM.material.uniforms.uOpacity.value = st.strokesA; markM.visible = st.strokesA > 0.004 && st.marks > 0.002;
-    circM.material.uniforms.uDraw.value = st.circ; circM.material.uniforms.uOpacity.value = st.strokesA * 0.8; circM.visible = st.strokesA > 0.004 && st.circ > 0.002;
+    setSpot(haze, HAZE[0], HAZE[1], HAZE[2], HAZE[3], still ? 0 : 0.14 * st.haze);   // live only (the keys are cut to what has alpha)
     last.t = t;   // QA (state()): the flakes outside the liquid at this time
   }
   function probes() {   // QA: the probe points of the ΔE checks (frame px) in the last pose drawn (state() only: no garbage per frame)
@@ -719,8 +601,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     camera.aspect = view.cover.w / view.cover.h;
     camera.setViewOffset(view.cover.w, view.cover.h, view.box.x - view.cover.x, view.box.y - view.cover.y, view.box.w, view.box.h);
     camera.updateProjectionMatrix();
-    pxU.value = pr * view.cover.w / 2400;   // device px per frame px: the strokes and particles keep ≥ 1.5 device px
-    EDGE.value.set((view.box.y - view.cover.y) * 2400 / view.cover.w, canvas.height, pxU.value);   // the frame's top edge
+    pxU = pr * view.cover.w / 2400;   // device px per frame px: the flakes keep ≥ 1.5 device px
+    EDGE.value.set((view.box.y - view.cover.y) * 2400 / view.cover.w, canvas.height, pxU);   // the frame's top edge
   }
   function render(p, view) { pr = Math.min(full(view), cap); fit(view, pr); pose(p, view.still ? 0 : view.t, view.still); renderer.render(scene, camera); renders++; }
   function draw(p, view) { pace(performance.now(), view.still); lastP = p; lastView = view; render(p, view); }
@@ -748,8 +630,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     return { quality: pr, cap, capped, pixelRatio: renderer.getPixelRatio(), width: canvas.width, height: canvas.height, renders, loaded, version, kits, lastP,
       box: { x: r1(b.cx), y: r1(b.cy), W: r1(b.W), yaw: r1(b.yaw), lift: r2(b.lift), o: r2(b.a) },
       vessels: st.v.map(v => ({ x: r1(v.x), y: r1(v.y), H: r1(v.H), o: r2(v.a), D: r2(v.D), cur: r2(v.cur) })), boxD: r2(b.D),
-      far: { n: parts.visible ? pg.instanceCount : 0, mode: st.wave >= 899 ? (st.line > 0 ? 'line' : 'veil') : st.wave > 0 ? 'wave' : st.dust > 0.5 ? 'dust' : 'sparks', wave: r1(st.wave) },
-      lines: { line: r2(lineM.visible ? st.draw * st.strokesA : 0), circle: r2(circM.visible ? st.circ * st.strokesA : 0), ring: r2(markM.visible && st.marks > 0.75 ? st.strokesA : 0) },
+      haze: r2(haze.visible ? haze.material.uniforms.uA.value : 0),
       glow: r2(halo.visible ? halo.material.uniforms.uA.value : 0), flakes: { n: heroes[0].g.visible ? heroes[0].flakes.count : 0, outside: heroes[0].g.visible ? flakesOutside(last.t) : 0 },
       probes: probes() };
   };
