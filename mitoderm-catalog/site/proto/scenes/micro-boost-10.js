@@ -7,25 +7,22 @@
 // (385×1252): the tall ivory box seen from the camera's height (its horizon at 0.42 of the box from the top, so neither
 // its top nor its foot shows), its right side a narrow plain strip; true proportions H : W : D = 4.21 : 1 : 1.21.
 // The story (site/story3d.json; scratchpad spec pages/micro-boost-10/spec.md, BIOSPICULE line). The scene shows only
-// what exists (the owner's rule, 22/10): the box as photographed, the syringe's clear silhouette, a plain clear drop of
-// the serum, its spicules as a loose swarm and a soft glow of the line's green; no lines, rings, cuts or marks:
-//   S1 meet     the box and a 3 ml syringe; a loose swarm of spicules drifts beside them
-//   S2 why      the box and the syringe smaller on the left, the swarm drifting on the right
-//   S3 inside   the syringe turns level, a drop swells at its nozzle and grows into the scene: the spicules drift
-//               loose inside it
-//   S4 feel     (no people: the owner's rule) the drop goes; the box alone on the left, the swarm loose beside it
-//   S5 protocol the box and the syringe small and high (the step cards pass below), a few spicules beside them
+// what exists (the owner's rule, 22/10, stronger than the spec): the box as photographed, the serum's spicules as a
+// loose swarm and a soft glow of the line's green; no lines, rings, circles, cuts, marks or props:
+//   S1 meet     the box; a loose swarm of spicules drifts beside it
+//   S2 why      the box smaller on the left, the swarm drifting on the right
+//   S3 inside   the box goes; the spicules come close, loose in the middle of the scene
+//   S4 feel     (no people: the owner's rule) the box alone on the left, the swarm loose beside it
+//   S5 protocol the box small and high (the step cards pass below), a few spicules beside it
 //   S6–S7 kit   the box alone in the packshot's pose: the picture that flies into the offer card
-// The syringe has never been photographed: a neutral clear silhouette without print, scale, needle or cap, its
-// plunger still (SYRINGE below: false takes it out). The box never opens and turns only as far as the packshot shows
-// its side (the side's width ≤ 0.263 of the front's). The product keeps its print's colours (emissive ≈ 85 % + neutral
-// shading, toneMapped off); the line's green lives in the page's smoke and the kit's soft glow. No text is drawn but
-// the package's own print (design/micro-boost-10/make_textures.py).
+// The syringe and a drop of the serum have never been photographed (spec §10.1): neither is drawn. The box never opens
+// and turns only as far as the packshot shows its side (the side's width ≤ 0.263 of the front's). The product keeps its
+// print's colours (emissive ≈ 85 % + neutral shading, toneMapped off); the line's green lives in the page's smoke and
+// the kit's soft glow. No text is drawn but the package's own print (design/micro-boost-10/make_textures.py).
 //
 // createScene(THREE, { canvas, base, onLoad }) → { draw(p, view), kit(view) → canvas, animated, state(), dispose() }
 //   p: the story position 0…5 (run index + progress); view: { cover, box, dpr, t, still } from the engine
 export function createScene(THREE, { canvas, base, onLoad }) {
-  const SYRINGE = true;   // the syringe's neutral silhouette (no photo of it yet): false leaves it out everywhere
   const V3 = THREE.Vector3, rad = THREE.MathUtils.degToRad, deg = THREE.MathUtils.radToDeg;
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
   const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
@@ -52,7 +49,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const world = (px, depth) => px / 1500 * 2 * depth * TAN;   // frame pixels → world units at that depth
   const pj = new V3();
   const frameOf = (v, out) => { pj.copy(v).project(lay); out[0] = (pj.x + 1) * 1200; out[1] = (1 - pj.y) * 750; return out; };
-  const D_BOX = DIST + 1.2, D_SYR = DIST + 0.4, D_DROP = DIST;
+  const D_BOX = DIST + 1.2;
 
   // ---- light: a neutral studio for reflections (PMREM), as the HAIR scenes': dark above and below, an even horizon,
   // two tall narrow softboxes either side of the camera, rims behind; a white key from the top left, in front
@@ -98,13 +95,10 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   };
   const faceTex = tex('box-face.png', true), metalTex = tex('box-metal.png');
 
-  // ---- the scene box's edges: anything crossing them (the syringe leaving to the left in S2 → S3) fades over their last
-  // 48 px; the frame px of a fragment from its buffer pixel (set in fit())
+  // ---- the scene box's edges: a spicule crossing them fades over their last 48 px (by its frame px)
   const BOXF = [168, 285, 1248, 1215], FADE = 48;
-  const EDGE = { value: new THREE.Vector4(0, 0, 1, 1) };   // frame x, y of the canvas's top left; device px per frame px; canvas height
   const EDGE_GLSL = `float edgeFade(vec2 f) { return smoothstep(${BOXF[0]}.0, ${BOXF[0] + FADE}.0, f.x) * (1.0 - smoothstep(${BOXF[2] - FADE}.0, ${BOXF[2]}.0, f.x))
       * smoothstep(${BOXF[1]}.0, ${BOXF[1] + FADE}.0, f.y) * (1.0 - smoothstep(${BOXF[3] - FADE}.0, ${BOXF[3]}.0, f.y)); }`;
-  const fragFrame = 'vec2(uEdge.x + gl_FragCoord.x / uEdge.z, uEdge.y + (uEdge.w - gl_FragCoord.y) / uEdge.z)';
 
   // ---- materials. The product in its print's colours: emissive 0.85 of the colour plus a neutral shading (a diffuse
   // 0.2 of it under the key and the room), not tone mapped; the gold a satin metal (roughness 0.28, metalness 0.6: it
@@ -122,41 +116,6 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const side = P(SIDE);
   const hidden = P(new THREE.Color(0xf8eee4).multiplyScalar(0.7));
   const boxMats = [facade, side, hidden];
-
-  // the syringe and the drop: a clear glass without transmission (on the transparent canvas it would not see the page's
-  // smoke; a phone pays a pass for it): no diffuse, its reflections of the studio and a Fresnel rim are its whole look.
-  // The key leaves no glint on it (a white dot on the drop, which nothing photographed shows)
-  const glass = (base0, rim, cc) => {
-    const u = { uFade: { value: 1 }, uBase: { value: base0 }, uRim: { value: rim } };
-    const m = new THREE.MeshPhysicalMaterial({ color: 0x000000, metalness: 0, roughness: 0.1, specularIntensity: 1, clearcoat: cc, clearcoatRoughness: 0.08,
-      envMapIntensity: 1.25, transparent: true, depthWrite: false, toneMapped: false });
-    m.onBeforeCompile = sh => {
-      Object.assign(sh.uniforms, u, { uEdge: EDGE });
-      sh.fragmentShader = `uniform float uFade, uBase, uRim; uniform vec4 uEdge;\n${EDGE_GLSL}\n` + sh.fragmentShader.replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
-        reflectedLight.directSpecular = vec3(0.0);
-        #ifdef USE_CLEARCOAT
-        clearcoatSpecularDirect = vec3(0.0);
-        #endif`).replace('#include <opaque_fragment>', `#include <opaque_fragment>
-        { float c = clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), F = pow(1.0 - c, 3.0);
-          vec3 spec = gl_FragColor.rgb; float body = uBase + uRim * F;   // the reflection; the glass's own whiteness
-          float a = clamp(body + 0.9 * max(max(spec.r, spec.g), spec.b), 0.0, 0.95);
-          gl_FragColor = vec4((spec + vec3(0.93, 0.95, 0.94) * body) / max(a, 1e-3), a * uFade * edgeFade(${fragFrame})); }`);
-    };
-    m.customProgramCacheKey = () => 'mb10-glass'; m.userData.u = u; return m;
-  };
-  const glassBack = glass(0.05, 0.35, 0), glassFront = glass(0.07, 0.55, 0.6);
-  glassBack.side = THREE.BackSide; glassFront.side = THREE.FrontSide;
-  const rodMat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color(0xd9d9d6).multiplyScalar(0.3), emissive: 0xd9d9d6, emissiveIntensity: 0.6, roughness: 0.35,
-    transparent: true, opacity: 0.55, depthWrite: false, toneMapped: false });   // a light grey plastic, its colour unknown
-  rodMat.onBeforeCompile = sh => {
-    sh.uniforms.uEdge = EDGE;
-    sh.fragmentShader = `uniform vec4 uEdge;\n${EDGE_GLSL}\n` + sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
-      gl_FragColor.a *= edgeFade(${fragFrame});`);
-  };
-  rodMat.customProgramCacheKey = () => 'mb10-rod';
-  // the drop reflects no studio (the softboxes read as two panels in it): a plain clear drop, its Fresnel body only
-  const dropBack = glass(0.04, 0.3, 0), dropFront = glass(0.06, 0.6, 0);
-  dropBack.side = THREE.BackSide; dropFront.side = THREE.FrontSide; dropBack.envMapIntensity = dropFront.envMapIntensity = 0;
 
   // ---- the box, W 1 × H 4.21 × D 1.21: its origin at the front's middle (it turns about that upright), the front a
   // plane with the print, the right side the plain strip; the rest closed for any transition's frame
@@ -190,28 +149,6 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     return a;
   }
 
-  // ---- the syringe, 3 ml, a neutral silhouette (length 1, its axis +y from the thumb pad to the nozzle): the barrel
-  // OD 0.10 × 0.62, a luer nozzle 0.08 × Ø 0.04 (no needle, no cap), the finger flange 0.22 × 0.10 × 0.02, the plunger
-  // out 0.25 with its cross-section rod and a pad Ø 0.18; the stopper inside the barrel. No print, no scale, no colour
-  const syr = new THREE.Group(); scene.add(syr); syr.visible = SYRINGE;
-  const V2 = (r, y) => new THREE.Vector2(r, y);
-  const barrel = new THREE.LatheGeometry([V2(0.05, 0.25), V2(0.05, 0.868), V2(0.047, 0.882), V2(0.035, 0.898), V2(0.022, 0.915),
-    V2(0.02, 0.922), V2(0.02, 0.995), V2(0.016, 1.0), V2(0.009, 1.0)], 64);
-  const flange = new THREE.CylinderGeometry(1, 1, 0.02, 48).scale(0.11, 1, 0.05).translate(0, 0.26, 0);
-  const syrParts = [];
-  const sPart = (g, m, order) => { const x = new THREE.Mesh(g, m); x.renderOrder = order; syr.add(x); syrParts.push(x); return x; };
-  sPart(barrel, glassBack, 30); sPart(flange, glassBack, 30);
-  sPart(new THREE.BoxGeometry(0.07, 0.29, 0.012).translate(0, 0.165, 0), rodMat, 31);
-  sPart(new THREE.BoxGeometry(0.012, 0.29, 0.07).translate(0, 0.165, 0), rodMat, 31);
-  sPart(new THREE.CylinderGeometry(0.09, 0.09, 0.02, 48).translate(0, 0.01, 0), rodMat, 31);
-  sPart(new THREE.CylinderGeometry(0.047, 0.047, 0.04, 48).translate(0, 0.31, 0), rodMat, 31);
-  sPart(barrel, glassFront, 60); sPart(flange, glassFront, 60);
-
-  // ---- the drop: a clear sphere (S2 → S3 on the nozzle, then grown into the scene with the spicules loose inside)
-  const dropGeo = new THREE.SphereGeometry(1, 64, 48);
-  const dropB = new THREE.Mesh(dropGeo, dropBack), dropF = new THREE.Mesh(dropGeo, dropFront);
-  dropB.renderOrder = 20; dropF.renderOrder = 50; scene.add(dropB, dropF);
-
   // ---- the swarm and the glow, flat to the camera in frame pixels (a plane: local x = px − 1200, y = 750 − py), drawn
   // over the box by order (they never pass behind it)
   const pxU = { value: 1 };   // device px per frame px
@@ -232,33 +169,33 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // the spicules: instanced quads (one draw), every instance's place, angle, length and opacity set on the CPU per frame
   // and uploaded at once. A spicule: a spindle, dark green as on the medallion (#243523), a light glassy rim (#D7E4D0,
   // α 0.55) so it reads on the green smoke; ≥ 1.5 device px wide, soft-edged
-  const SPI_V = `attribute vec4 iA; attribute vec3 iB; uniform float uPx; varying vec2 vQ, vF; varying float vHw, vLen, vA, vPh;
+  const SPI_V = `attribute vec4 iA; attribute vec2 iB; uniform float uPx; varying vec2 vQ, vF; varying float vHw, vLen, vA;
     void main() {
       float L = max(iA.w, 0.5), hw = max(iB.y * 0.5, 0.75 / uPx), pad = 1.5 / uPx;
       vec2 ax = vec2(cos(iA.z), sin(iA.z)), nr = vec2(-ax.y, ax.x);
       vQ = vec2(position.x * (L * 0.5 + pad), position.y * (hw + pad));
       vec2 p = iA.xy + ax * vQ.x + nr * vQ.y;
-      vHw = hw; vLen = L; vA = iB.x; vPh = iB.z; vF = p;
+      vHw = hw; vLen = L; vA = iB.x; vF = p;
       gl_Position = iB.x > 0.003 ? projectionMatrix * modelViewMatrix * vec4(p.x - 1200.0, 750.0 - p.y, 0.0, 1.0) : vec4(2.0, 2.0, 2.0, 1.0);
     }`;
-  const SPI_F = `uniform float uPx, uTime, uSpin; varying vec2 vQ, vF; varying float vHw, vLen, vA, vPh;
+  const SPI_F = `uniform float uPx; varying vec2 vQ, vF; varying float vHw, vLen, vA;
     ${EDGE_GLSL}
     void main() {
       float t = vQ.x / (vLen * 0.5), h = vHw * max(1.0 - t * t, 0.0), d = abs(vQ.y);
       float cov = clamp((h - d) * uPx + 0.5, 0.0, 1.0) * step(abs(t), 1.0);
       if (cov < 0.004) discard;
-      float r = clamp(d / max(h, 1e-3), 0.0, 1.0), rim = smoothstep(0.35, 0.95, r) * (1.0 - uSpin * 0.5 * (1.0 + sin(t * 4.0 - uTime * 2.2 + vPh * 6.0)));
+      float r = clamp(d / max(h, 1e-3), 0.0, 1.0), rim = smoothstep(0.35, 0.95, r);   // a still rim: no light runs along it
       vec3 col = mix(vec3(0.141, 0.208, 0.137), vec3(0.843, 0.894, 0.816), rim);
       gl_FragColor = vec4(col, cov * vA * mix(1.0, 0.55, rim) * edgeFade(vF));
     }`;
   const NS = 600, NS_PH = 360;
-  const SA = new Float32Array(NS * 4), SB = new Float32Array(NS * 3);
+  const SA = new Float32Array(NS * 4), SB = new Float32Array(NS * 2);
   const swGeo = new THREE.InstancedBufferGeometry();
   swGeo.setIndex([0, 1, 2, 0, 2, 3]); swGeo.setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], 3));
   swGeo.setAttribute('iA', new THREE.InstancedBufferAttribute(SA, 4).setUsage(THREE.DynamicDrawUsage));
-  swGeo.setAttribute('iB', new THREE.InstancedBufferAttribute(SB, 3).setUsage(THREE.DynamicDrawUsage));
+  swGeo.setAttribute('iB', new THREE.InstancedBufferAttribute(SB, 2).setUsage(THREE.DynamicDrawUsage));
   swGeo.instanceCount = NS;
-  const swU = { uPx: pxU, uTime: { value: 0 }, uSpin: { value: 0 } };
+  const swU = { uPx: pxU };
   const swarm = new THREE.Mesh(swGeo, new THREE.ShaderMaterial({ uniforms: swU, vertexShader: SPI_V, fragmentShader: SPI_F,
     transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide }));
   swarm.renderOrder = 40; swarm.frustumCulled = false; fx.add(swarm);
@@ -275,22 +212,17 @@ export function createScene(THREE, { canvas, base, onLoad }) {
 
   // ---- poses (frame px). The box [cx, h, opacity, k]: k the horizon's place on it from the top (0.42 as on the
   // packshot; its top and foot never show while both stay ≥ 5 % of its height off the horizon: k ≤ 0.95), θ always the
-  // packshot's angle (θmax, the sway aside); the syringe [x, y of its middle, angle° (0 nozzle up, 90 nozzle right),
-  // length px, opacity]: its length is 0.758 of the box's height in the world (it is nearer: 0.8 of the box's px height
-  // where both stand). S4 has the box alone on the left, the swarm beside it.
+  // packshot's angle (θmax, the sway aside). S3 has no box (the spicules close), S4 the box alone on the left.
   // S5 keeps above the page's three step cards: while the story holds there they come up to frame y ≈ 925 on a 16:10
-  // screen and ≈ 800 on 1920×1080, so the box stands high on its horizon (k 0.94: its foot at 775, the syringe's pad at
-  // 772) and the swarm is high
-  const BOX = [[520, 780, 1, 0.42], [330, 560, 1, 0.42], [330, 560, 0, 0.42], [420, 780, 1, 0.42], [360, 420, 1, 0.94], [600, 780, 1, 0.42]];
-  const SYR = [[790, 883, 0, 624, 1], [480, 841, 0, 448, 1], [60, 750, 90, 448, 0], [60, 750, 90, 448, 0], [530, 604, 0, 336, 1], [530, 604, 0, 336, 0]];
-  const DROP = [708, 750, 300];
+  // screen and ≈ 800 on 1920×1080, so the box stands high on its horizon (k 0.94: its foot at 775) and the swarm is high
+  const BOX = [[540, 780, 1, 0.42], [380, 560, 1, 0.42], [380, 560, 0, 0.42], [420, 780, 1, 0.42], [420, 420, 1, 0.94], [600, 780, 1, 0.42]];
 
   // the layouts of the spicules: [x, y, angle, length, opacity] of spicule i at time t (still: t 0). Each layout is one
   // loose swarm, [x, y of its middle, σx, σy, a long spicule's length] (frame px), clear of the box's print: S1 right of
-  // the syringe, S2 right of the pair, S3 inside the drop (2.2 σ + the drift + half a long one < its radius), S4 right of
-  // the box, S5 right of the pair and above the step cards. Every spicule keeps its place in each (its seeds g0, g1,
-  // held within 2.2 σ) and its own angle, and drifts a little while it lives
-  const CLOUD = [[990, 620, 85, 115, 44], [880, 820, 120, 95, 80], [708, 750, 85, 85, 150], [870, 760, 120, 130, 70], [900, 560, 90, 60, 44]];
+  // the box, S2 right of it, S3 close up in the middle of the scene (longer, wider apart), S4 right of the box, S5 right
+  // of it and above the step cards. Every spicule keeps its place in each (its seeds g0, g1, held within 2.2 σ) and its
+  // own angle, and drifts a little while it lives
+  const CLOUD = [[925, 640, 95, 120, 44], [860, 820, 120, 95, 80], [708, 750, 190, 140, 140], [870, 760, 120, 130, 70], [780, 560, 90, 60, 44]];
   const LS = [0.4, 0.12, 0.25, 0.10, 0.07, 0];   // the share of the spicules each layout shows (a phone draws 360 of 600)
   const held = g => 2.2 * Math.tanh(g / 2.2);
   function layout(k, i, t, still, o) {
@@ -302,47 +234,35 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   }
 
   // ---- the story's state at position p, written in place (nothing allocated per frame)
-  const ST = { box: [0, 0, 0, 0], syr: [0, 0, 0, 0, 0], drop: [0, 0, 0, 0], glow: 0, sw: [0, 0, 0, 0, 0] };   // sw: layout k → k1, its blend window [a, b], f
+  const ST = { box: [0, 0, 0, 0], glow: 0, sw: [0, 0, 0, 0, 0] };   // sw: layout k → k1, its blend window [a, b], f
   const mixA = (o, a, b, s) => { for (let i = 0; i < o.length; i++) o[i] = lerp(a[i], b[i], s); return o; };
   const setSw = (st, ka, kb, wa, wb, f) => { const w = st.sw; w[0] = ka; w[1] = kb; w[2] = wa; w[3] = wb; w[4] = f; };
   function story(p) {
     const k = Math.min(4, Math.floor(p)), f = p - k, st = ST;
-    st.glow = 0; st.drop[3] = 0; mixA(st.box, BOX[k], BOX[k + 1], smooth(0, 1, f)); mixA(st.syr, SYR[k], SYR[k + 1], smooth(0, 1, f));
-    if (k === 0) {   // S1 → S2: the pair recedes left and smaller; the swarm drifts over to their right
+    st.glow = 0; mixA(st.box, BOX[k], BOX[k + 1], smooth(0, 1, f));
+    if (k === 0) {   // S1 → S2: the box recedes left and smaller; the swarm drifts over to its right
       setSw(st, 0, 1, 0.1, 0.9, f);
-    } else if (k === 1) {   // S2 → S3: the box goes; the syringe turns level and rises, a drop swells at its nozzle and
-      // grows into the scene (the camera goes into it), the syringe leaves left; the swarm gathers in the drop
-      setSw(st, 1, 2, 0.5, 1, f);   // as the drop grows round it (0.5–0.9)
+    } else if (k === 1) {   // S2 → S3: the box goes; the spicules come close into the middle of the scene
+      setSw(st, 1, 2, 0.25, 1, f);
       st.box[2] = 1 - smooth(0, 0.35, f);
-      const turn = smooth(0, 0.4, f), away = smooth(0.5, 0.85, f);
-      st.syr[0] = lerp(SYR[1][0], SYR[2][0], away); st.syr[1] = lerp(SYR[1][1], 750, turn); st.syr[2] = 90 * turn; st.syr[3] = SYR[1][3]; st.syr[4] = 1 - away;
-      const tipX = st.syr[0] + Math.sin(rad(st.syr[2])) * st.syr[3] / 2, tipY = st.syr[1] - Math.cos(rad(st.syr[2])) * st.syr[3] / 2;
-      const r0 = 40 * smooth(0.25, 0.5, f), grow = smooth(0.5, 0.9, f);
-      const nx = SYRINGE ? tipX + r0 * 0.8 : DROP[0], ny = SYRINGE ? tipY : DROP[1];
-      st.drop[0] = lerp(nx, DROP[0], grow); st.drop[1] = lerp(ny, DROP[1], grow);
-      st.drop[2] = SYRINGE ? lerp(r0, DROP[2], grow) : DROP[2] * smooth(0.3, 0.9, f); st.drop[3] = 1;
-    } else if (k === 2) {   // S3 → S4: the drop widens and goes; the box comes back on the left, the swarm drifts out beside it
+    } else if (k === 2) {   // S3 → S4: the box comes back on the left, the swarm drifts out beside it
       setSw(st, 2, 3, 0.2, 1, f);
-      const gone = smooth(0.3, 0.7, f); st.drop[0] = DROP[0]; st.drop[1] = DROP[1]; st.drop[2] = DROP[2] * (1 + 0.15 * gone); st.drop[3] = 1 - gone;
       for (let i = 0; i < 4; i++) st.box[i] = BOX[3][i];
-      st.box[2] = smooth(0.55, 0.95, f);   // as the drop clears
-    } else if (k === 3) {   // S4 → S5: the box steps back small and high; the syringe comes back beside it
+      st.box[2] = smooth(0.55, 0.95, f);   // as the spicules clear its place
+    } else if (k === 3) {   // S4 → S5: the box steps back small and high
       setSw(st, 3, 4, 0.1, 0.9, f);
       mixA(st.box, BOX[3], BOX[4], smooth(0, 0.6, f));   // there before the step cards come up
-      for (let i = 0; i < 4; i++) st.syr[i] = SYR[4][i];
-      st.syr[4] = smooth(0.45, 0.9, f);
-    } else {   // S5 → kit: the syringe goes; the box comes forward into the packshot's pose
+    } else {   // S5 → kit: the box comes forward into the packshot's pose
       setSw(st, 4, 5, 0, 0.5, f);
-      st.syr[4] = 1 - smooth(0, 0.4, f); st.glow = smooth(0.5, 1, f);   // the backlight comes up as the box arrives
+      st.glow = smooth(0.5, 1, f);   // the backlight comes up as the box arrives
       mixA(st.box, BOX[4], BOX[5], smooth(0.45, 1, f));   // it waits for the step cards to pass over the scene
     }
-    if (!SYRINGE) st.syr[4] = 0;
     return st;
   }
 
   // ---- applying a state (in place: no garbage per frame; the QA probes are worked out in state() only)
   const Lk = [0, 0, 0, 0, 0], Lk1 = [0, 0, 0, 0, 0], thC = [NaN, NaN, NaN, 0];   // thC: θmax's last pose and value
-  const last = { th: 0, ratio: 0, top: 0, bottom: 0, swarm: 0, t: 0, drop: 0 };
+  const last = { th: 0, ratio: 0, top: 0, bottom: 0, swarm: 0, t: 0 };
   function pose(p, t, still) {
     const st = story(p), live = still ? 0 : 1 - smooth(4.85, 5, p), ph = phone.matches;
     // the box: θ the packshot's at rest, swaying toward 4° and back (9 s) while it lives; the side never wider than photographed
@@ -359,45 +279,28 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       GL.uR.value.set((l + r) / 2, c[1], 1.6 * (r - l), 0.46 * h); GL.uA.value = 0.55 * st.glow;
     }
     last.top = local(0, BH / 2, 0, out2)[1]; last.bottom = local(0, -BH / 2, 0, out2)[1];
-    const sx = st.syr[0], sy = st.syr[1], sa = st.syr[2], sl = st.syr[3], so = st.syr[4];
-    // the syringe: its middle at (x, y), turned in the picture's plane
-    syr.visible = SYRINGE && so > 0.004;
-    if (syr.visible) {
-      at(sx, sy, D_SYR, syr.position); const L = world(sl, D_SYR); syr.scale.setScalar(L);
-      syr.rotation.set(0, 0, -rad(sa)); syr.translateY(-0.5 * L);   // its middle, not its pad, at (x, y)
-      glassBack.userData.u.uFade.value = glassFront.userData.u.uFade.value = so; rodMat.opacity = 0.55 * so;
-      glassFront.clearcoat = ph ? 0 : 0.6;
-    }
-    // the drop
-    const dx = st.drop[0], dy = st.drop[1], dr = st.drop[2], dop = st.drop[3];
-    dropB.visible = dropF.visible = dr > 0.5 && dop > 0.004;
-    if (dropB.visible) {
-      at(dx, dy, D_DROP, dropB.position); dropF.position.copy(dropB.position); dropB.scale.setScalar(world(dr, D_DROP)); dropF.scale.copy(dropB.scale);
-      dropBack.userData.u.uFade.value = dropFront.userData.u.uFade.value = dop * (1 + 0.02 * Math.sin(t * 0.8) * live);
-    }
     // the spicules: each one's place in the two layouts of this transition, mixed (weighted by its opacity in each, so a
     // spicule only in one fades where it is, one in both flows between them), each a little late or early; a layout whose
     // weight is nil is not worked out
     const n = ph ? NS_PH : NS, ka = st.sw[0], kb = st.sw[1], fw = clamp((st.sw[4] - st.sw[2]) / (st.sw[3] - st.sw[2]));
-    swU.uTime.value = t; swU.uSpin.value = (ka === 2 ? 1 - fw : kb === 2 ? fw : 0) * (still ? 0 : 1);
     let shown = 0;
     for (let i = 0; i < n; i++) {
       const s = SEED[i], q = smooth(0, 1, clamp((fw - s.lag) / 0.75));
       if (q < 1 && s.rank < LS[ka]) layout(ka, i, t, still, Lk); else Lk[4] = 0;
       if (q > 0 && s.rank < LS[kb]) layout(kb, i, t, still, Lk1); else Lk1[4] = 0;
       const A = (1 - q) * Lk[4], B = q * Lk1[4], W = A + B;
-      const j = i * 4, jb = i * 3;
+      const j = i * 4, jb = i * 2;
       if (W < 0.003) { SB[jb] = 0; continue; }
       SA[j] = (A * Lk[0] + B * Lk1[0]) / W; SA[j + 1] = (A * Lk[1] + B * Lk1[1]) / W;
       SA[j + 2] = 0.5 * Math.atan2(A * Math.sin(2 * Lk[2]) + B * Math.sin(2 * Lk1[2]), A * Math.cos(2 * Lk[2]) + B * Math.cos(2 * Lk1[2]));
       if (B > A ? Math.cos(SA[j + 2] - Lk1[2]) < 0 : Math.cos(SA[j + 2] - Lk[2]) < 0) SA[j + 2] += Math.PI;   // keep its heading
       SA[j + 3] = (A * Lk[3] + B * Lk1[3]) / W;
-      SB[jb] = Math.min(1, W); SB[jb + 1] = SA[j + 3] / 28; SB[jb + 2] = s.ph;
+      SB[jb] = Math.min(1, W); SB[jb + 1] = SA[j + 3] / 28;
       if (W > 0.02) shown++;
     }
     swarm.geometry.instanceCount = n; swarm.geometry.attributes.iA.needsUpdate = swarm.geometry.attributes.iB.needsUpdate = true;
     swarm.visible = shown > 0; last.swarm = shown;
-    last.t = t; last.drop = dropB.visible ? dr : 0;
+    last.t = t;
   }
   // QA: where to pipette the print (frame px) in the pose drawn last: the front's empty paper (u .50 / .25, v .70), the
   // band (u .50, v .30), the side; the front's corners TL TR BR BL
@@ -433,7 +336,6 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     camera.setViewOffset(view.cover.w, view.cover.h, view.box.x - view.cover.x, view.box.y - view.cover.y, view.box.w, view.box.h);
     camera.updateProjectionMatrix();
     pxU.value = pr * view.cover.w / 2400;   // device px per frame px: the spicules keep ≥ 1.5 device px
-    EDGE.value.set((view.box.x - view.cover.x) * 2400 / view.cover.w, (view.box.y - view.cover.y) * 2400 / view.cover.w, pxU.value, canvas.height);
   }
   function render(p, view) {
     pr = Math.min(full(view), cap); fit(view, pr); pose(p, view.still ? 0 : view.t, view.still);
@@ -461,6 +363,6 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const r1 = v => Math.round(v * 10) / 10, r3 = v => Math.round(v * 1000) / 1000;
   const state = () => ({ quality: pr, cap, capped, pixelRatio: renderer.getPixelRatio(), width: canvas.width, height: canvas.height, renders, loaded,
     version, kits, lastP, yawEff: r1(deg(last.th)), sideRatio: r3(last.ratio), boxTop: r1(last.top), boxBottom: r1(last.bottom), boxOp: r3(boxMats[0].opacity * (box.visible ? 1 : 0)),
-    syringeOn: syr.visible, swarm: last.swarm, dropR: r1(last.drop || 0), probe: probe() });
+    swarm: last.swarm, probe: probe() });
   return { draw, kit, dispose, state, animated: true };
 }
