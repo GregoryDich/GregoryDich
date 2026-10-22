@@ -16,7 +16,8 @@ front at angle α (+ toward the right flat) and radius R(u) shows at t = R·sin(
 its own plane (u_plane = u_front + 0.156·R).
 Letters (half-max of letter − local body, columns and rows; the T at 0.35 for its fainter bar), facade px: the print's
 centre line is the generatrix α = 7.35° (M 7.1°, N 7.6°), its cap height 20.4 px of arc (M 20.6, N 19.9), the stems
-3.0 px (I 3.0, T 3.1, N 2.9): Jost 450 (SIL OFL, a geometric sans like the print; the owner's artwork would replace it
+3.0 px (I 3.0, T 3.1, N 2.9); set at 6.5° and 21.0 px so that the rendered print, measured the same way on the scene's
+render in the packshot's pose, lands on these (the texture's own edge softening narrows it): Jost 450 (SIL OFL, a geometric sans like the print; the owner's artwork would replace it
 glyph for glyph), each glyph set to its measured width. The V: its two grooves traced as luminance minima row by row.
 usage: python3 -I make_textures.py <font dir with Jost[wght].ttf> <out dir: site/proto/img/mitopen-3d> <repo root>"""
 import os, sys
@@ -32,7 +33,7 @@ R = lambda u: float(np.interp(u, *zip(*RU)))
 EL, AZ = np.radians(9.0), 11.0
 
 
-def _plane(uf, alpha=7.35):   # a facade point's own plane: u_plane = u_front + sin(el)·R(u_plane)·cos(α − α_cam), solved
+def _plane(uf, alpha=6.5):   # a facade point's own plane: u_plane = u_front + sin(el)·R(u_plane)·cos(α − α_cam), solved
     u = uf
     for _ in range(4): u = uf + np.sin(EL) * R(u) * np.cos(np.radians(alpha - AZ))
     return u
@@ -41,7 +42,8 @@ def _plane(uf, alpha=7.35):   # a facade point's own plane: u_plane = u_front + 
 # ---- the print: decal window (plane u, arc px from the centre line) and the measured letters
 U0, U1 = 432.0, 286.0                 # x 0 … 2048 ↔ u 432 (beyond the M) … 286 (beyond the N)
 S0, S1 = -13.7, 13.7                  # y 0 … 384 ↔ arc −13.7 (the letter tops' side, −α) … +13.7
-ALPHA_C, CAP = 7.35, 20.4             # the centre line (degrees from the button's meridian) and the cap height (arc px)
+ALPHA_C, CAP = 6.5, 21.0             # the centre line (degrees from the button's meridian) and the cap height (arc px), set so the
+#                                       rendered print's half-max box lands on the measured one (overlay: +0.8 px across, −0.7 px tall at 7.35°, 20.4)
 PW, PH = 2048, 384
 LETTERS = [('M', 416.3, 395.5), ('I', 389.5, 386.5), ('T', 382.5, 366.9), ('O', 363.7, 343.7), ('P', 339.2, 323.7),
            ('E', 319.0, 304.6), ('N', 300.1, 283.3)]   # facade u of each letter's ink, from its M-side edge to its N-side edge

@@ -284,9 +284,9 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     bumpMap: vTex, bumpScale: 0.0006, alphaMap: vTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }), 'v');
   // glass: no transmission (on a transparent canvas it cannot see the page's smoke, and a phone pays a pass for it): its
   // opacity follows Fresnel and its own highlights (as the HAIR ampoules)
-  function glassMat(side, a0, aF, aS) {
+  function glassMat(side, a0, aF, aS, own = true) {   // own: the cartridge's dim room; else the studio (the drop: a light rim)
     const m = new THREE.MeshPhysicalMaterial({ color: 0x0b0b0c, roughness: 0.04, ior: 1.5, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.6,
-      envMap: glassEnvRT.texture, transparent: true, depthWrite: false, side });
+      envMap: own ? glassEnvRT.texture : null, transparent: true, depthWrite: false, side });
     const k = [a0, aF, aS].map(v => v.toFixed(3));
     m.onBeforeCompile = sh => {
       sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
@@ -298,10 +298,10 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
         gl_FragColor.a = clamp(${k[0]} + ${k[1]} * F + dot(sp, vec3(0.2126, 0.7152, 0.0722)) * ${k[2]}, 0.0, 1.0) * opacity; }`);
     };
     m.customProgramCacheKey = () => 'glass' + k.join() + side;
-    glassMats.push(m); return m;
+    if (own) glassMats.push(m); return m;
   }
   const glassBack = glassMat(THREE.BackSide, 0.02, 0.3, 0.7), glassFront = glassMat(THREE.FrontSide, 0.03, 0.5, 1.0);
-  const stemMat = glassMat(THREE.DoubleSide, 0.02, 0.35, 0.6), dropMat = glassMat(THREE.FrontSide, 0.05, 0.6, 1.0);
+  const stemMat = glassMat(THREE.DoubleSide, 0.02, 0.35, 0.6), dropMat = glassMat(THREE.FrontSide, 0.02, 1.0, 0.35, false);
 
   // ---- the pen
   const pen = new THREE.Group(); scene.add(pen);
@@ -329,8 +329,8 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   }
   add(dot(135.5, 0, 5.5, 0.12), dotMat, 1);        // the dark dot above it (glass, flush; it does not light)
   add(dot(741, 0, 0.8, 0.1), markMat, 1);          // a tiny mark on the nose's collar, on the same meridian
-  // the print: x along the axis (u 432 → 286), y across (arc −13.7 … +13.7 px round its centre line α 7.35°)
-  const PU0 = 432, PU1 = 286, PS0 = -13.7, PS1 = 13.7, PAC = 7.35;
+  // the print: x along the axis (u 432 → 286), y across (arc −13.7 … +13.7 px round its centre line α 6.5°)
+  const PU0 = 432, PU1 = 286, PS0 = -13.7, PS1 = 13.7, PAC = 6.5;
   add(patch(PU1, PU0, 146, u => [PAC + deg(PS0 / R(u)), PAC + deg(PS1 / R(u))], 24, 0.15,
     (u, a) => [(PU0 - u) / (PU0 - PU1), 1 - (rad(a - PAC) * R(u) - PS0) / (PS1 - PS0)]), printMat, 20);
   // the engraved V: α −22…+18°, u 78…122

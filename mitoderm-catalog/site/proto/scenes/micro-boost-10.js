@@ -9,9 +9,9 @@
 // The story (site/story3d.json; scratchpad spec pages/micro-boost-10/spec.md, BIOSPICULE line):
 //   S1 meet     a stream of spicules flows from the medallion on the box up, over and down into the tip of a 3 ml
 //               syringe and on into its barrel, where it gathers and fades
-//   S2 why      the box and the syringe smaller on the left; a gold skin line across the scene (behind the box): a flat
-//               glint slides along it and stops on it (a peel works on the surface), then the spicules pass through it
-//               and stand under it, short ones shallow, long ones deeper, thin gold channels left under the line
+//   S2 why      the box and the syringe smaller on the left; a gold skin line: a flat glint slides along it and stops
+//               on it (a peel works on the surface), then the spicules pass through it and stand under it, short ones
+//               shallow, long ones deeper, thin gold channels left under the line
 //   S3 inside   the syringe turns level, a drop swells at its nozzle and grows into the scene: inside it the spicules
 //               sort into two rows, short above, long below
 //   S4 feel     (no people: the owner's rule) a schematic cut of the epidermis rises, frosted, two layers, the short
@@ -211,9 +211,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const dropB = new THREE.Mesh(dropGeo, dropBack), dropF = new THREE.Mesh(dropGeo, dropFront);
   dropB.renderOrder = 20; dropF.renderOrder = 50; scene.add(dropB, dropF);
 
-  // ---- the line's graphics, flat to the camera in frame pixels (a plane: local x = px − 1200, y = 750 − py), by order:
-  // the skin before the box (S2's line runs across the whole scene, behind the box and the glass), the spicules and the
-  // gold over it: strokes ≥ 1.5 device px wide with a soft edge
+  // ---- the line's graphics, flat to the camera in frame pixels (a plane: local x = px − 1200, y = 750 − py), drawn
+  // over the box by order (they never pass behind it): strokes ≥ 1.5 device px wide with a soft edge
   const pxU = { value: 1 };   // device px per frame px
   const fx = new THREE.Group(); scene.add(fx);
   at(1200, 750, DIST, fx.position); fx.scale.setScalar(world(1, DIST));
@@ -253,7 +252,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
         gl_FragColor = vec4(c.rgb, c.a * uO * edgeFade(vF));
       }` });
   const skin = new THREE.Mesh(new THREE.PlaneGeometry(BOXF[2] - BOXF[0], BOXF[3] - BOXF[1]).translate((BOXF[0] + BOXF[2]) / 2 - 1200, 750 - (BOXF[1] + BOXF[3]) / 2, 0), skinMat);
-  skin.renderOrder = 0.5; skin.frustumCulled = false; fx.add(skin);   // before the box's faces (1, 2): it hides the line
+  skin.renderOrder = 10; skin.frustumCulled = false; fx.add(skin);
   // the kit's backlight: a soft glow of the line's green behind the box (S6–S7 and the offer card's picture), its
   // ellipse within the box's height (the card's picture, cut to what has alpha, keeps the box's size); no ring
   const GL = { uC: { value: hex3(0x24573f) }, uA: { value: 0 }, uR: { value: new THREE.Vector4(600, 812, 330, 360) } };
@@ -337,8 +336,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // 772) and the cut is high
   const BOX = [[520, 780, 1, 0.42], [330, 560, 1, 0.42], [330, 560, 0, 0.42], [330, 560, 0, 0.42], [360, 420, 1, 0.94], [600, 780, 1, 0.42]];
   const SYR = [[790, 883, 0, 624, 1], [480, 841, 0, 448, 1], [60, 750, 90, 448, 0], [60, 750, 90, 448, 0], [530, 604, 0, 336, 1], [530, 604, 0, 336, 0]];
-  // S2's line (across the whole scene box: its edges fade it) and S4–S5's cut: [x0, x1, edge y, height, top's depth px]
-  const LINE = [BOXF[0], BOXF[2], 1010], CUT3 = [278, 1138, 790, 230, 100], CUT4 = [700, 1220, 560, 150, 64];
+  // S2's line and S4–S5's cut: [x0, x1, edge y, height, top's depth px]
+  const LINE = [600, 1235, 1010], CUT3 = [278, 1138, 790, 230, 100], CUT4 = [700, 1220, 560, 150, 64];
   const DROP = [708, 750, 300];
 
   // the layouts of the spicules: [x, y, angle, length, opacity] of spicule i at time t (still: the cycle's last state)
