@@ -14,7 +14,8 @@ GH = 'https://github.com/GregoryDich/GregoryDich/blob/claude/mitoderm-figma-cata
 # the hub's lines: the page's name and what it shows (Hebrew; product names stay Latin)
 ABOUT = {'v-tech-system': ('V-TECH SYSTEM', 'סיפור 3D בגלילה: פריימים ב-HD שרונדרו ב-Blender'),
          'exocell-mask': ('EXOCELL MASK', 'סיפור 3D חי ב-three.js'),
-         'exotech-gel': ('EXOTECH GEL', 'סיפור 3D חי ב-three.js')}
+         'exotech-gel': ('EXOTECH GEL', 'סיפור 3D חי ב-three.js'),
+         'exosignal-hair': ('EXOSIGNAL HAIR', 'סיפור 3D חי ב-three.js')}
 
 pages = []
 for arg in sys.argv[1:]:

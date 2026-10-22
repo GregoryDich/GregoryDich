@@ -1,0 +1,1564 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></head><body><title>EXOSIGNAL HAIR Live</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap">
+<script>document.documentElement.lang = 'he'; document.documentElement.dir = 'rtl'; document.documentElement.classList.add('js');</script>
+<style>
+/* V-TECH SYSTEM, Hebrew live page on pre-rendered Blender frames, screen for screen as the approved Figma design (page
+   142:3) with the owner's edits of 17/10: S1 meet → S5 protocol → the offer play as one scroll story on a fixed canvas
+   (five Cycles runs, the key frame held while each screen is read; the last run lands the kit in the offer card),
+   then the specialists and the related products without 3D. The copy keeps the RIGHT half on wide screens, the 3D
+   the left. From S1 to S3 exosome cells float in depth around the product (asteroid-like parallax on a deep plate).
+   Phone: no sequence; the product is a small HD still beside each heading. Blocks (steps, kit card, specialists,
+   cards, lead form) as on the EXOCELL MASK page. A committed single dark look (black and gold). */
+:root {
+  --bg: #0a0a0b; --ink: #111114; --charcoal: #1a1a1f;
+  --cream: #f6f3ec; --text: rgba(246,243,236,.78); --text-soft: rgba(246,243,236,.84); --text-faint: rgba(246,243,236,.72);
+  --gold: #c9a24b; --gold-soft: #d8bd7e; --gold-faint: rgba(201,162,75,.5); --gold-wash: rgba(201,162,75,.14);
+  --hairline: rgba(201,162,75,.22); --hairline-cream: rgba(246,243,236,.1); --on-gold: #0a0a0b; --error: #f0a595;
+  /* owner 17/10: Rubik in every role (Hebrew and Latin), no italics */
+  --display: 'Rubik', system-ui, sans-serif; --he-display: var(--display); --body: var(--display);
+  --gutter: clamp(18px, 5vw, 72px); --maxw: 1200px; --ease: cubic-bezier(.22,1,.36,1);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--cream); font: 300 clamp(15px, 1.15vw, 17px)/1.65 var(--body); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+@media (max-width: 1391px) { body { font-weight: 400; line-height: 1.6; } }   /* Hebrew at 16 px and below reads better at 400 */
+h1, h2, h3, h4 { margin: 0; font-weight: 400; text-wrap: balance; }
+p, ul, ol { margin: 0; }
+p { text-wrap: pretty; }
+a { color: inherit; }
+img { max-width: 100%; display: block; }
+bdi { unicode-bidi: isolate; }
+[hidden] { display: none !important; }
+.nw { white-space: nowrap; }
+svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+*, *::before, *::after { font-variant-numeric: lining-nums tabular-nums; font-style: normal; }
+.wrap { width: min(var(--maxw), 100% - 2 * var(--gutter)); margin-inline: auto; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* layers, back to front: the line's smoke and the deep plate (S2–S3), far cells, the Blender frames (faded out as the
+   offer arrives), near cells, the page */
+.bg, .plate { position: fixed; inset: -6vh -4vw; z-index: 0; background: url(img/bg.webp) center / cover no-repeat; will-change: transform; pointer-events: none; }
+.plate { background: var(--bg) center / cover no-repeat; opacity: 0; }
+#seq, .still, .cells { position: fixed; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none; }
+#seq { inset: auto; left: 0; top: 0; transform-origin: 0 0; }   /* sized and placed by the engine: its run's box of the cover-fitted frame */
+.js:not(.no-gl) .still { display: none; }   /* no-gl: a live scene could not start (no WebGL) */
+.still { overflow: hidden; }
+.still-f { position: absolute; left: 50%; top: 50%; width: max(100vw, 160vh); height: max(62.5vw, 100vh); transform: translate(-50%, -50%); }   /* the 16:10 frame, cover-fitted */
+.still-f img { position: absolute; max-width: none; }
+/* one composited layer per field, the sprites painted into it (a layer per sprite made every frame's commit slow) */
+.cells { overflow: hidden; contain: strict; will-change: transform; }
+/* S3: the DNA helix (PDRN) far behind the ampoules, an animated loop over black screened onto the plate; desktop only */
+.helix { position: fixed; z-index: 1; left: 1vw; top: 16vh; width: min(48vw, 80vh); height: auto; max-width: none; opacity: 0;
+  visibility: hidden; mix-blend-mode: screen; filter: blur(1.2px); pointer-events: none; will-change: opacity, transform; }
+.cells img { position: absolute; left: 0; top: 0; width: 256px; height: 256px; max-width: none; opacity: 0; visibility: hidden; }
+.cells i { position: absolute; left: 0; top: 0; width: 8px; height: 8px; border-radius: 50%; opacity: 0; visibility: hidden;
+  background: radial-gradient(circle, #fff1cf 0, rgba(232,196,120,.85) 30%, rgba(201,162,75,0) 70%); }
+main, .top, .foot, .dock, .bar { position: relative; z-index: 2; }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: rgba(10,10,11,.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hairline-cream); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; min-height: 72px; gap: 20px; }
+.top .logo img { height: 26px; width: auto; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 50px; padding: 0 28px; border-radius: 999px; font: 500 15px/1.2 var(--body); text-align: center; text-decoration: none; cursor: pointer; border: 1px solid transparent; white-space: nowrap; transition: transform .3s var(--ease), background-color .3s, color .3s; }
+.btn:hover { transform: scale(1.03); }
+.btn.primary { background: var(--gold); color: var(--on-gold); }
+.btn.ghost { border-color: var(--gold); color: var(--gold); background: transparent; }
+.btn.ghost:hover { background: var(--gold); color: var(--on-gold); }
+.top .btn { min-height: 42px; padding-inline: 18px; font-size: 14px; }
+@media (max-width: 460px) { .top .btn { display: none; } }
+
+/* story screens: a screen each, the copy in the right half (RTL: the start side; margin-inline-end: auto keeps it
+   there), the 3D on the left */
+.sec { min-height: 100svh; display: flex; align-items: center; padding-block: 72px; }
+.copy { width: min(540px, 100%); margin-inline-end: auto; display: grid; gap: 20px; justify-items: start; }
+@media (min-width: 900px) { .copy { width: min(540px, calc(50% - 32px)); } }
+.legend { display: flex; align-items: center; gap: 10px; font: 400 13px/1.4 var(--body); color: var(--text-faint); }
+.legend .dot { position: relative; width: 16px; height: 16px; flex: none; border-radius: 50%; border: 1px solid rgba(196,176,236,.75);
+  background: radial-gradient(circle, #f3cf86 0, #b98a3c 34%, rgba(60,36,12,.9) 52%, rgba(150,130,200,.18) 60%); box-shadow: 0 0 8px rgba(201,162,75,.35); }
+.badges { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.mark-line { font: 500 12px/1 var(--body); letter-spacing: .24em; color: var(--gold); }
+.badge { border-radius: 999px; padding: 4px 12px; font: 500 12px/1.4 var(--body); border: 1px solid var(--gold-faint); color: var(--gold-soft); }
+.badge.pro { background: var(--gold); color: var(--on-gold); border-color: var(--gold); }
+.kicker { display: flex; align-items: center; gap: 14px; font: 500 13px/1.3 var(--body); letter-spacing: .02em; color: var(--gold); }
+.kicker.line::after { content: ""; width: 40px; height: 1px; background: rgba(201,162,75,.3); }
+h1 { font: 500 clamp(48px, 5.8vw, 84px)/1 var(--display); letter-spacing: -.01em; }
+h2 { font: 500 clamp(30px, 3.2vw, 46px)/1.18 var(--he-display); letter-spacing: -.005em; }
+.tag { font: 400 clamp(20px, 1.9vw, 26px)/1.35 var(--he-display); color: var(--gold-soft); }
+.lead { color: var(--text); max-width: 480px; }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; padding: 0; list-style: none; }
+.chips li { border: 1px solid var(--hairline-cream); border-radius: 999px; padding: 6px 14px; font: 400 15px/1.3 var(--body); color: var(--text); background: rgba(10,10,11,.45); }
+.chips.gold li { border-color: var(--gold-faint); color: var(--gold-soft); }
+.cta { display: flex; flex-wrap: wrap; gap: 14px; }
+.note { font: 400 14px/1.5 var(--body); color: var(--text-faint); }
+.pill { padding: 10px 18px; border: 1px solid var(--gold-faint); border-radius: 22px; font: 400 15px/1.5 var(--body); color: var(--gold-soft); background: rgba(10,10,11,.45); max-width: 540px; }
+details { width: 100%; border-top: 1px solid var(--hairline-cream); }
+details summary { cursor: pointer; padding: 16px 0; font: 400 16px/1 var(--body); color: var(--cream); list-style: none; display: flex; justify-content: space-between; min-height: 48px; align-items: center; }
+details summary::-webkit-details-marker { display: none; }
+details summary::after { content: "+"; color: var(--gold); }
+details[open] summary::after { content: "–"; }
+details ul { padding: 0 0 18px; list-style: none; color: var(--text); display: grid; gap: 6px; }
+/* S4: the four sensations as pins */
+.pins { display: grid; gap: 10px; justify-items: start; padding: 0; list-style: none; }
+.pins li { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid var(--gold-faint); border-radius: 999px; background: rgba(10,10,11,.55); backdrop-filter: blur(8px); font: 400 14px/1.2 var(--body); color: var(--cream); }
+.pins li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px rgba(201,162,75,.22); }
+/* S5: three steps along the bottom, 01 on the right */
+.protocol.sec { display: block; }
+.protocol .copy { margin-block: 12px 0; }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: clamp(120px, 24vh, 260px) 0 0; padding: 0; list-style: none; }
+.step { display: grid; gap: 12px; align-content: start; min-width: 0; padding: 30px; border-radius: 24px; background: rgba(26,26,31,.92); border: 1px solid var(--hairline-cream); }
+.step .n { font: 300 22px/1 var(--display); color: var(--gold); }
+.step h3 { font: 500 21px/1.25 var(--display); color: var(--cream); }
+.step p { color: var(--text-faint); font: 400 15px/1.6 var(--body); }
+/* the offer: the copy on the right, the one card "what's in the box" on the left. With the story (desktop) the copy
+   arrives while the last run builds the kit and stays (sticky); the card rises after it and the 3D kit flies into the
+   card's picture. Phone order: heading → card → text → buttons → contacts. */
+.offer .wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: clamp(40px, 6vw, 96px); align-items: center; }
+.offer-copy { display: grid; gap: 20px; justify-items: start; min-width: 0; position: sticky; top: calc(72px + 5vh); }
+.offer .cta { flex-direction: column; align-items: flex-start; }
+.story .offer.sec { align-items: flex-start; }
+.story .offer .wrap { align-items: start; }
+.story .offer .kitcard { margin-top: 66vh; }   /* scroll room for the last run before the card covers the left half */
+@media (min-width: 900px) { .story #offer { scroll-margin-top: calc(-72px - 43vh); } }   /* the dock's «הצעה» lands where the kit has landed in the card */
+.contacts { display: grid; width: 100%; max-width: 420px; }
+.contacts a { display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 4px 2px; border-bottom: 1px solid var(--hairline-cream); color: var(--text-soft); text-decoration: none; font: 400 15px/1.3 var(--body); }
+.contacts svg { width: 20px; height: 20px; color: var(--gold); flex: none; }
+.offer .kitcard { justify-self: center; }
+.kitcard { width: min(100%, 540px); display: grid; gap: 14px; padding: 26px 30px 28px; border-radius: 28px; border: 1px solid var(--hairline); background: linear-gradient(160deg, rgba(28,27,31,.95), rgba(14,14,17,.95)); box-shadow: 0 30px 90px rgba(0,0,0,.5); }
+.kc-head { display: flex; align-items: center; gap: 14px; }
+.kc-head h3 { font: 500 26px/1.2 var(--he-display); color: var(--cream); }
+.kc-head .badge { letter-spacing: .14em; font-size: 11px; }
+.kc-pic, .kc-live { width: 100%; height: clamp(160px, 26vh, 250px); object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,.55)); }
+.kc-live { display: none; }
+.kc-fig { margin: 0; display: grid; justify-items: center; }
+.kc-call { display: flex; align-items: baseline; gap: 6px; font: 400 13px/1.2 var(--body); color: var(--gold-soft); position: relative; }
+.kc-call b { font: 500 15px/1 var(--display); color: var(--gold); }
+.kc-call::after { content: ''; position: absolute; left: 50%; width: 1px; height: 16px; background: var(--gold-faint); }
+.kc-call.top { margin-bottom: 18px; } .kc-call.top::after { top: calc(100% + 2px); }   /* down to the sachets at the far end */
+.kc-call.bot { margin-top: 18px; } .kc-call.bot::after { bottom: calc(100% + 2px); }   /* up to the ampoules */
+.kitcard.live .kc-live { display: block; }   /* desktop with the story: the engine draws the last frame of the kit run here */
+.kitcard.live .kc-pic { display: none; }
+.kc-qty { display: flex; align-items: baseline; gap: 12px; color: var(--text-soft); font: 400 15px/1.45 var(--body); }
+.kc-qty b { font: 300 32px/1 var(--display); color: var(--gold-soft); flex: none; }
+.kc-facts { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding-top: 12px; border-top: 1px solid var(--hairline-cream); font: 400 14px/1.4 var(--body); color: var(--text-faint); }
+.kc-facts b { font: 400 18px/1 var(--display); color: var(--gold-soft); }
+.kc-facts i { font-style: normal; color: var(--gold-faint); }
+/* S8: specialists (public: a monogram and the city) */
+.spec-sec.sec { display: block; min-height: 0; padding-block: 80px 92px; }
+.spec-sec .wrap { display: grid; gap: 12px; justify-items: start; }
+.spec-sec .wrap > * { max-width: 100%; }
+.filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 8px; }
+.filter .lbl { font: 400 14px/1 var(--body); color: var(--text-faint); margin-inline-end: 4px; }
+.fchip { min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(246,243,236,.2); background: rgba(10,10,11,.45); color: var(--text-soft); font: 400 14px/1 var(--body); cursor: pointer; }
+.fchip[aria-pressed="true"] { border-color: var(--gold); color: var(--gold-soft); background: rgba(201,162,75,.16); }
+.specs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; width: 100%; margin-top: 6px; }
+.spec { display: flex; flex-direction: column; min-width: 0; border-radius: 22px; background: rgb(24,24,28); border: 1px solid var(--hairline); }
+.spec .av { width: 58px; height: 58px; margin: 22px 22px 0; border-radius: 50%; border: 1px solid var(--gold); display: grid; place-items: center; font: 400 28px/1 var(--he-display); color: var(--gold-soft); background: rgba(10,10,11,.6); }
+.spec .sb { display: grid; gap: 8px; justify-items: start; padding: 14px 22px 12px; }
+.spec h3 { display: flex; align-items: center; gap: 8px; font: 500 21px/1.25 var(--he-display); color: var(--gold-soft); }
+.spec h3 svg { width: 17px; height: 17px; color: var(--gold); flex: none; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tags span { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font: 400 13px/1.2 var(--body); border: 1px solid var(--gold-faint); color: var(--gold-soft); }
+.tags svg { width: 15px; height: 15px; }
+.book { justify-self: stretch; display: flex; align-items: center; gap: 8px; min-height: 46px; padding-top: 6px; border-top: 1px solid var(--hairline-cream); color: var(--gold); text-decoration: none; font: 400 15px/1 var(--body); }
+.spec-empty { color: var(--text-soft); font: 400 15px/1.5 var(--body); }
+.spec-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px 28px; width: 100%; margin-top: 10px; }
+.join { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.join span { font: 400 24px/1.2 var(--he-display); color: var(--cream); }
+/* S9: related products */
+.related { padding-block: clamp(56px, 7vw, 96px) clamp(72px, 7vw, 104px); background: linear-gradient(to bottom, transparent, var(--ink) 18%); }
+.related h2 { font: 400 clamp(26px, 3vw, 36px)/1.15 var(--he-display); }
+.related h2 + .cards { margin-top: 28px; }
+.related .cards + h2 { margin-top: 64px; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+@media (max-width: 960px) { .cards, .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .cards, .specs { grid-template-columns: 1fr; } }
+.card { display: flex; flex-direction: column; overflow: hidden; border-radius: 24px; background: var(--charcoal); border: 1px solid var(--gold-wash); text-decoration: none; min-width: 0; }
+.card .pic { position: relative; height: 248px; }
+.card .pic img { position: absolute; inset: 20px 10% 24px; width: 80%; height: calc(100% - 44px); object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 16px 18px rgba(0,0,0,.45)); transition: transform .5s var(--ease); transform-origin: 50% 100%; }
+.card:hover .pic img { transform: scale(1.05); }
+.card .body { padding: 24px; display: grid; gap: 8px; justify-items: start; }
+.card .badge.home { border-color: rgba(246,243,236,.3); color: var(--text-soft); }
+.card h3 { font: 500 20px/1.2 var(--display); color: var(--cream); }
+.card p { font: 400 14px/1.6 var(--body); color: var(--text-faint); }
+.card .go { margin-top: 6px; font: 400 13px/1 var(--body); color: var(--gold-soft); }
+.foot { border-top: 1px solid var(--hairline-cream); padding-block: 36px calc(36px + 72px); color: var(--text-faint); font: 400 13px/1.5 var(--body); background: var(--bg); }
+.foot .wrap { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; align-items: center; }
+.foot img { height: 44px; width: auto; opacity: .9; }
+.legal { display: flex; flex-wrap: wrap; gap: 4px 22px; }
+.legal a { display: inline-flex; align-items: center; min-height: 44px; color: var(--text-soft); text-decoration: none; }
+/* section dock at the bottom, the active screen lit (Figma) */
+.dock { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 25; display: flex; gap: 4px; padding: 5px; border-radius: 999px; background: rgba(10,10,11,.66); backdrop-filter: blur(12px); border: 1px solid var(--hairline-cream); max-width: calc(100vw - 24px); }
+.dock a { padding: 13px 16px; border-radius: 999px; font: 400 13px/1 var(--body); color: var(--text-faint); text-decoration: none; white-space: nowrap; transition: background-color .3s, color .3s; }
+.dock a.on { background: var(--gold); color: var(--on-gold); }
+@media (max-width: 1000px) { .dock a { padding-inline: 10px; } }
+@media (max-width: 899px) { .dock { display: none; } }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom, 0px)); background: rgba(10,10,11,.86); backdrop-filter: blur(12px); border-top: 1px solid var(--hairline); display: none; align-items: center; justify-content: space-between; gap: 12px; transition: transform .35s var(--ease), visibility .35s; }
+.bar.away { transform: translateY(110%); visibility: hidden; }   /* the offer has its own buttons: the bar steps aside there */
+.bar b { font: 500 13px/1.3 var(--body); min-width: 0; display: grid; }
+.bar b small { font: 400 13px/1.3 var(--body); color: var(--text-faint); }
+.bar .btn { min-height: 44px; padding-inline: 18px; flex: none; font-size: 14px; }
+
+/* lead form (the blocks of the mitoderm.com form, in this design) */
+html.form-open { overflow: hidden; }
+dialog.lead { padding: 0; border: 0; background: transparent; color: var(--cream); width: min(1000px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); overflow: visible; }
+dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px); }
+.lead-in { position: relative; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); max-height: calc(100dvh - 32px); border-radius: 28px; overflow: hidden; border: 1px solid var(--hairline); background: #111114; box-shadow: 0 40px 120px rgba(0,0,0,.65); }
+.lead-x { position: absolute; z-index: 3; top: 14px; inset-inline-end: 14px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(246,243,236,.24); background: rgba(10,10,11,.55); color: var(--cream); display: grid; place-items: center; cursor: pointer; }
+.lead-x svg { width: 20px; height: 20px; }
+.lead-form { display: grid; align-content: center; padding: 48px 44px 34px; overflow-y: auto; }
+.lead-form h2 { font: 400 clamp(28px, 3vw, 38px)/1.12 var(--he-display); }
+.lead-form h2 .g, .lead-done .g { color: var(--gold-soft); }
+.lead-form .sub { margin-top: 10px; color: var(--text-soft); font: 400 15px/1.5 var(--body); }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 26px; }
+.f { display: grid; min-width: 0; }
+.f input { width: 100%; min-height: 52px; padding: 0 18px; border-radius: 14px; border: 1px solid rgba(246,243,236,.2); background: rgba(246,243,236,.05); color: var(--cream); font: 400 16px/1.2 var(--body); text-align: right; }
+.f input::placeholder { color: rgba(246,243,236,.62); }
+.f input[aria-invalid="true"] { border-color: var(--error); }
+.err { margin: 6px 4px 0; font: 400 13px/1.35 var(--body); color: var(--error); }
+.err:empty { display: none; }
+.consent { display: flex; align-items: center; gap: 12px; min-height: 44px; margin-top: 14px; font: 400 14px/1.4 var(--body); color: var(--text-soft); cursor: pointer; }
+.consent input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--gold); cursor: pointer; }
+.consent input[aria-invalid="true"] { outline: 2px solid var(--error); outline-offset: 2px; }
+.submit { width: 100%; margin-top: 14px; min-height: 54px; }
+.submit i { display: none; width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(201,162,75,.3); border-top-color: var(--gold); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.busy .fields, .busy .consent { opacity: .4; pointer-events: none; }
+.busy .submit { background: transparent; border-color: var(--gold); color: var(--gold); cursor: progress; transform: none; }
+.busy .submit i { display: block; }
+.privacy { display: flex; align-items: center; gap: 8px; margin-top: 14px; font: 400 13px/1.4 var(--body); color: var(--text-faint); }
+.privacy svg { width: 16px; height: 16px; flex: none; color: var(--gold); }
+.lead-fail { margin-top: 14px; }
+.fail-msg { margin-bottom: 10px; font: 400 15px/1.45 var(--body); color: var(--error); }
+.lead-fail .btn { width: 100%; }
+.lead-done { display: grid; gap: 18px; justify-items: start; align-content: center; min-height: 100%; outline: none; }
+.lead-done h2 { font: 400 clamp(32px, 3.6vw, 44px)/1.1 var(--he-display); }
+.lead-done .mob { display: none; font: 400 30px/1.1 var(--he-display); }
+.lead-panel { position: relative; display: grid; place-items: center; align-content: center; gap: 18px; padding: 56px 36px; background: url(img/bg.webp) 70% 50% / cover no-repeat, var(--bg); min-height: 560px; }
+.lead-panel img { width: min(100%, 420px); height: auto; filter: drop-shadow(0 26px 40px rgba(0,0,0,.55)); }
+.lead-panel p { font: 500 clamp(26px, 2.6vw, 34px)/1 var(--display); letter-spacing: .06em; }
+
+/* phone: the story plays in a stage under the header (smoke, plate and the 3D, the copy scrolls beneath it and the offer
+   pushes it away); without the story (no JS, reduced data) the product is a small HD still beside each heading */
+.head { display: contents; }
+.slot, .ph-cells { display: none; }
+@media (max-width: 899px) {
+  .still, .cells, .helix { display: none !important; }
+  html:not(.story) #seq, html:not(.story) .plate { display: none !important; }
+  html.story .bg, html.story .plate { inset: var(--stage-top, 60px) 0 auto 0; height: var(--stage-h, 46svh); z-index: 3;
+    transform: translate3d(0, calc(-1px * var(--push, 0)), 0) !important; }
+  html.story .bg::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 28px; background: linear-gradient(var(--bg), transparent); }
+  html.story #seq { z-index: 4; }
+  html.story .slot, html.story .ph-cells { display: none !important; }
+  html.story .head { grid-template-columns: minmax(0, 1fr); }
+  html.story #meet { padding-top: calc(var(--stage-h, 46svh) + 18px); }
+  /* a jump to a section (a button, a link) lands its heading just under the 3D stage, not behind it */
+  html.story .sec { scroll-margin-top: calc(var(--stage-top, 60px) + var(--stage-h, 46svh)); }
+  /* the copy, then room in which the run plays in the stage, so the next heading arrives under its own key frame */
+  html.story #meet, html.story #why, html.story #inside, html.story #feel, html.story #protocol { min-height: 0; padding-bottom: 64svh; }
+  /* S3: three still cells around the ampoules (no moving field on a phone) */
+  #inside .head { position: relative; }
+  #inside .slot { position: relative; z-index: 1; }
+  .ph-cells { display: block; position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  .ph-cells img { position: absolute; height: auto; }
+  .ph-cells img:nth-child(1) { width: 15%; left: 29%; top: 2%; opacity: .7; }
+  .ph-cells img:nth-child(2) { width: 10%; left: -2%; top: 74%; opacity: .9; }
+  .ph-cells img:nth-child(3) { width: 7%; left: 37%; top: 60%; opacity: .75; }
+  .sec { min-height: 0; padding-block: 34px 22px; }
+  .head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(118px, 38%); align-items: center; gap: 14px; width: 100%; }
+  .head > :not(.slot) { grid-column: 1; }
+  .slot { display: block; grid-column: 2; grid-row: 1 / span 2; width: 100%; height: auto; }
+  .slot.wide { grid-column: 1 / -1; grid-row: auto; margin-top: 6px; }   /* S5: the three stations on their line, a strip under the heading */
+  .offer .wrap { display: flex; flex-direction: column; align-items: flex-start; }
+  .offer-copy { display: contents; }
+  .offer-copy > * { margin: 0 0 20px; }
+  .offer-copy > .kicker { order: 1; } .offer-copy > h2 { order: 2; } .offer .kitcard { order: 3; }
+  .offer-copy > .lead { order: 4; } .offer-copy > .cta { order: 5; } .offer-copy > .contacts { order: 6; }
+  .offer .kitcard { align-self: stretch; width: 100%; margin: 4px 0 26px; padding: 22px 20px 24px; }
+  .steps { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 80%; gap: 12px; margin: 28px calc(-1 * var(--gutter)) 0; padding: 0 var(--gutter) 6px;
+    overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); scrollbar-width: none; overscroll-behavior-x: contain; }
+  .steps::-webkit-scrollbar { display: none; }
+  .step { scroll-snap-align: start; padding: 24px 22px; }
+  .spec-sec.sec { padding-block: 48px 40px; }
+  .spec-foot { flex-direction: column; align-items: stretch; }
+  .spec-foot .btn { width: 100%; white-space: normal; }
+  .related { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .bar { display: flex; }
+  dialog.lead { width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; }
+  .lead-in { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: 100dvh; max-height: 100dvh; border-radius: 0; border: 0; }
+  .lead-panel { order: -1; min-height: 0; grid-auto-flow: column; justify-content: center; gap: 14px; padding: 18px 64px 16px; }
+  .lead-panel img { width: auto; height: 104px; }
+  .lead-panel p { font-size: 22px; }
+  .lead-form { align-content: start; padding: 28px 20px 32px; }
+  .fields { grid-template-columns: 1fr; gap: 12px; margin-top: 22px; }
+  .lead-done .mob { display: block; }
+}
+@media (max-width: 380px) { .cta { flex-direction: column; align-items: stretch; } }
+/* reveal (0.6 s, 20 px, once); without JS everything shows */
+.js .rv { opacity: 0; transform: translateY(20px); transition: opacity .6s var(--ease), transform .6s var(--ease); transition-delay: var(--d, 0s); }
+.js .rv.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .js .rv { opacity: 1; transform: none; transition: none; }
+  .btn:hover, .card:hover .pic img { transform: none; }
+  .submit i { animation-duration: 2.4s; }
+}
+</style>
+
+<div class="bg" aria-hidden="true"></div>
+<div class="plate" aria-hidden="true"></div>
+<div class="still" aria-hidden="true"><div class="still-f"><img src="img/still.webp" alt="" loading="lazy" style="left:0;top:0;width:100%;height:100%"></div></div>   <!-- no JS only: the first key frame in its box; hidden (so never fetched) with JS -->
+<img class="helix" alt="" aria-hidden="true" decoding="async">
+<div class="cells back" aria-hidden="true"></div>
+<canvas id="seq" aria-hidden="true"></canvas>
+<div class="cells front" aria-hidden="true"></div>
+<header class="top"><div class="wrap">
+  <a class="logo" href="#meet" aria-label="MITODERM"><img src="img/logo-mark.png" alt="MITODERM"></a>
+  <a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXOSIGNAL%20HAIR" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a>
+</div></header>
+<main>
+  <section id="meet" class="sec" data-st="0"><div class="wrap"><div class="copy">
+    <div class="badges rv"><span class="mark-line"><bdi>HAIR</bdi></span><span class="badge pro">מקצועי</span></div>
+    <p class="kicker rv" style="--d:.06s">אקסוזומים סינתטיים · טיפולי קרקפת</p>
+    <div class="head">
+      <h1 class="rv" style="--d:.12s"><bdi>EXOSIGNAL HAIR</bdi></h1>
+      <p class="tag rv" style="--d:.18s">האות שזקיקי השיער מחכים לו</p>
+      <img class="slot" src="img/m1.webp" alt="" aria-hidden="true">
+    </div>
+    <p class="lead rv" style="--d:.24s">מערכת אקסוזומים סינתטיים מקצועית לקרקפת, שפותחה במעבדות VM באיטליה – PDRN 2% ושמונה פפטידים ביומימטיים.</p>
+    <ul class="chips rv" style="--d:.3s"><li>אקסוזומים סינתטיים</li><li><bdi class="nw">PDRN 2%</bdi></li><li>8 פפטידים ביומימטיים</li><li>קרקפת · זקיק · שיער</li></ul>
+    <div class="cta rv" style="--d:.36s"><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXOSIGNAL%20HAIR" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a><a class="btn ghost" href="#inside">גלו מה בפנים ↓</a></div>
+  </div></div></section>
+  <section id="why" class="sec" data-st="1"><div class="wrap"><div class="copy">
+    <p class="kicker line rv">למה?</p>
+    <div class="head">
+      <h2 class="rv" style="--d:.06s">לנשירת שיער יש נקודת פתיחה</h2>
+      <img class="slot" src="img/m2.webp" alt="" aria-hidden="true">
+    </div>
+    <p class="lead rv" style="--d:.12s">דילול, נשירה, קרקפת יבשה או שומנית – המטופלים שלכם רואים את זה במראה. תנו להם תוכנית שמתחילה במדידה.</p>
+    <p class="kicker rv" style="--d:.18s">אינדיקציות</p>
+    <ul class="chips gold rv" style="--d:.24s"><li>נשירה עונתית</li><li>דילול · ירידה בצפיפות</li><li>שיער דק וחלש</li><li>התקרחות אנדרוגנטית</li></ul>
+  </div></div></section>
+  <section id="inside" class="sec" data-st="2"><div class="wrap"><div class="copy">
+    <p class="kicker line rv">מה בפנים</p>
+    <div class="head">
+      <h2 class="rv" style="--d:.06s">אמפולה אחת, שמונה פפטידים</h2>
+      <img class="slot" src="img/m3.webp" alt="" aria-hidden="true">
+      <span class="ph-cells" aria-hidden="true"><img src="img/cells/c01-2.webp" alt="" loading="lazy" decoding="async"><img src="img/cells/c04-1.webp" alt="" loading="lazy" decoding="async"><img src="img/cells/c07-1.webp" alt="" loading="lazy" decoding="async"></span>
+    </div>
+    <p class="lead rv" style="--d:.12s">מבנים אקסוזומליים סינתטיים נושאים <bdi class="nw">PDRN 2%</bdi>, חומצה היאלורונית, שמונה פפטידים ביומימטיים, תאי גזע מתפוח וויטמיני <bdi class="nw">B</bdi>.</p>
+    <p class="legend rv" style="--d:.15s"><span class="dot" aria-hidden="true"></span><span>אקסוזומים סינתטיים — המחשה</span></p>
+    <p class="kicker rv" style="--d:.18s">רכיבים פעילים</p>
+    <ul class="chips rv" style="--d:.24s"><li><bdi class="nw">PDRN 2%</bdi> · 20 מ״ג/מ״ל</li><li><bdi class="nw">SH-Oligopeptide-1/2</bdi> · <bdi class="nw">SH-Polypeptide-1/9/11</bdi></li><li><bdi class="nw">Copper Tripeptide-1</bdi> (<bdi class="nw">GHK-Cu</bdi>)</li><li>ויטמינים <bdi class="nw">B5</bdi> · <bdi class="nw">B7</bdi> · <bdi class="nw">B6</bdi> · <bdi class="nw">B1</bdi></li></ul>
+    <details class="rv" style="--d:.3s"><summary>הפורמולה המלאה</summary><ul><li>מבנים אקסוזומליים סינתטיים</li><li><bdi class="nw">PDRN 2%</bdi> (20 מ״ג/מ״ל), מתא גזע של סלמון</li><li>חומצה היאלורונית במשקל מולקולרי גבוה</li><li>פפטידים ביומימטיים: <bdi class="nw">SH-Oligopeptide-1/2</bdi> · <bdi class="nw">SH-Polypeptide-1/9/11</bdi></li><li><bdi class="nw">Acetyl Decapeptide-3</bdi> · <bdi class="nw">Oligopeptide-20</bdi></li><li><bdi class="nw">Copper Tripeptide-1</bdi> (<bdi class="nw">GHK-Cu</bdi>)</li><li>תאי גזע צמחיים מתפוח שווייצרי (<bdi class="nw">Malus domestica</bdi>)</li><li>ויטמינים <bdi class="nw">B5</bdi>, <bdi class="nw">B7</bdi>, <bdi class="nw">B6</bdi>, <bdi class="nw">B1</bdi></li></ul></details>
+  </div></div></section>
+  <section id="feel" class="sec" data-st="3"><div class="wrap"><div class="copy">
+    <p class="kicker line rv">הרגישו</p>
+    <div class="head">
+      <h2 class="rv" style="--d:.06s">ארבע פעולות, קרקפת אחת</h2>
+      <img class="slot" src="img/m4.webp" alt="" aria-hidden="true">
+    </div>
+    <p class="lead rv" style="--d:.12s">הפורמולה מסייעת לאזן את הקרקפת, לתמוך בהזנה וביצירת כלי דם, להחיות זקיקים רדומים ולהאריך את שלב האנאגן.</p>
+    <ul class="pins rv" style="--d:.18s"><li>קרקפת מאוזנת</li><li>הזנה משופרת</li><li>החייאת זקיקים</li><li>הארכת שלב האנאגן</li></ul>
+  </div></div></section>
+  <section id="protocol" class="sec protocol" data-st="4"><div class="wrap">
+    <div class="copy">
+      <p class="kicker line rv">פרוטוקול</p>
+      <div class="head">
+        <h2 class="rv" style="--d:.06s">מודדים, פותחים, מחדירים</h2>
+        <img class="slot wide" src="img/m5.webp" alt="" aria-hidden="true">
+      </div>
+      <p class="lead rv" style="--d:.12s">MITOSCAN קובע את נקודת הפתיחה, MITOPEN פותח את מסלול החדירה, EXOSIGNAL HAIR מוחדר לקרקפת המטופלת; EXOSIGNAL SPRAY ממשיך את הטיפול בבית.</p>
+      <p class="pill rv" style="--d:.18s">בבית · <bdi class="nw">EXOSIGNAL SPRAY</bdi></p>
+      
+    </div>
+    <ol class="steps"><li class="step rv" style="--d:0.00s"><span class="n">01</span><h3>אבחון · <bdi class="nw">MITOSCAN</bdi></h3></li><li class="step rv" style="--d:0.08s"><span class="n">02</span><h3>מיקרונידלינג · <bdi class="nw">MITOPEN</bdi></h3></li><li class="step rv" style="--d:0.16s"><span class="n">03</span><h3>החדרה · אמפולה אחת</h3></li></ol>
+  </div></section>
+  <section id="offer" class="sec offer" data-st="5"><div class="wrap">
+    <div class="offer-copy">
+      <p class="kicker line rv">הצעה</p>
+      <h2 class="rv" style="--d:.06s">הכניסו את <bdi class="nw">EXOSIGNAL HAIR</bdi> לקליניקה שלכם</h2>
+      <p class="lead rv" style="--d:.12s">לשימוש מקצועי בלבד, מיועד לשילוב עם MITOPEN ו-MITOSCAN. פרוטוקולים והדרכה מבית מיטודרם; פנו אלינו לקבלת פרטים על מחירים.</p>
+      <div class="cta rv" style="--d:.18s"><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXOSIGNAL%20HAIR" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a><a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXOSIGNAL%20HAIR" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לתיאום הדגמת MITOSCAN</a></div>
+      <div class="contacts rv" style="--d:.24s">
+        <a href="tel:+972543262182"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span>לכל הפרטים: <bdi dir="ltr">054-326-2182</bdi></span></a>
+        <a href="mailto:info@mitoderm.com?subject=EXOSIGNAL%20HAIR"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg><span>דוא״ל: <bdi dir="ltr">info@mitoderm.com</bdi></span></a>
+      </div>
+    </div>
+    <aside class="kitcard rv" style="--d:.1s" aria-labelledby="kitcard-h">
+      <div class="kc-head"><h3 id="kitcard-h">מה באריזה</h3><span class="badge"><bdi>HAIR</bdi></span></div>
+      <figure class="kc-fig">   <!-- owner 17/10: the box as in his photo, with what is in it named around it -->
+        
+        <canvas class="kc-live" role="img" aria-label="EXOSIGNAL HAIR: חמש אמפולות זכוכית של 5 מ״ל – אחת לכל טיפול מקצועי – עם PDRN 2% (20 מ״ג/מ״ל) ושמונה פפטידים ביומימטיים."></canvas>
+        <img class="kc-pic" src="img/kit.webp" alt="EXOSIGNAL HAIR: חמש אמפולות זכוכית של 5 מ״ל – אחת לכל טיפול מקצועי – עם PDRN 2% (20 מ״ג/מ״ל) ושמונה פפטידים ביומימטיים." width="1200" height="785" loading="lazy">
+        
+      </figure>
+      
+      <p class="kc-facts"><span>חמישה טיפולים באריזה אחת</span></p>
+      <ul class="chips gold"><li><bdi class="nw">PDRN 2%</bdi> · 20 מ״ג/מ״ל</li><li>8 פפטידים ביומימטיים</li></ul>
+    </aside>
+  </div></section>
+  <section id="specialists" class="sec spec-sec" data-st="6" aria-labelledby="spec-h"><div class="wrap">
+    <p class="kicker line rv">מצאו מומחה</p>
+    <h2 class="rv" id="spec-h" style="--d:.06s">מומחי <bdi class="nw">MITODERM</bdi> מוסמכים</h2>
+    <p class="lead rv" style="--d:.12s">פרוטוקול <bdi class="nw">V-TECH</bdi>, פילינג <bdi class="nw">EXO-NAD</bdi> ומסכת <bdi class="nw">EXOCELL</bdi> מבוצעים על ידי איש מקצוע.</p>
+    <div class="filter rv" style="--d:.18s" role="group" aria-labelledby="spec-f"><span class="lbl" id="spec-f">מקצוע</span><button type="button" class="fchip" data-tag="*" aria-pressed="false">הכל</button><button type="button" class="fchip" data-tag="פנים" aria-pressed="false">פנים</button><button type="button" class="fchip" data-tag="קרקפת" aria-pressed="true">קרקפת</button><button type="button" class="fchip" data-tag="טריכולוג/ית" aria-pressed="false">טריכולוג/ית</button></div>
+    <div class="specs" aria-live="polite"><article class="spec rv" style="--d:0.00s" data-tags="קרקפת"><div class="av" aria-hidden="true">ל</div><div class="sb"><h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>לוד</span></h3><div class="tags"><span>קרקפת</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.8"/></svg>מוסמך/ת</span></div><a class="book" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXOSIGNAL%20HAIR" data-lead aria-haspopup="dialog">קביעת ייעוץ <span aria-hidden="true">↗</span></a></div></article><article class="spec rv" style="--d:0.08s" data-tags="קרקפת"><div class="av" aria-hidden="true">ק</div><div class="sb"><h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>קרית אתא</span></h3><div class="tags"><span>קרקפת</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.8"/></svg>מוסמך/ת</span></div><a class="book" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXOSIGNAL%20HAIR" data-lead aria-haspopup="dialog">קביעת ייעוץ <span aria-hidden="true">↗</span></a></div></article><article class="spec rv" style="--d:0.16s" data-tags="קרקפת"><div class="av" aria-hidden="true">כ</div><div class="sb"><h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>כרמיאל</span></h3><div class="tags"><span>קרקפת</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.8"/></svg>מוסמך/ת</span></div><a class="book" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXOSIGNAL%20HAIR" data-lead aria-haspopup="dialog">קביעת ייעוץ <span aria-hidden="true">↗</span></a></div></article></div>
+    <p class="spec-empty" role="status" hidden>עדיין אין מומחים מוסמכים בקטגוריה זו – ראו את הרשימה המלאה.</p>
+    <div class="spec-foot rv">
+      <a class="btn primary" href="https://www.mitoderm.com/he" target="_blank" rel="noopener">רשימת קוסמטיקאיות וקליניקות מוסמכות</a>
+      <div class="join"><span>אתם קוסמטיקאים?</span><a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXOSIGNAL%20HAIR" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">הגשת בקשה</a></div>
+    </div>
+  </div></section>
+  <section class="related" data-st="7"><div class="wrap">
+    
+    <h2 class="rv">משלימים את הטיפול</h2>
+    <div class="cards"><a class="card rv" style="--d:0.00s" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20MITOSCAN" target="_blank" rel="noopener"><div class="pic"><img src="img/mitoscan.webp" alt="MITOSCAN" loading="lazy"></div><div class="body"><span class="badge pro">מקצועי</span><h3><bdi>MITOSCAN</bdi></h3><p>מערכת אבחון שיער וקרקפת – <bdi class="nw">Measure what matters</bdi></p><span class="go">לקבלת פרטים ←</span></div></a><a class="card rv" style="--d:0.08s" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20MITOPEN" target="_blank" rel="noopener"><div class="pic"><img src="img/mitopen.webp" alt="MITOPEN" loading="lazy"></div><div class="body"><span class="badge pro">מקצועי</span><h3><bdi>MITOPEN</bdi></h3><p>עט מיקרונידלינג מקצועי ואלחוטי</p><span class="go">לקבלת פרטים ←</span></div></a></div>
+  </div></section>
+</main>
+<footer class="foot"><div class="wrap"><img src="img/logo.png" alt="MITODERM — Where Science Meets Beauty"><span>© 2026 מיטודרם – כשהמדע פוגש ביופי</span><span class="legal"><a href="#">הצהרת נגישות</a><a href="#">מדיניות פרטיות</a></span></div></footer>
+<nav class="dock" aria-label="ניווט בעמוד"><a href="#meet" data-i="0">הכירו</a><a href="#why" data-i="1">למה?</a><a href="#inside" data-i="2">מה בפנים</a><a href="#feel" data-i="3">הרגישו</a><a href="#protocol" data-i="4">פרוטוקול</a><a href="#offer" data-i="5">הצעה</a><a href="#specialists" data-i="6">מומחים</a></nav>
+<div class="bar"><b><bdi>EXOSIGNAL HAIR</bdi><small>מקצועי</small></b><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXOSIGNAL%20HAIR" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a></div>
+
+<!-- Lead form. This page is a static preview and cannot send data: the submit handler prevents the default and only
+     simulates the request. In production the form POSTs JSON {name, phone, email, profession, source: 'EXOSIGNAL HAIR page'}
+     to data-endpoint (/api/leads), as mitoderm.com does. -->
+<dialog class="lead" id="lead" aria-labelledby="lead-h">
+  <div class="lead-in">
+    <button type="button" class="lead-x" data-close aria-label="סגירה"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <form class="lead-form" novalidate data-endpoint="/api/leads">
+      <div class="lead-body">
+        <h2 id="lead-h">לקבלת פתרונות <span class="g">מותאמים</span> לקליניקה שלך</h2>
+        <p class="sub">השאר הודעה ונציגנו יצרו עמך קשר</p>
+        <div class="fields">
+          <div class="f"><input name="name" type="text" autocomplete="name" placeholder="שם ושם משפחה" aria-label="שם ושם משפחה" aria-describedby="e-name" required><p class="err" id="e-name"></p></div>
+          <div class="f"><input name="profession" type="text" autocomplete="organization-title" placeholder="מקצוע" aria-label="מקצוע" aria-describedby="e-profession" required><p class="err" id="e-profession"></p></div>
+          <div class="f"><input name="email" type="email" dir="ltr" autocomplete="email" inputmode="email" placeholder="אימייל" aria-label="אימייל" aria-describedby="e-email" required><p class="err" id="e-email"></p></div>
+          <div class="f"><input name="phone" type="tel" dir="ltr" autocomplete="tel" inputmode="tel" placeholder="טלפון" aria-label="טלפון" aria-describedby="e-phone" required><p class="err" id="e-phone"></p></div>
+        </div>
+        <label class="consent"><input type="checkbox" name="consent" aria-describedby="e-consent" required><span>אני מסכים/ה לתנאי מיטודרם בע״מ*</span></label><p class="err" id="e-consent"></p>
+        <button class="btn primary submit" type="submit"><span>בקשה לשיחה חוזרת</span><i aria-hidden="true"></i></button>
+        <p class="privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>המידע שתמסור משמש את חברת מיטודרם בע&quot;מ בלבד *</span></p>
+        <div class="lead-fail" role="alert" hidden><p class="fail-msg">הטופס לא נשלח. נסו שוב או כתבו לנו <span class="nw">ב-<bdi>WhatsApp</bdi></span>.</p><a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXOSIGNAL%20HAIR" target="_blank" rel="noopener"><bdi dir="ltr">WhatsApp</bdi></a></div>
+      </div>
+      <div class="lead-done" role="status" tabindex="-1" hidden>
+        <p class="mob">איזה כיף!</p>
+        <h2>הטופס נשלח <span class="g">בהצלחה</span></h2>
+        <button type="button" class="btn ghost" data-close>למידע נוסף</button>
+      </div>
+    </form>
+    <div class="lead-panel" aria-hidden="true"><img src="img/kit.webp" alt=""><p><bdi>EXOSIGNAL HAIR</bdi></p></div>
+  </div>
+</dialog>
+<script type="application/json" id="lead-errors">{"name_length": "השם חייב להכיל לפחות 3 תווים", "name_required": "שם הוא שדה חובה", "email_required": "אימייל הוא שדה חובה", "email_invalid": "אימייל לא תקין", "phone_required": "מספר הטלפון הוא שדה חובה", "phone_length": "מספר הטלפון חייב להכיל לפחות 10 תווים", "profession_length": "שם המקצוע חייב להיות באורך של לפחות 3 תווים", "profession_required": "שם המקצוע נדרש", "consent_required": "יש לאשר את התנאים"}</script>
+
+<script type="module">
+// The scroll story on pre-rendered frames: engine/story.js (build-vtech.py inlines it here), the same module a React
+// app mounts (react/useFrameStory.js). A product with a live three.js scene (build-vtech.py --scene) draws it instead.
+// engine/story.js, inlined by build-vtech.py
+// The V-TECH frame story engine, as one ES module: the scroll story on pre-rendered frames that build-vtech.py pages
+// use, and that a React (or any) app mounts the same way. Nothing runs at import (safe to import during server
+// rendering); createFrameStory() runs in the browser only, after the elements exist (React: in useEffect).
+// Scroll story on pre-rendered Blender frames: between two neighbouring screens their run plays (frame = share of the
+// scroll from the first screen, once it has been read, to the next one); on a screen its key frame holds. The last run
+// builds the kit while the offer copy arrives; then the card rises and the 3D kit flies into its picture. Memory: only frames −4…+8 around the wanted one
+// (ahead = the scroll direction) and the runs' end frames stay decoded, every other bitmap is closed; a worker
+// fetches and decodes off the main thread (WebKit would decode on the main thread at drawImage) and keeps the
+// compressed files, so the whole story downloads once. Cells: a field of exosome sprites the camera flies through
+// from S1 to S3 (far ones behind the product, near ones in front of it but never over the copy or the S3 hero).
+//
+// createFrameStory({
+//   config,        // what build-vtech.py writes: { runs: [{ a, b, n, box }], tiers: [480, …], cells: ['c01', …], mols, helix }
+//   base,          // the folder that holds seq/ and img/, absolute or relative to the page ('/v-tech/'; default: the page's own)
+//   canvas,        // the fixed canvas the frames are drawn on (#seq)
+//   sections,      // the story screens in order, runs.length + 1 of them (meet, why, inside, feel, protocol, offer);
+//                  // each one's .wrap (or the section itself) ends its copy
+//   header,        // the sticky header: on a phone the stage starts under it
+//   card, cardCanvas,           // the offer card and its canvas: the kit lands there (optional)
+//   bg, plate, helix,           // the smoke layer, the deep plate behind S2–S3, the DNA helix <img> (optional)
+//   cellLayers: [back, front],  // the two cell layers, behind and in front of the canvas (optional)
+//   root,          // gets the class .story and --stage-top / --stage-h / --push (default: <html>)
+//   phoneQuery,    // default '(max-width: 899px)'
+//   observe,       // the element whose size changes re-measure the page (default: the sections' parent)
+//   tier, noWorker // QA: force a frame tier / decode on the main thread
+// }) → { measure(), destroy(), state() }
+function createFrameStory(o) {
+  const CFG = o.config, BASE = new URL(o.base || '', document.baseURI).href;   // base may be relative ('/v-tech/')
+  let destroyed = false;
+  const RUNS = CFG.runs, R = RUNS.length, NS = RUNS.map(r => r.n), TIERS = CFG.tiers.slice().sort((a, b) => a - b), SPRITES = CFG.cells, MOLS = CFG.mols || [];
+  const OFF = NS.map((n, k) => NS.slice(0, k).reduce((a, b) => a + b, 0)), TOTAL = OFF[R - 1] + NS[R - 1];
+  const BACK = 4, AHEAD = 8, FLIGHT = 4, WARM = 2;              // decode window and fetch concurrency
+  const HOLD0 = 0.04, HOLD = 0.15, READ = 0.85, END = 0.12;      // a screen holds its key frame until it has been read
+  const LAND0 = 0.85, LAND1 = 0.25;   // the last run ends as the offer card's top reaches 85% of the screen; the kit lands by 25%
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+  // scene: a 3D scene drawn instead of frames, { draw(p, view), kit(view) → canvas, animated } (a three.js product page);
+  // the story geometry, the phone stage, the card, the cells and the helix stay the same
+  const SCENE = o.scene || null;
+  const canvas = o.canvas, ctx = SCENE ? null : canvas.getContext('2d');
+  const bg = o.bg || null, plate = o.plate || null;
+  const card = o.card || null, cardCv = o.cardCanvas || (card && card.querySelector('.kc-live')), cardCtx = cardCv && cardCv.getContext('2d');
+  const secs = o.sections, header = o.header || null, root = o.root || document.documentElement;   // sections: the screens in story order, one more than the runs
+  const phone = matchMedia(o.phoneQuery || '(max-width: 899px)'), calm = matchMedia('(prefers-reduced-motion: reduce)');
+  const U = RUNS.reduce((u, r) => [Math.min(u[0], r.box[0]), Math.min(u[1], r.box[1]), Math.max(u[2], r.box[2]), Math.max(u[3], r.box[3])], [1, 1, 0, 0]);   // all runs' boxes
+  let stage = null, push = 0, lastPush = -1, staged = null;   // phone: the stage rect under the header that the runs' union fits into
+  let probe = null;   // the large viewport (browser toolbars retracted) for this orientation, from CSS 100lvh
+  const largeH = () => {
+    if (!probe) { probe = document.createElement('div'); probe.className = 'lvh-probe'; probe.setAttribute('aria-hidden', 'true');
+      probe.style.cssText = 'position:fixed;left:0;top:0;width:0;height:100vh;height:100lvh;visibility:hidden;pointer-events:none'; document.body.appendChild(probe); }
+    return probe.offsetHeight;
+  };
+  const nav = navigator, saveData = !!(nav.connection && nav.connection.saveData);
+  const capped = (nav.maxTouchPoints > 1 && /Macintosh/.test(nav.userAgent)) || (nav.deviceMemory > 0 && nav.deviceMemory <= 4);   // iPad, small RAM: ≤ 1600
+  const key = (r, i) => r * 1000 + i, rOf = k => Math.floor(k / 1000), iOf = k => k % 1000, gOf = k => OFF[rOf(k)] + iOf(k);
+  const kOfG = g => { let r = 0; while (r < R - 1 && g >= OFF[r + 1]) r++; return key(r, g - OFF[r]); };
+  const KIT = key(R - 1, NS[R - 1] - 1);
+  const ENDS = RUNS.flatMap((x, r) => [key(r, 0), key(r, NS[r] - 1)]);              // the runs' end frames, kept decoded
+  const SCREENS = RUNS.map((x, r) => key(r, 0)).concat(KIT);                        // reduced motion / Save-Data: these only
+  const ladder = n => { const o = [0, n - 1], q = [[0, n - 1]]; while (q.length) { const [a, b] = q.shift(), m = (a + b) >> 1; if (m > a && m < b) { o.push(m); q.push([a, m], [m, b]); } } for (let i = 0; i < n; i++) if (!o.includes(i)) o.push(i); return o; };
+  const LADDER = NS.map(ladder);                                                    // coarse to fine: 0, 39, 19, 9, 29, …
+
+  let mode = 'off', tier = 0, dpr = 1, W = 0, H = 0, cover = { x: 0, y: 0, w: 0, h: 0 }, geo = [], cardTop = 0, lastTf = '';
+  let want = key(0, 0), wantG = 0, dir = 1, lastY = -1, pos = 0, shown = -1, dirty = true, misses = 0, missAt = -1, want0 = -1;
+  let stride = 1, vel = 0, wantT = 0;   // scroll speed in frames per second → how sparse the window ahead is
+  let raf = 0, needPump = true, lastOp = -1, lastBg = '', lastPlate = -1, keep = new Set(), warmPlan = [], planFor = '';
+  const bm = new Map(), flight = new Map(), warmFlight = new Map(), pending = new Map(), warmed = new Set(), missing = new Set(), fails = new Map();
+  const peak = { n: 0, bytes: 0 }, stats = { n: 0, fetch: 0, decode: 0, maxDecode: 0 };   // stats: the worker's timings, for QA
+  const url = k => new URL(`seq/${tier}/${RUNS[rOf(k)].a}_${RUNS[rOf(k)].b}_${String(iOf(k)).padStart(3, '0')}.webp`, BASE).href;
+
+  // decoding: an inline worker (fetch → blob, kept compressed → createImageBitmap, transferred); without one (old
+  // Safari, a CSP without blob: workers) <img> + decode() on the main thread
+  const WORKER = `const cache = new Map(), ctl = new Map(), ready = [], inprog = new Map(); let bytes = 0, busy = 0; const CAP = 64e6, DEC = 2;
+const abortErr = () => Object.assign(new Error('abort'), { name: 'AbortError' });
+function get(u, sig) {   // the compressed file: from the cache, or one fetch shared by every request for it
+  const b = cache.get(u); if (b) { cache.delete(u); cache.set(u, b); return Promise.resolve(b); }
+  let f = inprog.get(u);
+  if (!f) {
+    const c = new AbortController();
+    f = { c, refs: 0, p: fetch(u, { signal: c.signal }).then(r => { if (!r.ok) throw Object.assign(new Error('http'), { status: r.status }); return r.blob(); })
+      .then(b => { cache.set(u, b); bytes += b.size; for (const [k, x] of cache) { if (bytes <= CAP) break; if (k !== u) { cache.delete(k); bytes -= x.size; } } return b; })
+      .finally(() => inprog.delete(u)) };
+    inprog.set(u, f);
+  }
+  f.refs++;
+  return new Promise((res, rej) => {
+    const off = () => { if (--f.refs === 0) f.c.abort(); rej(abortErr()); };   // the last one out cancels the download
+    if (sig.aborted) return off();
+    sig.addEventListener('abort', off, { once: true });
+    f.p.then(b => { sig.removeEventListener('abort', off); f.refs--; res(b); }, e => { sig.removeEventListener('abort', off); f.refs--; rej(e); });
+  });
+}
+function next() {   // decode the most urgent fetched frame, two at a time, so a stop never waits behind a queue
+  while (busy < DEC && ready.length) {
+    ready.sort((a, b) => a.c.p - b.c.p); const j = ready.shift();
+    if (j.c.signal.aborted) { ctl.delete(j.id); postMessage({ id: j.id, err: 'abort' }); continue; }
+    busy++; const t1 = performance.now();
+    createImageBitmap(j.b, { premultiplyAlpha: 'premultiply', colorSpaceConversion: 'none' })   // sRGB frames: no conversion, ready to upload
+      .then(bmp => postMessage({ id: j.id, bmp, ft: j.ft, dt: performance.now() - t1 }, [bmp]), () => postMessage({ id: j.id, err: 'http' }))
+      .finally(() => { busy--; ctl.delete(j.id); next(); });
+  }
+}
+onmessage = async e => {
+  const m = e.data;
+  if (m.abort) { const c = ctl.get(m.abort); if (c) c.abort(); return; }
+  if (m.prio) { for (const [id, p, w] of m.prio) { const c = ctl.get(id); if (c) { c.p = p; if (w === 0) c.warm = false; } } next(); return; }   // w 0: a fetch now wanted decoded
+  const c = new AbortController(); c.warm = m.warm; c.p = m.p; ctl.set(m.id, c);
+  try {
+    const t0 = performance.now(), b = await get(m.url, c.signal), ft = performance.now() - t0;
+    if (c.warm) { ctl.delete(m.id); postMessage({ id: m.id, warm: 1 }); return; }
+    if (c.signal.aborted) throw abortErr();
+    ready.push({ id: m.id, b, c, ft }); next();
+  } catch (err) { ctl.delete(m.id); postMessage({ id: m.id, err: err.name === 'AbortError' ? 'abort' : err.status ? 'http' : 'net' }); }
+};`;
+  let worker = null, reqId = 0, okOnce = false, workerUrl = '';
+  try {
+    if (window.Worker && window.createImageBitmap && !o.noWorker && !SCENE) {
+      workerUrl = URL.createObjectURL(new Blob([WORKER], { type: 'text/javascript' })); worker = new Worker(workerUrl);
+      worker.onmessage = e => done(e.data); worker.onerror = () => fallback();
+    }
+  } catch (e) { worker = null; }
+  function fallback() {   // the worker could not run or fetch here: everything again on the main thread
+    if (!worker) return; worker.terminate(); worker = null;
+    pending.clear(); flight.clear(); warmFlight.clear(); needPump = true; kick();
+  }
+  function request(k, warm, p = 0) {
+    const id = ++reqId, u = url(k); pending.set(id, { k, warm, t: tier }); (warm ? warmFlight : flight).set(k, id);
+    if (worker) { worker.postMessage({ id, url: u, warm, p }); return; }
+    const im = new Image(); im.decoding = 'async'; im.src = u;
+    if (warm) { im.onload = () => done({ id, warm: 1 }); im.onerror = () => done({ id, err: 'http' }); }
+    else im.decode().then(() => done({ id, img: im }), () => done({ id, err: 'http' }));
+  }
+  function cancel(id) { pending.delete(id); if (worker) worker.postMessage({ abort: id }); }
+  const release = e => { if (e.im.close) e.im.close(); else e.im.removeAttribute('src'); };
+  function done(m) {
+    const p = pending.get(m.id);
+    if (!p) { if (m.bmp) m.bmp.close(); return; }   // cancelled meanwhile
+    pending.delete(m.id); const map = p.warm ? warmFlight : flight; if (map.get(p.k) === m.id) map.delete(p.k);
+    needPump = true; kick();
+    if (p.t !== tier) { if (m.bmp) m.bmp.close(); return; }
+    if (m.err) {
+      if (m.err === 'net' && worker && !okOnce) { fallback(); return; }
+      if (m.err !== 'abort') { const f = (fails.get(p.k) || 0) + 1; fails.set(p.k, f); if (m.err === 'http' || f >= 3) missing.add(p.k); }
+      if (p.k === KIT && missing.has(KIT) && card) card.classList.remove('live');   // no kit frame: the card keeps its picture
+      return;
+    }
+    okOnce = true; warmed.add(p.k);
+    if (m.warm) { if (!p.warm && keep.has(p.k)) request(p.k, false); return; }   // upgraded too late: decode from the worker's cache
+    const im = m.bmp || m.img;
+    if (!keep.has(p.k)) { release({ im }); return; }   // scrolled away while it decoded
+    if (m.dt != null) { stats.n++; stats.fetch += m.ft; stats.decode += m.dt; stats.maxDecode = Math.max(stats.maxDecode, m.dt); }
+    const w = im.width || im.naturalWidth, h = im.height || im.naturalHeight, old = bm.get(p.k);
+    if (old) release(old);
+    bm.set(p.k, { im, w, h, bytes: w * h * 4 });
+    let n = 0, b = 0; for (const e of bm.values()) { n++; b += e.bytes; }
+    peak.n = Math.max(peak.n, n); peak.bytes = Math.max(peak.bytes, b);
+    if (p.k === KIT) drawCard();
+    if (p.k === want || shown < 0 || Math.abs(gOf(p.k) - wantG) < Math.abs(gOf(shown) - wantG)) dirty = true;
+  }
+
+  function desired() {   // the frames to keep decoded, most urgent first
+    const ends = (mode === 'full' ? ENDS : SCREENS).slice().sort((a, b) => Math.abs(gOf(a) - wantG) - Math.abs(gOf(b) - wantG));
+    const out = [want];   // then its two neighbours, then the two nearest end frames (a stop always has a key frame close by)
+    if (mode === 'full') for (const g of [wantG - dir, wantG + dir]) if (g >= 0 && g < TOTAL) out.push(kOfG(g));
+    out.push(...ends.slice(0, 2));
+    // ahead every stride-th frame on a fixed grid (a fast scroll: the targets stay put until passed, so they finish
+    // decoding instead of being dropped every step), behind every one
+    const g0 = dir > 0 ? Math.floor(wantG / stride) * stride : Math.ceil(wantG / stride) * stride;
+    if (mode === 'full') for (let d = 1; d <= AHEAD; d++) {
+      const a = g0 + d * stride * dir, b = wantG - d * dir;
+      if (a >= 0 && a < TOTAL) out.push(kOfG(a));
+      if (d <= BACK && b >= 0 && b < TOTAL) out.push(kOfG(b));
+    }
+    return [...new Set(out.concat(ends))];
+  }
+  function warmList() {   // the rest of the story, fetched (not decoded): this run, then the next ones in the scroll direction
+    const r = rOf(want), id = r + ':' + dir;
+    if (planFor !== id) {
+      const order = [r, r + dir, r - dir]; for (let d = 2; d < R; d++) order.push(r + d * dir, r - d * dir);
+      warmPlan = order.filter(x => x >= 0 && x < R).flatMap(x => LADDER[x].map(i => key(x, i))); planFor = id;
+    }
+    return warmPlan;
+  }
+  function pump() {
+    needPump = false;
+    if (mode === 'off' || document.hidden || SCENE) return;
+    const D = desired(), r = rOf(want), rank = new Map(D.map((k, i) => [k, i])), prio = []; keep = new Set(D);
+    for (const [k, id] of flight) if (!keep.has(k)) { flight.delete(k); cancel(id); } else prio.push([id, rank.get(k)]);   // passed by: drop
+    for (const [k, id] of warmFlight) if (Math.abs(rOf(k) - r) >= 2) { warmFlight.delete(k); cancel(id); }   // runs two or more away
+    for (const [k, e] of bm) if (!keep.has(k) && k !== shown) { release(e); bm.delete(k); }
+    for (const [i, k] of D.entries()) {
+      if (worker && warmFlight.has(k)) {   // already on its way: decode it when it arrives
+        const id = warmFlight.get(k); warmFlight.delete(k); flight.set(k, id); pending.get(id).warm = false; prio.push([id, i, 0]); continue;
+      }
+      if (i < 3 && !bm.has(k) && !flight.has(k) && !missing.has(k) && flight.size + warmFlight.size >= FLIGHT) {   // the most urgent take a slot
+        let worst = null, wr = -1;
+        for (const [x, id] of warmFlight) { worst = [x, id, warmFlight]; wr = 1e9; break; }
+        if (!worst) for (const [x, id] of flight) if (rank.get(x) > wr && rank.get(x) > i) { wr = rank.get(x); worst = [x, id, flight]; }
+        if (worst) { worst[2].delete(worst[0]); cancel(worst[1]); }
+      }
+      if (flight.size + warmFlight.size >= FLIGHT) break;
+      if (!bm.has(k) && !flight.has(k) && !missing.has(k)) request(k, false, i);
+    }
+    if (worker && prio.length) worker.postMessage({ prio });   // the worker decodes in this order
+    if (mode === 'full') for (const k of warmList()) {
+      if (warmFlight.size >= WARM || flight.size + warmFlight.size >= FLIGHT) break;
+      if (!warmed.has(k) && !bm.has(k) && !flight.has(k) && !warmFlight.has(k) && !missing.has(k)) request(k, true);
+    }
+  }
+
+  function pick() {   // the wanted frame, or the nearest decoded one
+    if (bm.has(want)) return want;
+    let best = -1, bd = 1e9;
+    for (const k of bm.keys()) { const d = Math.abs(gOf(k) - wantG) + (rOf(k) === rOf(want) ? 0 : 0.5); if (d < bd) { bd = d; best = k; } }
+    return best;
+  }
+  let placed = '', shownBox = null;
+  const boxRect = r => { const b = RUNS[r].box; return { x: cover.x + b[0] * cover.w, y: cover.y + b[1] * cover.h, w: (b[2] - b[0]) * cover.w, h: (b[3] - b[1]) * cover.h }; };
+  function draw() {
+    if (mode === 'off') return;
+    if (SCENE) {   // the pose for the story position, rendered into the run's box at the screen's pixel ratio (not while hidden)
+      if (lastOp === 0 && shown >= 0) return;
+      const p = mode === 'keys' ? Math.round(pos) : pos, B = boxRect(Math.min(R - 1, Math.floor(p))), id = B.w.toFixed(2) + 'x' + B.h.toFixed(2);
+      SCENE.draw(p, { cover, box: B, dpr, t: performance.now() / 1000, still: mode !== 'full' });
+      if (id !== placed) { canvas.style.width = B.w + 'px'; canvas.style.height = B.h + 'px'; placed = id; }
+      shownBox = B; shown = want; dirty = false; return;
+    }
+    const k = pick();
+    if (k !== want && want !== missAt) { misses++; missAt = want; }
+    if (k < 0 || (k === shown && !dirty)) return;
+    // the canvas is the frame's own size, drawn 1:1, and the compositor scales it into the run's box: no resampling on
+    // the main thread and never a viewport-sized (5K) backing store
+    const e = bm.get(k), B = boxRect(rOf(k)), id = B.w.toFixed(2) + 'x' + B.h.toFixed(2);
+    if (canvas.width !== e.w || canvas.height !== e.h) { canvas.width = e.w; canvas.height = e.h; } else ctx.clearRect(0, 0, e.w, e.h);
+    ctx.drawImage(e.im, 0, 0);
+    if (id !== placed) { canvas.style.width = B.w + 'px'; canvas.style.height = B.h + 'px'; placed = id; }
+    shownBox = B;
+    const was = shown; shown = k; dirty = false;
+    if (was >= 0 && was !== k && !keep.has(was) && bm.has(was)) { release(bm.get(was)); bm.delete(was); }
+  }
+
+  // the offer card: the last frame of the kit run, cropped to what it shows
+  let kitCrop = null, sk = null;
+  function sceneKit() {   // a scene: its kit pose, rendered at the last run's box for the card and the flight into it, again
+    if (!cover.w) return sk;   // only when that box, the pixel ratio or the scene's version (textures, a restored context) change
+    const B = boxRect(R - 1), id = [B.w, B.h, dpr, SCENE.state ? SCENE.state().version : 0].join();
+    if (!sk || sk.id !== id) { const im = SCENE.kit({ cover, box: B, dpr }); sk = { id, im, w: im.width, h: im.height, bytes: 0 }; }
+    return sk;
+  }
+  function drawCard() {
+    const e = SCENE ? (stage ? null : sceneKit()) : bm.get(KIT); if (!cardCtx || !e || !cardCv.width) return;   // phone: the card keeps its picture
+    if (!kitCrop || kitCrop.im !== e.im) kitCrop = { im: e.im, r: alphaBox(e), w: e.w, h: e.h };
+    const [sx, sy, sw, sh] = kitCrop.r, cw = cardCv.width, ch = cardCv.height, s = Math.min(cw / sw, ch / sh), w = sw * s, h = sh * s;
+    cardCtx.clearRect(0, 0, cw, ch); cardCtx.imageSmoothingQuality = 'high';
+    cardCtx.drawImage(e.im, sx, sy, sw, sh, (cw - w) / 2, (ch - h) / 2, w, h);
+    card.classList.add('drawn');
+  }
+  function alphaBox(e) {
+    try {
+      const s = Math.min(1, 320 / e.w), w = Math.max(1, Math.round(e.w * s)), h = Math.max(1, Math.round(e.h * s));
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(e.im, 0, 0, w, h);
+      const d = x.getImageData(0, 0, w, h).data; let x0 = w, y0 = h, x1 = -1, y1 = -1;
+      for (let y = 0; y < h; y++) for (let i = 0; i < w; i++) if (d[(y * w + i) * 4 + 3] > 24) { if (i < x0) x0 = i; if (i > x1) x1 = i; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      if (x1 < 0) return [0, 0, e.w, e.h];
+      const p = 0.04 * Math.max(x1 - x0, y1 - y0);
+      x0 = Math.max(0, (x0 - p) / s); y0 = Math.max(0, (y0 - p) / s); x1 = Math.min(e.w, (x1 + 1 + p) / s); y1 = Math.min(e.h, (y1 + 1 + p) / s);
+      return [x0, y0, x1 - x0, y1 - y0];
+    } catch (err) { return [0, 0, e.w, e.h]; }
+  }
+
+  function pickTier() {
+    if (typeof o.tier === 'number') return o.tier;   // QA: force a tier
+    let list = TIERS;
+    if (capped) { const low = list.filter(t => t <= 1600); list = low.length ? low : [list[0]]; }
+    const need = cover.w * dpr;   // the frame's tier width that covers the drawn rect in device pixels (same for every box)
+    return list.find(t => t >= need) || list[list.length - 1];
+  }
+  function reset(m, t) {
+    for (const e of bm.values()) release(e); bm.clear();
+    for (const id of [...pending.keys()]) cancel(id); flight.clear(); warmFlight.clear();
+    warmed.clear(); missing.clear(); fails.clear(); planFor = ''; shown = -1; kitCrop = null; mode = m; tier = t;
+    root.classList.toggle('story', m !== 'off');
+    if (card) { card.classList.toggle('live', m !== 'off' && !stage); if (m !== 'off' && !stage) card.classList.remove('rv'); }   // no reveal shift: the kit lands on it; phone: the card keeps its HD picture
+    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); needPump = true;
+  }
+  function measure() {
+    dpr = Math.min(phone.matches ? 3 : 2, devicePixelRatio || 1); W = innerWidth; H = innerHeight;   // a phone's small stage: its full DPR
+    const s = Math.max(W / 16, H / 10); cover = { w: 16 * s, h: 10 * s, x: (W - 16 * s) / 2, y: (H - 10 * s) / 2 };
+    stage = null;
+    if (phone.matches) {   // the union of the runs' boxes fits the stage: the same scale for every run, so the motion carries on
+      const top = Math.round(header ? header.getBoundingClientRect().bottom : 0), sh = Math.round(0.46 * Math.max(H, largeH()));   // toolbars don't resize it
+      const uw = U[2] - U[0], uh = U[3] - U[1], k = Math.min(0.98 * W / (uw * 16), 0.96 * sh / (uh * 10));
+      cover = { w: 16 * k, h: 10 * k }; cover.x = (W - uw * cover.w) / 2 - U[0] * cover.w; cover.y = top + (sh - uh * cover.h) / 2 - U[1] * cover.h;
+      stage = { top, h: sh }; root.style.setProperty('--stage-top', top + 'px'); root.style.setProperty('--stage-h', sh + 'px');
+    }
+    const m = !TIERS.length && !SCENE ? 'off' : calm.matches || saveData ? 'keys' : 'full', t = m === 'off' ? 0 : SCENE ? 1 : pickTier();
+    if (m !== mode || t !== tier || (SCENE && !!stage !== staged)) reset(m, t);   // a scene: a phone ↔ desktop switch too (its tier never changes)
+    staged = !!stage;
+    placed = '';
+    geo = secs.map(s => ({ top: s.offsetTop, h: s.offsetHeight, cont: (s.querySelector('.wrap') || s).getBoundingClientRect().bottom + scrollY - s.offsetTop }));
+    cardTop = card && m !== 'off' ? card.getBoundingClientRect().top + scrollY : geo[R].top + 0.3 * H;
+    if (cardCv && m !== 'off') {
+      const r = cardCv.getBoundingClientRect(), w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+      if (w && (cardCv.width !== w || cardCv.height !== h)) { cardCv.width = w; cardCv.height = h; drawCard(); }
+      if (SCENE && !stage) drawCard();
+    }
+    if (cellEls) layoutCells();
+    dirty = true; needPump = true; kick();
+  }
+  function position(y) {   // 0 … R: run index + its progress
+    let p = 0;
+    const sb = stage ? stage.top + stage.h : 0;   // phone: a run plays once its copy has passed under the stage and ends as
+    for (let k = 0; k < R; k++) {                 // the next section reaches the stage's foot
+      const a = stage ? geo[k].top + geo[k].cont - sb + 0.02 * H : geo[k].top + Math.max(k ? HOLD * H : HOLD0 * H, geo[k].h - READ * H);
+      const b = stage ? geo[k + 1].top - sb : k === R - 1 ? cardTop - LAND0 * H : geo[k + 1].top - END * H;
+      if (y >= a) p = k + Math.min(1, (y - a) / Math.max(1, b - a));
+    }
+    return p;
+  }
+
+  // ---- exosome cells: [sprite, x, y (screen heights from the vanishing point), depth, size, front layer, drift in depth, spin]
+  const FIELD = [
+    [0, -0.42, -0.30, 3.0, 0.26, 0, 0, 30], [1, 0.16, 0.36, 3.9, 0.22, 0, 0, -40], [2, -0.78, 0.16, 4.6, 0.36, 0, 0, 25],
+    [3, 0.06, -0.42, 2.6, 0.24, 0, 4.0, -20],   // these two recede as the page scrolls
+    [5, 0.22, -0.16, 3.4, 0.18, 0, 2.2, -30],
+    [4, -0.24, 0.10, 6.6, 0.30, 0, 0, 35], [6, -0.62, -0.10, 7.4, 0.28, 0, 0, 20], [7, 0.18, 0.52, 5.4, 0.20, 0, 0, -25],
+    [8, -0.40, 0.34, 2.5, 0.30, 1, 0, 40], [9, -0.36, -0.44, 3.2, 0.24, 1, 0, -35], [2, 0.40, 0.46, 3.9, 0.20, 1, 0, 30],
+    [5, -0.62, 0.04, 4.6, 0.34, 1, 0, -20],
+    // PDRN molecules ('m' + index into MOLS) among the cells, smaller and mostly far
+    ['m0', -0.56, -0.40, 4.2, 0.20, 0, 0, 18], ['m1', 0.12, 0.24, 5.8, 0.17, 0, 0, -22], ['m2', -0.30, 0.50, 3.6, 0.15, 1, 0, 26],
+    ['m3', -0.88, -0.02, 6.2, 0.21, 0, 1.5, -15]];
+  const VP = [0.26, 0.52], ZC = 4.2, FAR = 9, FRONT_IN = [1.9, 2.7];
+  const HERO = [[2, [0.12, 0.25, 0.40, 0.85]]];   // [screen, viewport box]: no near cell over the S3 ampoules
+  let cellEls = null, cellsOn = false;
+  function buildCells() {
+    if (cellEls || !SPRITES.length || mode === 'off' || saveData || stage || !(o.cellLayers && o.cellLayers[0] && o.cellLayers[1])) return;   // phone: no field yet (the stage clips it)
+    const layers = o.cellLayers;
+    if (plate) plate.style.backgroundImage = `url(${new URL('img/plate.webp', BASE).href})`;
+    cellEls = FIELD.filter(f => typeof f[0] === 'number' || MOLS.length).map((f, n) => {
+      const id = typeof f[0] === 'number' ? SPRITES[f[0] % SPRITES.length] : MOLS[+f[0].slice(1) % MOLS.length], layer = layers[f[5]];
+      const imgs = [0, 1, 2].map(s => { const im = new Image(); im.decoding = 'async'; im.alt = ''; im.src = new URL(`img/cells/${id}-${s}.webp`, BASE).href; layer.appendChild(im); return im; });
+      const dust = [0, 1, 2, 3, 4].map(j => { const d = document.createElement('i'); layer.appendChild(d); return { el: d, a: n * 2.4 + j * 1.31, f: 0.35 + ((n * 7 + j * 3) % 5) / 8 }; });
+      return { f, imgs, dust, st: ['', '', ''], ph: n * 1.7 };
+    });
+  }
+  function layoutCells() { for (const c of cellEls) c.st = ['', '', '']; }
+  const set = (el, o, tf) => { el.style.opacity = o.toFixed(3); el.style.visibility = o > 0.004 ? 'visible' : 'hidden'; if (tf) el.style.transform = tf; };
+  function zoneCap(cx, cy, r, b, front) {   // r: the cell's disc (≈ 0.44 of its sprite)
+    let c = 1;
+    const over = clamp((cx + r - 0.5 * W) / (0.3 * r) + 1);   // 1 once the disc reaches the copy half; only faint bokeh may
+    if (over > 0) { const faint = b >= 1.4 ? (front ? 0.2 : 0.35) : 0; c = Math.min(c, 1 - over * (1 - faint)); }
+    if (front) for (const [at, bx] of HERO) {
+      const w = 1 - smooth(0.5, 0.95, Math.abs(pos - at)); if (w <= 0) continue;
+      const dx = Math.max(bx[0] * W - cx, 0, cx - bx[2] * W), dy = Math.max(bx[1] * H - cy, 0, cy - bx[3] * H);
+      c = Math.min(c, 1 - w * clamp((r - Math.hypot(dx, dy)) / (0.4 * r)));
+    }
+    return c;
+  }
+  function cells(t, y) {   // returns true while the field is on screen (it keeps drifting)
+    if (!cellEls) return false;
+    const o0 = smooth(0.08, 0.8, pos) * (pos < 3 ? 1 : 0), dis = smooth(2.1, 2.9, pos);
+    if (o0 <= 0 || dis >= 1) {
+      if (cellsOn) { for (const c of cellEls) { c.imgs.forEach(im => set(im, 0)); c.dust.forEach(d => set(d.el, 0)); c.st = ['', '', '']; } cellsOn = false; }
+      return false;
+    }
+    cellsOn = true;
+    const still = calm.matches, c01 = still ? 0.5 : clamp((y - geo[0].top) / Math.max(1, geo[3].top - geo[0].top));
+    const zc = c01 * ZC, focus = 3.0 - 0.9 * c01, tt = still ? 0 : t / 1000;
+    for (const c of cellEls) {
+      const [, x, yw, z, size, front, vz, spin] = c.f, d = z - zc + vz * c01;
+      let o = o0 * smooth(0.22, 0.5, d) * (1 - smooth(FAR - 2.5, FAR, d)) * (front ? 1 - smooth(FRONT_IN[0], FRONT_IN[1], d) : 1);
+      const k = 1 / Math.max(d, 0.05), D = size * k * H, dx = 0.012 * Math.sin(tt * 0.21 + c.ph), dy = 0.010 * Math.cos(tt * 0.17 + c.ph * 1.3);
+      const cx = VP[0] * W + (x + dx) * k * H, cy = VP[1] * H + (yw + dy) * k * H;
+      if (d <= 0.2 || cx + D / 2 < 0 || cx - D / 2 > W || cy + D / 2 < 0 || cy - D / 2 > H) o = 0;
+      const b = clamp(Math.abs(d - focus) * 0.85, 0, 2);
+      if (o > 0) o *= zoneCap(cx, cy, D * 0.44, b, front);
+      const oc = o * (1 - dis), tf = o > 0 ? `translate3d(${(cx - 128).toFixed(1)}px,${(cy - 128).toFixed(1)}px,0) scale(${(D / 256).toFixed(4)}) rotate(${(spin * c01 + tt * 2 + c.ph * 40).toFixed(1)}deg)` : '';
+      const wts = [clamp(1 - b), clamp(1 - Math.abs(b - 1)), clamp(b - 1)];
+      c.imgs.forEach((im, s) => { const v = oc * wts[s], st = v > 0.004 ? v.toFixed(3) + tf : '0'; if (st !== c.st[s]) { set(im, v, v > 0.004 ? tf : ''); c.st[s] = st; } });
+      const dO = o * Math.sin(Math.PI * dis) * 0.95;   // R3: the cells give way to gold dust
+      for (const p of c.dust) {
+        if (dO <= 0.004) { if (p.on) { set(p.el, 0); p.on = false; } continue; }
+        const rr = D / 2 * (0.2 + p.f * 1.4 * dis), px = cx + Math.cos(p.a) * rr, py = cy + Math.sin(p.a) * rr - dis * 0.04 * H, sc = 0.6 + D / 260;
+        set(p.el, dO * (0.6 + 0.4 * p.f), `translate3d(${(px - 4).toFixed(1)}px,${(py - 4).toFixed(1)}px,0) scale(${sc.toFixed(2)})`); p.on = true;
+      }
+    }
+    return !still;
+  }
+
+  function tick(t) {
+    raf = 0; if (destroyed) return;
+    const y = scrollY;
+    if (y !== lastY) { if (lastY >= 0) dir = y > lastY ? 1 : -1; lastY = y; }
+    pos = position(y);
+    const p = mode === 'keys' ? Math.round(pos) : pos, r = Math.min(R - 1, Math.floor(p)), k = key(r, Math.round((p - r) * (NS[r] - 1)));
+    const now = performance.now();
+    if (k !== want) { vel = 0.6 * vel + 0.4 * Math.abs(gOf(k) - wantG) * 1000 / Math.max(16, now - wantT); wantT = now; want = k; wantG = gOf(k); needPump = true; }
+    else if (now - wantT > 120) vel *= 0.5;   // stopped
+    const rate = 2000 / (stats.n ? stats.decode / stats.n : 40), st = Math.max(1, Math.min(6, Math.round(vel / rate)));   // frames the worker decodes per second
+    if (st !== stride) { stride = st; needPump = true; }
+    if (needPump) pump();
+    draw();
+    land(y);
+    const tf = `translate3d(0, ${(-y * 0.02).toFixed(1)}px, 0)`;
+    if (tf !== lastBg) { if (bg) bg.style.transform = tf; if (plate) plate.style.transform = tf; lastBg = tf; }
+    const po = cellEls || (stage && SPRITES.length) ? smooth(0.05, 0.85, pos) * (1 - smooth(2.1, 2.9, pos)) : 0;   // phone: the plate without the field
+    if (plate && Math.abs(po - lastPlate) > 0.002) { plate.style.opacity = po.toFixed(3); lastPlate = po; }
+    if (!cellEls && mode !== 'off' && (pos > 0.01 || shown >= 0)) buildCells();
+    if (cells(t, y) && !document.hidden) kick();
+    helix();
+    if (SCENE && SCENE.animated && mode === 'full' && !document.hidden && lastOp !== 0) { dirty = true; kick(); }   // a living scene: every frame it shows
+  }
+  // ---- the DNA helix behind S3: fetched only when the story nears S3 on a desktop, eased in and out around it
+  const hx = o.helix || null;
+  let hxOn = false, lastHx = -1;
+  function helix() {
+    if (!CFG.helix || !hx || stage || mode === 'off' || saveData || calm.matches) return;
+    if (!hxOn) { if (pos < 1.1) return; hx.src = new URL('img/helix.webp', BASE).href; hxOn = true; }
+    const o = 0.38 * smooth(1.35, 1.95, pos) * (1 - smooth(2.45, 2.95, pos));
+    if (Math.abs(o - lastHx) < 0.002) return;
+    lastHx = o; hx.style.opacity = o.toFixed(3); hx.style.visibility = o > 0.004 ? 'visible' : 'hidden';
+    hx.style.transform = `translate3d(0, ${((2 - pos) * 6).toFixed(2)}vh, 0)`;
+  }
+  function kick() { if (!raf && !destroyed) raf = requestAnimationFrame(tick); }
+  function show(o) {   // the canvas's opacity; a scene is not drawn while hidden, so on its way back it is drawn at once
+    if (o === lastOp) return;
+    const was = lastOp; canvas.style.opacity = String(o); canvas.style.visibility = o > 0 ? '' : 'hidden'; lastOp = o;
+    if (SCENE && was === 0 && o > 0) draw();
+  }
+  function land(y) {   // the card rises: the 3D kit flies from its place in the frame into the card's picture, then hands over
+    const l = clamp((LAND0 * H - (cardTop - y)) / ((LAND0 - LAND1) * H)), e = l * l * (3 - 2 * l);
+    const swap = smooth(0.88, 1, l), op = mode === 'off' ? 0 : mode === 'keys' ? 1 - l : 1 - swap;
+    if (stage) {   // phone: no flight; the offer section pushes the stage (smoke, plate, 3D) up and away, the card shows the kit
+      push = clamp(stage.top + stage.h - (geo[R].top - y), 0, stage.top + stage.h + 40);
+      if (push !== lastPush) { root.style.setProperty('--push', push.toFixed(1)); lastPush = push; }
+      show(mode === 'off' || push >= stage.top + stage.h + 40 ? 0 : 1);   // first: a scene coming back is drawn into its new box
+      const B = shownBox, tfp = B ? `translate3d(${B.x.toFixed(2)}px,${(B.y - push).toFixed(2)}px,0)` : '';
+      if (tfp !== lastTf) { canvas.style.transform = tfp; canvas.style.zIndex = ''; lastTf = tfp; }
+      if (cardCv && mode !== 'off') cardCv.style.opacity = '1';
+      return;
+    }
+    show(op);   // first: a scene coming back is drawn into its new box
+    const B = shownBox; let tf = B ? `translate3d(${B.x.toFixed(2)}px,${B.y.toFixed(2)}px,0)` : '', fly = false;
+    if (mode === 'full' && l > 0 && op > 0 && shown === KIT && kitCrop && cardCv && cardCv.clientWidth > 0 && B) {
+      const [sx, sy, sw, sh] = kitCrop.r, fx = B.w / kitCrop.w, fy = B.h / kitCrop.h, k = { x: sx * fx, y: sy * fy, w: sw * fx };   // the kit in the canvas
+      const c = cardCv.getBoundingClientRect(), s = Math.min(c.width / sw, c.height / sh);
+      const T = { x: c.left + (c.width - sw * s) / 2, y: c.top + (c.height - sh * s) / 2, w: sw * s };   // where the card draws it
+      const sc = 1 + (T.w / k.w - 1) * e, X = B.x + k.x + (T.x - B.x - k.x) * e, Y = B.y + k.y + (T.y - B.y - k.y) * e;
+      tf = `translate3d(${(X - k.x * sc).toFixed(2)}px,${(Y - k.y * sc).toFixed(2)}px,0) scale(${sc.toFixed(5)})`; fly = true;
+    }
+    if (tf !== lastTf) { canvas.style.transform = tf; canvas.style.zIndex = fly ? '3' : ''; lastTf = tf; }   // above the card while it flies
+    if (cardCv && mode !== 'off') cardCv.style.opacity = String(mode === 'keys' ? l : swap);
+  }
+
+  const onVisibility = () => {   // hidden: keep only the frame on screen
+    if (document.hidden) {
+      for (const [k, e] of bm) if (k !== shown) { release(e); bm.delete(k); }
+      for (const id of [...pending.keys()]) cancel(id); flight.clear(); warmFlight.clear();
+    } else { needPump = true; kick(); }
+  };
+  const ro = window.ResizeObserver ? new ResizeObserver(() => measure()) : null;
+  document.addEventListener('visibilitychange', onVisibility);
+  addEventListener('scroll', kick, { passive: true });
+  addEventListener('resize', measure);
+  phone.addEventListener('change', measure); calm.addEventListener('change', measure);
+  if (ro) ro.observe(o.observe || secs[0].parentElement);
+  addEventListener('load', measure);
+  measure();
+
+  function destroy() {   // unmount: every listener, the worker, the decoded frames and the cells it added; the page's
+    if (destroyed) return; // own elements stay (React may mount again on them, as StrictMode does in development)
+    destroyed = true; if (raf) cancelAnimationFrame(raf); raf = 0;
+    document.removeEventListener('visibilitychange', onVisibility);
+    removeEventListener('scroll', kick); removeEventListener('resize', measure); removeEventListener('load', measure);
+    phone.removeEventListener('change', measure); calm.removeEventListener('change', measure);
+    if (ro) ro.disconnect();
+    for (const id of [...pending.keys()]) cancel(id); flight.clear(); warmFlight.clear();
+    if (worker) { worker.terminate(); worker = null; }
+    if (workerUrl) URL.revokeObjectURL(workerUrl);
+    for (const e of bm.values()) release(e); bm.clear(); shown = -1; kitCrop = null;
+    if (cellEls) for (const c of cellEls) { c.imgs.forEach(im => im.remove()); c.dust.forEach(d => d.el.remove()); }
+    cellEls = null;
+    root.classList.remove('story'); for (const v of ['--stage-top', '--stage-h', '--push']) root.style.removeProperty(v);
+    if (probe) probe.remove();
+  }
+  function state() {   // for QA and debugging
+    let bytes = 0; for (const e of bm.values()) bytes += e.bytes;
+    return { run: rOf(want), want: iOf(want), g: rOf(want) + iOf(want) / (NS[rOf(want)] - 1), shown: shown < 0 ? null : [rOf(shown), iOf(shown)],
+      decoded: bm.size, decodedBytes: bytes, inflight: flight.size + warmFlight.size, misses, N: NS[rOf(want)], Ns: NS, R,
+      opacity: +canvas.style.opacity, tier, mode, worker: !!worker, win: BACK + AHEAD + 1, keys: (mode === 'full' ? ENDS : SCREENS).length,
+      peak: Object.assign({}, peak), warmed: warmed.size, fetchMs: stats.n ? +(stats.fetch / stats.n).toFixed(1) : 0,
+      decodeMs: stats.n ? +(stats.decode / stats.n).toFixed(1) : 0, maxDecodeMs: +stats.maxDecode.toFixed(1), missing: missing.size, pos,
+      cells: cellEls ? cellEls.length : 0, cellsVisible: cellEls ? cellEls.filter(c => c.imgs.some(im => im.style.visibility === 'visible')).length : 0,
+      card: card ? card.className : '', destroyed, scene: !!SCENE, sceneState: SCENE && SCENE.state ? SCENE.state() : null };
+  }
+  return { measure, destroy, state };
+}
+
+// three.js 0.160 from jsDelivr: failed or stalled (8 s), the page goes on without 3D (no-gl: the still)
+const THREE = await Promise.race([import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js').catch(() => null),
+  new Promise(r => setTimeout(r, 8000, null))]);
+// scenes/exosignal-hair.js, inlined by build-vtech.py
+// EXOSIGNAL HAIR live in three.js: the product page's scroll story (engine/story.js, option `scene`) drawn as a real 3D
+// scene, as the approved sample EXOTECH GEL (scenes/exotech-gel.js). The engine keeps the story geometry (the cover-fitted
+// 16:10 frame, the run's box, the phone stage, the kit card); this module draws the pose for the story position into the
+// box. Objects are placed by frame pixel (2400×1500), measured on the only packshot, protocols/print/img/exosignal-hair.webp:
+// the matte black box seen square on and five glass ampoules before its lower right corner, 1 + 2 + 2 (scale 0.885, the
+// photo's origin at (215, 435)). The story (site/story3d.json, as revised for the page): S1 the packshot; S2 the left
+// ampoule steps out, a gold measuring target (the MITOSCAN screen's mark) over faint falling hairs, a hair that crosses
+// it flashes gold; S3 the ampoule close, turned to its small print (the page draws the exosomes, PDRN and the DNA helix);
+// S4 a gold scalp line, four strands grow from it, the fourth tallest; S5 the line becomes the protocol's: MITOSCAN and
+// MITOPEN (their packshots, dimmed, neutral) and the ampoule on it with the line's gold under it; S6–S7 the box comes back,
+// the five ampoules stand in a row before it, then one by one go back into the packshot's pose (the kit card's picture).
+// Nothing is opened: the photos show no ampoule opened (story3d's open question). The product keeps its print's colours
+// (emissive ≈ 85 % + neutral shading, toneMapped off); the line's gold lives only around it (target, hairs, strands,
+// line, glows). No text is drawn but the package's own print (design/exosignal-hair/make_textures.py).
+//
+// createScene(THREE, { canvas, base, onLoad }) → { draw(p, view), kit(view) → canvas, animated, state(), dispose() }
+//   p: the story position 0…5 (run index + progress); view: { cover, box, dpr, t, still } from the engine
+function createScene(THREE, { canvas, base, onLoad }) {
+  const V3 = THREE.Vector3, rad = THREE.MathUtils.degToRad;
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+  const lerp = (a, b, s) => a + (b - a) * s;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+  renderer.setClearColor(0x000000, 0);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+  const scene = new THREE.Scene();
+
+  // the camera looks down 4° (the box's top edge at eye level: its top face never shows); `lay` is the same camera
+  // without the box's view offset, for placing objects by their frame pixels
+  const FOV = 20, EL = rad(4), DIST = 14;
+  const camera = new THREE.PerspectiveCamera(FOV, 1.6, 1, 80);
+  camera.position.set(0, Math.sin(EL) * DIST, Math.cos(EL) * DIST); camera.lookAt(0, 0, 0);
+  const lay = camera.clone(); lay.updateMatrixWorld(); lay.updateProjectionMatrix();
+  const fwd = new V3(); lay.getWorldDirection(fwd);
+  const ray = new V3(), TAN = Math.tan(rad(FOV / 2));
+  function at(cx, cy, depth, out) {   // the point seen at frame pixel (cx, cy), `depth` in front of the camera
+    ray.set(cx / 1200 - 1, 1 - cy / 750, 0.5).unproject(lay).sub(lay.position).normalize();
+    return out.copy(lay.position).addScaledVector(ray, depth / ray.dot(fwd));
+  }
+  const world = (px, depth) => px / 1500 * 2 * depth * TAN;   // frame pixels → world units at that depth
+
+  // ---- light: a neutral studio for reflections (PMREM): dark above and below, an even horizon, two tall narrow
+  // softboxes either side of the camera, rims behind. The glass has its own room without the two front softboxes: in the
+  // packshot an ampoule's body is clear over its label, bright only at its edges (the rims) and at the liquid's surface
+  function makeEnv(glass) {
+    const pm = new THREE.PMREMGenerator(renderer), room = new THREE.Scene();
+    const dome = new THREE.SphereGeometry(30, 48, 32), col = [], c = new THREE.Color();
+    for (let i = 0; i < dome.attributes.position.count; i++) {
+      const y = dome.attributes.position.getY(i) / 30;   // −1 floor … 1 ceiling
+      c.setRGB(1, 1, 1.02).multiplyScalar(0.05 + 0.18 * Math.exp(-(y * y) / 0.06)); col.push(c.r, c.g, c.b);
+    }
+    dome.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    room.add(new THREE.Mesh(dome, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
+    const panel = (i, x, y, z, w, h) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(i, i, i), side: THREE.DoubleSide }));
+      m.position.set(x, y, z); m.lookAt(0, y, 0); room.add(m);
+    };
+    if (!glass) { panel(5, -5.7, 1, 8.2, 2.4, 9); panel(2.5, 6.4, 1, 7.7, 1.6, 9); }   // ±35–40° from the camera, the left one the key
+    else panel(0.4, 0, 1, 12, 24, 12);   // the glass: a broad dim wall behind the camera instead (the body a little lighter)
+    panel(2.5, -9, 1.5, -7, 2.5, 9); panel(2, 9, 2, -7, 2.5, 9);     // rims from behind
+    const rt = pm.fromScene(room, 0.02); pm.dispose();
+    room.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
+    return rt;   // its target: disposing that frees the framebuffer too, not only the texture
+  }
+  let roomEnv = makeEnv(false), glassEnvRT = makeEnv(true), glassEnv = glassEnvRT.texture;
+  scene.environment = roomEnv.texture;
+  // after a lost context three.js restores image textures, not the rendered environments: rebuild them, and have the
+  // engine redraw (the kit picture too), also under reduced motion
+  const restored = () => {
+    const old = [roomEnv, glassEnvRT];
+    roomEnv = makeEnv(false); glassEnvRT = makeEnv(true); glassEnv = glassEnvRT.texture; scene.environment = roomEnv.texture;
+    old.forEach(t => t.dispose()); size = '';
+    for (const a of amps) for (const k of ['back', 'front', 'liquid']) a.m[k].envMap = glassEnv;
+    version++; if (onLoad) onLoad();
+  };
+  canvas.addEventListener('webglcontextrestored', restored);
+  const key = new THREE.DirectionalLight(0xffffff, 1.2); key.position.set(4, 6, 6); scene.add(key);   // top right: the
+  // packshot's front is lighter there
+
+  // ---- textures: the typeset print (make_textures.py) and the two devices' packshots (S5), as they are
+  let loaded = 0, version = 0;   // version: textures loaded, a context restored — the engine re-renders the kit picture
+  const ANISO = renderer.capabilities.getMaxAnisotropy();
+  const tex = (name, srgb) => {
+    const t = new THREE.TextureLoader().load(new URL(`img/exosignal-hair-3d/${name}`, base).href, () => {
+      t.needsUpdate = true; if (++loaded === 5) { version++; if (onLoad) onLoad(); }   // the engine redraws the kit picture
+    });
+    if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = ANISO; return t;
+  };
+  const faceTex = tex('box-face.png', true), metalTex = tex('box-metal.png'), printTex = tex('amp-print.png');
+  const scanTex = tex('mitoscan.webp', true), penTex = tex('mitopen.webp', true);
+
+  // ---- materials. The product in its print's colours: emissive 0.85 of the colour plus a neutral shading (a diffuse
+  // 0.2 of it under the key and the room, ≈ 0.15 of the colour lit), not tone mapped; the foil a satin metal (roughness
+  // 0.28) whose reflection gives the rest. Nothing on the product is dimmed or masked: it comes and goes by opacity only
+  const SHADE = 0.2;
+  const P = (hex, opts = {}) => new THREE.MeshPhysicalMaterial(Object.assign({ color: new THREE.Color(hex).multiplyScalar(SHADE), emissive: hex,
+    emissiveIntensity: 0.85, roughness: 0.7, specularIntensity: 0.3, toneMapped: false, transparent: true }, opts));
+  const facade = P(0xffffff, { color: 0xffffff, map: faceTex, emissiveMap: faceTex, metalnessMap: metalTex,   // the foil's
+    roughnessMap: metalTex, metalness: 1, roughness: 0.65, specularIntensity: 0.08, envMapIntensity: 0.7 });  // F0 its colour
+  // the front's paper and ink take the packshot's light: lighter toward the right and the top right (the key from there),
+  // measured on its bare paper as F = lightness / the reference patch's (u 0.15–0.25, v 0.30–0.40), smoothed (rms 0.06):
+  // F 0.88 top left … 1.0 at the patch … 1.6–1.9 top right. Emissive (0.85) and the room's faint reflection give the
+  // colour itself (1.0, measured in the key), the diffuse the rest: LIT = 1 / its share of the colour per unit (0.56,
+  // measured), so the patch keeps #161516; the foil (metal) has no diffuse
+  const LIT = 1.79;
+  facade.onBeforeCompile = sh => {
+    sh.fragmentShader = sh.fragmentShader.replace('#include <lights_physical_fragment>', `#include <lights_physical_fragment>
+      { float u = vMapUv.x, v = 1.0 - vMapUv.y;   // u right, v down: as on the photo
+        float F = clamp(0.816 + 0.4046 * u + 0.9017 * u * u + 0.2115 * v + 0.2952 * u * v - 1.3075 * u * u * v, 0.88, 1.9);
+        material.diffuseColor *= ${LIT.toFixed(3)} * max(F - 1.0, 0.0); }`);
+  };
+  const paper = P(0x161516, { specularIntensity: 0.08 });   // the box's other sides: the same black paper, no print
+  const boxMats = [facade, paper];
+  // glass: no transmission (on a transparent canvas it cannot see the page's smoke, and a phone pays a pass for it):
+  // its opacity follows Fresnel and its own highlights, so edges and highlights read and the body stays clear
+  function glassMat(side, a0, aF, aS) {
+    const m = new THREE.MeshPhysicalMaterial({ color: 0x0b0b0c, roughness: 0.04, ior: 1.5, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.6,
+      envMap: glassEnv, transparent: true, depthWrite: false, side });
+    const k = [a0, aF, aS].map(v => v.toFixed(3));
+    m.onBeforeCompile = sh => {
+      sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
+      { float F = pow(1.0 - clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), 5.0);
+        vec3 sp = reflectedLight.directSpecular + reflectedLight.indirectSpecular;
+        #ifdef USE_CLEARCOAT
+        sp += (clearcoatSpecularDirect + clearcoatSpecularIndirect) * material.clearcoat;
+        #endif
+        gl_FragColor.a = clamp(${k[0]} + ${k[1]} * F + dot(sp, vec3(0.2126, 0.7152, 0.0722)) * ${k[2]}, 0.0, 1.0) * opacity; }`);
+    };
+    m.customProgramCacheKey = () => 'glass' + k.join();
+    return m;
+  }
+
+  // ---- the ampoule, height 1 (scaled by HW): a lathe of the profile measured on the photo (fractions of the height
+  // from the foot: r 0.100 body to h 0.523, the shoulder, a waist, a bulb, the neck under the white ring at 0.708–0.725,
+  // the head tube r 0.042, a flattened dome), the colourless liquid to h 0.41, its surface (a bright filled ellipse seen at a
+  // grazing angle, as in the packshot, and a bright front edge), the ring, the black print
+  const V2 = (r, h) => new THREE.Vector2(r, h);
+  const neck = new THREE.SplineCurve([V2(0.1, 0.523), V2(0.088, 0.542), V2(0.067, 0.558), V2(0.06, 0.583), V2(0.064, 0.628), V2(0.058, 0.653),
+    V2(0.05, 0.675), V2(0.0445, 0.693), V2(0.0445, 0.708)]).getPoints(48);
+  const PROFILE = [V2(0, 0), V2(0.07, 0), V2(0.085, 0.002), V2(0.093, 0.008), V2(0.098, 0.017), V2(0.1, 0.031)].concat(neck,
+    [V2(0.0445, 0.725), V2(0.042, 0.733), V2(0.042, 0.976)], [0.25, 0.5, 0.75, 0.9, 1].map(s => V2(0.042 * Math.cos(s * Math.PI / 2), 0.976 + 0.024 * Math.sin(s * Math.PI / 2))));
+  const LIQ = 0.41;
+  const glassGeo = new THREE.LatheGeometry(PROFILE, 96);
+  const liquidGeo = new THREE.LatheGeometry([V2(0, 0.006), V2(0.079, 0.006), V2(0.09, 0.012), V2(0.093, 0.03), V2(0.093, LIQ), V2(0, LIQ)], 96);
+  const surfaceGeo = new THREE.CircleGeometry(0.0925, 96).rotateX(-Math.PI / 2).translate(0, LIQ, 0);
+  const meniscusGeo = new THREE.CylinderGeometry(0.0935, 0.0935, 0.012, 96, 1, true).translate(0, LIQ - 0.004, 0);
+  const ringGeo = new THREE.CylinderGeometry(0.0452, 0.0452, 0.017, 96, 1, true).translate(0, 0.7165, 0);
+  const printGeo = new THREE.CylinderGeometry(0.1002, 0.1002, 0.4, 160, 1, true, rad(-14), rad(110)).translate(0, 0.3, 0);   // θ −14…+96, h 0.10…0.50
+  const HW = 1.2, KH = HW * 750 / TAN;   // the ampoule's height in world units; an ampoule H px tall stands at depth KH / H
+  const SURF = 0.4, MEN = 0.6;   // the liquid's surface and its front edge: opacities
+  const amps = [0, 1, 2, 3, 4].map(() => {
+    const g = new THREE.Group(); g.rotation.order = 'XZY'; g.scale.setScalar(HW); scene.add(g);
+    const m = {
+      back: glassMat(THREE.BackSide, 0.02, 0.3, 0.7), front: glassMat(THREE.FrontSide, 0.04, 0.55, 1.0), liquid: glassMat(THREE.FrontSide, 0.04, 0.45, 0.6),
+      surface: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: SURF, depthWrite: false, toneMapped: false }),
+      meniscus: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: MEN, depthWrite: false, toneMapped: false }),   // its front arc
+      ring: P(0xf1ece8, { roughness: 0.4, side: THREE.DoubleSide, forceSinglePass: true }),   // one pass: its back half shows through
+      print: P(0x232021, { alphaMap: printTex, depthWrite: false, roughness: 0.45, polygonOffset: true, polygonOffsetFactor: -2 }),
+    };
+    // drawn in this order (renderOrder rank × 10 + layer): back of the glass, liquid, its surface and edge, ring, front of
+    // the glass, the print over it (it is on the glass's outside)
+    const layer = [[glassGeo, m.back], [liquidGeo, m.liquid], [surfaceGeo, m.surface], [meniscusGeo, m.meniscus], [ringGeo, m.ring], [glassGeo, m.front], [printGeo, m.print]]
+      .map(([geo, mat]) => { const x = new THREE.Mesh(geo, mat); g.add(x); return x; });
+    return { g, m, layer };
+  });
+
+  // ---- the box: the front 1.474 : 1 (as photographed), its depth unknown: a thin flat box, 0.16 of the width
+  const BWr = 1.474, BD = 0.16 * BWr, box = new THREE.Group(); scene.add(box);
+  const face = (geo, mat, x, y, z, rx, ry) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); m.renderOrder = 2; box.add(m); return m; };
+  face(new THREE.PlaneGeometry(BWr, 1), facade, 0, 0, 0, 0, 0).renderOrder = 3;
+  face(new THREE.PlaneGeometry(BWr, BD), paper, 0, 0.5, -BD / 2, -Math.PI / 2, 0);
+  face(new THREE.PlaneGeometry(BWr, BD), paper, 0, -0.5, -BD / 2, Math.PI / 2, 0);
+  face(new THREE.PlaneGeometry(BD, 1), paper, -BWr / 2, 0, -BD / 2, 0, -Math.PI / 2);
+  face(new THREE.PlaneGeometry(BD, 1), paper, BWr / 2, 0, -BD / 2, 0, Math.PI / 2);
+  face(new THREE.PlaneGeometry(BWr, 1), paper, 0, 0, -BD, 0, Math.PI);
+  const FH0 = 564.2, KF = FH0 * (DIST + 1.2), FHW = world(FH0, DIST + 1.2);   // the front FH0 px tall stands at DIST + 1.2
+  box.scale.setScalar(FHW);
+
+  // ---- the line's graphics, flat to the camera in frame pixels (a plane at a depth; local x = px − 1200, y = 750 − py):
+  // strokes with a soft edge, at least 1.5 device px wide, drawn up to a time (uDraw); gold of the HAIR line only
+  const pxU = { value: 1 };   // device px per frame px
+  const plane = D => { const g = new THREE.Group(); scene.add(g); place(g, D); return g; };
+  const place = (g, D) => { at(1200, 750, D, g.position); g.quaternion.copy(lay.quaternion); g.scale.setScalar(world(1, D)); };
+  const hex3 = h => new THREE.Vector3(((h >> 16) & 255) / 255, ((h >> 8) & 255) / 255, (h & 255) / 255);   // sRGB as drawn
+  const STROKE_V = `attribute float aSide, aHalf, aCore, aT, aU; uniform float uSway;
+    varying float vSide, vHalf, vCore, vT, vU, vPx;
+    void main() { vSide = aSide; vHalf = aHalf; vCore = aCore; vT = aT; vU = aU; vec3 p = position; p.x += uSway * aU * aU; vPx = p.x + 1200.0;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0); }`;
+  const STROKE_F = `uniform vec3 uA, uB, uCreamCol; uniform float uOpacity, uDraw, uPx, uGlow, uGlowA, uXL, uSplit, uCream;
+    varying float vSide, vHalf, vCore, vT, vU, vPx;
+    void main() {
+      float d = abs(vSide) * vHalf, c = max(vCore * uPx, 0.75);
+      float a = clamp(c + 0.5 - d * uPx, 0.0, 1.0);
+      if (uGlow > 0.0) a = max(a, uGlowA * exp(-(d * d) / (uGlow * uGlow)));
+      a *= clamp((uDraw - vT) * 60.0, 0.0, 1.0) * uOpacity;
+      vec3 col = mix(uA, uB, vU);
+      #ifdef LINE
+      a *= smoothstep(uXL, uXL + 24.0, vPx) * (1.0 - smoothstep(1170.0, 1200.0, vPx));
+      float cr = uCream * smoothstep(uSplit - 50.0, uSplit + 50.0, vPx);
+      col = mix(col, uCreamCol, cr); a *= mix(1.0, 0.35, cr);
+      #endif
+      gl_FragColor = vec4(col, a);
+    }`;
+  function strokeMat(a, b, o = {}) {
+    return new THREE.ShaderMaterial({ vertexShader: STROKE_V, fragmentShader: STROKE_F, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending, defines: o.line ? { LINE: 1 } : {},
+      uniforms: { uA: { value: hex3(a) }, uB: { value: hex3(b) }, uCreamCol: { value: hex3(0xf6f3ec) }, uOpacity: { value: 1 }, uDraw: { value: 1 },
+        uPx: pxU, uGlow: { value: o.glow || 0 }, uGlowA: { value: o.glowA || 0 }, uXL: { value: 0 }, uSplit: { value: 600 }, uCream: { value: 0 }, uSway: { value: 0 } } });
+  }
+  function strokes(list) {   // [{ pts: [[x, y] frame px], core: s → half width px, t: s → draw time, ext: geometry half width }]
+    const pos = [], side = [], half = [], core = [], tt = [], uu = [], idx = [];
+    for (const s of list) {
+      const n = s.pts.length, b0 = pos.length / 3;
+      for (let i = 0; i < n; i++) {
+        const [x, y] = s.pts[i], [xa, ya] = s.pts[Math.max(0, i - 1)], [xb, yb] = s.pts[Math.min(n - 1, i + 1)];
+        const l = Math.hypot(xb - xa, yb - ya) || 1, nx = -(yb - ya) / l, ny = (xb - xa) / l, u = i / (n - 1);
+        for (const sd of [-1, 1]) { pos.push(x + nx * s.ext * sd - 1200, 750 - (y + ny * s.ext * sd), 0); side.push(sd); half.push(s.ext); core.push(s.core(u)); tt.push(s.t(u)); uu.push(u); }
+        if (i) { const a = b0 + (i - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+      }
+    }
+    const g = new THREE.BufferGeometry(); g.setIndex(idx);
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    for (const [k, v] of [['aSide', side], ['aHalf', half], ['aCore', core], ['aT', tt], ['aU', uu]]) g.setAttribute(k, new THREE.Float32BufferAttribute(v, 1));
+    return g;
+  }
+  const SPOT_F = `uniform vec3 uC; uniform float uOpacity; varying vec2 vUv;
+    void main() { vec2 q = vUv * 2.0 - 1.0; float r2 = dot(q, q); gl_FragColor = vec4(uC, uOpacity * exp(-3.0 * r2) * (1.0 - smoothstep(0.5, 1.0, r2))); }`;
+  const spotMat = c => new THREE.ShaderMaterial({ vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: SPOT_F, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, uniforms: { uC: { value: hex3(c) }, uOpacity: { value: 0 } } });
+  const spot = (parent, c, cx, cy, rx, ry, order) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), spotMat(c)); m.position.set(cx - 1200, 750 - cy, 0); m.scale.set(rx, ry, 1); m.renderOrder = order; parent.add(m); return m; };
+
+  // S2: the measuring target (the MITOSCAN screen's mark: three rings, a cross through them with gaps at the rings, a dot;
+  // 72 ticks every 5° round the outer ring, every fourth longer), drawn rings first by angle, then ticks, then the arms
+  // out from the centre; over it faint hairs fall, and one whose middle enters the inner circle flashes gold for 0.4 s.
+  // S2 stands right in the 3D box: the page's exosome field fills its left part there (measured on the built page at
+  // 1440×900, 1512×982 and 1920×1080 while S2 is read: no cell over the target, none over the hero's head)
+  const TX = 1000, TY = 760, TR = 170, D_FX = 11;
+  const fx = plane(D_FX);
+  const tlist = [];
+  [1, 0.74, 0.55].forEach((k, j) => {
+    const r = TR * k, ga = 0.04 * TR / r;
+    for (let q = 0; q < 4; q++) {
+      const a0 = q * Math.PI / 2 + ga, a1 = (q + 1) * Math.PI / 2 - ga, pts = [];
+      for (let i = 0; i <= 24; i++) { const a = a0 + (a1 - a0) * i / 24; pts.push([TX + Math.cos(a) * r, TY - Math.sin(a) * r]); }
+      tlist.push({ pts, core: () => 1.1, ext: 5, t: u => 0.03 * j + 0.42 * (a0 + (a1 - a0) * u) / (2 * Math.PI) });
+    }
+  });
+  for (let i = 0; i < 72; i++) {
+    if (i % 18 === 0) continue;   // not under the arms
+    const a = i * Math.PI / 36, L = i % 4 === 0 ? 16 : 8, r0 = TR + 6;
+    tlist.push({ pts: [[TX + Math.cos(a) * r0, TY - Math.sin(a) * r0], [TX + Math.cos(a) * (r0 + L), TY - Math.sin(a) * (r0 + L)]], core: () => 0.8, ext: 4, t: () => 0.5 + 0.25 * i / 72 });
+  }
+  for (let q = 0; q < 4; q++) {
+    const c = Math.cos(q * Math.PI / 2), s = Math.sin(q * Math.PI / 2);
+    for (const [r0, r1] of [[0.08, 0.51], [0.59, 0.70], [0.78, 0.96], [1.04, 1.18]]) {
+      const pts = [0, 1, 2, 3, 4].map(i => { const r = TR * (r0 + (r1 - r0) * i / 4); return [TX + c * r, TY - s * r]; });
+      tlist.push({ pts, core: () => (r0 < 0.3 ? 1.3 : 1.1), ext: 5, t: u => 0.75 + 0.25 * (r0 + (r1 - r0) * u) / 1.18 });
+    }
+  }
+  const dot = []; for (let i = 0; i <= 24; i++) dot.push([TX + 3 * Math.cos(i * Math.PI / 12), TY + 3 * Math.sin(i * Math.PI / 12)]);
+  tlist.push({ pts: dot, core: () => 3, ext: 6, t: () => 0.75 });
+  const targetMat = strokeMat(0xd8bd7e, 0xc9a24b);
+  const target = new THREE.Mesh(strokes(tlist), targetMat); target.renderOrder = 7; fx.add(target);
+  // the hairs: one instanced strip, all motion in the vertex shader (no matrices on the CPU); a seeded field
+  const NT = 36, TB = [800, 1200, 320, 1180], SPEED = 60;
+  const rng = (s => () => { s |= 0; s = s + 0x6d2b79f5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; })(20261021);
+  const hairs = [];
+  for (let i = 0; i < NT; i++) hairs.push([TB[0] + ((i * 0.618034) % 1) * (TB[1] - TB[0]), rng(), 40 + 70 * rng(), rng() * 2 - 1, SPEED * (0.85 + 0.3 * rng()), rng() * 6.283]);
+  const hg = new THREE.InstancedBufferGeometry(), hs = [], hidx = [];
+  for (let i = 0; i <= 12; i++) { hs.push(i / 12, -1, i / 12, 1); if (i) hidx.push((i - 1) * 2, (i - 1) * 2 + 1, i * 2, (i - 1) * 2 + 1, i * 2 + 1, i * 2); }
+  hg.setIndex(hidx); hg.setAttribute('position', new THREE.Float32BufferAttribute(new Array(26 * 3).fill(0), 3));
+  hg.setAttribute('aS', new THREE.Float32BufferAttribute(hs, 2));
+  hg.setAttribute('aI', new THREE.InstancedBufferAttribute(new Float32Array(hairs.flatMap(h => h.slice(0, 4))), 4));
+  hg.setAttribute('aJ', new THREE.InstancedBufferAttribute(new Float32Array(hairs.flatMap(h => h.slice(4))), 2));
+  hg.instanceCount = NT;
+  const hairMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    uniforms: { uTime: { value: 0 }, uPx: pxU, uT: { value: new V3(TX, TY, 0.55 * TR) }, uOpacity: { value: 0 }, uFlashOn: { value: 0 } },
+    vertexShader: `attribute vec2 aS; attribute vec4 aI; attribute vec2 aJ; uniform float uTime, uPx; uniform vec3 uT;
+      varying float vSide, vHalf, vA, vFlash;
+      void main() {
+        float span = ${TB[3] - TB[2]}.0 + aI.z, head = ${TB[2]}.0 - aI.z + mod(aI.y * span + uTime * aJ.x, span);
+        float y = head + aS.x * aI.z, hw = 0.8 + 2.0 / max(uPx, 0.3);
+        float x = aI.x + aI.w * 8.0 * sin(3.14159 * aS.x) + 4.0 * sin(uTime * 0.7 + aJ.y) * aS.x + aS.y * hw;
+        vSide = aS.y; vHalf = hw; vA = smoothstep(${TB[2]}.0, ${TB[2] + 60}.0, y) * (1.0 - smoothstep(${TB[3] - 60}.0, ${TB[3]}.0, y));
+        float dx = aI.x - uT.x, f = 0.0;
+        if (abs(dx) < uT.z) { float ts = (head + 0.5 * aI.z - (uT.y - sqrt(uT.z * uT.z - dx * dx))) / aJ.x; f = ts >= 0.0 && ts < 0.4 ? 1.0 - ts / 0.4 : 0.0; }
+        vFlash = f;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(x - 1200.0, 750.0 - y, 0.0, 1.0);
+      }`,
+    fragmentShader: `uniform float uOpacity, uPx, uFlashOn; varying float vSide, vHalf, vA, vFlash;
+      void main() {
+        float a = clamp(max(0.8 * uPx, 0.75) + 0.5 - abs(vSide) * vHalf * uPx, 0.0, 1.0) * vA, fl = vFlash * uFlashOn;
+        gl_FragColor = vec4(mix(vec3(0.965, 0.953, 0.925), vec3(0.847, 0.741, 0.494), fl), a * mix(0.3, 0.9, fl) * uOpacity);
+      }` });
+  const hairMesh = new THREE.Mesh(hg, hairMat); hairMesh.frustumCulled = false; hairMesh.renderOrder = 6; fx.add(hairMesh);
+  let seenN = 0, flashN = 0;
+  function hairCount(t) {   // what the shader draws, counted for QA: hairs in the band, hairs flashing
+    seenN = flashN = 0; const n = phone.matches ? NT / 2 : NT, r = 0.55 * TR;
+    for (let i = 0; i < n; i++) {
+      const h = hairs[i], x = h[0], len = h[2], sp = h[4], span = TB[3] - TB[2] + len, head = TB[2] - len + ((h[1] * span + t * sp) % span + span) % span;
+      if (head + len > TB[2] + 30 && head < TB[3] - 30) seenN++;
+      const dx = x - TX; if (Math.abs(dx) < r) { const ts = (head + len / 2 - (TY - Math.sqrt(r * r - dx * dx))) / sp; if (ts >= 0 && ts < 0.4) flashN++; }
+    }
+  }
+
+  // S4–S5: the scalp line (core 2.4 px, a soft glow ±9 px, drawn right to left), four strands growing from it (the
+  // fourth, left, tallest: the longer anagen phase), the roots' points; on S5 the same line is the protocol's, gold under
+  // the ampoule and cream toward the devices; MITOPEN and MITOSCAN on it (their packshots, dimmed to about 40 % as seen,
+  // no gold; MITOPEN, photographed diagonally with its needle lowest, floats a little above the line)
+  const LY = 975, D_LINE = 12.4, ln = plane(D_LINE);   // (the page's three step cards on S5 start at frame y ≈ 1050)
+  const lineMat = strokeMat(0xe0c98c, 0xd8bd7e, { line: true, glow: 4.5, glowA: 0.35 });
+  const lpts = []; for (let i = 0; i <= 90; i++) lpts.push([1200 - 900 * i / 90, LY]);
+  const line = new THREE.Mesh(strokes([{ pts: lpts, core: () => 1.2, ext: 16, t: () => 0 }]), lineMat); line.renderOrder = 8; ln.add(line);
+  const SX = [1110, 950, 790, 630], SH = [300, 330, 360, 460];
+  const strands = SX.map((x, i) => {
+    const pts = [], b = i % 2 ? 1 : -1; for (let k = 0; k <= 48; k++) { const s = k / 48; pts.push([x + b * SH[i] * 0.06 * Math.sin(Math.PI * s * 1.1), LY - s * SH[i]]); }
+    const m = new THREE.Mesh(strokes([{ pts, core: s => 1.5 - s, ext: 6, t: s => s }]), strokeMat(0x9c7a2f, 0xd8bd7e)); m.renderOrder = 7; ln.add(m); return m;
+  });
+  const roots = SX.map(x => spot(ln, 0xd8bd7e, x, LY, 14, 14, 7));
+  const heroSpot = spot(ln, 0xc9a24b, 440, LY + 2, 140, 35, 6);   // the line's gold under the ampoule (S5)
+  const DIM = new THREE.Color().setRGB(0.4, 0.4, 0.4, THREE.SRGBColorSpace);   // 0.4 as seen (0.13 in linear light)
+  const board = (map, w, h, cx, lift) => {   // a device's packshot over the line, bottom centre at (cx, LY − lift)
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h).translate(0, h / 2, 0), new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, toneMapped: false, color: DIM }));
+    m.position.set(cx - 1200, 750 - LY + lift, 0); m.renderOrder = 5; ln.add(m); return m;
+  };
+  const scan = board(scanTex, 398, 270, 1010, 0), pen = board(penTex, 400 * 273 / 891, 400, 680, 24);
+  // the box's glow (S1 alive, mid-way to the kit): its own plane just behind the box, never in a key picture
+  const gb = plane(DIST + 2), glowBox = spot(gb, 0xc9a24b, 0, 0, 1, 1, 1);
+
+  // ---- poses (frame px): ampoules { x: axis at the foot, y: the foot, H: height, yaw° (0: the big word faces the
+  // camera, − turns it left), lean° (head right), pitch° (top toward the viewer), a: opacity }; the box { cx, cy: its
+  // front's centre, h: the front's height, yaw°, a }
+  const A = (x, y, H, yaw = 0, lean = 0, pitch = 0) => ({ x, y, H, yaw, lean, pitch, a: 1 });
+  // the packshot ×0.885 + (215, 435): its feet are the lowest point of each ampoule's outline (the front of the base,
+  // seen from above) and its heights tip to there; the pose's foot is the base's centre: 0.0097 H higher (fitted on A4)
+  const photoA = (x, y, H, yaw, lean) => A(x, y - 0.0097 * H, H * 0.9927, yaw, lean);
+  const PACK = [photoA(958.8, 1039.0, 365.1, 2, 0), photoA(1023.0, 1056.7, 376.1, -26, 0.6), photoA(1038.9, 1039.5, 364.2, -20, 2.5),
+    photoA(1116.4, 1065.1, 377.9, -18, 0.9), photoA(1137.2, 1048.3, 369.0, -20, 1.2)];
+  const BOX0 = { cx: 632.5, cy: 718.7, h: FH0, yaw: 0, a: 1 };
+  const KC = [695, 750], KS = 1.04;   // the kit: the packshot 1.04× round the composition's centre
+  const KIT = PACK.map(a => ({ ...a, x: KC[0] + (a.x - KC[0]) * KS, y: KC[1] + (a.y - KC[1]) * KS, H: a.H * KS }));
+  const BOX5 = { ...BOX0, cx: KC[0] + (BOX0.cx - KC[0]) * KS, cy: KC[1] + (BOX0.cy - KC[1]) * KS, h: BOX0.h * KS };
+  const BOX1 = { cx: 950, cy: 520, h: 282, yaw: 0, a: 0 };
+  // S2 and S3 stand clear of the page's own layers there (measured on the built page at 1440×900, 1512×982 and
+  // 1920×1080): on S2 the exosome field fills the left of the 3D box, so the hero and the target stand right of it; on S3
+  // the DNA helix crosses the left of the box from low left to high right, so the hero stands right of it and below,
+  // and the helix passes behind its neck, not its label. A phone has neither layer: there S3's hero fills the stage
+  const HERO = [PACK[0], A(440, 1050, 500), A(960, 1172, 680, -26, 0, 6), A(330, LY, 600), A(440, LY, 420), KIT[0]];   // S4, S5 on the line
+  const HERO2_PHONE = A(708, 1168, 820, -26, 0, 6);
+  const ROW = [440, 535, 630, 725, 820].map(x => A(x, 1075, 375));   // S6: five sessions in a row before the box
+  const SWAY = [0, 2, 4, 6, 2, 0];   // the hero's slow idle turn per screen, ± degrees (within ±30° of the photographed)
+  // S6: the row stands whole f 0.50–0.60; then the five go into the packshot one at a time from the right (A5, A4, A3,
+  // A2, A1): each goes right, to a place right of the ones still standing and left of the ones already placed, so none
+  // passes through another (each arcs forward on its way)
+  const DEPART = [4, 3, 2, 1, 0], PACK_W = 0.15, PACK_STEP = 0.055, PACK_T0 = 0.6;
+  // the state, written in place on every frame (nothing allocated per frame)
+  const amp = () => ({ x: 0, y: 0, H: 1, yaw: 0, lean: 0, pitch: 0, a: 0 });
+  const ST = { box: { cx: 0, cy: 0, h: 1, yaw: 0, a: 0 }, amps: [amp(), amp(), amp(), amp(), amp()], glowBox: 0, target: 0, targetA: 0,
+    hairs: 0, lineXL: 1200, lineA: 0, cream: 0, grow: [0, 0, 0, 0], roots: 0, pen: 0, scan: 0, back: 0, spot: 0 };
+  const setA = (o, s, a = s.a) => { o.x = s.x; o.y = s.y; o.H = s.H; o.yaw = s.yaw; o.lean = s.lean; o.pitch = s.pitch; o.a = a; return o; };
+  const mixA = (o, a, b, s) => { o.x = lerp(a.x, b.x, s); o.y = lerp(a.y, b.y, s); o.H = lerp(a.H, b.H, s); o.yaw = lerp(a.yaw, b.yaw, s);
+    o.lean = lerp(a.lean, b.lean, s); o.pitch = lerp(a.pitch, b.pitch, s); o.a = lerp(a.a, b.a, s); return o; };
+  const toPack = (o, from, to, m) => {   // into its packshot place, passing in front of the others (a forward arc in depth)
+    mixA(o, from, to, m); o.H = KH / (KH / o.H - 1.0 * Math.sin(Math.PI * m)); return o;
+  };
+
+  function story(p) {   // the state at story position p
+    const k = Math.min(4, Math.floor(p)), f = p - k, st = ST, b = st.box, H2 = phone.matches ? HERO2_PHONE : HERO[2];
+    b.cx = BOX0.cx; b.cy = BOX0.cy; b.h = BOX0.h; b.yaw = 0; b.a = 0;
+    for (let i = 0; i < 5; i++) setA(st.amps[i], PACK[i], 0);
+    st.glowBox = st.target = st.targetA = st.hairs = st.lineA = st.cream = st.roots = st.pen = st.scan = st.back = st.spot = 0; st.lineXL = 1200;
+    st.grow[0] = st.grow[1] = st.grow[2] = st.grow[3] = 0;
+    if (k === 0) {   // S1 → S2: the box and four ampoules recede and fade; the left ampoule rises and arcs to its place
+      const g = smooth(0.05, 0.7, f), al = 1 - smooth(0.1, 0.65, f);
+      b.cx = lerp(BOX0.cx, BOX1.cx, g); b.cy = lerp(BOX0.cy, BOX1.cy, g); b.h = lerp(BOX0.h, BOX1.h, g); b.a = al;
+      const s = b.h / BOX0.h;
+      for (let i = 1; i < 5; i++) { const a = PACK[i], o = setA(st.amps[i], a, al); o.x = b.cx + (a.x - BOX0.cx) * s; o.y = b.cy + (a.y - BOX0.cy) * s; o.H = a.H * s; }
+      const m = smooth(0, 0.85, f), S = PACK[0], E = HERO[1], q = smooth(0.15, 0.85, f), o = st.amps[0];
+      o.x = (1 - m) ** 2 * S.x + 2 * m * (1 - m) * 880 + m * m * E.x; o.y = (1 - m) ** 2 * S.y + 2 * m * (1 - m) * 880 + m * m * E.y;
+      o.H = lerp(S.H, E.H, q); o.yaw = lerp(S.yaw, E.yaw, q); o.lean = o.pitch = 0; o.a = 1;
+      // the glow behind the box goes while the box is still whole (through a fading box it would tint the box), the
+      // hairs come once the box has nearly gone
+      st.glowBox = 0.6 * (1 - smooth(0, 0.08, f));
+      st.hairs = smooth(0.5, 0.85, f); st.target = smooth(0.55, 1, f); st.targetA = 1;
+    } else if (k === 1) {   // S2 → S3: the target and the hairs go, the ampoule comes close and turns to its small print
+      st.hairs = 1 - smooth(0, 0.4, f); st.target = 1; st.targetA = 1 - smooth(0, 0.4, f);
+      mixA(st.amps[0], HERO[1], H2, smooth(0.2, 1, f));
+    } else if (k === 2) {   // S3 → S4: the line drawn right to left, the roots light, the strands grow one by one
+      mixA(st.amps[0], H2, HERO[3], smooth(0, 0.6, f));
+      st.lineXL = lerp(1200, 470, smooth(0.2, 0.6, f)); st.lineA = 1;
+      st.roots = smooth(0.45, 0.6, f); for (let i = 0; i < 4; i++) st.grow[i] = smooth(0.5 + i * 0.0833, 0.75 + i * 0.0833, f);
+    } else if (k === 3) {   // S4 → S5: the strands go back into the line, it runs on to the left and turns cream toward
+      const g = 1 - smooth(0, 0.35, f);   // the devices; the ampoule steps onto it; MITOPEN, then MITOSCAN come forward
+      st.grow[0] = st.grow[1] = st.grow[2] = st.grow[3] = g; st.roots = 1 - smooth(0.2, 0.4, f);
+      st.lineXL = lerp(470, 300, smooth(0.1, 0.4, f)); st.lineA = 1; st.cream = smooth(0.1, 0.4, f);
+      mixA(st.amps[0], HERO[3], HERO[4], smooth(0.2, 0.7, f));
+      st.pen = smooth(0.35, 0.8, f); st.scan = smooth(0.45, 0.9, f); st.spot = smooth(0.6, 1, f);
+    } else {   // S5 → kit: the protocol goes back; the box comes from the depth; the ampoules stand in a row before it (the
+      // four from behind its right edge: no room left of it), then one by one go into the packshot's places
+      const out = 1 - smooth(0, 0.3, f);
+      st.lineXL = 300; st.lineA = out; st.cream = 1; st.pen = st.scan = st.spot = out; st.back = 1 - out;
+      const g = smooth(0.05, 0.38, f);
+      b.cx = BOX5.cx; b.cy = lerp(BOX5.cy - 40, BOX5.cy, g); b.h = lerp(BOX5.h * 0.5, BOX5.h, g); b.a = smooth(0.05, 0.33, f);
+      st.glowBox = 0.6 * smooth(0.38, 0.55, f) * (1 - smooth(0.7, 0.95, f));   // only behind a whole box
+      const Drow = KH / ROW[0].H, Dstart = KF / BOX5.h + 0.3;
+      for (let i = 0; i < 5; i++) {
+        const o = st.amps[i], w0 = PACK_T0 + DEPART.indexOf(i) * PACK_STEP, m = smooth(w0, w0 + PACK_W, f);
+        if (m > 0) { toPack(o, ROW[i], KIT[i], m); continue; }
+        if (i === 0) { mixA(o, HERO[4], ROW[0], smooth(0.15, 0.45, f)); continue; }
+        // from behind the box's right edge: first forward (still beside the box), then left to its slot; whole by f 0.50
+        const u = clamp((f - 0.12 - 0.06 * (i - 1)) / 0.2);
+        setA(o, ROW[i], smooth(0, 0.25, u)); o.x = lerp(1125, ROW[i].x, smooth(0.25, 1, u)); o.H = KH / lerp(Dstart, Drow, smooth(0, 0.25, u));
+      }
+    }
+    return st;
+  }
+
+  // ---- applying a state
+  const camAt = new V3(), DEPTH = new Float32Array(5), RANK = [0, 1, 2, 3, 4], farFirst = (i, j) => DEPTH[j] - DEPTH[i];
+  const last = { hx: 0, hy: 0, hH: 0, hyaw: 0, threads: 0, flashes: 0, strands: 0, inPlace: 0, glow: 0 };   // for QA
+  function pose(p, t, still) {
+    const st = story(p), live = still ? 0 : 1 - smooth(4.85, 5, p);
+    const k = Math.min(4, Math.floor(p)), sw = lerp(SWAY[k], SWAY[k + 1], p - k) * Math.sin(t * 0.45) * live, h0 = st.amps[0];
+    h0.yaw += sw; h0.y -= 3 * Math.sin(t * 0.8) * live * smooth(0.5, 1, p) * (1 - smooth(4, 4.5, p));
+    camAt.copy(camera.position);
+    // the box
+    const b = st.box; box.visible = b.a > 0.004;
+    if (box.visible) {
+      const D = KF / b.h; at(b.cx, b.cy, D, box.position); box.scale.setScalar(FHW);
+      box.quaternion.copy(lay.quaternion); box.rotateY(rad(b.yaw + Math.sin(t * 0.4 + 1) * live));   // its front parallel to the
+      // picture, as photographed (a rectangle within 1–3 px; facing the eye instead skews it and the camera's 4° tilt slants it)
+      for (const m of boxMats) { m.opacity = b.a; m.depthWrite = b.a > 0.99; }
+    }
+    // the ampoules, drawn back to front
+    for (let i = 0; i < 5; i++) {
+      const s = st.amps[i], a = amps[i], g = a.g, m = a.m; g.visible = s.a > 0.004; DEPTH[i] = KH / s.H; if (!g.visible) continue;
+      at(s.x, s.y, DEPTH[i], g.position);
+      g.rotation.set(rad(s.pitch), Math.atan2(camAt.x - g.position.x, camAt.z - g.position.z) + rad(s.yaw), -rad(s.lean));
+      m.back.opacity = m.front.opacity = m.liquid.opacity = m.ring.opacity = m.print.opacity = s.a; m.surface.opacity = SURF * s.a; m.meniscus.opacity = MEN * s.a;
+    }
+    RANK.sort(farFirst);
+    for (let r = 0; r < 5; r++) { const L = amps[RANK[r]].layer; for (let j = 0; j < L.length; j++) L[j].renderOrder = 100 + r * 10 + j; }
+    // the graphics
+    targetMat.uniforms.uDraw.value = st.target; targetMat.uniforms.uOpacity.value = st.targetA; target.visible = st.target > 0 && st.targetA > 0.004;
+    hairMat.uniforms.uOpacity.value = st.hairs; hairMat.uniforms.uTime.value = t; hairMesh.visible = st.hairs > 0.004;
+    hairMat.uniforms.uFlashOn.value = smooth(0.8, 1, st.target) * st.targetA; hg.instanceCount = phone.matches ? NT / 2 : NT;
+    const lu = lineMat.uniforms; lu.uXL.value = st.lineXL; lu.uCream.value = st.cream; lu.uOpacity.value = st.lineA; line.visible = st.lineA > 0.004 && st.lineXL < 1190;
+    for (let i = 0; i < 4; i++) { const m = strands[i]; m.visible = st.grow[i] > 0.002; m.material.uniforms.uDraw.value = st.grow[i]; m.material.uniforms.uSway.value = 6 * Math.sin(t * 0.6 + i * 1.7) * live; }
+    for (const m of roots) { m.material.uniforms.uOpacity.value = 0.8 * st.roots; m.visible = st.roots > 0.004; }
+    heroSpot.material.uniforms.uOpacity.value = 0.55 * st.spot; heroSpot.visible = st.spot > 0.004;
+    pen.visible = st.pen > 0.004; pen.material.opacity = st.pen; pen.scale.setScalar(lerp(0.6, 1, Math.min(1, st.pen + st.back)) * (1 - 0.2 * st.back));
+    scan.visible = st.scan > 0.004; scan.material.opacity = st.scan; scan.scale.setScalar(lerp(0.6, 1, Math.min(1, st.scan + st.back)) * (1 - 0.2 * st.back));
+    const gl = still ? 0 : st.glowBox; glowBox.visible = gl > 0.004;
+    if (glowBox.visible) {   // just behind the box, a little right of its centre (the canvas edge is 49 px left of the box)
+      place(gb, KF / b.h + 0.5); const s = b.h / FH0;
+      glowBox.position.set(b.cx + 60 * s - 1200, 750 - b.cy, 0); glowBox.scale.set(500 * s, 400 * s, 1); glowBox.material.uniforms.uOpacity.value = gl;
+    }
+    if (st.hairs > 0.004) hairCount(t); else seenN = flashN = 0;
+    last.hx = h0.x; last.hy = h0.y - h0.H / 2; last.hH = h0.H; last.hyaw = h0.yaw; last.threads = seenN;
+    last.flashes = hairMat.uniforms.uFlashOn.value > 0.5 ? flashN : 0; last.strands = (st.grow[0] + st.grow[1] + st.grow[2] + st.grow[3]) / 4;
+    last.inPlace = 0; for (let i = 0; i < 5; i++) { const s = st.amps[i]; if (Math.abs(s.x - KIT[i].x) + Math.abs(s.H - KIT[i].H) < 0.5 && s.a > 0.99) last.inPlace++; }
+    last.glow = gl;
+  }
+
+  // ---- drawing into the engine's box: the full frame is the cover; the canvas shows the box's part of it
+  // the density drawn: a phone's stage is small, so it draws at the screen's full density (≤ 3, as the MASK page), a
+  // desktop at the engine's (≤ 2); long frames lower it under a cap (pace), which a rotation keeps
+  const phone = matchMedia('(max-width: 899px)'), full = view => (phone.matches ? Math.min(3, devicePixelRatio || 1) : view.dpr);
+  let cap = Infinity, pr = 0, size = '', renders = 0, lastT = 0, lastP = 0, lastView = null, trial = null, capped = false;
+  const LADDER = [2, 1.5, 1.25], win = [];
+  function pace(now, still) {   // fewer pixels when frames run long: a 90-frame median over 24 ms tries the next cap that
+    if (still || capped) { lastT = now; return; }   // cuts ≥ 20 % of the pixels; the next window keeps it only if frames got
+    const dt = lastT ? now - lastT : 0; lastT = now;   // ≥ 20 % shorter; if not, the rate is a cap (low-power 30 Hz), not
+    if (!dt || dt > 400) return;   // the GPU: back, no more tries. A gap over 400 ms is a pause (hidden, idle), not a frame
+    win.push(dt); if (win.length < 90) return;
+    const m = win.slice().sort((a, b) => a - b)[45], mean = win.reduce((a, v) => a + Math.min(v, 100), 0) / win.length; win.length = 0;
+    if (trial) { if (mean > trial.mean * 0.8) { cap = trial.cap; capped = true; } trial = null; return; }   // the mean: vsync-
+    const next = LADDER.find(q => (q / pr) ** 2 <= 0.8);   // quantised medians would hide a 30 → 18 ms gain
+    if (m > 24 && next) { trial = { cap, mean }; cap = next; }
+  }
+  function fit(view, pr) {
+    const id = `${view.box.w}x${view.box.h}@${pr}`;
+    if (id !== size) { renderer.setPixelRatio(pr); renderer.setSize(view.box.w, view.box.h, false); size = id; }
+    camera.aspect = view.cover.w / view.cover.h;
+    camera.setViewOffset(view.cover.w, view.cover.h, view.box.x - view.cover.x, view.box.y - view.cover.y, view.box.w, view.box.h);
+    camera.updateProjectionMatrix();
+    pxU.value = pr * view.cover.w / 2400;   // device px per frame px: the strokes keep ≥ 1.5 device px
+  }
+  function render(p, view) { pr = Math.min(full(view), cap); fit(view, pr); pose(p, view.still ? 0 : view.t, view.still); renderer.render(scene, camera); renders++; }
+  function draw(p, view) { pace(performance.now(), view.still); lastP = p; lastView = view; render(p, view); }
+  let kits = 0;   // kit pictures rendered (QA: none on a phone, none for a toolbar)
+  function kit(view) {   // the kit pose rendered once into a picture (the offer card, the flight into it), then the current pose again
+    kits++;
+    fit(view, view.dpr); pose(5, 0, true); renderer.render(scene, camera);
+    const c = document.createElement('canvas'); c.width = canvas.width; c.height = canvas.height; c.getContext('2d').drawImage(canvas, 0, 0);
+    if (lastView) render(lastP, lastView);
+    return c;
+  }
+  function dispose() {
+    canvas.removeEventListener('webglcontextrestored', restored);
+    const mats = new Set();
+    scene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) mats.add(o.material); });
+    for (const m of mats) m.dispose();
+    for (const t of [faceTex, metalTex, printTex, scanTex, penTex, roomEnv, glassEnvRT]) t.dispose();
+    renderer.dispose();
+  }
+  const r1 = v => Math.round(v * 10) / 10, r2 = v => Math.round(v * 100) / 100;
+  const state = () => ({ quality: pr, cap, capped, pixelRatio: renderer.getPixelRatio(), width: canvas.width, height: canvas.height, renders, loaded,
+    version, kits, lastP, hero: { x: r1(last.hx), y: r1(last.hy), H: r1(last.hH), yaw: r1(last.hyaw) }, threads: last.threads,
+    flashes: last.flashes, strands: r2(last.strands), inPlace: last.inPlace, glow: r2(last.glow) });
+  return { draw, kit, dispose, state, animated: true };
+}
+
+const $ = id => document.getElementById(id), q = s => document.querySelector(s);
+const story = createFrameStory({
+  config: {"runs":[{"a":"v1-meet","b":"v2-why","n":60,"box":[0.07,0.19,0.52,0.81]},{"a":"v2-why","b":"v3-inside","n":60,"box":[0.07,0.19,0.52,0.81]},{"a":"v3-inside","b":"v4-feel","n":60,"box":[0.07,0.19,0.52,0.81]},{"a":"v4-feel","b":"v5-protocol","n":60,"box":[0.07,0.19,0.52,0.81]},{"a":"v5-protocol","b":"v6-kit","n":60,"box":[0.07,0.19,0.52,0.81]}],"tiers":[],"cells":["c01","c02","c03","c04","c05","c06","c07","c08","c09","c10"],"mols":["m01","m02","m03","m04"],"helix":true}, scene: (() => { try { if (!THREE) throw 0; return createScene(THREE, { canvas: $('seq'), base: document.baseURI, onLoad: () => story.measure() }); }
+  catch (e) { document.documentElement.classList.add('no-gl'); return null; } })(), canvas: $('seq'), sections: ['meet', 'why', 'inside', 'feel', 'protocol', 'offer'].map($), header: q('.top'),
+  card: q('.kitcard'), bg: q('.bg'), plate: q('.plate'), helix: q('.helix'), cellLayers: [q('.cells.back'), q('.cells.front')],
+  tier: window.__SEQ_TIER, noWorker: !!window.__SEQ_NO_WORKER });
+window.__seq = story.state;   // for the QA script
+</script>
+<script type="module">   // a module, as it always was; it does not use the story module (which, on a 3D-scene page, waits for three.js)
+// page: reveal on scroll, the dock, the specialists filter and the lead form
+(function () {
+  var root = document.documentElement, reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var secs = Array.prototype.slice.call(document.querySelectorAll('[data-st]')), dock = Array.prototype.slice.call(document.querySelectorAll('.dock a'));
+  function onScroll() {
+    var mid = window.innerHeight / 2, best = 0;
+    secs.forEach(function (s) { if (s.getBoundingClientRect().top <= mid) best = +s.dataset.st; });
+    best = Math.min(best, dock.length - 1);
+    dock.forEach(function (a) { var on = +a.dataset.i === best; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current'); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  var bar = document.querySelector('.bar'), offer = document.getElementById('offer');   // phone: the bar steps aside at the offer
+  if (bar && offer && 'IntersectionObserver' in window) new IntersectionObserver(function (es) { bar.classList.toggle('away', es[0].isIntersecting); }).observe(offer);
+  var rv = document.querySelectorAll('.rv');
+  if (reduce || !('IntersectionObserver' in window)) rv.forEach(function (el) { el.classList.add('in'); });
+  else {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -80px 0px' });
+    rv.forEach(function (el) { io.observe(el); });
+  }
+  var chips = Array.prototype.slice.call(document.querySelectorAll('.fchip')), cards = Array.prototype.slice.call(document.querySelectorAll('.spec'));
+  function filter(tag) {
+    chips.forEach(function (c) { c.setAttribute('aria-pressed', String(c.dataset.tag === tag)); });
+    cards.forEach(function (c) { c.hidden = !(tag === '*' || c.dataset.tags.split('|').indexOf(tag) >= 0); });
+    document.querySelector('.spec-empty').hidden = cards.some(function (c) { return !c.hidden; });
+  }
+  chips.forEach(function (c) { c.addEventListener('click', function () { filter(c.dataset.tag); }); });
+
+  var dlg = document.getElementById('lead');
+  if (!dlg || typeof dlg.showModal !== 'function') return;   // no dialog support: the buttons stay WhatsApp links
+  var form = dlg.querySelector('form'), body = dlg.querySelector('.lead-body'), done = dlg.querySelector('.lead-done');
+  var fail = dlg.querySelector('.lead-fail'), submit = form.querySelector('.submit'), consent = form.elements.consent;
+  var ERR = JSON.parse(document.getElementById('lead-errors').textContent), NAMES = ['name', 'profession', 'email', 'phone'];
+  var opener = null, tried = false, sending = false;
+  function phoneOk(v) { var d = v.replace(/[\s\-().]/g, ''); return /^0\d{8,9}$/.test(d) || /^\+972[1-9]\d{7,8}$/.test(d); }
+  function check(name) {
+    var el = form.elements[name], v = el.value.trim(), msg = '';
+    if (name === 'name') msg = !v ? ERR.name_required : v.length < 3 ? ERR.name_length : '';
+    if (name === 'profession') msg = !v ? ERR.profession_required : v.length < 3 ? ERR.profession_length : '';
+    if (name === 'email') msg = !v ? ERR.email_required : !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) ? ERR.email_invalid : '';
+    if (name === 'phone') msg = !v ? ERR.phone_required : !phoneOk(v) ? ERR.phone_length : '';
+    el.setAttribute('aria-invalid', String(!!msg)); document.getElementById('e-' + name).textContent = msg;
+    return !msg;
+  }
+  function checkConsent() {
+    consent.setAttribute('aria-invalid', String(!consent.checked));
+    document.getElementById('e-consent').textContent = consent.checked ? '' : ERR.consent_required;
+    return consent.checked;
+  }
+  NAMES.forEach(function (n) { form.elements[n].addEventListener('input', function () { if (tried) check(n); }); });
+  consent.addEventListener('change', function () { if (tried) checkConsent(); });
+  function setBusy(on) {
+    sending = on; form.classList.toggle('busy', on); submit.disabled = on; consent.disabled = on;
+    if (on) form.setAttribute('aria-busy', 'true'); else form.removeAttribute('aria-busy');
+    NAMES.forEach(function (n) { form.elements[n].readOnly = on; });
+  }
+  function sendLead(payload) {   // preview: waits 1.2 s and succeeds (window.__leadFail = true shows the error state)
+    return new Promise(function (resolve, reject) { setTimeout(function () { if (window.__leadFail) reject(new Error('preview')); else resolve(payload); }, 1200); });
+  }
+  form.addEventListener('submit', function (e) {
+    e.preventDefault(); if (sending) return; tried = true;
+    var ok = NAMES.map(check).every(Boolean); ok = checkConsent() && ok;
+    if (!ok) { var bad = form.querySelector('[aria-invalid="true"]'); if (bad) bad.focus(); return; }
+    var payload = { name: form.elements.name.value.trim(), phone: form.elements.phone.value.trim(), email: form.elements.email.value.trim(), profession: form.elements.profession.value.trim(), source: 'EXOSIGNAL HAIR page' };
+    fail.hidden = true; setBusy(true);
+    sendLead(payload).then(function () { setBusy(false); body.hidden = true; done.hidden = false; done.focus(); }, function () { setBusy(false); fail.hidden = false; });
+  });
+  function reset() {
+    form.reset(); tried = false; body.hidden = false; done.hidden = true; fail.hidden = true;
+    NAMES.forEach(function (n) { form.elements[n].removeAttribute('aria-invalid'); document.getElementById('e-' + n).textContent = ''; });
+    consent.removeAttribute('aria-invalid'); document.getElementById('e-consent').textContent = '';
+  }
+  function open(e) { e.preventDefault(); opener = e.currentTarget; if (!done.hidden) reset(); dlg.showModal(); root.classList.add('form-open'); form.elements.name.focus(); }
+  function finish() { if (!root.classList.contains('form-open')) return; root.classList.remove('form-open'); if (opener) opener.focus(); }
+  function close() { if (dlg.open) dlg.close(); finish(); }
+  document.querySelectorAll('[data-lead]').forEach(function (a) { a.addEventListener('click', open); });
+  dlg.querySelectorAll('[data-close]').forEach(function (b) { b.addEventListener('click', close); });
+  dlg.addEventListener('click', function (e) { if (e.target === dlg) close(); });
+  dlg.addEventListener('cancel', function (e) { e.preventDefault(); close(); });
+  dlg.addEventListener('close', finish);
+})();
+</script>
+</body></html>
