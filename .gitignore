@@ -3,3 +3,6 @@ tools/aquarium-test/node_modules/
 tools/aquarium-test/out/
 # Видео-копии задника для headless-тестов (VP9) и LUT — генерирует tools/aquarium-test/make_media.sh
 tools/aquarium-test/media/
+# Сборка и выпуск приложения (build.sh, scripts/release.sh): .app, DMG, ответы нотаризации
+macos-app/build/
+macos-app/dist/

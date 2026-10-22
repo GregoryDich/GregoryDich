@@ -6,7 +6,12 @@ import Cocoa
 // apps report that the occlusion notification is not reliable for a desktop-level window behind a full-screen app.
 // Reads the window list (CGWindowListCopyWindowInfo: bounds, layer, alpha, owner PID — never titles or owner names,
 // no Screen Recording permission, no prompt) on events (Space switch, app activation, occlusion change, screen
-// change) and on a slow poll, at most once a second; never per frame.
+// change) and on a slow poll, at most once a second; never per frame. The read itself runs off the main thread
+// (≈ 7 ms on the owner's Mac, 22.10): the main thread is the one WebKit may need for the aquarium's frames.
+// Its verdict is only a candidate: WallpaperWindow's sensor (a clear window over the usable area) overrules it when the
+// aquarium still shows through — a translucent window (kCGWindowAlpha is the window's alphaValue, not its content's:
+// a terminal with background opacity reads 1.0) or Show Desktop (windows moved by a WindowServer transform keep their
+// bounds). See AppDelegate.pauseReason.
 
 /// The pure part (geometry and hysteresis), apart from AppKit so it can be tested anywhere.
 enum Coverage {
@@ -66,10 +71,20 @@ enum Coverage {
     }
 }
 
+/// One window-list read: the displays (taken from NSScreen on the main thread) in, the shares out. Handed to a
+/// background thread and back (performSelector), so it carries values only and is touched by one thread at a time.
+final class CoverageJob: NSObject {
+    let displays: [Coverage.Display]
+    var shares: [CGDirectDisplayID: Double] = [:]
+    var ms = 0.0
+    init(displays: [Coverage.Display]) { self.displays = displays }
+}
+
 /// Which displays a full-screen or maximised window covers (`covered`), kept up to date while `active` (pages shown,
 /// displays awake). Every check also calls `onCheck`: AppDelegate re-reads each window's occlusion state then (a lost
 /// "visible again" notification must not keep a page paused) and re-applies the pauses.
-/// Main thread only, like AppDelegate that owns it (checks run via perform(…afterDelay:) on the main run loop).
+/// Main thread only, like AppDelegate that owns it (checks run via perform(…afterDelay:) on the main run loop), except
+/// `readList`, which runs on a background thread and touches nothing but its job (`CoverageJob`).
 /// Deliberately NOT `@MainActor`: with the real macOS SDK AppDelegate is not actor-isolated in Swift 5 mode, and its
 /// synchronous calls into a `@MainActor` class are hard errors on Apple's compiler (owner's build, 22.10).
 final class CoverageMonitor: NSObject {
@@ -90,6 +105,7 @@ final class CoverageMonitor: NSObject {
     private var lastMs = 0.0
     private var maxMs = 0.0
     private var lastShares: [CGDirectDisplayID: Double] = [:]
+    private var measuring = false                    // a read in flight on a background thread
 
     private static var uptime: TimeInterval { ProcessInfo.processInfo.systemUptime }
 
@@ -130,15 +146,42 @@ final class CoverageMonitor: NSObject {
         Log.info("display \(id): visible again — full-screen verdict dropped until the next check")
     }
 
+    /// Main thread: the displays now; the window list is read on a background thread (`readList`) and the verdict
+    /// taken in `measured`. A check while a read is in flight is skipped (`measured` schedules the next one).
     @objc private func check() {
         dueAt = nil
-        guard active else { return }
+        guard active, !measuring else { return }
+        let displays = CoverageMonitor.displays()
+        guard windowListEnabled else {
+            var none: [CGDirectDisplayID: Double] = [:]
+            for d in displays { none[d.id] = 0 }
+            finish(shares: none, ms: 0)
+            return
+        }
+        measuring = true
+        performSelector(inBackground: #selector(readList(_:)), with: CoverageJob(displays: displays))
+    }
+
+    /// Background thread (a new one per read, every ≥ 1 s): CGWindowListCopyWindowInfo and the running-apps walk are
+    /// thread-safe; the result goes back to the main thread in the common run-loop modes (also while a menu is open).
+    @objc private func readList(_ job: CoverageJob) {
         let start = CoverageMonitor.uptime
-        let shares = measure()
-        let end = CoverageMonitor.uptime
-        lastCheck = end
+        job.shares = CoverageMonitor.measure(displays: job.displays)
+        job.ms = (CoverageMonitor.uptime - start) * 1000
+        performSelector(onMainThread: #selector(measured(_:)), with: job, waitUntilDone: false,
+                        modes: [RunLoop.Mode.common.rawValue])
+    }
+
+    @objc private func measured(_ job: CoverageJob) {
+        measuring = false
+        guard active else { return }                 // stopped meanwhile (sleep, layers test): setActive re-requests
+        finish(shares: job.shares, ms: job.ms)
+    }
+
+    private func finish(shares: [CGDirectDisplayID: Double], ms: Double) {
+        lastCheck = CoverageMonitor.uptime
         checks += 1
-        lastMs = (end - start) * 1000
+        lastMs = ms
         maxMs = max(maxMs, lastMs)
         lastShares = shares
         let hits = Set(shares.compactMap { $0.value >= Coverage.threshold ? $0.key : nil })
@@ -157,20 +200,20 @@ final class CoverageMonitor: NSObject {
         onCheck?()
     }
 
-    /// Share of each display's usable area under its biggest counting window (all 0 when the window list is off).
-    private func measure() -> [CGDirectDisplayID: Double] {
+    /// Main thread (NSScreen): each display's usable area in CG global coordinates.
+    private static func displays() -> [Coverage.Display] {
         let screens = NSScreen.screens
-        guard let top = screens.first?.frame.maxY else { return [:] }   // the main display's top edge: CG y = 0
+        guard let top = screens.first?.frame.maxY else { return [] }   // the main display's top edge: CG y = 0
         var displays: [Coverage.Display] = []
         for s in screens {
             guard let id = Diagnostics.displayID(s) else { continue }
             displays.append(Coverage.Display(id: id, area: Coverage.cgRect(s.visibleFrame, top: top)))
         }
-        guard windowListEnabled else {
-            var none: [CGDirectDisplayID: Double] = [:]
-            for d in displays { none[d.id] = 0 }
-            return none
-        }
+        return displays
+    }
+
+    /// Any thread: share of each display's usable area under its biggest counting window.
+    private static func measure(displays: [Coverage.Display]) -> [CGDirectDisplayID: Double] {
         let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID)
             as? [[String: Any]] ?? []
         let windows: [Coverage.Window] = list.compactMap { w in
@@ -189,7 +232,8 @@ final class CoverageMonitor: NSObject {
                                ownPID: ProcessInfo.processInfo.processIdentifier, regularPIDs: regular)
     }
 
-    /// For «Скопировать диагностику» (`host.coverage`): shares and timings only — no window or app names.
+    /// For «Скопировать диагностику» (`host.coverage`): shares and timings only — no window or app names. The ms are
+    /// the background read's (not main-thread time any more).
     func snapshot() -> [String: Any] {
         var shares: [String: Double] = [:]
         for (id, s) in lastShares { shares[String(id)] = (s * 1000).rounded() / 1000 }

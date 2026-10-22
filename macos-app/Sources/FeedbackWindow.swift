@@ -67,6 +67,7 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
     private let snapshotThumb = NSImageView()
     private let snapshotCaption = NSTextField(wrappingLabelWithString: "")
     private let diagBox = NSButton(checkboxWithTitle: FBText.diagToggle, target: nil, action: nil)
+    private let diagHint = NSTextField(wrappingLabelWithString: FBText.diagBugHint)
     private let diagDisclosure = NSButton(title: "", target: nil, action: nil)
     private let diagScroll: NSScrollView
     private let diagText: NSTextView
@@ -87,8 +88,6 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
     private var diagnostics: DiagnosticsReport?      // the instance shown is the instance sent
     private var collectingDiagnostics = false
     private var diagnosticsToken = 0
-    private var diagTouched = false
-    private var diagAutoOn = false                  // switched ON by «Ошибка», not by the user
     private var diagExpanded = false
     private var snapshotJPEG: Data?
     private var snapshotInfo: FeedbackReport.Snapshot?
@@ -284,10 +283,13 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
         snapshotCaption.isHidden = true
         let snapshotGroup = column([snapshotBox, snapshotThumb, snapshotCaption], spacing: 6)
 
-        // 7. Diagnostics (default OFF; auto-ON for «Ошибка») + "what will be sent" disclosure
+        // 7. Diagnostics (default OFF, never switched on by the app — consent must be the user's own tick; «Ошибка»
+        // only shows a hint) + "what will be sent" disclosure
         diagBox.target = self
         diagBox.action = #selector(diagToggled)
         diagBox.state = .off
+        styleText(diagHint, size: 11, color: .secondaryLabelColor, width: w)
+        diagHint.isHidden = true
         styleLink(diagDisclosure, FBText.diagShow)
         diagDisclosure.target = self
         diagDisclosure.action = #selector(diagDisclosureClicked)
@@ -299,7 +301,7 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
         diagText.delegate = self
         diagText.setAccessibilityLabel(FBText.diagToggle)
         diagScroll.isHidden = true
-        let diagGroup = column([diagBox, diagDisclosure, diagScroll], spacing: 6)
+        let diagGroup = column([diagBox, diagHint, diagDisclosure, diagScroll], spacing: 6)
 
         configureColumn(form, [intro, topicGroup, fishGroup, messageGroup, emailGroup, marketingRow,
                                snapshotGroup, diagGroup], spacing: 12)
@@ -456,19 +458,10 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
 
     @objc private func categoryChanged() {
         fishGroup.isHidden = selectedCategory != .fishRequest
-        var autoOn = false
-        if selectedCategory == .bug && !diagTouched && diagBox.state == .off {
-            diagBox.state = .on
-            diagAutoOn = true
-            autoOn = true
-            collectDiagnostics()
-        } else if selectedCategory != .bug && diagAutoOn && !diagTouched {
-            diagBox.state = .off                     // a mis-click on «Ошибка» leaves nothing attached
-            diagAutoOn = false
-        }
-        contentChanged()
+        let hintWasHidden = diagHint.isHidden
+        contentChanged()                             // validate() shows the diagnostics hint for «Ошибка»
         relayout()
-        if autoOn { formScroll.flashScrollers() }    // hint that the form continues below
+        if hintWasHidden && !diagHint.isHidden { formScroll.flashScrollers() }   // the form continues below
     }
 
     @objc private func consentChanged() {
@@ -607,6 +600,11 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
             diagDisclosure.isHidden = diagOff
             diagLayout = true
         }
+        let hintHidden = !(diagOff && selectedCategory == .bug)   // «Ошибка», diagnostics off: say why they help
+        if diagHint.isHidden != hintHidden {
+            diagHint.isHidden = hintHidden
+            diagLayout = true
+        }
         if diagLayout { relayout() }
 
         let limited = FeedbackRateLimit.isLimited
@@ -657,17 +655,11 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate, NSTe
         // Only a fresh form gets the last address: an e-mail the user cleared in a draft stays cleared.
         if draft == nil, trimmedEmail.isEmpty, let last = FeedbackDraft.lastEmail { emailField.stringValue = last }
         fishGroup.isHidden = selectedCategory != .fishRequest
-        if selectedCategory == .bug {                             // same auto-ON rule as a fresh choice
-            diagBox.state = .on
-            diagAutoOn = true
-        }
         emailError.isHidden = emailOK
     }
 
     // MARK: - Diagnostics
     @objc private func diagToggled() {
-        diagTouched = true
-        diagAutoOn = false
         if diagBox.state == .on { collectDiagnostics() }      // re-collect when switched ON
         validate()
     }

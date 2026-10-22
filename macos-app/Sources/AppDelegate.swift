@@ -311,13 +311,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// Why the page on display `id` should be paused, nil = run (high/low by power). First the global pauses —
     /// displays asleep, the layers test open — then, never for the page the performance test runs on (a pause would
     /// stall it), the per-display ones: a full-screen or maximised window on that display (window list; named first:
-    /// behind a full-screen app occlusion may say "covered" too, a moment later) and the desktop not visible for
+    /// behind a full-screen app occlusion may say "covered" too, a moment later) — unless the page's sensor sees some
+    /// of the usable area (a translucent window, Show Desktop: the aquarium shows) — and the desktop not visible for
     /// > 2 s (occlusion: screen saver, lock screen, a window over the whole screen including the menu bar strip).
     private func pauseReason(display id: CGDirectDisplayID, covered: Bool) -> String? {
         if displaysAsleep { return "sleep" }
         if layersTest != nil { return "layersTest" }
         if id == probeDisplay { return nil }
-        if coverage.covered.contains(id) { return "fullscreen" }
+        if coverage.covered.contains(id), !(windows[id]?.usableAreaVisible ?? false) { return "fullscreen" }
         if covered { return "covered" }
         return nil
     }
@@ -340,7 +341,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         coverage.setActive(!displaysAsleep && layersTest == nil && !windows.isEmpty)
     }
 
-    /// A page's occlusion changed (a notification, or covered after the 2-s grace). Visible again after not being
+    /// A page's occlusion changed (a notification, or covered after the 2-s grace), or its sensor's. Visible again after not being
     /// visible — e.g. back from a full-screen Space — drops the window list's verdict for that display at once (resume
     /// now, not at the next check); the check soon decides again (a maximised window there re-pauses in ≈ 1–2 s).
     /// Parked pages are not ours to decide.
@@ -460,7 +461,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             "probeRunning": probeRunning,
             // R12: full-screen / maximised windows per display (shares of the usable area, timings; no names).
             "coverage": coverage.snapshot(),
-            "fullscreenCheck": AppSettings.fullscreenCheck,
+            "fullscreenCheck": AppSettings.fullscreenCheck, "coverSensor": AppSettings.coverSensor,
             "primaryDisplay": primary.map { Int($0) } ?? -1,
             "parkedDisplays": parked.map { ["display": Int($0.key), "parkedAgoSec": Int(Date().timeIntervalSince($0.value.since))] },
         ]

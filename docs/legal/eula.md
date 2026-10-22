@@ -26,16 +26,31 @@
 2. Разрешение на скриншоты и короткие записи экрана для обзоров и соцсетей (раздел 3) — совместимо ли
    с лицензиями контента.
 3. Закон о стандартных договорах (חוק החוזים האחידים, התשמ"ג-1982): не признает ли суд ограничение ответственности,
-   отказ от гарантий или выбор суда «ущемляющим условием». Нужна ли версия на иврите.
+   отказ от гарантий или выбор суда «ущемляющим условием». Нужна ли версия на иврите. Отдельно — условия из
+   презумпций ст. 4 (право поставщика в одностороннем порядке прекратить, приостановить или изменить свои основные
+   обязательства), уже смягчённые в тексте:
+   а) лицензия больше не «отзывная» — прекращается только по разделу 13;
+   б) замена или удаление Контента (раздел 4) — для купленного Платного контента без равноценной замены возврат денег
+      (п. 5.7);
+   в) новая редакция при продолжении использования (п. 16.5) — без согласия не ухудшает условия уже купленного;
+   г) суд по месту жительства потребителя — и для потребителей в Израиле (раздел 14).
 4. Возвраты: в тексте — добровольные 14 дней (ROADMAP R13); как это сочетается со ст. 14ג закона о защите прав
-   потребителя (исключение для цифрового контента) и с правом отказа в ЕС; кто оформляет возврат — мы или продавец.
+   потребителя (исключение для цифрового контента) и с правом отказа в ЕС; кто даёт добровольный возврат за 14 дней —
+   продавец (merchant of record: Paddle, Gumroad) или вы. Покупки в Mac App Store возвращает только Apple (п. 5.6).
 5. Нужен ли пункт об экспортном контроле (раздел 12).
 
-**Где показывать:**
-- ссылка на соглашение рядом с кнопкой «Скачать» на странице продукта (R14);
-- по желанию — файл с текстом в DMG (сейчас `macos-app/scripts/release.sh` кладёт в DMG только приложение
-  и ссылку на «Программы»);
-- для Mac App Store (R16) — стандартное соглашение Apple или этот текст, дополненный минимальными условиями Apple.
+**Где показывать — обязательно до первого публичного DMG.** Без этого фраза «Устанавливая или используя Приложение,
+вы принимаете…» — browse-wrap, на который запреты раздела 3 (извлечение Контента, обучение ИИ) надёжно не опираются:
+1. страница продукта (R14), рядом с кнопкой «Скачать»: «Скачивая, вы принимаете Лицензионное соглашение и Политику
+   конфиденциальности» — со ссылками;
+2. файл `License.txt` (русская и английская версии) в DMG рядом с приложением: окончательный текст положить в
+   `macos-app/Resources/License.txt` — `macos-app/scripts/release.sh` кладёт его в DMG и без `--internal`
+   останавливается, если файла нет или в нём остались «[ВЛАДЕЛЕЦ: …]» / «ЧЕРНОВИК»;
+3. в приложении — решить: пункт меню рыбки «Лицензия и приватность…», открывающий опубликованные адреса (новый ключ
+   `Info.plist`, например `AQEulaURL`, рядом с `AQPrivacyPolicyURL`), или окно при первом запуске с кнопкой «Принимаю».
+
+Первую фразу соглашения («Устанавливая или используя…») оставлять, только когда есть пункты 1 и 2.
+Для Mac App Store (R16) — стандартное соглашение Apple или этот текст, дополненный минимальными условиями Apple.
 
 **Связь с кодом и ROADMAP:** запрет извлекать медиа опирается на R9 (упаковка медиа в контейнер);
 право заменять контент обновлением — на R7/R8 (любой ассет заменяется обновлением); обработка фото «своей рыбки»
@@ -64,8 +79,8 @@
 
 ### 2. Лицензия
 
-Мы даём вам ограниченную, неисключительную, непередаваемую и отзывную лицензию без права сублицензирования:
-установить Приложение на компьютеры Mac, которыми вы владеете или управляете, и пользоваться им для личных целей
+Мы даём вам ограниченную, неисключительную и непередаваемую лицензию без права сублицензирования, которая
+прекращается только по разделу 13: установить Приложение на компьютеры Mac, которыми вы владеете или управляете, и пользоваться им для личных целей
 или для внутренних нужд вашей организации. [ВЛАДЕЛЕЦ: разрешать ли показ на экранах в общественных местах —
 решить с юристом после сверки с лицензиями Контента.]
 
@@ -112,8 +127,10 @@
 5. Платный контент можно бесплатно посмотреть в режиме «Предпросмотр» в течение [ВЛАДЕЛЕЦ: 15 минут].
 6. **Возврат денег:** в течение 14 дней с покупки, без объяснения причин. Напишите на [ВЛАДЕЛЕЦ: адрес поддержки].
    Права, которые даёт вам закон вашей страны (например, израильский закон о защите прав потребителя или правила
-   ЕС), сохраняются.
-7. Если нам придётся заменить купленный Контент из-за условий лицензии, мы постараемся дать равноценную замену.
+   ЕС), сохраняются. Покупки в Mac App Store возвращает Apple по своим правилам (reportaproblem.apple.com); сами мы
+   вернуть их не можем.
+7. Если нам придётся заменить купленный Контент из-за условий лицензии, мы постараемся дать равноценную замену. Если
+   равноценной замены нет, по вашему запросу вернём деньги за этот Платный контент.
 8. «Своя рыбка по фото»: фото обрабатывается на вашем Mac и никуда не загружается. Используйте только фото,
    на которые у вас есть права. Получившаяся рыбка — для использования в Приложении.
 9. Если вам меньше 18 лет, покупайте только с согласия родителей.
@@ -177,7 +194,7 @@
 международной купли-продажи товаров не применяется. Споры рассматривают компетентные суды
 [ВЛАДЕЛЕЦ: Тель-Авива-Яффо — подтвердить].
 
-Если вы потребитель в ЕС или в другой стране, вы сохраняете защиту обязательных норм страны вашего проживания
+Если вы потребитель (в Израиле, ЕС или другой стране), вы сохраняете защиту обязательных норм страны вашего проживания
 и право обратиться в суд по месту жительства, если его даёт закон.
 
 ### 15. Apple
@@ -195,7 +212,8 @@ Apple не является стороной этого Соглашения и 
    согласия.
 5. Новую редакцию мы публикуем на сайте с новой датой. О существенных изменениях сообщим на сайте или
    в Приложении. Если вы продолжаете пользоваться Приложением после вступления новой редакции в силу, она
-   действует для вас.
+   действует для вас. Изменения, ухудшающие условия уже купленного Платного контента, к нему без вашего согласия
+   не применяются.
 6. Соглашение составлено на русском и английском языках. [ВЛАДЕЛЕЦ: какая версия имеет силу при расхождении —
    предлагаем английскую; нужна ли версия на иврите — решить с юристом.]
 
@@ -207,7 +225,7 @@ Apple не является стороной этого Соглашения и 
 
 # English version
 
-## End User Licence Agreement for [ВЛАДЕЛЕЦ: app name after R10; currently «Морской аквариум» (Marine Aquarium)]
+## End User Licence Agreement for [ВЛАДЕЛЕЦ: app name after R10; currently «Морской аквариум»]
 
 Version [ВЛАДЕЛЕЦ: number, e.g. 1.0], effective [ВЛАДЕЛЕЦ: publication date].
 
@@ -226,8 +244,8 @@ do not install the App, and if you have already installed it, delete it.
 
 ### 2. Licence
 
-We grant you a limited, non-exclusive, non-transferable, revocable licence, without the right to sublicense, to
-install the App on Mac computers that you own or control and to use it for personal purposes or for the internal
+We grant you a limited, non-exclusive, non-transferable licence, without the right to sublicense, that ends only as
+set out in section 13, to install the App on Mac computers that you own or control and to use it for personal purposes or for the internal
 purposes of your organisation. [ВЛАДЕЛЕЦ: whether to allow display on screens in public places — decide with the
 lawyer after checking the Content licences.]
 
@@ -273,9 +291,10 @@ We may replace or remove any Content at any time through an update, for example 
 5. You can try Paid Content free of charge in "Preview" mode for [ВЛАДЕЛЕЦ: 15 minutes].
 6. **Refunds:** within 14 days of purchase, no reason needed. Write to [ВЛАДЕЛЕЦ: support address]. Any rights you
    have under the law of your country (for example, the Israeli Consumer Protection Law or EU rules) are not
-   affected.
+   affected. Purchases made in the Mac App Store are refunded by Apple under its own rules
+   (reportaproblem.apple.com); we cannot refund them ourselves.
 7. If we have to replace purchased Content because of licence terms, we will make reasonable efforts to provide an
-   equivalent replacement.
+   equivalent replacement. If no equivalent replacement is available, we will refund that Paid Content on request.
 8. "Your own fish from a photo": the photo is processed on your Mac and is not uploaded anywhere. Use only photos
    you have the rights to. The resulting fish is for use within the App.
 9. If you are under 18, purchase only with a parent's consent.
@@ -340,7 +359,7 @@ This Agreement is governed by the laws of the State of Israel, without regard to
 Convention on Contracts for the International Sale of Goods does not apply. Disputes are heard by the competent
 courts of [ВЛАДЕЛЕЦ: Tel Aviv-Jaffa — confirm].
 
-If you are a consumer in the EU or another country, you keep the protection of the mandatory laws of your country of
+If you are a consumer (in Israel, the EU or elsewhere), you keep the protection of the mandatory laws of your country of
 residence and any right the law gives you to bring proceedings in the courts where you live.
 
 ### 15. Apple
@@ -357,7 +376,8 @@ Apple's standard EULA, or this text with Apple's minimum terms added.]
 4. We may transfer our rights and obligations if the business is sold or transferred. You may do so only with our
    written consent.
 5. We publish each new version on the website with a new date and announce material changes on the website or in
-   the App. If you keep using the App after a new version takes effect, it applies to you.
+   the App. If you keep using the App after a new version takes effect, it applies to you. Changes that worsen the
+   terms of Paid Content you have already bought do not apply to it without your consent.
 6. This Agreement is written in Russian and English. [ВЛАДЕЛЕЦ: which version prevails in case of discrepancy —
    we suggest English; whether a Hebrew version is needed — decide with the lawyer.]
 

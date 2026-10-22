@@ -11,7 +11,9 @@ import WebKit
 /// A WebContent crash/kill or a failed load is reloaded with a backoff: 1 / 5 / 15 s, then every
 /// 10 min and on wake or a screen change — never black forever, never a reload storm.
 /// R12: the window watches its own occlusion — not `.visible` for more than 2 s → `isCovered`, and AppDelegate pauses
-/// this page only (`pauseReason` "covered"); visible again → resumed at once.
+/// this page only (`pauseReason` "covered"); visible again → resumed at once. A second, empty window (the sensor) over
+/// the display's usable area tells whether any of it shows (`usableAreaVisible`): AppDelegate trusts the window list's
+/// "full-screen" verdict only while it does not.
 final class WallpaperWindow: NSObject, WKNavigationDelegate {
     enum State: String {
         case loading            // navigation in flight
@@ -55,9 +57,20 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     /// R12: the desktop not `.visible` for longer than this → covered (a window dragged across, a Space swipe or
     /// Mission Control do not pause the page); visible again → resumed at once.
     static let coverGrace: TimeInterval = 2
+    /// R12: the sensor's margin inside the usable area (visibleFrame): more than a tiled «Fill» window's margins and the
+    /// rounded corners of a maximised one, so those still cover it.
+    static let sensorInset: CGFloat = 24
 
     let displayID: CGDirectDisplayID
     private let window: NSWindow
+    /// R12 (`aq.coverSensor`, on by default): clear, empty, click-through, one level above the wallpaper (which is
+    /// opaque and would hide it), below the desktop icons (desktop + 20). Only opaque windows occlude, so it stays
+    /// `.visible` while the aquarium shows through anywhere in the usable area: behind a translucent maximised window
+    /// (a terminal with background opacity reports kCGWindowAlpha 1.0 — the window list cannot tell), during Show
+    /// Desktop (windows moved by a WindowServer transform keep their bounds), with a band of the screen left free.
+    private let sensor: NSWindow?
+    private var sensorVisible = false                // last logged sensor state
+    private var sensorEvents = 0                     // its didChangeOcclusionState notifications this run
     private let webView: WKWebView
     private let contentController: WKUserContentController
     /// The mode the page runs in (sent to it): "high" | "low" | "paused".
@@ -155,11 +168,30 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         window.setFrame(screen.frame, display: true)
         window.contentView = webView
 
+        if AppSettings.coverSensor {
+            let s = NSWindow(contentRect: WallpaperWindow.sensorFrame(screen), styleMask: [.borderless],
+                             backing: .buffered, defer: false)
+            s.isReleasedWhenClosed = false
+            s.isOpaque = false
+            s.backgroundColor = .clear
+            s.hasShadow = false
+            s.ignoresMouseEvents = true
+            s.collectionBehavior = window.collectionBehavior
+            s.level = NSWindow.Level(rawValue: window.level.rawValue + 1)
+            sensor = s
+        } else {
+            sensor = nil
+        }
+
         super.init()
         webView.navigationDelegate = self
         // Posted for this window only, on the main thread.
         NotificationCenter.default.addObserver(self, selector: #selector(occlusionChanged(_:)),
                                                name: NSWindow.didChangeOcclusionStateNotification, object: window)
+        if let s = sensor {
+            NotificationCenter.default.addObserver(self, selector: #selector(sensorChanged(_:)),
+                                                   name: NSWindow.didChangeOcclusionStateNotification, object: s)
+        }
         load(reason: reason)
         armHeartbeat()
     }
@@ -260,7 +292,16 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
     func show() {
         parkedNow = false
         window.orderFrontRegardless()
+        sensor?.orderFrontRegardless()                   // its own level, above the wallpaper
         refreshOcclusion()
+    }
+
+    /// R12: some of the display's usable area shows (the sensor is `.visible`): a "full-screen" verdict of the window
+    /// list is not acted on. False without a sensor (`aq.coverSensor` NO) or while parked.
+    var usableAreaVisible: Bool { sensor?.occlusionState.contains(.visible) ?? false }
+
+    private static func sensorFrame(_ screen: NSScreen) -> NSRect {
+        screen.visibleFrame.insetBy(dx: sensorInset, dy: sensorInset)
     }
 
     /// False while other windows cover this whole display: WebKit then hides the page and draws no frames.
@@ -273,6 +314,7 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         refreshOcclusion()
         setPower("paused", constrained: constrained, reason: "parked")
         window.orderOut(nil)
+        sensor?.orderOut(nil)
         Log.info("display \(displayID) gone — window parked (hidden, paused)")
     }
 
@@ -284,6 +326,11 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         NSObject.cancelPreviousPerformRequests(withTarget: self)
         NotificationCenter.default.removeObserver(self, name: NSWindow.didChangeOcclusionStateNotification,
                                                   object: window)
+        if let s = sensor {
+            NotificationCenter.default.removeObserver(self, name: NSWindow.didChangeOcclusionStateNotification, object: s)
+            s.orderOut(nil)
+            s.close()
+        }
         onOcclusionChange = nil
         webView.navigationDelegate = nil
         webView.stopLoading()
@@ -299,6 +346,10 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
         if window.frame != screen.frame {
             Log.info("display \(displayID) resized to \(screenInfo.w)x\(screenInfo.h) (no reload)")
             window.setFrame(screen.frame, display: true)
+        }
+        if let s = sensor {
+            let f = WallpaperWindow.sensorFrame(screen)
+            if s.frame != f { s.setFrame(f, display: false) }
         }
     }
 
@@ -328,6 +379,19 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
             occludedSince = Date()
             perform(#selector(coverGraceEnded), with: nil, afterDelay: WallpaperWindow.coverGrace, inModes: [.common])
         }
+    }
+
+    /// The sensor's occlusion changed: AppDelegate re-decides this page at once (a "full-screen" verdict applies again
+    /// or not any more). No grace: the window list's two hits ≥ 1 s apart already gate every new pause.
+    @objc private func sensorChanged(_ note: Notification) {
+        guard !closed else { return }
+        sensorEvents += 1
+        let visible = usableAreaVisible
+        if visible != sensorVisible {
+            sensorVisible = visible
+            Log.info("display \(displayID) usable area: \(visible ? "visible" : "covered") (sensor)" + (parkedNow ? " (parked)" : ""))
+        }
+        onOcclusionChange?(self, false)
     }
 
     @objc private func coverGraceEnded() {
@@ -469,6 +533,8 @@ final class WallpaperWindow: NSObject, WKNavigationDelegate {
             // R12: why paused (null: running), occlusion as AppKit reports it, pauses this run by reason.
             "pauseReason": pauseReason ?? NSNull(), "occlusionVisible": isDesktopVisible, "covered": isCovered,
             "occlusionEvents": occlusionEvents, "pausesThisRun": pauseCounts,
+            // R12 sensor (null: off, aq.coverSensor NO): does any of the usable area show; its notifications this run.
+            "usableAreaVisible": sensor == nil ? NSNull() as Any : usableAreaVisible, "sensorEvents": sensorEvents,
         ]
         var totals = pausedTotals
         if let why = pauseReason, let since = pausedSince {

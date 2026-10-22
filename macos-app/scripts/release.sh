@@ -8,6 +8,7 @@
 #   ./scripts/release.sh                                — выпуск с версией из Resources/Info.plist
 #   ./scripts/release.sh --version 1.0.1 --bump-build   — поднять версию и номер сборки, затем выпуск
 #   ./scripts/release.sh --dry-run …                    — только показать команды, ничего не менять
+#   ./scripts/release.sh --internal                     — пробный выпуск, не для сайта (без политики и License.txt)
 #   ./scripts/release.sh --help                         — все параметры и разовая настройка
 #
 # Пишется под /bin/bash 3.2 из macOS: без ассоциативных массивов и mapfile; пустые массивы — через ${a[@]+…}.
@@ -26,6 +27,8 @@ BUMP_BUILD=0
 DRY=0
 CHECK=0
 NOTARIZE=1
+INTERNAL=0
+LICENSE_SRC="Resources/License.txt"   # текст соглашения (RU+EN) для DMG — в .app не попадает (build.sh его не копирует)
 
 usage() {
   cat <<'EOF'
@@ -48,9 +51,17 @@ usage() {
   --entitlements ФАЙЛ   файл исключений hardened runtime. Обычно НЕ нужен: JavaScript в WKWebView
                         исполняется в отдельном процессе WebKit со своими правами
   --no-notarize         подписать и собрать DMG без нотаризации (проверка на своём Mac, не для раздачи)
+  --internal            пробный выпуск, НЕ для сайта: нотаризуется как обычно, но не требует ссылки на
+                        политику и License.txt (ниже); файл dist/AquariumWallpaper-<версия>-internal.dmg
   -h, --help            эта справка
 
 Итог: dist/AquariumWallpaper-<версия>.dmg (+ .txt: версия, SHA-256, id нотаризации, коммит).
+
+Для выпуска на сайт (без --internal) обязательны (R13):
+  • AQPrivacyPolicyURL в Resources/Info.plist — https-адрес опубликованной политики конфиденциальности
+    (ссылка в окне отзыва);
+  • Resources/License.txt — окончательный текст лицензионного соглашения (RU + EN, без «[ВЛАДЕЛЕЦ: …]» и
+    пометок «ЧЕРНОВИК»); кладётся в DMG рядом с приложением.
 
 Разовая настройка (один раз на Mac):
   1. Apple Developer Program (developer.apple.com/programs, 99 $ в год).
@@ -146,6 +157,7 @@ while [ $# -gt 0 ]; do
     --dry-run) DRY=1 ;;
     --check) CHECK=1 ;;
     --no-notarize) NOTARIZE=0 ;;
+    --internal) INTERNAL=1 ;;
     --bump-build) BUMP_BUILD=1 ;;
     --version) need_value "$@"; NEW_VERSION=$2; shift ;;
     --version=*) NEW_VERSION=${1#*=} ;;
@@ -317,7 +329,36 @@ else
   ok "Версия: $CUR_VERSION (сборка $CUR_BUILD) → $VERSION (сборка $BUILD)"
 fi
 
-DMG_NAME="$APP-$VERSION.dmg"
+# Для раздачи (R13): ссылка на политику конфиденциальности в окне отзыва и текст соглашения в DMG. Пробный
+# выпуск (--internal) их не требует — только предупреждает.
+public_need() {
+  if [ "$INTERNAL" = 1 ]; then
+    warn "$1 — пробному выпуску (--internal) можно, на сайт так нельзя"
+  else
+    fail "$1
+    $2
+    Пробный выпуск, который не публикуется: ./scripts/release.sh --internal"
+  fi
+}
+PRIVACY_URL=$(plist_get AQPrivacyPolicyURL)
+case "$PRIVACY_URL" in
+  https://?*) ok "Политика конфиденциальности: $PRIVACY_URL" ;;
+  *) public_need "В $PLIST пуст или не https ключ AQPrivacyPolicyURL${PRIVACY_URL:+ («$PRIVACY_URL»)}" \
+       "Опубликуйте политику (docs/legal/privacy.md после проверки юристом) и впишите её https-адрес в AQPrivacyPolicyURL." ;;
+esac
+LICENSE_OK=0
+if [ ! -f "$LICENSE_SRC" ]; then
+  public_need "Нет $LICENSE_SRC — текста лицензионного соглашения для DMG" \
+    "Сохраните окончательный текст (docs/legal/eula.md: русская и английская версии, без блока «Для владельца») в $LICENSE_SRC."
+elif grep -q -e 'ВЛАДЕЛЕЦ:' -e 'ЧЕРНОВИК' -e 'DRAFT' "$LICENSE_SRC"; then
+  public_need "В $LICENSE_SRC остались плейсхолдеры «[ВЛАДЕЛЕЦ: …]» или пометка «ЧЕРНОВИК/DRAFT»" \
+    "Впишите всё, что помечено «ВЛАДЕЛЕЦ», и уберите пометки черновика."
+else
+  LICENSE_OK=1
+  ok "Лицензионное соглашение: $LICENSE_SRC → License.txt в DMG"
+fi
+
+if [ "$INTERNAL" = 1 ]; then DMG_NAME="$APP-$VERSION-internal.dmg"; else DMG_NAME="$APP-$VERSION.dmg"; fi
 FINAL="dist/$DMG_NAME"
 if [ "$CHECK" = 0 ] && [ "$NOTARIZE" = 1 ] && [ -e "$FINAL" ]; then
   fail "Выпуск $VERSION уже собран: $FINAL. Для нового выпуска поднимите версию (--version …);
@@ -340,8 +381,16 @@ fi
 
 say ""
 say "Выпуск «${DISPLAY_NAME:-$APP}» $VERSION (сборка $BUILD)"
+if [ "$INTERNAL" = 1 ]; then say "  назначение:  ПРОБНЫЙ (--internal) — не публиковать"; fi
 say "  подпись:     $SIGN_NAME"
 if [ "$NOTARIZE" = 1 ]; then say "  нотаризация: профиль $PROFILE"; else say "  нотаризация: пропущена (--no-notarize)"; fi
+
+# Состояние исходников для .txt выпуска — до того, как шаг 2 перепишет Info.plist. Неотслеживаемые файлы не в счёт
+# (build/ и dist/ создаёт сам выпуск; они в .gitignore).
+SRC_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo '?')
+if [ -n "$(git status --porcelain --untracked-files=no -- . ../aquarium 2>/dev/null || true)" ]; then
+  SRC_COMMIT="$SRC_COMMIT + незакоммиченные изменения"
+fi
 
 # ── 2. Версия ────────────────────────────────────────────────────────────────────────────────────
 if [ "$VERSION" != "$CUR_VERSION" ] || [ "$BUILD" != "$CUR_BUILD" ]; then
@@ -413,7 +462,11 @@ $(printf '%s\n' "$info" | grep '^Authority=' || true)"
 fi
 
 # ── 5. DMG ───────────────────────────────────────────────────────────────────────────────────────
-step "Образ диска (DMG): приложение + ярлык «Программы»"
+if [ "$LICENSE_OK" = 1 ]; then
+  step "Образ диска (DMG): приложение, ярлык «Программы», License.txt"
+else
+  step "Образ диска (DMG): приложение + ярлык «Программы»"
+fi
 STAGE="build/dmg-root"
 DMG="build/$DMG_NAME"
 VOLNAME="${DISPLAY_NAME:-$APP}"
@@ -421,6 +474,7 @@ run rm -rf "$STAGE" "$DMG"
 run mkdir -p "$STAGE"
 run ditto "$APP_PATH" "$STAGE/$APP.app"        # ditto сохраняет подпись и ссылки
 run ln -s /Applications "$STAGE/Applications"
+if [ "$LICENSE_OK" = 1 ]; then run cp "$LICENSE_SRC" "$STAGE/License.txt"; fi
 show hdiutil create -volname "$VOLNAME" -srcfolder "$STAGE" -ov -fs HFS+ -format UDZO "$DMG"
 if ! dry; then
   made=0
@@ -479,8 +533,24 @@ if [ "$NOTARIZE" = 1 ]; then
 
   # ── 7. Скрепка ─────────────────────────────────────────────────────────────────────────────────
   step "Скрепка (staple): билет нотаризации в DMG и в приложение — Gatekeeper проверит и без интернета"
-  run xcrun stapler staple "$DMG" || die "Не удалось прикрепить билет к $DMG (нужен интернет: билет скачивается у Apple)"
-  run xcrun stapler staple "$APP_PATH" || die "Не удалось прикрепить билет к $APP_PATH"
+  # Сразу после «Accepted» билет может ещё не дойти до серверов Apple: stapler отвечает «Record not found»
+  # (код 65). Несколько повторов вместо нового выпуска с новой нотаризацией.
+  staple() { # путь
+    local i
+    for i in 1 2 3 4 5; do
+      run xcrun stapler staple "$1" && return 0
+      dry && return 0
+      [ "$i" -lt 5 ] || break
+      warn "Билет ещё не доступен (попытка $i из 5) — повтор через 20 с"
+      sleep 20
+    done
+    return 1
+  }
+  staple_hint="Apple приняла DMG (id $NOTARY_ID), но билет пока не скачивается (нужен интернет). Через несколько минут —
+    вручную (DMG остаётся в build/): xcrun stapler staple $DMG && xcrun stapler staple $APP_PATH && xcrun stapler validate $DMG
+    или весь выпуск заново: ./scripts/release.sh без --version/--bump-build (новая сборка и нотаризация)."
+  staple "$DMG" || die "Не удалось прикрепить билет к $DMG. $staple_hint"
+  staple "$APP_PATH" || die "Не удалось прикрепить билет к $APP_PATH. $staple_hint"
   run xcrun stapler validate "$DMG" || die "Билет в $DMG не проходит проверку"
   run xcrun stapler validate "$APP_PATH" || die "Билет в $APP_PATH не проходит проверку"
 fi
@@ -519,10 +589,12 @@ run codesign --verify --deep --strict "$MNT/$APP.app" || die "Приложени
 show test -L "$MNT/Applications"
 if ! dry; then
   [ -L "$MNT/Applications" ] || die "В DMG нет ярлыка «Программы» (Applications)"
+  if [ "$LICENSE_OK" = 1 ]; then [ -f "$MNT/License.txt" ] || die "В DMG нет License.txt"; fi
 fi
 run hdiutil detach -quiet "$MNT" || warn "Не удалось отключить $MNT — отключите вручную в Finder"
 MOUNTED=0
-dry || ok "DMG: $APP.app и ярлык «Программы» на месте"
+if [ "$LICENSE_OK" = 1 ]; then dry || ok "DMG: $APP.app, ярлык «Программы» и License.txt на месте"
+else dry || ok "DMG: $APP.app и ярлык «Программы» на месте"; fi
 
 # ── 9. Итог ──────────────────────────────────────────────────────────────────────────────────────
 if [ "$NOTARIZE" = 0 ]; then
@@ -533,7 +605,7 @@ fi
 step "Готово"
 run mkdir -p dist
 run mv -f "$DMG" "$FINAL"
-NOTES="dist/$APP-$VERSION.txt"
+NOTES="dist/${DMG_NAME%.dmg}.txt"
 show shasum -a 256 "$FINAL"
 if dry; then
   say "  (записать $NOTES: версия, SHA-256, сертификат, id нотаризации, коммит)"
@@ -542,23 +614,23 @@ if dry; then
   exit 0
 fi
 SHA=$(shasum -a 256 "$FINAL" | awk '{print $1}')
-commit=$(git rev-parse --short HEAD 2>/dev/null || echo '?')
-if [ -n "$(git status --porcelain -- . ../aquarium 2>/dev/null || true)" ]; then
-  commit="$commit + незакоммиченные изменения"
-fi
 {
   say "${DISPLAY_NAME:-$APP} $VERSION (сборка $BUILD)"
+  if [ "$INTERNAL" = 1 ]; then say "Назначение:  ПРОБНЫЙ выпуск (--internal) — не публиковать"; fi
   say "Файл:        $DMG_NAME"
   say "SHA-256:     $SHA"
   say "Bundle ID:   $BUNDLE_ID"
   say "Подпись:     $SIGN_NAME"
   say "Нотаризация: Accepted, id $NOTARY_ID"
-  say "Исходники:   git $commit"
+  say "Исходники:   git $SRC_COMMIT"
+  if [ "$PLIST_CHANGED" = 1 ]; then say "Info.plist:  версия записана этим запуском ($VERSION/$BUILD)"; fi
+  if [ "$LICENSE_OK" = 1 ]; then say "В DMG:       $APP.app, ярлык «Программы», License.txt"; fi
   say "Собран:      $(date '+%Y-%m-%d %H:%M %z')"
 } >"$NOTES"
 say "  $PWD/$FINAL"
 say "  SHA-256: $SHA"
 say "  Сведения о выпуске: $NOTES"
+if [ "$INTERNAL" = 1 ]; then say "  ПРОБНЫЙ выпуск (--internal): не выкладывать на сайт."; fi
 if [ "$PLIST_CHANGED" = 1 ]; then
   say "  Версия в $PLIST изменена на $VERSION ($BUILD) — сохраните это изменение в git."
 fi

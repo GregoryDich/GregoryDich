@@ -121,8 +121,17 @@
 ## Что поменять в коде после решения (отдельная задача, сейчас не делаем)
 
 - `macos-app/Resources/Info.plist` → `CFBundleDisplayName`. При желании добавить локализацию через `ru.lproj/InfoPlist.strings`.
-- `macos-app/Sources/Feedback.swift` → `fallbackAppName`.
+- `macos-app/Sources/Feedback.swift` → `fallbackAppName` и `FBText.clipboardHeader` («Отзыв для «Морского аквариума»» —
+  дословно «Marine Aquarium», остался бы в каждом отзыве из буфера обмена).
 - `aquarium/index.html` → `<title>` и комментарий в шапке.
-- Комментарий в `macos-app/build.sh`; заглушки с названием в `docs/legal/eula.md` и `docs/legal/privacy.md`; `ROADMAP.md` (R10).
+- Комментарий в `macos-app/build.sh`; `macos-app/scripts/release.sh` — шапка и первая строка справки `--help`
+  («Выпуск «Морского аквариума»»; имя тома DMG скрипт берёт из `CFBundleDisplayName` сам); заглушки с названием в
+  `docs/legal/eula.md` и `docs/legal/privacy.md` (английский перевод старого имени в них намеренно не пишем);
+  `ROADMAP.md` (R10).
 - Адрес поддержки — на домене продукта (R13); сейчас `support@tonamorph.com`.
-- `CFBundleIdentifier` (`com.gregorydich.aquariumwallpaper`) и внутреннее имя `AquariumWallpaper` пользователь не видит, их можно оставить. Если менять идентификатор, то до первой подачи в Mac App Store: после неё он фиксируется, а его смена сбрасывает сохранённые настройки.
+- Имя файла приложения и DMG пользователь видит (Finder, «Программы», окно Gatekeeper, «Объекты входа», Мониторинг
+  системы, файл `AquariumWallpaper-<версия>.dmg`). После выбора имени: `APP` в `macos-app/build.sh` и
+  `macos-app/scripts/release.sh`, `CFBundleName` и `CFBundleExecutable` в `Info.plist` — новое имя латиницей.
+  `CFBundleIdentifier` и папку `~/Library/Application Support/AquariumWallpaper` можно оставить: их видно только в
+  путях. Идентификатор менять только до первого публичного выпуска: потом смена сбросит настройки и автозапуск у
+  пользователей.

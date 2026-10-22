@@ -131,6 +131,7 @@
     if (m !== "paused") budgetChanged();         // бюджет пикселей зависит от питания (P1.3)
     lastShown = 0; govReset();                   // смена режима — замер интервалов заново (3 с тишины)
     syncVideos();                                // 'paused' — видео-задник тоже на паузу (и обратно)
+    if (m !== "paused") kickFrames();            // R12: на паузе цикл кадров стоит (см. frame) — запустить снова
   };
 
   /* ---------- ЕДИНЫЙ ГПСЧ (mulberry32) ----------
@@ -6875,7 +6876,21 @@
   }
 
   let last = performance.now(), acc = 0, lastShown = 0;
+  /* R12: на паузе ('paused') rAF не взводится. Скрытую страницу WebKit не будит и сам, но за развёрнутым окном
+     обои остаются «видимыми» (полоска под строкой меню) — и пустой колбэк шёл бы каждый vsync (60–120 раз в
+     секунду, часами). Цикл запускают старт и выход из паузы (aquariumSetPower); ?test=1 — кадры только по __aq.step() */
+  let rafOn = false;
+  function kickFrames() {
+    if (TEST || rafOn) return;
+    rafOn = true;
+    last = performance.now();                        // пауза могла длиться часы: первый кадр — без скачка времени
+    requestAnimationFrame(frame);
+  }
   function frame(now) {
+    if (POWER === "paused") {                        // видео-задник уже остановлен (aquariumSetPower → syncVideos)
+      rafOn = false; lastShown = 0; acc = 0; PERF.armed = false; syncVideos();
+      return;
+    }
     requestAnimationFrame(frame);
     const rawMs = now - last, P = PERF, cbAt = performance.now(), gap = cbAt - P.cbAt;
     // «чёрный ящик»: между колбэками rAF > 1 с, и прошлый колбэк был активным, — застой главного потока (фазы — что
@@ -7173,7 +7188,7 @@
   if (BB.on) BB.timer = setInterval(() => bbWrite("timer"), 5000);
   if ((BOOT && BOOT.hud) || flag("hud")) setHud(true);   // P1.1: HUD с самого запуска (приложение помнит галочку)
   // ?test=1: от rAF ничего не идёт — кадры только по window.__aq.step()
-  if (!TEST) requestAnimationFrame(frame);
+  kickFrames();
 })();
 </script>
 </body>

@@ -79,7 +79,7 @@ Controls from top to bottom (strings are exact):
    - ON → take the snapshot asynchronously (§6), then show a thumbnail `NSImageView` 192×108 (aspect-fit, corner radius 6) with the caption «Снимается только аквариум — без иконок, окон и вашего стола.»
    - On failure → uncheck, caption «Не удалось сделать снимок».
 7. **Checkbox «Приложить диагностику (без личных данных)»** — default OFF.
-   - It switches ON automatically when the user selects «Ошибка», unless the user has already clicked this checkbox in this window.
+   - The app never switches it ON by itself (22.10, R13: a pre-ticked optional box is not valid consent under the GDPR — CJEU Planet49, C-673/17). For «Ошибка», while it is OFF, a secondary 11-pt hint below it says «Для ошибок диагностика очень помогает.»
    - Below it, a link-style button «Показать, что отправится ▸» / «Скрыть ▾» toggles a read-only, selectable, monospaced `NSTextView` (11 pt, height 160, scrollable) with the pretty-printed `diagnostics` JSON.
    - The shown object is **the same instance** that is sent. Collect it when the window opens; re-collect when the toggle goes ON.
 8. Separator (`NSBox`, `.separator`).
@@ -87,10 +87,10 @@ Controls from top to bottom (strings are exact):
    - a checkbox with an empty title and next to it `NSTextField(wrappingLabelWithString:)` (preferredMaxLayoutWidth 410); an `NSClickGestureRecognizer` on the label toggles the checkbox;
    - the checkbox's `setAccessibilityLabel` is the full text below.
 
-   > «Согласен(на) передать разработчику этот отзыв, а также e-mail, снимок и диагностику — если я их указал(а) или включил(а). Данные нужны, чтобы ответить мне и улучшить приложение; хранятся до 24 месяцев. Отправка добровольная.»
+   > «Согласен(на) передать разработчику этот отзыв, а также e-mail, снимок и диагностику — если я их указал(а) или включил(а). Данные нужны, чтобы ответить мне и улучшить приложение; хранятся до 24 месяцев. Отправка добровольная. Кто отвечает за данные, кому они передаются и ваши права (доступ, исправление) — в Политике конфиденциальности.»
 
    - If `AQPrivacyPolicyURL` is valid, show a borderless link button «Политика конфиденциальности» underneath; it opens the URL via `NSWorkspace.shared.open`.
-   - `consent.version = "fb-consent-ru-1"`. Bump the version on any wording change.
+   - `consent.version = "fb-consent-ru-2"` (ru-1 until 22.10: without the last sentence). Bump the version on any wording change.
 10. **Route line** (secondary, 11 pt), chosen by the config:
     - endpoint: «Отправка: на сервер разработчика. Копия остаётся на этом Mac.»
     - email: «Отправка: откроется письмо в вашей почтовой программе (адрес: <email>). Копия остаётся на этом Mac.»
@@ -297,7 +297,7 @@ Example payload:
   "createdAt": "2026-10-17T12:30:05Z", "category": "fish_request",
   "message": "Хочу мандаринку возле кораллов, очень красивая рыба.", "fishRequest": "мандаринка",
   "email": null, "uiLanguage": "ru",
-  "consent": { "given": true, "version": "fb-consent-ru-1", "at": "2026-10-17T12:30:01Z" },
+  "consent": { "given": true, "version": "fb-consent-ru-2", "at": "2026-10-17T12:30:01Z" },
   "app": { "bundleId": "com.gregorydich.aquariumwallpaper", "version": "1.0", "build": "1" },
   "diagnostics": null, "snapshot": null }
 ```
@@ -334,7 +334,10 @@ When the user presses «Отправить»:
      —
      Рыбка: <fishRequest>          (only if set)
      E-mail для ответа: <email>    (only if set)
+     Группа первых пользователей: да (<marketing.version>, <marketing.at>)   (only if opted in)
      ID отзыва: <id>
+     Создан: <createdAt>, язык интерфейса: <uiLanguage>
+     Согласие: <consent.version>, <consent.at>   (the proof of what was accepted: mail never reaches a server)
      Версия: <version> (<build>), macOS <os.version>, <model>   (model only if diagnostics ON)
      Диагностика:
      <compact JSON>                (only if diagnostics ON)
@@ -402,7 +405,7 @@ When the user presses «Отправить»:
 3. Endpoint is a test HTTPS server: 2xx → `status = sent`. Network off → `pending`, and the report is delivered after the next launch. 413 → resent without the snapshot.
 4. Endpoint `http://…` → ignored, logged, and the next route is used.
 5. Message of 9 characters → Send disabled. Typing beyond 2000 → blocked. Email `a@b` → error shown, Send disabled. Consent unchecked → Send disabled.
-6. Selecting «Ошибка» turns diagnostics ON. The JSON shown in the disclosure equals `diagnostics` in the saved file byte for byte (compare after re-serialising).
+6. Selecting «Ошибка» leaves diagnostics OFF and shows the hint; ticking it attaches them. The JSON shown in the disclosure equals `diagnostics` in the saved file byte for byte (compare after re-serialising).
 7. `grep` of the saved JSON finds neither the user name nor `/Users/`.
 8. Snapshot shows only the aquarium, is at most 1600 px and at most 400 KB, and the **video backdrop is visible**. If the backdrop is black, follow §6.
 9. With two monitors, `screens` lists both and the snapshot is taken from the main screen.

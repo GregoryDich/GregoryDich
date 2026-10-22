@@ -31,12 +31,13 @@ enum FBText {
     static let snapshotCaption = "Снимается только аквариум — без иконок, окон и вашего стола."
     static let snapshotFailed = "Не удалось сделать снимок"
     static let diagToggle = "Приложить диагностику (без личных данных)"
+    static let diagBugHint = "Для ошибок диагностика очень помогает."
     static let diagShow = "Показать, что отправится ▸"
     static let diagHide = "Скрыть ▾"
     static let diagCollecting = "Собираем диагностику…"
 
-    static let consent = "Согласен(на) передать разработчику этот отзыв, а также e-mail, снимок и диагностику — если я их указал(а) или включил(а). Данные нужны, чтобы ответить мне и улучшить приложение; хранятся до 24 месяцев. Отправка добровольная."
-    static let consentVersion = "fb-consent-ru-1"      // bump on any wording change
+    static let consent = "Согласен(на) передать разработчику этот отзыв, а также e-mail, снимок и диагностику — если я их указал(а) или включил(а). Данные нужны, чтобы ответить мне и улучшить приложение; хранятся до 24 месяцев. Отправка добровольная. Кто отвечает за данные, кому они передаются и ваши права (доступ, исправление) — в Политике конфиденциальности."
+    static let consentVersion = "fb-consent-ru-2"      // bump on any wording change
     static let privacy = "Политика конфиденциальности"
 
     static let routeEndpoint = "Отправка: на сервер разработчика. Копия остаётся на этом Mac."
@@ -85,6 +86,9 @@ enum FBText {
     static let bodyEmail = "E-mail для ответа: "
     static let bodyMarketing = "Группа первых пользователей: да"
     static let bodyId = "ID отзыва: "
+    static let bodyCreated = "Создан: "
+    static let bodyLanguage = ", язык интерфейса: "
+    static let bodyConsent = "Согласие: "
     static let bodyVersion = "Версия: "
     static let bodyDiagnostics = "Диагностика:"
     static func diagnosticsInFile(_ id: String) -> String { "Диагностика сохранена в файле \(id).json" }
@@ -610,8 +614,12 @@ enum FeedbackDelivery {
         var lines = [r.message, "", "—"]
         if let fish = r.fishRequest { lines.append(FBText.bodyFish + fish) }
         if let email = r.email { lines.append(FBText.bodyEmail + email) }
-        if r.marketing?.optIn == true { lines.append(FBText.bodyMarketing) }
+        // The opt-in and the consent travel with the message (wording version and time): the owner keeps the proof of
+        // what was accepted — mail and clipboard reports never reach a server that would store it.
+        if let m = r.marketing, m.optIn { lines.append(FBText.bodyMarketing + " (\(m.version), \(m.at))") }
         lines.append(FBText.bodyId + r.id)
+        lines.append(FBText.bodyCreated + r.createdAt + FBText.bodyLanguage + r.uiLanguage)
+        lines.append(FBText.bodyConsent + "\(r.consent.version), \(r.consent.at)")
         var version = FBText.bodyVersion + "\(r.app.version) (\(r.app.build)), macOS "
         version += r.diagnostics?.os.version ?? Diagnostics.osVersion
         if let d = r.diagnostics { version += ", \(d.model)" }

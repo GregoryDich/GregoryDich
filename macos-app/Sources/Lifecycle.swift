@@ -32,6 +32,11 @@ enum AppSettings {
     /// On unless set to NO — the way out if that check ever misjudges a Mac (the pause on occlusion stays):
     ///   defaults write com.gregorydich.aquariumwallpaper aq.fullscreenCheck -bool NO   (then restart the app)
     static let fullscreenCheckKey = "aq.fullscreenCheck"
+    /// R12, no menu item: the clear sensor window over each display's usable area (WallpaperWindow) that overrules the
+    /// window list while the aquarium still shows (translucent window, Show Desktop). On unless set to NO — then a
+    /// full-screen verdict pauses as before the sensor (read when a page's window is created):
+    ///   defaults write com.gregorydich.aquariumwallpaper aq.coverSensor -bool NO   (then restart the app)
+    static let coverSensorKey = "aq.coverSensor"
 
     static var hud: Bool {
         get { UserDefaults.standard.bool(forKey: hudKey) }
@@ -54,6 +59,10 @@ enum AppSettings {
     static var fullscreenCheck: Bool {
         let d = UserDefaults.standard
         return d.object(forKey: fullscreenCheckKey) == nil || d.bool(forKey: fullscreenCheckKey)   // "NO" string too
+    }
+    static var coverSensor: Bool {
+        let d = UserDefaults.standard
+        return d.object(forKey: coverSensorKey) == nil || d.bool(forKey: coverSensorKey)
     }
 
     /// "1.0 (1)" — CFBundleShortVersionString (CFBundleVersion).

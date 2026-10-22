@@ -14,28 +14,50 @@
 1. Название приложения после R10 (сейчас «Морской аквариум», англ. — пока нет).
 2. Ваше полное имя или название бизнеса, статус (осек патур / осек мурше), номер (ת.ז. или ע.מ.), почтовый адрес в Израиле.
 3. Адрес поддержки на домене продукта (сейчас `support@tonamorph.com`, письма пересылаются вам).
-4. Почтовый провайдер, у которого лежат письма (например, Google — Gmail).
+4. Почтовый провайдер и сервис пересылки домена (например, Cloudflare Email Routing → Google Gmail): письма на
+   адрес поддержки проходят через оба.
 5. Номер редакции и дата публикации.
 6. Разделы «Обновления» и «Покупки» — оставить с пометкой «вступает в силу…» или убрать до появления функции.
+7. ИИ-сервис для разбора отзывов (разделы 5–7) — выбрать одно:
+   - Claude по коммерческим условиям (тариф Team или API/Console — в них есть DPA): тогда он «обработчик»;
+   - личная подписка (Free/Pro/Max): Anthropic работает по своим потребительским условиям, без DPA, — это **не**
+     наш обработчик; в тексте — вариант «по своей политике», и в настройках выключить использование чатов для обучения.
 
 **Вопросы юристу:**
 1. Нужно ли регистрировать базу данных и назначать ответственного за защиту данных по поправке 13 (для малого разработчика, судя по исследованию, — нет, но подтвердить).
 2. Нужен ли представитель в ЕС по ст. 27 GDPR (обработка эпизодическая и мелкая — возможно, нет).
 3. Нужна ли версия на иврите для пользователей в Израиле и какая языковая версия имеет силу при расхождении.
-4. Достаточно ли текста согласия в окне отзыва (`fb-consent-ru-1`) и галочки рассылки (`fb-marketing-ru-2`)
-   для уведомления по ст. 11 закона и для ст. 30А закона о связи.
+4. Достаточно ли текста согласия в окне отзыва (`fb-consent-ru-2`) и галочки рассылки (`fb-marketing-ru-2`)
+   для уведомления по ст. 11 закона и для ст. 30А Закона о связи: покрывает ли согласие + ссылка на политику все
+   пункты ст. 11 в редакции поправки 13 (кто отвечает за данные, цель, добровольность и последствия отказа,
+   получатели, право на доступ и исправление); нужна ли пометка «פרסומת» для получателей за пределами Израиля.
 5. Срок хранения бухгалтерских записей о продажах (обычно 7 лет — уточнить у бухгалтера).
 
-**После публикации:**
-- Вписать URL политики в `macos-app/Resources/Info.plist`, ключ `AQPrivacyPolicyURL`
-  (только https). Тогда под галочкой согласия в окне отзыва появится ссылка «Политика конфиденциальности».
+**До выпуска v1.0 — обязательно:**
+- Опубликовать политику и вписать её URL в `macos-app/Resources/Info.plist`, ключ `AQPrivacyPolicyURL` (только
+  https). Тогда под галочкой согласия в окне отзыва появится ссылка «Политика конфиденциальности» — на неё опирается
+  уведомление по ст. 11: текст согласия в окне говорит, что «кто отвечает за данные, кому они передаются и ваши
+  права» — в политике. `macos-app/scripts/release.sh` без `--internal` останавливается, если ключ пуст или не https.
 - Та же ссылка — на странице продукта (R14) и, позже, в App Store Connect (R16).
 - Любая правка текста согласия в приложении → новая версия согласия в коде и правка этой политики (и наоборот).
 
+**Правила для владельца (выполнять всегда):**
+- **ИИ-разбор отзывов:** перед вставкой письма в ИИ удалять из него имя и адрес отправителя, подпись, вложения и
+  цитаты заголовков (From/To/Reply-To) — в ИИ уходит только текст отзыва.
+- **Рассылка «группе первых пользователей» (ст. 30А Закона о связи):** вносить адрес в список, только если он
+  совпадает с адресом отправителя письма-отзыва; если не совпадает — одно письмо без рекламы с просьбой подтвердить,
+  без ответа не вносить. В каждом письме: слово «פרסומת» в начале темы, ваше имя и почтовый адрес, строка «Чтобы
+  отписаться, ответьте „отписаться“ на это письмо». Письма-отзывы с отметкой «Группа первых пользователей: да
+  (fb-marketing-…, время)» хранить как доказательство согласия, пока адрес в списке. Нарушение — до ₪1 000 за
+  письмо без доказательства ущерба.
+
 **Где в коде проверены факты** (при изменении кода обновить политику):
-`macos-app/Sources/Feedback.swift` (тексты согласий, сроки 90 дней / 100 файлов, маршруты доставки),
-`FeedbackWindow.swift` (галочки по умолчанию сняты), `Diagnostics.swift` (состав диагностики и что не собирается),
-`Lifecycle.swift` (настройки и счётчики в UserDefaults, системный журнал без личных данных),
+`macos-app/Sources/Feedback.swift` (тексты согласий, сроки 90 дней / 100 файлов, маршруты доставки, что входит в
+письмо: время создания, язык, версия и время согласия), `FeedbackWindow.swift` (галочки по умолчанию сняты;
+диагностику приложение само не включает — для «Ошибки» только подсказка), `Diagnostics.swift` (состав диагностики и
+что не собирается), `Lifecycle.swift` (настройки и счётчики в UserDefaults, системный журнал без личных данных),
+`WallpaperWindow.swift` (хранилище WebKit по умолчанию: `~/Library/WebKit/…`, `~/Library/Caches/…`),
+`AppDelegate.swift` (автозапуск через `SMAppService` — объекты входа macOS),
 `Coverage.swift` (размеры окон для паузы, без заголовков и названий), `Resources/Info.plist`
 (`AQFeedbackEndpoint` пуст, `AQFeedbackEmail`), `aquarium/index.html` (localStorage — уровень качества,
 sessionStorage — служебные метки), `docs/plans/feedback-window-spec.md` (24 месяца, сервер в ЕС),
@@ -61,8 +83,8 @@ sessionStorage — служебные метки), `docs/plans/feedback-window-s
 
 ### 1. Кто отвечает за данные и как с нами связаться
 
-Ответственный за обработку данных (controller по GDPR; владелец базы данных по израильскому закону о защите
-приватности): [ВЛАДЕЛЕЦ: полное имя или название бизнеса], [ВЛАДЕЛЕЦ: статус и номер — עוסק פטור / עוסק מורשה,
+Ответственный за обработку данных (controller по GDPR; בעל שליטה במאגר מידע — контролёр базы данных по Закону о
+защите частной жизни, 5741-1981, в редакции поправки 13): [ВЛАДЕЛЕЦ: полное имя или название бизнеса], [ВЛАДЕЛЕЦ: статус и номер — עוסק פטור / עוסק מורשה,
 ת.ז. или ע.מ.], [ВЛАДЕЛЕЦ: почтовый адрес в Израиле]. Далее — «мы».
 
 Вопросы о приватности, поддержка и запросы о ваших данных: [ВЛАДЕЛЕЦ: адрес поддержки на домене продукта;
@@ -83,9 +105,10 @@ sessionStorage — служебные метки), `docs/plans/feedback-window-s
 
 | Что | Где | Зачем | Сколько хранится |
 |---|---|---|---|
-| Настройки: тема аквариума, «Показать FPS», «Только на главном экране», автозапуск | Настройки приложения в `~/Library/Preferences/` | Чтобы помнить ваш выбор | Пока вы их не удалите |
+| Настройки: тема аквариума, «Показать FPS», «Только на главном экране» | Настройки приложения в `~/Library/Preferences/` | Чтобы помнить ваш выбор | Пока вы их не удалите |
+| Автозапуск | Объекты входа macOS (Системные настройки ▸ Основные ▸ Объекты входа) | Запуск при входе | Пока вы его не выключите |
 | Технические счётчики: перезагрузки страницы аквариума, сбои и «зависания» движка (время, номер экрана, причина) | Там же | Чтобы при вашей жалобе на сбой было видно, что произошло | Последние 20 записей каждого вида |
-| Уровень качества графики для каждого экрана и режима питания; служебные метки движка (номер запуска, последние замеры кадров) | Хранилище встроенного браузера приложения в `~/Library/` | Плавная анимация без перегрева; разбор сбоев | Уровень качества — пока не удалите; служебные метки — до закрытия приложения |
+| Уровень качества графики для каждого экрана и режима питания; служебные метки движка (номер запуска, последние замеры кадров) | Хранилище встроенного браузера приложения: `~/Library/WebKit/com.gregorydich.aquariumwallpaper` (и его кэш в `~/Library/Caches/com.gregorydich.aquariumwallpaper`) | Плавная анимация без перегрева; разбор сбоев | Уровень качества — пока не удалите; служебные метки — до закрытия приложения |
 | Черновик отзыва (тема, текст, e-mail, рыбка) | Настройки приложения | Чтобы текст не пропал, если вы закрыли окно | До отправки или пока вы не очистите поля |
 | Последний e-mail из отзыва | Настройки приложения | Подставить его в следующий раз | Забывается, если вы отправите отзыв без e-mail |
 | Время последних отправок отзывов | Настройки приложения | Ограничение: не больше 5 отзывов за 10 минут | 10 минут |
@@ -97,9 +120,11 @@ sessionStorage — служебные метки), `docs/plans/feedback-window-s
   экрана» не нужно и не запрашивается) — чтобы ставить аквариум на паузу, когда рабочий стол закрыт окнами;
 - **состояние питания** (батарея, режим энергосбережения, нагрев) — чтобы снижать частоту кадров.
 
-**Как удалить всё локальное:** выйдите из приложения, удалите его из «Программ», удалите папку
-`~/Library/Application Support/AquariumWallpaper` и выполните в Терминале
-`defaults delete com.gregorydich.aquariumwallpaper`.
+**Как удалить всё локальное:** выключите в меню рыбки «Запускать при входе», выйдите из приложения, удалите его из
+«Программ», удалите папки `~/Library/Application Support/AquariumWallpaper`,
+`~/Library/WebKit/com.gregorydich.aquariumwallpaper` и `~/Library/Caches/com.gregorydich.aquariumwallpaper`
+(и `~/Library/Saved Application State/com.gregorydich.aquariumwallpaper.savedState`, если она есть) и выполните в
+Терминале `defaults delete com.gregorydich.aquariumwallpaper`.
 
 ### 4. Что попадает к нам — только по вашему действию
 
@@ -111,7 +136,8 @@ sessionStorage — служебные метки), `docs/plans/feedback-window-s
 - текст сообщения и тема («Ошибка», «Идея», «Хочу рыбку», «Другое»);
 - номер отзыва — случайный, создаётся заново для каждого отзыва и не связан ни с вами, ни с вашим Mac;
 - версия приложения, версия macOS, время создания, язык интерфейса;
-- отметка о согласии: время и версия текста согласия.
+- отметка о согласии: время и версия текста согласия (и то же для согласия на «группу первых пользователей», если
+  вы его дали).
 
 **Только если вы сами указали или включили:**
 - **e-mail для ответа** — чтобы ответить на этот отзыв;
@@ -120,7 +146,7 @@ sessionStorage — служебные метки), `docs/plans/feedback-window-s
   указанном e-mail. Она разрешает присылать короткие опросы и новости о новых рыбках;
 - **снимок аквариума** — флажок по умолчанию выключен. Снимается только изображение аквариума, без иконок,
   окон и вашего рабочего стола; JPEG не больше 1600 пикселей и 400 КБ;
-- **диагностика** — флажок включается сам, если вы выбрали тему «Ошибка»; его можно снять. Точное содержимое
+- **диагностика** — флажок по умолчанию выключен; для темы «Ошибка» окно предложит его включить. Точное содержимое
   видно по кнопке «Показать, что отправится». Состав: версия и сборка macOS, модель Mac (например, Mac15,6),
   тип процессора и работа через Rosetta, объём памяти, размеры и масштаб экранов, светлое или тёмное оформление,
   питание от батареи, режим энергосбережения, нагрев, включён ли автозапуск, время работы приложения,
@@ -134,8 +160,8 @@ IP-адрес и сведения о Wi-Fi, списки программ и о�
 Строка внизу окна отзыва показывает, какой способ сейчас действует.
 
 1. **Письмо (так работает текущая версия).** Открывается готовое письмо в вашей почтовой программе на адрес
-   [ВЛАДЕЛЕЦ: адрес поддержки]. Вы проверяете его и отправляете сами. Письмо проходит через вашего и нашего
-   почтовых провайдеров. Мы видим также ваш адрес отправителя, имя отправителя и служебные заголовки письма —
+   [ВЛАДЕЛЕЦ: адрес поддержки]. Вы проверяете его и отправляете сами. Письмо проходит через вашего почтового
+   провайдера, сервис пересылки нашего домена и наш почтовый ящик. Мы видим также ваш адрес отправителя, имя отправителя и служебные заголовки письма —
    **даже если поле e-mail в окне вы не заполнили**. Снимок вы прикладываете к письму сами.
 2. **Буфер обмена.** Если почтовой программы нет, текст отзыва копируется. Вы сами решаете, куда его вставить.
 3. **Наш сервер (если включим в будущей версии).** Отзыв уходит по защищённому соединению (HTTPS) на сервер у
@@ -173,7 +199,7 @@ e-mail, страну, купленный товар, номер заказа и 
 | Цель | Данные | Основание |
 |---|---|---|
 | Ответить на отзыв, исправить ошибки, улучшить приложение | Отзыв, e-mail, снимок, диагностика | Ваше согласие (галочка в окне отзыва; ст. 6(1)(a) GDPR) |
-| Опросы и новости для «группы первых пользователей» | E-mail | Отдельное согласие (вторая галочка; ст. 6(1)(a) GDPR; ст. 30А израильского закона о связи) |
+| Опросы и новости для «группы первых пользователей» | E-mail | Отдельное согласие (вторая галочка; ст. 6(1)(a) GDPR; ст. 30А Закона о связи (бизек и вещание), 5742-1982) |
 | Ответ на ваше письмо | Письмо и адрес | Ваш запрос; наш законный интерес отвечать пользователям (ст. 6(1)(f) GDPR) |
 | Защита сервера от злоупотреблений (если сервер включён) | Хэш IP-адреса, до 24 часов | Законный интерес (ст. 6(1)(f) GDPR) |
 | Продажа, выдача и восстановление покупок, возвраты | Данные заказа | Договор (ст. 6(1)(b) GDPR) |
@@ -182,18 +208,21 @@ e-mail, страну, купленный товар, номер заказа и 
 Давать данные не обязательно. Без e-mail мы просто не сможем ответить. Автоматических решений, влияющих на вас,
 и профилирования нет.
 
-Чтобы разобрать много отзывов, мы можем использовать ИИ-сервис [ВЛАДЕЛЕЦ: например, Claude компании Anthropic]
-как обработчика: только текст отзыва, без e-mail и вложений, в отдельном чате без доступа к другим системам.
-[ВЛАДЕЛЕЦ: проверить, что в аккаунте ИИ-сервиса выключено использование переписки для обучения моделей.]
+Чтобы разобрать много отзывов, мы можем передавать текст отзыва — без e-mail, имени, подписи и вложений — ИИ-сервису
+[ВЛАДЕЛЕЦ: Claude, Anthropic PBC, США], в отдельном чате без доступа к другим системам. [ВЛАДЕЛЕЦ: по договору с DPA
+(Claude Team или API) — «как обработчику, по нашему поручению»; по личной подписке — «он обрабатывает текст по своей
+политике; использование чатов для обучения моделей выключено».]
 
 ### 6. Кому мы передаём данные
 
 Мы **не продаём** персональные данные, не передаём их рекламодателям и не «делимся» ими (share) в смысле законов
-штатов США. Доступ к данным есть только у нас и у обработчиков, которые работают по нашему поручению:
-- почтовый провайдер: [ВЛАДЕЛЕЦ: например, Google (Gmail)];
+штатов США. Доступ к данным есть только у нас и у сервисов ниже — обработчиков, которые работают по нашему поручению,
+и тех, кто, как сказано ниже, действует самостоятельно:
+- почта: [ВЛАДЕЛЕЦ: сервис пересылки домена] и [ВЛАДЕЛЕЦ: почтовый ящик, например Google (Gmail)];
 - хостинг сервера отзывов, если он включён: [ВЛАДЕЛЕЦ: провайдер];
 - сервис рассылок для «группы первых пользователей», если будет: [ВЛАДЕЛЕЦ: сервис или «рассылаем вручную»];
-- ИИ-сервис для разбора отзывов (раздел 5): [ВЛАДЕЛЕЦ: сервис];
+- ИИ-сервис для разбора отзывов (раздел 5): [ВЛАДЕЛЕЦ: сервис; обработчик — только по договору с DPA, иначе —
+  самостоятельно, по своей политике];
 - продавец платного контента — самостоятельно, как продавец (раздел 4.6);
 - бухгалтер и налоговые органы — в объёме, который требует закон;
 - государственные органы — только если этого требует закон или суд;
@@ -204,6 +233,8 @@ e-mail, страну, купленный товар, номер заказа и 
 Мы находимся в Израиле. Европейская комиссия признала, что Израиль обеспечивает достаточный уровень защиты
 данных. Наши провайдеры могут хранить данные в ЕС и США; передача идёт на условиях, которые требует закон
 (стандартные договорные условия ЕС или EU–US Data Privacy Framework) [ВЛАДЕЛЕЦ: уточнить по каждому провайдеру].
+ИИ-сервис для разбора отзывов (раздел 5) находится в США [ВЛАДЕЛЕЦ: основание передачи — по его договору (DPF или
+стандартные условия); для личной подписки — решить с юристом].
 
 ### 8. Сколько мы храним данные
 
@@ -226,15 +257,15 @@ e-mail, страну, купленный товар, номер заказа и 
 ### 10. Ваши права
 
 Вы можете:
-- узнать, какие данные о вас у нас есть, и получить их копию (ст. 13 израильского закона о защите приватности;
+- узнать, какие данные о вас у нас есть, и получить их копию (ст. 13 Закона о защите частной жизни;
   ст. 15 GDPR);
 - исправить или удалить неточные данные (ст. 14 закона; ст. 16 GDPR);
 - потребовать удалить данные (ст. 17 GDPR) и ограничить их обработку (ст. 18 GDPR);
 - получить данные в машиночитаемом виде (ст. 20 GDPR);
 - возразить против обработки на основании законного интереса (ст. 21 GDPR);
 - в любой момент отозвать согласие. Это не делает незаконной обработку до отзыва. Отозвать согласие на отзыв —
-  написать нам. Отписаться от рассылки — ответить «отписаться» на любое письмо (ст. 17F закона о защите приватности;
-  ст. 30А закона о связи);
+  написать нам. Отписаться от рассылки — ответить «отписаться» на любое письмо (ст. 17F Закона о защите частной
+  жизни; ст. 30А Закона о связи);
 - подать жалобу: в Израиле — в Управление по защите приватности (הרשות להגנת הפרטיות, gov.il); в ЕС — в надзорный
   орган своей страны.
 
@@ -261,7 +292,7 @@ e-mail, страну, купленный товар, номер заказа и 
 
 # English version
 
-## Privacy Policy for [ВЛАДЕЛЕЦ: app name after R10; currently «Морской аквариум» (Marine Aquarium)]
+## Privacy Policy for [ВЛАДЕЛЕЦ: app name after R10; currently «Морской аквариум»]
 
 Version [ВЛАДЕЛЕЦ: number, e.g. 1.0], effective [ВЛАДЕЛЕЦ: publication date].
 
@@ -278,7 +309,8 @@ Version [ВЛАДЕЛЕЦ: number, e.g. 1.0], effective [ВЛАДЕЛЕЦ: publi
 
 ### 1. Who is responsible and how to contact us
 
-Controller (under the GDPR; database owner under the Israeli Privacy Protection Law): [ВЛАДЕЛЕЦ: full name or
+Controller (under the GDPR; database controller (בעל שליטה במאגר מידע) under the Protection of Privacy Law,
+5741-1981, as amended by Amendment 13): [ВЛАДЕЛЕЦ: full name or
 business name], [ВЛАДЕЛЕЦ: status and number — Osek Patur / Osek Murshe, ID or VAT number], [ВЛАДЕЛЕЦ: postal
 address in Israel] ("we", "us").
 
@@ -300,9 +332,10 @@ This data never leaves your computer. We have no access to it.
 
 | What | Where | Why | How long |
 |---|---|---|---|
-| Settings: aquarium theme, "Show FPS", "Main display only", launch at login | App preferences in `~/Library/Preferences/` | To remember your choices | Until you delete them |
+| Settings: aquarium theme, "Show FPS", "Main display only" | App preferences in `~/Library/Preferences/` | To remember your choices | Until you delete them |
+| Launch at login | macOS Login Items (System Settings ▸ General ▸ Login Items) | To start at login | Until you turn it off |
 | Technical counters: aquarium page reloads, engine crashes and freezes (time, display number, reason) | Same place | So that, if you report a problem, it is clear what happened | Last 20 entries of each kind |
-| Graphics quality level per display and power mode; engine housekeeping marks (launch number, latest frame timings) | The app's built-in browser storage in `~/Library/` | Smooth animation without overheating; crash analysis | Quality level until you delete it; housekeeping marks until the app quits |
+| Graphics quality level per display and power mode; engine housekeeping marks (launch number, latest frame timings) | The app's built-in browser storage: `~/Library/WebKit/com.gregorydich.aquariumwallpaper` (and its cache in `~/Library/Caches/com.gregorydich.aquariumwallpaper`) | Smooth animation without overheating; crash analysis | Quality level until you delete it; housekeeping marks until the app quits |
 | Feedback draft (topic, text, e-mail, fish) | App preferences | So your text is not lost if you close the window | Until sent or until you clear the fields |
 | The last e-mail address used in feedback | App preferences | To pre-fill it next time | Forgotten when you send feedback without an e-mail |
 | Times of your latest feedback sends | App preferences | Limit of 5 sends per 10 minutes | 10 minutes |
@@ -314,9 +347,11 @@ The app also uses the following **in memory only, without storing or sending it*
   permission is neither needed nor requested), to pause the aquarium while the desktop is covered;
 - **power state** (battery, Low Power Mode, thermal state), to lower the frame rate.
 
-**To delete everything stored locally:** quit the app, delete it from Applications, delete the folder
-`~/Library/Application Support/AquariumWallpaper` and run `defaults delete com.gregorydich.aquariumwallpaper`
-in Terminal.
+**To delete everything stored locally:** turn off «Запускать при входе» (Launch at login) in the fish menu, quit the
+app, delete it from Applications, delete the folders `~/Library/Application Support/AquariumWallpaper`,
+`~/Library/WebKit/com.gregorydich.aquariumwallpaper` and `~/Library/Caches/com.gregorydich.aquariumwallpaper` (and
+`~/Library/Saved Application State/com.gregorydich.aquariumwallpaper.savedState`, if present), and run
+`defaults delete com.gregorydich.aquariumwallpaper` in Terminal.
 
 ### 4. Data we receive — only when you act
 
@@ -328,7 +363,8 @@ The Send button works only after you tick the consent box. The consent box is **
 - your message and its topic ("Bug", "Idea", "I want a fish", "Other");
 - a feedback number — random, created anew for each message and linked neither to you nor to your Mac;
 - app version, macOS version, time of creation, interface language;
-- a consent record: the time and the version of the consent wording.
+- a consent record: the time and the version of the consent wording (and the same for the "early users group"
+  consent, if you gave it).
 
 **Only if you enter or switch it on:**
 - **a reply e-mail address**, to answer this message;
@@ -337,7 +373,7 @@ The Send button works only after you tick the consent box. The consent box is **
   e-mail address. It lets us send you short surveys and news about new fish;
 - **an aquarium snapshot** — off by default. Only the aquarium image is captured, without icons, windows or your
   desktop; a JPEG of at most 1600 pixels and 400 KB;
-- **diagnostics** — switched on automatically when you choose the "Bug" topic; you can switch it off. The exact
+- **diagnostics** — off by default; for the «Ошибка» (Bug) topic the window suggests switching it on. The exact
   content is shown by "Show what will be sent". It contains: macOS version and build, Mac model identifier
   (e.g. Mac15,6), processor type and whether Rosetta is used, memory size, display sizes and scale, light or dark
   appearance, battery power, Low Power Mode, thermal state, whether launch at login is on, app uptime, preferred
@@ -351,7 +387,8 @@ lists of apps or windows, file paths, any persistent installation identifier.
 A line at the bottom of the feedback window shows which route is active.
 
 1. **E-mail (how the current version works).** A pre-filled message opens in your mail app, addressed to
-   [ВЛАДЕЛЕЦ: support address]. You review it and send it yourself. It passes through your mail provider and ours.
+   [ВЛАДЕЛЕЦ: support address]. You review it and send it yourself. It passes through your mail provider, our
+   domain's forwarding service and our mailbox.
    We also see your sender address, sender name and the message headers — **even if you left the e-mail field in
    the window empty**. You attach the snapshot to the message yourself.
 2. **Clipboard.** If there is no mail app, the feedback text is copied. You decide where to paste it.
@@ -390,7 +427,7 @@ purchases in the Mac App Store, Apple processes the payment.
 | Purpose | Data | Legal basis |
 |---|---|---|
 | Answer your feedback, fix bugs, improve the app | Feedback, e-mail, snapshot, diagnostics | Your consent (box in the feedback window; Art. 6(1)(a) GDPR) |
-| Surveys and news for the "early users group" | E-mail | Separate consent (second box; Art. 6(1)(a) GDPR; s. 30A of the Israeli Communications Law) |
+| Surveys and news for the "early users group" | E-mail | Separate consent (second box; Art. 6(1)(a) GDPR; s. 30A of the Communications (Telecommunications and Broadcasting) Law, 5742-1982) |
 | Reply to your e-mail | Your message and address | Your request; our legitimate interest in answering users (Art. 6(1)(f) GDPR) |
 | Protect the server from abuse (if the server is enabled) | IP address hash, up to 24 hours | Legitimate interest (Art. 6(1)(f) GDPR) |
 | Sell, deliver and restore purchases; refunds | Order data | Contract (Art. 6(1)(b) GDPR) |
@@ -399,18 +436,22 @@ purchases in the Mac App Store, Apple processes the payment.
 Providing data is voluntary. Without an e-mail address we simply cannot reply. We make no automated decisions
 that affect you and do no profiling.
 
-To sort large volumes of feedback we may use an AI service [ВЛАДЕЛЕЦ: e.g. Claude by Anthropic] as a processor:
-the message text only, without e-mail addresses or attachments, in a separate session with no access to other
-systems. [ВЛАДЕЛЕЦ: make sure the AI account does not allow conversations to be used for model training.]
+To sort large volumes of feedback we may pass the message text — without e-mail addresses, names, signatures or
+attachments — to an AI service [ВЛАДЕЛЕЦ: Claude, Anthropic PBC, USA], in a separate session with no access to other
+systems. [ВЛАДЕЛЕЦ: under a contract with a DPA (Claude Team or API) — "as our processor, on our instructions"; under
+a personal subscription — "it processes the text under its own policy; use of chats for model training is turned
+off".]
 
 ### 6. Who we share data with
 
 We **do not sell** personal data, do not pass it to advertisers and do not "share" it as defined by US state privacy
-laws. Only we and the processors acting on our behalf have access:
-- mail provider: [ВЛАДЕЛЕЦ: e.g. Google (Gmail)];
+laws. Only we and the services below have access — processors acting on our behalf, and those that act
+independently, as stated:
+- e-mail: [ВЛАДЕЛЕЦ: domain forwarding service] and [ВЛАДЕЛЕЦ: mailbox provider, e.g. Google (Gmail)];
 - feedback server hosting, if enabled: [ВЛАДЕЛЕЦ: provider];
 - mailing service for the "early users group", if any: [ВЛАДЕЛЕЦ: service, or "sent manually"];
-- AI service for sorting feedback (section 5): [ВЛАДЕЛЕЦ: service];
+- AI service for sorting feedback (section 5): [ВЛАДЕЛЕЦ: service; a processor only under a contract with a DPA,
+  otherwise independently, under its own policy];
 - the reseller of paid content, independently, as the seller (section 4.6);
 - our accountant and the tax authorities, to the extent the law requires;
 - public authorities, only where required by law or a court;
@@ -421,7 +462,8 @@ laws. Only we and the processors acting on our behalf have access:
 We are based in Israel, which the European Commission recognises as providing an adequate level of data
 protection. Our providers may store data in the EU and the US; such transfers rely on the safeguards the law
 requires (EU Standard Contractual Clauses or the EU–US Data Privacy Framework) [ВЛАДЕЛЕЦ: confirm for each
-provider].
+provider]. The AI service for sorting feedback (section 5) is in the US [ВЛАДЕЛЕЦ: transfer basis — under its
+contract (DPF or Standard Contractual Clauses); for a personal subscription — decide with the lawyer].
 
 ### 8. How long we keep data
 
@@ -444,14 +486,14 @@ of a data breach we will notify the Privacy Protection Authority and the people 
 ### 10. Your rights
 
 You may:
-- find out what data we hold about you and get a copy (s. 13 of the Israeli Privacy Protection Law; Art. 15 GDPR);
+- find out what data we hold about you and get a copy (s. 13 of the Protection of Privacy Law; Art. 15 GDPR);
 - correct or delete inaccurate data (s. 14 of the Law; Art. 16 GDPR);
 - ask us to erase your data (Art. 17 GDPR) or restrict its use (Art. 18 GDPR);
 - receive your data in a machine-readable format (Art. 20 GDPR);
 - object to processing based on legitimate interest (Art. 21 GDPR);
 - withdraw consent at any time; this does not affect processing before the withdrawal. To withdraw consent for
-  feedback, write to us. To leave the mailing list, reply "unsubscribe" to any message (s. 17F of the Privacy
-  Protection Law; s. 30A of the Communications Law);
+  feedback, write to us. To leave the mailing list, reply "unsubscribe" to any message (s. 17F of the Protection of
+  Privacy Law; s. 30A of the Communications Law);
 - complain to a regulator: in Israel, the Privacy Protection Authority (gov.il); in the EU, the supervisory
   authority of your country.
 
