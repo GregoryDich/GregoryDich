@@ -506,7 +506,7 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     // ring flashes as it passes
     const act = still || qa ? 0 : clamp(1 - smooth(2.2, 2.4, p) + smooth(4.5, 4.7, p));
     const tt = t % 6.5, sy = 0.55 - tt;
-    SW.uSweepY.value = sy; SW.uSweepA.value = tt < 1.1 ? 0.3 * act * smooth(0, 0.15, tt) * (1 - smooth(0.95, 1.1, tt)) : 0;
+    SW.uSweepY.value = sy; SW.uSweepA.value = tt < 1.1 ? 0.22 * act * smooth(0, 0.15, tt) * (1 - smooth(0.95, 1.1, tt)) : 0;
     SW.uRingFlash.value = SW.uSweepA.value > 0 ? 0.35 * Math.exp(-(((sy - Y(558)) / 0.05) ** 2)) * (1 - smooth(0.4, 0.9, p)) : 0;
     // the grid
     place(dp, D_DOT);

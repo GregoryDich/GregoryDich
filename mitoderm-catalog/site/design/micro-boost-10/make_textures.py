@@ -10,18 +10,21 @@ protocols/print/img/micro-boost-10.webp (385×1252, never upscaled), in edge coo
 the closest by overlay (0.87–0.95 correlation, Jost and Inter lower), each line at its own narrowing; every glyph's
 ink centre stands on its measured centre (ink-weighted, ±0.0017 u), its cap height and baseline as measured, so the
 spacing is the photo's, not the font's. The gold monogram M is the owner's file site/img/mitoderm-m-gold.png reduced
-(566 → 170 px). The medallion is three layers, none an upscaled photo:
-  ring   the photo's colours in polar coordinates (radius × angle), smoothed along the angle (σ 3°): a smooth field (the
-         drawn bevel: light at the left, dark at the lower left, is part of the print), its edges drawn sharp on the
-         fitted circles (outer R = 0.10256 H, the disc's edge 0.80 R)
-  disc   the photo's silver disc with its dark strokes taken out (filled from the silver round them) and blurred
-         (σ 1.0 px): a soft field that keeps the faint grey «ghost» spicules
+(566 → 170 px). The medallion keeps no pixel of the photo: it is drawn at the texture's own resolution (≈ 3.2 texels
+per photo px), from numbers measured on the photo:
+  fields the silver disc, its thin dark outline and the gold ring's two bands (the darker inner one, a step, the lighter
+         outer one), each a zone between circles at the photo's half-contrast radii (0.826, 0.845, 0.930, 0.991 R; the
+         outer R = 0.10256 H) with sharp, anti-aliased edges; inside each zone its colour is a smooth function of radius
+         and angle (polynomials × angles up to 10θ: the lens's bevel, light at the upper right, dark at the left, and the
+         ring's), fitted by least squares to the photo's pixels in that zone (the strokes left out); 0.5–14 levels rms
+         from the photo, which is its blur and the disc's foil grain. The disc's faint grey «ghost» marks are left out:
+         on the photo they are broken shards between the strokes, not lines; traced, they come out as leaves on the rim
   strokes the dark green spicules (#243523) traced on the photo and drawn as vectors: each stroke found in turn (a
          Hough vote of the stroke map, each pixel voting only along its own stroke's direction), its centre line
          refitted to the ink (straight, or a parabola where it bends), its tips out to where the ink fades, its width
          from the ink across it; pieces cut by crossings joined; drawn as spindles (pointed at both ends) with edges
          anti-aliased at the texture's scale. About 60 strokes, centre lines on the photo's ink; the photo's tangle has
-         more: its faintest lines stay in the soft disc, pieces under 15 px are left out; a hand check by overlay remains
+         more: its faintest lines are left out with the ghosts, pieces under 15 px too; a hand check by overlay remains
 The packaging's vector file would replace all of it one for one (a question to the owner).
 Writes into <out dir>:
   box-face.png   the front's colours, RGB 960×4040 (3.1 texels per px where the box is largest, 820 frame px in a 3840
@@ -80,10 +83,17 @@ M_BOX, M_MEDIAN = ((0.4040, 0.5807), (0.0430, 0.0873)), '#C3A271'  # the monogra
 # the medallion: centre (u, v), outer radius (H); in photo px its centre (153.07, 647.22), half axes 131.2 × 127.7
 MED_UV, MED_R = (0.5006, 0.5171), 0.10256
 MED_PX, MED_AX = (153.07, 647.22), (131.2, 127.7)
-DISC_EDGE, RING_SMOOTH, DISC_BLUR = 0.80, 3.0, 1.0     # the disc's edge (of R), the ring's smoothing (°), the disc's blur (px)
+# the medallion's zones, edges at the photo's half-contrast radii (of R; the angle-averaged radial gradient): the silver
+# disc, its thin dark outline, the ring's darker inner band, its lighter outer band (a step between them), the paper
+MED_EDGES = (0.826, 0.845, 0.930, 0.991)
+DISC_EDGE = MED_EDGES[0]
+STROKE_RHO = 0.77                                       # the strokes are traced inside this (of R)
 STROKE, STROKE_L = '#243523', 140                       # the strokes' ink; lighter than that (mean RGB) is silver
-WMAX, TIP, WK, MINLEN = 4.0, 2.2, 1.35, 15             # a stroke's widest (photo px); its spindle w(t) = w (1 − |2t − 1|^TIP);
-# WK: the GPU averages light, so a thin dark line reduced in a key reads lighter than the photo's: drawn 35 % wider;
+WMAX, TIP, WK, MINLEN = 5.6, 2.2, 1.9, 15              # a stroke's widest (photo px); its spindle w(t) = w (1 − |2t − 1|^TIP);
+# WK: the GPU averages light (mipmaps, filtering in linear light), so a thin dark line reduced in a key reads lighter than
+# the photo's: drawn 1.9 × the ink measured across it (WMAX with it), the 3840 kit key's medallion at the photo's scale
+# has the photo's share of dark pixels inside 0.78 R (L < 110 / 90 / 70: 0.250 / 0.220 / 0.185 against 0.247 / 0.221 /
+# 0.189; at 1.35 it was 0.193 / 0.159 / 0.121);
 # MINLEN: shorter pieces are a crossing's leftovers, not strokes (drawn, they read as leaves): left out
 GOLD_ROUGH, GOLD_METAL, PAPER_ROUGH, INK_ROUGH = 0.28, 0.60, 0.70, 0.60
 
@@ -308,7 +318,55 @@ def _erase(W, p0, d, n, s0, s1, k, r):   # take a stroke out of the map (its pix
     W[ys[m], xs[m]] *= np.clip((np.abs(o[m]) - r) / 0.8, 0, 1)
 
 
-# ---- the medallion
+# ---- the medallion: its fields synthesized (least-squares fits of the photo in polar coordinates, evaluated at the
+# texture's own resolution with sharp edges), its strokes vectors
+def _fourier(th, M):   # 1, cos θ, sin θ, … cos Mθ, sin Mθ
+    cols = [np.ones_like(th)]
+    for m in range(1, M + 1): cols += [np.cos(m * th), np.sin(m * th)]
+    return cols
+
+
+def _disc_basis(r, th):
+    """the disc's field: polynomials regular at the centre (ρ^n cos mθ, n ≥ m, n − m even, n ≤ 10) and, for the shading
+    by its edge (a lens's bevel: dark at the left, light at the upper right), powers of its outer part (ρ > 0.72 of the
+    disc) times angles to 10θ"""
+    rn = r / DISC_EDGE; cols = []
+    for m in range(11):
+        for n in range(m, 11, 2):
+            if m == 0: cols.append(rn ** n)
+            else: cols += [rn ** n * np.cos(m * th), rn ** n * np.sin(m * th)]
+    F = _fourier(th, 10); o = np.clip((rn - 0.72) / 0.28, 0, None)
+    for k in (2, 3, 4, 6): cols += [o ** k * f for f in F]
+    return np.stack(cols, -1)
+
+
+def _band_basis(r, th, a, b, deg):   # a ring's band [a, b]: Legendre polynomials across it times angles to 10θ
+    t = (r - a) / (b - a) * 2 - 1; F = _fourier(th, 10); cols = []
+    for d in range(deg + 1):
+        P = np.polynomial.legendre.Legendre.basis(d)(t); cols += [P * f for f in F]
+    return np.stack(cols, -1)
+
+
+MED_ZONES = [('disc', 0.0, MED_EDGES[0], None), ('outline', MED_EDGES[0], MED_EDGES[1], 1),
+             ('inner band', MED_EDGES[1], MED_EDGES[2], 2), ('outer band', MED_EDGES[2], MED_EDGES[3], 2)]
+
+
+def medallion_fields(shot, strokes):
+    """each zone's colour (R, G, B) as a smooth function of (ρ, θ), fitted to the photo's pixels inside it (0.6 px off its
+    edges, the disc's dark strokes and a pixel round them left out): ≈ 60–150 numbers a channel per zone, no pixel of
+    the photo kept"""
+    cxp, cyp = MED_PX; rx, ry = MED_AX
+    yy, xx = np.mgrid[0:shot.shape[0], 0:shot.shape[1]] + 0.5
+    X, Y = (xx - cxp) / rx, (yy - cyp) / ry; rho, th = np.hypot(X, Y), np.arctan2(Y, X)
+    mar = 0.6 / MED_AX[1]; out = {}
+    for name, a, b, deg in MED_ZONES:
+        m = (rho > (a + mar if a else -1)) & (rho < b - mar)
+        if deg is None: m &= ~ndimage.binary_dilation(strokes, iterations=1)
+        B = _disc_basis(rho[m], th[m]) if deg is None else _band_basis(rho[m], th[m], a, b, deg)
+        out[name] = np.linalg.solve(B.T @ B + 1e-6 * m.sum() * np.eye(B.shape[1]), B.T @ shot[m].astype(np.float64))
+    return out
+
+
 def medallion(rgb, metal):
     shot = np.asarray(Image.open(PACKSHOT).convert('RGB')).astype(np.float32)
     L = shot.mean(2)
@@ -322,30 +380,29 @@ def medallion(rgb, metal):
     D = np.clip((bg - L) / np.maximum(bg - Ls, 20), 0, 1.2)
     yy, xx = np.mgrid[0:shot.shape[0], 0:shot.shape[1]] + 0.5
     rr = np.hypot((xx - cxp) / rx, (yy - cyp) / ry)
-    D[rr > DISC_EDGE - 0.03] = 0
-    # the disc without its strokes: the stroke pixels (and a pixel round them) filled from the silver, then blurred
-    hole = ndimage.binary_dilation(D > 0.3, iterations=2)
-    clean = shot.copy()
-    bgc = np.stack([norm(shot[..., k]) for k in range(3)], -1)
-    clean[hole] = bgc[hole]
-    clean = np.stack([ndimage.gaussian_filter(clean[..., k], DISC_BLUR) for k in range(3)], -1)
-    # the ring in polar coordinates, smoothed along the angle
-    A, RHO = 720, np.arange(0.70, 1.0401, 0.002)
-    ang = (np.arange(A) + 0.5) / A * 2 * np.pi
-    px = cxp + rx * RHO[None, :] * np.cos(ang)[:, None]; py = cyp + ry * RHO[None, :] * np.sin(ang)[:, None]
-    polar = sample(shot, px, py, order=1)                                     # (A, len(RHO), 3)
-    polar = ndimage.gaussian_filter1d(polar, RING_SMOOTH / 360 * A, axis=0, mode='wrap')
-    # the texture's medallion window
+    D[rr > STROKE_RHO] = 0
+    fields = medallion_fields(shot, ndimage.binary_dilation(D > 0.3, iterations=2))
+    # the texture's medallion window (texture ρ = photo ρ: the front's mapping carries the photo's x stretch)
     R = MED_R * TH; cu, cv = MED_UV[0] * TW, MED_UV[1] * TH
     x0, x1, y0, y1 = int(cu - R - 4), int(cu + R + 5), int(cv - R - 4), int(cv + R + 5)
     ty, tx = np.mgrid[y0:y1, x0:x1].astype(np.float32) + 0.5
     d = np.hypot(tx - cu, ty - cv); rho = d / R
-    th = np.mod(np.arctan2(ty - cv, tx - cu), 2 * np.pi)
-    # the same point on the photo (through the front's mapping: the photo's x stretch is in it)
+    th = np.arctan2(ty - cv, tx - cu)
     u, v = tx / TW, ty / TH; pxx, pyy = photo_xy(u, v)
-    ring = np.stack([ndimage.map_coordinates(polar[..., k], [th / (2 * np.pi) * A - 0.5, (rho - RHO[0]) / 0.002], order=1, mode='wrap')
-                     for k in range(3)], -1)
-    disc = sample(clean, pxx, pyy, order=3)
+    # the zones, each its fitted field, edges anti-aliased at the texture's scale; evaluated a band of rows at a time
+    win = rgb[y0:y1, x0:x1]; gold = np.zeros(d.shape, np.float32); inner = np.zeros(d.shape, np.float32)
+    acc = np.zeros(win.shape, np.float32); covs = np.zeros(d.shape, np.float32)   # Σ coverage × field, Σ coverage
+    for name, a, b, deg in MED_ZONES:
+        cov = np.clip(b * R - d + 0.5, 0, 1) - (np.clip(a * R - d + 0.5, 0, 1) if a else 0)
+        for r0 in range(0, d.shape[0], 48):
+            sl = slice(r0, r0 + 48); m = cov[sl] > 0
+            if not m.any(): continue
+            B = _disc_basis(rho[sl][m], th[sl][m]) if deg is None else _band_basis(rho[sl][m], th[sl][m], a, b, deg)
+            acc[sl][m] += np.clip(B @ fields[name], 0, 255) * cov[sl][m][:, None]
+        covs += cov
+        if 'band' in name: gold += cov
+        if deg is None: inner += cov
+    win[:] = win * (1 - covs[..., None]) + acc
     # strokes: traced on the photo (trace_strokes), drawn as spindles at the texture's scale, edges anti-aliased by
     # their distance in texels (the photo's x and y scales differ: the normal's own scale)
     J = np.array([TW / XW, TH / (FOOT[0] - TOP[0] + (FOOT[1] - TOP[1]) * cxp)])
@@ -360,18 +417,11 @@ def medallion(rgb, metal):
         a = np.clip(0.5 - (np.abs(o[m]) - hw) * np.linalg.norm(J * nn), 0, 1) * min(1.0, dark / 0.5)
         keepa[m] *= 1 - a
     cov = (1 - keepa) * np.clip((DISC_EDGE - 0.02) * R - d + 0.5, 0, 1)
-    # compose: disc inside DISC_EDGE (its edge sharp), the ring field to the outer edge, the strokes on the disc
-    win = rgb[y0:y1, x0:x1]
-    inner = np.clip(DISC_EDGE * R - d + 0.5, 0, 1)[..., None]
-    outer = np.clip(R - d + 0.5, 0, 1)[..., None]
-    field = ring * (1 - inner) + disc * inner
-    win[:] = win * (1 - outer) + field * outer
     win += (hexrgb(STROKE) - win) * cov[..., None]
-    gold = (outer[..., 0] * (1 - inner[..., 0]))
     m = metal[y0:y1, x0:x1]
     m[..., 1] = m[..., 1] * (1 - gold) + GOLD_ROUGH * gold
     m[..., 2] = np.maximum(m[..., 2], GOLD_METAL * gold)
-    m[..., 1] = m[..., 1] * (1 - inner[..., 0]) + INK_ROUGH * inner[..., 0]   # the printed silver: no metal
+    m[..., 1] = m[..., 1] * (1 - inner) + INK_ROUGH * inner   # the printed silver: no metal
 
 
 def disk(r):
