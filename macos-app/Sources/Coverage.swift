@@ -69,7 +69,9 @@ enum Coverage {
 /// Which displays a full-screen or maximised window covers (`covered`), kept up to date while `active` (pages shown,
 /// displays awake). Every check also calls `onCheck`: AppDelegate re-reads each window's occlusion state then (a lost
 /// "visible again" notification must not keep a page paused) and re-applies the pauses.
-@MainActor
+/// Main thread only, like AppDelegate that owns it (checks run via perform(…afterDelay:) on the main run loop).
+/// Deliberately NOT `@MainActor`: with the real macOS SDK AppDelegate is not actor-isolated in Swift 5 mode, and its
+/// synchronous calls into a `@MainActor` class are hard errors on Apple's compiler (owner's build, 22.10).
 final class CoverageMonitor: NSObject {
     static let minInterval: TimeInterval = 1         // never two window-list reads closer than this
     static let confirmAfter: TimeInterval = 1        // the second look at a new hit
