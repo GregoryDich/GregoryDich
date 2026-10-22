@@ -17,7 +17,8 @@
 //   S4 feel     the cloud gathers into one clear drop of the serum, a few spicules suspended in it (no skin, no people)
 //   S5 protocol the drop sinks; the 2.5% box and DERMA RECOVERY CREAM (its packshot) stand side by side, the routine's two
 //               products, above the page's step cards
-//   S6–S7 kit   the 2.5% box alone in the packshot's pose: the picture that flies into the offer card
+//   S6–S7 kit   the 2.5% box alone in the packshot's pose, the green light behind it: the picture that flies into the
+//               offer card
 // Left out from the spec (the owner's rule overrides it): the steps and their gold edges, the blurred floating M, the
 // contact shadow, the enlarged medallion ring and the milky disc behind the field, the five gold peptide threads and the
 // two light particles, the warm surface, the sparks and the ring wave. The boxes never open and turn only as far as the
@@ -175,7 +176,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     return { o, d: unit(0.4), L, lag: rng() * 0.4, ph: rng() * 6.283, in: q.map(v => v * 0.62), Lin: Math.min(0.45 * L, 0.72),   // Lin: of the drop's R
       din: unit(0.6), m: [Math.sqrt(rng()) * 0.62, rng() * 6.283, rng() * 6.283, 0.6 + 0.4 * rng()] };   // m: on the medallion: r, angle, axis angle, length
   });
-  const FIELD = [680, 750], DROP = [690, 720, 170];   // the cloud's centre (frame px), the drop's centre and radius
+  const FIELD = [680, 750], DROP = [690, 720, 220];   // the cloud's centre (frame px), the drop's centre and radius
 
   // ---- the drop of serum: clear glass without transmission (on the transparent canvas it would not see the page's
   // smoke; a phone pays a pass for it): its reflections of the studio and a Fresnel rim are its whole look
@@ -231,6 +232,9 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const HERO = [[660, 700, 760], [800, 700, 560], null, null, [420, 555, 430], [680, 740, 800]];
   const RENEW = [450, 810, 560], DERMA = [700, 630, 280];   // DERMA: 0.65 of the 2.5% box's height (assumed), feet level
   const TH_PK = rad(10), TH_DERMA = rad(0.5);              // the view angles photographed
+  // the kit's glow (S6–S7 and the offer card's picture, which is cut to what has alpha): within the box's height, about
+  // twice its width, so the card's picture is the box in its light, not a narrow strip in an empty card
+  const KIT_GLOW = 0.6;
   const ST = { hero: [0, 0, 0, 0], renew: [0, 0, 0, 0], derma: [0, 0, 0, 0], mode: 0, e: 0, g: 0, o: 0, drop: [0, 0, 0, 0],
     glow: [0, 0, 0], haze: 0, hazeAt: [0, 0, 0, 0] };   // mode: 0 none, 1 leaving the medallion (e), 2 the cloud gathering into the drop (g), 3 in the drop
   const set4 = (o, x, y, H, a) => { o[0] = x; o[1] = y; o[2] = H; o[3] = a; return o; };
@@ -239,7 +243,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     const k = Math.min(4, Math.floor(p)), f = p - k, st = ST;
     set4(st.hero, 0, 0, 1, 0); set4(st.renew, 0, 0, 1, 0); set4(st.derma, 0, 0, 1, 0); set4(st.drop, DROP[0], DROP[1], DROP[2], 0);
     st.mode = 0; st.e = st.g = st.o = 0; st.glow[0] = st.glow[1] = st.glow[2] = 0; st.haze = 0;
-    if (p >= 5) { mixPose(st.hero, HERO[5], HERO[5], 0, 1); return st; }   // the kit: exactly the pose, nothing else
+    if (p >= 5) { mixPose(st.hero, HERO[5], HERO[5], 0, 1); st.glow[0] = KIT_GLOW; return st; }   // the kit: exactly the pose
     if (k === 0) {   // S1 → S2: the 2.5% box steps back and up right; the 1.5% comes in from the left, from the dark
       mixPose(st.hero, HERO[0], HERO[1], smooth(0.05, 0.8, f), 1);
       const s = smooth(0.3, 0.85, f); set4(st.renew, RENEW[0] - 120 * (1 - s), RENEW[1], RENEW[2], s);
@@ -247,21 +251,21 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     } else if (k === 1) {   // S2 → S3: the 1.5% recedes and goes; the camera nears the 2.5%'s medallion (its centre to the
       // cloud's, ×1.3), the box fades; its spicules leave the print and spread into the cloud
       const s = smooth(0, 0.3, f); set4(st.renew, RENEW[0], RENEW[1], RENEW[2] * (1 - 0.15 * s), 1 - s);
-      const z = smooth(0, 0.45, f), H = HERO[1][2] * (1 + 0.3 * z);
+      const z = smooth(0, 0.55, f), H = HERO[1][2] * (1 + 0.3 * z);
       const m0x = HERO[1][0] + (MED[0] - 0.5) * BW * HERO[1][2], m0y = HERO[1][1] + (MED[1] - 0.5) * HERO[1][2];
       const mx = lerp(m0x, FIELD[0], z), my = lerp(m0y, FIELD[1], z);
-      set4(st.hero, mx - (MED[0] - 0.5) * BW * H, my - (MED[1] - 0.5) * H, H, 1 - smooth(0.2, 0.45, f));
-      st.mode = 1; st.e = clamp((f - 0.22) / 0.78); st.o = st.e > 0 ? 1 : 0;
+      set4(st.hero, mx - (MED[0] - 0.5) * BW * H, my - (MED[1] - 0.5) * H, H, 1 - smooth(0.25, 0.6, f));
+      st.mode = 1; st.e = clamp((f - 0.12) / 0.7); st.o = st.e > 0 ? 1 : 0;   // they leave while the box is still there
       st.glow[0] = 0.55 * (1 - smooth(0, 0.4, f)); st.glow[1] = 0.55 * (1 - s);
       st.haze = 0.75 * smooth(0.35, 1, f); set4(st.hazeAt, FIELD[0], FIELD[1], 480, 450);
     } else if (k === 2) {   // S3 → S4: the cloud gathers into a clear drop: fifty spicules stay suspended in it, the rest go in
       st.mode = 2; st.g = f; st.o = 1;
       const a = smooth(0.3, 0.75, f); set4(st.drop, DROP[0], DROP[1], DROP[2] * (0.75 + 0.25 * smooth(0.3, 0.9, f)), a);
-      st.haze = 0.75; set4(st.hazeAt, lerp(FIELD[0], DROP[0], f), lerp(FIELD[1], DROP[1], f), lerp(480, 340, f), lerp(450, 340, f));
+      st.haze = 0.75; set4(st.hazeAt, lerp(FIELD[0], DROP[0], f), lerp(FIELD[1], DROP[1], f), lerp(480, 400, f), lerp(450, 400, f));
     } else if (k === 3) {   // S4 → S5: the drop sinks and goes; the 2.5% box and DERMA come in from the dark, side by side
       const s = smooth(0, 0.35, f); st.mode = 3; st.o = 1 - s;
       set4(st.drop, DROP[0], DROP[1] + 100 * s, DROP[2], 1 - s);
-      st.haze = 0.75 * (1 - s); set4(st.hazeAt, DROP[0], DROP[1] + 100 * s, 340, 340);
+      st.haze = 0.75 * (1 - s); set4(st.hazeAt, DROP[0], DROP[1] + 100 * s, 400, 400);
       const h = smooth(0.3, 0.7, f), d = smooth(0.45, 0.8, f);
       set4(st.hero, HERO[4][0], HERO[4][1], HERO[4][2] * (0.9 + 0.1 * h), h);
       set4(st.derma, DERMA[0], DERMA[1], DERMA[2] * (0.9 + 0.1 * d), d);
@@ -269,7 +273,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     } else {   // S5 → kit: both hold while the page's step cards pass (to f ≈ 0.5); DERMA goes; the 2.5% comes forward
       const d = smooth(0.45, 0.7, f); set4(st.derma, DERMA[0], DERMA[1], DERMA[2] * (1 - 0.1 * d), 1 - d);
       mixPose(st.hero, HERO[4], HERO[5], smooth(0.5, 1, f), 1);
-      st.glow[0] = 0.5 * (1 - smooth(0.4, 0.75, f)); st.glow[2] = 0.5 * (1 - d);
+      st.glow[0] = 0.5 * (1 - smooth(0.4, 0.6, f)) + KIT_GLOW * smooth(0.75, 1, f); st.glow[2] = 0.5 * (1 - d);
     }
     return st;
   }

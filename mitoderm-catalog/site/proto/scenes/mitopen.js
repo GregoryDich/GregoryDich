@@ -68,7 +68,7 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   // middle; further left the room is dark again (the body's dark left edge, the left flat), a rim behind right (+70…+110°)
   // lights the right edge, the middle (#aba48b) is the dim wall behind the camera; above, a soft ceiling (the cone's upper
   // side). Neutral white throughout. The cartridge is lit by the same room
-  const ENV = { base: 0.27, front: 0.12, left: 1.0, rim: 0.5, back: 0.15, up: 0.8, down: 0.18 };
+  const ENV = { base: 0.27, front: 0.26, left: 1.25, rim: 0.5, back: 0.15, up: 0.8, down: 0.18, floor: 0.4 };
   const plateau = (v, a, b, s) => smooth(a - s, a + s, v) * (1 - smooth(b - s, b + s, v));
   function makeEnv() {
     const pm = new THREE.PMREMGenerator(renderer), room = new THREE.Scene();
@@ -76,10 +76,10 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     for (let i = 0; i < q.count; i++) {
       const x = q.getX(i) / 30, y = q.getY(i) / 30, z = q.getZ(i) / 30;   // the camera looks from +z
       const az = deg(Math.atan2(x, z)), el = deg(Math.asin(clamp(y, -1, 1)));   // az 0: behind the camera, −90: left
-      const band = plateau(el, -25, 55, 12), azc = -57 - 0.9 * (el - 20);   // the softbox's middle at this height
-      let v = ENV.base + band * (ENV.front * plateau(az, -32, 22, 6) + ENV.left * plateau(az - azc, -22, 22, 7) + ENV.rim * plateau(az, 70, 110, 10)
-        + ENV.back * (plateau(az, -200, -122, 10) + plateau(az, 168, 200, 10)));
-      v = lerp(v, el > 0 ? ENV.up : ENV.down, el > 0 ? smooth(45, 70, el) : smooth(-20, -50, el));
+      const band = plateau(el, -25, 55, 12), sx = az + 55 + 0.46 * (el - 20);   // sx: from the softbox's middle at this height
+      let v = ENV.base + band * (ENV.front * plateau(az, -32, 8, 8) + ENV.left * smooth(-29, -15, sx) * (1 - smooth(22, 38, sx))
+        + ENV.back * (plateau(az, -200, -122, 10) + plateau(az, 168, 200, 10))) + ENV.rim * plateau(az, 70, 110, 10) * plateau(el, 0, 55, 10);
+      v = lerp(v, el > 0 ? ENV.up * (1 - 0.35 * smooth(10, 80, az)) : ENV.down + ENV.floor * plateau(az, -35, 35, 15), el > 0 ? smooth(45, 70, el) : smooth(-20, -50, el));
       c.setRGB(v, v, v); col.push(c.r, c.g, c.b);
     }
     dome.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
@@ -193,10 +193,13 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     return r;
   }
   // a surface of revolution r(u, α) on a grid (rows u, columns α in degrees, closed): positions in the pen's space,
-  // normals from the surface's own derivatives (crisp scallop ridges and flat edges)
-  function surface(us, as, rf) {
-    const nu = us.length, na = as.length, pos = new Float32Array(nu * na * 3), nor = new Float32Array(nu * na * 3), idx = [];
-    for (let j = 0; j < nu; j++) for (let i = 0; i < na; i++) {
+  // normals from the surface's own derivatives (crisp scallop ridges and flat edges). `cols`: the columns' α, or a
+  // function u → the row's α (always as many): columns that follow the scallops' and the flats' edges row by row keep
+  // those edges crisp with few columns (no staircase where an edge runs across the columns)
+  function surface(us, cols, rf) {
+    const row = typeof cols === 'function' ? cols : () => cols, nu = us.length, na = row(us[0]).length;
+    const pos = new Float32Array(nu * na * 3), nor = new Float32Array(nu * na * 3), idx = [];
+    for (let j = 0; j < nu; j++) for (let i = 0, as = row(us[j]); i < na; i++) {
       const u = us[j], a = as[i], ar = rad(a), s = Math.sin(ar), c = Math.cos(ar), r = rf(u, a);
       const ru = (rf(u + 0.15, a) - rf(u - 0.15, a)) / 0.3, ra = (rf(u, a + 0.08) - rf(u, a - 0.08)) / rad(0.16);
       const ux = ru * s, uy = -KAX, uz = ru * c, ax = ra * s + r * c, az = ra * c - r * s;
@@ -266,9 +269,9 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   }
   const MET = { color: 0xd4ccb1, emissive: 0x4a4639, roughness: 0.3 };
   const metal = penPatch(new THREE.MeshPhysicalMaterial({ color: MET.color, metalness: 1, roughness: MET.roughness, emissive: MET.emissive, toneMapped: false }), 'metal');
-  const ringMat = penPatch(new THREE.MeshPhysicalMaterial({ color: 0xd9b9a0, metalness: 1, roughness: 0.24, emissive: 0x0a0705, toneMapped: false }), 'ring');
-  const buttonMat = penPatch(new THREE.MeshPhysicalMaterial({ color: 0xe6cbb7, metalness: 1, roughness: 0.25, emissive: 0x8e7764, toneMapped: false }), 'button');
-  const dotMat = new THREE.MeshPhysicalMaterial({ color: 0x6c6f69, roughness: 0.15, clearcoat: 1, clearcoatRoughness: 0.05, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 });
+  const ringMat = penPatch(new THREE.MeshPhysicalMaterial({ color: 0xd4b49b, metalness: 1, roughness: 0.3, emissive: 0x0a0705, toneMapped: false }), 'ring');
+  const buttonMat = penPatch(new THREE.MeshPhysicalMaterial({ color: 0xcfb3a0, metalness: 1, roughness: 0.25, emissive: 0x3a3029, toneMapped: false }), 'button');
+  const dotMat = new THREE.MeshPhysicalMaterial({ color: 0x5c5f59, roughness: 0.15, clearcoat: 0.5, clearcoatRoughness: 0.05, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 });
   const gapMat = new THREE.MeshStandardMaterial({ color: 0x47443b, roughness: 0.6, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 });
   const markMat = new THREE.MeshStandardMaterial({ color: 0x3a3a36, roughness: 0.8, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 });
   const SHADE = 0.2;
@@ -279,40 +282,61 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   // the cartridge: light clear plastic, as the packshot shows it (#cbccc4 on the tube, lighter at its open end), the
   // parts inside it a little darker through its walls. Its colour is pipetted and held as the print's is (emissive 0.8 of
   // it, a neutral shading, not tone mapped); no transmission (on a transparent canvas it could not see the page's smoke,
-  // and a phone pays a pass for it): its opacity rises toward its edges (Fresnel), where clear plastic catches the light
-  function clear(hex, a0, aF, side = THREE.FrontSide, emi = 0.8) {
+  // and a phone pays a pass for it): toward its edges (Fresnel) it grows more opaque and greyer (`edge`), as the walls
+  // and the parts' rims of clear plastic read on the photo: thin grey lines
+  function clear(hex, a0, aF, edge, side = THREE.FrontSide, emi = 0.8) {
     const c = new THREE.Color(hex);
     const m = new THREE.MeshPhysicalMaterial({ color: c.clone().multiplyScalar(0.3), emissive: c, emissiveIntensity: emi, roughness: 0.3, metalness: 0,
       clearcoat: 0.5, clearcoatRoughness: 0.1, toneMapped: false, transparent: true, depthWrite: false, side });
-    const k = [a0, aF].map(v => v.toFixed(3));
+    const k = [a0, aF, edge].map(v => v.toFixed(3));
     m.onBeforeCompile = sh => {
       sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
       { float F = pow(1.0 - clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), 2.0);
+        gl_FragColor.rgb *= mix(1.0, ${k[2]}, F);
         gl_FragColor.a = clamp(${k[0]} + ${k[1]} * F, 0.0, 1.0) * opacity; }`);
     };
     m.customProgramCacheKey = () => 'clear' + k.join() + side;
     return m;
   }
-  const tubeBack = clear(0xd3d4cd, 0.8, 0.1, THREE.BackSide), tubeFront = clear(0xdedfd9, 0.2, 0.45);
-  const partMat = clear(0xa3a49d, 0.1, 0.7), plateMat = clear(0xaeaca2, 0.55, 0.35);
+  const tubeBack = clear(0xeeefe8, 0.9, 0.1, 0.75, THREE.BackSide), tubeFront = clear(0xf0f1eb, 0.1, 0.5, 0.55);
+  const partMat = clear(0xa3a49d, 0.12, 0.75, 0.6), snapMat = clear(0x9c9c94, 0.35, 0.5, 0.6), plateMat = clear(0x8f8d84, 0.7, 0.3, 0.7);
 
   // ---- the pen
   const pen = new THREE.Group(); scene.add(pen);
   const add = (g, m, order = 0) => { const x = new THREE.Mesh(g, m); x.renderOrder = order; pen.add(x); return x; };
-  // The meshes are as fine as the 3840 keys need and no finer (≈ 140k triangles, a third of the first build's): rows
-  // every packshot px where the profile turns (≈ 1.5 key px), sparser on the straight runs; columns at ≈ 1 px of arc
-  // round the scallops and the flats' edges, sparser where the surface is round
-  const rows = (u0, u1, fine) => { const o = []; for (let u = u0; u < u1 - 1e-6;) { o.push(u); u += fine(u) ? 1 : 2; } o.push(u1); return o; };
+  // The meshes are as fine as the 3840 keys need and no finer (≈ 140k triangles, under half the first build's): rows
+  // every packshot px where the profile turns (≈ 1.5 key px), sparser on the body's straight run; on the ring and the
+  // nose the columns follow the scallops' and the flats' edges, sparser where the surface is round
   {   // the body from the top end to the ring: a lathe, dense where the profile turns
     const us = [4.5, 5.0, 5.8].concat(range(6.5, 100, 1), range(106, 510, 6));
     add(lathe(us.slice().reverse().map(u => [R(u), u]).concat([[22.6, 4.3], [0, 4.3]]), 96), metal);
   }
-  add(surface(rows(RING[0], RING[1], u => u < 543 || u > 571), range(0, 360, 1.2), ringR), ringMat);
-  {   // the nose: denser columns round the two flats, rows every 2 px between the flats' rounded ends
-    const as = [];
-    for (let a = -180; a < 180 - 1e-6;) { as.push(a); const f = Math.min(Math.abs(Math.abs(a) - 53), 99); a += f < 36 ? 1 : 4; }
-    as.push(180);
-    add(surface(rows(NOSE[0], NOSE[1], u => u < CT + 2 || u > CB - 2), as, noseR), metal);
+  {   // the ring: per scallop, columns across the cut (its edges on a column) and three over the ridge (the fillet)
+    const SX = [-1, -0.9, -0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 0.9, 1], SF = [0.15, 0.5, 0.85];
+    const cols = u => {
+      const e = R(u), wd = u > SC0 && u < SC1 ? deg(scallopW(u, e) / e) : 0, o = [];
+      for (let k = 0; k < 15; k++) { for (const x of SX) o.push(24 * k + x * wd); for (const f of SF) o.push(24 * k + wd + f * (24 - 2 * wd)); }
+      o.push(360 - wd); return o;
+    };
+    add(surface(range(RING[0], RING[1], 1), cols, ringR), ringMat);
+  }
+  {   // the nose: per flat, a column just inside and just outside each edge (0.1°: the normals' differences stay on their
+    // side), four across it; 64 columns round the back, 40 over the front between the flats
+    const half = (u, f) => {   // the flat's half angle on row u (0: no flat here)
+      if (u < FU0 - 1 || u > FU1 + 1) return 0;
+      const d = dF(u), b = Math.acos(Math.min(1, d / R(u)));
+      const w = u < CT ? Math.sqrt(Math.max(0, RT * RT - (CT - u) ** 2)) : u > CB ? Math.sqrt(Math.max(0, RB * RB - (u - CB) ** 2)) : Infinity;
+      return deg(Math.min(b, Math.atan(w / d)));
+    };
+    const E = 0.1, flat = (o, f, b) => { o.push(f - b - E, f - b + E); for (const x of [-0.6, -0.2, 0.2, 0.6]) o.push(f + x * b); o.push(f + b - E, f + b + E); };
+    const cols = u => {
+      const bl = half(u, -53), br = half(u, 53), o = [], s0 = 53 + br + E - 360, s1 = -53 - bl - E, f0 = -53 + bl + E, f1 = 53 - br - E;
+      for (let i = 0; i < 64; i++) o.push(s0 + (s1 - s0) * i / 64);
+      flat(o, -53, bl);
+      for (let i = 1; i < 40; i++) o.push(f0 + (f1 - f0) * i / 40);
+      flat(o, 53, br); o.push(s0 + 360); return o;
+    };
+    add(surface(range(NOSE[0], NOSE[1], 1), cols, noseR), metal);
     const end = new THREE.RingGeometry(23 / PXW, R(NOSE[1]) / PXW, 96).rotateX(Math.PI / 2).translate(0, Y(NOSE[1]), 0);
     add(end, metal);   // the nose's end round the hub (seen through the cartridge)
   }
@@ -346,8 +370,8 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     boss.translate(Math.sin(ab) * 23.6 / PXW, Y(751), Math.cos(ab) * 23.6 / PXW); add(boss, metal);
   }
   // the cartridge, light clear plastic: the tube (its far wall, then what is inside, then its near wall: one outer wall,
-  // so the layers sort), the flange with its snaps left smooth, the open end; inside, the clear carrier (its shell, its
-  // plate, the cup under it) and the needle plate with its ribbed edge, clear and silvery. The needles are not drawn
+  // so the layers sort), the flange, the open end; inside, the clear carrier (its snaps under the flange as one clear
+  // band, its shell, its plate, the cup under it) and the needle plate with its ribbed edge, clear and silvery. The needles are not drawn
   // (story3d: not readable on the packshot). As photographed, the cartridge leans 0.9° to the photo's left from u 750
   // (its end 2.4 px off the pen's axis)
   {
@@ -357,6 +381,7 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
     const tube = lathe([[31.5, 902], [31.5, 901], [31.9, 791], [33, 789.8], [33, 771.8], [31.5, 770.5], [31.5, 750.5], [32.4, 747.5], [33, 745.5], [30.2, 745]], 96);
     part(tube, tubeBack, 10); add(tube, tubeFront, 13);   // one geometry, tilted once
     part(new THREE.RingGeometry(30.2 / PXW, 31.5 / PXW, 96).rotateX(Math.PI / 2).translate(0, Y(902), 0), tubeFront, 13);   // the open end's rim
+    part(new THREE.CylinderGeometry(28.8 / PXW, 28.8 / PXW, 20 / PXW, 64, 1, true).translate(0, Y(781), 0), snapMat, 11);   // the snaps, u 771…791
     part(new THREE.CylinderGeometry(26 / PXW, 26 / PXW, 60 / PXW, 64, 1, true).translate(0, Y(814), 0), partMat, 11);   // the carrier, u 784…844
     part(new THREE.CylinderGeometry(27.5 / PXW, 27.5 / PXW, 3 / PXW, 64).translate(0, Y(798.5), 0), partMat, 11);        // its plate
     part(lathe([[0, 836], [5, 835.2], [9.5, 833], [12.5, 830], [13.5, 826], [13.5, 800]], 48), partMat, 11);             // the cup

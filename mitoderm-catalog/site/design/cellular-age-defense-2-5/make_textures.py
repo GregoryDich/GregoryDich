@@ -15,14 +15,20 @@ sign ℮ is DejaVu Sans (Rubik has none) in its measured box. The gold monogram 
 site/img/mitoderm-m-gold.png (566 px, reduced to 181) fitted to the printed M (least squares of the silhouettes:
 x 108.5–153.8, y 55.0–101.8), filled with the print's gold #C6A87F and its DNA ladder kept as light and shade (the file
 is a rendered relief: its own gold is not the print's); its stone is the print's (a flat drop, not the file's
-brilliant), inked from the photo. The medallion (centre 131.38, 620.0, R 92.78, by 180 rays, rms 0.46 px): its smooth
-parts — the ring's colour round the angle, the bright inner rim, the disc's light and haze — are the photo's own, ×4
-(they hold no edge); its edges are drawn at the texture's scale: the dark green spicules re-inked from the photo's
-strokes (each stroke's ink found against the disc's light, its edge set at half contrast with a one-texel ramp, the
-light filled in under it), the ring's outer edge a circle. The packaging's vector file would replace all of it.
+brilliant), inked from the photo. The medallion (centre 131.38, 619.99; outer radius 93.37 by an ellipse fit to 180
+rays, rms 0.23 px) is the print's own picture, 186 px on the photo: its smooth parts — the ring's colour round the
+angle, the bright inner rim, the disc's light and haze, the faint deeper strokes — are the photo's, ×4 (they hold no
+edge); its dark green spicules keep the photo's strokes (tips and crossings) with their soft edges made steep (their
+darkness against the disc's light through an S-curve, the light filled in under them: a ~3-texel edge, not ~8); the
+ring's outer band is its own colour round the angle up to a sharp circle. Where the box is largest (the kit pose, 800
+frame px in a 3840 key) the medallion is 1.25× the photo's size: not a redrawing. Tried and dropped: strokes re-inked
+at half contrast with a one-texel edge (heavier than the print, blobs at crossings, tips lost). The packaging's vector
+file would replace all of it.
 Writes into <out dir>:
   box-face.png    the front's colours, RGB 1060×4076 (4 texels per photo px down, 4 / 0.988 across: square on the true
-                  front; ≈ 3.2 texels per key px where the box is largest, 800 frame px in a 3840 key): the paper #F4EAE1, the band #183322, the inks and golds as pipetted
+                  front; ≈ 3.2 texels per key px where the box is largest): the paper #F4EAE1, the band #183322, the
+                  inks and golds as pipetted (MITODERM #1D2A1D, the black #121108, the band's gold #D8CFA0, the frame
+                  #BE9760 2 px, the M #C6A87F, the spicules' core #22311E)
   box-side.png    the plain right side, RGB 64×2048 (u: the front edge 0 → the back 1, v: top 0 → foot 1): the photo's
                   side as pipetted (#C0AF99 at the top, #BCA790 in the middle, #AE9A83 at the foot), the rounded edge's
                   light strip along the front edge, the flaps' dark seams along the top and the foot
@@ -180,7 +186,7 @@ def medallion(canvas, rect):
     base = np.where(hole[..., None], fill, img)
     base = np.stack([ndimage.gaussian_filter(base[..., c], 1.2) for c in range(3)], -1)   # the photo's ×4 steps smoothed
     t = np.clip((d - 0.15) / 0.7, 0, 1); a_sp = t * t * (3 - 2 * t)
-    # the ring's outer band: its colour round the angle (the photo's, at 0.925–0.975 R), up to a sharp circle at R
+    # the ring's outer band: its colour round the angle (the photo's, at 0.93–0.965 R), from 0.955 R up to a sharp circle at R
     bins = np.round((th + np.pi) / (2 * np.pi) * 360).astype(int) % 360; band = (r > 0.93 * R) & (r < 0.965 * R)
     ring = np.zeros((360, 3))
     for c in range(3):
