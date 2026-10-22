@@ -20,11 +20,36 @@
      "lower third: 'V-TECH' letter-spaced (the V drawn as the same V-with-triangle mark), below it letter-spaced 'S Y S T E M'"]},
    {"what": "5 ampoules (vials) of V-TECH Serum, 5 ml", "look": "amber glass vials with silver flip-off caps (owner photo #79; the old packshot render shows white caps), amber label", "front": ["white V-with-triangle mark", "'V-TECH'", "[unreadable] one tiny line under 'V-TECH'", "white graduation ticks on the side"]},
    {"what": "5 gel-mask sachets (V-TECH Gel Mask, 5 ml each; owner: «5 масок и 5 ампул», kit diagram photos #78/#83)", "look": "gold foil sachet with a small white nozzle cap on the left", "front": ["large black V-with-triangle mark", "'V-TECH' letter-spaced, below it 'G E L   M A S K'", "[unreadable] four tiny lines at the bottom"]}]},
- "exo-nad": {"packshot": "protocols/assets/img/exo-nad.webp", "objects": [
-   {"what": "square box", "look": "brushed gold gradient box with a thin lid line near the bottom, black print", "front": ["top centre: VM monogram, 'VM corporation'", "centre: 'EXO-NAD' ('EXO-' thin, 'NAD' bold)", "below: letter-spaced 'SKIN LONGEVITY PEELING'"]},
-   {"what": "peel bottle", "look": "clear square glass bottle with a gold cap, gold flakes in the liquid", "front": ["'EXO-NAD'", "'SKIN LONGEVITY PEELING'"]},
-   {"what": "amber vial", "look": "amber glass vial, silver crimp cap", "front": ["VM monogram", "'PH NORMALIZER' bold white"]},
-   {"what": "teal vial", "look": "blue-teal glass vial, silver crimp cap", "front": ["VM monogram", "'LONGEVITY SERUM' bold white"]}]},
+ "exo-nad": {"packshot": "protocols/assets/img/exo-nad.webp", "sources": "packshot + the owner's photos of 22/10 (box front, the open box with the tray, the peel bottle), shown in the session; texts transcribed from them", "objects": [
+   {"what": "square box", "look": "brushed gold box, a thin lid line near the bottom: the lid slides up off the base and the tray stands inside the base (owner photos 22/10); black print", "front": [
+     "top centre: VM monogram, 'VM corporation'",
+     "centre: 'EXO-NAD' ('EXO-' thin, 'NAD' bold)",
+     "below: letter-spaced 'SKIN LONGEVITY PEELING'",
+     "lower block, small, centred: 'Professional Cosmetic Kit – Three-Step Revitalizing System' (bold)",
+     "'Kit Cosmetico Professionale Trifase Rivitalizzante'",
+     "'Kit Cosmético Profesional Trifásico Revitalizante'",
+     "'Kit Cosmétique Professionnel Triphasé Revitalisant'",
+     "one line in Arabic [unreadable in the photos: not typeset]",
+     "'FACE & BODY' (bold)",
+     "'EXO-NAD PEELING: 15 ml ℮ 0.51 fl.oz.' (label bold)",
+     "'PH NORMALIZER: 5 x 5 ml ℮ 5 x 0.17 fl.oz.' (label bold)",
+     "'LONGEVITY SERUM: 5 x 5 ml ℮ 5 x 0.17 fl.oz.' (label bold)"]},
+   {"what": "tray", "look": "black tray standing in the gold base: the peel bottle at the left across both rows, five pH Normalizer vials in the top row, five Longevity Serum vials in the bottom row; gold print (owner photos 22/10)", "front": [
+     "top centre: gold VM monogram, 'VM corporation'",
+     "above the peel bottle: 'EXO-NAD PEELING', a short vertical leader to a circled '1'",
+     "above the first pH vial: 'PH NORMALIZER', a short vertical leader to a circled '2'",
+     "below the first serum vial: a circled '3', a short vertical leader, 'LONGEVITY SERUM'",
+     "bottom centre: 'EXO-NAD' ('EXO-' thin, 'NAD' bold), 'SKIN LONGEVITY PEELING', 'MADE IN ITALY'"]},
+   {"what": "peel bottle", "look": "clear glass bottle with a gold cap, pale yellow liquid with gold flakes; black print", "front": [
+     "VM monogram",
+     "'EXO-NAD' / 'PEELING' (bold, two lines)",
+     "'Exfoliating and revitalizing cosmetic solution'",
+     "'Soluzione cosmetica esfoliante e rivitalizzante'",
+     "'Solución cosmética exfoliante y revitalizante'",
+     "'Solution cosmétique exfoliante et revitalisante'",
+     "one more line [unreadable in the photos: not typeset]"]},
+   {"what": "amber vial", "look": "amber liquid in glass, silver crimp cap", "front": ["VM monogram", "'PH NORMALIZER' bold (black on the packshot)"]},
+   {"what": "teal vial", "look": "blue-teal liquid in glass, silver crimp cap", "front": ["VM monogram", "'LONGEVITY SERUM' bold (black on the packshot)"]}]},
  "exosignal-hair": {"packshot": "protocols/assets/img/exosignal-hair.webp", "objects": [
    {"what": "flat box", "look": "matte black box, gold and white print", "front": [
      "top centre: grey VM monogram, small 'VM corporation'", "centre, gold: 'EXOSIGNAL' ('EXO' bold) with letter-spaced 'H A I R' below right",
