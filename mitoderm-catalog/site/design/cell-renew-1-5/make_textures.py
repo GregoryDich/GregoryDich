@@ -10,10 +10,13 @@ upscaled), in edge coordinates (a pixel i spans [i, i+1)):
   the true proportions W : H = 0.2597, as photographed: the owner's M file sits on the print at its own proportions
              (scale 0.081 across and down), so this photo is not squeezed (the 2.5%'s is, by 1.2 %); the medallion on
              this print is a little taller than wide (182 × 188 px, an ellipse to ±1 px) and is kept as printed. The
-             depth is not on the photo: D = W, as for the 2.5% (its right side then shows 0.18 of the front at 10°)
+             depth is not on the photo: D = W, as for the 2.5% (its right side shows 0.176 of the front: about 10°)
 Typeface: Rubik (SIL OFL, github.com/google/fonts), the closest by its shapes (vertical M, flat C/S terminals, oval
-zeros), as on the 2.5%; each block's weight by its ink area and stems (MITODERM 440, BIOSPICULE SYSTEM 390, the band
-435, BIOSPICULE SERUM 365, the framed lines 455, the volume 400), each block's narrowing (its lines share one size and face)
+zeros), as on the 2.5%; each block's weight by its ink area and stems (MITODERM 470, BIOSPICULE SYSTEM 390, the band
+460, BIOSPICULE SERUM 365, the framed lines 455, the volume 400; MITODERM and the band's gold by their ink summed
+unclipped against each picture's own paper and ink plateau, so the photo's blur and sharpening cancel out: texture :
+photo MITODERM 1.03 (0.975 clipped at one ink level), CELL RENEW 1.00, 1.5% 1.00 (0.98, 0.94 at one gold level: the
+photo's gold has a gradient)), each block's narrowing (its lines share one size and face)
 the median of measured / natural ink widths; every glyph's ink centre stands on its measured centre, its cap height and baseline as measured, so the
 spacing is the photo's, not the font's. The band's gold letters have a thin dark olive edge on the print (#5C633E, about
 1 photo px outside the gold): typeset too. The estimate sign ℮ is DejaVu Sans (Rubik has none) in its measured box; the
@@ -37,8 +40,8 @@ Writes into <out dir>:
                   side as pipetted (#C0AE97 at the top, #BEA991 in the middle, #B4A088 at the foot), the rounded edge's
                   light strip along the front edge, the flaps' seams along the top and the foot (as the 2.5%'s)
   cad-face.webp   the next step CELLULAR AGE DEFENSE 2.5%'s front, rectified from protocols/print/img/cellular-age-25.webp
-                  (its corners as in the 2.5%'s script), 262×1019, softened (gaussian σ 2.5 photo px: it stands behind,
-                  out of focus): as photographed, never upscaled
+                  (its corners as in the 2.5%'s script), 262×1019, as photographed: never upscaled, never softened
+                  (everything HD: the scene shows it behind by its depth, its size and a dimmer glow, not by a blur)
   derma-face.webp the DERMA RECOVERY CREAM front, cut from protocols/assets/img/derma-recovery.webp (x 11.6–624.0,
                   y 12.7–986.8; its side ≤ 5 px), 612×974, as the 2.5%'s page has it
 usage: python3 -I make_textures.py <font dir with Rubik[wght].ttf> <out dir>"""
@@ -70,13 +73,13 @@ STONE = (106, 119, 93, 104)             # the print's stone, inked from the phot
 # the lines: (glyphs, Rubik weight, cap top, baseline, ink centres, ink widths, colour, edged). Spaces are not glyphs;
 # '%' is measured as the union of its three parts. Measured at half contrast on the rectified front (×4)
 LINES = [
-    ('MITODERM', 440, 149.5, 176.2, [37.8, 62.0, 83.0, 110.2, 140.1, 168.1, 195.5, 225.9],
+    ('MITODERM', 470, 149.5, 176.2, [37.8, 62.0, 83.0, 110.2, 140.1, 168.1, 195.5, 225.9],
      [24.5, 4.5, 20.5, 21.0, 20.8, 17.8, 20.0, 24.2], MITO, False),
     ('BIOSPICULESYSTEM', 390, 188.85, 203.75, [42.1, 51.2, 60.5, 73.5, 86.5, 95.0, 104.5, 117.9, 131.0, 142.2, 158.8, 170.8, 183.0, 194.6, 206.6, 220.1],
      [10.2, 2.0, 11.0, 10.5, 10.5, 2.0, 11.0, 10.8, 9.0, 9.5, 10.5, 11.0, 10.5, 10.8, 9.2, 12.2], BLACK, False),
-    ('CELLRENEW', 435, 281.9, 305.7, [44.0, 65.1, 84.9, 103.8, 131.0, 151.5, 172.5, 194.5, 217.5],
+    ('CELLRENEW', 460, 281.9, 305.7, [44.0, 65.1, 84.9, 103.8, 131.0, 151.5, 172.5, 194.5, 217.5],
      [19.0, 15.8, 15.2, 15.0, 17.5, 15.5, 17.5, 15.5, 24.0], GOLD, True),
-    ('1.5%', 435, 318.2, 342.2, [102.5, 115.4, 129.8, 152.5], [11.5, 4.8, 17.0, 23.0], GOLD, True),
+    ('1.5%', 460, 318.2, 342.2, [102.5, 115.4, 129.8, 152.5], [11.5, 4.8, 17.0, 23.0], GOLD, True),
     ('BIOSPICULE', 365, 421.0, 442.5, [63.9, 75.8, 88.8, 106.9, 124.6, 136.2, 149.5, 167.5, 185.9, 201.0],
      [14.2, 2.5, 15.0, 14.2, 14.2, 2.5, 15.0, 14.5, 12.2, 12.5], BLACK, False),
     ('SERUM', 365, 455.1, 476.95, [94.2, 111.2, 128.2, 146.2, 166.4], [14.5, 12.5, 14.0, 14.5, 16.8], BLACK, False),
@@ -261,8 +264,7 @@ if __name__ == '__main__':
     side().save(f'{out}/box-side.png', optimize=True)
     ct = lambda x: 1.6 - 0.0044898 * (x - 10); cf = lambda x: 1018.6 + 0.0110204 * (x - 10)   # the 2.5%'s corners (its script)
     cad = rectify(CAD, [[0.2, ct(0.2)], [262.0, ct(262.0)], [262.0, cf(262.0)], [0.2, cf(0.2)]], (261.8, 1019.0), 1, PAPER)
-    cad = np.stack([ndimage.gaussian_filter(cad[..., c], 2.5, mode='nearest') for c in range(3)], -1)
-    Image.fromarray(np.clip(np.round(cad), 0, 255).astype(np.uint8)).save(f'{out}/cad-face.webp', quality=90, method=6)
+    Image.fromarray(np.clip(np.round(cad[..., :3]), 0, 255).astype(np.uint8)).save(f'{out}/cad-face.webp', quality=92, method=6)
     derma = rectify(DERMA, [[11.6, 12.7], [624.0, 12.7], [624.0, 986.8], [11.6, 986.8]], (612.4, 974.1), 1, (243, 233, 223))
     Image.fromarray(np.clip(np.round(derma[..., :3]), 0, 255).astype(np.uint8)).save(f'{out}/derma-face.webp', quality=92, method=6)
     print('\n'.join(report))
