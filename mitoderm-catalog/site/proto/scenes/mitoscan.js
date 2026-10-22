@@ -121,7 +121,13 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   const plastic = (g, k = 1) => reg(g, new THREE.MeshPhysicalMaterial({ ...PLASTIC, color: new THREE.Color(PLASTIC.color).multiplyScalar(k),
     emissive: new THREE.Color(PLASTIC.emissive).multiplyScalar(k), toneMapped: false }));
   const metal = m => { m.envMap = metalEnv.texture; metals.push(m); return m; };
-  const chrome = g => reg(g, metal(new THREE.MeshPhysicalMaterial({ color: 0xf2f2f2, metalness: 1, roughness: 0.12, toneMapped: false })));
+  // chrome: a mirror of the soft studio reads grey; the packshot's chrome is black and white, so its reflection's
+  // contrast is raised (dark stays dark, the light clips white), its colour neutral
+  const chrome = g => {
+    const m = metal(new THREE.MeshPhysicalMaterial({ color: 0xf2f2f2, metalness: 1, roughness: 0.12, toneMapped: false }));
+    m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_maps>', '#include <lights_fragment_maps>\n  radiance = pow(radiance, vec3(2.2)) * 1.35;'); };
+    m.customProgramCacheKey = () => 'mitoscan-chrome'; return reg(g, m);
+  };
   const SHADE = 0.2;
   const print = (g, map, extra = {}) => reg(g, new THREE.MeshPhysicalMaterial({ color: new THREE.Color(1, 1, 1).multiplyScalar(SHADE), map,
     emissive: 0xffffff, emissiveMap: map, emissiveIntensity: 0.85, roughness: 0.35, specularIntensity: 0.08, toneMapped: false, depthWrite: false,
@@ -185,7 +191,7 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   const prb = new THREE.Group(); prb.position.set(PX, PY, DZ); prb.rotation.x = TH - LEAN; tab.add(prb);
   // its front outline (half width by height; y from the anchor, top 0.307, bottom −0.306): round top r 0.073, straight
   // sides to y −0.146, narrowing to 0.060 at −0.266, a round bottom
-  const PT = 0.307, PB = -0.306, PW = 0.073, BS = 0.008, BT = 0.028, PD = 0.09;
+  const PT = 0.301, PB = -0.300, PW = 0.073, BS = 0.018, BT = 0.032, PD = 0.09;
   function outline(inset) {   // the right half's points, top to bottom, then mirrored: a closed shape
     const pts = [], hw = PW - inset, top = PT - inset, bot = PB + inset;
     for (let i = 0; i <= 24; i++) { const a = Math.PI / 2 * (1 - i / 24); pts.push([hw * Math.cos(a), top - hw + hw * Math.sin(a)]); }
@@ -197,8 +203,8 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   }
   const shapeOf = pts => { const s = new THREE.Shape(); s.moveTo(pts[0][0], pts[0][1]); for (const [x, y] of pts.slice(1)) s.lineTo(x, y); s.closePath(); return s; };
   {
-    // the front face 0.142 wide; the body bulges 0.008 past it at its middle depth (the photo's silhouette, 0.158)
-    const g = new THREE.ExtrudeGeometry(shapeOf(outline(0.002)), { depth: PD - 2 * BT, bevelEnabled: true, bevelThickness: BT, bevelSize: BS, bevelSegments: 10, curveSegments: 8 });
+    // the front face 0.122 wide; the body rounds 0.018 past it to its middle depth (the photo's silhouette, 0.158)
+    const g = new THREE.ExtrudeGeometry(shapeOf(outline(0.012)), { depth: PD - 2 * BT, bevelEnabled: true, bevelThickness: BT, bevelSize: BS, bevelSegments: 10, curveSegments: 8 });
     mesh(g.translate(0, 0, -(PD - BT)), mH.body, prb);
   }
   // the panel: a black stadium u 1.058…1.166 × v 0.052…0.262 (0.108 × 0.210) on a raised white bezel, its ridge below
@@ -214,20 +220,20 @@ export function createScene(THREE, { canvas, base, onLoad, qa = null }) {
   mesh(pill(0.007, 0.010, 0.007).translate(-PW - 0.006, 0.354 - 0.160, -PD / 2), mH.chrome, prb);
   mesh(pill(0.007, 0.0125, 0.007).translate(-PW - 0.006, 0.354 - 0.215, -PD / 2), mH.chrome, prb);
   mesh(pill(0.004, 0.0225, 0.008).translate(PW + 0.0055, 0.354 - 0.2725, -PD / 2), mH.button, prb);
-  // the cradle: a U round the probe's lower part (v 0.30 to its bottom), its walls 0.014 outside the outline, lips over
-  // the front edges widening downward (left x −0.062 → −0.045, right 0.072 → 0.050 at v 0.31 → 0.62)
+  // the cradle: a U round the probe's lower part (v 0.30 down, under its bottom), its walls 0.006 outside the probe,
+  // narrow lips over the front edges widening a little downward (left x −0.066 → −0.052, right 0.070 → 0.056 at
+  // v 0.31 → 0.62), open over the probe's rounded bottom (only the wall's rim shows below it)
   {
-    const out = outline(-0.016).filter(([, y]) => y <= 0.055).map(([x, y]) => [x, Math.max(y, PB - 0.004)]), lipL = [-0.062, -0.045], lipR = [0.072, 0.050];
-    const y0 = 0.354 - 0.31, y1 = 0.354 - 0.62;
+    const TOP = 0.055, out = outline(-0.012).filter(([, y]) => y <= TOP), lipL = [-0.066, -0.052], lipR = [0.070, 0.056], y1 = 0.354 - 0.62;
     const right = out.filter(([x]) => x >= 0), left = out.filter(([x]) => x < 0);
-    const inner = [];
-    for (let i = 0; i <= 10; i++) { const t = i / 10; inner.push([lerp(lipR[0], lipR[1], t), lerp(0.055, y1, t)]); }
-    for (let i = 1; i < 12; i++) { const a = -Math.PI * i / 12; inner.push([(lipR[1] - lipL[1]) / 2 * Math.cos(a) + (lipR[1] + lipL[1]) / 2, y1 + 0.03 * Math.sin(a)]); }
-    for (let i = 10; i >= 0; i--) { const t = i / 10; inner.push([lerp(lipL[0], lipL[1], t), lerp(0.055, y1, t)]); }
-    const pts = [[right[0][0], 0.055]].concat(right, left, [[left[left.length - 1][0], 0.055]], inner.reverse());
-    const g = new THREE.ExtrudeGeometry(shapeOf(pts), { depth: PD + 0.022 - 0.006, bevelEnabled: true, bevelThickness: 0.003, bevelSize: 0.002, bevelSegments: 3 });
-    mesh(g.translate(0, 0, -PD - 0.014 + 0.003), mH.cradle, prb);
-    void y0;
+    const inner = [];   // left lip down, round under the probe's bottom (just outside its outline), right lip up
+    for (let i = 0; i <= 10; i++) { const t = i / 10; inner.push([lerp(lipL[0], lipL[1], t), lerp(TOP, y1, t)]); }
+    const bot = outline(-0.008).filter(([, y]) => y < y1 - 0.004).sort((a, b) => a[0] - b[0]);
+    for (const q of bot) inner.push(q);
+    for (let i = 10; i >= 0; i--) { const t = i / 10; inner.push([lerp(lipR[0], lipR[1], t), lerp(TOP, y1, t)]); }
+    const pts = [[right[0][0], TOP]].concat(right, left, [[left[left.length - 1][0], TOP]], inner);
+    const g = new THREE.ExtrudeGeometry(shapeOf(pts), { depth: PD + 0.02 - 0.008, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.003, bevelSegments: 4 });
+    mesh(g.translate(0, 0, -PD - 0.014 + 0.004), mH.cradle, prb);
   }
   // the bracket from the cradle's left wall to the tablet's right side (u 1.00…1.03, v 0.335…0.50)
   mesh(rbox(0.495, 0.535, 0.31425 - 0.50, 0.31425 - 0.335, -0.028, -0.008, 0.003, 0.004), mT.body, tab);
