@@ -12,8 +12,9 @@
 # Frames: <dir>/seq/<tier>/<A>_<B>_NNN.webp, one folder per tier (the full 16:10 frame's width in px: 1600, 1920,
 # 2400 …); each frame holds only its run's crop box, from <dir>/seq/runs.json ({"runs": [{"a", "b", "n", "box":
 # [x0, y0, x1, y1] in fractions of the frame]}]}, else 40 frames and the whole frame). Only complete tiers are offered.
-# Exosome cells: site/design/vtech-3d/cells/cNN-{0,1,2}.webp (sharp, soft, bokeh) and plate.webp are copied into
-# <dir>/img/cells/ and <dir>/img/plate.webp when they exist; otherwise whatever <dir>/img/cells/ holds is used.
+# Exosome cells: site/design/vtech-3d/cells/cNN-{0,1,2}.webp (sharp, soft, bokeh; glassy), fNN-… (the owner's folded
+# exosome, design/exosomes/make_folded.py) and plate.webp are copied into <dir>/img/cells/ and <dir>/img/plate.webp when
+# they exist; otherwise whatever <dir>/img/cells/ holds is used.
 # PDRN molecules mNN-{0,1,2}.webp join the same field; helix.webp (the DNA loop) goes to <dir>/img/ for S3.
 # The frame engine is engine/story.js (an ES module, also what a React app mounts); the build inlines it into the page.
 # `--scene` (another product): no frames; the page draws scenes/<slug>.js live with three.js (the engine's `scene`),
@@ -211,10 +212,10 @@ if FILES:   # the page's images: smoke, logos, kit card, related products, phone
         p = round(0.03 * max(x1 - x0, y1 - y0))   # a little air around the objects
         save(im.crop((max(0, x0 - p), max(0, y0 - p), min(im.width, x1 + p), min(im.height, y1 + p))), f'{FILES}/img/m{n}.webp', 900, quality=84, method=6)
     src = f'{SITE}/design/vtech-3d/cells'   # exosome sprites and the deep plate (render), when they exist
-    kinds = ('c' if EXO else '') + ('m' if EXO and PDRN else '')   # cells (c), PDRN molecules (m)
+    kinds = ('cf' if EXO else '') + ('m' if EXO and PDRN else '')   # glassy (c) and folded (f) cells, PDRN molecules (m)
     real = sorted(f for k in kinds for f in glob.glob(f'{src}/{k}[0-9][0-9]-[012].webp'))
     if real:
-        for f in glob.glob(f'{FILES}/img/cells/[cm][0-9][0-9]-[012].webp'): os.remove(f)
+        for f in glob.glob(f'{FILES}/img/cells/[cfm][0-9][0-9]-[012].webp'): os.remove(f)
         os.makedirs(f'{FILES}/img/cells', exist_ok=True)
         for f in real:   # sharp ≤ 1024 px, soft ≤ 640, bokeh ≤ 512: what a cell is ever drawn at
             im = Image.open(f); cap = (1024, 640, 512)[int(f[-6])]
@@ -234,6 +235,13 @@ cdir, plate = (f'{FILES}/img/cells', f'{FILES}/img/plate.webp') if FILES else (f
 def sprites(k): return sorted(c for c in {os.path.basename(f)[:3] for f in glob.glob(f'{cdir}/{k}[0-9][0-9]-0.webp')}
                               if all(os.path.exists(f'{cdir}/{c}-{v}.webp') for v in '012'))
 CELLS, MOLS = (sprites('c') if EXO else []), (sprites('m') if PDRN else [])
+FOLDED = sprites('f') if CELLS else []   # owner 22/10: his folded exosomes among the glassy ones, at these places of the
+if FOLDED:                               # list the engine's field draws from (a near one, far ones, one on the phone)
+    glass, folded, at = iter(CELLS), iter(FOLDED), (1, 3, 5, 8)[:len(FOLDED)]
+    CELLS = [next(folded) if i in at else next(glass) for i in range(len(CELLS))]
+    if FILES:   # the glassy ones they replaced are not drawn: not shipped either
+        for f in glob.glob(f'{cdir}/[cf][0-9][0-9]-[012].webp'):
+            if os.path.basename(f)[:3] not in CELLS: os.remove(f)
 if CELLS and not os.path.exists(plate if FILES else f'{plate}/plate.webp'):
     print('cells without plate.webp: no cells'); CELLS = []
 if not CELLS: MOLS = []   # the molecules float in the cells' field

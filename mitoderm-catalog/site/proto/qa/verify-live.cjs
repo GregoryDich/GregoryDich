@@ -225,7 +225,7 @@ async function synthRun(browser, tag, assert) {
     else skip('desktop: the DNA helix behind S3');
     if (!HAS.cells || !HAS.mols || !HAS.helix) {   // what the product does not contain is not on the page either
       const sprites = [...req.cells], vals = o => Object.values(o);
-      const gone = { cells: HAS.cells || (!sprites.some(r => /\/c\d\d-/.test(r)) && vals(cellsAt).every(v => !v) && vals(plateAt).every(v => v < 0.05) && !legend),
+      const gone = { cells: HAS.cells || (!sprites.some(r => /\/[cf]\d\d-/.test(r)) && vals(cellsAt).every(v => !v) && vals(plateAt).every(v => v < 0.05) && !legend),
         mols: HAS.mols || (!sprites.some(r => /\/m\d\d-/.test(r)) && vals(molsAt).every(v => !v)),
         helix: HAS.helix || (!req.helix && vals(hxAt).every(h => !h.o)) };
       ok('desktop: the layers this product does not contain are absent (nothing fetched or shown)', gone.cells && gone.mols && gone.helix,
