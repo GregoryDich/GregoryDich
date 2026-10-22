@@ -19,7 +19,7 @@ Writes into <out dir>:
                  (#aaa29b, as photographed), the foil in its photographed colour per letter
   box-metal.png  the front's material, RGB 1024×695: G roughness (paper 1 × 0.65, foil 0.43 × 0.65 = 0.28), B metalness
   amp-print.png  alpha of the ampoule's black print, L 491×1024: θ −14…+96 × h 0.10…0.50 (row 0 at h 0.50); the
-                 two unreadable lines of the small block as thin lines at half strength
+                 two lines of the small block the photo does not resolve are left out (no stand-in bars)
   mitoscan.webp, mitopen.webp   S5's devices: protocols/print/img's packshots, the same pixels in lossy WebP (q 86,
                  alpha 92; 60 + 18 KB instead of 655 + 104 lossless): the scene shows them only dimmed, at most 637 px wide
 usage: python3 -I make_textures.py <font dir with Jost[wght].ttf, Rubik[wght].ttf, DejaVuSans-Bold.ttf> <out dir>"""
@@ -303,11 +303,10 @@ AW = round(PX * R * np.radians(TH1 - TH0)); AH = round(PX * (H1 - H0))
 # the body (0.0335 of the height), centred on θ 0; «H A I R» under the word's end, from N's left edge to L's right edge,
 # its baseline 0.78 cap below the lockup's; the small block (θ of each line's middle, h of its ends, cap in degrees: the
 # photo's 0.010 / 0.008 of the height (5.7° / 4.6°, ±1°) a little up, so that the lines need little letter-spacing to fill
-# their measured length): «EXOSIGNAL HAIR» (Rubik 600), «Siero nutriente per il cuoio capelluto» (Rubik 400), and two
-# lines the photo does not resolve
+# their measured length): «EXOSIGNAL HAIR» (Rubik 600), «Siero nutriente per il cuoio capelluto» (Rubik 400); the two
+# lines under them (θ 77° and 89.5°) the photo does not resolve: left out, as nothing is drawn that is not read there
 AMP_LOCKUP = (0.130, 0.466, -9.6, 9.6)
 AMP_SMALL = [('EXOSIGNAL HAIR', 600, 51.0, 0.21, 0.365, 6.4), ('Siero nutriente per il cuoio capelluto', 400, 64.0, 0.13, 0.44, 5.6)]
-AMP_LINES = [(77.0, 0.217, 0.373), (89.5, 0.19, 0.40)]   # unreadable: thin lines at half strength (θ, h from, h to)
 
 
 def amp_print(fdir):
@@ -338,11 +337,7 @@ def amp_print(fdir):
         g = np.asarray(im.resize((round(im.width * sc), round(im.height * sc)), Image.LANCZOS)).astype(np.float32) / 255
         paste(a, g, Xh(ha) - ix0 * sc, Yt(t) + capd * deg / 2 - b * sc)   # the line's middle on θ: baseline half a cap below
     img = Image.fromarray((a * 255).astype(np.uint8))
-    d = ImageDraw.Draw(img); th = 2.2 * deg
-    for t, ha, hb in AMP_LINES:   # a rounded bar the height of a lowercase letter, half strength
-        d.rounded_rectangle((Xh(ha), Yt(t) - th / 2, Xh(hb), Yt(t) + th / 2), radius=th / 2, fill=128)
-    img = img.resize((AH, AW), Image.LANCZOS).transpose(Image.Transpose.ROTATE_90)
-    return img
+    return img.resize((AH, AW), Image.LANCZOS).transpose(Image.Transpose.ROTATE_90)
 
 
 if __name__ == '__main__':
