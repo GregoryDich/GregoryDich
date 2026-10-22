@@ -241,8 +241,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const CAP0 = capBox(BOT0);   // S1's cap, for the S1 mist (and its JS twin)
 
   // ---- the mist: one instanced quad per droplet, all motion in the vertex shader (no matrices on the CPU): each
-  // droplet's place is a mix of six layouts, weighted by the story and by its own opacity in each (so a droplet only
-  // in one layout fades where it is, one in two flies between them): 0 the still mist of S1, 1 the cloud coming in from
+  // droplet's place is a mix of six layouts, weighted by the story and by its share's weight in each (so a droplet only
+  // in one layout fades where it is, one in two flies between them, its whole cloud in step): 0 the still mist of S1, 1 the cloud coming in from
   // above, 2 the loose cloud of S2, 3 the cloud parting into three, 4 the haze of S4 with its melting drops, 5 the small
   // clouds falling in S5. Every layout is a loose cloud: Gaussian, its spread varied per droplet (no edge, no line or
   // ring). Each layout uses its own share of the droplets (by seed); a phone draws half
@@ -269,56 +269,66 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // S1's cloud: three Gaussian lobes (centre, spread): behind the box, at its upper left, low behind the bottle
   const S1C = [[650, 820], [470, 610], [980, 1010]], S1S = [[230, 200], [110, 120], [150, 70]];
   const v2 = a => `vec2(${a[0].toFixed(1)}, ${a[1].toFixed(1)})`;
-  // the layouts, written once for the shader and once (dropAt below) for QA: keep the two the same
+  // the layouts, written once for the shader and once (dropAt below) for QA: keep the two the same. Each gives a
+  // droplet's place, its weight in the layout (the same for every droplet of that share: a droplet flying between two
+  // layouts mixes them in the same ratio as all the others, so a cloud moves and spreads as a whole and never folds
+  // onto itself into a strip) and its size; the fades that depend on where the droplet is (born over the top edge,
+  // clear of the cap) or on time (melting) only dim it: out float e
   const MIST_V = `attribute vec4 aS; attribute vec2 aG, aZ;
     uniform float uTime, uPx, uW[6], uSplit, uEnter, uMelt, uBx1, uBx2, uAbsorb;
     uniform vec4 uCloud, uHaze; uniform vec2 uRest[9];
     varying vec2 vQ; varying float vA;
     vec2 wob(float k) { return vec2(sin(uTime * 0.3 * k + aZ.y), cos(uTime * 0.27 * k + aZ.y * 1.3)); }
-    vec4 L0() {   // S1: a still thin mist far behind the pair, one soft cloud (no edges: its density falls off as a
-      // Gaussian), thinning out between 150 and 220 px from the cap's frame
+    vec4 L0(out float e) {   // S1: a still thin mist far behind the pair, one soft cloud (no edges: its density falls
+      // off as a Gaussian), thinning out between 150 and 220 px from the cap's frame
       vec2 C = aS.x < 0.45 ? ${v2(S1C[0])} : (aS.x < 0.72 ? ${v2(S1C[1])} : ${v2(S1C[2])});
       vec2 S = aS.x < 0.45 ? ${v2(S1S[0])} : (aS.x < 0.72 ? ${v2(S1S[1])} : ${v2(S1S[2])});
       vec2 p = C + aG * S, d = max(max(${v2(CAP0)} - p, p - ${v2(CAP0.slice(2))}), 0.0);   // (as QA's margin: a square one)
-      return vec4(p + 1.5 * wob(1.0), aS.w > 0.83 && aS.w < 0.99 ? 0.7 * smoothstep(150.0, 220.0, max(d.x, d.y)) : 0.0, 1.0);
+      e = smoothstep(150.0, 220.0, max(d.x, d.y));
+      return vec4(p + 1.5 * wob(1.0), aS.w > 0.83 && aS.w < 0.99 ? 0.7 : 0.0, 1.0);
     }
-    vec4 L1() {   // the cloud coming in from above: born over the frame's edge, its opacity growing from y 300 to 420
+    vec4 L1(out float e) {   // the cloud coming in from above: born over the frame's edge, showing from y 300 to 420
       vec2 p = uCloud.xy + aG * uCloud.zw * 0.5 + 3.0 * wob(2.3);
-      return vec4(p, aS.w < 0.45 ? 0.7 * smoothstep(300.0, 420.0, p.y) : 0.0, 1.0);
+      e = smoothstep(300.0, 420.0, p.y);
+      return vec4(p, aS.w < 0.45 ? 0.7 : 0.0, 1.0);
     }
-    vec4 L2() {   // S2: the loose cloud low behind the bottle (uHaze: centre, spread)
+    vec4 L2(out float e) {   // S2: the loose cloud low behind the bottle (uHaze: centre, spread)
       vec2 p = uHaze.xy + aG * uHaze.zw * (0.55 + 0.9 * aS.y) + 4.0 * wob(1.2);
+      e = 1.0;
       return vec4(p, aS.w < 0.45 ? 0.5 : 0.0, 1.0);
     }
-    vec4 L3() {   // one cloud enters from above, through the top edge by the bottle's cut top, drifts down and left and
-      // parts into three (b2.label1–3); some droplets melt as one looks (b2.label4)
+    vec4 L3(out float e) {   // one cloud enters from above, through the top edge by the bottle's cut top, drifts down
+      // and left and parts into three (b2.label1–3); some droplets melt as one looks (b2.label4)
       float k = floor(aS.x * 3.0);
       vec2 C = k < 0.5 ? vec2(420.0, 560.0) : (k < 1.5 ? vec2(650.0, 760.0) : vec2(440.0, 960.0)), w = 4.0 * wob(1.4);
       vec2 one = vec2(800.0, 520.0) + aG * vec2(115.0, 95.0) * (0.6 + 0.8 * aS.z) + w, cl = C + aG * 48.0 + w;
       vec2 p = mix(one, cl, uSplit); p.y -= (1.0 - uEnter) * 460.0;
-      float melt = aS.z > 0.82 ? 0.5 + 0.5 * sin(uTime * 0.9 + aZ.y * 3.0) : 1.0;
-      return vec4(p, aS.w < 0.64 ? 0.7 * melt * smoothstep(300.0, 420.0, p.y) : 0.0, 1.0);
+      e = (aS.z > 0.82 ? 0.5 + 0.5 * sin(uTime * 0.9 + aZ.y * 3.0) : 1.0) * smoothstep(300.0, 420.0, p.y);
+      return vec4(p, aS.w < 0.64 ? 0.7 : 0.0, 1.0);
     }
-    vec4 L4() {   // S4: the three settle into a soft haze; a few larger drops in it melt, each at its own stage
+    vec4 L4(out float e) {   // S4: the three settle into a soft haze; a few larger drops in it melt, each at its own stage
       vec2 p = vec2(700.0, 840.0) + aG * vec2(190.0, 95.0) * (0.55 + 0.9 * aS.y) + 5.0 * wob(1.0);
       bool drop = aS.w < 0.05;
       float a = drop ? mix(0.55, 0.85 * (1.0 - 0.8 * aS.z), uMelt) : (aS.w < 0.3 ? 0.22 : 0.0);
+      e = 1.0;
       return vec4(p, a, drop ? mix(1.0, 1.0 - 0.6 * aS.z, uMelt) : 1.0);
     }
-    vec4 L5() {   // S5: nine small clouds fall from beyond the top edge just behind the bottle, five as it passes right to
-      // left, four as it passes back, come to rest as loose clouds (uRest) and melt (b4.label3)
+    vec4 L5(out float e) {   // S5: nine small clouds fall from beyond the top edge just behind the bottle, five as it
+      // passes right to left, four as it passes back, come to rest as loose clouds (uRest) and melt (b4.label3)
       float k = floor(aS.x * 9.0); bool one = k < 4.5; vec2 r = uRest[int(k)];
       float fall = one ? smoothstep(r.x + 40.0, r.x - 120.0, uBx1) : smoothstep(r.x - 40.0, r.x + 120.0, uBx2);
       vec2 rest = r + aG * 22.0 * (0.6 + 0.8 * aS.y), sky = vec2(r.x + 20.0 + aG.x * 9.0, 230.0 + aG.y * 14.0);
       float a = smoothstep(0.0, 0.05, fall) * 0.8 * (1.0 - 0.7 * uAbsorb * aS.z);
+      e = 1.0;
       return vec4(mix(sky, rest, fall), aS.w < 0.12 ? a : 0.0, 1.0 - 0.5 * uAbsorb * aS.z);
     }
     void main() {
-      vec4 l[6]; l[0] = L0(); l[1] = L1(); l[2] = L2(); l[3] = L3(); l[4] = L4(); l[5] = L5();
-      float s = 0.0, k = 0.0; vec2 p = vec2(0.0);
-      for (int i = 0; i < 6; i++) { float w = uW[i] * l[i].z; s += w; p += w * l[i].xy; k += w * l[i].w; }
-      p /= max(s, 1e-4); k /= max(s, 1e-4);
-      vA = min(s, 1.0) * smoothstep(175.0, 235.0, p.x) * (1.0 - smoothstep(1165.0, 1240.0, p.x)) * smoothstep(290.0, 330.0, p.y) * (1.0 - smoothstep(1170.0, 1212.0, p.y));
+      vec4 l[6]; float f[6];
+      l[0] = L0(f[0]); l[1] = L1(f[1]); l[2] = L2(f[2]); l[3] = L3(f[3]); l[4] = L4(f[4]); l[5] = L5(f[5]);
+      float s = 0.0, k = 0.0, e = 0.0; vec2 p = vec2(0.0);
+      for (int i = 0; i < 6; i++) { float w = uW[i] * l[i].z; s += w; p += w * l[i].xy; k += w * l[i].w; e += w * f[i]; }
+      p /= max(s, 1e-4); k /= max(s, 1e-4); e /= max(s, 1e-4);
+      vA = min(s, 1.0) * e * smoothstep(175.0, 235.0, p.x) * (1.0 - smoothstep(1165.0, 1240.0, p.x)) * smoothstep(290.0, 330.0, p.y) * (1.0 - smoothstep(1170.0, 1212.0, p.y));
       float r = max(aZ.x * k * 0.5, 0.75 / uPx); vQ = position.xy;
       vec2 q = p + position.xy * r;
       gl_Position = vA > 0.002 ? projectionMatrix * modelViewMatrix * vec4(q.x - 1200.0, 750.0 - q.y, 0.0, 1.0) : vec4(2.0, 2.0, 2.0, 1.0);
@@ -333,28 +343,28 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   function dropAt(i, u, t) {
     const s = SEED.subarray(i * 4, i * 4 + 4), g = GAU.subarray(i * 2, i * 2 + 2), ph = SZ[i * 2 + 1];
     const wob = k => [Math.sin(t * 0.3 * k + ph), Math.cos(t * 0.27 * k + ph * 1.3)], mx = (a, b, k) => a + (b - a) * k;
-    const L = [];
+    const L = [];   // [x, y, weight, e]
     { const w = wob(1), lo = s[0] < 0.45 ? 0 : s[0] < 0.72 ? 1 : 2, x = S1C[lo][0] + g[0] * S1S[lo][0], y = S1C[lo][1] + g[1] * S1S[lo][1];
       const d = Math.max(CAP0[0] - x, x - CAP0[2], CAP0[1] - y, y - CAP0[3], 0);
-      L.push([x + 1.5 * w[0], y + 1.5 * w[1], s[3] > 0.83 && s[3] < 0.99 ? 0.7 * smooth(150, 220, d) : 0]); }
-    { const c = u.uCloud.value, w = wob(2.3), x = c.x + g[0] * c.z * 0.5 + 3 * w[0], y = c.y + g[1] * c.w * 0.5 + 3 * w[1]; L.push([x, y, s[3] < 0.45 ? 0.7 * smooth(300, 420, y) : 0]); }
-    { const h = u.uHaze.value, w = wob(1.2), sp = 0.55 + 0.9 * s[1]; L.push([h.x + g[0] * h.z * sp + 4 * w[0], h.y + g[1] * h.w * sp + 4 * w[1], s[3] < 0.45 ? 0.5 : 0]); }
+      L.push([x + 1.5 * w[0], y + 1.5 * w[1], s[3] > 0.83 && s[3] < 0.99 ? 0.7 : 0, smooth(150, 220, d)]); }
+    { const c = u.uCloud.value, w = wob(2.3), x = c.x + g[0] * c.z * 0.5 + 3 * w[0], y = c.y + g[1] * c.w * 0.5 + 3 * w[1]; L.push([x, y, s[3] < 0.45 ? 0.7 : 0, smooth(300, 420, y)]); }
+    { const h = u.uHaze.value, w = wob(1.2), sp = 0.55 + 0.9 * s[1]; L.push([h.x + g[0] * h.z * sp + 4 * w[0], h.y + g[1] * h.w * sp + 4 * w[1], s[3] < 0.45 ? 0.5 : 0, 1]); }
     { const k = Math.floor(s[0] * 3), C = k < 0.5 ? [420, 560] : k < 1.5 ? [650, 760] : [440, 960], w = wob(1.4), sp = 0.6 + 0.8 * s[2];
       const one = [800 + g[0] * 115 * sp + 4 * w[0], 520 + g[1] * 95 * sp + 4 * w[1]], cl = [C[0] + g[0] * 48 + 4 * w[0], C[1] + g[1] * 48 + 4 * w[1]];
       const x = mx(one[0], cl[0], u.uSplit.value), y = mx(one[1], cl[1], u.uSplit.value) - (1 - u.uEnter.value) * 460;
       const melt = s[2] > 0.82 ? 0.5 + 0.5 * Math.sin(t * 0.9 + ph * 3) : 1;
-      L.push([x, y, s[3] < 0.64 ? 0.7 * melt * smooth(300, 420, y) : 0]); }
+      L.push([x, y, s[3] < 0.64 ? 0.7 : 0, melt * smooth(300, 420, y)]); }
     { const w = wob(1), sp = 0.55 + 0.9 * s[1], drop = s[3] < 0.05, m = u.uMelt.value;
-      L.push([700 + g[0] * 190 * sp + 5 * w[0], 840 + g[1] * 95 * sp + 5 * w[1], drop ? mx(0.55, 0.85 * (1 - 0.8 * s[2]), m) : s[3] < 0.3 ? 0.22 : 0]); }
+      L.push([700 + g[0] * 190 * sp + 5 * w[0], 840 + g[1] * 95 * sp + 5 * w[1], drop ? mx(0.55, 0.85 * (1 - 0.8 * s[2]), m) : s[3] < 0.3 ? 0.22 : 0, 1]); }
     { const k = Math.floor(s[0] * 9), one = k < 4.5, [rx, ry] = REST[k], sp = 0.6 + 0.8 * s[1];
       const fall = one ? smooth(rx + 40, rx - 120, u.uBx1.value) : smooth(rx - 40, rx + 120, u.uBx2.value);
       const rest = [rx + g[0] * 22 * sp, ry + g[1] * 22 * sp], sky = [rx + 20 + g[0] * 9, 230 + g[1] * 14];
-      L.push([mx(sky[0], rest[0], fall), mx(sky[1], rest[1], fall), s[3] < 0.12 ? smooth(0, 0.05, fall) * 0.8 * (1 - 0.7 * u.uAbsorb.value * s[2]) : 0]); }
-    let S = 0, X = 0, Y = 0;
-    for (let j = 0; j < 6; j++) { const w = u.uW.value[j] * L[j][2]; S += w; X += w * L[j][0]; Y += w * L[j][1]; }
+      L.push([mx(sky[0], rest[0], fall), mx(sky[1], rest[1], fall), s[3] < 0.12 ? smooth(0, 0.05, fall) * 0.8 * (1 - 0.7 * u.uAbsorb.value * s[2]) : 0, 1]); }
+    let S = 0, X = 0, Y = 0, E = 0;
+    for (let j = 0; j < 6; j++) { const w = u.uW.value[j] * L[j][2]; S += w; X += w * L[j][0]; Y += w * L[j][1]; E += w * L[j][3]; }
     if (S < 1e-4) return null;
-    X /= S; Y /= S;
-    const a = Math.min(S, 1) * smooth(175, 235, X) * (1 - smooth(1165, 1240, X)) * smooth(290, 330, Y) * (1 - smooth(1170, 1212, Y));
+    X /= S; Y /= S; E /= S;
+    const a = Math.min(S, 1) * E * smooth(175, 235, X) * (1 - smooth(1165, 1240, X)) * smooth(290, 330, Y) * (1 - smooth(1170, 1212, Y));
     return a > 0.02 ? [X, Y] : null;
   }
 
