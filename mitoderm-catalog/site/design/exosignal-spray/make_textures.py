@@ -18,9 +18,12 @@ line under the monogram and the line under the boxed label are unreadable (packa
 as thin lines at 0.4 strength (a line of small type averages well under its ink's full strength); the boxed label as a
 light plate with a darker line (its unreadable type) in it. The lower
 block sits 2 px left of the front's middle on the mock-up (the top block within 0.5 px of it): set as measured.
-Colours: the paper #131417 and the seam #0d0e12 as the mock-up's palette has them; the foil of the HAIR box's photo
-(EXO #eec26b, SIGNAL and «S P R A Y · H O M E» #e5d474) instead of the mock-up's saturated #c6a62e, the light ink the
-HAIR box's #aaa29b (the mock-up is too small to show either); both temporary, a question to the owner.
+Colours: the paper #131417 and the seam #0d0e12 as the mock-up's palette has them; one foil for EXO, SIGNAL and
+«S P R A Y · H O M E», the mock-up's own: its solid EXO pixels are two palette entries, #c6a62e (48 px) and #b59931
+(70 px), set as the brighter one because the scene's foil renders about 5 % darker than its texture (SIGNAL and the
+spaced line are hairlines there, mixed with the paper, but print the same foil); the light ink (VM, the lower block,
+the plate) neutral #919496, as owner photo #34 shows the monogram (the mock-up's hairline VM reads darker, #727684,
+from its small size). Both unverified until the owner's full-size photo: a question to the owner.
 Writes into <out dir>:
   box-face.png     the front's colours, RGB 1024×2572 (2.1 texels per px where the front is largest, 760 frame px tall,
                    in a 3840 key): the paper with its light top edge and the dark seam band at 0.78 of the height, the
@@ -45,9 +48,9 @@ TOP, BOT, FW = 1.5, 298.6, 118.2                         # the front on the mock
 FH = BOT - TOP
 TW, TH = 1024, round(1024 * FH / FW)                     # box-face.png, square texels
 CENTRE = [(5, 171.71), (80, 171.36), (200, 171.0), (240, 170.68), (298, 170.5)]   # the front's middle (x) per row (y)
-PAPER, RIM, SEAM, INK = (0x13, 0x14, 0x17), (0x20, 0x21, 0x25), (0x0d, 0x0e, 0x12), (0xaa, 0xa2, 0x9b)
+PAPER, RIM, SEAM, INK = (0x13, 0x14, 0x17), (0x20, 0x21, 0x25), (0x0d, 0x0e, 0x12), (0x91, 0x94, 0x96)
 RIM_Y, SEAM_Y = 3.0, (231.6, 235.0)                      # the light top edge (row 2), the seam's dark band (rows 232–234)
-FOIL_EXO, FOIL_SIGNAL = '#eec26b', '#e5d474'
+FOIL = '#c6a62e'                                         # one foil, the mock-up's (see the notes above)
 # the logo along its column: E's foot … L's end (y), its cap's middle (x); the HAIR logo's ink ends (photo px of that box)
 LOGO_R0, LOGO_R1, LOGO_X = 72.82, 198.63, 170.99
 HAIR_L0 = HR.LOGO[0][2] - HR.LOGO[0][3] / 2
@@ -180,8 +183,7 @@ def box_face():
     x, y = X(capx - d1, ymid), Y(r0)
     HR.paste(foil_a, al, x, y)
     h, w = al.shape; X0, Y0 = int(x), int(y)
-    for ci, col in ((1, FOIL_EXO), (2, FOIL_SIGNAL)):
-        foil_c[Y0:Y0 + h, X0:X0 + w][idx == ci] = [int(col[i:i + 2], 16) for i in (1, 3, 5)]
+    foil_c[Y0:Y0 + h, X0:X0 + w][idx > 0] = [int(FOIL[i:i + 2], 16) for i in (1, 3, 5)]
     # the monogram and the line under it
     vm(ink_a, T, T, X(VM_AXIS, 30), Y(VM_TOP), *VM_K)
     yl, a0, a1, t = VM_LINE; bar(ink_a, X(a0, yl), X(a1, yl), Y(yl), t * T, LINE_A, seed=1)
