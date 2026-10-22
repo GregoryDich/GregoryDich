@@ -23,9 +23,10 @@ S4 feel         s4.h2 · p · pins               b3.title · b3.line · b3.label
 S5 protocol     s5.h2 · p                      b4.title · b4.line
                 s5.steps                       b4.label1–3, «1 · » dropped (the template numbers them), no paragraph
                 s5.chip                        b4.label4
-S6 kit (card)   s7.card_lines                  b5.line split at its quantity («1×» + the rest), none without one
+S6 kit (card)   s7.card_lines                  the b5 labels that name a box item («1 × 15 מ״ל …», EXO-NAD); else b5.line
+                                               split at its quantity («1×» + the rest), none without one
                 s7.card_facts                  b5.title (one line)
-                s7.card_chips                  b5.label3–4
+                s7.card_chips                  b5.label3–4 that are not a box item
 S7 offer        s7.h2 · p                      b6.title · b6.line;  s7.training  b6.cta's second button
 S8 specialists  s8.tag                         «קרקפת» (ui.spec_tag_scalp) for a scalp product (catalogue eyebrow, tagline)
 S9 related      s9.line, s9.more               the rest of the line, then the products b4.line names (RELATED overrides);
@@ -72,6 +73,7 @@ def content(slug):
     labels = lambda b, ks=(1, 2, 3, 4): [sb[f'{b}.label{i}'] for i in ks]
     buy, more = two('b0.cta')[:2]; ask = (two('b6.cta') + [''])[1]   # b6.cta: the price button, then the offer's second one
     qty = sb['b5.line'].split(' ', 1)[0]; qty = qty if re.fullmatch(r'\d+×', qty) else ''
+    box = [m.groups() for m in (re.fullmatch(r'(\d+) ?× ?(.+)', l) for l in labels('b5')) if m]   # «1 × 15 מ״ל …»: what is in the box
     line_id = next(k for k, v in LINES.items() if slug in v)
     mark = MARK.get(line_id, line_id) if line_id != 'V-TECH FACE' else ui['line_mark']
     lname = {'V-TECH FACE': ui['line_name'], 'DEVICES': home['home.sl-2']}.get(line_id, '')
@@ -101,7 +103,8 @@ def content(slug):
                'steps': [[re.sub(r'^\d+\s*·\s*', '', t), ''] for t in labels('b4', (1, 2, 3))]},
         's6': {'p': sb['b5.line']},
         's7': {'h2': sb['b6.title'], 'p': sb['b6.line'], 'training': ask, 'card_title': vt['s7']['card_title'],
-               'card_lines': [[qty, sb['b5.line'][len(qty):].strip()]] if qty else [], 'card_facts': sb['b5.title'], 'card_chips': labels('b5', (3, 4))},
+               'card_lines': [[n + '×', t] for n, t in box] or ([[qty, sb['b5.line'][len(qty):].strip()]] if qty else []),
+               'card_facts': sb['b5.title'], 'card_chips': [l for l in labels('b5', (3, 4)) if not re.fullmatch(r'\d+ ?× ?.+', l)]},
         's8': {**vt['s8'], 'tag': ui['spec_tag_scalp'] if scalp else vt['s8']['tag']},
         's9': {**{k: vt['s9'][k] for k in ('more_h', 'go', 'pro', 'home')}, 'line_h': vt['s9']['line_h'].replace(ui['line_mark'], mark or 'ה' + lname),   # «עוד מקו המכשור»: a common noun takes the article
                'line': [card(s) for s in line], 'more': [card(s) for s in also]},
