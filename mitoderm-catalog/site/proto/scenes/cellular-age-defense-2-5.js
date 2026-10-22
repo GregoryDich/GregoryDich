@@ -166,13 +166,13 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const spicules = new THREE.InstancedMesh(spiGeo, spiMat, NS);
   spicules.instanceMatrix.setUsage(THREE.DynamicDrawUsage); spicules.renderOrder = 30; spicules.frustumCulled = false; spicules.visible = false;
   scene.add(spicules);
-  // their seeds: a soft uneven cloud (four overlapping gaussian lobes, cut within 280 px across and 255 px up and down:
-  // no figure, no edge), an axis leaning into the picture's plane so the length reads, a length 70…220 px (more short
-  // than long), a lag
-  const rng = (s => () => { s |= 0; s = s + 0x6d2b79f5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; })(20261022);
+  // their seeds: a soft uneven cloud (four overlapping gaussian lobes, one of them on the centre so no hollow opens
+  // there and no wreath forms round it, cut within 280 px across and 255 px up and down: no figure, no edge), an axis
+  // leaning into the picture's plane so the length reads, a length 70…220 px (more short than long), a lag
+  const rng = (s => () => { s |= 0; s = s + 0x6d2b79f5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; })(20261023);
   const gau = () => Math.sqrt(-2 * Math.log(Math.max(1e-6, rng()))) * Math.cos(2 * Math.PI * rng());
   const unit = (zk) => { let x, y, z, n; do { x = gau(); y = gau(); z = gau() * zk; n = Math.hypot(x, y, z); } while (n < 1e-3 || Math.abs(z) > 0.6 * n); return [x / n, y / n, z / n]; };
-  const LOBES = [[-130, 50, -30, 95], [100, -70, 40, 105], [40, 110, 0, 90], [-40, -120, 60, 80]];   // a drift, not a ball
+  const LOBES = [[-170, 85, -30, 90], [140, -95, 40, 95], [-10, 10, 0, 105], [70, 135, 20, 70]];   // a drift, not a ball
   const SEED = Array.from({ length: NS }, () => {
     let o; do { const c = LOBES[Math.floor(rng() * LOBES.length)]; o = [c[0] + gau() * c[3], c[1] + gau() * c[3] * 0.9, c[2] + gau() * c[3] * 0.8]; }
     while (Math.hypot(o[0], o[2]) > 280 || Math.abs(o[1]) > 255);
