@@ -18,7 +18,8 @@ ABOUT = {'v-tech-system': ('V-TECH SYSTEM', 'סיפור 3D בגלילה: פרי�
          'exosignal-hair': ('EXOSIGNAL HAIR', 'סיפור 3D חי ב-three.js'),
          'exosignal-spray': ('EXOSIGNAL SPRAY', 'סיפור 3D חי ב-three.js'),
          'exo-nad': ('EXO-NAD', 'סיפור 3D חי ב-three.js'),
-         'cellular-age-defense-2-5': ('CELLULAR AGE DEFENSE 2.5%', 'סיפור 3D חי ב-three.js')}
+         'cellular-age-defense-2-5': ('CELLULAR AGE DEFENSE 2.5%', 'סיפור 3D חי ב-three.js'),
+         'mitopen': ('MITOPEN', 'סיפור 3D חי ב-three.js')}
 
 pages = []
 for arg in sys.argv[1:]:

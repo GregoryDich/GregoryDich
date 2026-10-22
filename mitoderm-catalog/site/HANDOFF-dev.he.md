@@ -35,6 +35,7 @@
    - EXOSIGNAL SPRAY — https://claude.ai/artifact/GAUwhjxzqdk7jEg7JgSBJz
    - EXO-NAD — https://claude.ai/artifact/NcP4v3p7KAdvqZGTnoGK8S
    - CELLULAR AGE DEFENSE 2.5% — https://claude.ai/artifact/RhFJsLyLDinq2HcizL1hvq
+   - MITOPEN — https://claude.ai/artifact/KAn13gS9E2on2ZikQSz4eW
 
    הקוד כולו: https://github.com/GregoryDich/GregoryDich/tree/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site
 
