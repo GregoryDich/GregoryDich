@@ -530,13 +530,25 @@ Firefly (левая половина, ≥ 10 % от краёв, чистый ч�
 страница — workflow `product-page-3d` (спека с проверкой → сцена three.js, текстуры, ключи 3840 → два ревью → правки),
 потом мой просмотр ключей и скриншотов, коммит, артефакт, `site/public`, HANDOFF. Спека следующей страницы пишется,
 пока строится текущая (`until: 'spec'`, потом resume того же прогона).
-- **Готово:**
+- **Готово (23/10):** все артефакты — в `site/HANDOFF-dev.he.md`, все страницы — в `site/public`.
   - EXOSIGNAL HAIR — https://claude.ai/artifact/2ws7qr1xL7Y7wp5xdbE1jh (live 54/54, edges 7/7);
   - EXOSIGNAL SPRAY — https://claude.ai/artifact/GAUwhjxzqdk7jEg7JgSBJz (live 50/50 + 6 SKIP, edges 7/7). Пакшота нет
-    (макет 400×300): мелкая печать флакона — полосы без букв, фольга с HAIR; нужен студийный снимок.
-- **Идёт:** EXO-NAD (спека: поза p5 с открытой коробкой временная — фото 29/32 только миниатюрами; нужны фото в
-  полном размере и размеры коробки в мм). Спека MICRO BOOST 10% — параллельно.
-- **Дальше:** CELLULAR AGE DEFENSE 2.5% → CELL RENEW 1.5% → DERMA RECOVERY CREAM → MITOPEN → MITOSCAN.
+    (макет 400×300): мелкая печать флакона — полосы без букв, фольга с HAIR; нужен студийный снимок;
+  - EXO-NAD — https://claude.ai/artifact/NcP4v3p7KAdvqZGTnoGK8S (v4: набор по фото заказчика — крышка поднята выше,
+    видны верхние ампулы с белыми колпачками, pH золотистый, сыворотка голубая; live 53/53, edges 7/7);
+  - MICRO BOOST 10% — https://claude.ai/artifact/3hwRLR8RxjcQV2oGTynari;
+  - CELLULAR AGE DEFENSE 2.5% — https://claude.ai/artifact/RhFJsLyLDinq2HcizL1hvq (v2: без капли и выдуманных деталей,
+    облако спикул без одиночных скрещений);
+  - MITOPEN — https://claude.ai/artifact/KAn13gS9E2on2ZikQSz4eW («MitoPen E30-Ultima»; кольцо задаёт глубину иглы);
+  - CELL RENEW 1.5% — https://claude.ai/artifact/2rVvsAFJ9NRUjymZDmANup;
+  - MITOSCAN — https://claude.ai/artifact/KD3L1gfgVA8twY7HBvYofp.
+- **Идёт:** DERMA RECOVERY CREAM — правки 9 замечаний ревью (S5: две упаковки не просвечивают друг через друга; S2:
+  спикулы без рядов, как на соседних страницах линейки; L/l в печати; вес мелкого шрифта), затем коммит и `site/public`.
+- **Правило «только то, что существует» (22/10):** в 3D — только настоящие средства, частицы настоящих ингредиентов и
+  бесформенное свечение цвета линейки; страницы, собранные раньше, почищены (`remove-invented-graphics`) и
+  переопубликованы по тем же ссылкам.
+- **Ждёт заказчика:** печать боковых сторон коробок BIOSPICULE (развёртка или фото сторон в лоб, файлами, + размеры в
+  мм) — потом одна задача на 4 страницы (CELLULAR, CELL RENEW, MICRO BOOST, DERMA), те же ссылки.
 - **Экзосомы заказчика (22/10):** его картинка `site/design/exosomes/ref-folded-2210.webp`, спрайты f01–f08 (зеркало,
   поворот; резко/мягко/боке тем же `cells_scene.py post`). Новые страницы — только они (`GLASS` в `build-vtech.py`:
   V-TECH, GEL, HAIR остаются со стеклянными; пересборка геля байт в байт). Процедурная модель Blender — 7 попыток,
