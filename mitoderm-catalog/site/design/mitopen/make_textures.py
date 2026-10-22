@@ -8,7 +8,8 @@ far too small to put on the model, so the pen is modelled from its measurements 
               surface, 0 the groove's floor), G its coverage (the decal's alpha), B the groove's cavity (darkening);
               x the angle round the axis, y along the axis. 512 × 512.
   vtech-system.webp, exosignal-hair.webp   the two partner products of S5 (story3d: billboards of their packshots),
-              from the lossless print packshots, never enlarged.
+              from the lossless print packshots, never enlarged; only the products: the loose specks the V-TECH cut-out
+              left on the backdrop (gold flecks and strokes right of the box) are dropped.
 Measurements (scratchpad spec of 22/10, re-measured here on the lossless print file): the axis is 12.49° from vertical;
 u is px along it from the silhouette's top (the top end's plane at u 4.3, the bottom's at 902), t px across it (+ right).
 The camera saw the pen from 11° right of the button's meridian (α_cam) and 9° below its axis (el), so a point on the
@@ -138,6 +139,16 @@ def vmark():
     return Image.fromarray((rgb * 255 + 0.5).astype(np.uint8)), arms
 
 
+def products_only(path):   # a packshot without the islands of its alpha under 1 % of the largest (backdrop specks)
+    im = np.array(Image.open(path).convert('RGBA'))
+    lab, _ = ndimage.label(im[:, :, 3] > 0, structure=np.ones((3, 3)))
+    size = np.bincount(lab.ravel()); size[0] = 0
+    keep = size >= 0.01 * size.max(); keep[0] = False
+    im[:, :, 3] *= keep[lab]
+    print(os.path.basename(path), 'specks dropped:', int((size[1:] > 0).sum() - keep.sum()))
+    return Image.fromarray(im)
+
+
 if __name__ == '__main__':
     fdir, out, repo = sys.argv[1:4]; os.makedirs(out, exist_ok=True)
     tex, placed = print_tex(os.path.join(fdir, 'Jost[wght].ttf'))
@@ -145,10 +156,10 @@ if __name__ == '__main__':
     print('letters (plane u of the ink edges):', placed)
     vm, arms = vmark(); vm.save(f'{out}/vmark.png', optimize=True)
     print('V: top ends', [tuple(np.round(a[0], 1)) for a in arms], 'vertex', tuple(np.round(arms[0][-1], 1)), '(α°, plane u)')
-    vt = Image.open(f'{repo}/protocols/print/img/vtech-system.webp').convert('RGBA')
+    vt = products_only(f'{repo}/protocols/print/img/vtech-system.webp')
     vt = vt.resize((round(vt.width * 960 / vt.height), 960), Image.LANCZOS)   # S5 shows it ≤ 432 px tall on a 3840 key
     vt.save(f'{out}/vtech-system.webp', quality=86, alpha_quality=92, method=6)
-    Image.open(f'{repo}/protocols/print/img/exosignal-hair.webp').convert('RGBA').save(f'{out}/exosignal-hair.webp', quality=86, alpha_quality=92, method=6)
+    products_only(f'{repo}/protocols/print/img/exosignal-hair.webp').save(f'{out}/exosignal-hair.webp', quality=86, alpha_quality=92, method=6)
     total = 0
     for n in ('print.png', 'vmark.png', 'vtech-system.webp', 'exosignal-hair.webp'):
         im = Image.open(f'{out}/{n}'); s = os.path.getsize(f'{out}/{n}'); total += s; print(n, im.size, im.mode, s // 1024, 'KB')
