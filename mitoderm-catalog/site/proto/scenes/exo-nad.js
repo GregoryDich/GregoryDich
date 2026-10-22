@@ -534,13 +534,14 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // ---- poses (frame px). The box { cx, cy: its front's centre, W: the front's width, yaw° (+: toward the copy), lift
   // (of W), a, D: depth }; a vessel { x: its axis, y: its foot, H: its height, a, D } (0 peel, 1 pH, 2 serum)
   const B = (cx, cy, W, D, lift = 0) => ({ cx, cy, W, yaw: 4, lift, a: 1, D });
-  // the kit (photo A): the sleeve slid up until its foot is at 57 % of the open box's height (0.877 / (1 + LIFT)), the
-  // box all but square to the camera (1.5° toward the copy: both walls show their insides)
-  const LIFT = 0.54;
+  // the kit (photo A, opened a little further at the owner's word of 22/10 so the top row shows whole with its caps): the
+  // sleeve slid up until its foot is at 52 % of the open box's height (0.877 / (1 + LIFT)), the box all but square to
+  // the camera (1.5° toward the copy: both walls show their insides)
+  const LIFT = 0.68;
   // S2 → S3: the closed box goes far behind the row, upper right of the peel, and out into the dark as the last vessel
   // clears it (at its true size beside them it would fill the frame; small and still there it read as a miniature)
   const BOX = [B(760, 790, 660, DIST + 1), B(745, 805, 607, DIST + 1), B(1000, 815, 200, DIST + 8), null, null,
-    B(720, 900, 500, DIST + 1, LIFT)];
+    B(720, 930, 500, DIST + 1, LIFT)];
   const BOX_IN = B(720, 850, 200, DIST + 6);   // S5 → kit: from the depth
   const VS = (x, y, H) => ({ x, y, H });
   const ROW2 = [VS(760, 1010, 350), VS(570, 1010, 229), VS(400, 1010, 229)];
