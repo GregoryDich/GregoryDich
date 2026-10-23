@@ -160,7 +160,7 @@ LINE_ID = LINE.lower().replace(' ', '-')   # the badge's data-line: v-tech-face,
 def line_badge(small=False):
     """The line's badge (S1 and, small, the offer card): its Latin mark as letter-spaced text in the line's colour (the CSS
     styles data-line: PEELING champagne with a dot, story3d EXO-NAD), its Hebrew name as plain text beside it on S1 — never
-    the gold outline, which design-rules («палитра по линейкам») reserve for «טיפוח ביתי». DEVICES has no Latin mark:
+    the gold outline, which design-rules (the site v2 palette per line) reserve for «טיפוח ביתי». DEVICES has no Latin mark:
     «מכשור» in a silver outline (story3d MITOPEN)."""
     mark, name = s1['line_mark'], s1['line_name']
     if LINE == 'DEVICES':
