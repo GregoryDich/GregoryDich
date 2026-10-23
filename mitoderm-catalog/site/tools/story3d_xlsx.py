@@ -422,6 +422,19 @@ def build_he():
         ws.title = '\u05de\u05e4\u05ea \u05d3\u05e8\u05db\u05d9\u05dd'  # מפת דרכים
         wb.move_sheet(ws, offset=-(len(wb.worksheets) - 1))
         left += [(ws.title, c.coordinate, c.value[:60]) for row in ws.iter_rows() for c in row if isinstance(c.value, str) and CYR.search(c.value)]
+    # the product pages: one row per page — link, what it shows, checks, what was fixed, what waits for the owner
+    # (site/xlsx-he/pages-status: the same ru/he pair as the roadmap); second sheet, after the roadmap
+    ps = os.path.join(XH, 'pages-status')
+    if os.path.exists(os.path.join(ps, 'he.json')):
+        ru, he = (json.load(open(os.path.join(ps, f), encoding='utf-8')) for f in ('ru.json', 'he.json'))
+        H = he['items']
+        rows = [[H.get(f'r{r}c{c}', v) for c, v in enumerate(row)] for r, row in enumerate(ru['rows'])]
+        ws = sheet(wb, H['h0'], [(H[f'h{i}'], w) for i, w in enumerate((24, 14, 12, 44, 60, 36, 60, 48))], rows,
+                   he_cols=tuple(H[f'h{i}'] for i in range(8) if i != 3))   # the link column stays left-to-right
+        ws.sheet_view.rightToLeft = True; ws.freeze_panes = 'B2'
+        ws.title = 'עמודי המוצרים'  # עמודי המוצרים
+        wb.move_sheet(ws, offset=-(len(wb.worksheets) - 2))
+        left += [(ws.title, c.coordinate, c.value[:60]) for row in ws.iter_rows() for c in row if isinstance(c.value, str) and CYR.search(c.value)]
     return left
 
 if '--ru' in __import__('sys').argv:
