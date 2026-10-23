@@ -340,8 +340,7 @@ onmessage = async e => {
     cellEls = FIELD.filter(f => typeof f[0] === 'number' || MOLS.length).map((f, n) => {
       const id = typeof f[0] === 'number' ? SPRITES[f[0] % SPRITES.length] : MOLS[+f[0].slice(1) % MOLS.length], layer = layers[f[5]];
       const imgs = [0, 1, 2].map(s => { const im = new Image(); im.decoding = 'async'; im.alt = ''; im.src = new URL(`img/cells/${id}-${s}.webp`, BASE).href; layer.appendChild(im); return im; });
-      const dust = [0, 1, 2, 3, 4].map(j => { const d = document.createElement('i'); layer.appendChild(d); return { el: d, a: n * 2.4 + j * 1.31, f: 0.35 + ((n * 7 + j * 3) % 5) / 8 }; });
-      return { f, imgs, dust, st: ['', '', ''], ph: n * 1.7 };
+      return { f, imgs, st: ['', '', ''], ph: n * 1.7 };   // only the sprites: nothing drawn that is not real (owner 22/10)
     });
   }
   function layoutCells() { for (const c of cellEls) c.st = ['', '', '']; }
@@ -361,7 +360,7 @@ onmessage = async e => {
     if (!cellEls) return false;
     const o0 = smooth(0.08, 0.8, pos) * (pos < 3 ? 1 : 0), dis = smooth(2.1, 2.9, pos);
     if (o0 <= 0 || dis >= 1) {
-      if (cellsOn) { for (const c of cellEls) { c.imgs.forEach(im => set(im, 0)); c.dust.forEach(d => set(d.el, 0)); c.st = ['', '', '']; } cellsOn = false; }
+      if (cellsOn) { for (const c of cellEls) { c.imgs.forEach(im => set(im, 0)); c.st = ['', '', '']; } cellsOn = false; }
       return false;
     }
     cellsOn = true;
@@ -378,12 +377,6 @@ onmessage = async e => {
       const oc = o * (1 - dis), tf = o > 0 ? `translate3d(${(cx - 128).toFixed(1)}px,${(cy - 128).toFixed(1)}px,0) scale(${(D / 256).toFixed(4)}) rotate(${(spin * c01 + tt * 2 + c.ph * 40).toFixed(1)}deg)` : '';
       const wts = [clamp(1 - b), clamp(1 - Math.abs(b - 1)), clamp(b - 1)];
       c.imgs.forEach((im, s) => { const v = oc * wts[s], st = v > 0.004 ? v.toFixed(3) + tf : '0'; if (st !== c.st[s]) { set(im, v, v > 0.004 ? tf : ''); c.st[s] = st; } });
-      const dO = o * Math.sin(Math.PI * dis) * 0.95;   // R3: the cells give way to gold dust
-      for (const p of c.dust) {
-        if (dO <= 0.004) { if (p.on) { set(p.el, 0); p.on = false; } continue; }
-        const rr = D / 2 * (0.2 + p.f * 1.4 * dis), px = cx + Math.cos(p.a) * rr, py = cy + Math.sin(p.a) * rr - dis * 0.04 * H, sc = 0.6 + D / 260;
-        set(p.el, dO * (0.6 + 0.4 * p.f), `translate3d(${(px - 4).toFixed(1)}px,${(py - 4).toFixed(1)}px,0) scale(${sc.toFixed(2)})`); p.on = true;
-      }
     }
     return !still;
   }
@@ -479,7 +472,7 @@ onmessage = async e => {
     if (worker) { worker.terminate(); worker = null; }
     if (workerUrl) URL.revokeObjectURL(workerUrl);
     for (const e of bm.values()) release(e); bm.clear(); shown = -1; kitCrop = null;
-    if (cellEls) for (const c of cellEls) { c.imgs.forEach(im => im.remove()); c.dust.forEach(d => d.el.remove()); }
+    if (cellEls) for (const c of cellEls) c.imgs.forEach(im => im.remove());
     cellEls = null;
     root.classList.remove('story'); for (const v of ['--stage-top', '--stage-h', '--push']) root.style.removeProperty(v);
     if (probe) probe.remove();

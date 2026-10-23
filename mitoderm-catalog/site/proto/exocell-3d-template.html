@@ -340,7 +340,9 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 <canvas id="gl" aria-hidden="true"></canvas>
 <div class="still-fallback" aria-hidden="true"><img src="__FALLBACK__" alt=""></div>
 
-<header class="top">
+<!-- the page is a body fragment (the host adds the document shell), so the landmarks carry dir="rtl" lang="he" themselves:
+     the layout is RTL without JS too (the script above sets them on <html> as well) -->
+<header class="top" dir="rtl" lang="he">
   <div class="wrap">
     <a class="logo" href="#top" aria-label="MITODERM"><img src="__LOGO_MARK__" alt="MITODERM"></a>
     <a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{cta_price}}</a>
@@ -348,7 +350,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 </header>
 
 <p class="lyr" aria-hidden="true">{{layer_white}}</p><p class="lyr" aria-hidden="true">{{layer_blue}}</p>
-<main>
+<main dir="rtl" lang="he">
 <!-- 0 · Meet: the box in front of the moving background -->
 <section class="sec hero" id="top" data-st="0">
   <div class="wrap split">
@@ -504,18 +506,18 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 </section>
 </main>
 
-<footer class="foot">
+<footer class="foot" dir="rtl" lang="he">
   <div class="wrap"><img src="__LOGO_FULL__" alt="MITODERM — Where Science Meets Beauty"><span>{{footer}}</span><span class="legal"><a href="#">{{foot_access}}</a><a href="#">{{foot_privacy}}</a></span></div>
 </footer>
 
-<nav class="dock" aria-label="{{nav_label}}"><a href="#top" data-i="0">{{nav_meet}}</a><a href="#why" data-i="1">{{nav_why}}</a><a href="#inside" data-i="2">{{nav_inside}}</a><a href="#feel" data-i="3">{{nav_feel}}</a><a href="#kit" data-i="4">{{nav_kit}}</a><a href="#protocol" data-i="5">{{nav_protocol}}</a><a href="#offer" data-i="6">{{nav_offer}}</a><a href="#specialists" data-i="7">{{nav_spec}}</a></nav>
+<nav class="dock" aria-label="{{nav_label}}" dir="rtl" lang="he"><a href="#top" data-i="0">{{nav_meet}}</a><a href="#why" data-i="1">{{nav_why}}</a><a href="#inside" data-i="2">{{nav_inside}}</a><a href="#feel" data-i="3">{{nav_feel}}</a><a href="#kit" data-i="4">{{nav_kit}}</a><a href="#protocol" data-i="5">{{nav_protocol}}</a><a href="#offer" data-i="6">{{nav_offer}}</a><a href="#specialists" data-i="7">{{nav_spec}}</a></nav>
 
-<div class="bar"><b><bdi>{{bar_name}}</bdi><small>{{bar_note}}</small></b><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{cta_price}}</a></div>
+<div class="bar" dir="rtl" lang="he"><b><bdi>{{bar_name}}</bdi><small>{{bar_note}}</small></b><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{{cta_price}}</a></div>
 
 <!-- Lead form. This page is a static preview and cannot send data: the submit handler prevents the default and only
      simulates the request. In production the form POSTs JSON {name, phone, email, profession, source: 'EXOCELL MASK page'}
      to data-endpoint (/api/leads), as mitoderm.com does. -->
-<dialog class="lead" id="lead" aria-labelledby="lead-h">
+<dialog class="lead" id="lead" aria-labelledby="lead-h" dir="rtl" lang="he">
   <div class="lead-in">
     <button type="button" class="lead-x" data-close aria-label="{{close_label}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     <form class="lead-form" novalidate data-endpoint="/api/leads">

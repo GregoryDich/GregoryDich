@@ -13,7 +13,10 @@ S1 meet         s1.line_mark, line_name        the product's line (LINES, design
                                                name; the Hebrew one only where a source has it (V-TECH FACE: ui.line_name,
                                                DEVICES: home.sl-2 «מכשור»); the line's name also heads the related cards
                 s1.use_pro                     ui.use_home when the catalogue tags it HOME CARE (the badge, outlined)
-                s1.eyebrow                     product-pages eyebrow
+                s1.eyebrow                     product-pages eyebrow less the parts the badges already say (kicker(); story3d:
+                                               the screen-1 kicker carries no line badge): a « · » part that is the use badge
+                                               or the line's name, or holds the line's Latin mark, is left out; the kicker is
+                                               left out when nothing remains (CELLULAR AGE, CELL RENEW, the devices)
                 s1.h1 · tag · lead · chips     name · b0.title · b0.line · b0.label1–4
 S2 why          s2.h2 · p · chips              b1.title · b1.line · b1.label1–4;  s2.kicker  product-pages s05[0]
 S3 inside       s3.h2 · p · chips              b2.title · b2.line · b2.label1–4;  s3.kicker  product-pages s03[0]
@@ -27,12 +30,17 @@ S6 kit (card)   s7.card_lines                  the b5 labels that name a box ite
                                                split at its quantity («1×» + the rest), none without one
                 s7.card_facts                  b5.title (one line)
                 s7.card_chips                  b5.label3–4 that are not a box item
-S7 offer        s7.h2 · p                      b6.title · b6.line;  s7.training  b6.cta's second button
+S7 offer        s7.h2 · p                      b6.title · b6.line;  s7.training  b6.cta's second button (none where the
+                                               product's story3d has one button: OVERRIDE)
 S8 specialists  s8.tag                         «קרקפת» (ui.spec_tag_scalp) for a scalp product (catalogue eyebrow, tagline)
 S9 related      s9.line, s9.more               the rest of the line, then the products b4.line names (RELATED overrides);
                                                name, tagline and tag from product-pages; a product whose packshot (in
                                                protocols/assets or protocols/print) is too small for an HD card is left out
-bar             bar                            name · ui.use_home / ui.use_pro"""
+bar             bar                            name · ui.use_home / ui.use_pro
+OVERRIDE: per product, what the page shows instead of a reviewed source string, with the reason — for the editor:
+  mitoscan  b0.label4 «מקצועית» → «מקצועי»: the chip stands next to the badge «מקצועי» (ui.use_pro) and must agree with it
+            (story3d MITOSCAN: three chips); the storyboard's feminine form agrees with «מערכת», which the chip does not name
+  mitoscan  training '' : story3d MITOSCAN gives the offer one button; b6.cta's second one, «שאלו על הדרכה», is not placed"""
 import json, os, re
 
 H = os.path.dirname(os.path.abspath(__file__))
@@ -49,6 +57,16 @@ RELATED = {'exotech-gel': (['v-tech-system', 'exocell-mask'], ['exo-nad', 'micro
 IMG = {'v-tech-system': 'vtech-system.webp', 'derma-recovery-cream': 'derma-recovery.webp',   # protocols/assets/img names
        'cell-renew-1-5': 'cell-renew-15.webp', 'cellular-age-defense-2-5': 'cellular-age-25.webp'}   # protocols/print/img
 PACKSHOTS = [os.path.join(REPO, 'protocols', d, 'img') for d in ('assets', 'print')]
+OVERRIDE = {'mitoscan': {'b0.label4': 'מקצועי', 'training': ''}}   # see the docstring; keys of the storyboard, or 'training'
+
+
+def kicker(eyebrow, mark, name, use):
+    """S1's kicker: the catalogue eyebrow without the parts the badges beside it already say — a « · » part equal to the use
+    badge («טיפוח ביתי», «מקצועי») or to the line's Hebrew name («מכשור»), or holding the line's Latin mark
+    («BIOSPICULE™»); '' when nothing is left (the page then draws no kicker)."""
+    word = mark.rstrip('™®')
+    said = lambda t: t == use or (name and (t == name or re.search(rf'(?<![א-ת]){re.escape(name)}(?![א-ת])', t))) or (word and word in t)
+    return ' · '.join(t for t in eyebrow.split(' · ') if not said(t))
 
 
 def packshot(slug):   # the card's picture: its file name, or None when it is too small for an HD card: the picture is
@@ -67,11 +85,12 @@ def content(slug):
     pages = {p['slug']: (p, h) for p, h in zip(load(SITE, 'product-pages.json'), load(SITE, 'product-pages.he.json'))}
     sb = {i['key']: i['he'] for p in load(SITE, 'storyboard.he.json')['pages'] if p['slug'] == slug for i in p['items']}
     assert sb, f'no storyboard for {slug}'
+    over = OVERRIDE.get(slug, {}); sb.update({k: t for k, t in over.items() if k in sb})
     en, c = pages[slug]; name = c['name']
     use = 'home' if en['tag'] == 'HOME CARE' else 'pro'
     two = lambda k: [t.strip() for t in sb[k].split(' · ')]
     labels = lambda b, ks=(1, 2, 3, 4): [sb[f'{b}.label{i}'] for i in ks]
-    buy, more = two('b0.cta')[:2]; ask = (two('b6.cta') + [''])[1]   # b6.cta: the price button, then the offer's second one
+    buy, more = two('b0.cta')[:2]; ask = over.get('training', (two('b6.cta') + [''])[1])   # b6.cta: the price button, then the offer's second one
     qty = sb['b5.line'].split(' ', 1)[0]; qty = qty if re.fullmatch(r'\d+×', qty) else ''
     box = [m.groups() for m in (re.fullmatch(r'(\d+) ?× ?(.+)', l) for l in labels('b5')) if m]   # «1 × 15 מ״ל …»: what is in the box
     line_id = next(k for k, v in LINES.items() if slug in v)
@@ -93,7 +112,7 @@ def content(slug):
     line, also = [s for s in line if packshot(s)][:4], [s for s in also if packshot(s)][:4]
     return {
         'use': use, 'nav': vt['nav'], 'cta_price': buy, 'line': line_id, 'exo': exo, 'pdrn': pdrn,
-        's1': {'line_mark': mark, 'line_name': lname, 'use_pro': ui['use_' + use], 'eyebrow': c['eyebrow'],
+        's1': {'line_mark': mark, 'line_name': lname, 'use_pro': ui['use_' + use], 'eyebrow': kicker(c['eyebrow'], mark, lname, ui['use_' + use]),
                'h1': name, 'tag': sb['b0.title'], 'lead': sb['b0.line'], 'chips': labels('b0'), 'more': more},
         's2': {'h2': sb['b1.title'], 'p': sb['b1.line'], 'kicker': c['s05'][0], 'chips': labels('b1')},
         's3': {'h2': sb['b2.title'], 'legend': vt['s3']['legend'] if exo else '', 'p': sb['b2.line'], 'kicker': c['s03'][0],

@@ -19,6 +19,11 @@
 # The frame engine is engine/story.js (an ES module, also what a React app mounts); the build inlines it into the page.
 # `--scene` (another product): no frames; the page draws scenes/<slug>.js live with three.js (the engine's `scene`),
 # every run in the same box SCENE_BOX, its textures from img/<slug>-3d/; without WebGL the first key frame stands still.
+# The «see also» cards link to each product's own page: by default «../<slug>/», the product's folder of the static site
+# (stage-public.py keeps it); `--links artifact` writes the published page instead (PUBLISHED below) for the copies that
+# are published as artifacts. Each card carries data-slug, by which stage-public.py turns published links back into
+# «../<slug>/» when it stages an artifact copy. The page is a body fragment: the host adds the document shell, so the
+# landmarks (header, main, footer, nav, bar, dialog) carry dir="rtl" lang="he" themselves and the layout is RTL without JS.
 import glob, html, json, os, re, shutil, sys, urllib.parse
 from PIL import Image
 
@@ -26,6 +31,15 @@ ARGS = sys.argv[1:]
 opt = lambda name: ARGS[ARGS.index(name) + 1] if name in ARGS else None
 FILES, KEYS, PRODUCT = opt('--files'), opt('--keys'), opt('--product') or 'v-tech-system'
 SCENE = '--scene' in ARGS
+LINKS = opt('--links') or 'public'   # the «see also» cards: 'public' → «../<slug>/», 'artifact' → the published pages
+assert LINKS in ('public', 'artifact'), '--links public|artifact'
+PUBLISHED = {   # the published page of each product (the artifact copies), for --links artifact
+    'v-tech-system': 'https://claude.ai/artifact/NdQezU5bikrsuaWVVW5TBK', 'exocell-mask': 'https://claude.ai/artifact/FA5ySxGihnDAmjQPvDftzn',
+    'exotech-gel': 'https://claude.ai/artifact/LsJVky9GDssBuW1eQkLaTe', 'exosignal-hair': 'https://claude.ai/artifact/2ws7qr1xL7Y7wp5xdbE1jh',
+    'exosignal-spray': 'https://claude.ai/artifact/GAUwhjxzqdk7jEg7JgSBJz', 'exo-nad': 'https://claude.ai/artifact/NcP4v3p7KAdvqZGTnoGK8S',
+    'micro-boost-10': 'https://claude.ai/artifact/3hwRLR8RxjcQV2oGTynari', 'cellular-age-defense-2-5': 'https://claude.ai/artifact/RhFJsLyLDinq2HcizL1hvq',
+    'mitopen': 'https://claude.ai/artifact/KAn13gS9E2on2ZikQSz4eW', 'cell-renew-1-5': 'https://claude.ai/artifact/2rVvsAFJ9NRUjymZDmANup',
+    'mitoscan': 'https://claude.ai/artifact/KD3L1gfgVA8twY7HBvYofp', 'derma-recovery-cream': 'https://claude.ai/artifact/7a3EpTpcTbYMWjTypNk2pV'}
 H = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.normpath(os.path.join(H, '..'))
 REPO = os.path.normpath(os.path.join(SITE, '..'))
@@ -36,7 +50,9 @@ if PRODUCT == 'v-tech-system':
 else:
     assert FILES, '--files <dir> is needed: the page is written there, next to its img/ and seq/'
     sys.path.insert(0, H); from story_content import content; v = content(PRODUCT)
-cat = {s['slug']: h for s, h in zip(load(SITE, 'product-pages.json'), load(SITE, 'product-pages.he.json'))}[PRODUCT]
+PAGES = list(zip(load(SITE, 'product-pages.json'), load(SITE, 'product-pages.he.json')))
+cat = next(h for s, h in PAGES if s['slug'] == PRODUCT)
+SLUG = {h['name']: s['slug'] for s, h in PAGES}   # a related card names its product; its page is that product's slug
 ui = load(H, 'exocell-he-ui.json')
 form = load(SITE, 'sources/mitoderm-com/form-he.json'); ff = form['form']
 site = load(SITE, 'sources/mitoderm-com/contacts.json')
@@ -47,15 +63,26 @@ esc = lambda s: html.escape(s, quote=True)
 wa = lambda text: 'https://wa.me/' + ui['wa_number'] + '?text=' + urllib.parse.quote(text)
 
 
+def rng(s):
+    """A number range in a Hebrew line («0.25–2.5 מ״מ», «4–6», «80–100») reads left to right: the en dash is neutral, so
+    the bidi algorithm would put the second number first; each range goes into its own LTR isolate (s is escaped text)."""
+    return re.sub(r'(?<![\w.,])(\d+(?:[.,]\d+)?–\d+(?:[.,]\d+)?%?)(?!\w)', r'<bdi dir="ltr">\1</bdi>', s)
+
+
+text = lambda s: rng(esc(s))   # a line of text (never an attribute): escaped, its number ranges isolated
+
+
 def keep(s):
     """As in build-exocell.py: escape a Hebrew line and keep each Latin name whole and in order ('V-TECH' never breaks,
-    'BIOSPICULE™' keeps its ™ after the word, a one-letter prefix stays with its name)."""
+    'BIOSPICULE™' keeps its ™ after the word, a one-letter prefix stays with its name, 'CELL RENEW 1.5%' keeps its
+    decimal point and 'I–VI' its dash; a full stop after a name stays outside)."""
     out, pos = [], 0
-    for m in re.finditer(r'(?<![א-ת])([א-ת]-)?([A-Za-z][A-Za-z0-9™®%\-‑]*(?:[ /]+[A-Za-z0-9][A-Za-z0-9™®%\-‑]*)*)', s):
+    LATIN = r'(?:[A-Za-z0-9™®%\-‑]|\.(?=\d)|–(?=[A-Za-z0-9]))*'
+    for m in re.finditer(r'(?<![א-ת])([א-ת]-)?([A-Za-z]' + LATIN + r'(?:[ /]+[A-Za-z0-9]' + LATIN + r')*)', s):
         run = f'<bdi>{esc(m.group(2))}</bdi>'
-        out += [esc(s[pos:m.start()]), f'<span class="nw">{esc(m.group(1))}{run}</span>' if m.group(1) else run.replace('<bdi>', '<bdi class="nw">', 1)]
+        out += [text(s[pos:m.start()]), f'<span class="nw">{esc(m.group(1))}{run}</span>' if m.group(1) else run.replace('<bdi>', '<bdi class="nw">', 1)]
         pos = m.end()
-    return ''.join(out) + esc(s[pos:])
+    return ''.join(out) + text(s[pos:])
 
 
 def brand(s):  # Latin product and brand names in capitals, as everywhere in the edition (build-exocell.py)
@@ -64,8 +91,8 @@ def brand(s):  # Latin product and brand names in capitals, as everywhere in the
     return s
 
 
-lis = lambda items, f=esc: ''.join(f'<li>{f(t)}</li>' for t in items)
-txt = lambda s: keep(s) if re.search('[™®]', s) else esc(s)   # a mark sign stays after its word in an RTL line
+lis = lambda items, f=text: ''.join(f'<li>{f(t)}</li>' for t in items)
+txt = lambda s: keep(s) if re.search('[™®]', s) else text(s)   # a mark sign stays after its word in an RTL line
 nav = v['nav']
 PIN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>'
 CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.8"/></svg>'
@@ -87,7 +114,7 @@ LEAD = '' if HOME else ' data-lead aria-haspopup="dialog"'
 
 T = {
     'cta_price': v['cta_price'], 'use_pro': s1['use_pro'],
-    'eyebrow': s1['eyebrow'], 'h1': s1['h1'], 'tag': s1['tag'], 's1_lead': s1['lead'], 's1_more': s1['more'],
+    'h1': s1['h1'], 'tag': s1['tag'], 's1_lead': s1['lead'], 's1_more': s1['more'],
     **{f'nav{i}': nav[i] for i in range(1, 6)},
     's2_h2': s2['h2'], 's2_p': s2['p'], 's2_kicker': s2['kicker'],
     's3_h2': s3['h2'], 's3_kicker': s3['kicker'],
@@ -109,7 +136,15 @@ T = {
 
 
 def card(name, line, use, img, i):
-    return (f'<a class="card rv" style="--d:{i * .08:.2f}s" href="{esc(wa(ui["wa_text_product"].format(name=name)))}" target="_blank" rel="noopener">'
+    """a «see also» card: the product's own page («../<slug>/», or its published page with --links artifact; data-slug
+    lets stage-public.py swap one for the other); WhatsApp only for a product that has no page"""
+    slug = SLUG.get(name)
+    if slug in PUBLISHED:
+        to = (f' href="{esc(PUBLISHED[slug])}" data-slug="{slug}" target="_blank" rel="noopener"' if LINKS == 'artifact'
+              else f' href="../{slug}/" data-slug="{slug}"')
+    else:
+        to = f' href="{esc(wa(ui["wa_text_product"].format(name=name)))}" target="_blank" rel="noopener"'
+    return (f'<a class="card rv" style="--d:{i * .08:.2f}s"{to}>'
             f'<div class="pic"><img src="img/{img}" alt="{esc(name)}" loading="lazy"></div>'
             f'<div class="body"><span class="badge{" pro" if use == "pro" else " home"}">{esc(s9[use])}</span>'
             f'<h3><bdi>{esc(name)}</bdi></h3><p>{keep(line)}</p><span class="go">{esc(s9["go"])}</span></div></a>')
@@ -118,41 +153,61 @@ def card(name, line, use, img, i):
 book = f'<a class="book" href="{esc(WA_MAIN)}"{LEAD}>{esc(s8["book"])} <span aria-hidden="true">↗</span></a>'
 calls = len(s7['card_lines']) == 2   # the two kinds in the box named over and under its picture (V-TECH: sachets, ampoules)
 call = lambda pos, k: (f'<p class="kc-call {pos}" aria-hidden="true"><b><bdi dir="ltr">{esc(s7["card_lines"][k][0])}</bdi></b>'
-                       f'{esc(s7["card_lines"][k][1].split(" — ")[0])}</p>') if calls else ''
+                       f'{text(s7["card_lines"][k][1].split(" — ")[0])}</p>') if calls else ''
+LINE_ID = LINE.lower().replace(' ', '-')   # the badge's data-line: v-tech-face, hair, peeling, biospicule, devices (the CSS colours it)
+
+
+def line_badge(small=False):
+    """The line's badge (S1 and, small, the offer card): its Latin mark as letter-spaced text in the line's colour (the CSS
+    styles data-line: PEELING champagne with a dot, story3d EXO-NAD), its Hebrew name as plain text beside it on S1 — never
+    the gold outline, which design-rules («палитра по линейкам») reserve for «טיפוח ביתי». DEVICES has no Latin mark:
+    «מכשור» in a silver outline (story3d MITOPEN)."""
+    mark, name = s1['line_mark'], s1['line_name']
+    if LINE == 'DEVICES':
+        return f'<span class="badge line" data-line="{LINE_ID}">{esc(name)}</span>' if name else ''
+    return ((f'<span class="mark-line" data-line="{LINE_ID}"><bdi>{esc(mark)}</bdi></span>' if mark else '')
+            + (f'<span class="mark-line he" data-line="{LINE_ID}">{esc(name)}</span>' if name and not small else ''))
+
+
+# the offer's second button on a professional page asks for training or a demo: it opens the lead form with its label as
+# the subject (the form's hidden field; the page script copies the opener's label) and, without JS, WhatsApp with the
+# product's reviewed text and that label («שלום, אשמח לקבל פרטים על V-TECH SYSTEM · לתיאום הדרכה»)
+WA_TRAIN = wa(ui['wa_text_product'].format(name=NAME) + ' · ' + s7['training']) if s7['training'] else ''
 RAW = {
     's1_chips': lis(s1['chips'], keep), 's2_chips': lis(s2['chips']), 's3_p': keep(s3['p']), 's3_chips': lis(s3['chips'], keep),
+    # S1's kicker, the catalogue eyebrow less what the badges already say (story_content.py); none when nothing is left
+    's1_kicker': f'<p class="kicker rv" style="--d:.06s">{txt(s1["eyebrow"])}</p>' if s1['eyebrow'] else '',
     's3_formula': (f'<details class="rv" style="--d:.3s"><summary>{esc(s3["formula"])}</summary><ul>{lis(cat["ingredients"], keep)}</ul></details>'
                    if s3['formula'] else ''),   # a device has features, not a formula
     's4_pins': lis(s4['pins']), 's5_chip': keep(s5['chip']),
     's5_steps': ''.join(f'<li class="step rv" style="--d:{i * .08:.2f}s"><span class="n">0{i + 1}</span><h3>{keep(t)}</h3>{f"<p>{keep(p)}</p>" if p else ""}</li>'
                         for i, (t, p) in enumerate(s5['steps'])),
-    's5_note': f'<p class="note rv" style="--d:.24s">{esc(s5["note"])}</p>' if s5['note'] else '',
+    's5_note': f'<p class="note rv" style="--d:.24s">{text(s5["note"])}</p>' if s5['note'] else '',
     'lead': LEAD, 'use_cls': '' if HOME else ' pro',
     # the offer's second button does what its label says: a price quote opens the price form (a home-care page too),
-    # «WhatsApp» opens WhatsApp, a home-care page otherwise sends to the specialists, a professional one to the form
+    # «WhatsApp» opens WhatsApp, a home-care page otherwise sends to the specialists, a professional one to the form with
+    # the training (demo) subject
     'offer_more': '' if not s7['training'] else (
         f'<a class="btn ghost" href="{esc(wa(ui["wa_text_price"].replace("EXOCELL MASK", NAME)))}" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">{esc(s7["training"])}</a>'
         if HOME and 'מחיר' in s7['training'] else
         f'<a class="btn ghost" href="{esc(wa(ui["wa_text_product"].format(name=NAME)))}" target="_blank" rel="noopener">{esc(s7["training"])}</a>'
         if 'WhatsApp' in s7['training'] else
         f'<a class="btn ghost" href="#specialists">{esc(s7["training"])}</a>' if HOME else
-        f'<a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener"{LEAD}>{esc(s7["training"])}</a>'),
+        f'<a class="btn ghost" href="{esc(WA_TRAIN)}" target="_blank" rel="noopener"{LEAD}>{esc(s7["training"])}</a>'),
     's7_h2': keep(s7['h2']),
     'kit_call_top': call('top', 1), 'kit_call_bot': call('bot', 0),   # «מסכת ג׳ל» over the sachets, «סרום» under the ampoules
     's7_card_lines': ''.join(f'<p class="kc-qty"><b><bdi dir="ltr">{esc(q)}</bdi></b><span>{keep(t)}</span></p>' for q, t in s7['card_lines']),
     # one thin line from the approved S6 facts: «4–6 טיפולים בסדרה · 14 יום בין טיפול לטיפול» (or the product's own line)
     's7_card_facts': f'<p class="kc-facts"><span>{keep(s7["card_facts"])}</span></p>' if 'card_facts' in s7 else '<p class="kc-facts">' + '<i aria-hidden="true">·</i>'.join(
-        f'<span><b><bdi dir="ltr">{esc(n)}</bdi></b> {esc(l)}</span>' for n, l in s6['facts'][2:4]) + '</p>',
+        f'<span><b><bdi dir="ltr">{esc(n)}</bdi></b> {text(l)}</span>' for n, l in s6['facts'][2:4]) + '</p>',
     's7_card_chips': lis(s7['card_chips'], keep), 's8_h2': keep(brand(s8['h2'])), 's8_p': keep(brand(s8['p'])),
     's8_chips': ''.join(f'<button type="button" class="fchip" data-tag="{esc(tag)}" aria-pressed="{str(tag == s8["tag"]).lower()}">{esc(label)}</button>'
                         for label, tag in zip(s8['chips'], ['*'] + s8['chips'][1:])),
     's8_cards': ''.join(f'<article class="spec rv" style="--d:{i * .08:.2f}s" data-tags="{esc(s8["tag"])}"><div class="av" aria-hidden="true">{esc(city[0])}</div>'
                         f'<div class="sb"><h3>{PIN}<span>{esc(city)}</span></h3><div class="tags"><span>{esc(s8["tag"])}</span><span>{CHECK}{esc(s8["certified"])}</span></div>'
                         f'{book}</div></article>' for i, city in enumerate(s8['cities'])),
-    # the line's badge (its Latin name, its Hebrew name where there is one) on S1 and the offer card
-    'line_badges': (f'<span class="mark-line"><bdi>{esc(s1["line_mark"])}</bdi></span>' if s1['line_mark'] else '')
-                   + (f'<span class="badge">{esc(s1["line_name"])}</span>' if s1['line_name'] else ''),
-    'kit_line': f'<span class="badge"><bdi>{esc(s1["line_mark"] or s1["line_name"])}</bdi></span>' if s1['line_mark'] or s1['line_name'] else '',
+    # the line's badge (its Latin name, its Hebrew name where there is one) on S1 and, the mark only, the offer card
+    'line_badges': line_badge(), 'kit_line': line_badge(small=True),
     # the exosome legend only on a product with synthetic exosomes; a related row only when it has cards
     's3_legend': (f'<p class="legend rv" style="--d:.15s"><span class="dot" aria-hidden="true"{FOLDED_DOT if CELL == "f" else ""}></span>'
                   f'<span>{esc(s3["legend"])}</span></p>') if s3['legend'] else '',
@@ -238,6 +293,11 @@ if FILES:   # the page's images: smoke, logos, kit card, related products, phone
         STILL = ('<div class="still" aria-hidden="true"><div class="still-f"><img src="img/still.webp" alt="" loading="lazy" '
                  'style="left:0;top:0;width:100%;height:100%"></div></div>')
 RAW['kit_size'] = f'width="{kit_size[0]}" height="{kit_size[1]}"'
+# the offer card's picture box is clamp(160px, 26vh, 250px) tall: a landscape kit fills the card's width in it; a portrait
+# kit (EXO-NAD, the sprays, the serums) would stay small, so its box grows by the kit's aspect and the kit fills the
+# card's height as a landscape one fills its width (its long side the same size); a landscape kit's box is unchanged
+r = kit_size[1] / kit_size[0]
+RAW['kit_h'] = f';--kc-h:clamp({160 * r:.0f}px, {26 * r:.1f}vh, {250 * r:.0f}px)' if r > 1 else ''
 cdir, plate = (f'{FILES}/img/cells', f'{FILES}/img/plate.webp') if FILES else (f'{SITE}/design/vtech-3d/cells',) * 2
 def sprites(k): return sorted(c for c in {os.path.basename(f)[:3] for f in glob.glob(f'{cdir}/{k}[0-9][0-9]-0.webp')}
                               if all(os.path.exists(f'{cdir}/{c}-{v}.webp') for v in '012'))
@@ -254,7 +314,7 @@ missing, unused = used - set(T) - set(RAW), (set(T) | set(RAW)) - used
 assert not missing, f'no text for {sorted(missing)}'
 assert not unused, f'texts never placed: {sorted(unused)}'
 page = re.sub(r'\{\{\{(\w+)\}\}\}', lambda m: RAW[m.group(1)], page)
-KEEP = {'eyebrow', 'tag', 's1_lead', 's2_h2', 's2_p', 's2_kicker', 's3_h2', 's3_kicker', 's4_h2', 's4_p', 's5_h2', 's5_p', 's7_p'}   # text, not attributes
+KEEP = {'tag', 's1_lead', 's2_h2', 's2_p', 's2_kicker', 's3_h2', 's3_kicker', 's4_h2', 's4_p', 's5_h2', 's5_p', 's7_p'}   # text, not attributes
 page = re.sub(r'\{\{(\w+)\}\}', lambda m: txt(T[m.group(1)]) if m.group(1) in KEEP else esc(T[m.group(1)]), page)
 # the live scene: three.js from jsDelivr (as the MASK page), imported so that a failed load (or no WebGL) leaves the
 # page whole, without 3D: no-gl, the still; then the scene module inlined

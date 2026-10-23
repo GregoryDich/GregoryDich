@@ -52,8 +52,6 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round
 .helix { position: fixed; z-index: 1; left: 1vw; top: 16vh; width: min(48vw, 80vh); height: auto; max-width: none; opacity: 0;
   visibility: hidden; mix-blend-mode: screen; filter: blur(1.2px); pointer-events: none; will-change: opacity, transform; }
 .cells img { position: absolute; left: 0; top: 0; width: 256px; height: 256px; max-width: none; opacity: 0; visibility: hidden; }
-.cells i { position: absolute; left: 0; top: 0; width: 8px; height: 8px; border-radius: 50%; opacity: 0; visibility: hidden;
-  background: radial-gradient(circle, #fff1cf 0, rgba(232,196,120,.85) 30%, rgba(201,162,75,0) 70%); }
 main, .top, .foot, .dock, .bar { position: relative; z-index: 2; }
 
 .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: rgba(10,10,11,.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hairline-cream); }
@@ -76,9 +74,16 @@ main, .top, .foot, .dock, .bar { position: relative; z-index: 2; }
 .legend .dot { position: relative; width: 16px; height: 16px; flex: none; border-radius: 50%; border: 1px solid rgba(196,176,236,.75);
   background: radial-gradient(circle, #f3cf86 0, #b98a3c 34%, rgba(60,36,12,.9) 52%, rgba(150,130,200,.18) 60%); box-shadow: 0 0 8px rgba(201,162,75,.35); }
 .badges { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+/* the line's badge: text in the line's colour, no outline (the gold outline marks «טיפוח ביתי»: design-rules «палитра по
+   линейкам»). The brand's gold for V-TECH FACE, HAIR and BIOSPICULE; PEELING champagne #d8c48a with a small dot in front
+   (story3d EXO-NAD); DEVICES «מכשור» in a silver outline (story3d MITOPEN). The use badge keeps its own look. */
 .mark-line { font: 500 12px/1 var(--body); letter-spacing: .24em; color: var(--gold); }
+.mark-line.he { letter-spacing: 0; line-height: 1.4; }
+.mark-line[data-line="peeling"] { display: inline-flex; align-items: center; gap: 8px; color: #d8c48a; }
+.mark-line[data-line="peeling"]::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #d8c48a; }
 .badge { border-radius: 999px; padding: 4px 12px; font: 500 12px/1.4 var(--body); border: 1px solid var(--gold-faint); color: var(--gold-soft); }
 .badge.pro { background: var(--gold); color: var(--on-gold); border-color: var(--gold); }
+.badge.line[data-line="devices"] { border-color: #d9d4cc; color: #d9d4cc; }
 .kicker { display: flex; align-items: center; gap: 14px; font: 500 13px/1.3 var(--body); letter-spacing: .02em; color: var(--gold); }
 .kicker.line::after { content: ""; width: 40px; height: 1px; background: rgba(201,162,75,.3); }
 h1 { font: 500 clamp(48px, 5.8vw, 84px)/1 var(--display); letter-spacing: -.01em; }
@@ -127,7 +132,10 @@ details ul { padding: 0 0 18px; list-style: none; color: var(--text); display: g
 .kc-head { display: flex; align-items: center; gap: 14px; }
 .kc-head h3 { font: 500 26px/1.2 var(--he-display); color: var(--cream); }
 .kc-head .badge { letter-spacing: .14em; font-size: 11px; }
-.kc-pic, .kc-live { width: 100%; height: clamp(160px, 26vh, 250px); object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,.55)); }
+.kc-head .mark-line { font-size: 11px; }
+/* the picture's box: a landscape kit fills the card's width in it; for a portrait kit the builder sets --kc-h on the card
+   (the same clamp grown by the kit's aspect), so it fills the card's height as a landscape one fills its width */
+.kc-pic, .kc-live { width: 100%; height: var(--kc-h, clamp(160px, 26vh, 250px)); object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,.55)); }
 .kc-live { display: none; }
 .kc-fig { margin: 0; display: grid; justify-items: center; }
 .kc-call { display: flex; align-items: baseline; gap: 6px; font: 400 13px/1.2 var(--body); color: var(--gold-soft); position: relative; }
@@ -310,14 +318,16 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
 <div class="cells back" aria-hidden="true"></div>
 <canvas id="seq" aria-hidden="true"></canvas>
 <div class="cells front" aria-hidden="true"></div>
-<header class="top"><div class="wrap">
+<!-- the page is a body fragment (the host adds the document shell), so the landmarks carry dir="rtl" lang="he" themselves:
+     the layout is RTL without JS too (the script above sets them on <html> as well) -->
+<header class="top" dir="rtl" lang="he"><div class="wrap">
   <a class="logo" href="#meet" aria-label="MITODERM"><img src="img/logo-mark.png" alt="MITODERM"></a>
   <a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener"{{{lead}}}>{{cta_price}}</a>
 </div></header>
-<main>
+<main dir="rtl" lang="he">
   <section id="meet" class="sec" data-st="0"><div class="wrap"><div class="copy">
     <div class="badges rv">{{{line_badges}}}<span class="badge{{{use_cls}}}">{{use_pro}}</span></div>
-    <p class="kicker rv" style="--d:.06s">{{eyebrow}}</p>
+    {{{s1_kicker}}}
     <div class="head">
       <h1 class="rv" style="--d:.12s"><bdi>{{h1}}</bdi></h1>
       <p class="tag rv" style="--d:.18s">{{tag}}</p>
@@ -383,7 +393,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
         <a href="{{email_href}}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg><span>{{email_label}} <bdi dir="ltr">{{email}}</bdi></span></a>
       </div>
     </div>
-    <aside class="kitcard rv" style="--d:.1s" aria-labelledby="kitcard-h">
+    <aside class="kitcard rv" style="--d:.1s{{{kit_h}}}" aria-labelledby="kitcard-h">
       <div class="kc-head"><h3 id="kitcard-h">{{s7_card_title}}</h3>{{{kit_line}}}</div>
       <figure class="kc-fig">   <!-- owner 17/10: the box as in his photo, with what is in it named around it -->
         {{{kit_call_top}}}
@@ -410,14 +420,15 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
   </div></section>
   {{{s9}}}
 </main>
-<footer class="foot"><div class="wrap"><img src="img/logo.png" alt="MITODERM — Where Science Meets Beauty"><span>{{footer}}</span><span class="legal"><a href="#">{{foot_access}}</a><a href="#">{{foot_privacy}}</a></span></div></footer>
-<nav class="dock" aria-label="{{nav_label}}">{{{dock}}}</nav>
-<div class="bar"><b><bdi>{{bar_name}}</bdi><small>{{bar_note}}</small></b><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener"{{{lead}}}>{{cta_price}}</a></div>
+<footer class="foot" dir="rtl" lang="he"><div class="wrap"><img src="img/logo.png" alt="MITODERM — Where Science Meets Beauty"><span>{{footer}}</span><span class="legal"><a href="#">{{foot_access}}</a><a href="#">{{foot_privacy}}</a></span></div></footer>
+<nav class="dock" aria-label="{{nav_label}}" dir="rtl" lang="he">{{{dock}}}</nav>
+<div class="bar" dir="rtl" lang="he"><b><bdi>{{bar_name}}</bdi><small>{{bar_note}}</small></b><a class="btn primary" href="__WA_PRICE__" target="_blank" rel="noopener"{{{lead}}}>{{cta_price}}</a></div>
 
 <!-- Lead form. This page is a static preview and cannot send data: the submit handler prevents the default and only
-     simulates the request. In production the form POSTs JSON {name, phone, email, profession, source: '{{h1}} page'}
-     to data-endpoint (/api/leads), as mitoderm.com does. -->
-<dialog class="lead" id="lead" aria-labelledby="lead-h">
+     simulates the request. In production the form POSTs JSON {name, phone, email, profession, subject, source: '{{h1}} page'}
+     to data-endpoint (/api/leads), as mitoderm.com does. subject is the label of the button that opened the form (a price
+     request, training or a demo, the specialists' application); without JS each button is a WhatsApp link with that text. -->
+<dialog class="lead" id="lead" aria-labelledby="lead-h" dir="rtl" lang="he">
   <div class="lead-in">
     <button type="button" class="lead-x" data-close aria-label="{{close_label}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     <form class="lead-form" novalidate data-endpoint="/api/leads">
@@ -431,6 +442,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
           <div class="f"><input name="phone" type="tel" dir="ltr" autocomplete="tel" inputmode="tel" placeholder="{{f_phone}}" aria-label="{{f_phone}}" aria-describedby="e-phone" required><p class="err" id="e-phone"></p></div>
         </div>
         <label class="consent"><input type="checkbox" name="consent" aria-describedby="e-consent" required><span>{{f_consent}}</span></label><p class="err" id="e-consent"></p>
+        <input type="hidden" name="subject" value="">
         <button class="btn primary submit" type="submit"><span>{{f_submit}}</span><i aria-hidden="true"></i></button>
         <p class="privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>{{f_privacy}}</span></p>
         <div class="lead-fail" role="alert" hidden><p class="fail-msg">{{{form_fail}}}</p><a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener"><bdi dir="ltr">WhatsApp</bdi></a></div>
@@ -521,7 +533,7 @@ window.__seq = story.state;   // for the QA script
     e.preventDefault(); if (sending) return; tried = true;
     var ok = NAMES.map(check).every(Boolean); ok = checkConsent() && ok;
     if (!ok) { var bad = form.querySelector('[aria-invalid="true"]'); if (bad) bad.focus(); return; }
-    var payload = { name: form.elements.name.value.trim(), phone: form.elements.phone.value.trim(), email: form.elements.email.value.trim(), profession: form.elements.profession.value.trim(), source: '{{h1}} page' };
+    var payload = { name: form.elements.name.value.trim(), phone: form.elements.phone.value.trim(), email: form.elements.email.value.trim(), profession: form.elements.profession.value.trim(), subject: form.elements.subject.value, source: '{{h1}} page' };
     fail.hidden = true; setBusy(true);
     sendLead(payload).then(function () { setBusy(false); body.hidden = true; done.hidden = false; done.focus(); }, function () { setBusy(false); fail.hidden = false; });
   });
@@ -530,7 +542,12 @@ window.__seq = story.state;   // for the QA script
     NAMES.forEach(function (n) { form.elements[n].removeAttribute('aria-invalid'); document.getElementById('e-' + n).textContent = ''; });
     consent.removeAttribute('aria-invalid'); document.getElementById('e-consent').textContent = '';
   }
-  function open(e) { e.preventDefault(); opener = e.currentTarget; if (!done.hidden) reset(); dlg.showModal(); root.classList.add('form-open'); form.elements.name.focus(); }
+  function open(e) {   // the subject is the opener's label (a price request, training, a demo); its WhatsApp text is the fallback
+    e.preventDefault(); opener = e.currentTarget; if (!done.hidden) reset();
+    form.elements.subject.value = opener.textContent.replace(/\s+/g, ' ').replace(/\s*↗\s*$/, '').trim();
+    var waf = fail.querySelector('a'); if (waf && /^https:\/\/wa\.me\//.test(opener.href)) waf.href = opener.href;
+    dlg.showModal(); root.classList.add('form-open'); form.elements.name.focus();
+  }
   function finish() { if (!root.classList.contains('form-open')) return; root.classList.remove('form-open'); if (opener) opener.focus(); }
   function close() { if (dlg.open) dlg.close(); finish(); }
   document.querySelectorAll('[data-lead]').forEach(function (a) { a.addEventListener('click', open); });

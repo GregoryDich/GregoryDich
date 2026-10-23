@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """Stages the built prototype pages as one static site, site/public/, for any static host (Vercel, GitHub Pages):
 each page becomes <slug>/index.html with the document shell the artifact host and serve-local.py add (doctype, UTF-8,
-viewport), next to its own img/ and seq/ (only the frame tiers the page offers, and runs.json); index.html lists the
-pages and links the developer handoff and the Hebrew workbook of all page texts on GitHub.
+viewport; the shell is RTL Hebrew, so the page lays out right to left without JS too), next to its own img/ and seq/
+(only the frame tiers the page offers, and runs.json); index.html lists the pages and links the developer handoff and the
+Hebrew workbook of all page texts on GitHub. A page's «see also» cards link to the other products' pages: build-vtech.py
+writes «../<slug>/» (kept as is) or, for an artifact copy (--links artifact), the published page; the card's data-slug
+names the product, and a published link is turned back into «../<slug>/» here, so an artifact copy can be staged as is.
 usage: python3 stage-public.py <slug>=<page.html>[:<files dir>] …
   e.g. v-tech-system=<dir>/vtech-live.html:<dir>  exotech-gel=<dir>/exotech-gel-live.html:<dir>  exocell-mask=exocell-mask-3d.html"""
 import html, json, os, re, shutil, sys
 
 H = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.normpath(os.path.join(H, '..', 'public'))
-HEAD = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></head><body>'
+HEAD = '<!doctype html><html dir="rtl" lang="he"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></head><body>'
+# a «see also» card of an artifact copy: its published link becomes the product's folder of this site
+CARD = re.compile(r'(<a class="card rv" style="--d:[^"]*" href=")https://claude\.ai/artifact/\w+(" data-slug="([\w-]+)")( target="_blank" rel="noopener")?')
 GH = 'https://github.com/GregoryDich/GregoryDich/blob/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/'
 # the hub's lines: the page's name and what it shows (Hebrew; product names stay Latin)
 ABOUT = {'v-tech-system': ('V-TECH SYSTEM', 'סיפור 3D בגלילה: פריימים ב-HD שרונדרו ב-Blender'),
@@ -31,6 +36,8 @@ for arg in sys.argv[1:]:
     page, files = (rest.split(':', 1) + [None])[:2]
     body = open(page, encoding='utf-8').read()
     assert not body.lstrip()[:9].lower().startswith('<!doctype'), f'{page}: expected a <body> fragment'
+    body, n = CARD.subn(r'\1../\3/\2', body)
+    if n: print(f'{slug}: {n} «see also» links → ../<slug>/')
     dst = os.path.join(OUT, slug)
     if os.path.exists(dst): shutil.rmtree(dst)
     os.makedirs(dst)
