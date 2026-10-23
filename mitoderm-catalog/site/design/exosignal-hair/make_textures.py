@@ -48,7 +48,7 @@ CAP1, BASE1, HAIR_W = 315.0, 328.9, 420                            # «H A I R»
 # sRGB reduction of the texture shows. Each line's ink energy (mean lightness above the paper) in the v1 key is 0.98…1.12
 # of the photo's, the monogram's (a large shape) 1.13 (the key's light on the front, measured as the photo's)
 BLOCK = [('EXOSIGNAL HAIR', 500, 407.0, 528.0, 489.9, 500.0, 0.03),   # letter-spaced (the others fitted by narrowing);
-         # the photo reads «SÉRUM» in both lines (×12; packaging-text.json has «SERUM» in the Spanish one)
+         # the photo reads «SÉRUM» in both lines (×12; packaging-text.json's Spanish line was fixed to match, 24/10)
          ('SIERO NUTRIENTE PER IL CUOIO CAPELLUTO', 400, 357.0, 578.0, 512.0, 520.2, 0.023),
          ('NOURISHING SCALP SERUM', 300, 411.0, 524.0, 523.8, 530.2, 0.0195),
          ('SÉRUM NOURRISSANT CUIR CHEVELU', 300, 391.0, 543.0, 533.9, 540.4, 0.0205),

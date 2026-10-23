@@ -53,7 +53,7 @@
  "exosignal-hair": {"packshot": "protocols/assets/img/exosignal-hair.webp", "objects": [
    {"what": "flat box", "look": "matte black box, gold and white print", "front": [
      "top centre: grey VM monogram, small 'VM corporation'", "centre, gold: 'EXOSIGNAL' ('EXO' bold) with letter-spaced 'H A I R' below right",
-     "lower block, white: 'EXOSIGNAL HAIR' / 'SIERO NUTRIENTE PER IL CUOIO CAPELLUTO' / 'NOURISHING SCALP SERUM' / 'SÉRUM NOURRISSANT CUIR CHEVELU' / 'SERUM NUTRITIVO PARA EL CUERO CABELLUDO'",
+     "lower block, white: 'EXOSIGNAL HAIR' / 'SIERO NUTRIENTE PER IL CUOIO CAPELLUTO' / 'NOURISHING SCALP SERUM' / 'SÉRUM NOURRISSANT CUIR CHEVELU' / 'SÉRUM NUTRITIVO PARA EL CUERO CABELLUDO'",
      "'Net 5 x 5 ml ℮ 5 x 0.17 fl.oz.'"]},
    {"what": "5 ampoules", "look": "clear glass ampoules with a white ring at the neck", "front": ["'EXOSIGNAL HAIR' printed vertically in black ('EXO' bold)"]}]},
  "exosignal-spray": {"packshot": "Figma 93:8081 / 93:8083 / 104:8121 (owner photos #2, #3, #21: box + bottle on white; the earlier crop with a person is kept privately, not in the repo)", "objects": [
