@@ -149,6 +149,5 @@
 - ההדפסה על צידי הקופסאות של BIOSPICULE ‏(CELLULAR AGE DEFENSE 2.5%, CELL RENEW 1.5%, MICRO BOOST 10%, DERMA RECOVERY CREAM): ממתינה לקבצים ולמידות במ״מ מהמזמין/ה.
 - כתובת משותפת לאתר (Vercel או GitHub Pages): ממתינה לגישה מהמזמין/ה.
 - שאלות פתוחות למזמין/ה: האם ב-EXOSIGNAL HAIR יש PDRN בריכוז 2%; האם להשאיר את סליל ה-DNA ומולקולות ה-PDRN ב-V-TECH, ב-EXOTECH GEL וב-EXOSIGNAL HAIR; האם הזהב נמצא ב-pH Normalizer או בפילינג של EXO-NAD.
-- «אוקיי» של המזמין/ה על עמוד EXOCELL MASK.
 - הצילומים של EXO-NAD כקבצים בגודל מלא, מהמזמין/ה.
 - תמונת מוצר אמיתית ל-EXOSIGNAL SPRAY.
