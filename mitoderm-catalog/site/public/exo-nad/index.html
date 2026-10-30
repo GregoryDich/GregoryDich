@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></head><body><title>EXO-NAD Live</title>
+<!doctype html><html dir="rtl" lang="he"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></head><body><title>EXO-NAD Live</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap">
 <script>document.documentElement.lang = 'he'; document.documentElement.dir = 'rtl'; document.documentElement.classList.add('js');</script>
 <style>
@@ -52,8 +52,6 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round
 .helix { position: fixed; z-index: 1; left: 1vw; top: 16vh; width: min(48vw, 80vh); height: auto; max-width: none; opacity: 0;
   visibility: hidden; mix-blend-mode: screen; filter: blur(1.2px); pointer-events: none; will-change: opacity, transform; }
 .cells img { position: absolute; left: 0; top: 0; width: 256px; height: 256px; max-width: none; opacity: 0; visibility: hidden; }
-.cells i { position: absolute; left: 0; top: 0; width: 8px; height: 8px; border-radius: 50%; opacity: 0; visibility: hidden;
-  background: radial-gradient(circle, #fff1cf 0, rgba(232,196,120,.85) 30%, rgba(201,162,75,0) 70%); }
 main, .top, .foot, .dock, .bar { position: relative; z-index: 2; }
 
 .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: rgba(10,10,11,.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hairline-cream); }
@@ -76,12 +74,20 @@ main, .top, .foot, .dock, .bar { position: relative; z-index: 2; }
 .legend .dot { position: relative; width: 16px; height: 16px; flex: none; border-radius: 50%; border: 1px solid rgba(196,176,236,.75);
   background: radial-gradient(circle, #f3cf86 0, #b98a3c 34%, rgba(60,36,12,.9) 52%, rgba(150,130,200,.18) 60%); box-shadow: 0 0 8px rgba(201,162,75,.35); }
 .badges { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+/* the line's badge: text in the line's colour, no outline (the gold outline marks «טיפוח ביתי»: design-rules, the site v2
+   palette per line). The brand's gold for V-TECH FACE, HAIR and BIOSPICULE; PEELING champagne #d8c48a with a small dot in front
+   (story3d EXO-NAD); DEVICES «מכשור» in a silver outline (story3d MITOPEN). The use badge keeps its own look. */
 .mark-line { font: 500 12px/1 var(--body); letter-spacing: .24em; color: var(--gold); }
+.mark-line.he { letter-spacing: 0; line-height: 1.4; }
+.mark-line[data-line="peeling"] { display: inline-flex; align-items: center; gap: 8px; color: #d8c48a; }
+.mark-line[data-line="peeling"]::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #d8c48a; }
 .badge { border-radius: 999px; padding: 4px 12px; font: 500 12px/1.4 var(--body); border: 1px solid var(--gold-faint); color: var(--gold-soft); }
 .badge.pro { background: var(--gold); color: var(--on-gold); border-color: var(--gold); }
+.badge.line[data-line="devices"] { border-color: #d9d4cc; color: #d9d4cc; }
 .kicker { display: flex; align-items: center; gap: 14px; font: 500 13px/1.3 var(--body); letter-spacing: .02em; color: var(--gold); }
 .kicker.line::after { content: ""; width: 40px; height: 1px; background: rgba(201,162,75,.3); }
 h1 { font: 500 clamp(48px, 5.8vw, 84px)/1 var(--display); letter-spacing: -.01em; }
+h1.long { font-size: clamp(40px, 4.5vw, 66px); }   /* a name longer than 20 characters (CELLULAR AGE DEFENSE 2.5%): two lines in the 540-px copy, never a line of «2.5%» alone */
 h2 { font: 500 clamp(30px, 3.2vw, 46px)/1.18 var(--he-display); letter-spacing: -.005em; }
 .tag { font: 400 clamp(20px, 1.9vw, 26px)/1.35 var(--he-display); color: var(--gold-soft); }
 .lead { color: var(--text); max-width: 480px; }
@@ -123,11 +129,14 @@ details ul { padding: 0 0 18px; list-style: none; color: var(--text); display: g
 .contacts a { display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 4px 2px; border-bottom: 1px solid var(--hairline-cream); color: var(--text-soft); text-decoration: none; font: 400 15px/1.3 var(--body); }
 .contacts svg { width: 20px; height: 20px; color: var(--gold); flex: none; }
 .offer .kitcard { justify-self: center; }
-.kitcard { width: min(100%, 540px); display: grid; gap: 14px; padding: 26px 30px 28px; border-radius: 28px; border: 1px solid var(--hairline); background: linear-gradient(160deg, rgba(28,27,31,.95), rgba(14,14,17,.95)); box-shadow: 0 30px 90px rgba(0,0,0,.5); }
+.kitcard { width: min(100%, 540px); display: grid; gap: 14px; padding: 26px 30px 28px; border-radius: 28px; border: 1px solid var(--hairline); background: linear-gradient(160deg, #1c1b1f, #0e0e11); box-shadow: 0 30px 90px rgba(0,0,0,.5); }   /* opaque: the stage (the still, the scene) must not show through as a ghost of the product behind the kit picture */
 .kc-head { display: flex; align-items: center; gap: 14px; }
 .kc-head h3 { font: 500 26px/1.2 var(--he-display); color: var(--cream); }
 .kc-head .badge { letter-spacing: .14em; font-size: 11px; }
-.kc-pic, .kc-live { width: 100%; height: clamp(160px, 26vh, 250px); object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,.55)); }
+.kc-head .mark-line { font-size: 11px; }
+/* the picture's box: a landscape kit fills the card's width in it; for a portrait kit the builder sets --kc-h on the card
+   (the same clamp grown by the kit's aspect), so it fills the card's height as a landscape one fills its width */
+.kc-pic, .kc-live { width: 100%; height: var(--kc-h, clamp(160px, 26vh, 250px)); object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,.55)); }
 .kc-live { display: none; }
 .kc-fig { margin: 0; display: grid; justify-items: center; }
 .kc-call { display: flex; align-items: baseline; gap: 6px; font: 400 13px/1.2 var(--body); color: var(--gold-soft); position: relative; }
@@ -268,6 +277,9 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   .head > :not(.slot) { grid-column: 1; }
   .slot { display: block; grid-column: 2; grid-row: 1 / span 2; width: 100%; height: auto; }
   .slot.wide { grid-column: 1 / -1; grid-row: auto; margin-top: 6px; }   /* S5: the three stations on their line, a strip under the heading */
+  /* S1: the name across both columns (whole: «EXO-NAD», «BOOST 10%» would not fit the heading column), the still beside the tagline under it */
+  #meet .head h1 { grid-column: 1 / -1; }
+  #meet .slot { grid-row: 2; }
   .offer .wrap { display: flex; flex-direction: column; align-items: flex-start; }
   .offer-copy { display: contents; }
   .offer-copy > * { margin: 0 0 20px; }
@@ -310,21 +322,23 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 <div class="cells back" aria-hidden="true"></div>
 <canvas id="seq" aria-hidden="true"></canvas>
 <div class="cells front" aria-hidden="true"></div>
-<header class="top"><div class="wrap">
+<!-- the page is a body fragment (the host adds the document shell), so the landmarks carry dir="rtl" lang="he" themselves:
+     the layout is RTL without JS too (the script above sets them on <html> as well) -->
+<header class="top" dir="rtl" lang="he"><div class="wrap">
   <a class="logo" href="#meet" aria-label="MITODERM"><img src="img/logo-mark.png" alt="MITODERM"></a>
   <a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXO-NAD" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a>
 </div></header>
-<main>
+<main dir="rtl" lang="he">
   <section id="meet" class="sec" data-st="0"><div class="wrap"><div class="copy">
-    <div class="badges rv"><span class="mark-line"><bdi>PEELING</bdi></span><span class="badge pro">מקצועי</span></div>
-    <p class="kicker rv" style="--d:.06s">אקסוזומים סינתטיים · SKIN LONGEVITY PEEL</p>
+    <div class="badges rv"><span class="mark-line" data-line="peeling"><bdi>PEELING</bdi></span><span class="badge pro">מקצועי</span></div>
+    <p class="kicker rv" style="--d:.06s"><bdi class="nw">SKIN LONGEVITY PEEL</bdi></p>
     <div class="head">
-      <h1 class="rv" style="--d:.12s"><bdi>EXO-NAD</bdi></h1>
+      <h1 class="rv" style="--d:.12s"><bdi><span class="nw">EXO-NAD</span></bdi></h1>
       <p class="tag rv" style="--d:.18s">אריכות חיים לעור, בשלושה שלבים</p>
       <img class="slot" src="img/m1.webp" alt="" aria-hidden="true">
     </div>
-    <p class="lead rv" style="--d:.24s">פילינג ביוהאקינג תלת־שלבי ממעבדות VM באיטליה: פילינג דו-פאזי, מנטרל pH וסרום Longevity עם אקסוזומים ו-NAD⁺.</p>
-    <ul class="chips rv" style="--d:.3s"><li><bdi class="nw">AHA</bdi> + <bdi class="nw">BHA</bdi> ≈30%</li><li><bdi class="nw">NAD</bdi>⁺</li><li>אקסוזומים סינתטיים</li><li>פיצפטריק <bdi class="nw">I</bdi>–<bdi class="nw">VI</bdi></li></ul>
+    <p class="lead rv" style="--d:.24s">פילינג ביוהאקינג תלת־שלבי ממעבדות <bdi class="nw">VM</bdi> באיטליה: פילינג דו-פאזי, מנטרל <bdi class="nw">pH</bdi> וסרום <bdi class="nw">Longevity</bdi> עם אקסוזומים <span class="nw">ו-<bdi>NAD⁺</bdi></span>.</p>
+    <ul class="chips rv" style="--d:.3s"><li><bdi class="nw">AHA + BHA ≈30%</bdi></li><li><bdi class="nw">NAD⁺</bdi></li><li>אקסוזומים סינתטיים</li><li>פיצפטריק <bdi class="nw">I–VI</bdi></li></ul>
     <div class="cta rv" style="--d:.36s"><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXO-NAD" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a><a class="btn ghost" href="#inside">גלו את שלושת השלבים ↓</a></div>
   </div></div></section>
   <section id="why" class="sec" data-st="1"><div class="wrap"><div class="copy">
@@ -333,7 +347,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
       <h2 class="rv" style="--d:.06s">עור חסר ברק מסגיר את גילו</h2>
       <img class="slot" src="img/m2.webp" alt="" aria-hidden="true">
     </div>
-    <p class="lead rv" style="--d:.12s">תאים מתים מעמעמים את פני העור; הגוון נעשה בלתי אחיד; כתמי שמש, PIH וכתמי אקנה נשארים לאורך זמן. ההתחדשות חייבת לבוא יחד עם שיקום.</p>
+    <p class="lead rv" style="--d:.12s">תאים מתים מעמעמים את פני העור; הגוון נעשה בלתי אחיד; כתמי שמש, <bdi class="nw">PIH</bdi> וכתמי אקנה נשארים לאורך זמן. ההתחדשות חייבת לבוא יחד עם שיקום.</p>
     <p class="kicker rv" style="--d:.18s">אינדיקציות</p>
     <ul class="chips gold rv" style="--d:.24s"><li>עור עייף וחסר ברק</li><li>גוון בלתי אחיד · כתמי שמש</li><li>PIH · כתמי אקנה</li><li>קמטוטים</li></ul>
   </div></div></section>
@@ -344,11 +358,11 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
       <img class="slot" src="img/m3.webp" alt="" aria-hidden="true">
       <span class="ph-cells" aria-hidden="true"><img src="img/cells/f01-2.webp" alt="" loading="lazy" decoding="async"><img src="img/cells/f04-1.webp" alt="" loading="lazy" decoding="async"><img src="img/cells/f07-1.webp" alt="" loading="lazy" decoding="async"></span>
     </div>
-    <p class="lead rv" style="--d:.12s">פילינג דו-פאזי ליפידי-חומצי (<bdi class="nw">AHA</bdi> + <bdi class="nw">BHA</bdi> ≈30%), מנטרל עם קולגן <span class="nw">ו-<bdi>B12</bdi></span>, וסרום עם אקסוזומים, <bdi class="nw">NAD</bdi>⁺, <bdi class="nw">Epitalon</bdi> <span class="nw">ו-<bdi>GHK-Cu</bdi></span>.</p>
+    <p class="lead rv" style="--d:.12s">פילינג דו-פאזי ליפידי-חומצי (<bdi class="nw">AHA + BHA ≈30%</bdi>), מנטרל עם קולגן <span class="nw">ו-<bdi>B12</bdi></span>, וסרום עם אקסוזומים, <bdi class="nw">NAD⁺</bdi>, <bdi class="nw">Epitalon</bdi> <span class="nw">ו-<bdi>GHK-Cu</bdi></span>.</p>
     <p class="legend rv" style="--d:.15s"><span class="dot" aria-hidden="true" style="background:url(img/cells/f01-0.webp) center/120% no-repeat;border-color:transparent"></span><span>אקסוזומים סינתטיים — המחשה</span></p>
     <p class="kicker rv" style="--d:.18s">רכיבים פעילים</p>
-    <ul class="chips rv" style="--d:.24s"><li>1 · <bdi class="nw">Biphasic Peel</bdi> · ליפידי + חומצי</li><li>2 · <bdi class="nw">pH Normalizer</bdi> · קולגן, <bdi class="nw">B12</bdi></li><li>3 · <bdi class="nw">Longevity Serum</bdi> · <bdi class="nw">NAD</bdi>⁺, <bdi class="nw">Epitalon</bdi>, <bdi class="nw">GHK-Cu</bdi></li><li>חומצה טרנקסמית ונוגדי חמצון</li></ul>
-    <details class="rv" style="--d:.3s"><summary>הפורמולה המלאה</summary><ul><li>שילוב חומצות <bdi class="nw">AHA</bdi> <span class="nw">ו-<bdi>BHA</bdi></span> (כ־30%)</li><li>חומצה טרנקסמית ורכיבים נוגדי חמצון</li><li>קולגן ופפטידים ביומימטיים</li><li>ויטמין <bdi class="nw">B12</bdi></li><li>מבנים אקסוזומליים סינתטיים</li><li><bdi class="nw">NAD</bdi>⁺</li><li><bdi class="nw">Epitalon</bdi> – אפיטלון</li><li><bdi class="nw">GHK-Cu</bdi></li></ul></details>
+    <ul class="chips rv" style="--d:.24s"><li>1 · <bdi class="nw">Biphasic Peel</bdi> · ליפידי + חומצי</li><li>2 · <bdi class="nw">pH Normalizer</bdi> · קולגן, <bdi class="nw">B12</bdi></li><li>3 · <bdi class="nw">Longevity Serum</bdi> · <bdi class="nw">NAD⁺</bdi>, <bdi class="nw">Epitalon</bdi>, <bdi class="nw">GHK-Cu</bdi></li><li>חומצה טרנקסמית ונוגדי חמצון</li></ul>
+    <details class="rv" style="--d:.3s"><summary>הפורמולה המלאה</summary><ul><li>שילוב חומצות <bdi class="nw">AHA</bdi> <span class="nw">ו-<bdi>BHA</bdi></span> (כ־30%)</li><li>חומצה טרנקסמית ורכיבים נוגדי חמצון</li><li>קולגן ופפטידים ביומימטיים</li><li>ויטמין <bdi class="nw">B12</bdi></li><li>מבנים אקסוזומליים סינתטיים</li><li><bdi class="nw">NAD⁺</bdi></li><li><bdi class="nw">Epitalon</bdi> – אפיטלון</li><li><bdi class="nw">GHK-Cu</bdi></li></ul></details>
   </div></div></section>
   <section id="feel" class="sec" data-st="3"><div class="wrap"><div class="copy">
     <p class="kicker line rv">הרגישו</p>
@@ -363,11 +377,11 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
     <div class="copy">
       <p class="kicker line rv">פרוטוקול</p>
       <div class="head">
-        <h2 class="rv" style="--d:.06s">ביקור אחד, כל 3–4 שבועות</h2>
+        <h2 class="rv" style="--d:.06s">ביקור אחד, כל <bdi dir="ltr" class="nw">3–4</bdi> שבועות</h2>
         <img class="slot wide" src="img/m5.webp" alt="" aria-hidden="true">
       </div>
-      <p class="lead rv" style="--d:.12s">פילינג, נטרול והחדרת ה-Longevity Serum. טיפול בודד או סדרה, בכל ימות השנה; בסיום – EXOCELL MASK ומקדם הגנה.</p>
-      <p class="pill rv" style="--d:.18s">בסיום: <bdi class="nw">EXOCELL MASK</bdi> + <bdi class="nw">SPF</bdi></p>
+      <p class="lead rv" style="--d:.12s">פילינג, נטרול והחדרת <span class="nw">ה-<bdi>Longevity Serum</bdi></span>. טיפול בודד או סדרה, בכל ימות השנה; בסיום – <bdi class="nw">EXOCELL MASK</bdi> ומקדם הגנה.</p>
+      <p class="pill rv" style="--d:.18s">בסיום: <bdi class="nw">EXOCELL MASK + SPF</bdi></p>
       
     </div>
     <ol class="steps"><li class="step rv" style="--d:0.00s"><span class="n">01</span><h3><bdi class="nw">Biphasic Peel</bdi></h3></li><li class="step rv" style="--d:0.08s"><span class="n">02</span><h3><bdi class="nw">pH Normalizer</bdi></h3></li><li class="step rv" style="--d:0.16s"><span class="n">03</span><h3><bdi class="nw">Longevity Serum</bdi></h3></li></ol>
@@ -376,15 +390,15 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
     <div class="offer-copy">
       <p class="kicker line rv">הצעה</p>
       <h2 class="rv" style="--d:.06s">הכניסו את <bdi class="nw">EXO-NAD</bdi> לקליניקה שלכם</h2>
-      <p class="lead rv" style="--d:.12s">לשימוש מקצועי בלבד. טיפול אחד כל 3–4 שבועות, בודד או כסדרה. פרוטוקולים והדרכה מבית מיטודרם; בקשו פרטים על מחירים.</p>
-      <div class="cta rv" style="--d:.18s"><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXO-NAD" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a><a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXO-NAD" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לתיאום הדרכה</a></div>
+      <p class="lead rv" style="--d:.12s">לשימוש מקצועי בלבד. טיפול אחד כל <bdi dir="ltr" class="nw">3–4</bdi> שבועות, בודד או כסדרה. פרוטוקולים והדרכה מבית מיטודרם; בקשו פרטים על מחירים.</p>
+      <div class="cta rv" style="--d:.18s"><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXO-NAD" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a><a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20EXO-NAD%20%C2%B7%20%D7%9C%D7%AA%D7%99%D7%90%D7%95%D7%9D%20%D7%94%D7%93%D7%A8%D7%9B%D7%94" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לתיאום הדרכה</a></div>
       <div class="contacts rv" style="--d:.24s">
         <a href="tel:+972543262182"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span>לכל הפרטים: <bdi dir="ltr">054-326-2182</bdi></span></a>
         <a href="mailto:info@mitoderm.com?subject=EXO-NAD"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg><span>דוא״ל: <bdi dir="ltr">info@mitoderm.com</bdi></span></a>
       </div>
     </div>
-    <aside class="kitcard rv" style="--d:.1s" aria-labelledby="kitcard-h">
-      <div class="kc-head"><h3 id="kitcard-h">מה באריזה</h3><span class="badge"><bdi>PEELING</bdi></span></div>
+    <aside class="kitcard rv" style="--d:.1s;--kc-h:clamp(272px, 44.2vh, 425px)" aria-labelledby="kitcard-h">
+      <div class="kc-head"><h3 id="kitcard-h">מה באריזה</h3><span class="mark-line" data-line="peeling"><bdi>PEELING</bdi></span></div>
       <figure class="kc-fig">   <!-- owner 17/10: the box as in his photo, with what is in it named around it -->
         
         <canvas class="kc-live" role="img" aria-label="EXO-NAD: Biphasic Peel של 15 מ״ל, 5 בקבוקוני pH Normalizer של 5 מ״ל ו-5 בקבוקוני Longevity Serum של 5 מ״ל – כל המערכת התלת־שלבית באריזה אחת."></canvas>
@@ -393,7 +407,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
       </figure>
       <p class="kc-qty"><b><bdi dir="ltr">1×</bdi></b><span>15 מ״ל <bdi class="nw">Biphasic Peel</bdi></span></p><p class="kc-qty"><b><bdi dir="ltr">5×</bdi></b><span>5 מ״ל <bdi class="nw">pH Normalizer</bdi></span></p><p class="kc-qty"><b><bdi dir="ltr">5×</bdi></b><span>5 מ״ל <bdi class="nw">Longevity Serum</bdi></span></p>
       <p class="kc-facts"><span>בקבוק אחד, 10 בקבוקונים</span></p>
-      <ul class="chips gold"><li><bdi class="nw">AHA</bdi> + <bdi class="nw">BHA</bdi> ≈30%</li></ul>
+      <ul class="chips gold"><li><bdi class="nw">AHA + BHA ≈30%</bdi></li></ul>
     </aside>
   </div></section>
   <section id="specialists" class="sec spec-sec" data-st="6" aria-labelledby="spec-h"><div class="wrap">
@@ -411,17 +425,18 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   <section class="related" data-st="7"><div class="wrap">
     
     <h2 class="rv">משלימים את הטיפול</h2>
-    <div class="cards"><a class="card rv" style="--d:0.00s" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20EXOCELL%20MASK" target="_blank" rel="noopener"><div class="pic"><img src="img/exocell-mask.webp" alt="EXOCELL MASK" loading="lazy"></div><div class="body"><span class="badge pro">מקצועי</span><h3><bdi>EXOCELL MASK</bdi></h3><p>מסכת ביו-צלולוז מתקדמת – כמו עור שני</p><span class="go">לקבלת פרטים ←</span></div></a></div>
+    <div class="cards"><a class="card rv" style="--d:0.00s" href="../exocell-mask/" data-slug="exocell-mask"><div class="pic"><img src="img/exocell-mask.webp" alt="EXOCELL MASK" loading="lazy"></div><div class="body"><span class="badge pro">מקצועי</span><h3><bdi>EXOCELL MASK</bdi></h3><p>מסכת ביו-צלולוז מתקדמת – כמו עור שני</p><span class="go">לקבלת פרטים ←</span></div></a></div>
   </div></section>
 </main>
-<footer class="foot"><div class="wrap"><img src="img/logo.png" alt="MITODERM — Where Science Meets Beauty"><span>© 2026 מיטודרם – כשהמדע פוגש ביופי</span><span class="legal"><a href="#">הצהרת נגישות</a><a href="#">מדיניות פרטיות</a></span></div></footer>
-<nav class="dock" aria-label="ניווט בעמוד"><a href="#meet" data-i="0">הכירו</a><a href="#why" data-i="1">למה?</a><a href="#inside" data-i="2">מה בפנים</a><a href="#feel" data-i="3">הרגישו</a><a href="#protocol" data-i="4">פרוטוקול</a><a href="#offer" data-i="5">הצעה</a><a href="#specialists" data-i="6">מומחים</a></nav>
-<div class="bar"><b><bdi>EXO-NAD</bdi><small>מקצועי</small></b><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXO-NAD" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a></div>
+<footer class="foot" dir="rtl" lang="he"><div class="wrap"><img src="img/logo.png" alt="MITODERM — Where Science Meets Beauty"><span>© 2026 מיטודרם – כשהמדע פוגש ביופי</span><span class="legal"><a href="#">הצהרת נגישות</a><a href="#">מדיניות פרטיות</a></span></div></footer>
+<nav class="dock" aria-label="ניווט בעמוד" dir="rtl" lang="he"><a href="#meet" data-i="0">הכירו</a><a href="#why" data-i="1">למה?</a><a href="#inside" data-i="2">מה בפנים</a><a href="#feel" data-i="3">הרגישו</a><a href="#protocol" data-i="4">פרוטוקול</a><a href="#offer" data-i="5">הצעה</a><a href="#specialists" data-i="6">מומחים</a></nav>
+<div class="bar" dir="rtl" lang="he"><b><bdi>EXO-NAD</bdi><small>מקצועי</small></b><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXO-NAD" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקבלת פרטים על מחירים</a></div>
 
 <!-- Lead form. This page is a static preview and cannot send data: the submit handler prevents the default and only
-     simulates the request. In production the form POSTs JSON {name, phone, email, profession, source: 'EXO-NAD page'}
-     to data-endpoint (/api/leads), as mitoderm.com does. -->
-<dialog class="lead" id="lead" aria-labelledby="lead-h">
+     simulates the request. In production the form POSTs JSON {name, phone, email, profession, subject, source: 'EXO-NAD page'}
+     to data-endpoint (/api/leads), as mitoderm.com does. subject is the label of the button that opened the form (a price
+     request, training or a demo, the specialists' application); without JS each button is a WhatsApp link with that text. -->
+<dialog class="lead" id="lead" aria-labelledby="lead-h" dir="rtl" lang="he">
   <div class="lead-in">
     <button type="button" class="lead-x" data-close aria-label="סגירה"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     <form class="lead-form" novalidate data-endpoint="/api/leads">
@@ -435,6 +450,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
           <div class="f"><input name="phone" type="tel" dir="ltr" autocomplete="tel" inputmode="tel" placeholder="טלפון" aria-label="טלפון" aria-describedby="e-phone" required><p class="err" id="e-phone"></p></div>
         </div>
         <label class="consent"><input type="checkbox" name="consent" aria-describedby="e-consent" required><span>אני מסכים/ה לתנאי מיטודרם בע״מ*</span></label><p class="err" id="e-consent"></p>
+        <input type="hidden" name="subject" value="">
         <button class="btn primary submit" type="submit"><span>בקשה לשיחה חוזרת</span><i aria-hidden="true"></i></button>
         <p class="privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>המידע שתמסור משמש את חברת מיטודרם בע&quot;מ בלבד *</span></p>
         <div class="lead-fail" role="alert" hidden><p class="fail-msg">הטופס לא נשלח. נסו שוב או כתבו לנו <span class="nw">ב-<bdi>WhatsApp</bdi></span>.</p><a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20EXO-NAD" target="_blank" rel="noopener"><bdi dir="ltr">WhatsApp</bdi></a></div>
@@ -796,8 +812,7 @@ onmessage = async e => {
     cellEls = FIELD.filter(f => typeof f[0] === 'number' || MOLS.length).map((f, n) => {
       const id = typeof f[0] === 'number' ? SPRITES[f[0] % SPRITES.length] : MOLS[+f[0].slice(1) % MOLS.length], layer = layers[f[5]];
       const imgs = [0, 1, 2].map(s => { const im = new Image(); im.decoding = 'async'; im.alt = ''; im.src = new URL(`img/cells/${id}-${s}.webp`, BASE).href; layer.appendChild(im); return im; });
-      const dust = [0, 1, 2, 3, 4].map(j => { const d = document.createElement('i'); layer.appendChild(d); return { el: d, a: n * 2.4 + j * 1.31, f: 0.35 + ((n * 7 + j * 3) % 5) / 8 }; });
-      return { f, imgs, dust, st: ['', '', ''], ph: n * 1.7 };
+      return { f, imgs, st: ['', '', ''], ph: n * 1.7 };   // only the sprites: nothing drawn that is not real (owner 22/10)
     });
   }
   function layoutCells() { for (const c of cellEls) c.st = ['', '', '']; }
@@ -817,7 +832,7 @@ onmessage = async e => {
     if (!cellEls) return false;
     const o0 = smooth(0.08, 0.8, pos) * (pos < 3 ? 1 : 0), dis = smooth(2.1, 2.9, pos);
     if (o0 <= 0 || dis >= 1) {
-      if (cellsOn) { for (const c of cellEls) { c.imgs.forEach(im => set(im, 0)); c.dust.forEach(d => set(d.el, 0)); c.st = ['', '', '']; } cellsOn = false; }
+      if (cellsOn) { for (const c of cellEls) { c.imgs.forEach(im => set(im, 0)); c.st = ['', '', '']; } cellsOn = false; }
       return false;
     }
     cellsOn = true;
@@ -834,12 +849,6 @@ onmessage = async e => {
       const oc = o * (1 - dis), tf = o > 0 ? `translate3d(${(cx - 128).toFixed(1)}px,${(cy - 128).toFixed(1)}px,0) scale(${(D / 256).toFixed(4)}) rotate(${(spin * c01 + tt * 2 + c.ph * 40).toFixed(1)}deg)` : '';
       const wts = [clamp(1 - b), clamp(1 - Math.abs(b - 1)), clamp(b - 1)];
       c.imgs.forEach((im, s) => { const v = oc * wts[s], st = v > 0.004 ? v.toFixed(3) + tf : '0'; if (st !== c.st[s]) { set(im, v, v > 0.004 ? tf : ''); c.st[s] = st; } });
-      const dO = o * Math.sin(Math.PI * dis) * 0.95;   // R3: the cells give way to gold dust
-      for (const p of c.dust) {
-        if (dO <= 0.004) { if (p.on) { set(p.el, 0); p.on = false; } continue; }
-        const rr = D / 2 * (0.2 + p.f * 1.4 * dis), px = cx + Math.cos(p.a) * rr, py = cy + Math.sin(p.a) * rr - dis * 0.04 * H, sc = 0.6 + D / 260;
-        set(p.el, dO * (0.6 + 0.4 * p.f), `translate3d(${(px - 4).toFixed(1)}px,${(py - 4).toFixed(1)}px,0) scale(${sc.toFixed(2)})`); p.on = true;
-      }
     }
     return !still;
   }
@@ -935,7 +944,7 @@ onmessage = async e => {
     if (worker) { worker.terminate(); worker = null; }
     if (workerUrl) URL.revokeObjectURL(workerUrl);
     for (const e of bm.values()) release(e); bm.clear(); shown = -1; kitCrop = null;
-    if (cellEls) for (const c of cellEls) { c.imgs.forEach(im => im.remove()); c.dust.forEach(d => d.el.remove()); }
+    if (cellEls) for (const c of cellEls) c.imgs.forEach(im => im.remove());
     cellEls = null;
     root.classList.remove('story'); for (const v of ['--stage-top', '--stage-h', '--push']) root.style.removeProperty(v);
     if (probe) probe.remove();
@@ -1836,7 +1845,7 @@ window.__seq = story.state;   // for the QA script
     e.preventDefault(); if (sending) return; tried = true;
     var ok = NAMES.map(check).every(Boolean); ok = checkConsent() && ok;
     if (!ok) { var bad = form.querySelector('[aria-invalid="true"]'); if (bad) bad.focus(); return; }
-    var payload = { name: form.elements.name.value.trim(), phone: form.elements.phone.value.trim(), email: form.elements.email.value.trim(), profession: form.elements.profession.value.trim(), source: 'EXO-NAD page' };
+    var payload = { name: form.elements.name.value.trim(), phone: form.elements.phone.value.trim(), email: form.elements.email.value.trim(), profession: form.elements.profession.value.trim(), subject: form.elements.subject.value, source: 'EXO-NAD page' };
     fail.hidden = true; setBusy(true);
     sendLead(payload).then(function () { setBusy(false); body.hidden = true; done.hidden = false; done.focus(); }, function () { setBusy(false); fail.hidden = false; });
   });
@@ -1845,7 +1854,12 @@ window.__seq = story.state;   // for the QA script
     NAMES.forEach(function (n) { form.elements[n].removeAttribute('aria-invalid'); document.getElementById('e-' + n).textContent = ''; });
     consent.removeAttribute('aria-invalid'); document.getElementById('e-consent').textContent = '';
   }
-  function open(e) { e.preventDefault(); opener = e.currentTarget; if (!done.hidden) reset(); dlg.showModal(); root.classList.add('form-open'); form.elements.name.focus(); }
+  function open(e) {   // the subject is the opener's label (a price request, training, a demo); its WhatsApp text is the fallback
+    e.preventDefault(); opener = e.currentTarget; if (!done.hidden) reset();
+    form.elements.subject.value = opener.textContent.replace(/\s+/g, ' ').replace(/\s*↗\s*$/, '').trim();
+    var waf = fail.querySelector('a'); if (waf && /^https:\/\/wa\.me\//.test(opener.href)) waf.href = opener.href;
+    dlg.showModal(); root.classList.add('form-open'); form.elements.name.focus();
+  }
   function finish() { if (!root.classList.contains('form-open')) return; root.classList.remove('form-open'); if (opener) opener.focus(); }
   function close() { if (dlg.open) dlg.close(); finish(); }
   document.querySelectorAll('[data-lead]').forEach(function (a) { a.addEventListener('click', open); });

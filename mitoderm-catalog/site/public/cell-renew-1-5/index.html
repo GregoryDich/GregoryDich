@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></head><body><title>CELL RENEW 1.5% Live</title>
+<!doctype html><html dir="rtl" lang="he"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></head><body><title>CELL RENEW 1.5% Live</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap">
 <script>document.documentElement.lang = 'he'; document.documentElement.dir = 'rtl'; document.documentElement.classList.add('js');</script>
 <style>
@@ -52,8 +52,6 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round
 .helix { position: fixed; z-index: 1; left: 1vw; top: 16vh; width: min(48vw, 80vh); height: auto; max-width: none; opacity: 0;
   visibility: hidden; mix-blend-mode: screen; filter: blur(1.2px); pointer-events: none; will-change: opacity, transform; }
 .cells img { position: absolute; left: 0; top: 0; width: 256px; height: 256px; max-width: none; opacity: 0; visibility: hidden; }
-.cells i { position: absolute; left: 0; top: 0; width: 8px; height: 8px; border-radius: 50%; opacity: 0; visibility: hidden;
-  background: radial-gradient(circle, #fff1cf 0, rgba(232,196,120,.85) 30%, rgba(201,162,75,0) 70%); }
 main, .top, .foot, .dock, .bar { position: relative; z-index: 2; }
 
 .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: rgba(10,10,11,.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hairline-cream); }
@@ -76,12 +74,20 @@ main, .top, .foot, .dock, .bar { position: relative; z-index: 2; }
 .legend .dot { position: relative; width: 16px; height: 16px; flex: none; border-radius: 50%; border: 1px solid rgba(196,176,236,.75);
   background: radial-gradient(circle, #f3cf86 0, #b98a3c 34%, rgba(60,36,12,.9) 52%, rgba(150,130,200,.18) 60%); box-shadow: 0 0 8px rgba(201,162,75,.35); }
 .badges { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+/* the line's badge: text in the line's colour, no outline (the gold outline marks «טיפוח ביתי»: design-rules, the site v2
+   palette per line). The brand's gold for V-TECH FACE, HAIR and BIOSPICULE; PEELING champagne #d8c48a with a small dot in front
+   (story3d EXO-NAD); DEVICES «מכשור» in a silver outline (story3d MITOPEN). The use badge keeps its own look. */
 .mark-line { font: 500 12px/1 var(--body); letter-spacing: .24em; color: var(--gold); }
+.mark-line.he { letter-spacing: 0; line-height: 1.4; }
+.mark-line[data-line="peeling"] { display: inline-flex; align-items: center; gap: 8px; color: #d8c48a; }
+.mark-line[data-line="peeling"]::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #d8c48a; }
 .badge { border-radius: 999px; padding: 4px 12px; font: 500 12px/1.4 var(--body); border: 1px solid var(--gold-faint); color: var(--gold-soft); }
 .badge.pro { background: var(--gold); color: var(--on-gold); border-color: var(--gold); }
+.badge.line[data-line="devices"] { border-color: #d9d4cc; color: #d9d4cc; }
 .kicker { display: flex; align-items: center; gap: 14px; font: 500 13px/1.3 var(--body); letter-spacing: .02em; color: var(--gold); }
 .kicker.line::after { content: ""; width: 40px; height: 1px; background: rgba(201,162,75,.3); }
 h1 { font: 500 clamp(48px, 5.8vw, 84px)/1 var(--display); letter-spacing: -.01em; }
+h1.long { font-size: clamp(40px, 4.5vw, 66px); }   /* a name longer than 20 characters (CELLULAR AGE DEFENSE 2.5%): two lines in the 540-px copy, never a line of «2.5%» alone */
 h2 { font: 500 clamp(30px, 3.2vw, 46px)/1.18 var(--he-display); letter-spacing: -.005em; }
 .tag { font: 400 clamp(20px, 1.9vw, 26px)/1.35 var(--he-display); color: var(--gold-soft); }
 .lead { color: var(--text); max-width: 480px; }
@@ -123,11 +129,14 @@ details ul { padding: 0 0 18px; list-style: none; color: var(--text); display: g
 .contacts a { display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 4px 2px; border-bottom: 1px solid var(--hairline-cream); color: var(--text-soft); text-decoration: none; font: 400 15px/1.3 var(--body); }
 .contacts svg { width: 20px; height: 20px; color: var(--gold); flex: none; }
 .offer .kitcard { justify-self: center; }
-.kitcard { width: min(100%, 540px); display: grid; gap: 14px; padding: 26px 30px 28px; border-radius: 28px; border: 1px solid var(--hairline); background: linear-gradient(160deg, rgba(28,27,31,.95), rgba(14,14,17,.95)); box-shadow: 0 30px 90px rgba(0,0,0,.5); }
+.kitcard { width: min(100%, 540px); display: grid; gap: 14px; padding: 26px 30px 28px; border-radius: 28px; border: 1px solid var(--hairline); background: linear-gradient(160deg, #1c1b1f, #0e0e11); box-shadow: 0 30px 90px rgba(0,0,0,.5); }   /* opaque: the stage (the still, the scene) must not show through as a ghost of the product behind the kit picture */
 .kc-head { display: flex; align-items: center; gap: 14px; }
 .kc-head h3 { font: 500 26px/1.2 var(--he-display); color: var(--cream); }
 .kc-head .badge { letter-spacing: .14em; font-size: 11px; }
-.kc-pic, .kc-live { width: 100%; height: clamp(160px, 26vh, 250px); object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,.55)); }
+.kc-head .mark-line { font-size: 11px; }
+/* the picture's box: a landscape kit fills the card's width in it; for a portrait kit the builder sets --kc-h on the card
+   (the same clamp grown by the kit's aspect), so it fills the card's height as a landscape one fills its width */
+.kc-pic, .kc-live { width: 100%; height: var(--kc-h, clamp(160px, 26vh, 250px)); object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,.55)); }
 .kc-live { display: none; }
 .kc-fig { margin: 0; display: grid; justify-items: center; }
 .kc-call { display: flex; align-items: baseline; gap: 6px; font: 400 13px/1.2 var(--body); color: var(--gold-soft); position: relative; }
@@ -268,6 +277,9 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   .head > :not(.slot) { grid-column: 1; }
   .slot { display: block; grid-column: 2; grid-row: 1 / span 2; width: 100%; height: auto; }
   .slot.wide { grid-column: 1 / -1; grid-row: auto; margin-top: 6px; }   /* S5: the three stations on their line, a strip under the heading */
+  /* S1: the name across both columns (whole: «EXO-NAD», «BOOST 10%» would not fit the heading column), the still beside the tagline under it */
+  #meet .head h1 { grid-column: 1 / -1; }
+  #meet .slot { grid-row: 2; }
   .offer .wrap { display: flex; flex-direction: column; align-items: flex-start; }
   .offer-copy { display: contents; }
   .offer-copy > * { margin: 0 0 20px; }
@@ -310,20 +322,22 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 <div class="cells back" aria-hidden="true"></div>
 <canvas id="seq" aria-hidden="true"></canvas>
 <div class="cells front" aria-hidden="true"></div>
-<header class="top"><div class="wrap">
+<!-- the page is a body fragment (the host adds the document shell), so the landmarks carry dir="rtl" lang="he" themselves:
+     the layout is RTL without JS too (the script above sets them on <html> as well) -->
+<header class="top" dir="rtl" lang="he"><div class="wrap">
   <a class="logo" href="#meet" aria-label="MITODERM"><img src="img/logo-mark.png" alt="MITODERM"></a>
   <a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20CELL%20RENEW%201.5%25" target="_blank" rel="noopener">איפה לקנות</a>
 </div></header>
-<main>
+<main dir="rtl" lang="he">
   <section id="meet" class="sec" data-st="0"><div class="wrap"><div class="copy">
-    <div class="badges rv"><span class="mark-line"><bdi>BIOSPICULE™</bdi></span><span class="badge">טיפוח ביתי</span></div>
-    <p class="kicker rv" style="--d:.06s">סרום <bdi class="nw">BIOSPICULE™</bdi> · טיפוח ביתי</p>
+    <div class="badges rv"><span class="mark-line" data-line="biospicule"><bdi>BIOSPICULE™</bdi></span><span class="badge">טיפוח ביתי</span></div>
+    
     <div class="head">
-      <h1 class="rv" style="--d:.12s"><bdi>CELL RENEW 1.5%</bdi></h1>
+      <h1 class="rv" style="--d:.12s"><bdi>CELL RENEW 1.5%</bdi></h1>
       <p class="tag rv" style="--d:.18s">חידוש, בכל יום.</p>
       <img class="slot" src="img/m1.webp" alt="" aria-hidden="true">
     </div>
-    <p class="lead rv" style="--d:.24s"><bdi class="nw">CELL RENEW 1</bdi>.5% – סרום <bdi class="nw">BIOSPICULE™</bdi> ביתי לחידוש והבהרת העור. זה אינו פילינג ביתי רגיל.</p>
+    <p class="lead rv" style="--d:.24s"><bdi class="nw">CELL RENEW 1.5%</bdi> – סרום <bdi class="nw">BIOSPICULE™</bdi> ביתי לחידוש והבהרת העור. זה אינו פילינג ביתי רגיל.</p>
     <ul class="chips rv" style="--d:.3s"><li>1.5% ספיקולות</li><li>30 מ״ל</li><li>יומיומי</li><li>כל סוגי העור</li></ul>
     <div class="cta rv" style="--d:.36s"><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20CELL%20RENEW%201.5%25" target="_blank" rel="noopener">איפה לקנות</a><a class="btn ghost" href="#inside">מה בפנים ↓</a></div>
   </div></div></section>
@@ -348,7 +362,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
     
     <p class="kicker rv" style="--d:.18s">רכיבים פעילים</p>
     <ul class="chips rv" style="--d:.24s"><li>1.5% ספיקולות</li><li><bdi class="nw">Niacinamide</bdi></li><li><bdi class="nw">Galactomyces ferment</bdi></li><li><bdi class="nw">Sodium DNA</bdi></li></ul>
-    <details class="rv" style="--d:.3s"><summary>הפורמולה המלאה</summary><ul><li><bdi class="nw">Hydrolyzed Sponge</bdi> – ספיקולות בריכוז 1.5%</li><li><bdi class="nw">Niacinamide</bdi> – ניאצינאמיד</li><li><bdi class="nw">Galactomyces Ferment Filtrate</bdi></li><li><bdi class="nw">Sodium DNA</bdi></li><li><bdi class="nw">Salicylic Acid</bdi> + <bdi class="nw">Citric Acid</bdi> – חומצה סליצילית וחומצה ציטרית</li><li><bdi class="nw">Sodium Hyaluronate</bdi>, <bdi class="nw">Glycerin</bdi> <span class="nw">ו-<bdi>Betaine</bdi></span></li></ul></details>
+    <details class="rv" style="--d:.3s"><summary>הפורמולה המלאה</summary><ul><li><bdi class="nw">Hydrolyzed Sponge</bdi> – ספיקולות בריכוז 1.5%</li><li><bdi class="nw">Niacinamide</bdi> – ניאצינאמיד</li><li><bdi class="nw">Galactomyces Ferment Filtrate</bdi></li><li><bdi class="nw">Sodium DNA</bdi></li><li><bdi class="nw">Salicylic Acid + Citric Acid</bdi> – חומצה סליצילית וחומצה ציטרית</li><li><bdi class="nw">Sodium Hyaluronate</bdi>, <bdi class="nw">Glycerin</bdi> <span class="nw">ו-<bdi>Betaine</bdi></span></li></ul></details>
   </div></div></section>
   <section id="feel" class="sec" data-st="3"><div class="wrap"><div class="copy">
     <p class="kicker line rv">הרגישו</p>
@@ -366,8 +380,8 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
         <h2 class="rv" style="--d:.06s">מריחה. שיקום. הגנה.</h2>
         <img class="slot wide" src="img/m5.webp" alt="" aria-hidden="true">
       </div>
-      <p class="lead rv" style="--d:.12s">על עור נקי ויבש, עסו בעדינות עד לספיגה; לאחר מכן DERMA RECOVERY CREAM; בשעות היום – מסנן קרינה. כשהעור מסתגל, עברו ל-2.5%.</p>
-      <p class="pill rv" style="--d:.18s">השלב הבא: <bdi class="nw">CELLULAR AGE DEFENSE 2</bdi>.5%</p>
+      <p class="lead rv" style="--d:.12s">על עור נקי ויבש, עסו בעדינות עד לספיגה; לאחר מכן <bdi class="nw">DERMA RECOVERY CREAM</bdi>; בשעות היום – מסנן קרינה. כשהעור מסתגל, עברו ל-2.5%.</p>
+      <p class="pill rv" style="--d:.18s">השלב הבא: <bdi class="nw">CELLULAR AGE DEFENSE 2.5%</bdi></p>
       
     </div>
     <ol class="steps"><li class="step rv" style="--d:0.00s"><span class="n">01</span><h3>מריחה</h3></li><li class="step rv" style="--d:0.08s"><span class="n">02</span><h3>שיקום</h3></li><li class="step rv" style="--d:0.16s"><span class="n">03</span><h3>הגנה</h3></li></ol>
@@ -376,15 +390,15 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
     <div class="offer-copy">
       <p class="kicker line rv">הצעה</p>
       <h2 class="rv" style="--d:.06s">מתחילים שגרת <bdi class="nw">BIOSPICULE™</bdi> בבית</h2>
-      <p class="lead rv" style="--d:.12s">זמין דרך הקליניקות השותפות של מיטודרם. כשהעור מסתגל, ניתן לעבור ל-CELLULAR AGE DEFENSE 2.5%; לאחר הסרום מומלץ תמיד למרוח DERMA RECOVERY CREAM.</p>
+      <p class="lead rv" style="--d:.12s">זמין דרך הקליניקות השותפות של מיטודרם. כשהעור מסתגל, ניתן לעבור <span class="nw">ל-<bdi>CELLULAR AGE DEFENSE 2.5%</bdi></span>; לאחר הסרום מומלץ תמיד למרוח <bdi class="nw">DERMA RECOVERY CREAM</bdi>.</p>
       <div class="cta rv" style="--d:.18s"><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20CELL%20RENEW%201.5%25" target="_blank" rel="noopener">איפה לקנות</a><a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20%D7%9E%D7%97%D7%99%D7%A8%D7%99%20CELL%20RENEW%201.5%25" target="_blank" rel="noopener" data-lead aria-haspopup="dialog">לקליניקות: לקבלת הצעת מחיר</a></div>
       <div class="contacts rv" style="--d:.24s">
         <a href="tel:+972543262182"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span>לכל הפרטים: <bdi dir="ltr">054-326-2182</bdi></span></a>
         <a href="mailto:info@mitoderm.com?subject=CELL%20RENEW%201.5%25"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg><span>דוא״ל: <bdi dir="ltr">info@mitoderm.com</bdi></span></a>
       </div>
     </div>
-    <aside class="kitcard rv" style="--d:.1s" aria-labelledby="kitcard-h">
-      <div class="kc-head"><h3 id="kitcard-h">מה באריזה</h3><span class="badge"><bdi>BIOSPICULE™</bdi></span></div>
+    <aside class="kitcard rv" style="--d:.1s;--kc-h:clamp(201px, 32.6vh, 314px)" aria-labelledby="kitcard-h">
+      <div class="kc-head"><h3 id="kitcard-h">מה באריזה</h3><span class="mark-line" data-line="biospicule"><bdi>BIOSPICULE™</bdi></span></div>
       <figure class="kc-fig">   <!-- owner 17/10: the box as in his photo, with what is in it named around it -->
         
         <canvas class="kc-live" role="img" aria-label="CELL RENEW 1.5%: CELL RENEW 1.5% – 30 ml ℮ 1.0 fl. oz"></canvas>
@@ -410,18 +424,19 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   </div></section>
   <section class="related" data-st="7"><div class="wrap">
     <h2 class="rv">עוד מקו <bdi class="nw">BIOSPICULE™</bdi></h2>
-    <div class="cards"><a class="card rv" style="--d:0.00s" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20MICRO%20BOOST%2010%25" target="_blank" rel="noopener"><div class="pic"><img src="img/micro-boost-10.webp" alt="MICRO BOOST 10%" loading="lazy"></div><div class="body"><span class="badge pro">מקצועי</span><h3><bdi>MICRO BOOST 10%</bdi></h3><p>הסרום המקצועי והמרוכז ביותר בסדרת <bdi class="nw">BIOSPICULE™</bdi></p><span class="go">לקבלת פרטים ←</span></div></a><a class="card rv" style="--d:0.08s" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20CELLULAR%20AGE%20DEFENSE%202.5%25" target="_blank" rel="noopener"><div class="pic"><img src="img/cellular-age-25.webp" alt="CELLULAR AGE DEFENSE 2.5%" loading="lazy"></div><div class="body"><span class="badge home">טיפוח ביתי</span><h3><bdi>CELLULAR AGE DEFENSE 2.5%</bdi></h3><p>סרום מתקדם למיצוק ואנטי-אייג׳ינג</p><span class="go">לקבלת פרטים ←</span></div></a><a class="card rv" style="--d:0.16s" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20DERMA%20RECOVERY%20CREAM" target="_blank" rel="noopener"><div class="pic"><img src="img/derma-recovery.webp" alt="DERMA RECOVERY CREAM" loading="lazy"></div><div class="body"><span class="badge home">טיפוח ביתי</span><h3><bdi>DERMA RECOVERY CREAM</bdi></h3><p>קרם משקם להרגעה ולתמיכה במחסום העור</p><span class="go">לקבלת פרטים ←</span></div></a></div>
+    <div class="cards"><a class="card rv" style="--d:0.00s" href="../micro-boost-10/" data-slug="micro-boost-10"><div class="pic"><img src="img/micro-boost-10.webp" alt="MICRO BOOST 10%" loading="lazy"></div><div class="body"><span class="badge pro">מקצועי</span><h3><bdi>MICRO BOOST 10%</bdi></h3><p>הסרום המקצועי והמרוכז ביותר בסדרת <bdi class="nw">BIOSPICULE™</bdi></p><span class="go">לקבלת פרטים ←</span></div></a><a class="card rv" style="--d:0.08s" href="../cellular-age-defense-2-5/" data-slug="cellular-age-defense-2-5"><div class="pic"><img src="img/cellular-age-25.webp" alt="CELLULAR AGE DEFENSE 2.5%" loading="lazy"></div><div class="body"><span class="badge home">טיפוח ביתי</span><h3><bdi>CELLULAR AGE DEFENSE 2.5%</bdi></h3><p>סרום מתקדם למיצוק ואנטי-אייג׳ינג</p><span class="go">לקבלת פרטים ←</span></div></a><a class="card rv" style="--d:0.16s" href="../derma-recovery-cream/" data-slug="derma-recovery-cream"><div class="pic"><img src="img/derma-recovery.webp" alt="DERMA RECOVERY CREAM" loading="lazy"></div><div class="body"><span class="badge home">טיפוח ביתי</span><h3><bdi>DERMA RECOVERY CREAM</bdi></h3><p>קרם משקם להרגעה ולתמיכה במחסום העור</p><span class="go">לקבלת פרטים ←</span></div></a></div>
     
   </div></section>
 </main>
-<footer class="foot"><div class="wrap"><img src="img/logo.png" alt="MITODERM — Where Science Meets Beauty"><span>© 2026 מיטודרם – כשהמדע פוגש ביופי</span><span class="legal"><a href="#">הצהרת נגישות</a><a href="#">מדיניות פרטיות</a></span></div></footer>
-<nav class="dock" aria-label="ניווט בעמוד"><a href="#meet" data-i="0">הכירו</a><a href="#why" data-i="1">למה?</a><a href="#inside" data-i="2">מה בפנים</a><a href="#feel" data-i="3">הרגישו</a><a href="#protocol" data-i="4">פרוטוקול</a><a href="#offer" data-i="5">הצעה</a><a href="#specialists" data-i="6">מומחים</a></nav>
-<div class="bar"><b><bdi>CELL RENEW 1.5%</bdi><small>טיפוח ביתי</small></b><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20CELL%20RENEW%201.5%25" target="_blank" rel="noopener">איפה לקנות</a></div>
+<footer class="foot" dir="rtl" lang="he"><div class="wrap"><img src="img/logo.png" alt="MITODERM — Where Science Meets Beauty"><span>© 2026 מיטודרם – כשהמדע פוגש ביופי</span><span class="legal"><a href="#">הצהרת נגישות</a><a href="#">מדיניות פרטיות</a></span></div></footer>
+<nav class="dock" aria-label="ניווט בעמוד" dir="rtl" lang="he"><a href="#meet" data-i="0">הכירו</a><a href="#why" data-i="1">למה?</a><a href="#inside" data-i="2">מה בפנים</a><a href="#feel" data-i="3">הרגישו</a><a href="#protocol" data-i="4">פרוטוקול</a><a href="#offer" data-i="5">הצעה</a><a href="#specialists" data-i="6">מומחים</a></nav>
+<div class="bar" dir="rtl" lang="he"><b><bdi>CELL RENEW 1.5%</bdi><small>טיפוח ביתי</small></b><a class="btn primary" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20CELL%20RENEW%201.5%25" target="_blank" rel="noopener">איפה לקנות</a></div>
 
 <!-- Lead form. This page is a static preview and cannot send data: the submit handler prevents the default and only
-     simulates the request. In production the form POSTs JSON {name, phone, email, profession, source: 'CELL RENEW 1.5% page'}
-     to data-endpoint (/api/leads), as mitoderm.com does. -->
-<dialog class="lead" id="lead" aria-labelledby="lead-h">
+     simulates the request. In production the form POSTs JSON {name, phone, email, profession, subject, source: 'CELL RENEW 1.5% page'}
+     to data-endpoint (/api/leads), as mitoderm.com does. subject is the label of the button that opened the form (a price
+     request, training or a demo, the specialists' application); without JS each button is a WhatsApp link with that text. -->
+<dialog class="lead" id="lead" aria-labelledby="lead-h" dir="rtl" lang="he">
   <div class="lead-in">
     <button type="button" class="lead-x" data-close aria-label="סגירה"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     <form class="lead-form" novalidate data-endpoint="/api/leads">
@@ -435,6 +450,7 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
           <div class="f"><input name="phone" type="tel" dir="ltr" autocomplete="tel" inputmode="tel" placeholder="טלפון" aria-label="טלפון" aria-describedby="e-phone" required><p class="err" id="e-phone"></p></div>
         </div>
         <label class="consent"><input type="checkbox" name="consent" aria-describedby="e-consent" required><span>אני מסכים/ה לתנאי מיטודרם בע״מ*</span></label><p class="err" id="e-consent"></p>
+        <input type="hidden" name="subject" value="">
         <button class="btn primary submit" type="submit"><span>בקשה לשיחה חוזרת</span><i aria-hidden="true"></i></button>
         <p class="privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>המידע שתמסור משמש את חברת מיטודרם בע&quot;מ בלבד *</span></p>
         <div class="lead-fail" role="alert" hidden><p class="fail-msg">הטופס לא נשלח. נסו שוב או כתבו לנו <span class="nw">ב-<bdi>WhatsApp</bdi></span>.</p><a class="btn ghost" href="https://wa.me/972547621889?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%A4%D7%A8%D7%98%D7%99%D7%9D%20%D7%A2%D7%9C%20CELL%20RENEW%201.5%25" target="_blank" rel="noopener"><bdi dir="ltr">WhatsApp</bdi></a></div>
@@ -796,8 +812,7 @@ onmessage = async e => {
     cellEls = FIELD.filter(f => typeof f[0] === 'number' || MOLS.length).map((f, n) => {
       const id = typeof f[0] === 'number' ? SPRITES[f[0] % SPRITES.length] : MOLS[+f[0].slice(1) % MOLS.length], layer = layers[f[5]];
       const imgs = [0, 1, 2].map(s => { const im = new Image(); im.decoding = 'async'; im.alt = ''; im.src = new URL(`img/cells/${id}-${s}.webp`, BASE).href; layer.appendChild(im); return im; });
-      const dust = [0, 1, 2, 3, 4].map(j => { const d = document.createElement('i'); layer.appendChild(d); return { el: d, a: n * 2.4 + j * 1.31, f: 0.35 + ((n * 7 + j * 3) % 5) / 8 }; });
-      return { f, imgs, dust, st: ['', '', ''], ph: n * 1.7 };
+      return { f, imgs, st: ['', '', ''], ph: n * 1.7 };   // only the sprites: nothing drawn that is not real (owner 22/10)
     });
   }
   function layoutCells() { for (const c of cellEls) c.st = ['', '', '']; }
@@ -817,7 +832,7 @@ onmessage = async e => {
     if (!cellEls) return false;
     const o0 = smooth(0.08, 0.8, pos) * (pos < 3 ? 1 : 0), dis = smooth(2.1, 2.9, pos);
     if (o0 <= 0 || dis >= 1) {
-      if (cellsOn) { for (const c of cellEls) { c.imgs.forEach(im => set(im, 0)); c.dust.forEach(d => set(d.el, 0)); c.st = ['', '', '']; } cellsOn = false; }
+      if (cellsOn) { for (const c of cellEls) { c.imgs.forEach(im => set(im, 0)); c.st = ['', '', '']; } cellsOn = false; }
       return false;
     }
     cellsOn = true;
@@ -834,12 +849,6 @@ onmessage = async e => {
       const oc = o * (1 - dis), tf = o > 0 ? `translate3d(${(cx - 128).toFixed(1)}px,${(cy - 128).toFixed(1)}px,0) scale(${(D / 256).toFixed(4)}) rotate(${(spin * c01 + tt * 2 + c.ph * 40).toFixed(1)}deg)` : '';
       const wts = [clamp(1 - b), clamp(1 - Math.abs(b - 1)), clamp(b - 1)];
       c.imgs.forEach((im, s) => { const v = oc * wts[s], st = v > 0.004 ? v.toFixed(3) + tf : '0'; if (st !== c.st[s]) { set(im, v, v > 0.004 ? tf : ''); c.st[s] = st; } });
-      const dO = o * Math.sin(Math.PI * dis) * 0.95;   // R3: the cells give way to gold dust
-      for (const p of c.dust) {
-        if (dO <= 0.004) { if (p.on) { set(p.el, 0); p.on = false; } continue; }
-        const rr = D / 2 * (0.2 + p.f * 1.4 * dis), px = cx + Math.cos(p.a) * rr, py = cy + Math.sin(p.a) * rr - dis * 0.04 * H, sc = 0.6 + D / 260;
-        set(p.el, dO * (0.6 + 0.4 * p.f), `translate3d(${(px - 4).toFixed(1)}px,${(py - 4).toFixed(1)}px,0) scale(${sc.toFixed(2)})`); p.on = true;
-      }
     }
     return !still;
   }
@@ -935,7 +944,7 @@ onmessage = async e => {
     if (worker) { worker.terminate(); worker = null; }
     if (workerUrl) URL.revokeObjectURL(workerUrl);
     for (const e of bm.values()) release(e); bm.clear(); shown = -1; kitCrop = null;
-    if (cellEls) for (const c of cellEls) { c.imgs.forEach(im => im.remove()); c.dust.forEach(d => d.el.remove()); }
+    if (cellEls) for (const c of cellEls) c.imgs.forEach(im => im.remove());
     cellEls = null;
     root.classList.remove('story'); for (const v of ['--stage-top', '--stage-h', '--push']) root.style.removeProperty(v);
     if (probe) probe.remove();
@@ -1087,10 +1096,14 @@ function createScene(THREE, { canvas, base, onLoad }) {
   // with the print, the right side the plain strip; the left, the back, the top and the foot closed for any transition's
   // frame but never seen. Front and side are drawn first (they write depth), the closed faces after them: through a
   // fading front nothing behind it shows. `order`: the boxes further back are drawn before the nearer ones
-  const mkBox = (front, side, hidden, W, D, order) => {
+  // `fu`: the front texture's u at the front's right edge (1 unless the picture is narrower than the front: a texel stays
+  // square, the edge column repeats over the rest)
+  const mkBox = (front, side, hidden, W, D, order, fu = 1) => {
     const g = new THREE.Group(); scene.add(g); g.visible = false;
     const face = (geo, mat, x, y, z, rx, ry, o) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); m.renderOrder = o; g.add(m); return m; };
-    face(new THREE.PlaneGeometry(W, 1), front, 0, 0, 0, 0, 0, order);
+    const fg = new THREE.PlaneGeometry(W, 1);
+    if (fu !== 1) { const uv = fg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * fu); }
+    face(fg, front, 0, 0, 0, 0, 0, order);
     face(new THREE.PlaneGeometry(D, 1), side, W / 2, 0, -D / 2, 0, Math.PI / 2, order);
     face(new THREE.PlaneGeometry(D, 1), hidden, -W / 2, 0, -D / 2, 0, -Math.PI / 2, order + 1);
     face(new THREE.PlaneGeometry(W, 1), hidden, 0, 0, -D, 0, Math.PI, order + 1);
@@ -1103,8 +1116,12 @@ function createScene(THREE, { canvas, base, onLoad }) {
   const hero = mkBox(printed(faceTex), printed(sideTex, SIDE_K), SIDE_HID(), BW, BW, 100);
   // CELLULAR AGE DEFENSE 2.5%: the same box (its true W : H 0.2600, its photo squeezed 1.2 % across); its side as ours
   const cad = mkBox(printed(cadTex), printed(sideTex, SIDE_K), SIDE_HID(), 0.26, 0.26, 90);
-  // DERMA RECOVERY CREAM: the front 612 × 974 (W : H 0.629), a square base (assumed: no photo of its sides)
-  const derma = mkBox(printed(dermaTex), P(0xc9beb2), P(new THREE.Color(0xc9beb2).multiplyScalar(0.7)), 612.4 / 974.1, 612.4 / 974.1, 100);
+  // DERMA RECOVERY CREAM: the front as its own page measured it (scenes/derma-recovery-cream.js: the packshot's
+  // x 11.6…627.4 at half alpha, 615.8 × 974.2, W : H 0.6321, the print's axis the front's middle); derma-face.webp holds
+  // the packshot's x 11.6…624.0 (612.4 px), so the front's u runs 0…615.8/612.4: the print undistorted, the last 3.4 px
+  // the dark rounded edge repeated. A square base (assumed: no photo of its sides)
+  const DW = 615.8 / 974.2;
+  const derma = mkBox(printed(dermaTex), P(0xc9beb2), P(new THREE.Color(0xc9beb2).multiplyScalar(0.7)), DW, DW, 100, 615.8 / 612.4);
   const BOXES = [hero, cad, derma];
   // the medallion on the front: u, v of its centre, its semi-axes across and down / H (as printed: 182 × 188 photo px)
   const MED = [131.1 / 261.75, 625.2 / 1008, 91.0 / 1008, 94.05 / 1008];
@@ -1512,7 +1529,7 @@ window.__seq = story.state;   // for the QA script
     e.preventDefault(); if (sending) return; tried = true;
     var ok = NAMES.map(check).every(Boolean); ok = checkConsent() && ok;
     if (!ok) { var bad = form.querySelector('[aria-invalid="true"]'); if (bad) bad.focus(); return; }
-    var payload = { name: form.elements.name.value.trim(), phone: form.elements.phone.value.trim(), email: form.elements.email.value.trim(), profession: form.elements.profession.value.trim(), source: 'CELL RENEW 1.5% page' };
+    var payload = { name: form.elements.name.value.trim(), phone: form.elements.phone.value.trim(), email: form.elements.email.value.trim(), profession: form.elements.profession.value.trim(), subject: form.elements.subject.value, source: 'CELL RENEW 1.5% page' };
     fail.hidden = true; setBusy(true);
     sendLead(payload).then(function () { setBusy(false); body.hidden = true; done.hidden = false; done.focus(); }, function () { setBusy(false); fail.hidden = false; });
   });
@@ -1521,7 +1538,12 @@ window.__seq = story.state;   // for the QA script
     NAMES.forEach(function (n) { form.elements[n].removeAttribute('aria-invalid'); document.getElementById('e-' + n).textContent = ''; });
     consent.removeAttribute('aria-invalid'); document.getElementById('e-consent').textContent = '';
   }
-  function open(e) { e.preventDefault(); opener = e.currentTarget; if (!done.hidden) reset(); dlg.showModal(); root.classList.add('form-open'); form.elements.name.focus(); }
+  function open(e) {   // the subject is the opener's label (a price request, training, a demo); its WhatsApp text is the fallback
+    e.preventDefault(); opener = e.currentTarget; if (!done.hidden) reset();
+    form.elements.subject.value = opener.textContent.replace(/\s+/g, ' ').replace(/\s*↗\s*$/, '').trim();
+    var waf = fail.querySelector('a'); if (waf && /^https:\/\/wa\.me\//.test(opener.href)) waf.href = opener.href;
+    dlg.showModal(); root.classList.add('form-open'); form.elements.name.focus();
+  }
   function finish() { if (!root.classList.contains('form-open')) return; root.classList.remove('form-open'); if (opener) opener.focus(); }
   function close() { if (dlg.open) dlg.close(); finish(); }
   document.querySelectorAll('[data-lead]').forEach(function (a) { a.addEventListener('click', open); });
