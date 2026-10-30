@@ -87,6 +87,7 @@ main, .top, .foot, .dock, .bar { position: relative; z-index: 2; }
 .kicker { display: flex; align-items: center; gap: 14px; font: 500 13px/1.3 var(--body); letter-spacing: .02em; color: var(--gold); }
 .kicker.line::after { content: ""; width: 40px; height: 1px; background: rgba(201,162,75,.3); }
 h1 { font: 500 clamp(48px, 5.8vw, 84px)/1 var(--display); letter-spacing: -.01em; }
+h1.long { font-size: clamp(40px, 4.5vw, 66px); }   /* a name longer than 20 characters (CELLULAR AGE DEFENSE 2.5%): two lines in the 540-px copy, never a line of «2.5%» alone */
 h2 { font: 500 clamp(30px, 3.2vw, 46px)/1.18 var(--he-display); letter-spacing: -.005em; }
 .tag { font: 400 clamp(20px, 1.9vw, 26px)/1.35 var(--he-display); color: var(--gold-soft); }
 .lead { color: var(--text); max-width: 480px; }
@@ -128,7 +129,7 @@ details ul { padding: 0 0 18px; list-style: none; color: var(--text); display: g
 .contacts a { display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 4px 2px; border-bottom: 1px solid var(--hairline-cream); color: var(--text-soft); text-decoration: none; font: 400 15px/1.3 var(--body); }
 .contacts svg { width: 20px; height: 20px; color: var(--gold); flex: none; }
 .offer .kitcard { justify-self: center; }
-.kitcard { width: min(100%, 540px); display: grid; gap: 14px; padding: 26px 30px 28px; border-radius: 28px; border: 1px solid var(--hairline); background: linear-gradient(160deg, rgba(28,27,31,.95), rgba(14,14,17,.95)); box-shadow: 0 30px 90px rgba(0,0,0,.5); }
+.kitcard { width: min(100%, 540px); display: grid; gap: 14px; padding: 26px 30px 28px; border-radius: 28px; border: 1px solid var(--hairline); background: linear-gradient(160deg, #1c1b1f, #0e0e11); box-shadow: 0 30px 90px rgba(0,0,0,.5); }   /* opaque: the stage (the still, the scene) must not show through as a ghost of the product behind the kit picture */
 .kc-head { display: flex; align-items: center; gap: 14px; }
 .kc-head h3 { font: 500 26px/1.2 var(--he-display); color: var(--cream); }
 .kc-head .badge { letter-spacing: .14em; font-size: 11px; }
@@ -329,7 +330,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
     <div class="badges rv">{{{line_badges}}}<span class="badge{{{use_cls}}}">{{use_pro}}</span></div>
     {{{s1_kicker}}}
     <div class="head">
-      <h1 class="rv" style="--d:.12s"><bdi>{{h1}}</bdi></h1>
+      <h1 class="rv{{{h1_cls}}}" style="--d:.12s"><bdi>{{h1}}</bdi></h1>
       <p class="tag rv" style="--d:.18s">{{tag}}</p>
       <img class="slot" src="img/m1.webp" alt="" aria-hidden="true">
     </div>

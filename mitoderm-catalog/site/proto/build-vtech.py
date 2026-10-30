@@ -29,6 +29,9 @@ from PIL import Image
 
 ARGS = sys.argv[1:]
 opt = lambda name: ARGS[ARGS.index(name) + 1] if name in ARGS else None
+KNOWN = {'--files', '--keys', '--product', '--scene', '--links'}   # a misspelt option fails here, never passes silently
+bad = [a for a in ARGS if a.startswith('--') and a not in KNOWN]
+assert not bad, f'unknown option {bad}: --files <dir> --keys <dir> --product <slug> --scene --links public|artifact'
 FILES, KEYS, PRODUCT = opt('--files'), opt('--keys'), opt('--product') or 'v-tech-system'
 SCENE = '--scene' in ARGS
 LINKS = opt('--links') or 'public'   # the «see also» cards: 'public' → «../<slug>/», 'artifact' → the published pages
@@ -75,10 +78,12 @@ text = lambda s: rng(esc(s))   # a line of text (never an attribute): escaped, i
 def keep(s):
     """As in build-exocell.py: escape a Hebrew line and keep each Latin name whole and in order ('V-TECH' never breaks,
     'BIOSPICULE™' keeps its ™ after the word, a one-letter prefix stays with its name, 'CELL RENEW 1.5%' keeps its
-    decimal point and 'I–VI' its dash; a full stop after a name stays outside)."""
+    decimal point and 'I–VI' its dash; a full stop after a name stays outside). A formula is one name too: 'NAD⁺' and 'CO₂'
+    with their superscript or subscript, 'AHA + BHA ≈30%' and 'Salicylic Acid + Citric Acid' whole — an isolate is neutral
+    for the bidi algorithm, so split pieces would come out right to left in a Hebrew line («30%≈ BHA + AHA»)."""
     out, pos = [], 0
-    LATIN = r'(?:[A-Za-z0-9™®%\-‑]|\.(?=\d)|–(?=[A-Za-z0-9]))*'
-    for m in re.finditer(r'(?<![א-ת])([א-ת]-)?([A-Za-z]' + LATIN + r'(?:[ /]+[A-Za-z0-9]' + LATIN + r')*)', s):
+    LATIN = r'(?:[A-Za-z0-9™®%\-‑⁺⁻⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉]|\.(?=\d)|–(?=[A-Za-z0-9]))*'
+    for m in re.finditer(r'(?<![א-ת])([א-ת]-)?([A-Za-z]' + LATIN + r'(?:[ /+≈]+[A-Za-z0-9]' + LATIN + r')*)', s):
         run = f'<bdi>{esc(m.group(2))}</bdi>'
         out += [text(s[pos:m.start()]), f'<span class="nw">{esc(m.group(1))}{run}</span>' if m.group(1) else run.replace('<bdi>', '<bdi class="nw">', 1)]
         pos = m.end()
@@ -92,7 +97,6 @@ def brand(s):  # Latin product and brand names in capitals, as everywhere in the
 
 
 lis = lambda items, f=text: ''.join(f'<li>{f(t)}</li>' for t in items)
-txt = lambda s: keep(s) if re.search('[™®]', s) else text(s)   # a mark sign stays after its word in an RTL line
 nav = v['nav']
 PIN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>'
 CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.8"/></svg>'
@@ -176,7 +180,7 @@ WA_TRAIN = wa(ui['wa_text_product'].format(name=NAME) + ' · ' + s7['training'])
 RAW = {
     's1_chips': lis(s1['chips'], keep), 's2_chips': lis(s2['chips']), 's3_p': keep(s3['p']), 's3_chips': lis(s3['chips'], keep),
     # S1's kicker, the catalogue eyebrow less what the badges already say (story_content.py); none when nothing is left
-    's1_kicker': f'<p class="kicker rv" style="--d:.06s">{txt(s1["eyebrow"])}</p>' if s1['eyebrow'] else '',
+    's1_kicker': f'<p class="kicker rv" style="--d:.06s">{keep(s1["eyebrow"])}</p>' if s1['eyebrow'] else '',
     's3_formula': (f'<details class="rv" style="--d:.3s"><summary>{esc(s3["formula"])}</summary><ul>{lis(cat["ingredients"], keep)}</ul></details>'
                    if s3['formula'] else ''),   # a device has features, not a formula
     's4_pins': lis(s4['pins']), 's5_chip': keep(s5['chip']),
@@ -184,6 +188,7 @@ RAW = {
                         for i, (t, p) in enumerate(s5['steps'])),
     's5_note': f'<p class="note rv" style="--d:.24s">{text(s5["note"])}</p>' if s5['note'] else '',
     'lead': LEAD, 'use_cls': '' if HOME else ' pro',
+    'h1_cls': ' long' if len(NAME) > 20 else '',   # a long name (CELLULAR AGE DEFENSE 2.5%) at a smaller size: two lines on a desktop, never «2.5%» alone
     # the offer's second button does what its label says: a price quote opens the price form (a home-care page too),
     # «WhatsApp» opens WhatsApp, a home-care page otherwise sends to the specialists, a professional one to the form with
     # the training (demo) subject
@@ -212,7 +217,7 @@ RAW = {
     's3_legend': (f'<p class="legend rv" style="--d:.15s"><span class="dot" aria-hidden="true"{FOLDED_DOT if CELL == "f" else ""}></span>'
                   f'<span>{esc(s3["legend"])}</span></p>') if s3['legend'] else '',
     's9': ('<section class="related" data-st="7"><div class="wrap">\n    ' + '\n    '.join(
-        f'<h2 class="rv">{txt(s9[k + "_h"])}</h2>\n    <div class="cards">' + ''.join(card(*c, i) for i, c in enumerate(s9[k])) + '</div>' if s9[k] else ''
+        f'<h2 class="rv">{keep(s9[k + "_h"])}</h2>\n    <div class="cards">' + ''.join(card(*c, i) for i, c in enumerate(s9[k])) + '</div>' if s9[k] else ''
         for k in ('line', 'more')) + '\n  </div></section>') if s9['line'] or s9['more'] else '',
     'dock': ''.join(f'<a href="#{h}" data-i="{i}">{esc(n)}</a>' for i, (h, n) in enumerate(zip(
         ('meet', 'why', 'inside', 'feel', 'protocol', 'offer', 'specialists'), nav))),
@@ -314,8 +319,9 @@ missing, unused = used - set(T) - set(RAW), (set(T) | set(RAW)) - used
 assert not missing, f'no text for {sorted(missing)}'
 assert not unused, f'texts never placed: {sorted(unused)}'
 page = re.sub(r'\{\{\{(\w+)\}\}\}', lambda m: RAW[m.group(1)], page)
-KEEP = {'tag', 's1_lead', 's2_h2', 's2_p', 's2_kicker', 's3_h2', 's3_kicker', 's4_h2', 's4_p', 's5_h2', 's5_p', 's7_p'}   # text, not attributes
-page = re.sub(r'\{\{(\w+)\}\}', lambda m: txt(T[m.group(1)]) if m.group(1) in KEEP else esc(T[m.group(1)]), page)
+KEEP = {'s1_lead', 's2_h2', 's2_p', 's2_kicker', 's3_h2', 's3_kicker', 's4_h2', 's4_p', 's5_h2', 's5_p', 's7_p'}   # text, not attributes: its Latin names whole
+SENT = {'tag'}   # a sentence («Measure what matters»): no nowrap, so that it still fits a phone's heading column without JS
+page = re.sub(r'\{\{(\w+)\}\}', lambda m: keep(T[m.group(1)]) if m.group(1) in KEEP else text(T[m.group(1)]) if m.group(1) in SENT else esc(T[m.group(1)]), page)
 # the live scene: three.js from jsDelivr (as the MASK page), imported so that a failed load (or no WebGL) leaves the
 # page whole, without 3D: no-gl, the still; then the scene module inlined
 SRC = open(SCENE_JS, encoding='utf-8').read() if SCENE else ''

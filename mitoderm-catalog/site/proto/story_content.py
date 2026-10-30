@@ -13,10 +13,11 @@ S1 meet         s1.line_mark, line_name        the product's line (LINES, design
                                                name; the Hebrew one only where a source has it (V-TECH FACE: ui.line_name,
                                                DEVICES: home.sl-2 «מכשור»); the line's name also heads the related cards
                 s1.use_pro                     ui.use_home when the catalogue tags it HOME CARE (the badge, outlined)
-                s1.eyebrow                     product-pages eyebrow less the parts the badges already say (kicker(); story3d:
-                                               the screen-1 kicker carries no line badge): a « · » part that is the use badge
-                                               or the line's name, or holds the line's Latin mark, is left out; the kicker is
-                                               left out when nothing remains (CELLULAR AGE, CELL RENEW, the devices)
+                s1.eyebrow                     product-pages eyebrow less the parts the badges and the S1 chips already say
+                                               (kicker(); story3d: the screen-1 kicker carries no line badge): a « · » part
+                                               that is the use badge, the line's name or one of the four chips (b0.label1–4),
+                                               or holds the line's Latin mark, is left out; the kicker is left out when nothing
+                                               remains (CELLULAR AGE, CELL RENEW, the devices, EXOTECH GEL, DERMA)
                 s1.h1 · tag · lead · chips     name · b0.title · b0.line · b0.label1–4
 S2 why          s2.h2 · p · chips              b1.title · b1.line · b1.label1–4;  s2.kicker  product-pages s05[0]
 S3 inside       s3.h2 · p · chips              b2.title · b2.line · b2.label1–4;  s3.kicker  product-pages s03[0]
@@ -60,12 +61,13 @@ PACKSHOTS = [os.path.join(REPO, 'protocols', d, 'img') for d in ('assets', 'prin
 OVERRIDE = {'mitoscan': {'b0.label4': 'מקצועי', 'training': ''}}   # see the docstring; keys of the storyboard, or 'training'
 
 
-def kicker(eyebrow, mark, name, use):
-    """S1's kicker: the catalogue eyebrow without the parts the badges beside it already say — a « · » part equal to the use
-    badge («טיפוח ביתי», «מקצועי») or to the line's Hebrew name («מכשור»), or holding the line's Latin mark
+def kicker(eyebrow, mark, name, use, chips=()):
+    """S1's kicker: the catalogue eyebrow without the parts the badges and chips beside it already say — a « · » part equal
+    to the use badge («טיפוח ביתי», «מקצועי»), to the line's Hebrew name («מכשור») or to one of the S1 chips (DERMA «SNAIL
+    COLLAGEN», GEL «סדרת האקסוזומים הסינתטיים», HAIR and EXO-NAD «אקסוזומים סינתטיים»), or holding the line's Latin mark
     («BIOSPICULE™»); '' when nothing is left (the page then draws no kicker)."""
     word = mark.rstrip('™®')
-    said = lambda t: t == use or (name and (t == name or re.search(rf'(?<![א-ת]){re.escape(name)}(?![א-ת])', t))) or (word and word in t)
+    said = lambda t: t == use or t in chips or (name and (t == name or re.search(rf'(?<![א-ת]){re.escape(name)}(?![א-ת])', t))) or (word and word in t)
     return ' · '.join(t for t in eyebrow.split(' · ') if not said(t))
 
 
@@ -112,7 +114,7 @@ def content(slug):
     line, also = [s for s in line if packshot(s)][:4], [s for s in also if packshot(s)][:4]
     return {
         'use': use, 'nav': vt['nav'], 'cta_price': buy, 'line': line_id, 'exo': exo, 'pdrn': pdrn,
-        's1': {'line_mark': mark, 'line_name': lname, 'use_pro': ui['use_' + use], 'eyebrow': kicker(c['eyebrow'], mark, lname, ui['use_' + use]),
+        's1': {'line_mark': mark, 'line_name': lname, 'use_pro': ui['use_' + use], 'eyebrow': kicker(c['eyebrow'], mark, lname, ui['use_' + use], labels('b0')),
                'h1': name, 'tag': sb['b0.title'], 'lead': sb['b0.line'], 'chips': labels('b0'), 'more': more},
         's2': {'h2': sb['b1.title'], 'p': sb['b1.line'], 'kicker': c['s05'][0], 'chips': labels('b1')},
         's3': {'h2': sb['b2.title'], 'legend': vt['s3']['legend'] if exo else '', 'p': sb['b2.line'], 'kicker': c['s03'][0],
