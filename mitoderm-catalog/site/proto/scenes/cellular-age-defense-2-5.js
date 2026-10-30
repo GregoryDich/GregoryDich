@@ -127,10 +127,14 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // with the print, the right side the plain strip; the left, the back, the top and the foot closed for any transition's
   // frame but never seen. Front and side are drawn first (they write depth), the closed faces after them: through a
   // fading front nothing behind it shows
-  const mkBox = (front, side, hidden, W, D) => {
+  // `fu`: the front texture's u at the front's right edge (1 unless the picture is narrower than the front: a texel
+  // stays square, the edge column repeats over the rest)
+  const mkBox = (front, side, hidden, W, D, fu = 1) => {
     const g = new THREE.Group(); scene.add(g); g.visible = false;
     const face = (geo, mat, x, y, z, rx, ry, order) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); m.renderOrder = order; g.add(m); return m; };
-    face(new THREE.PlaneGeometry(W, 1), front, 0, 0, 0, 0, 0, 100);
+    const fg = new THREE.PlaneGeometry(W, 1);
+    if (fu !== 1) { const uv = fg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * fu); }
+    face(fg, front, 0, 0, 0, 0, 0, 100);
     face(new THREE.PlaneGeometry(D, 1), side, W / 2, 0, -D / 2, 0, Math.PI / 2, 100);
     face(new THREE.PlaneGeometry(D, 1), hidden, -W / 2, 0, -D / 2, 0, -Math.PI / 2, 101);
     face(new THREE.PlaneGeometry(W, 1), hidden, 0, 0, -D, 0, Math.PI, 101);
@@ -142,8 +146,12 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const hero = mkBox(printed(faceTex), printed(sideTex, SIDE_K), P(new THREE.Color(0xbca790).multiplyScalar(0.7)), BW, BW);
   // CELL RENEW 1.5%: the same box (both 30 ml, one series; its packshot's front W : H 0.260 too); its side as the 2.5%'s
   const renew = mkBox(printed(renewTex), printed(sideTex, SIDE_K), P(new THREE.Color(0xbca790).multiplyScalar(0.7)), BW, BW);
-  // DERMA RECOVERY CREAM: the front 612 × 974 (W : H 0.629), a square base (assumed: no photo of its sides)
-  const derma = mkBox(printed(dermaTex), P(0xc9beb2), P(new THREE.Color(0xc9beb2).multiplyScalar(0.7)), 612.4 / 974.1, 612.4 / 974.1);
+  // DERMA RECOVERY CREAM: the front as its own page measured it (scenes/derma-recovery-cream.js: the packshot's
+  // x 11.6…627.4 at half alpha, 615.8 × 974.2, W : H 0.6321, the print's axis the front's middle); derma-face.webp holds
+  // the packshot's x 11.6…624.0 (612.4 px), so the front's u runs 0…615.8/612.4: the print undistorted, the last 3.4 px
+  // the dark rounded edge repeated. A square base (assumed: no photo of its sides)
+  const DW = 615.8 / 974.2;
+  const derma = mkBox(printed(dermaTex), P(0xc9beb2), P(new THREE.Color(0xc9beb2).multiplyScalar(0.7)), DW, DW, 615.8 / 612.4);
   const BOXES = [hero, renew, derma];
   const MED = [131.38 / 261.8, 619.99 / 1019, 93.37 / 1019];   // the medallion on the front: u, v of its centre, its radius / H
 

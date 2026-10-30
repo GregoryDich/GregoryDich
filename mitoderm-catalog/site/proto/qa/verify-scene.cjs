@@ -7,6 +7,9 @@
 //   step-down  on a fake clock, at DPR 2: a steady 30 Hz (a low-power cap) steps down once, finds no gain, goes back to
 //              2 and stops trying; slow frames that get faster at the lower ratio keep it, also when vsync steps hide the
 //              gain from a median; each step cuts ≥ 20 % of the pixels (DPR 2.125 goes to 1.5, DPR 1.5 tries 1.25).
+// The seam, pearls and restore probes are written for the EXOTECH GEL jar (its places in the 2400 frame); a scene has that
+// jar when its state() reports lidUp and pearlsOn. Without them, seam and pearls are SKIPped with the reason (not counted),
+// and restore reads the whole frame instead of the jar's centre: not black, and ≥ 70 % of its light before the loss.
 // usage: NODE_PATH=$(npm root -g) node verify-scene.cjs <scene.js> <three.module.min.js (three@0.160.0)>
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
@@ -39,9 +42,11 @@ window.__lose = () => new Promise(res => {   // lose and restore the context, th
   ext.loseContext();
 });
 window.__fresh = () => { sc.dispose(); sc = make(); };
+window.__has = k => k in sc.state();   // a feature the scene's state() reports
 </script></body></html>`;
 const checks = [];
 const ok = (name, pass, info = '') => { checks.push({ name, pass }); console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? '  ' + info : '')); };
+const skipped = [], skip = (name, why) => { skipped.push(name); console.log('SKIP ' + name + '  ' + why); };
 const lum = (d, x, y) => { const i = (y * W + x) * 4; return 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]; };
 (async () => {
   const b = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
@@ -56,19 +61,27 @@ const lum = (d, x, y) => { const i = (y * W + x) * 4; return 0.299 * d[i] + 0.58
   });
   await p.goto('http://scene.test/'); await p.waitForFunction(() => window.__loaded, null, { timeout: 60000 });
 
+  // the EXOTECH GEL jar (a lid that unscrews, pearls under it): the scene reports lidUp and pearlsOn
+  const gelJar = await p.evaluate(() => { window.__draw(0); return window.__has('lidUp') && window.__has('pearlsOn'); });   // a first still frame: every scene's state() is safe to read after a draw
+  const noJar = `no gel jar: state() of ${path.basename(sceneFile)} reports no lidUp/pearlsOn`;
+
   // seam: the darkest pixel down a column of the big 'why' jar (560 px high in the 2400 frame, centre x 720) that is
   // clear of the lettering (left of «EXOTECH»), around the seam, against the gold of the base under it
-  const col = await p.evaluate(() => window.__column(1, 270, 370, 470));
-  const darkest = Math.min(...col.slice(0, 60)), gold = col.slice(65).sort((a, b) => a - b)[17];
-  ok('seam: a dark line across the closed jar', darkest < 0.45 * gold, `darkest ${darkest.toFixed(0)} vs gold ${gold.toFixed(0)}`);
+  if (gelJar) {
+    const col = await p.evaluate(() => window.__column(1, 270, 370, 470));
+    const darkest = Math.min(...col.slice(0, 60)), gold = col.slice(65).sort((a, b) => a - b)[17];
+    ok('seam: a dark line across the closed jar', darkest < 0.45 * gold, `darkest ${darkest.toFixed(0)} vs gold ${gold.toFixed(0)}`);
+  } else skip('seam: a dark line across the closed jar', noJar);
 
   // pearls only with the lid up
-  const bad = [];
-  for (let x = 1; x <= 3.001; x += 0.05) for (const t of [0.3, 2.1, 5.7]) {
-    const s = await p.evaluate(([x, t]) => window.__draw(x, t, false), [x, t]);
-    if (s.pearlsOn && s.lidUp < 0.5) bad.push(`${x.toFixed(2)}@${t}:${s.pearlsOn}/${s.lidUp.toFixed(2)}`);
-  }
-  ok('pearls: only once the lid is up', !bad.length, bad.slice(0, 6).join(' '));
+  if (gelJar) {
+    const bad = [];
+    for (let x = 1; x <= 3.001; x += 0.05) for (const t of [0.3, 2.1, 5.7]) {
+      const s = await p.evaluate(([x, t]) => window.__draw(x, t, false), [x, t]);
+      if (s.pearlsOn && s.lidUp < 0.5) bad.push(`${x.toFixed(2)}@${t}:${s.pearlsOn}/${s.lidUp.toFixed(2)}`);
+    }
+    ok('pearls: only once the lid is up', !bad.length, bad.slice(0, 6).join(' '));
+  } else skip('pearls: only once the lid is up', noJar);
 
   // kit: the card's picture equals the live pose at p = 5 (the sway has settled)
   const kv = await p.evaluate(() => window.__kitVsLive());
@@ -78,9 +91,15 @@ const lum = (d, x, y) => { const i = (y * W + x) * 4; return 0.299 * d[i] + 0.58
   const before = await p.evaluate(() => window.__frame(0));
   await p.evaluate(() => window.__lose());
   const after = await p.evaluate(() => window.__frame(0));
-  const jx = Math.round(930 / 2400 * W), jy = Math.round(760 / 1500 * H);
-  const lb = lum(before, jx, jy), la = lum(after, jx, jy);
-  ok('restore: the jar is not black after a lost context', la > 0.7 * lb && la > 40, `jar centre ${lb.toFixed(0)} → ${la.toFixed(0)}`);
+  if (gelJar) {
+    const jx = Math.round(930 / 2400 * W), jy = Math.round(760 / 1500 * H);
+    const lb = lum(before, jx, jy), la = lum(after, jx, jy);
+    ok('restore: the jar is not black after a lost context', la > 0.7 * lb && la > 40, `jar centre ${lb.toFixed(0)} → ${la.toFixed(0)}`);
+  } else {   // no gel jar to probe: the whole frame keeps its light
+    const mean = d => { let s = 0; for (let i = 0; i < d.length; i += 4) s += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]; return s / (d.length / 4); };
+    const mb = mean(before), ma = mean(after);
+    ok('restore: the frame is not black after a lost context', ma > 0.7 * mb && ma > 1, `frame mean ${mb.toFixed(1)} → ${ma.toFixed(1)}`);
+  }
 
   // step-down on a fake clock
   const run = (steps, dpr = 2) => p.evaluate(async ([steps, dpr]) => {
@@ -104,5 +123,5 @@ const lum = (d, x, y) => { const i = (y * W + x) * 4; return 0.299 * d[i] + 0.58
 
   ok('no page errors', !errs.filter(e => !/Context Lost|Context Restored/.test(e)).length, errs.join(' | ').slice(0, 300));
   await b.close();
-  console.log(`\n${checks.filter(c => c.pass).length}/${checks.length} checks passed`);
+  console.log(`\n${checks.filter(c => c.pass).length}/${checks.length} checks passed` + (skipped.length ? `, ${skipped.length} skipped (${skipped.map(n => n.split(':')[0]).join(', ')}: ${noJar})` : ''));
 })();

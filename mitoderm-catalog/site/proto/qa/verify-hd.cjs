@@ -7,6 +7,10 @@
 // the MASK page's fixed canvas, which draws only the far smoke there (the product has its own canvas in the slot), and
 // the smoke painted into the MASK form's panel. The reveals (.rv) are shown at once; the lead form is opened and measured too;
 // a frame canvas is measured twice: its own pixels and the tier of the frames drawn into it (the phone at its full DPR).
+// A scene canvas (#seq on a three.js page) drawn below need is PACE, not FAIL, when the scene's pace() stepped its density
+// down (state(): a finite cap) and the canvas is CSS × that density: software GL's slow frames, not a resolution cap. A
+// canvas short of CSS × DPR with no step-down, or short of CSS × the stepped density, stays FAIL; so does a frame tier
+// under need (the device limit of engine/story.js included).
 // usage: FONTDIR=<dir with Rubik[wght].ttf> [THREE=<three.module.min.js>] NODE_PATH=$(npm root -g)
 //        node verify-hd.cjs <page.html> <files dir | -> <out.json> [wrap=1: add the artifact skeleton]
 const { chromium } = require('playwright');
@@ -23,6 +27,8 @@ const SIZES = [{ name: 'phone 390×844 @3', w: 390, h: 844, dpr: 3 }, { name: 'l
   { name: 'desktop 1920×1080 @2', w: 1920, h: 1080, dpr: 2 }];
 const SOFT = (it, size) => /cells\/[cmf]\d\d-[12]\.webp|plate\.webp|img\/bg\.webp/.test(it.src) || (size.w < 900 && it.el === 'canvas#gl')
   || /^canvas$/.test(it.el) && it.y === 'form';   // the form panel's smoke (MASK), painted small on purpose
+// a scene canvas at the density pace() stepped down to (a finite cap): have is CSS × that density, not short of it
+const PACED = it => !!it.scene && it.scene.cap != null && it.scene.quality < it.scene.full && it.ratio >= 0.95 * it.scene.quality / it.scene.full;
 // the frame story's crop boxes, as build-vtech.py wrote them into the page ({"runs": […], "tiers": …})
 const RUNS = (() => { const i = html.indexOf('{"runs":'); if (i < 0) return [];
   for (let d = 0, j = i; j < html.length; j++) { d += html[j] === '{' ? 1 : html[j] === '}' ? -1 : 0; if (!d) return JSON.parse(html.slice(i, j + 1)).runs; } return []; })();
@@ -95,10 +101,12 @@ async function measure(browser, size) {
           res.push({ el: name(el), src: label(m[1], nw, nh), have: [nw, nh], need: [Math.round(dw * D), Math.round(dh * D)] });
         }
       }
-      const st = window.__seq ? window.__seq() : null;
+      const st = window.__seq ? window.__seq() : null, ss = st && st.scene ? st.sceneState : null;
       for (const cv of document.querySelectorAll('canvas')) {
         const b = seen(cv); if (!b) continue;
-        res.push({ el: name(cv), src: 'canvas', have: [cv.width, cv.height], need: [Math.round(b.width * D), Math.round(b.height * D)] });
+        const row = { el: name(cv), src: 'canvas', have: [cv.width, cv.height], need: [Math.round(b.width * D), Math.round(b.height * D)] };
+        if (ss && cv.id === 'seq') row.scene = { quality: ss.quality, cap: Number.isFinite(ss.cap) ? ss.cap : null, capped: !!ss.capped, full: D };   // the scene's density, as pace() left it
+        res.push(row);
         if (st && !st.scene && cv.id === 'seq' && st.tier) {   // the frames: the full 16:10 frame's width, as engine/story.js measure()
           const runs = window.__cfgRuns || [], sh = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stage-h'));
           let F = Math.max(vw / 16, vh / 10) * 16;
@@ -134,13 +142,16 @@ async function measure(browser, size) {
     const r = await measure(browser, s); report.push(r);
     console.log(`\n== ${r.size}` + (r.errs.length ? `  page errors: ${r.errs.join(' | ')}` : ''));
     for (const it of r.items) {
-      const soft = SOFT(it, s);
-      it.verdict = it.ratio >= 0.95 ? 'PASS' : soft ? 'SOFT' : 'FAIL';
-      console.log(`${it.verdict} ${String(it.ratio).padStart(5)}  have ${it.have.join('×')}  need ${it.need.join('×')}  ${it.el}  ${String(it.src).replace(ORIGIN, '').slice(0, 70)}`);
+      const soft = SOFT(it, s), paced = PACED(it);
+      it.verdict = it.ratio >= 0.95 ? 'PASS' : soft ? 'SOFT' : paced ? 'PACE' : 'FAIL';
+      console.log(`${it.verdict} ${String(it.ratio).padStart(5)}  have ${it.have.join('×')}  need ${it.need.join('×')}  ${it.el}  ${String(it.src).replace(ORIGIN, '').slice(0, 70)}`
+        + (paced ? `  (software GL step-down: density ${it.scene.quality} of ${it.scene.full}, cap ${it.scene.cap}${it.scene.capped ? ' capped' : ''}; not a resolution cap)` : ''));
     }
   }
   await browser.close();
   fs.writeFileSync(out, JSON.stringify(report, null, 1));
   const fails = report.flatMap(r => r.items.filter(i => i.verdict === 'FAIL').map(i => r.size + ': ' + i.el + ' ' + String(i.src).replace(ORIGIN, '')));
-  console.log(`\n${fails.length ? fails.length + ' below HD' : 'all HD'} (${report.reduce((n, r) => n + r.items.length, 0)} pictures measured)`);
+  const paced = report.reduce((n, r) => n + r.items.filter(i => i.verdict === 'PACE').length, 0);
+  console.log(`\n${fails.length ? fails.length + ' below HD' : 'all HD'}${paced ? `, ${paced} paced (software GL step-down, not a resolution cap)` : ''}`
+    + ` (${report.reduce((n, r) => n + r.items.length, 0)} pictures measured)`);
 })();

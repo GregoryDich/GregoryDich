@@ -7,7 +7,7 @@
 // right). The products: the box (its current print, typeset from protocols/assets/img/derma-recovery.webp: W : H : D =
 // 0.632 : 1 : 0.632, the depth assumed) and the 50 ml jar (no packshot: the owner's two small photos, Figma photo 1 the
 // closed jar, photo 73 the open jar with its lid beside it; Ø : H 1 : 1.31 with the lid, a white body, a black collar
-// and a frosted lid over a white top).
+// and a frosted lid over a white top, the lid lined inside with matte white plastic: the owner's note to photo 73).
 // The DERMA box's width: canonical is this page's W : H = 615.8 : 974.2 = 0.6321 (the front on the assets packshot at
 // half alpha, the dark rounded right edge's last 2 px left out so the print's own axis is the front's middle; the typeset
 // print fits it within 0.5 photo px). The sibling pages' S5 (cell-renew-1-5.js, cellular-age-defense-2-5.js) draw the
@@ -166,8 +166,9 @@ export function createScene(THREE, { canvas, base, onLoad }) {
 
   // ---- the jar, Ø 1 (scaled per pose), its origin the foot's middle: a white body (to 0.77), the black collar (to 0.99)
   // and its neck under the lid (r 0.478, to 1.13), the plain white top; the print on the body's front (φ −50…+34°);
-  // the frosted lid (r 0.495, 0.32 tall) over the neck. The lid is a child of the jar's rig: it lifts straight up,
-  // clears the neck and comes to rest beside the jar, on the jar's own ground, as on photo 73
+  // the frosted lid (r 0.495, 0.32 tall) over the neck, lined inside with matte white plastic above the neck's height.
+  // The lid is a child of the jar's rig: it lifts straight up, clears the neck and comes to rest beside the jar, on the
+  // jar's own ground, as on photo 73
   const SEG = 128;
   const jar = new THREE.Group(); jar.visible = false; scene.add(jar);
   const lathe = (pts, m, parent, o) => { const x = new THREE.Mesh(new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), SEG), m); x.renderOrder = o; parent.add(x); return x; };
@@ -184,9 +185,17 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // ≈ #444444, over the white top ≈ #D6D6D6: α 0.34 of #A5A5A5); its top, lit from above, lighter and denser (α 0.85 of
   // #D8D8D8; photo 73: a light ellipse, 200–208; photo 1: 203–227 over the white top); at grazing angles the frost
   // thickens (lighter, denser
-  // rim); the far wall's inner face, lit through the frost and by the white top under it, light and dense (the photo's
-  // band over the white top reads #D6D6D6; on a dark page only this keeps the lid frosted white, not dark glass). Drawn
-  // after the jar (no depth write): the far wall's inside, the near wall, the top
+  // rim); the far wall's inner face, lit through the frost, light and dense (on a dark page it keeps the shell's skirt
+  // frosted white, not dark glass). Drawn after the jar and its liner (no depth write): the far wall's inside, the near
+  // wall, the top.
+  // The liner: the lid's inner wall and underside are matte white plastic (the owner's note to photo 73), an opaque cup
+  // inside the shell from the neck's height (0.14: when closed its foot meets the neck's top) to the top (0.305). It
+  // writes depth before the frost, so through the shell the lid's inside reads white, never the page behind an open
+  // lid (the v3 key before 24/10: the page's dark showed through the lid standing beside the jar). The shell's skirt
+  // below it (0…0.14) stays frost alone: on the closed jar it is the band over the black neck that photo 1 shows
+  // through the lid's lower third (≈ #444444); on the open lid it shows what stands behind it, as on photo 73
+  const jLiner = P(0xeaeaea, { roughness: 0.75, specularIntensity: 0.15, side: THREE.DoubleSide });
+  const LINER = [0.14, 0.305], R_LINER = 0.476;
   const frost = (hex, a, side) => {
     const m = P(hex, { opacity: a, depthWrite: false, side, roughness: 0.6, specularIntensity: 0.4 });
     m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
@@ -196,10 +205,11 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   };
   const jLid = frost(0xa5a5a5, 0.34, THREE.FrontSide), jLidIn = frost(0xe6e6e6, 0.85, THREE.BackSide), jLidTop = frost(0xd8d8d8, 0.85, THREE.FrontSide);
   const lid = new THREE.Group(); jar.add(lid);
+  lathe([[R_LINER, LINER[0]], [R_LINER, LINER[1]], [0, LINER[1]]], jLiner, lid, 113);   // the wall up, then the underside in to the axis
   { const inner = new THREE.Mesh(new THREE.CylinderGeometry(0.481, 0.481, 0.3, SEG, 1, true), jLidIn); inner.position.y = 0.15; inner.renderOrder = 115; lid.add(inner);
     const wall = new THREE.Mesh(new THREE.CylinderGeometry(0.495, 0.495, 0.32, SEG, 1, true), jLid); wall.position.y = 0.16; wall.renderOrder = 116; lid.add(wall);
     const cap = new THREE.Mesh(new THREE.CircleGeometry(0.495, SEG).rotateX(-Math.PI / 2), jLidTop); cap.position.y = 0.32; cap.renderOrder = 117; lid.add(cap); }
-  const JAR_MATS = [jBody, jCollar, jTop, jPrint], LID_MATS = [jLid, jLidIn, jLidTop];
+  const JAR_MATS = [jBody, jCollar, jTop, jPrint, jLiner], LID_MATS = [jLid, jLidIn, jLidTop];
   const LID0 = 0.99;   // the lid's foot on the closed jar
 
   // ---- the spicules (S2: BIOSPICULE, the catalogue's needles of a marine sponge, as site/img/spicules-macro.png): the
