@@ -1,6 +1,6 @@
 # MITODERM — אתר v2: מסירה למתכנת
 
-עודכן 23/10/2026.
+עודכן 30/10/2026.
 
 ## מאיפה מתחילים
 
@@ -40,6 +40,8 @@
    - CELL RENEW 1.5% — https://claude.ai/artifact/2rVvsAFJ9NRUjymZDmANup
    - MITOSCAN — https://claude.ai/artifact/KD3L1gfgVA8twY7HBvYofp
    - DERMA RECOVERY CREAM — https://claude.ai/artifact/7a3EpTpcTbYMWjTypNk2pV
+
+   כל 12 העמודים פורסמו מחדש ב-30/10 באותם קישורים, עם תיקוני הסקירה (כפתור ההדרכה פותח פנייה להדרכה, הכרטיסים «משלימים את הטיפול» מובילים לעמודי המוצרים, הכרטיס «מה באריזה» אטום, שמות וטווחי מספרים לא נשברים, העמוד נקרא מימין לשמאל גם בלי JavaScript). הפירוט לכל עמוד — בגיליון «עמודי המוצרים» ב-`MITODERM-3D-story.xlsx`.
 
    הקוד כולו: https://github.com/GregoryDich/GregoryDich/tree/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site
 
@@ -148,6 +150,5 @@
 - נתוני המומחים.
 - ההדפסה על צידי הקופסאות של BIOSPICULE ‏(CELLULAR AGE DEFENSE 2.5%, CELL RENEW 1.5%, MICRO BOOST 10%, DERMA RECOVERY CREAM): ממתינה לקבצים ולמידות במ״מ מהמזמין/ה.
 - כתובת משותפת לאתר (Vercel או GitHub Pages): ממתינה לגישה מהמזמין/ה.
-- שאלות פתוחות למזמין/ה: האם ב-EXOSIGNAL HAIR יש PDRN בריכוז 2%; האם להשאיר את סליל ה-DNA ומולקולות ה-PDRN ב-V-TECH, ב-EXOTECH GEL וב-EXOSIGNAL HAIR; האם הזהב נמצא ב-pH Normalizer או בפילינג של EXO-NAD.
 - הצילומים של EXO-NAD כקבצים בגודל מלא, מהמזמין/ה.
 - תמונת מוצר אמיתית ל-EXOSIGNAL SPRAY.
