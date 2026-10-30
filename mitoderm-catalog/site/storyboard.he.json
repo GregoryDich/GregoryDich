@@ -1690,8 +1690,8 @@
      "kind": "block 0 Meet — buttons and links (raw spec incl. developer notes)",
      "en": "Where to buy · Press",
      "en_spec": "'Where to buy' as a ghost button; scroll cue 'Press'",
-     "he": "איפה לקנות · לחצו",
-     "note": "Button label per glossary (Where to buy = איפה לקנות); replaces he_reference 'היכן לרכוש'"
+     "he": "איפה לקנות · למידע נוסף",
+     "note": "Button label per glossary (Where to buy = איפה לקנות); replaces he_reference 'היכן לרכוש'. Second button «למידע נוסף» = the old site's buttons.learnMore (owner 30/10: take button names from mitoderm.com); was «לחצו»"
     },
     {
      "key": "b1.title",
