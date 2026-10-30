@@ -10,7 +10,8 @@ from PIL import Image, ImageFilter
 # `... 3d --private <figma-texts.json> [--out <page.html>]` builds the review copy with the specialists' photos, names
 # and phones. That data must never reach this public repository, so the private page is written next to the JSON
 # (or to --out) and the build refuses any path inside the git checkout. Without --private the specialists block shows
-# a monogram and the city only.
+# a monogram and the city only. The «see also» cards link to the products' published pages (story_content.PUBLISHED;
+# each card's data-slug lets stage-public.py turn the link into «../<slug>/» for the static site), as the other 11 pages do.
 ARGS = sys.argv[1:]
 MODE = '3d' if '3d' in ARGS else 'still'
 opt = lambda name: ARGS[ARGS.index(name) + 1] if name in ARGS else None
@@ -19,6 +20,7 @@ assert not PRIVATE or MODE == '3d', '--private applies to the 3D page only'
 H = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.normpath(os.path.join(H, '..'))
 REPO = os.path.normpath(os.path.join(SITE, '..'))
+sys.path.insert(0, H); from story_content import PUBLISHED   # the published page of each product
 
 
 def load(*p):
@@ -98,8 +100,12 @@ RAW = {
 
 
 def card(slug, img, use, i, txt=esc):
+    """a «see also» card: the product's published page (data-slug names the product for stage-public.py); WhatsApp only
+    for a product that has no page"""
     c = cat[slug]
-    return (f'<a class="card rv" style="--d:{i * .08:.2f}s" href="{esc(wa(ui["wa_text_product"].format(name=c["name"])))}" target="_blank" rel="noopener">'
+    to = (f' href="{esc(PUBLISHED[slug])}" data-slug="{slug}"' if slug in PUBLISHED
+          else f' href="{esc(wa(ui["wa_text_product"].format(name=c["name"])))}"')
+    return (f'<a class="card rv" style="--d:{i * .08:.2f}s"{to} target="_blank" rel="noopener">'
             f'<div class="pic"><img src="{data_uri(os.path.join(REPO, "protocols/assets/img", img), 1000, "WEBP")}" alt="{esc(c["name"])}" loading="lazy"></div>'
             f'<div class="body"><span class="badge{" pro" if use == "pro" else " home"}">{esc(ui["use_pro" if use == "pro" else "use_home"])}</span>'
             f'<h3><bdi>{txt(c["name"])}</bdi></h3><p>{txt(c["tagline"])}</p><span class="go">{esc(ui["card_cta"])} ←</span></div></a>')

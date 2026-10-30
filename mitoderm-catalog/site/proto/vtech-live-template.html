@@ -277,6 +277,9 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   .head > :not(.slot) { grid-column: 1; }
   .slot { display: block; grid-column: 2; grid-row: 1 / span 2; width: 100%; height: auto; }
   .slot.wide { grid-column: 1 / -1; grid-row: auto; margin-top: 6px; }   /* S5: the three stations on their line, a strip under the heading */
+  /* S1: the name across both columns (whole: «EXO-NAD», «BOOST 10%» would not fit the heading column), the still beside the tagline under it */
+  #meet .head h1 { grid-column: 1 / -1; }
+  #meet .slot { grid-row: 2; }
   .offer .wrap { display: flex; flex-direction: column; align-items: flex-start; }
   .offer-copy { display: contents; }
   .offer-copy > * { margin: 0 0 20px; }
@@ -330,7 +333,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
     <div class="badges rv">{{{line_badges}}}<span class="badge{{{use_cls}}}">{{use_pro}}</span></div>
     {{{s1_kicker}}}
     <div class="head">
-      <h1 class="rv{{{h1_cls}}}" style="--d:.12s"><bdi>{{h1}}</bdi></h1>
+      <h1 class="rv{{{h1_cls}}}" style="--d:.12s"><bdi>{{{h1_html}}}</bdi></h1>
       <p class="tag rv" style="--d:.18s">{{tag}}</p>
       <img class="slot" src="img/m1.webp" alt="" aria-hidden="true">
     </div>

@@ -20,8 +20,8 @@
 # `--scene` (another product): no frames; the page draws scenes/<slug>.js live with three.js (the engine's `scene`),
 # every run in the same box SCENE_BOX, its textures from img/<slug>-3d/; without WebGL the first key frame stands still.
 # The «see also» cards link to each product's own page: by default «../<slug>/», the product's folder of the static site
-# (stage-public.py keeps it); `--links artifact` writes the published page instead (PUBLISHED below) for the copies that
-# are published as artifacts. Each card carries data-slug, by which stage-public.py turns published links back into
+# (stage-public.py keeps it); `--links artifact` writes the published page instead (story_content.PUBLISHED) for the copies
+# that are published as artifacts. Each card carries data-slug, by which stage-public.py turns published links back into
 # «../<slug>/» when it stages an artifact copy. The page is a body fragment: the host adds the document shell, so the
 # landmarks (header, main, footer, nav, bar, dialog) carry dir="rtl" lang="he" themselves and the layout is RTL without JS.
 import glob, html, json, os, re, shutil, sys, urllib.parse
@@ -36,23 +36,20 @@ FILES, KEYS, PRODUCT = opt('--files'), opt('--keys'), opt('--product') or 'v-tec
 SCENE = '--scene' in ARGS
 LINKS = opt('--links') or 'public'   # the «see also» cards: 'public' → «../<slug>/», 'artifact' → the published pages
 assert LINKS in ('public', 'artifact'), '--links public|artifact'
-PUBLISHED = {   # the published page of each product (the artifact copies), for --links artifact
-    'v-tech-system': 'https://claude.ai/artifact/NdQezU5bikrsuaWVVW5TBK', 'exocell-mask': 'https://claude.ai/artifact/FA5ySxGihnDAmjQPvDftzn',
-    'exotech-gel': 'https://claude.ai/artifact/LsJVky9GDssBuW1eQkLaTe', 'exosignal-hair': 'https://claude.ai/artifact/2ws7qr1xL7Y7wp5xdbE1jh',
-    'exosignal-spray': 'https://claude.ai/artifact/GAUwhjxzqdk7jEg7JgSBJz', 'exo-nad': 'https://claude.ai/artifact/NcP4v3p7KAdvqZGTnoGK8S',
-    'micro-boost-10': 'https://claude.ai/artifact/3hwRLR8RxjcQV2oGTynari', 'cellular-age-defense-2-5': 'https://claude.ai/artifact/RhFJsLyLDinq2HcizL1hvq',
-    'mitopen': 'https://claude.ai/artifact/KAn13gS9E2on2ZikQSz4eW', 'cell-renew-1-5': 'https://claude.ai/artifact/2rVvsAFJ9NRUjymZDmANup',
-    'mitoscan': 'https://claude.ai/artifact/KD3L1gfgVA8twY7HBvYofp', 'derma-recovery-cream': 'https://claude.ai/artifact/7a3EpTpcTbYMWjTypNk2pV'}
 H = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.normpath(os.path.join(H, '..'))
 REPO = os.path.normpath(os.path.join(SITE, '..'))
 load = lambda *p: json.load(open(os.path.join(*p), encoding='utf-8'))
 
+sys.path.insert(0, H); from story_content import content, kicker, PUBLISHED   # the product texts, S1's kicker rule, the published pages
 if PRODUCT == 'v-tech-system':
     v = load(H, 'vtech-he-figma.json')
+    # S1's kicker under the same rule as on every other page (story_content.kicker): it says nothing a badge or a chip beside
+    # it already says; the Figma eyebrow «אקסוזומים סינתטיים · ערכה מקצועית» is two of the four chips, so no kicker (as GEL, DERMA)
+    v['s1']['eyebrow'] = kicker(v['s1']['eyebrow'], v['s1']['line_mark'], v['s1']['line_name'], v['s1']['use_pro'], v['s1']['chips'])
 else:
     assert FILES, '--files <dir> is needed: the page is written there, next to its img/ and seq/'
-    sys.path.insert(0, H); from story_content import content; v = content(PRODUCT)
+    v = content(PRODUCT)
 PAGES = list(zip(load(SITE, 'product-pages.json'), load(SITE, 'product-pages.he.json')))
 cat = next(h for s, h in PAGES if s['slug'] == PRODUCT)
 SLUG = {h['name']: s['slug'] for s, h in PAGES}   # a related card names its product; its page is that product's slug
@@ -68,8 +65,9 @@ wa = lambda text: 'https://wa.me/' + ui['wa_number'] + '?text=' + urllib.parse.q
 
 def rng(s):
     """A number range in a Hebrew line («0.25–2.5 מ״מ», «4–6», «80–100») reads left to right: the en dash is neutral, so
-    the bidi algorithm would put the second number first; each range goes into its own LTR isolate (s is escaped text)."""
-    return re.sub(r'(?<![\w.,])(\d+(?:[.,]\d+)?–\d+(?:[.,]\d+)?%?)(?!\w)', r'<bdi dir="ltr">\1</bdi>', s)
+    the bidi algorithm would put the second number first; each range goes into its own LTR isolate (s is escaped text),
+    one that never breaks at its dash («300–» / «360 מיקרון» on a 360-px phone)."""
+    return re.sub(r'(?<![\w.,])(\d+(?:[.,]\d+)?–\d+(?:[.,]\d+)?%?)(?!\w)', r'<bdi dir="ltr" class="nw">\1</bdi>', s)
 
 
 text = lambda s: rng(esc(s))   # a line of text (never an attribute): escaped, its number ranges isolated
@@ -88,6 +86,15 @@ def keep(s):
         out += [text(s[pos:m.start()]), f'<span class="nw">{esc(m.group(1))}{run}</span>' if m.group(1) else run.replace('<bdi>', '<bdi class="nw">', 1)]
         pos = m.end()
     return ''.join(out) + text(s[pos:])
+
+
+def heading(name):
+    """The name in the h1: a hyphenated word («EXO-NAD», «V-TECH») and a trailing percentage with the word before it
+    («BOOST 10%», «DEFENSE 2.5%») never break apart — the name whole, never «2.5%» alone on a line, at any width."""
+    words = name.split(' ')
+    if len(words) > 1 and re.fullmatch(r'\d+(?:[.,]\d+)?%', words[-1]):
+        words[-2:] = [words[-2] + '\u00a0' + words[-1]]
+    return ' '.join(f'<span class="nw">{esc(w)}</span>' if '-' in w else esc(w) for w in words)
 
 
 def brand(s):  # Latin product and brand names in capitals, as everywhere in the edition (build-exocell.py)
@@ -189,6 +196,7 @@ RAW = {
     's5_note': f'<p class="note rv" style="--d:.24s">{text(s5["note"])}</p>' if s5['note'] else '',
     'lead': LEAD, 'use_cls': '' if HOME else ' pro',
     'h1_cls': ' long' if len(NAME) > 20 else '',   # a long name (CELLULAR AGE DEFENSE 2.5%) at a smaller size: two lines on a desktop, never «2.5%» alone
+    'h1_html': heading(NAME),   # the name in the h1 (the title, the bar and the form keep the plain name)
     # the offer's second button does what its label says: a price quote opens the price form (a home-care page too),
     # «WhatsApp» opens WhatsApp, a home-care page otherwise sends to the specialists, a professional one to the form with
     # the training (demo) subject

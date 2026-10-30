@@ -59,13 +59,22 @@ IMG = {'v-tech-system': 'vtech-system.webp', 'derma-recovery-cream': 'derma-reco
        'cell-renew-1-5': 'cell-renew-15.webp', 'cellular-age-defense-2-5': 'cellular-age-25.webp'}   # protocols/print/img
 PACKSHOTS = [os.path.join(REPO, 'protocols', d, 'img') for d in ('assets', 'print')]
 OVERRIDE = {'mitoscan': {'b0.label4': 'מקצועי', 'training': ''}}   # see the docstring; keys of the storyboard, or 'training'
+PUBLISHED = {   # the published page of each product (the artifact copies): a published copy's «see also» cards link to these
+    # (build-vtech.py --links artifact, build-exocell.py); stage-public.py turns them back into «../<slug>/» by the card's data-slug
+    'v-tech-system': 'https://claude.ai/artifact/NdQezU5bikrsuaWVVW5TBK', 'exocell-mask': 'https://claude.ai/artifact/FA5ySxGihnDAmjQPvDftzn',
+    'exotech-gel': 'https://claude.ai/artifact/LsJVky9GDssBuW1eQkLaTe', 'exosignal-hair': 'https://claude.ai/artifact/2ws7qr1xL7Y7wp5xdbE1jh',
+    'exosignal-spray': 'https://claude.ai/artifact/GAUwhjxzqdk7jEg7JgSBJz', 'exo-nad': 'https://claude.ai/artifact/NcP4v3p7KAdvqZGTnoGK8S',
+    'micro-boost-10': 'https://claude.ai/artifact/3hwRLR8RxjcQV2oGTynari', 'cellular-age-defense-2-5': 'https://claude.ai/artifact/RhFJsLyLDinq2HcizL1hvq',
+    'mitopen': 'https://claude.ai/artifact/KAn13gS9E2on2ZikQSz4eW', 'cell-renew-1-5': 'https://claude.ai/artifact/2rVvsAFJ9NRUjymZDmANup',
+    'mitoscan': 'https://claude.ai/artifact/KD3L1gfgVA8twY7HBvYofp', 'derma-recovery-cream': 'https://claude.ai/artifact/7a3EpTpcTbYMWjTypNk2pV'}
 
 
 def kicker(eyebrow, mark, name, use, chips=()):
     """S1's kicker: the catalogue eyebrow without the parts the badges and chips beside it already say — a « · » part equal
     to the use badge («טיפוח ביתי», «מקצועי»), to the line's Hebrew name («מכשור») or to one of the S1 chips (DERMA «SNAIL
     COLLAGEN», GEL «סדרת האקסוזומים הסינתטיים», HAIR and EXO-NAD «אקסוזומים סינתטיים»), or holding the line's Latin mark
-    («BIOSPICULE™»); '' when nothing is left (the page then draws no kicker)."""
+    («BIOSPICULE™»); '' when nothing is left (the page then draws no kicker). V-TECH SYSTEM's Figma eyebrow goes through
+    here too (build-vtech.py): «אקסוזומים סינתטיים · ערכה מקצועית» is two of its chips, so that page draws no kicker."""
     word = mark.rstrip('™®')
     said = lambda t: t == use or t in chips or (name and (t == name or re.search(rf'(?<![א-ת]){re.escape(name)}(?![א-ת])', t))) or (word and word in t)
     return ' · '.join(t for t in eyebrow.split(' · ') if not said(t))
