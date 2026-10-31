@@ -397,12 +397,12 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
         <a href="mailto:info@mitoderm.com?subject=CELL%20RENEW%201.5%25"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg><span>דוא״ל: <bdi dir="ltr">info@mitoderm.com</bdi></span></a>
       </div>
     </div>
-    <aside class="kitcard rv" style="--d:.1s;--kc-h:clamp(201px, 32.6vh, 314px)" aria-labelledby="kitcard-h">
+    <aside class="kitcard rv" style="--d:.1s;--kc-h:clamp(164px, 26.7vh, 257px)" aria-labelledby="kitcard-h">
       <div class="kc-head"><h3 id="kitcard-h">מה באריזה</h3><span class="mark-line" data-line="biospicule"><bdi>BIOSPICULE™</bdi></span></div>
       <figure class="kc-fig">   <!-- owner 17/10: the box as in his photo, with what is in it named around it -->
         
         <canvas class="kc-live" role="img" aria-label="CELL RENEW 1.5%: CELL RENEW 1.5% – 30 ml ℮ 1.0 fl. oz"></canvas>
-        <img class="kc-pic" src="img/kit.webp" alt="CELL RENEW 1.5%: CELL RENEW 1.5% – 30 ml ℮ 1.0 fl. oz" width="806" height="1012" loading="lazy">
+        <img class="kc-pic" src="img/kit.webp" alt="CELL RENEW 1.5%: CELL RENEW 1.5% – 30 ml ℮ 1.0 fl. oz" width="986" height="1012" loading="lazy">
         
       </figure>
       
@@ -974,8 +974,13 @@ const THREE = await Promise.race([import('https://cdn.jsdelivr.net/npm/three@0.1
 // position into the box. Objects are placed by frame pixel (2400×1500) inside the page's scene box (x 168…1248,
 // y 285…1215: the scene left, the copy right), measured on the largest packshot, protocols/print/img/cell-renew-15.webp
 // (309×1012, never upscaled): the tall ivory box seen from a little below its top (neither its top nor its foot shows),
-// its right side a plain strip, 46.1 px beside the front's 261.8 (0.176 of it: about 10° off square, seen from afar);
-// true proportions W : H : D = 0.26 : 1 : 0.26 (the depth unknown: D = W).
+// its right side a plain strip, 46.1 px beside the front's 261.8 (0.176 of it: about 10° off square, seen from afar).
+// 31/10: the boxes' sizes and every face's print now come from the printer's dielines (design/biospicule/geometry.json,
+// panels.py): CELL RENEW and the 2.5% 35 × 35 × 110 mm (W : H = D : H = 0.3182; the packshots, measured at 0.26, were
+// not to scale), DERMA 62 × 62 × 85 mm (0.7294, was 0.6321); the front, both sides, the back and the top carry the
+// dieline's panels (design/cell-renew-1-5/make_textures.py, step `panels`), the serums' blank bottom flap too; DERMA's
+// crash-lock bottom is unprinted paper. The poses (frame px) and the sides' photographed share are as before, but
+// DERMA's height in S5 (desktop and phone), now 85 / 110 of CELL RENEW's at the same depth (it was an assumed 0.61).
 // The story (site/story3d.json; scratchpad spec pages/cell-renew-1-5/spec.md, BIOSPICULE line), as far as the owner's
 // rule of 22/10 lets it («only what exists»):
 //   S1 meet     the box as on the packshot, a soft green light behind it
@@ -1068,9 +1073,11 @@ function createScene(THREE, { canvas, base, onLoad }) {
   canvas.addEventListener('webglcontextrestored', restored);
   const key = new THREE.DirectionalLight(0xffffff, 1.2); key.position.set(-4, 7, 6); scene.add(key);
 
-  // ---- textures (make_textures.py): the typeset front, the plain side, the two neighbours' fronts as photographed
+  // ---- textures (make_textures.py panels → img/cell-renew-1-5-3d/<slug>-<face>.webp): the dielines' panels, every face
+  // of the three boxes (DERMA has no bottom panel: a crash-lock, unprinted)
   let loaded = 0, version = 0;   // version: textures loaded, a context restored — the engine re-renders the kit picture
-  const ANISO = renderer.capabilities.getMaxAnisotropy(), NTEX = 4;
+  const SLUGS = ['cell-renew-1-5', 'cellular-age-defense-2-5', 'derma-recovery-cream'], FACES = ['front', 'right', 'left', 'back', 'top', 'bottom'];
+  const ANISO = renderer.capabilities.getMaxAnisotropy(), NTEX = 17;
   const tex = name => {
     const t = new THREE.TextureLoader().load(new URL(`img/cell-renew-1-5-3d/${name}`, base).href, () => {
       t.needsUpdate = true; renderer.initTexture(t);   // uploaded now, not on the first scroll
@@ -1078,8 +1085,9 @@ function createScene(THREE, { canvas, base, onLoad }) {
     });
     t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = ANISO; return t;
   };
-  const faceTex = tex('box-face.webp'), sideTex = tex('box-side.png'), cadTex = tex('cad-face.webp'), dermaTex = tex('derma-face.webp');
-  const TEXS = [faceTex, sideTex, cadTex, dermaTex];
+  const TEXS = [];
+  const PANELS = Object.fromEntries(SLUGS.map(slug => [slug, Object.fromEntries(FACES.filter(f => !(slug === 'derma-recovery-cream' && f === 'bottom'))
+    .map(f => { const t = tex(`${slug}-${f}.webp`); TEXS.push(t); return [f, t]; }))]));
 
   // ---- materials. The products in their print's colours: emissive 0.85 of the colour plus a neutral shading (a diffuse
   // 0.2 of it under the key and the room), not tone mapped; a dense glossy paper (roughness 0.5, a soft highlight). They
@@ -1088,43 +1096,37 @@ function createScene(THREE, { canvas, base, onLoad }) {
   const P = (hex, opts = {}) => new THREE.MeshPhysicalMaterial(Object.assign({ color: new THREE.Color(hex).multiplyScalar(SHADE), emissive: hex,
     emissiveIntensity: 0.85, roughness: 0.5, specularIntensity: 0.3, toneMapped: false, transparent: true }, opts));
   const printed = (map, k = 1) => P(new THREE.Color(k, k, k), { color: new THREE.Color(SHADE * k, SHADE * k, SHADE * k), map, emissiveMap: map });
-  // the right side: the packshot's side as pipetted (#C0AE97 → #BEA991 → #B4A088, in box-side.png), raised by what the
-  // shading takes off it facing away from the key (×1.06 in linear light), so the side drawn reads as the photo's
-  const SIDE_K = 1.06;
+  const PAPER = 0xfaf1e6;   // the dielines' unprinted board (geometry.json fill_rgb 250, 241, 230): DERMA's crash-lock bottom
 
-  // ---- a box W × 1 × D (scaled per pose), its origin the front's middle (it turns about that upright): the front a plane
-  // with the print, the right side the plain strip; the left, the back, the top and the foot closed for any transition's
-  // frame but never seen. Front and side are drawn first (they write depth), the closed faces after them: through a
-  // fading front nothing behind it shows. `order`: the boxes further back are drawn before the nearer ones
-  // `fu`: the front texture's u at the front's right edge (1 unless the picture is narrower than the front: a texel stays
-  // square, the edge column repeats over the rest)
-  const mkBox = (front, side, hidden, W, D, order, fu = 1) => {
+  // ---- a box W × 1 × D (scaled per pose), its origin the front's middle (it turns about that upright): six planes, each
+  // with its panel of the dieline (`faces`: front, right, left, back, top, bottom materials). PlaneGeometry's uv (u to its
+  // local +x, v up) with three.js's flipY lays every panel as the dieline reads it, seen from outside: the right side's
+  // u = 0 at the front's edge (its cell is right of the front's), the left's u = 1 there, the back's u = 0 at the right
+  // side's far edge, the top's lower edge (the flap's hinge) at the front's top, the bottom's upper edge at the front's
+  // foot. Front and right side are drawn first (they write depth), the other faces after them: through a fading front
+  // nothing behind it shows. `order`: the boxes further back are drawn before the nearer ones
+  const mkBox = (faces, W, D, order) => {
     const g = new THREE.Group(); scene.add(g); g.visible = false;
     const face = (geo, mat, x, y, z, rx, ry, o) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); m.renderOrder = o; g.add(m); return m; };
-    const fg = new THREE.PlaneGeometry(W, 1);
-    if (fu !== 1) { const uv = fg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * fu); }
-    face(fg, front, 0, 0, 0, 0, 0, order);
-    face(new THREE.PlaneGeometry(D, 1), side, W / 2, 0, -D / 2, 0, Math.PI / 2, order);
-    face(new THREE.PlaneGeometry(D, 1), hidden, -W / 2, 0, -D / 2, 0, -Math.PI / 2, order + 1);
-    face(new THREE.PlaneGeometry(W, 1), hidden, 0, 0, -D, 0, Math.PI, order + 1);
-    face(new THREE.PlaneGeometry(W, D), hidden, 0, 0.5, -D / 2, -Math.PI / 2, 0, order + 1);
-    face(new THREE.PlaneGeometry(W, D), hidden, 0, -0.5, -D / 2, Math.PI / 2, 0, order + 1);
-    return { g, W, D, mats: [front, side, hidden], a: 0, x: 0, y: 0, H: 0, yaw: 0, view: 0 };
+    face(new THREE.PlaneGeometry(W, 1), faces.front, 0, 0, 0, 0, 0, order);
+    face(new THREE.PlaneGeometry(D, 1), faces.right, W / 2, 0, -D / 2, 0, Math.PI / 2, order);
+    face(new THREE.PlaneGeometry(D, 1), faces.left, -W / 2, 0, -D / 2, 0, -Math.PI / 2, order + 1);
+    face(new THREE.PlaneGeometry(W, 1), faces.back, 0, 0, -D, 0, Math.PI, order + 1);
+    face(new THREE.PlaneGeometry(W, D), faces.top, 0, 0.5, -D / 2, -Math.PI / 2, 0, order + 1);
+    face(new THREE.PlaneGeometry(W, D), faces.bottom, 0, -0.5, -D / 2, Math.PI / 2, 0, order + 1);
+    return { g, W, D, mats: [faces.front, faces.right, faces.left, faces.back, faces.top, faces.bottom], a: 0, x: 0, y: 0, H: 0, yaw: 0, view: 0 };
   };
-  const BW = 1048 / 4032;   // the front's true W : H (the texture's: this photo is not squeezed, the M file fits it 1 : 1)
-  const SIDE_HID = () => P(new THREE.Color(0xbea991).multiplyScalar(0.7));
-  const hero = mkBox(printed(faceTex), printed(sideTex, SIDE_K), SIDE_HID(), BW, BW, 100);
-  // CELLULAR AGE DEFENSE 2.5%: the same box (its true W : H 0.2600, its photo squeezed 1.2 % across); its side as ours
-  const cad = mkBox(printed(cadTex), printed(sideTex, SIDE_K), SIDE_HID(), 0.26, 0.26, 90);
-  // DERMA RECOVERY CREAM: the front as its own page measured it (scenes/derma-recovery-cream.js: the packshot's
-  // x 11.6…627.4 at half alpha, 615.8 × 974.2, W : H 0.6321, the print's axis the front's middle); derma-face.webp holds
-  // the packshot's x 11.6…624.0 (612.4 px), so the front's u runs 0…615.8/612.4: the print undistorted, the last 3.4 px
-  // the dark rounded edge repeated. A square base (assumed: no photo of its sides)
-  const DW = 615.8 / 974.2;
-  const derma = mkBox(printed(dermaTex), P(0xc9beb2), P(new THREE.Color(0xc9beb2).multiplyScalar(0.7)), DW, DW, 100, 615.8 / 612.4);
+  const printedBox = slug => Object.fromEntries(FACES.map(f => [f, PANELS[slug][f] ? printed(PANELS[slug][f]) : P(PAPER)]));
+  // the sizes: geometry.json (W_over_H, D_over_H), from the fold lines of the dielines at 1 : 1
+  const BW = 35 / 110;   // CELL RENEW and CELLULAR AGE DEFENSE 2.5%: one 30 ml box, 35 × 35 × 110 mm (0.3182)
+  const DW = 62 / 85;    // DERMA RECOVERY CREAM: 62 × 62 × 85 mm (0.7294)
+  const hero = mkBox(printedBox('cell-renew-1-5'), BW, BW, 100);
+  const cad = mkBox(printedBox('cellular-age-defense-2-5'), BW, BW, 90);
+  const derma = mkBox(printedBox('derma-recovery-cream'), DW, DW, 100);
   const BOXES = [hero, cad, derma];
-  // the medallion on the front: u, v of its centre, its semi-axes across and down / H (as printed: 182 × 188 photo px)
-  const MED = [131.1 / 261.75, 625.2 / 1008, 91.0 / 1008, 94.05 / 1008];
+  // the medallion on the front: u, v of its centre, its semi-axes across and down / H, fitted on the dieline's front panel
+  // (panels/cell-renew-1-5/front.png 812 × 2582: centre 411.4, 1539.9; semi-axes 214.3 × 221.3 px, 72 rays at its outer edge)
+  const MED = [411.4 / 812, 1539.9 / 2582, 214.3 / 2582, 221.3 / 2582];
 
   // ---- the spicules (BIOSPICULE: the catalogue's needles of a marine sponge, as site/img/spicules-macro.png): glassy
   // spindles pointed at both ends (length : width 18), dark green in their core, light and clear at their rims, the
@@ -1205,16 +1207,20 @@ function createScene(THREE, { canvas, base, onLoad }) {
 
   // ---- poses (frame px). A box [cx, cy: its front's middle, H: its front's height]; every top above the horizon
   // (601.5) and every foot below it in every frame (the poses and their straight mixes keep them so). Where CELL RENEW
-  // stands opaque its front is at most 630 frame px tall: 1008 px in a 3840 key (a 1920 px wide screen at DPR 2), the
-  // packshot's own front, so its medallion (the print's picture, from the photo) is never drawn above the photo's pixels;
-  // a larger box waits for the packaging's print file. S1 sees the box from 0.39 of its height (the packshot: 0.41)
+  // stands opaque its front is at most 630 frame px tall: 1008 px in a 3840 key (a 1920 px wide screen at DPR 2); the
+  // print is now the dieline's (644 × 2048 texels on the front), so the poses stay as approved. S1 sees the box from
+  // 0.39 of its height (the packshot: 0.41)
   const HERO = [[660, 670, 630], [780, 690, 560], null, null, [400, 560, 440], [680, 740, 630]];
-  // S5, the routine: CELL RENEW (step 1) lower left, DERMA (step 2) right of it, its foot 45 px above CELL RENEW's, 0.61
-  // of its height (assumed: no sizes in any source); the 2.5% (the next step) behind, higher, smaller, deeper
-  const DERMA = [660, 600, 270], NEXT = [905, 500, 290];
+  // S5, the routine: CELL RENEW (step 1) lower left, DERMA (step 2) right of it at the same depth, its foot 45 px above
+  // CELL RENEW's and its height from the dielines (design/biospicule/geometry.json): 85 / 110 of CELL RENEW's 440 = 340
+  // (was 270, an assumed 0.61); the 2.5% (the next step) behind, higher, smaller, deeper
+  const DERMA = [660, 565, 340], NEXT = [905, 500, 290];
   // a phone's stage shows the scene box at ~0.35 css px per frame px: S5 the three centred in it and larger; at most
-  // ~1.06 device px per frame px there, so no print is drawn above its photo's pixels
-  const HERO4_PH = [470, 760, 700], DERMA_PH = [800, 780, 420], NEXT_PH = [1080, 640, 400];
+  // ~1.06 device px per frame px there, so no print is drawn above its photo's pixels. DERMA 85 / 110 of CELL RENEW's 700
+  // = 541 (was 420), its foot where it was (frame y 990); the wider box asked for room: CELL RENEW 20 px left and the
+  // 2.5% 10 px right of where they stood, so DERMA clears CELL RENEW's turned side (its back edge, frame x ≈ 600) by
+  // 18 px and the 2.5% by 14 px in the frame; the three still sit within the stage (frame x 168…1248)
+  const HERO4_PH = [450, 760, 700], DERMA_PH = [815, 720, 541], NEXT_PH = [1090, 640, 400];
   // the share of the front their right side shows on the packshots, the smaller of two measures (half alpha; half
   // contrast on the band's rows, as the keys are checked): CELL RENEW 46.1 : 261.8 px (46.4 : 261.75 at half alpha),
   // the 2.5% 44.8 : 262.1 (cellular-age-25.webp; its squeeze across leaves the share as it is). DERMA faces the camera
@@ -1453,8 +1459,8 @@ function createScene(THREE, { canvas, base, onLoad }) {
     version, kits, lastP, horizon: r1(HORIZON), hero: boxState(hero), cad: boxState(cad), derma: boxState(derma),
     field: { n: last.n, o: r2(spicules.visible ? spiMat.opacity : 0), bbox: cloudBox() },
     glow: glows.map(g => r2(g.visible ? g.material.uniforms.uA.value : 0)), haze: r2(haze.visible ? haze.material.uniforms.uA.value : 0),
-    probes: { hero: probes(hero, [0.30, 0.70, 0.372, 0.405], [0.03, 0.11, 0.27, 0.35]), cad: probes(cad, [0.30, 0.70, 0.47, 0.505], [0.10, 0.90, 0.335, 0.352]),
-      derma: probes(derma, [0.05, 0.25, 0.58, 0.72], [0.03, 0.11, 0.37, 0.46]) } });
+    probes: { hero: probes(hero, [0.30, 0.70, 0.455, 0.505], [0.03, 0.11, 0.25, 0.335]), cad: probes(cad, [0.30, 0.70, 0.455, 0.505], [0.03, 0.11, 0.25, 0.335]),
+      derma: probes(derma, [0.30, 0.70, 0.455, 0.49], [0.03, 0.11, 0.30, 0.43]) } });
   return { draw, kit, dispose, state, animated: true };
 }
 
