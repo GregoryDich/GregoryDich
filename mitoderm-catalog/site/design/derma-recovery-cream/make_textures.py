@@ -59,7 +59,19 @@ Writes into <out dir>:
   jar-label.png  the jar's print, RGBA 1501×1475 (2048 texels per Ø; u: φ −50° → +34°, v: y 0.76 → 0.04): black ink in
                  the alpha, the M in its colours
   renew.webp, cad.webp, mb.webp   the neighbours' fronts and sides (their front's share of the width printed below)
-usage: python3 -I make_textures.py <font dir with Rubik[wght].ttf> <out dir>"""
+usage: python3 -I make_textures.py <font dir with Rubik[wght].ttf> <out dir>
+Step 2 (31/10, the printer's dielines): `python3 -I make_textures.py panels <out dir>` reads the panels cut from the
+print files by design/biospicule/panels.py (panels/<slug>/{front,right,left,back,top,bottom}.png, 0.3 mm inside the
+fold lines, 600 dpi) for the four boxes of this scene (DERMA, CELL RENEW 1.5%, CELLULAR AGE DEFENSE 2.5%, MICRO BOOST
+10%) and writes them as the scene's textures, <out dir>/<slug>-<face>.webp (lossless), as design/cell-renew-1-5/
+make_textures.py does for its page: every face of a box at one texel density, the front's long side 2048 (DERMA
+1490 × 2048, its top 1490 × 1489; the serums 644 × 2048, their sides 642 × 2048, their top 644 × 642; MICRO BOOST
+444 × 2048, its sides 305 and 296 × 2034 (the dieline's sides are 149 mm to the front's 150: the scene stretches them
+to the full height, 0.7 %), its top 444 × 300), the blank bottom flaps 256 px, and the back of MICRO BOOST (665 × 3051)
+at 3072 (its 150 mm at 2048 would give 13.7 texels per mm, under the 18.6 of the serums' backs and the 24 of DERMA's:
+the small text of its ingredients list stays readable at 20.5). The scene then shows the real print on every face at the
+dieline's sizes (design/biospicule/geometry.json); the typeset front and the photographed neighbours above are kept
+here only for a roll-back."""
 import os, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -343,7 +355,30 @@ def neighbour(name):
     return Image.fromarray(np.clip(np.round(out), 0, 255).astype(np.uint8)), a.shape[1] / out.shape[1]
 
 
+PANELS = f'{REPO}/site/design/biospicule/panels'
+SCENE_BOXES = ('derma-recovery-cream', 'cell-renew-1-5', 'cellular-age-defense-2-5', 'micro-boost-10')
+FACES = ('front', 'right', 'left', 'back', 'top', 'bottom')
+LONG = 2048; LONG_BACK = {'micro-boost-10': 3072}   # the back's long side where 2048 would fall under 16 texels per mm
+
+
+def panels_textures(out):   # step 2: the dieline panels as the scene's textures, one texel density per box
+    os.makedirs(out, exist_ok=True)
+    for slug in SCENE_BOXES:
+        front = Image.open(f'{PANELS}/{slug}/front.png'); k = LONG / max(front.size)
+        for face in FACES:
+            src = f'{PANELS}/{slug}/{face}.png'
+            if not os.path.exists(src): continue   # DERMA: a crash-lock bottom, no printed panel (the scene uses the paper's colour)
+            im = Image.open(src).convert('RGB')
+            if face == 'bottom': im = im.resize((256, 256), Image.LANCZOS)   # blank cream: nothing to keep sharp
+            else:
+                kk = LONG_BACK.get(slug, LONG) / max(front.size) if face == 'back' else k
+                im = im.resize((max(1, round(im.width * kk)), max(1, round(im.height * kk))), Image.LANCZOS)
+            f = f'{out}/{slug}-{face}.webp'; im.save(f, lossless=True, quality=100, method=6)
+            print(f'{slug}-{face}.webp', im.size, os.path.getsize(f) // 1024, 'KB')
+
+
 if __name__ == '__main__':
+    if sys.argv[1] == 'panels': panels_textures(sys.argv[2]); sys.exit()
     fdir, out = sys.argv[1:3]; os.makedirs(out, exist_ok=True)
     font = os.path.join(fdir, 'Rubik[wght].ttf')
     face, report = front(font)

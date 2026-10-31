@@ -4,14 +4,17 @@
 // material, so the BIOSPICULE pages match. The engine keeps the story geometry (the cover-fitted 16:10 frame, the run's
 // box, the phone stage, the kit card); this module draws the pose for the story position into the box. Objects are
 // placed by frame pixel (2400×1500) inside the page's scene box (x 168…1248, y 285…1215: the scene left, the copy
-// right). The products: the box (its current print, typeset from protocols/assets/img/derma-recovery.webp: W : H : D =
-// 0.632 : 1 : 0.632, the depth assumed) and the 50 ml jar (no packshot: the owner's two small photos, Figma photo 1 the
+// right). The products: the box and the 50 ml jar (no packshot: the owner's two small photos, Figma photo 1 the
 // closed jar, photo 73 the open jar with its lid beside it; Ø : H 1 : 1.31 with the lid, a white body, a black collar
 // and a frosted lid over a white top, the lid lined inside with matte white plastic: the owner's note to photo 73).
-// The DERMA box's width: canonical is this page's W : H = 615.8 : 974.2 = 0.6321 (the front on the assets packshot at
-// half alpha, the dark rounded right edge's last 2 px left out so the print's own axis is the front's middle; the typeset
-// print fits it within 0.5 photo px). The sibling pages' S5 (cell-renew-1-5.js, cellular-age-defense-2-5.js) draw the
-// same box at 612.4 : 974.1 = 0.6287, 0.5 % narrower, from the same packshot: theirs to align to this one.
+// 31/10: the boxes' sizes and every face's print come from the printer's dielines (design/biospicule/geometry.json,
+// panels.py): DERMA 62 × 62 × 85 mm (W : H = D : H = 0.7294; the packshot, measured at 0.6321 with an assumed depth,
+// was not to scale), CELL RENEW 1.5% and CELLULAR AGE DEFENSE 2.5% 35 × 35 × 110 mm (0.3182, was 0.26), MICRO BOOST
+// 10% 33 × 22.5 × 150 mm (W : H 0.22, D : H 0.15: not square, was 0.2376 × 0.2875); the front, both sides, the back and
+// the top of every box carry the dieline's panels (design/derma-recovery-cream/make_textures.py, step `panels`), the
+// serums' and MICRO BOOST's blank bottom flap too; DERMA's crash-lock bottom is unprinted paper. The poses (frame px)
+// and the neighbours' photographed side share are as before, but the four boxes' heights in S5 (desktop and phone)
+// are now in the dielines' proportion, 110 : 150 : 85 at one scale (they were each box's own photo-fitted pose).
 // The story (site/story3d.json; scratchpad spec pages/derma-recovery-cream/spec.md), as far as the owner's rule of 22/10
 // lets it («only what exists»):
 //   S1 meet     the box as on the packshot, a soft green light behind it, turning a little toward its left side (the
@@ -23,8 +26,8 @@
 //   S4 feel     (no people: the owner's rule) the lid back on, the jar alone in an even, wider light
 //   S5 protocol the line's green haze; the home branch, CELL RENEW 1.5% and CELLULAR AGE DEFENSE 2.5% taking turns on one
 //               place («או»: one goes fully out before the other comes in, never two prints at once), the clinic's
-//               MICRO BOOST 10% beside it, and the DERMA box a step nearer: their packshots'
-//               fronts and sides as photographed. On a desktop all go back into the dark as the step cards scroll up
+//               MICRO BOOST 10% beside it, and the DERMA box a step nearer: every box the dieline's print on every face.
+//               On a desktop all go back into the dark as the step cards scroll up
 //               over the scene
 //   S6–S7 kit   the box and the closed jar side by side, the green light behind them: the picture that flies into the
 //               offer card
@@ -101,10 +104,11 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   canvas.addEventListener('webglcontextrestored', restored);
   const key = new THREE.DirectionalLight(0xffffff, 1.2); key.position.set(-4, 7, 6); scene.add(key);
 
-  // ---- textures (make_textures.py): the typeset front and the plain side of the box, the jar's print, the three
-  // neighbours' fronts and sides as photographed
+  // ---- textures (make_textures.py panels → img/derma-recovery-cream-3d/<slug>-<face>.webp): the dielines' panels, every
+  // face of the four boxes (DERMA has no bottom panel: a crash-lock, unprinted), and the jar's print (make_textures.py)
   let loaded = 0, version = 0;   // version: textures loaded, a context restored — the engine re-renders the kit picture
-  const ANISO = renderer.capabilities.getMaxAnisotropy(), NTEX = 6;
+  const SLUGS = ['derma-recovery-cream', 'cell-renew-1-5', 'cellular-age-defense-2-5', 'micro-boost-10'], FACES = ['front', 'right', 'left', 'back', 'top', 'bottom'];
+  const ANISO = renderer.capabilities.getMaxAnisotropy(), NTEX = 24;
   const tex = name => {
     const t = new THREE.TextureLoader().load(new URL(`img/derma-recovery-cream-3d/${name}`, base).href, () => {
       t.needsUpdate = true; renderer.initTexture(t);   // uploaded now, not on the first scroll
@@ -112,9 +116,9 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     });
     t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = ANISO; return t;
   };
-  const faceTex = tex('box-face.webp'), sideTex = tex('box-side.png'), labelTex = tex('jar-label.png');
-  const renewTex = tex('renew.webp'), cadTex = tex('cad.webp'), mbTex = tex('mb.webp');
-  const TEXS = [faceTex, sideTex, labelTex, renewTex, cadTex, mbTex];
+  const labelTex = tex('jar-label.png'), TEXS = [labelTex];
+  const PANELS = Object.fromEntries(SLUGS.map(slug => [slug, Object.fromEntries(FACES.filter(f => !(slug === 'derma-recovery-cream' && f === 'bottom'))
+    .map(f => { const t = tex(`${slug}-${f}.webp`); TEXS.push(t); return [f, t]; }))]));
 
   // ---- materials. The products in their print's colours: emissive 0.85 of the colour plus a neutral shading (a diffuse
   // 0.2 of it under the key and the room), not tone mapped; a dense glossy paper (roughness 0.5, a soft highlight). They
@@ -126,40 +130,38 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     emissiveIntensity: 0.85, roughness: 0.5, specularIntensity: 0.3, toneMapped: false, transparent: true }, opts));
   const printed = (map, k = 1, opts = {}) => P(new THREE.Color(k, k, k), Object.assign({ color: new THREE.Color(SHADE * k, SHADE * k, SHADE * k), map, emissiveMap: map,
     specularIntensity: 0.05 }, opts));
-  const uvSpan = (geo, u0, u1) => {   // a plane's u from u0 to u1 (a part of a picture holding the front and the side)
-    const uv = geo.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, u0 + uv.getX(i) * (u1 - u0)); return geo;
-  };
+  const PAPER = 0xfaf1e6;   // the dielines' unprinted board (geometry.json fill_rgb 250, 241, 230): DERMA's crash-lock bottom
 
-  // ---- the boxes, W × 1 × D (scaled per pose), their origin the front's middle (they turn about that upright). DERMA:
-  // the typeset front, its left side the plain board (the side the old ¾ packshot shows); the right side, the back, the
-  // top and the foot closed for any transition's frame but never seen. Front and side are drawn first (they write
-  // depth), the closed faces after them: through a fading front nothing behind it shows
-  const BW = 615.8 / 974.2, BD = BW;
+  // ---- the boxes, W × 1 × D (scaled per pose), their origin the front's middle (they turn about that upright): six
+  // planes, each with its panel of the dieline (`faces`: front, right, left, back, top, bottom materials). PlaneGeometry's
+  // uv (u to its local +x, v up) with three.js's flipY lays every panel as the dieline reads it, seen from outside: the
+  // right side's u = 0 at the front's edge (its cell is right of the front's), the left's u = 1 there, the back's u = 0 at
+  // the right side's far edge, the top's lower edge (the flap's hinge) at the front's top, the bottom's upper edge at the
+  // front's foot. Front and right side are drawn first (they write depth), the other faces after them: through a fading
+  // front nothing behind it shows. `order`: the boxes further back are drawn before the nearer ones
   const mkGroup = () => { const g = new THREE.Group(); g.visible = false; scene.add(g); return g; };
   const addFace = (g, geo, mat, x, y, z, rx, ry, o) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); m.renderOrder = o; g.add(m); return m; };
-  const heroMats = [printed(faceTex), printed(sideTex), P(new THREE.Color(0xf3e9df).multiplyScalar(0.7))];
-  const hero = { g: mkGroup(), W: BW, D: BD, mats: heroMats, a: 0, x: 0, y: 0, H: 0, yaw: 0, view: 0 };
-  {
-    const g = hero.g, [front, left, hid] = heroMats;
-    addFace(g, new THREE.PlaneGeometry(BW, 1), front, 0, 0, 0, 0, 0, 100);
-    const lg = new THREE.PlaneGeometry(BD, 1); uvSpan(lg, 1, 0);   // the texture's u 0 is the front edge
-    addFace(g, lg, left, -BW / 2, 0, -BD / 2, 0, -Math.PI / 2, 100);
-    addFace(g, new THREE.PlaneGeometry(BD, 1), hid, BW / 2, 0, -BD / 2, 0, Math.PI / 2, 101);
-    addFace(g, new THREE.PlaneGeometry(BW, 1), hid, 0, 0, -BD, 0, Math.PI, 101);
-    addFace(g, new THREE.PlaneGeometry(BW, BD), hid, 0, 0.5, -BD / 2, -Math.PI / 2, 0, 101);
-    addFace(g, new THREE.PlaneGeometry(BW, BD), hid, 0, -0.5, -BD / 2, Math.PI / 2, 0, 101);
-  }
-  // the neighbours (S5): their front and right side as photographed, one picture each (u: the front 0…f, the side f…1);
-  // W : H and D as their own pages measured them; only these two faces exist (the views never reach the others)
-  const mkNext = (map, f, W, D, order) => {
-    const mats = [printed(map), printed(map)], g = mkGroup();
-    addFace(g, uvSpan(new THREE.PlaneGeometry(W, 1), 0, f), mats[0], 0, 0, 0, 0, 0, order);
-    addFace(g, uvSpan(new THREE.PlaneGeometry(D, 1), f, 1), mats[1], W / 2, 0, -D / 2, 0, Math.PI / 2, order);
-    return { g, W, D, mats, a: 0, x: 0, y: 0, H: 0, yaw: 0, view: 0 };
+  const mkBox = (faces, W, D, order) => {
+    const g = mkGroup();
+    addFace(g, new THREE.PlaneGeometry(W, 1), faces.front, 0, 0, 0, 0, 0, order);
+    addFace(g, new THREE.PlaneGeometry(D, 1), faces.right, W / 2, 0, -D / 2, 0, Math.PI / 2, order);
+    addFace(g, new THREE.PlaneGeometry(D, 1), faces.left, -W / 2, 0, -D / 2, 0, -Math.PI / 2, order + 1);
+    addFace(g, new THREE.PlaneGeometry(W, 1), faces.back, 0, 0, -D, 0, Math.PI, order + 1);
+    addFace(g, new THREE.PlaneGeometry(W, D), faces.top, 0, 0.5, -D / 2, -Math.PI / 2, 0, order + 1);
+    addFace(g, new THREE.PlaneGeometry(W, D), faces.bottom, 0, -0.5, -D / 2, Math.PI / 2, 0, order + 1);
+    return { g, W, D, mats: [faces.front, faces.right, faces.left, faces.back, faces.top, faces.bottom], a: 0, x: 0, y: 0, H: 0, yaw: 0, view: 0 };
   };
-  const renew = mkNext(renewTex, 0.8506, 1048 / 4032, 1048 / 4032, 92);
-  const cad = mkNext(cadTex, 0.8534, 0.26, 0.26, 90);
-  const mb = mkNext(mbTex, 0.7937, 0.2376, 0.2376 * 1.21, 91);
+  const printedBox = slug => Object.fromEntries(FACES.map(f => [f, PANELS[slug][f] ? printed(PANELS[slug][f]) : P(PAPER)]));
+  // the sizes: geometry.json (W_over_H, D_over_H), from the fold lines of the dielines at 1 : 1
+  const BW = 62 / 85, BD = BW;   // DERMA RECOVERY CREAM: 62 × 62 × 85 mm (0.7294)
+  const SW = 35 / 110;           // CELL RENEW 1.5% and CELLULAR AGE DEFENSE 2.5%: one 30 ml box, 35 × 35 × 110 mm (0.3182)
+  const MW = 33 / 150, MD = 22.5 / 150;   // MICRO BOOST 10%: 33 × 22.5 × 150 mm (0.22 × 0.15)
+  const hero = mkBox(printedBox('derma-recovery-cream'), BW, BD, 100);
+  // the neighbours (S5): the home branch's two on one place, MICRO BOOST beside them; their right side turned to the
+  // camera by their packshots' share (R_SIDE, as before)
+  const renew = mkBox(printedBox('cell-renew-1-5'), SW, SW, 92);
+  const cad = mkBox(printedBox('cellular-age-defense-2-5'), SW, SW, 90);
+  const mb = mkBox(printedBox('micro-boost-10'), MW, MD, 91);
   const NEXT = [renew, cad, mb];
   // the side's share of the front on their packshots (their side's width : their front's, half alpha)
   const R_SIDE = [45.6 / 261.75, 44.9 / 261.8, 78.6 / 304.04];
@@ -295,14 +297,19 @@ export function createScene(THREE, { canvas, base, onLoad }) {
 
   // ---- poses (frame px). The box [cx, cy: its front's middle, H: its front's height]: its top above the horizon
   // (601.5) and its foot below it in every frame, so neither shows; where it stands opaque its front is at most 600 px
-  // tall (960 px in a 3840 key, under the packshot's 974): the illustration, the photo's own picture, is never drawn
-  // above its pixels. The jar [x: its axis, y: its foot, Ø px, tilt toward the camera (deg), lid 0 on … 1 beside]: the
+  // tall (960 px in a 3840 key; the print is the dieline's, 1490 × 2048 texels on the front, so the poses stay as
+  // approved). The jar [x: its axis, y: its foot, Ø px, tilt toward the camera (deg), lid 0 on … 1 beside]: the
   // closed jar seen as on photo 1 (from ≈ 6° above: the camera's 2° and a tilt of 4–5°), the open one as on photo 73
   // (≈ 17° above: a tilt of 14°); turned at most ±4° about its axis (its back was never photographed)
-  const HERO = [[700, 735, 600], [700, 700, 470], null, null, [900, 640, 470], [600, 720, 600]];
+  const HERO = [[700, 735, 600], [700, 700, 470], null, null, [900, 728, 294], [600, 720, 600]];
   const JAR = [null, [640, 1000, 290, 0, 0], [580, 1035, 360, 14, 1], [700, 1060, 400, 5, 0], [820, 985, 300, 5, 0], [985, 1030, 330, 4, 0]];
-  const HOME = [400, 600, 380], CLINIC = [600, 612, 400];   // S5: the home branch's place (CELL RENEW ↔ 2.5%), MICRO BOOST
-  const HOME_PH = [380, 620, 420], CLINIC_PH = [600, 630, 440], HERO4_PH = [920, 660, 500];   // a phone: a little larger
+  // S5: the home branch's place (CELL RENEW ↔ 2.5%) and MICRO BOOST at D_NEXT, DERMA (HERO[4]) a step nearer at D_BOX. The
+  // heights are the dielines' (design/biospicule/geometry.json), 110 : 150 : 85 mm at one scale, 3.2 frame px per mm at
+  // D_NEXT (a desktop; 3.5 on a phone): CELL RENEW 352 (was 380), MICRO BOOST 480 (was 400; its top 332, under the scene
+  // box's fade at 285…333), DERMA 85 × 3.2 × 16.4 / 15.2 = 294 at its nearer depth (was 470); every foot where it was
+  // (790, 812, 875; a phone: 830, 850, 910), every top above the horizon 601.5 (DERMA's 581; a phone 590)
+  const HOME = [400, 614, 352], CLINIC = [600, 572, 480];
+  const HOME_PH = [380, 638, 385], CLINIC_PH = [600, 588, 525], HERO4_PH = [920, 750, 321];   // a phone: a little larger
   const KIT_GLOW = 0.7;   // the kit's light behind the pair
   const JAR5_IN = [JAR[5][0], JAR[5][1], JAR[5][2] * 0.94, 4, 0];   // the kit's jar as it comes in (a step back, closed)
   const ST = { hero: [0, 0, 0, 0], jar: [0, 0, 0, 0, 0, 0], next: [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], spi: 0, sd: 0, glow: [0, 0, 0, 0], veil: 0, kitGlow: 0 };
@@ -465,13 +472,14 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     }
     return b.map(Math.round);
   }
-  // QA: where to pipette (frame px rectangles) in the pose drawn last: the box's empty paper and band (left of the
-  // print), its left side; the jar's body above the M (φ −5…+5°, y 0.705…0.75), its collar (φ −8…+8°, y 0.82…0.95)
+  // QA: where to pipette (frame px rectangles) in the pose drawn last: the box's empty paper (left of the cream swirl)
+  // and band (left of its gold letters; the band on the dieline's front panel: v 562…891 of 1992, 0.282…0.447); the
+  // jar's body above the M (φ −5…+5°, y 0.705…0.75), its collar (φ −8…+8°, y 0.82…0.95)
   const rectOf = pts => [Math.round(Math.min(...pts.map(q => q[0]))), Math.round(Math.min(...pts.map(q => q[1]))), Math.round(Math.max(...pts.map(q => q[0]))), Math.round(Math.max(...pts.map(q => q[1])))];
   function boxProbes(B) {
     if (!B.g.visible || B.a < 0.99) return null;
     const r = (u0, u1, v0, v1) => rectOf([local(B, (u0 - 0.5) * B.W, 0.5 - v0, 0, [0, 0]), local(B, (u1 - 0.5) * B.W, 0.5 - v1, 0, [0, 0])]);
-    return { paper: r(0.03, 0.14, 0.58, 0.72), band: r(0.02, 0.12, 0.37, 0.45), top: Math.round(local(B, 0, 0.5, 0, [0, 0])[1]), foot: Math.round(local(B, 0, -0.5, 0, [0, 0])[1]) };
+    return { paper: r(0.03, 0.14, 0.58, 0.72), band: r(0.02, 0.12, 0.30, 0.43), top: Math.round(local(B, 0, 0.5, 0, [0, 0])[1]), foot: Math.round(local(B, 0, -0.5, 0, [0, 0])[1]) };
   }
   const onJar = (phi, y, out) => frameOf(tmp.set(0.5 * Math.sin(rad(phi)), y, 0.5 * Math.cos(rad(phi))).applyMatrix4(jar.matrixWorld), out);
   function jarProbes() {
