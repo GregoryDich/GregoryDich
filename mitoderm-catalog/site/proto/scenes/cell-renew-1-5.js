@@ -11,7 +11,8 @@
 // panels.py): CELL RENEW and the 2.5% 35 × 35 × 110 mm (W : H = D : H = 0.3182; the packshots, measured at 0.26, were
 // not to scale), DERMA 62 × 62 × 85 mm (0.7294, was 0.6321); the front, both sides, the back and the top carry the
 // dieline's panels (design/cell-renew-1-5/make_textures.py, step `panels`), the serums' blank bottom flap too; DERMA's
-// crash-lock bottom is unprinted paper. The poses (frame px) and the sides' photographed share are as before.
+// crash-lock bottom is unprinted paper. The poses (frame px) and the sides' photographed share are as before, but
+// DERMA's height in S5 (desktop and phone), now 85 / 110 of CELL RENEW's at the same depth (it was an assumed 0.61).
 // The story (site/story3d.json; scratchpad spec pages/cell-renew-1-5/spec.md, BIOSPICULE line), as far as the owner's
 // rule of 22/10 lets it («only what exists»):
 //   S1 meet     the box as on the packshot, a soft green light behind it
@@ -242,12 +243,14 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // print is now the dieline's (644 × 2048 texels on the front), so the poses stay as approved. S1 sees the box from
   // 0.39 of its height (the packshot: 0.41)
   const HERO = [[660, 670, 630], [780, 690, 560], null, null, [400, 560, 440], [680, 740, 630]];
-  // S5, the routine: CELL RENEW (step 1) lower left, DERMA (step 2) right of it, its foot 45 px above CELL RENEW's, 0.61
-  // of its height (assumed: no sizes in any source); the 2.5% (the next step) behind, higher, smaller, deeper
-  const DERMA = [660, 600, 270], NEXT = [905, 500, 290];
+  // S5, the routine: CELL RENEW (step 1) lower left, DERMA (step 2) right of it at the same depth, its foot 45 px above
+  // CELL RENEW's and its height from the dielines (design/biospicule/geometry.json): 85 / 110 of CELL RENEW's 440 = 340
+  // (was 270, an assumed 0.61); the 2.5% (the next step) behind, higher, smaller, deeper
+  const DERMA = [660, 565, 340], NEXT = [905, 500, 290];
   // a phone's stage shows the scene box at ~0.35 css px per frame px: S5 the three centred in it and larger; at most
-  // ~1.06 device px per frame px there, so no print is drawn above its photo's pixels
-  const HERO4_PH = [470, 760, 700], DERMA_PH = [800, 780, 420], NEXT_PH = [1080, 640, 400];
+  // ~1.06 device px per frame px there, so no print is drawn above its photo's pixels. DERMA 85 / 110 of CELL RENEW's 700
+  // = 541 (was 420), its foot where it was (frame y 990), 27 px right of CELL RENEW and 14 px left of the 2.5%
+  const HERO4_PH = [470, 760, 700], DERMA_PH = [805, 720, 541], NEXT_PH = [1080, 640, 400];
   // the share of the front their right side shows on the packshots, the smaller of two measures (half alpha; half
   // contrast on the band's rows, as the keys are checked): CELL RENEW 46.1 : 261.8 px (46.4 : 261.75 at half alpha),
   // the 2.5% 44.8 : 262.1 (cellular-age-25.webp; its squeeze across leaves the share as it is). DERMA faces the camera
