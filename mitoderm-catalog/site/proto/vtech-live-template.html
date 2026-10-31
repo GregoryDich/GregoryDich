@@ -246,24 +246,26 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
 .lead-panel img { width: min(100%, 420px); height: auto; filter: drop-shadow(0 26px 40px rgba(0,0,0,.55)); }
 .lead-panel p { font: 500 clamp(26px, 2.6vw, 34px)/1 var(--display); letter-spacing: .06em; }
 
-/* phone: the story plays in a stage under the header (smoke, plate and the 3D, the copy scrolls beneath it and the offer
-   pushes it away); without the story (no JS, reduced data) the product is a small HD still beside each heading */
+/* phone (≤ 760, html.flow): the 3D in its own block under each heading, in the page's flow and below the copy's layer: the
+   engine draws the canvas into the block of the screen being read, the other blocks show their key frame; tablet (761–899):
+   the story plays in a stage under the header (smoke, plate and the 3D, the copy scrolls beneath it and the offer pushes it
+   away); without the story (no JS, reduced data) the product is an HD still beside each heading (phone: under it) */
 .head { display: contents; }
-.slot, .ph-cells { display: none; }
+.slot, .ph-cells, .stage { display: none; }
 @media (max-width: 899px) {
   .still, .cells, .helix { display: none !important; }
   html:not(.story) #seq, html:not(.story) .plate { display: none !important; }
-  html.story .bg, html.story .plate { inset: var(--stage-top, 60px) 0 auto 0; height: var(--stage-h, 46svh); z-index: 3;
+  html.story:not(.flow) .bg, html.story:not(.flow) .plate { inset: var(--stage-top, 60px) 0 auto 0; height: var(--stage-h, 46svh); z-index: 3;
     transform: translate3d(0, calc(-1px * var(--push, 0)), 0) !important; }
-  html.story .bg::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 28px; background: linear-gradient(var(--bg), transparent); }
-  html.story #seq { z-index: 4; }
+  html.story:not(.flow) .bg::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 28px; background: linear-gradient(var(--bg), transparent); }
+  html.story:not(.flow) #seq { z-index: 4; }
   html.story .slot, html.story .ph-cells { display: none !important; }
   html.story .head { grid-template-columns: minmax(0, 1fr); }
-  html.story #meet { padding-top: calc(var(--stage-h, 46svh) + 18px); }
+  html.story:not(.flow) #meet { padding-top: calc(var(--stage-h, 46svh) + 18px); }
   /* a jump to a section (a button, a link) lands its heading just under the 3D stage, not behind it */
-  html.story .sec { scroll-margin-top: calc(var(--stage-top, 60px) + var(--stage-h, 46svh)); }
+  html.story:not(.flow) .sec { scroll-margin-top: calc(var(--stage-top, 60px) + var(--stage-h, 46svh)); }
   /* the copy, then room in which the run plays in the stage, so the next heading arrives under its own key frame */
-  html.story #meet, html.story #why, html.story #inside, html.story #feel, html.story #protocol { min-height: 0; padding-bottom: 64svh; }
+  html.story:not(.flow) #meet, html.story:not(.flow) #why, html.story:not(.flow) #inside, html.story:not(.flow) #feel, html.story:not(.flow) #protocol { min-height: 0; padding-bottom: 64svh; }
   /* S3: three still cells around the ampoules (no moving field on a phone) */
   #inside .head { position: relative; }
   #inside .slot { position: relative; z-index: 1; }
@@ -304,6 +306,16 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   .fields { grid-template-columns: 1fr; gap: 12px; margin-top: 22px; }
   .lead-done .mob { display: block; }
 }
+@media (max-width: 760px) {   /* phone: heading → the product (its block, or the still without the story) → the rest of the copy */
+  .head, html.story .head { grid-template-columns: minmax(0, 1fr); }
+  .slot, #meet .slot, .slot.wide { grid-column: 1; grid-row: auto; width: 100%; height: auto; max-height: 46svh; object-fit: contain; margin-top: 4px; }
+  .ph-cells { display: none; }
+  html.flow #seq { position: absolute; z-index: 1; }   /* page coordinates: it scrolls with its block, under main (z 2) */
+  html.flow .stage { display: block; position: relative; width: 100%; height: var(--stage-h, 46svh); margin-top: 4px; }
+  .stage-still { position: absolute; max-width: none; pointer-events: none; }
+  html.flow .sec { scroll-margin-top: var(--stage-top, 72px); }
+  html.flow .offer .kitcard { margin-top: 4px; }   /* no stage to push away: the card right under the heading */
+}
 @media (max-width: 380px) { .cta { flex-direction: column; align-items: stretch; } }
 /* reveal (0.6 s, 20 px, once); without JS everything shows */
 .js .rv { opacity: 0; transform: translateY(20px); transition: opacity .6s var(--ease), transform .6s var(--ease); transition-delay: var(--d, 0s); }
@@ -336,6 +348,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
       <h1 class="rv{{{h1_cls}}}" style="--d:.12s"><bdi>{{{h1_html}}}</bdi></h1>
       <p class="tag rv" style="--d:.18s">{{tag}}</p>
       <img class="slot" src="img/m1.webp" alt="" aria-hidden="true">
+      <div class="stage" aria-hidden="true"></div>
     </div>
     <p class="lead rv" style="--d:.24s">{{s1_lead}}</p>
     <ul class="chips rv" style="--d:.3s">{{{s1_chips}}}</ul>
@@ -346,6 +359,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
     <div class="head">
       <h2 class="rv" style="--d:.06s">{{s2_h2}}</h2>
       <img class="slot" src="img/m2.webp" alt="" aria-hidden="true">
+      <div class="stage" aria-hidden="true"></div>
     </div>
     <p class="lead rv" style="--d:.12s">{{s2_p}}</p>
     <p class="kicker rv" style="--d:.18s">{{s2_kicker}}</p>
@@ -356,6 +370,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
     <div class="head">
       <h2 class="rv" style="--d:.06s">{{s3_h2}}</h2>
       <img class="slot" src="img/m3.webp" alt="" aria-hidden="true">
+      <div class="stage" aria-hidden="true"></div>
       __PH_CELLS__
     </div>
     <p class="lead rv" style="--d:.12s">{{{s3_p}}}</p>
@@ -369,6 +384,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
     <div class="head">
       <h2 class="rv" style="--d:.06s">{{s4_h2}}</h2>
       <img class="slot" src="img/m4.webp" alt="" aria-hidden="true">
+      <div class="stage" aria-hidden="true"></div>
     </div>
     <p class="lead rv" style="--d:.12s">{{s4_p}}</p>
     <ul class="pins rv" style="--d:.18s">{{{s4_pins}}}</ul>
@@ -379,6 +395,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
       <div class="head">
         <h2 class="rv" style="--d:.06s">{{s5_h2}}</h2>
         <img class="slot wide" src="img/m5.webp" alt="" aria-hidden="true">
+        <div class="stage" aria-hidden="true"></div>
       </div>
       <p class="lead rv" style="--d:.12s">{{s5_p}}</p>
       <p class="pill rv" style="--d:.18s">{{{s5_chip}}}</p>
@@ -470,6 +487,7 @@ __SCENE_JS__
 const $ = id => document.getElementById(id), q = s => document.querySelector(s);
 const story = createFrameStory({
   config: __SEQ__, scene: __SCENE__, canvas: $('seq'), sections: ['meet', 'why', 'inside', 'feel', 'protocol', 'offer'].map($), header: q('.top'),
+  stages: [...document.querySelectorAll('main .stage')], stills: [...document.querySelectorAll('main .slot')],   // phone ≤ 760: the 3D under each heading
   card: q('.kitcard'), bg: q('.bg'), plate: q('.plate'), helix: q('.helix'), cellLayers: [q('.cells.back'), q('.cells.front')],
   tier: window.__SEQ_TIER, noWorker: !!window.__SEQ_NO_WORKER });
 window.__seq = story.state;   // for the QA script

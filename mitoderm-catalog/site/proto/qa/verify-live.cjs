@@ -4,7 +4,7 @@
 // screen holds its key frame while it is read; every frame of every run is fetched once; only a window of frames stays
 // decoded; the 3D kit lands in the offer card and the fixed canvas is gone there; the exosome cells live in S2–S3,
 // never over the copy (only faint bokeh) nor the S3 ampoules, none from S4 on; the copy keeps the right half; no
-// horizontal scroll; headings below the sticky header; phone: the story in a stage under the header, the window, the stills
+// horizontal scroll; headings below the sticky header; phone: the 3D in a block under each heading (≤ 760; a tablet: in a stage under the header), the window, the stills
 // in the slots, the offer in the order heading → card → text → buttons → contacts and the bottom bar off the card;
 // reduced motion: key frames only; no JS: the first frame as a still; the lead form validates and completes; no
 // console errors. With SYNTH=<2400×1500 RGBA webp> the same file is served for every frame at the 2400 tier, the CPU
@@ -286,17 +286,23 @@ async function synthRun(browser, tag, assert) {
     const { ctx, p } = await open(browser, 960, 720);
     await layout(p, 'desktop 960'); await ctx.close();
   }
-  for (const [w, h] of [[390, 844], [360, 780]]) { // phone (owner 17/10: it moves too): the story in a stage under the header
+  for (const [w, h] of [[390, 844], [360, 780]]) { // phone (owner 17/10: it moves too; 31/10: the 3D in its own block under each
+    // heading, .flow, in the page's flow and below the copy): the story plays in the blocks
     const { ctx, p, errs, req } = await open(browser, w, h, { dpr: 2 });
     await layout(p, `phone ${w}`);
     const r = await p.evaluate(() => ({ canvas: getComputedStyle(document.getElementById('seq')).display, seq: window.__seq(),
       st: getComputedStyle(document.documentElement).getPropertyValue('--stage-h'), top: getComputedStyle(document.documentElement).getPropertyValue('--stage-top') }));
     ok(`phone ${w}: the story plays in the stage`, r.canvas !== 'none' && r.seq.mode === 'full' && r.seq.tier > 0, `canvas ${r.canvas}, mode ${r.seq.mode}, tier ${r.seq.tier}, stage ${r.top.trim()} + ${r.st.trim()}`);
     let maxDec = 0; const held = [];
-    for (const [n, id] of [...STORY, 'specialists'].entries()) {   // each heading just under the stage, as it is read
-      await p.evaluate(i => { const s = document.getElementById(i), hd = s.querySelector('h1, h2'), cs = getComputedStyle(document.documentElement);
-        const below = parseFloat(cs.getPropertyValue('--stage-top')) + parseFloat(cs.getPropertyValue('--stage-h')) + 14;
-        scrollTo(0, Math.max(0, hd.getBoundingClientRect().top + scrollY - below)); }, id);
+    const flow = await p.evaluate(() => document.documentElement.classList.contains('flow'));
+    ok(`phone ${w}: the 3D in its own block under each heading, below the copy's layer`, flow && await p.evaluate(() => {
+      const st = [...document.querySelectorAll('main .stage')], cv = document.getElementById('seq'), z = e => +getComputedStyle(e).zIndex || 0;
+      return st.length === 5 && st.every(b => { const h = b.closest('section').querySelector('h1, h2'); return b.offsetParent === h.offsetParent && b.offsetTop >= h.offsetTop + h.offsetHeight; })
+        && getComputedStyle(cv).position === 'absolute' && z(cv) < z(document.querySelector('main')); }), `flow ${flow}`);
+    for (const [n, id] of [...STORY, 'specialists'].entries()) {   // each heading as it is read: under the header (flow), or just under the stage
+      await p.evaluate(([i, flow]) => { const s = document.getElementById(i), hd = s.querySelector('h1, h2'), cs = getComputedStyle(document.documentElement);
+        const below = parseFloat(cs.getPropertyValue('--stage-top')) + (flow ? 0 : parseFloat(cs.getPropertyValue('--stage-h'))) + 14;
+        scrollTo(0, Math.max(0, hd.getBoundingClientRect().top + scrollY - below)); }, [id, flow]);
       await p.waitForTimeout(900);
       const q = await p.evaluate(() => window.__seq()); maxDec = Math.max(maxDec, q.decoded);
       if (n < STORY.length - 1) held.push(`${STORY[n]}:${q.shown ? q.shown.join('.') : '-'}`);
@@ -313,7 +319,7 @@ async function synthRun(browser, tag, assert) {
         `density ${d.r.toFixed(2)}, step ${d.q}, ${seqReq} frame requests`);
     } else ok(`phone ${w}: frames fetched, not the whole story at once`, seqReq > 0, `${seqReq} requests`);
     ok(`phone ${w}: the DNA helix is never fetched`, !req.helix, `${req.helix} requests`);
-    ok(`phone ${w}: the offer pushes the stage away`, gone.o === 0 && gone.push > 0, `canvas opacity ${gone.o}, push ${gone.push}px`);
+    ok(`phone ${w}: ` + (flow ? 'the 3D has scrolled away with its block' : 'the offer pushes the stage away'), gone.o === 0 && (flow || gone.push > 0), `canvas opacity ${gone.o}, push ${gone.push}px`);
     const order = await p.evaluate(() => ['#offer h2', '#offer .kitcard', '#offer .lead', '#offer .cta', '#offer .contacts'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top + scrollY)));
     const kinds = await p.evaluate(() => document.querySelectorAll('#offer .kc-qty').length);
     const calls = await p.evaluate(() => { const c = document.querySelector('#offer .kitcard').getBoundingClientRect(), pic = document.querySelector('#offer .kc-pic, #offer .kitcard.live .kc-live');

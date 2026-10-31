@@ -253,7 +253,7 @@ if FILES and not SCENE:   # a tier is offered only when every frame of every run
         if not lack: TIERS.append(t)
 elif not SCENE:
     print('no --files: the page is built without frames (no 3D)')
-STILL = ''
+STILL, STILLS = '', []   # STILLS: the phone stills' crop boxes in the 16:10 key frame (fractions)
 if TIERS:   # no JS: the first key frame, in its box of the cover-fitted frame
     t = min([x for x in TIERS if x >= 1920] or [max(TIERS)]); x0, y0, x1, y1 = RUNS[0]['box']
     STILL = (f'<div class="still" aria-hidden="true"><div class="still-f"><img src="{frame(RUNS[0], 0, t)}" alt="" loading="lazy" '
@@ -283,7 +283,9 @@ if FILES:   # the page's images: smoke, logos, kit card, related products, phone
     for n, shot in enumerate(('v1-meet', 'v2-why', 'v3-inside', 'v4-feel', 'v5-protocol'), 1):   # the key frames of the story of 17/10
         im = Image.open(f'{KEYS}/{shot}.png').convert('RGBA'); x0, y0, x1, y1 = im.getchannel('A').point(lambda a: 255 if a > 8 else 0).getbbox()
         p = round(0.03 * max(x1 - x0, y1 - y0))   # a little air around the objects
-        save(im.crop((max(0, x0 - p), max(0, y0 - p), min(im.width, x1 + p), min(im.height, y1 + p))), f'{FILES}/img/m{n}.webp', 900, quality=84, method=6)
+        c = (max(0, x0 - p), max(0, y0 - p), min(im.width, x1 + p), min(im.height, y1 + p))
+        save(im.crop(c), f'{FILES}/img/m{n}.webp', 900, quality=84, method=6)
+        STILLS.append([round(c[0] / im.width, 5), round(c[1] / im.height, 5), round(c[2] / im.width, 5), round(c[3] / im.height, 5)])   # the phone blocks place it in the frame
     src = f'{SITE}/design/vtech-3d/cells'   # exosome sprites and the deep plate (render), when they exist
     kinds = (CELL if EXO else '') + ('m' if EXO and PDRN else '')   # glassy (c) or folded (f) cells, PDRN molecules (m)
     real = sorted(f for k in kinds for f in glob.glob(f'{src}/{k}[0-9][0-9]-[012].webp'))
@@ -342,7 +344,7 @@ ASSETS = {'__WA_PRICE__': esc(WA_MAIN), '__STILL__': STILL,
                            "  new Promise(r => setTimeout(r, 8000, null))]);\n"
                            f'// scenes/{PRODUCT}.js, inlined by build-vtech.py\n' + SRC.replace('export function createScene(', 'function createScene(', 1)) if SCENE else '',
           '__SCENE__': SCENE_INIT if SCENE else 'null',
-          '__SEQ__': json.dumps({'runs': RUNS, 'tiers': TIERS, 'cells': CELLS, 'mols': MOLS, 'helix': HELIX, **HERO}, separators=(',', ':')),
+          '__SEQ__': json.dumps({'runs': RUNS, 'tiers': TIERS, 'cells': CELLS, 'mols': MOLS, 'helix': HELIX, **({'stills': STILLS} if STILLS else {}), **HERO}, separators=(',', ':')),
           # phone: three still cells around the S3 ampoules (soft and bokeh sprites, small)
           '__PH_CELLS__': ('<span class="ph-cells" aria-hidden="true">' + ''.join(
               f'<img src="img/cells/{CELLS[j % len(CELLS)]}-{s}.webp" alt="" loading="lazy" decoding="async">' for j, s in ((0, 2), (3, 1), (6, 1)))

@@ -21,6 +21,12 @@
 //   cellLayers: [back, front],  // the two cell layers, behind and in front of the canvas (optional)
 //   root,          // gets the class .story and --stage-top / --stage-h / --push (default: <html>)
 //   phoneQuery,    // default '(max-width: 899px)'
+//   stages,        // phone (flowQuery): one block per run (meet … protocol) under its heading, in the page's flow; the canvas
+//                  // (position: absolute, in page coordinates) is drawn into the block of the screen being read; the root
+//                  // gets .flow. Blocks not holding the canvas show their key frame (config.stills: crop boxes of the
+//                  // phone stills in the 16:10 frame) at the canvas's scale (optional: without it, the stage above)
+//   stills,        // the phone stills (<img>, one per block) whose pictures the blocks show (optional)
+//   flowQuery,     // default '(max-width: 760px)'; tablets (up to phoneQuery) keep the stage under the header
 //   observe,       // the element whose size changes re-measure the page (default: the sections' parent)
 //   tier, noWorker // QA: force a frame tier / decode on the main thread
 // }) → { measure(), destroy(), state() }
@@ -41,9 +47,11 @@ export function createFrameStory(o) {
   const bg = o.bg || null, plate = o.plate || null;
   const card = o.card || null, cardCv = o.cardCanvas || (card && card.querySelector('.kc-live')), cardCtx = cardCv && cardCv.getContext('2d');
   const secs = o.sections, header = o.header || null, root = o.root || document.documentElement;   // sections: the screens in story order, one more than the runs
-  const phone = matchMedia(o.phoneQuery || '(max-width: 899px)'), calm = matchMedia('(prefers-reduced-motion: reduce)');
+  const phone = matchMedia(o.phoneQuery || '(max-width: 899px)'), flowQ = matchMedia(o.flowQuery || '(max-width: 760px)'), calm = matchMedia('(prefers-reduced-motion: reduce)');
   const U = RUNS.reduce((u, r) => [Math.min(u[0], r.box[0]), Math.min(u[1], r.box[1]), Math.max(u[2], r.box[2]), Math.max(u[3], r.box[3])], [1, 1, 0, 0]);   // all runs' boxes
   let stage = null, push = 0, lastPush = -1, staged = null;   // phone: the stage rect under the header that the runs' union fits into
+  const blocks = o.stages && o.stages.length === R ? o.stages : null;   // phone (flow): the stage blocks in the page, one per run
+  let act = -1, local = null, stillEls = null;   // the block that holds the canvas; the cover's offset inside a block
   let probe = null;   // the large viewport (browser toolbars retracted) for this orientation, from CSS 100lvh
   const largeH = () => {
     if (!probe) { probe = document.createElement('div'); probe.className = 'lvh-probe'; probe.setAttribute('aria-hidden', 'true');
@@ -287,18 +295,23 @@ onmessage = async e => {
   function measure() {
     dpr = Math.min(phone.matches ? 3 : 2, devicePixelRatio || 1); W = innerWidth; H = innerHeight;   // a phone's small stage: its full DPR
     const s = Math.max(W / 16, H / 10); cover = { w: 16 * s, h: 10 * s, x: (W - 16 * s) / 2, y: (H - 10 * s) / 2 };
-    stage = null;
+    stage = null; local = null; act = -1;
+    const flow = !!(blocks && phone.matches && flowQ.matches && (TIERS.length || SCENE)); root.classList.toggle('flow', flow);   // before the blocks are measured
     if (phone.matches) {   // the union of the runs' boxes fits the stage: the same scale for every run, so the motion carries on
       const top = Math.round(header ? header.getBoundingClientRect().bottom : 0), sh = Math.round(0.46 * Math.max(H, largeH()));   // toolbars don't resize it
-      const uw = U[2] - U[0], uh = U[3] - U[1], k = Math.min(0.98 * W / (uw * 16), 0.96 * sh / (uh * 10));
-      cover = { w: 16 * k, h: 10 * k }; cover.x = (W - uw * cover.w) / 2 - U[0] * cover.w; cover.y = top + (sh - uh * cover.h) / 2 - U[1] * cover.h;
-      stage = { top, h: sh }; root.style.setProperty('--stage-top', top + 'px'); root.style.setProperty('--stage-h', sh + 'px');
+      root.style.setProperty('--stage-top', top + 'px'); root.style.setProperty('--stage-h', sh + 'px');
+      const sw = flow ? blocks[0].getBoundingClientRect().width || W : W;   // flow: the block, the copy's width
+      const uw = U[2] - U[0], uh = U[3] - U[1], k = Math.min(0.98 * sw / (uw * 16), 0.96 * sh / (uh * 10));
+      cover = { w: 16 * k, h: 10 * k }; cover.x = (sw - uw * cover.w) / 2 - U[0] * cover.w; cover.y = (sh - uh * cover.h) / 2 - U[1] * cover.h;
+      if (flow) local = { x: cover.x, y: cover.y }; else cover.y += top;   // flow: offset inside a block, placed in page coordinates by place()
+      stage = { top, h: sh, flow };
     }
     const m = !TIERS.length && !SCENE ? 'off' : calm.matches || saveData ? 'keys' : 'full', t = m === 'off' ? 0 : SCENE ? 1 : pickTier();
     if (m !== mode || t !== tier || (SCENE && !!stage !== staged)) reset(m, t);   // a scene: a phone ↔ desktop switch too (its tier never changes)
     staged = !!stage;
     placed = '';
     geo = secs.map(s => ({ top: s.offsetTop, h: s.offsetHeight, cont: (s.querySelector('.wrap') || s).getBoundingClientRect().bottom + scrollY - s.offsetTop }));
+    if (local) { stage.T = blocks.map(b => { const r = b.getBoundingClientRect(); return { x: r.left + scrollX, y: r.top + scrollY }; }); layoutStills(); }
     cardTop = card && m !== 'off' ? card.getBoundingClientRect().top + scrollY : geo[R].top + 0.3 * H;
     if (cardCv && m !== 'off') {
       const r = cardCv.getBoundingClientRect(), w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
@@ -308,10 +321,28 @@ onmessage = async e => {
     if (cellEls) layoutCells();
     dirty = true; needPump = true; kick();
   }
+  function place(y) {   // flow: the canvas goes to the first block not yet gone under the header (the last one after them all)
+    let j = 0; while (j < R - 1 && stage.T[j].y + stage.h - y <= stage.top) j++;
+    if (j === act) return;
+    act = j; cover.x = stage.T[j].x + local.x; cover.y = stage.T[j].y + local.y; dirty = true;   // same size: no resampling
+  }
+  function layoutStills() {   // flow: each block's key frame at the canvas's scale and place (its crop box in the frame)
+    const S = CFG.stills; if (!S || !o.stills || S.length !== R) return;
+    if (!stillEls) stillEls = blocks.map((b, i) => { const im = document.createElement('img'), src = o.stills[i];
+      im.className = 'stage-still'; im.alt = ''; im.decoding = 'async'; im.src = src ? src.getAttribute('src') : ''; b.appendChild(im); return im; });
+    stillEls.forEach((im, i) => { const [x0, y0, x1, y1] = S[i];
+      Object.assign(im.style, { left: (local.x + x0 * cover.w).toFixed(2) + 'px', top: (local.y + y0 * cover.h).toFixed(2) + 'px',
+        width: ((x1 - x0) * cover.w).toFixed(2) + 'px', height: ((y1 - y0) * cover.h).toFixed(2) + 'px' }); });
+  }
   function position(y) {   // 0 … R: run index + its progress
     let p = 0;
     const sb = stage ? stage.top + stage.h : 0;   // phone: a run plays once its copy has passed under the stage and ends as
     for (let k = 0; k < R; k++) {                 // the next section reaches the stage's foot
+      if (local) {   // flow: a run plays in its screen's block as the heading has gone under the header and the block follows it, and
+        const a = stage.T[k].y - stage.top - 0.05 * H, b = stage.T[k].y + 0.7 * stage.h - stage.top;   // ends with 30% of it in view
+        if (y >= a) p = k + Math.min(1, (y - a) / Math.max(1, b - a));
+        continue;
+      }
       const a = stage ? geo[k].top + geo[k].cont - sb + 0.02 * H : geo[k].top + Math.max(k ? HOLD * H : HOLD0 * H, geo[k].h - READ * H);
       const b = stage ? geo[k + 1].top - sb : k === R - 1 ? cardTop - LAND0 * H : geo[k + 1].top - END * H;
       if (y >= a) p = k + Math.min(1, (y - a) / Math.max(1, b - a));
@@ -386,6 +417,7 @@ onmessage = async e => {
     const y = scrollY;
     if (y !== lastY) { if (lastY >= 0) dir = y > lastY ? 1 : -1; lastY = y; }
     pos = position(y);
+    if (local) place(y);
     const p = mode === 'keys' ? Math.round(pos) : pos, r = Math.min(R - 1, Math.floor(p)), k = key(r, Math.round((p - r) * (NS[r] - 1)));
     const now = performance.now();
     if (k !== want) { vel = 0.6 * vel + 0.4 * Math.abs(gOf(k) - wantG) * 1000 / Math.max(16, now - wantT); wantT = now; want = k; wantG = gOf(k); needPump = true; }
@@ -424,6 +456,15 @@ onmessage = async e => {
   function land(y) {   // the card rises: the 3D kit flies from its place in the frame into the card's picture, then hands over
     const l = clamp((LAND0 * H - (cardTop - y)) / ((LAND0 - LAND1) * H)), e = l * l * (3 - 2 * l);
     const swap = smooth(0.88, 1, l), op = mode === 'off' ? 0 : mode === 'keys' ? 1 - l : 1 - swap;
+    if (local) {   // flow: the canvas sits in the block it is read in and scrolls with the page; off screen it is hidden (not drawn)
+      const T = stage.T[act];
+      show(mode === 'off' || T.y - y > H || T.y + stage.h - y < 0 ? 0 : 1);
+      const B = shownBox, tfp = B ? `translate3d(${B.x.toFixed(2)}px,${B.y.toFixed(2)}px,0)` : '';
+      if (tfp !== lastTf) { canvas.style.transform = tfp; canvas.style.zIndex = ''; lastTf = tfp; }
+      if (stillEls) stillEls.forEach((im, i) => { const v = i > act || (i === act && shown < 0) ? '' : 'hidden'; if (im.style.visibility !== v) im.style.visibility = v; });
+      if (cardCv && mode !== 'off') cardCv.style.opacity = '1';
+      return;
+    }
     if (stage) {   // phone: no flight; the offer section pushes the stage (smoke, plate, 3D) up and away, the card shows the kit
       push = clamp(stage.top + stage.h - (geo[R].top - y), 0, stage.top + stage.h + 40);
       if (push !== lastPush) { root.style.setProperty('--push', push.toFixed(1)); lastPush = push; }
@@ -456,7 +497,7 @@ onmessage = async e => {
   document.addEventListener('visibilitychange', onVisibility);
   addEventListener('scroll', kick, { passive: true });
   addEventListener('resize', measure);
-  phone.addEventListener('change', measure); calm.addEventListener('change', measure);
+  phone.addEventListener('change', measure); flowQ.addEventListener('change', measure); calm.addEventListener('change', measure);
   if (ro) ro.observe(o.observe || secs[0].parentElement);
   addEventListener('load', measure);
   measure();
@@ -466,7 +507,7 @@ onmessage = async e => {
     destroyed = true; if (raf) cancelAnimationFrame(raf); raf = 0;
     document.removeEventListener('visibilitychange', onVisibility);
     removeEventListener('scroll', kick); removeEventListener('resize', measure); removeEventListener('load', measure);
-    phone.removeEventListener('change', measure); calm.removeEventListener('change', measure);
+    phone.removeEventListener('change', measure); flowQ.removeEventListener('change', measure); calm.removeEventListener('change', measure);
     if (ro) ro.disconnect();
     for (const id of [...pending.keys()]) cancel(id); flight.clear(); warmFlight.clear();
     if (worker) { worker.terminate(); worker = null; }
@@ -474,7 +515,8 @@ onmessage = async e => {
     for (const e of bm.values()) release(e); bm.clear(); shown = -1; kitCrop = null;
     if (cellEls) for (const c of cellEls) c.imgs.forEach(im => im.remove());
     cellEls = null;
-    root.classList.remove('story'); for (const v of ['--stage-top', '--stage-h', '--push']) root.style.removeProperty(v);
+    if (stillEls) stillEls.forEach(im => im.remove()); stillEls = null;
+    root.classList.remove('story', 'flow'); for (const v of ['--stage-top', '--stage-h', '--push']) root.style.removeProperty(v);
     if (probe) probe.remove();
   }
   function state() {   // for QA and debugging
