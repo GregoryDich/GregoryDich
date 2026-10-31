@@ -469,7 +469,19 @@
      "content": "crash-lock bottom, unprinted cream (no panel file; use fill_rgb)"
     }
    },
-   "label": null
+   "label": {
+    "file": "panels/derma-recovery-cream/label.png",
+    "px": [
+     4614,
+     912
+    ],
+    "pdf": "derma-recovery-cream-box-50ml.pdf",
+    "page": 1,
+    "size_mm": [
+     196.0,
+     39.29
+    ]
+   }
   },
   "micro-boost-10": {
    "W_mm": 33.0,
@@ -608,17 +620,17 @@
      "file": "panels/micro-boost-10/bottom.png",
      "px": [
       764,
-      492
+      469
      ],
      "box_pt": [
       340.08,
       623.04,
       433.68,
-      684.0
+      681.17
      ],
      "size_mm": [
       33.02,
-      21.51
+      20.51
      ],
      "content": "blank flap (unprinted cream)"
     }

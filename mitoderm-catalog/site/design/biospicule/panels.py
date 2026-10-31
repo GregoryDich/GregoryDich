@@ -69,7 +69,7 @@ LAYOUTS = {
     'micro-boost-10': dict(
         pdf='micro-boost-10-box-3ml.pdf', page=1,
         cells=['flap', 'glue', 'back', 'left', 'front', 'right'],
-        nominal_mm=None, bottom=True, label='separate', label_thr=240,
+        nominal_mm=None, bottom=True, bottom_extra_inset_mm=1.0, label='separate', label_thr=240,
         content={
             'back':  'MICRO BOOST 10% SPICULE SERUM: Professional cosmetic serum ..., Ingredients, How to use, Cautions, Manufactured by: Republic of Korea, Expiry Date & Batch No.',
             'left':  'MICRO BOOST 10% SPICULE SERUM (vertical, reads top-to-bottom) + "Formulated with marine spicule, helps enhance skin elasticity and radiance."',
@@ -211,15 +211,16 @@ def extract(slug, pdf, page, label_pdf, out_dir, dpi, geometry_file):
             if not cand:
                 sys.exit(f'{slug}: no bottom-flap fold line below the front panel')
             bot = min(cand, key=lambda l: abs((l['pos'] - f['y1']) - D_px))
-            boxes['bottom'] = (f['x0'], f['y1'], f['x1'], bot['pos'])
+            # the fold line to the tuck may be notched at the corners: optional extra inset
+            boxes['bottom'] = (f['x0'], f['y1'], f['x1'], bot['pos'] - lay.get('bottom_extra_inset_mm', 0) * mm)
 
         # bottle label
         label = None
         if lay['label'] == 'page':
-            xr = int(xs[-1] + 15 * mm)
-            sub = dark[:, xr:]
+            xr = int(xs[-1] + 15 * mm); yr = max(0, int(y_top - 10 * mm))
+            sub = dark[yr:int(y_bot + 10 * mm), xr:]     # beside the panel row (skips the printer's logo)
             r = find_rect(sub, int(20 * mm))
-            if r: label = (pdf, page, (r[0] + xr, r[1], r[2] + xr, r[3]))
+            if r: label = (pdf, page, (r[0] + xr, r[1] + yr, r[2] + xr, r[3] + yr))
         elif lay['label'] == 'separate' and label_pdf:
             limg = Image.open(render(label_pdf, 1, DETECT_DPI, os.path.join(td, 'l'))).convert('RGB')
             lm = np.asarray(limg).max(axis=2) < lay.get('label_thr', 120)
