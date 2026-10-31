@@ -31,7 +31,15 @@ Writes into <out dir>:
                  key; ≤ 4096 for phones): the paper #F8EEE4, the band #132A1C, the inks and golds as pipetted
   box-metal.png  the front's material, RGB 480×2020: G roughness (paper 0.70, ink and band 0.60, gold 0.28), B metalness
                  (gold 0.60)
-usage: python3 -I make_textures.py <font dir with Rubik[wght].ttf, DejaVuSans-Bold.ttf> <out dir>"""
+usage: python3 -I make_textures.py <font dir with Rubik[wght].ttf, DejaVuSans-Bold.ttf> <out dir>
+Step 2 (31/10, the printer's dieline): `python3 -I make_textures.py panels <out dir>` reads the panels cut from the print
+file by design/biospicule/panels.py (panels/micro-boost-10/{front,right,left,back,top,bottom}.png, 0.3 mm inside the fold
+lines, 600 dpi; the box 33 × 22.5 × 150 mm, geometry.json) and writes them as the scene's textures,
+<out dir>/micro-boost-10-<face>.webp (lossless), as design/cell-renew-1-5/make_textures.py does for its three boxes: every
+face at one texel density, the front's long side 2048 (444 × 2048; the sides 305 and 296 × 2034: the dieline's sides are
+149 mm against the front's 150, the scene stretches them by that 0.7 %; the top 444 × 300; the blank bottom flap 256 px).
+The scene then shows the real print on every face at the dieline's sizes, and the typeset front above is kept only for a
+roll-back."""
 import os, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -486,7 +494,24 @@ def box_face(fonts):
     return face, mat
 
 
+PANELS = os.path.join(SITE, 'design', 'biospicule', 'panels', 'micro-boost-10')
+FACES = ('front', 'right', 'left', 'back', 'top', 'bottom')
+LONG = 2048
+
+
+def panels_textures(out):   # step 2: the dieline panels as the scene's textures, one texel density for every face
+    os.makedirs(out, exist_ok=True)
+    front = Image.open(f'{PANELS}/front.png'); k = LONG / max(front.size)
+    for face in FACES:
+        im = Image.open(f'{PANELS}/{face}.png').convert('RGB')
+        if face == 'bottom': im = im.resize((256, 256), Image.LANCZOS)   # blank cream: nothing to keep sharp
+        else: im = im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS)
+        f = f'{out}/micro-boost-10-{face}.webp'; im.save(f, lossless=True, quality=100, method=6)
+        print(f'micro-boost-10-{face}.webp', im.size, os.path.getsize(f) // 1024, 'KB')
+
+
 if __name__ == '__main__':
+    if sys.argv[1] == 'panels': panels_textures(sys.argv[2]); sys.exit()
     fdir, out = sys.argv[1:3]; os.makedirs(out, exist_ok=True)
     face, mat = box_face({'rubik': os.path.join(fdir, 'Rubik[wght].ttf'), 'sign': os.path.join(fdir, 'DejaVuSans-Bold.ttf')})
     face.save(f'{out}/box-face.png', optimize=True); mat.save(f'{out}/box-metal.png', optimize=True)

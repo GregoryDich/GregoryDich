@@ -5,7 +5,12 @@
 // position into the box. Objects are placed by frame pixel (2400×1500) inside the page's scene box (x 168…1248,
 // y 285…1215: the scene left, the copy right), measured on the largest packshot, protocols/print/img/micro-boost-10.webp
 // (385×1252): the tall ivory box seen from the camera's height (its horizon at 0.42 of the box from the top, so neither
-// its top nor its foot shows), its right side a narrow plain strip; true proportions H : W : D = 4.21 : 1 : 1.21.
+// its top nor its foot shows), its right side a narrow strip.
+// 31/10: the box's sizes and every face's print now come from the printer's dieline (design/biospicule/geometry.json,
+// panels.py): 33 × 22.5 × 150 mm (W : H = 0.22, D : H = 0.15; the packshot, measured at H : W : D = 4.21 : 1 : 1.21, was
+// not to scale, and the base is not square); the front, both sides, the back, the top and the blank bottom flap carry the
+// dieline's panels (design/micro-boost-10/make_textures.py, step `panels`). The poses (frame px), the side's photographed
+// share and the camera are as before; with the shallower depth the box turns further (≈ 21° instead of ≈ 12°) to show it.
 // The story (site/story3d.json; scratchpad spec pages/micro-boost-10/spec.md, BIOSPICULE line). The scene shows only
 // what exists (the owner's rule, 22/10, stronger than the spec): the box as photographed, the serum's spicules as a
 // loose swarm and a soft glow of the line's green; no lines, rings, circles, cuts, marks or props:
@@ -83,17 +88,20 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   canvas.addEventListener('webglcontextrestored', restored);
   const key = new THREE.DirectionalLight(0xffffff, 1.2); key.position.set(-4, 6, 6); scene.add(key);
 
-  // ---- textures: the typeset print (make_textures.py): the front's colours and its material (G roughness, B metal)
+  // ---- textures (make_textures.py panels → img/micro-boost-10-3d/micro-boost-10-<face>.webp): the dieline's panels,
+  // every face of the box (the bottom flap blank cream)
   let loaded = 0, version = 0;   // version: textures loaded, a context restored — the engine re-renders the kit picture
-  const ANISO = renderer.capabilities.getMaxAnisotropy();
-  const tex = (name, srgb) => {
+  const FACES = ['front', 'right', 'left', 'back', 'top', 'bottom'];
+  const ANISO = renderer.capabilities.getMaxAnisotropy(), NTEX = FACES.length;
+  const tex = name => {
     const t = new THREE.TextureLoader().load(new URL(`img/micro-boost-10-3d/${name}`, base).href, () => {
       t.needsUpdate = true; renderer.initTexture(t);   // uploaded now, not on the first scroll
-      if (++loaded === 2) { version++; if (onLoad) onLoad(); }   // the engine redraws the kit picture
+      if (++loaded === NTEX) { version++; if (onLoad) onLoad(); }   // the engine redraws the kit picture
     });
-    if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = ANISO; return t;
+    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = ANISO; return t;
   };
-  const faceTex = tex('box-face.png', true), metalTex = tex('box-metal.png');
+  const PANELS = Object.fromEntries(FACES.map(f => [f, tex(`micro-boost-10-${f}.webp`)]));
+  const TEXS = FACES.map(f => PANELS[f]);
 
   // ---- the scene box's edges: a spicule crossing them fades over their last 48 px (by its frame px)
   const BOXF = [168, 285, 1248, 1215], FADE = 48;
@@ -101,32 +109,30 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       * smoothstep(${BOXF[1]}.0, ${BOXF[1] + FADE}.0, f.y) * (1.0 - smoothstep(${BOXF[3] - FADE}.0, ${BOXF[3]}.0, f.y)); }`;
 
   // ---- materials. The product in its print's colours: emissive 0.85 of the colour plus a neutral shading (a diffuse
-  // 0.2 of it under the key and the room), not tone mapped; the gold a satin metal (roughness 0.28, metalness 0.6: it
-  // catches a little of the softboxes as the box turns). It comes and goes by opacity only, never dimmed
+  // 0.2 of it under the key and the room), not tone mapped; a dense glossy paper (roughness 0.7, a soft highlight), the
+  // print as the dieline has it (the gold a printed gold, as on the sibling CELL RENEW page). It comes and goes by opacity
+  // only, never dimmed or tinted
   const SHADE = 0.2;
   const P = (hex, opts = {}) => new THREE.MeshPhysicalMaterial(Object.assign({ color: new THREE.Color(hex).multiplyScalar(SHADE), emissive: hex,
     emissiveIntensity: 0.85, roughness: 0.7, specularIntensity: 0.15, toneMapped: false, transparent: true }, opts));
-  const facade = P(0xffffff, { color: new THREE.Color(SHADE, SHADE, SHADE), map: faceTex, emissiveMap: faceTex, metalnessMap: metalTex,
-    roughnessMap: metalTex, metalness: 1, roughness: 1, envMapIntensity: 0.35 });
-  // the right side: no print reaches it; its colour is the packshot's side as pipetted there (5×5 medians ≈ #BEAD99 at
-  // the front probe's height), raised by what the shading takes off it in this light (≈ 0.9 in linear light at θmax), so
-  // the side drawn reads as the photo's (the owner's rule: every flat face of the product within ΔE 8 of its packshot).
-  // The faces never seen: the paper, darker
-  const SIDE = 0xc8b6a0;
-  const side = P(SIDE);
-  const hidden = P(new THREE.Color(0xf8eee4).multiplyScalar(0.7));
-  const boxMats = [facade, side, hidden];
+  const printed = map => P(0xffffff, { color: new THREE.Color(SHADE, SHADE, SHADE), map, emissiveMap: map });
+  const MATS = Object.fromEntries(FACES.map(f => [f, printed(PANELS[f])]));
+  const boxMats = FACES.map(f => MATS[f]);
 
-  // ---- the box, W 1 × H 4.21 × D 1.21: its origin at the front's middle (it turns about that upright), the front a
-  // plane with the print, the right side the plain strip; the rest closed for any transition's frame
-  const BW = 1, BH = 4.21, BD = 1.21, box = new THREE.Group(); scene.add(box);
+  // ---- the box, W 0.22 × H 1 × D 0.15 (33 × 22.5 × 150 mm, geometry.json): its origin at the front's middle (it turns
+  // about that upright); six planes, each with its panel of the dieline. PlaneGeometry's uv (u to its local +x, v up) with
+  // three.js's flipY lays every panel as the dieline reads it, seen from outside: the right side's u = 0 at the front's
+  // edge (its cell is right of the front's), the left's u = 1 there, the back's u = 0 at the right side's far edge, the
+  // top's lower edge (the flap's hinge) at the front's top, the bottom's upper edge at the front's foot. Front and right
+  // side are drawn first (they write depth), the other faces after them: through a fading front nothing behind it shows
+  const BW = 33 / 150, BH = 1, BD = 22.5 / 150, box = new THREE.Group(); scene.add(box);
   const face = (geo, mat, x, y, z, rx, ry, order) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); m.renderOrder = order; box.add(m); return m; };
-  face(new THREE.PlaneGeometry(BW, BH), facade, 0, 0, 0, 0, 0, 1);
-  face(new THREE.PlaneGeometry(BD, BH), side, BW / 2, 0, -BD / 2, 0, Math.PI / 2, 1);
-  face(new THREE.PlaneGeometry(BD, BH), hidden, -BW / 2, 0, -BD / 2, 0, -Math.PI / 2, 2);
-  face(new THREE.PlaneGeometry(BW, BH), hidden, 0, 0, -BD, 0, Math.PI, 2);
-  face(new THREE.PlaneGeometry(BW, BD), hidden, 0, BH / 2, -BD / 2, -Math.PI / 2, 0, 2);
-  face(new THREE.PlaneGeometry(BW, BD), hidden, 0, -BH / 2, -BD / 2, Math.PI / 2, 0, 2);
+  face(new THREE.PlaneGeometry(BW, BH), MATS.front, 0, 0, 0, 0, 0, 1);
+  face(new THREE.PlaneGeometry(BD, BH), MATS.right, BW / 2, 0, -BD / 2, 0, Math.PI / 2, 1);
+  face(new THREE.PlaneGeometry(BD, BH), MATS.left, -BW / 2, 0, -BD / 2, 0, -Math.PI / 2, 2);
+  face(new THREE.PlaneGeometry(BW, BH), MATS.back, 0, 0, -BD, 0, Math.PI, 2);
+  face(new THREE.PlaneGeometry(BW, BD), MATS.top, 0, BH / 2, -BD / 2, -Math.PI / 2, 0, 2);
+  face(new THREE.PlaneGeometry(BW, BD), MATS.bottom, 0, -BH / 2, -BD / 2, Math.PI / 2, 0, 2);
   // the box's pose: [cx, h, k] the front's middle at frame x cx, its height h px, the horizon at k of it from the top;
   // θ the angle between the front's normal and the camera's ray to it (the side shows on the right, as photographed)
   const alphaOf = cx => Math.atan((1200 - cx) / 1200 * TANX);
@@ -142,9 +148,9 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     const fl = local(-BW / 2, yh, 0, out2)[0], fr = local(BW / 2, yh, 0, o3)[0], br = local(BW / 2, yh, -BD, o4)[0];
     return Math.max(0, br - fr) / (fr - fl);
   }
-  const SIDE_MAX = 0.263;   // the packshot's: no more of the side than was photographed
+  const SIDE_MAX = 0.263;   // the packshot's: no more of the side than was photographed (D : W 0.68 by the dieline: ≈ 21°)
   function thetaMax(cx, h, k) {   // the angle at which the side is the packshot's 0.263 of the front, in this camera
-    let a = 0, b = rad(25);
+    let a = 0, b = rad(45);
     for (let i = 0; i < 22; i++) { const m = (a + b) / 2; placeBox(cx, h, k, m); if (sideRatio() > SIDE_MAX) b = m; else a = m; }
     return a;
   }
@@ -303,11 +309,12 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     last.t = t;
   }
   // QA: where to pipette the print (frame px) in the pose drawn last: the front's empty paper (u .50 / .25, v .70), the
-  // band (u .50, v .30), the side; the front's corners TL TR BR BL
+  // band (u .50, v .19: on the dieline's front the black band spans v 0.177…0.255, its gold letters 0.207…0.225), the
+  // side; the front's corners TL TR BR BL
   function probe() {
     if (!box.visible) return null;
     const pt = (x, y, z) => local(x, y, z, [0, 0]).map(Math.round);
-    return { face: pt(0, (0.5 - 0.70) * BH, 0), face2: pt(-0.25 * BW, (0.5 - 0.70) * BH, 0), band: pt(0, (0.5 - 0.30) * BH, 0),
+    return { face: pt(0, (0.5 - 0.70) * BH, 0), face2: pt(-0.25 * BW, (0.5 - 0.70) * BH, 0), band: pt(0, (0.5 - 0.19) * BH, 0),
       side: pt(BW / 2, (0.5 - 0.70) * BH, -BD / 2),
       front: [[-1, 1], [1, 1], [1, -1], [-1, -1]].map(([x, y]) => local(x * BW / 2, y * BH / 2, 0, [0, 0]).map(v => Math.round(v * 10) / 10)) };
   }
@@ -357,7 +364,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     scene.traverse(o => { if (o.geometry) geos.add(o.geometry); if (o.material) mats.add(o.material); });
     for (const g of geos) g.dispose();
     for (const m of mats) m.dispose();
-    for (const t of [faceTex, metalTex, roomEnv]) t.dispose();
+    for (const t of [...TEXS, roomEnv]) t.dispose();
     renderer.dispose();
   }
   const r1 = v => Math.round(v * 10) / 10, r3 = v => Math.round(v * 1000) / 1000;
