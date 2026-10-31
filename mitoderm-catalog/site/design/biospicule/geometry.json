@@ -1,0 +1,336 @@
+{
+ "units": "mm; ratios are W/H and D/H as used by mkBox(front, side, hidden, W, D, ...)",
+ "generated_by": "site/design/biospicule/panels.py",
+ "boxes": {
+  "cell-renew-1-5": {
+   "W_mm": 35,
+   "D_mm": 35,
+   "H_mm": 110,
+   "W_over_H": 0.3182,
+   "D_over_H": 0.3182,
+   "source": {
+    "pdf": "spicule-serum-30ml-boxes-labels.pdf",
+    "page": 1,
+    "page_size_pt": "989.342 x 699.951 pts"
+   },
+   "scale": {
+    "pt_per_mm": 2.8346,
+    "method": "dimension-labels",
+    "note": "dimension labels 35 mm x4 / 110 mm / 35 mm on the drawing match the fold-line distances at 1:1 (pt/2.8346)",
+    "measured_mm": {
+     "W": 35.01,
+     "D": 34.97,
+     "H": 109.98,
+     "W_pt": 99.24,
+     "D_pt": 99.12,
+     "H_pt": 311.76,
+     "left_mm": 34.97,
+     "right_mm": 34.97,
+     "side_H_mm": 109.98,
+     "glue_flap_mm": 5.0
+    }
+   },
+   "dieline_cells_left_to_right": [
+    "left",
+    "front",
+    "right",
+    "back",
+    "glue"
+   ],
+   "face_mapping": "print side up: the cell left of \"front\" is the LEFT face (-W/2), right of it the RIGHT face (+W/2); top/bottom flaps are hinged to the front panel",
+   "fill_rgb": [
+    250,
+    241,
+    230
+   ],
+   "panels": {
+    "left": {
+     "file": "panels/cell-renew-1-5/left.png",
+     "px": [
+      810,
+      2582
+     ],
+     "box_pt": [
+      101.52,
+      217.68,
+      200.64,
+      529.44
+     ],
+     "size_mm": [
+      34.97,
+      109.98
+     ],
+     "content": "BIOSPICULE (vertical, reads top-to-bottom) + small text \"Micro Spicule Serum formulated with marine spicules ...\""
+    },
+    "front": {
+     "file": "panels/cell-renew-1-5/front.png",
+     "px": [
+      812,
+      2582
+     ],
+     "box_pt": [
+      200.64,
+      217.68,
+      300.0,
+      529.44
+     ],
+     "size_mm": [
+      35.05,
+      109.98
+     ],
+     "content": "M monogram; MITODERM / BIOSPICULE SYSTEM; dark-green band CELL RENEW 1.5%; BIOSPICULE SERUM; spicule circle; frame ADVANCED BIOSPICULE TECHNOLOGY; 30ml e 1.0 fl.oz."
+    },
+    "right": {
+     "file": "panels/cell-renew-1-5/right.png",
+     "px": [
+      810,
+      2582
+     ],
+     "box_pt": [
+      300.0,
+      217.68,
+      399.12,
+      529.44
+     ],
+     "size_mm": [
+      34.97,
+      109.98
+     ],
+     "content": "MICRO SPICULE TECHNOLOGY / MADE IN KOREA (vertical, reads bottom-to-top) + 6M PAO icon"
+    },
+    "back": {
+     "file": "panels/cell-renew-1-5/back.png",
+     "px": [
+      810,
+      2582
+     ],
+     "box_pt": [
+      399.12,
+      217.68,
+      498.24,
+      529.44
+     ],
+     "size_mm": [
+      34.97,
+      109.98
+     ],
+     "content": "BIOSPICULE CELL RENEW 1.5%: description, Ingredients, How to use, Cautions, Manufactured by: Republic of Korea, Batch No."
+    },
+    "top": {
+     "file": "panels/cell-renew-1-5/top.png",
+     "px": [
+      812,
+      810
+     ],
+     "box_pt": [
+      200.64,
+      118.56,
+      300.0,
+      217.68
+     ],
+     "size_mm": [
+      35.05,
+      34.97
+     ],
+     "content": "BIOSPICULE / by MITODERM (upright, same orientation as the front; PNG bottom edge is hinged to the front top edge)"
+    },
+    "bottom": {
+     "file": "panels/cell-renew-1-5/bottom.png",
+     "px": [
+      812,
+      812
+     ],
+     "box_pt": [
+      200.64,
+      529.44,
+      300.0,
+      628.8
+     ],
+     "size_mm": [
+      35.05,
+      35.05
+     ],
+     "content": "blank 35 mm flap (unprinted cream)"
+    }
+   },
+   "label": {
+    "file": "panels/cell-renew-1-5/label.png",
+    "px": [
+     2488,
+     1354
+    ],
+    "pdf": "spicule-serum-30ml-boxes-labels.pdf",
+    "page": 1,
+    "size_mm": [
+     106.0,
+     58.0
+    ]
+   }
+  },
+  "cellular-age-defense-2-5": {
+   "W_mm": 35,
+   "D_mm": 35,
+   "H_mm": 110,
+   "W_over_H": 0.3182,
+   "D_over_H": 0.3182,
+   "source": {
+    "pdf": "spicule-serum-30ml-boxes-labels.pdf",
+    "page": 2,
+    "page_size_pt": "989.342 x 699.951 pts"
+   },
+   "scale": {
+    "pt_per_mm": 2.8346,
+    "method": "dimension-labels",
+    "note": "dimension labels 35 mm x4 / 110 mm / 35 mm on the drawing match the fold-line distances at 1:1 (pt/2.8346)",
+    "measured_mm": {
+     "W": 35.05,
+     "D": 34.97,
+     "H": 109.98,
+     "W_pt": 99.36,
+     "D_pt": 99.12,
+     "H_pt": 311.76,
+     "left_mm": 34.97,
+     "right_mm": 34.97,
+     "side_H_mm": 109.98,
+     "glue_flap_mm": 5.0
+    }
+   },
+   "dieline_cells_left_to_right": [
+    "left",
+    "front",
+    "right",
+    "back",
+    "glue"
+   ],
+   "face_mapping": "print side up: the cell left of \"front\" is the LEFT face (-W/2), right of it the RIGHT face (+W/2); top/bottom flaps are hinged to the front panel",
+   "fill_rgb": [
+    250,
+    241,
+    230
+   ],
+   "panels": {
+    "left": {
+     "file": "panels/cellular-age-defense-2-5/left.png",
+     "px": [
+      810,
+      2582
+     ],
+     "box_pt": [
+      100.8,
+      215.28,
+      199.92,
+      527.04
+     ],
+     "size_mm": [
+      34.97,
+      109.98
+     ],
+     "content": "BIOSPICULE (vertical, reads top-to-bottom) + small text \"Micro Spicule Serum formulated with marine spicules ...\""
+    },
+    "front": {
+     "file": "panels/cellular-age-defense-2-5/front.png",
+     "px": [
+      812,
+      2582
+     ],
+     "box_pt": [
+      199.92,
+      215.28,
+      299.28,
+      527.04
+     ],
+     "size_mm": [
+      35.05,
+      109.98
+     ],
+     "content": "M monogram; MITODERM / BIOSPICULE SYSTEM; dark-green band CELLULAR AGE DEFENSE 2.5%; BIOSPICULE SERUM; spicule circle; frame ADVANCED BIOSPICULE TECHNOLOGY; 30ml e 1.0 fl.oz."
+    },
+    "right": {
+     "file": "panels/cellular-age-defense-2-5/right.png",
+     "px": [
+      810,
+      2582
+     ],
+     "box_pt": [
+      299.28,
+      215.28,
+      398.4,
+      527.04
+     ],
+     "size_mm": [
+      34.97,
+      109.98
+     ],
+     "content": "MICRO SPICULE TECHNOLOGY / MADE IN KOREA (vertical, reads bottom-to-top) + 6M PAO icon"
+    },
+    "back": {
+     "file": "panels/cellular-age-defense-2-5/back.png",
+     "px": [
+      812,
+      2582
+     ],
+     "box_pt": [
+      398.4,
+      215.28,
+      497.76,
+      527.04
+     ],
+     "size_mm": [
+      35.05,
+      109.98
+     ],
+     "content": "BIOSPICULE CELLULAR AGE DEFENSE 2.5%: description, Ingredients, How to use, Cautions, Manufactured by: Republic of Korea, Batch No."
+    },
+    "top": {
+     "file": "panels/cellular-age-defense-2-5/top.png",
+     "px": [
+      812,
+      812
+     ],
+     "box_pt": [
+      199.92,
+      115.92,
+      299.28,
+      215.28
+     ],
+     "size_mm": [
+      35.05,
+      35.05
+     ],
+     "content": "BIOSPICULE / by MITODERM (upright, same orientation as the front; PNG bottom edge is hinged to the front top edge)"
+    },
+    "bottom": {
+     "file": "panels/cellular-age-defense-2-5/bottom.png",
+     "px": [
+      812,
+      810
+     ],
+     "box_pt": [
+      199.92,
+      527.04,
+      299.28,
+      626.16
+     ],
+     "size_mm": [
+      35.05,
+      34.97
+     ],
+     "content": "blank 35 mm flap (unprinted cream)"
+    }
+   },
+   "label": {
+    "file": "panels/cellular-age-defense-2-5/label.png",
+    "px": [
+     2488,
+     1354
+    ],
+    "pdf": "spicule-serum-30ml-boxes-labels.pdf",
+    "page": 2,
+    "size_mm": [
+     106.0,
+     58.0
+    ]
+   }
+  }
+ }
+}
