@@ -37,7 +37,14 @@ Writes into <out dir>:
                   top y 2.2 → 1.0, foot 1008.4 → 1010.5), 262×1009: as photographed, never upscaled
   derma-face.webp the DERMA RECOVERY CREAM front, cut from protocols/assets/img/derma-recovery.webp (x 11.6–624.0,
                   y 12.7–986.8; its side ≤ 5 px), 612×974
-usage: python3 -I make_textures.py <font dir with Rubik[wght].ttf> <out dir>"""
+usage: python3 -I make_textures.py <font dir with Rubik[wght].ttf> <out dir>
+Step 2 (31/10, the printer's dielines; as design/cell-renew-1-5/make_textures.py): `python3 -I make_textures.py panels
+<out dir>` reads the panels cut from the print files by design/biospicule/panels.py (panels/<slug>/{front,right,left,back,
+top,bottom}.png, 0.3 mm inside the fold lines, 600 dpi) for the three boxes of this scene and writes them as the scene's
+textures, <out dir>/<slug>-<face>.webp (lossless): every face of a box at one texel density, the front's long side 2048
+(the 2.5% and CELL RENEW: 644 × 2048, the sides 642 × 2048, the top 644 × 644; DERMA: 1490 × 2048, its top 1490 × 1489;
+the blank bottom flaps of the serums 256 px). The scene then shows the real print on every face at the dieline's sizes
+(geometry.json) and the typeset front above is kept here only for a roll-back."""
 import os, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -227,7 +234,28 @@ def side():   # the right side as photographed (no print reaches it)
     return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
 
 
+PANELS = f'{REPO}/site/design/biospicule/panels'
+SCENE_BOXES = ('cellular-age-defense-2-5', 'cell-renew-1-5', 'derma-recovery-cream')
+FACES = ('front', 'right', 'left', 'back', 'top', 'bottom')
+LONG = 2048
+
+
+def panels_textures(out):   # step 2: the dieline panels as the scene's textures, one texel density per box
+    os.makedirs(out, exist_ok=True)
+    for slug in SCENE_BOXES:
+        front = Image.open(f'{PANELS}/{slug}/front.png'); k = LONG / max(front.size)
+        for face in FACES:
+            src = f'{PANELS}/{slug}/{face}.png'
+            if not os.path.exists(src): continue   # DERMA: a crash-lock bottom, no printed panel (the scene uses the paper's colour)
+            im = Image.open(src).convert('RGB')
+            if face == 'bottom': im = im.resize((256, 256), Image.LANCZOS)   # blank cream: nothing to keep sharp
+            else: im = im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS)
+            f = f'{out}/{slug}-{face}.webp'; im.save(f, lossless=True, quality=100, method=6)
+            print(f'{slug}-{face}.webp', im.size, os.path.getsize(f) // 1024, 'KB')
+
+
 if __name__ == '__main__':
+    if sys.argv[1] == 'panels': panels_textures(sys.argv[2]); sys.exit()
     fdir, out = sys.argv[1:3]; os.makedirs(out, exist_ok=True)
     font = os.path.join(fdir, 'Rubik[wght].ttf')
     top = lambda x: 1.6 - 0.0044898 * (x - 10); foot = lambda x: 1018.6 + 0.0110204 * (x - 10)
