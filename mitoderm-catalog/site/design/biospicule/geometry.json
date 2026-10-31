@@ -331,6 +331,311 @@
      58.0
     ]
    }
+  },
+  "derma-recovery-cream": {
+   "W_mm": 62,
+   "D_mm": 62,
+   "H_mm": 85,
+   "W_over_H": 0.7294,
+   "D_over_H": 0.7294,
+   "source": {
+    "pdf": "derma-recovery-cream-box-50ml.pdf",
+    "page": 1,
+    "page_size_pt": "1645.6 x 1164.25 pts"
+   },
+   "scale": {
+    "pt_per_mm": 2.8346,
+    "method": "dimension-labels",
+    "note": "dimension labels 62 mm x4 / 85 mm / 62 mm on the drawing match the fold-line distances at 1:1 (pt/2.8346)",
+    "measured_mm": {
+     "W": 62.02,
+     "D": 62.0,
+     "H": 85.01,
+     "W_pt": 175.8,
+     "D_pt": 175.74,
+     "H_pt": 240.96,
+     "left_mm": 61.98,
+     "right_mm": 62.02,
+     "side_H_mm": 85.01,
+     "glue_flap_mm": 14.99
+    }
+   },
+   "dieline_cells_left_to_right": [
+    "glue",
+    "back",
+    "left",
+    "front",
+    "right"
+   ],
+   "face_mapping": "print side up: the cell left of \"front\" is the LEFT face (-W/2), right of it the RIGHT face (+W/2); top/bottom flaps are hinged to the front panel",
+   "fill_rgb": [
+    250,
+    241,
+    230
+   ],
+   "panels": {
+    "back": {
+     "file": "panels/derma-recovery-cream/back.png",
+     "px": [
+      1449,
+      1992
+     ],
+     "box_pt": [
+      142.44,
+      606.48,
+      318.24,
+      847.44
+     ],
+     "size_mm": [
+      62.02,
+      85.01
+     ],
+     "content": "BIOSPICULE Derma Recovery Cream: description, Ingredients, Cautions, How to use, Manufactured by: Republic of Korea"
+    },
+    "left": {
+     "file": "panels/derma-recovery-cream/left.png",
+     "px": [
+      1448,
+      1992
+     ],
+     "box_pt": [
+      318.24,
+      606.48,
+      493.92,
+      847.44
+     ],
+     "size_mm": [
+      61.98,
+      85.01
+     ],
+     "content": "BIOSPICULE (vertical, reads top-to-bottom) + \"Formulated to help support skin comfort after professional treatments\""
+    },
+    "front": {
+     "file": "panels/derma-recovery-cream/front.png",
+     "px": [
+      1449,
+      1992
+     ],
+     "box_pt": [
+      493.92,
+      606.48,
+      669.72,
+      847.44
+     ],
+     "size_mm": [
+      62.02,
+      85.01
+     ],
+     "content": "M monogram; MITODERM / BIOSPICULE SYSTEM; olive band DERMA RECOVERY CREAM (gold); SNAIL COLLAGEN; cream swirl; frame \"Daily nourishing collagen cream for healthy-looking glow\"; 50 ml e 1.69 fl.oz."
+    },
+    "right": {
+     "file": "panels/derma-recovery-cream/right.png",
+     "px": [
+      1449,
+      1992
+     ],
+     "box_pt": [
+      669.72,
+      606.48,
+      845.52,
+      847.44
+     ],
+     "size_mm": [
+      62.02,
+      85.01
+     ],
+     "content": "MADE IN KOREA (vertical, reads bottom-to-top) + 6M PAO icon"
+    },
+    "top": {
+     "file": "panels/derma-recovery-cream/top.png",
+     "px": [
+      1449,
+      1448
+     ],
+     "box_pt": [
+      493.92,
+      430.8,
+      669.72,
+      606.48
+     ],
+     "size_mm": [
+      62.02,
+      61.98
+     ],
+     "content": "BIOSPICULE / by MITODERM (62 mm top face; the rounded tuck above it is not extracted)"
+    },
+    "bottom": {
+     "file": null,
+     "content": "crash-lock bottom, unprinted cream (no panel file; use fill_rgb)"
+    }
+   },
+   "label": null
+  },
+  "micro-boost-10": {
+   "W_mm": 33.0,
+   "D_mm": 22.5,
+   "H_mm": 150.0,
+   "W_over_H": 0.22,
+   "D_over_H": 0.15,
+   "source": {
+    "pdf": "micro-boost-10-box-3ml.pdf",
+    "page": 1,
+    "page_size_pt": "595.276 x 841.89 pts (A4)"
+   },
+   "scale": {
+    "pt_per_mm": 2.8346,
+    "method": "assumed-1:1",
+    "note": "A4 drawing without dimension labels, assumed 1:1 (pt/2.8346). Evidence: the designer's other files are exactly 1:1; type sizes match the 30 ml drawings (\"3 ml e 0.10 fl.oz.\" 4.6 pt vs \"30ml e 1.0 fl.oz.\" 4.8 pt, side text 7.5 pt, MITODERM wordmark 80 vs 77 pt), at 2:1 the body text would print at ~3.5 pt; the 63x34 mm label drawing is 1:1 too. Confidence: medium-high. Only W:H and D:H matter for the 3D scene and they do not depend on the scale.",
+    "measured_mm": {
+     "W": 33.02,
+     "D": 22.61,
+     "H": 150.03,
+     "W_pt": 93.6,
+     "D_pt": 64.08,
+     "H_pt": 425.28,
+     "left_mm": 22.94,
+     "right_mm": 22.27,
+     "side_H_mm": 149.01,
+     "glue_flap_mm": 13.97
+    }
+   },
+   "dieline_cells_left_to_right": [
+    "flap",
+    "glue",
+    "back",
+    "left",
+    "front",
+    "right"
+   ],
+   "face_mapping": "print side up: the cell left of \"front\" is the LEFT face (-W/2), right of it the RIGHT face (+W/2); top/bottom flaps are hinged to the front panel",
+   "fill_rgb": [
+    250,
+    241,
+    230
+   ],
+   "panels": {
+    "back": {
+     "file": "panels/micro-boost-10/back.png",
+     "px": [
+      764,
+      3504
+     ],
+     "box_pt": [
+      181.44,
+      199.2,
+      275.04,
+      621.6
+     ],
+     "size_mm": [
+      33.02,
+      149.01
+     ],
+     "content": "MICRO BOOST 10% SPICULE SERUM: Professional cosmetic serum ..., Ingredients, How to use, Cautions, Manufactured by: Republic of Korea, Expiry Date & Batch No."
+    },
+    "left": {
+     "file": "panels/micro-boost-10/left.png",
+     "px": [
+      526,
+      3504
+     ],
+     "box_pt": [
+      275.04,
+      199.2,
+      340.08,
+      621.6
+     ],
+     "size_mm": [
+      22.94,
+      149.01
+     ],
+     "content": "MICRO BOOST 10% SPICULE SERUM (vertical, reads top-to-bottom) + \"Formulated with marine spicule, helps enhance skin elasticity and radiance.\""
+    },
+    "front": {
+     "file": "panels/micro-boost-10/front.png",
+     "px": [
+      764,
+      3528
+     ],
+     "box_pt": [
+      340.08,
+      197.76,
+      433.68,
+      623.04
+     ],
+     "size_mm": [
+      33.02,
+      150.03
+     ],
+     "content": "M monogram; MITODERM / BIOSPICULE PROFESSIONAL; black band MICRO BOOST 10% (gold); SPICULE SERUM; spicule circle with gold ring; frame Concentrated Spicule System; PROFESSIONAL TREATMENT; 3 ml e 0.10 fl.oz."
+    },
+    "right": {
+     "file": "panels/micro-boost-10/right.png",
+     "px": [
+      510,
+      3504
+     ],
+     "box_pt": [
+      433.68,
+      199.2,
+      496.8,
+      621.6
+     ],
+     "size_mm": [
+      22.27,
+      149.01
+     ],
+     "content": "PROFESSIONAL TREATMENT / MADE IN KOREA (vertical, reads bottom-to-top)"
+    },
+    "top": {
+     "file": "panels/micro-boost-10/top.png",
+     "px": [
+      764,
+      516
+     ],
+     "box_pt": [
+      340.08,
+      133.92,
+      433.68,
+      197.76
+     ],
+     "size_mm": [
+      33.02,
+      22.52
+     ],
+     "content": "MICRO SPICULE SERUM / BIOSPICULE by MITODERM (top face; a short tuck above it is not extracted)"
+    },
+    "bottom": {
+     "file": "panels/micro-boost-10/bottom.png",
+     "px": [
+      764,
+      492
+     ],
+     "box_pt": [
+      340.08,
+      623.04,
+      433.68,
+      684.0
+     ],
+     "size_mm": [
+      33.02,
+      21.51
+     ],
+     "content": "blank flap (unprinted cream)"
+    }
+   },
+   "label": {
+    "file": "panels/micro-boost-10/label.png",
+    "px": [
+     1448,
+     788
+    ],
+    "pdf": "micro-boost-10-label-3ml.pdf",
+    "page": 1,
+    "size_mm": [
+     61.98,
+     34.04
+    ]
+   }
   }
  }
 }
