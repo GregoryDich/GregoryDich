@@ -249,8 +249,10 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const DERMA = [660, 565, 340], NEXT = [905, 500, 290];
   // a phone's stage shows the scene box at ~0.35 css px per frame px: S5 the three centred in it and larger; at most
   // ~1.06 device px per frame px there, so no print is drawn above its photo's pixels. DERMA 85 / 110 of CELL RENEW's 700
-  // = 541 (was 420), its foot where it was (frame y 990), 27 px right of CELL RENEW and 14 px left of the 2.5%
-  const HERO4_PH = [470, 760, 700], DERMA_PH = [805, 720, 541], NEXT_PH = [1080, 640, 400];
+  // = 541 (was 420), its foot where it was (frame y 990); the wider box asked for room: CELL RENEW 20 px left and the
+  // 2.5% 10 px right of where they stood, so DERMA clears CELL RENEW's turned side (its back edge, frame x ≈ 600) by
+  // 18 px and the 2.5% by 14 px in the frame; the three still sit within the stage (frame x 168…1248)
+  const HERO4_PH = [450, 760, 700], DERMA_PH = [815, 720, 541], NEXT_PH = [1090, 640, 400];
   // the share of the front their right side shows on the packshots, the smaller of two measures (half alpha; half
   // contrast on the band's rows, as the keys are checked): CELL RENEW 46.1 : 261.8 px (46.4 : 261.75 at half alpha),
   // the 2.5% 44.8 : 262.1 (cellular-age-25.webp; its squeeze across leaves the share as it is). DERMA faces the camera
