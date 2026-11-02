@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Read",
+      "Edit",
+      "Write",
+      "SendUserFile",
+      "Artifact",
+      "mcp__Figma__create_session",
+      "mcp__Figma__use_figma",
+      "mcp__Figma__get_screenshot",
+      "mcp__Figma__get_metadata",
+      "mcp__Figma__download_assets",
+      "mcp__Figma__upload_assets"
+    ],
+    "ask": [
+      "mcp__atlascloud",
+      "mcp__Higgsfield"
+    ]
+  }
+}
