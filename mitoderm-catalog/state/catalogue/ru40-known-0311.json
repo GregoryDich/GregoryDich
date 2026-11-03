@@ -1,0 +1,198 @@
+[
+ {
+  "page": 30,
+  "severity": "major",
+  "node": "667:666, 667:667 (in RU p30 column 672:44) → RU p31 column 678:4; also 667:661, 667:662",
+  "problem": "The 'Salicylic Acid + Citric Acid' heading and text sit on RU p.30. On HE they open p.31 (HE 796:27: Salicylic → Sodium Hyaluronate/Glycerin/Betaine → how-to; HE p.30 has only Sponge, Niacinamide, Galactomyces, Sodium DNA). So RU p.30 has one extra ingredient and RU p.31 is missing it. The change list missed this, and the writer's report does not mention it.",
+  "fix": "Move 667:666 and 667:667 into auto-layout 678:4 on RU p.31 at index 0 and 1, before 667:668. Set 678:4.itemSpacing from 20 to 9 (the same as 672:44 on p.30). Estimated column bottom is y≈460; the limit is ≈505, with the panel footer 1110:21 at y 516. On p.30, move Galactomyces 667:661 and 667:662 from 672:43 to the top of 672:44, above Sodium DNA 667:664. That rebalances the columns and gives HE's order (Sponge, Niacinamide | Galactomyces, Sodium DNA). Then re-run the ink/footer check on both pages."
+ },
+ {
+  "page": 33,
+  "severity": "major",
+  "node": "667:625, 667:626, 667:627, 667:628 (in RU p33 column 672:51) → RU p34 column 678:5",
+  "problem": "'Yeast Beta-Glucan' and 'Экстракты Akebia Quinata и Camellia Japonica' (headings and texts) sit on RU p.33. On HE they are on p.34, above 'אופן השימוש' (HE 796:90). HE p.33 ends with Hydrolyzed Collagen and Adenosine. So RU p.33 has two extra blocks and RU p.34 has only the how-to. The change list missed this too.",
+  "fix": "Move the 4 nodes into auto-layout 678:5 on RU p.34 at index 0–3, before 667:629 'Способ применения'. Set 678:5.itemSpacing from 25 to 7 and its y from 176 to 162. Set the line height to 15 px on 667:626, 667:628 and 667:630 (12/15, as on RU p.6). Estimated bottom is y≈494; the limit is ≈505, with the panel footer 1110:28 at y 516. Check the result with absoluteRenderBounds. RU p.33 then ends with Collagen and Adenosine, as on HE."
+ },
+ {
+  "page": 14,
+  "severity": "major",
+  "node": "667:816 (p14), 667:782 (p18), 671:29 (p19)",
+  "problem": "MICRO BOOST 10% photo: RU still has the old front-only box b62c8f506c638a98b9145919506b58b3c552008d. That is exactly the 'old' hash in scratchpad/biospicule-new/rollback-he-catalogue.json. HE switched to the angled box showing the side panel on 02/11 (PLAN §21); see HE 793:236, 795:52, 795:73.",
+  "fix": "On each node, set fills[0].imageHash = 'a967ab04b9559daa8d81b68e87727c853f4b85c9' and keep scaleMode FIT (clone the fills array and reassign it). Then re-check the label/caption clearance on pp.18–19, because the angled shot is wider."
+ },
+ {
+  "page": 24,
+  "severity": "major",
+  "node": "667:760 (p24), 667:702 (p28), 667:687 (p29), 672:46 (p31)",
+  "problem": "CELL RENEW 1.5% photo: RU has the old hash 88f8a54de071ee1b479a1b4c7e32dea6236d6613. HE uses the angled photo 9e75119b… (HE 793:258, 793:326, 793:348, 796:55).",
+  "fix": "Set fills[0].imageHash = '9e75119b5a417943440e8ad83c4c7230c0fa8c1b' with scaleMode FIT on all 4 nodes."
+ },
+ {
+  "page": 24,
+  "severity": "major",
+  "node": "667:761 (p24), 667:704 (p28), 667:645 (p32), 672:53 (p34)",
+  "problem": "CELLULAR AGE DEFENSE 2.5% photo: RU has the old hash d0da5a19636207a025812b923bc800bde6c8445a. HE uses the angled photo feaf059a… (HE 793:259, 793:328, 793:456, 796:124).",
+  "fix": "Set fills[0].imageHash = 'feaf059a021791551aafb500159a9d7a05c31c06' with scaleMode FIT on all 4 nodes."
+ },
+ {
+  "page": 24,
+  "severity": "major",
+  "node": "667:762 (p24), 667:706 (p28), 667:603 (p35)",
+  "problem": "DERMA RECOVERY photo: RU has the old hash d02d61c882c9f1add2d85e303af04b411f95e59a. HE uses the angled photo 7755e896… (HE 793:260, 793:330, 793:369).",
+  "fix": "Set fills[0].imageHash = '7755e896ff345bda25c67d39736b52f438c8f97c' with scaleMode FIT on all 3 nodes. On p.35, re-check that the label 667:602 still clears the box."
+ },
+ {
+  "page": 6,
+  "severity": "major",
+  "node": "670:2 (667:938, 667:939) on p7; 671:3 (667:917, 667:918) on p6; 667:935; card 667:915 + 667:916 (hidden, p7)",
+  "problem": "The V-TECH blocks are on swapped pages (change-list item E6.8, still pending the owner). HE p.6 carries the full active-ingredient lists (serum and gel mask) under 'רכיבים פעילים'. HE p.7 carries the results callout (card with gold bar) and the benefits list. RU has the lists on p.7, with no heading, and the results on p.6. RU p.6's 'Активные компоненты' (667:935) heads the kit description instead.",
+  "fix": "If the owner confirms HE parity: move 670:2 to p.6 as the right column, after 'Содержимое упаковки' (667:937/667:940). Move 667:935 so it sits directly above 670:2, and leave the kit description without a heading, as on HE. Move 671:3 to p.7 and unhide 667:915 'card — results' and 667:916 'card — accent bar' around it, under the title as on HE p.7. In 230-px columns the p.6 lists will not fit at 12/16.5, so set 667:938/667:939 to 10/15 and re-check that the ink ends ≤ y 515. Optionally put 'Только для профессионального применения' (667:930) above the title and the two-phase line (667:943) directly under it, as HE does. If the owner keeps the RU split, record it as an accepted deviation."
+ },
+ {
+  "page": 8,
+  "severity": "major",
+  "node": "667:905, 667:906 (p9 column 671:4) → p8 column 670:8",
+  "problem": "EXO-NAD step 3 is on the wrong page (change-list item E8.5, still pending the owner). HE p.8 holds all three steps (EXO BIPHASIC PEEL, pH NORMALIZER, LONGEVITY SERUM). RU p.8 stops after step 2, and '3. LONGEVITY SERUM — …' plus its text open RU p.9. HE p.9 starts with 'יתרונות מרכזיים'.",
+  "fix": "If the owner confirms: move 667:905 and 667:906 to the end of 670:8 on p.8. HE sets p.8 at 10 pt, so set 667:897, 667:900, 667:901 and 667:906 to 10/15. Re-flow p.8; the 'IMG — EXO-NAD' picture at 42,432 has to move or shrink so both columns end ≤ y 515. p.9 then starts with 'Основные преимущества' (667:890). If the owner keeps the RU split, record it as an accepted deviation."
+ },
+ {
+  "page": 24,
+  "severity": "minor",
+  "node": "667:759 (p24), 667:749 (p25)",
+  "problem": "The EXOSIGNAL SPRAY pack shot differs from HE. RU uses dca06568… (clear glass bottle, FILL). HE uses 7a8ed5b1… on p.24 (FIT) and 7b089e65… on p.25 (CROP), which show the white bottle; HE uses dca06568 only on p.27.",
+  "fix": "For parity, set 667:759 fills[0].imageHash = '7a8ed5b1fcfb25443ee926a8fc9a530f69936a61' with FIT. Set 667:749 fills[0].imageHash = '7b089e65a84766326c2b8eec16af25d0fb057d48' and copy HE 793:279's CROP imageTransform. Skip this only if the owner prefers the clear-bottle shot in EN/RU."
+ },
+ {
+  "page": 1,
+  "severity": "minor",
+  "node": "667:1014; 667:1009–667:1013",
+  "problem": "The cover stack differs from HE. The top picture 667:1014 sits at x=−1 (HE 824:49 is at x=−0.1), leaving a ~0.9 px strip on the right edge. The five full-page pictures underneath stay visible, while HE hides them (824:44–48). Visible layers are exported, so the RU cover PDF carries 6 full-page rasters instead of 1. If the top picture is partly transparent, as the writer says, the RU cover also renders differently from HE.",
+  "fix": "Set 667:1014.x = −0.1 (as HE). Hide 667:1009–667:1013 and mark them with setSharedPluginData hidden_by = cover-stack, as on p.40. Then compare the frame render with HE p.1; the background must match, since both use the same hashes."
+ },
+ {
+  "page": 38,
+  "severity": "minor",
+  "node": "1110:8 (caption); row: 667:555/667:557, 1110:9/1110:8, 667:556/667:552",
+  "problem": "The two-line caption 'MITOTECH⏎CELL BOOSTER' ends at ink y≈523. That is below this page's footer line: the panel footer 667:550 has its ink top at 513.5. HE keeps the captions above its footer.",
+  "fix": "Move the product row (the three images and three captions) up 12 px, so 1110:8 ends ≤ y 511. The body above ends at ~360, so there is room."
+ },
+ {
+  "page": 38,
+  "severity": "minor",
+  "node": "667:555 + 667:557 (V-TECH), 667:556 + 667:552 (EXOSIGNAL HAIR)",
+  "problem": "The product row is not mirrored. HE (right to left) reads EXOSIGNAL HAIR → MITOTECH → V-TECH. RU keeps the same left/right positions, so left to right it reads V-TECH → MITOTECH → EXOSIGNAL HAIR, the reverse of HE. Every other mirrored layout in this edition flips.",
+  "fix": "Swap the x positions of the V-TECH group (image 667:555 + caption 667:557) and the EXOSIGNAL HAIR group (image 667:556 + caption 667:552); MITOTECH stays in the middle."
+ },
+ {
+  "page": 4,
+  "severity": "minor",
+  "node": "667:964",
+  "problem": "'Профессиональные процедуры - лицо' uses a hyphen-minus between NBSPs as a dash. Russian typesetting needs an em dash.",
+  "fix": "Replace the U+002D at the hyphen position with '—' (U+2014), keeping the NBSP before it. Use deleteCharacters then insertCharacters at the same index so the style is kept."
+ },
+ {
+  "page": 11,
+  "severity": "minor",
+  "node": "667:859",
+  "problem": "'Профессиональные процедуры - кожа головы' uses a hyphen as a dash, the same issue as p.4.",
+  "fix": "Replace ' - ' with ' — ' (an NBSP before the em dash), keeping the style."
+ },
+ {
+  "page": 4,
+  "severity": "minor",
+  "node": "667:965",
+  "problem": "The 'PROFESSIONAL FACIAL TREATMENT' tagline is Regular 12, tracking 0, cream #F8F3E8. HE 824:76 and the matching RU p.11 line 667:854 are gold #D4A853 with +18% tracking, so the two section openers look different.",
+  "fix": "Set letterSpacing to 18 PERCENT, the fill to #D4A853 and the size to 14, matching 667:854."
+ },
+ {
+  "page": 14,
+  "severity": "minor",
+  "node": "667:815",
+  "problem": "'4-Е ПОКОЛЕНИЕ' is Medium 20, cream, with no tracking. HE 793:235 '4TH GENERATION' is Regular 21, gold #D4A853, +18% tracking. The other RU openers keep their English taglines, while this one is translated.",
+  "fix": "Set it to Regular 20, letterSpacing 18 PERCENT, fill #D4A853. Ask the owner whether to keep '4-Е ПОКОЛЕНИЕ' or use '4TH GENERATION', as with the other English taglines kept on pp.4 and 11."
+ },
+ {
+  "page": 18,
+  "severity": "minor",
+  "node": "667:770 (p18), 1110:15 (p19)",
+  "problem": "These footers read 'MITODERM  |  WHERE SCIENCE MEETS BEAUTY' with double spaces. The other 34 RU footers use single spaces.",
+  "fix": "Delete one space on each side of '|' in both nodes (deleteCharacters keeps the style)."
+ },
+ {
+  "page": 6,
+  "severity": "minor",
+  "node": "667:927 (p6), 667:878 (p10), 667:688 (p29), 667:646 (p32), 667:604 (p35), 667:542 (p39); visible: 1093:43 (p20), 667:553 (p38)",
+  "problem": "The gold panel hairline ('fx — hairline frame') is inconsistent across RU panel pages. It is visible on pp.19, 20 and 38 (copied from HE). It is hidden on pp.6, 10, 29, 32, 35 and 39, and on pp.6, 10 and 32 it sits on the wrong side, away from the panel. It is absent on pp.31 and 34. HE shows it on every panel page.",
+  "fix": "Unhide 667:688, 667:604 and 667:542, which are already on the panel side. Set 667:927.x = 12 and unhide it. Set 667:878.x = 14 and 667:646.x = 14 and unhide both. Clone 667:688 into 669:30 (p.31) at 508,14, and the moved 667:646 into 669:32 (p.34) at 14,14. Alternatively, hide 1093:43 and 667:553 if the owner prefers the RU look without the frame."
+ },
+ {
+  "page": 20,
+  "severity": "minor",
+  "node": "1093:34 (p20), 1093:49 (p21), 1093:63 (p22), 1093:470 (p23)",
+  "problem": "Title rules (thin lines under the titles) appear in RU only on pp.20–23, which were copied from HE. The other RU pages have none, while HE has them on 32 pages. As a result, the MITOTECH spread looks different from the rest of the RU edition.",
+  "fix": "Pick one rule for the RU edition. Either hide these 4 lines to match the rest of RU, or add HE's rules to the other RU pages (HE positions, mirrored for left-to-right). Ask the owner which."
+ },
+ {
+  "page": 27,
+  "severity": "minor",
+  "node": "667:714",
+  "problem": "The Latin label copy 'Deep nourishing scalp spray / HOME USE · 15 ml' sits in gold inside the text column at 46,272, between the formula paragraph and the bullets. It reads like a sub-heading. On HE it is a caption under the pack shot.",
+  "fix": "Move 667:714 under the pack shot ('123456777 1' at 611,110, 136×191) as a centred caption at about y 305. Shift the third bullet column so it starts below the caption, then re-check overlaps."
+ },
+ {
+  "page": 27,
+  "severity": "minor",
+  "node": "667:716",
+  "problem": "The formula paragraph adds 'и не требует смывания', which is not in the HE sentence ('מתאים לשימוש יום־יומי, נספג במהירות'). It also repeats bullet 5.",
+  "fix": "End the paragraph with '…Подходит для ежедневного применения и быстро впитывается.'"
+ },
+ {
+  "page": 39,
+  "severity": "minor",
+  "node": "667:537",
+  "problem": "The trust paragraph adds 'на первичной и повторных консультациях … данные и динамику'. It also drops HE's point that the tool is used at the first diagnostic meeting and shows the data on screen together with a professional explanation.",
+  "fix": "Replace the text with: 'Инструмент доверия и подтверждения результата — на первичной диагностической консультации MITOSCAN показывает пациенту данные на экране вместе с профессиональным объяснением. Так пациенту легче понять необходимость курса процедур, соблюдать протокол и реалистично оценивать прогресс, а удовлетворённость результатом растёт.'"
+ },
+ {
+  "page": 2,
+  "severity": "minor",
+  "node": "667:984, 667:988",
+  "problem": "The ToC lines read awkwardly because 'для' is doubled: '2. Синтетические экзосомы для профессиональных процедур для лица' and '3. Синтетические экзосомы для процедур для кожи головы и волос'.",
+  "fix": "Change them to '2. Синтетические экзосомы: профессиональные процедуры для лица' and '3. Синтетические экзосомы: процедуры для кожи головы и волос'. This matches the p.4 and p.11 subtitles; keep the existing styles."
+ },
+ {
+  "page": 10,
+  "severity": "minor",
+  "node": "667:868",
+  "problem": "HE uses 'יתרונות מרכזיים' throughout. RU renders it as 'Основные преимущества' on pp.9 and 21 but 'Ключевые преимущества' on p.10.",
+  "fix": "Change 667:868 to 'Основные преимущества'."
+ },
+ {
+  "page": 3,
+  "severity": "minor",
+  "node": "667:974",
+  "problem": "The brand legend gloss 'DERM — дерма, слой кожи.' adds 'слой кожи', which HE does not have (it says only 'דרמיס').",
+  "fix": "Change the line to 'DERM — дерма.' and keep the Bold 'DERM' run."
+ },
+ {
+  "page": 4,
+  "node": "RU p.4 glow ellipses (find the 'fx — glow' layers under the kit photo)",
+  "severity": "minor",
+  "problem": "HE p.4 (824:67) shows the V-TECH kit photo on a visible golden glow (824:68 / 824:69). Make RU p.4 match, as EN p.4 now does (667:460: 460×420, #D4A853 at 30%, layer blur 90; 667:461: 300×260, #E8C87E at 28%, blur 60; both visible, below the photo, geometry mirrored from HE).",
+  "fix": "Mirror HE 824:68/824:69 geometry into the RU frame, set fills/opacity/blur as on EN 667:460/667:461, visible, layered below the kit photo. Skip if RU p.4 already matches HE."
+ },
+ {
+  "page": 22,
+  "node": "RU p.22 note 'Примечание…' (1093:58)",
+  "severity": "minor",
+  "problem": "On HE p.22 (956:2) and EN p.22 (1081:30) the note about bubbles sits under the 5 steps; on RU it sits to the right of the how-to text.",
+  "fix": "Move the note under the 5 steps as on HE/EN, full width of the steps row, above the footer; keep 10 pt minimum. If it cannot fit cleanly, leave it and report the numbers."
+ },
+ {
+  "page": 6,
+  "node": "pp.6–9 (and 30/31, 33/34)",
+  "severity": "major",
+  "problem": "Owner decision (03/11): HE is the master, so E6.8/E8.5 are decided — blocks must sit on the same pages as on HE.",
+  "fix": "Rearrange RU pp.6–9 exactly like the EN edition now does (model frames EN 667:427, 667:411, 667:396, 667:381): p.6 = intro + indications | package contents + active ingredients; p.7 = treatment protocol + areas | results card (the hidden card + gold accent bar, as on HE 824:121/824:122) + benefits + photo; p.8 = EXO-NAD intro + step 1 | steps 2 and 3 + photo; p.9 = key benefits, directions, combination, end of treatment | package contents + photo. Use 10/13 pt body where needed (never below 10), headings unchanged. Move the ingredient blocks of pp.30/31 and 33/34 to their HE pages as described in the issues above."
+ }
+]

@@ -1,0 +1,103 @@
+{
+ "verdict": "NOT READY TO SHIP: there are 2 major gaps against HE page 793:2, plus minor fixes. I checked this independently and changed nothing in Figma.\n\nChecked and OK:\n(a) Structure. The page is named \"EXPORT — EN — Design 40\" and holds exactly 40 frames, \"EN — 01 — Cover\" to \"EN — 40 — Back Cover\". Each frame sits at exactly its HE grid position. Layers run 40 down to 1. Each frame has 1 identical PDF export setting, and no descendants have any. Backup page 1076:2 has 36 frames and 0 export settings.\n(b) Text. I read the live HE text (its hashes match the 01/11 dump on all 40 pages). The EN text has a counterpart for every heading, list, ingredient, number, step and combination on pp.1–5, 10–40. pp.6–9 are the exception (issue 2).\n- p.2 contents: 8 sections, mirrored into 2 columns. MITOTECH is section 5 and also a bullet in section 7, as on HE. HE has no page numbers, so EN has none either.\n- pp.20–23 match the owner text and canon-v2.\n- p.38 shows all three products with their images.\n(c) Language. No Hebrew, Cyrillic or bidi marks in any EN text or layer name. Spelling is consistently British (ageing, programme, fibres). MITOTECH terms match protocols-en.md (Concentrated powder – 4 × 154 mg; Active booster ampoules – 4 × 15 mL; dosage line; \"Total of up to 60 treatments!\"). The only mismatch is program/programme.\n(d) Layout. Measured by actual glyph bounds: no text renders null, nothing is clipped or outside its frame, nothing sits below the footer line, and no text overlaps other text by more than 2 px. Three overlaps between text and image boxes are only transparent margins: p.1 logo, p.28 footer vs. pack shot (3 px), p.35 caption. Apart from the cover layers (as on HE) and the back-cover layers under the \"EN 1\" image, every hidden layer was already hidden on the backup.\n- MITOTECH pages are correctly mirrored. The p.22 step row reads 1→5 left to right, and each icon sits with its caption. All 4 titles use \"MITOTECH \" ExtraBold + \"CELL BOOSTER\" Light.\n(e) I looked at fresh renders of pp.1–10, 12, 15, 17–24, 26–29, 35, 38, 40, and of HE pp.4, 15, 22–24, 29, 40.\n\nNote: the p.15 photo is a different file from HE (24e53969dd vs ebe521959d), but it is the same 1024×819 picture and looks the same. Not a defect.\n\nMain finding: since the 01/11 dump, the final HE swapped all BIOSPICULE pack shots for new angled photos. The change list predates that swap, so EN still uses the old ones on 10 pages (issue 1).",
+ "issues": [
+  {
+   "page": 29,
+   "severity": "major",
+   "node": "14 image nodes: p14 667:313; p18 667:278; p19 669:10; p24 667:253, 667:254, 667:255; p28 667:194, 667:196, 667:198; p29 667:178; p31 674:3; p32 667:134; p34 674:5; p35 667:91",
+   "problem": "BIOSPICULE product photos do not match the final HE. On 10 pages (14, 18, 19, 24, 28, 29, 31, 32, 34, 35), HE now shows new angled pack shots: MICRO BOOST a967ab04b9, CELL RENEW 9e75119b5a, CAD feaf059a02, DERMA RECOVERY 7755e896ff. EN still shows the old front-on shots (b62c8f506c, 88f8a54de0, d0da5a1963, d02d61c882). The change list was built from the 01/11 dump, before HE swapped these images, so it never listed them.",
+   "fix": "Copy the HE IMAGE paint into each EN node, keeping the EN geometry and scaleMode FIT: 667:313←793:236, 667:278←795:52, 669:10←795:73, 667:253←793:258, 667:254←793:259, 667:255←793:260, 667:194←793:326, 667:196←793:328, 667:198←793:330, 667:178←793:348, 674:3←796:55, 667:134←793:456, 674:5←796:124, 667:91←793:369. The new files contain English-only packaging text; I checked the side panels, which read MICRO SPICULE TECHNOLOGY / MADE IN KOREA. They are narrower, for example 685×2000 against 899×1750 before. Afterwards, re-render pp.24 and 28 and check that each product label is still centred under its visible box."
+  },
+  {
+   "page": 6,
+   "severity": "major",
+   "node": "p6 667:420/667:421 (frame 673:13); p7 667:439/667:441; p9 667:409/667:410",
+   "problem": "Blocks sit on different pages than on HE, against the same-N parity rule. HE p.6 has 'Active ingredients' and the salmon/low-MW notes; EN p.6 has the 'Expected Results' statement and benefit list instead, which are HE p.7 content under an EN-only heading. EN p.7 has Active Ingredients and lacks the results block. HE p.8 has step 3 LONGEVITY SERUM; EN has it on p.9. The writer filed this as a layout note (E6.6/E8.2), but it is a content-placement difference and owner question 10 is still open. The content stays inside the same printed spread.",
+   "fix": "Get the owner's answer to Q10. If he wants HE order: move 667:439+667:441 to p.6 and 673:13 (667:420+667:421) to p.7, and move 667:409+667:410 from p.9 to p.8. At 12 pt they do not fit: p.6 has about 100 px free below y400 and needs about 220; p.8 has about 90 px and needs about 130. So p.6 needs a 3-column body (kit + package | active ingredients | indications) at 10/13, and p.8 needs the EXO-NAD photo 667:407 moved to p.9 or the body set to 10/13. If he accepts the current order, record it as an owner-approved deviation."
+  },
+  {
+   "page": 4,
+   "severity": "minor",
+   "node": "667:460, 667:461",
+   "problem": "The HE p.4 kit photo sits on a visible golden glow (824:68 / 824:69). On EN the two glow ellipses are hidden, and 667:460 has the wrong geometry and colour (309,267, 460×250, #DBCBAC at 41%), so the kit sits on flat #241c12.",
+   "fix": "667:460: x 304, y 110, resize to 460×420, fill #D4A853 at 30%, layer blur 90, visible. 667:461: keep x 389, y 185, 300×260, #E8C87E at 28%, blur 60, and set it visible. Keep both below the photo 667:467."
+  },
+  {
+   "page": 26,
+   "severity": "minor",
+   "node": "667:226",
+   "problem": "The Protocol text breaks the product name at its hyphen: 'V-' at the end of one line, 'TECH' on the next. Visible in the render.",
+   "fix": "In 667:226, replace the hyphens in 'V-TECH' and 'EXO-NAD' with a non-breaking hyphen (U+2011), as the HE titles already do for EXO‑NAD. Load the node's fonts first, then use deleteCharacters/insertCharacters so the style is kept. Re-render and check the line now breaks before 'V‑TECH'."
+  },
+  {
+   "page": 23,
+   "severity": "minor",
+   "node": "1081:444, 1081:445, 1081:447",
+   "problem": "The left column runs down to y≈502, 11 px above the footer at 513, while the right column ends at y≈305. Item 1's title leaves '10% –' alone on its second line, and item 3 leaves 'day.' alone on its last line.",
+   "fix": "In 1081:445, join 'MICRO BOOST 10% –' with no-break spaces (U+00A0) so the title breaks as '1. After using the BIOSPICULE syringe:' / 'MICRO BOOST 10% –'. In 1081:447, use a no-break space in 'once a day.' ('a day.'). Optionally widen the left frame 1081:443 to 350 and shift the right frame 1081:448 to x 424 so the kit lines and icons still fit; this gains a line."
+  },
+  {
+   "page": 15,
+   "severity": "minor",
+   "node": "667:299",
+   "problem": "EN says the renewal cycle is shortened 'from 28 to 7 days'. The final HE 793:242 says 'מ 7 ל 28 ימים' (from 7 to 28). EN fixes HE's logic, but the two now disagree, and owner question 3 is still open.",
+   "fix": "Keep the EN wording only with the owner's written confirmation, and ideally have him correct the HE. If he wants the HE kept literally, change the EN to match ('from 7 to 28 days')."
+  },
+  {
+   "page": 3,
+   "severity": "minor",
+   "node": "667:475, 667:472",
+   "problem": "667:475 has an EN-only heading, 'The Story Behind the Name'; HE 824:60 has only the sentence. In 667:472, 'purified Spongilla-derived spicules that undergo rigorous purification' repeats itself, and HE says 'spongillas – micro-needles that underwent strict purification and control processes'.",
+   "fix": "In 667:475, delete 'The Story Behind the Name\\n' (or record it as an accepted EN-only heading) and move 667:477/667:476 up by one line. In 667:472, replace 'based on purified Spongilla-derived spicules that undergo rigorous purification and quality-control processes' with 'based on Spongilla spicules – micro-needles that undergo rigorous purification and quality-control processes'."
+  },
+  {
+   "page": 8,
+   "severity": "minor",
+   "node": "667:401",
+   "problem": "The meaning drifts from HE 824:136. HE says the goal is to restore (לשקם) the epidermal barrier during the treatment; EN says 'support the skin barrier'. EN also adds 'carefully selected', which is not in HE.",
+   "fix": "Replace 'and carefully selected active ingredients that support' with 'and ingredients that support', and replace 'The overall goal is to support the skin barrier throughout the treatment.' with 'The overall goal is to restore the epidermal barrier during the treatment.' Keep the existing style runs."
+  },
+  {
+   "page": 27,
+   "severity": "minor",
+   "node": "667:204, 667:208, 667:209",
+   "problem": "The page has content HE lacks. The subtitle adds 'continuous … between professional treatments' (HE 793:303: 'advanced home spray for scalp care and hair support'). The EN-only headings 'Key Benefits' (in 667:208) and 'Recommended For' (in 667:209) have no HE counterpart.",
+   "fix": "Set 667:204 to 'Advanced home-use spray for scalp care and hair support.' Either delete '\\n\\nKey Benefits' and '\\n\\nRecommended For' and pull 667:209/667:210 up by the freed height, or get the owner to approve them as EN-only headings."
+  },
+  {
+   "page": 34,
+   "severity": "minor",
+   "node": "667:119",
+   "problem": "HE 796:116 says Derma Recovery Cream is applied 'to support the skin's hydration and vitality'. EN says 'to support the skin’s moisture barrier and maintain a comfortable, hydrated feel', which is a different claim. It also uses a curly apostrophe; the rest of the edition uses straight ones.",
+   "fix": "Replace 'to support the skin’s moisture barrier and maintain a comfortable, hydrated feel' with 'to support skin hydration and vitality'."
+  },
+  {
+   "page": 33,
+   "severity": "minor",
+   "node": "667:104",
+   "problem": "Apostrophes are inconsistent. 'formula’s' uses U+2019, while 11 other pages use straight apostrophes (skin's).",
+   "fix": "Replace ’ with ' in 667:104, and in 667:119 if it is kept."
+  },
+  {
+   "page": 18,
+   "severity": "minor",
+   "node": "667:264, 1094:9 (p.19)",
+   "problem": "The footers on pp.18–19 read 'MITODERM  |  WHERE SCIENCE MEETS BEAUTY' with double spaces. All other EN footers use single spaces. The p.19 footer is new and copied the p.18 spacing.",
+   "fix": "Set both nodes to 'MITODERM | WHERE SCIENCE MEETS BEAUTY'."
+  },
+  {
+   "page": 24,
+   "severity": "minor",
+   "node": "667:250",
+   "problem": "The ™ in 'BIOSPICULE™ Series' is set at Medium 8 pt on a 14 pt line, and it renders like a hyphen ('BIOSPICULE- Series'). HE 793:255 looks the same, but an English reader will see a stray hyphen.",
+   "fix": "Set the range [10,11) to Medium 14, as in the p.2 contents entry 667:498 ('7. BIOSPICULE™ series'), or to 10 pt. Or leave it as is and note it as matching HE."
+  },
+  {
+   "page": 23,
+   "severity": "minor",
+   "node": "1081:447",
+   "problem": "MITOTECH spelling differs from the EN protocols. The catalogue has '8-week home care programme' (British, as on pp.26, 27, 32); protocols-en.md line 139 and the EN protocols page have 'program'.",
+   "fix": "Keep 'programme' in the catalogue and change the EN protocols heading to '8-week home care programme – full kit', so both documents agree."
+  }
+ ]
+}
