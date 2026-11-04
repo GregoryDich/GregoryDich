@@ -54,16 +54,16 @@ html.story:not(.flow) #meet { padding-top: calc(72px + 45svh); }   /* S1's copy 
   html.story:not(.flow) .offer .kitcard { margin-top: 150vh; }   /* room for the last run after the cards */
   .story #offer { scroll-margin-top: calc(-72px - 127vh); }   /* the dock's «הצעה» lands where the kit has landed in the card */
 }
-/* the kit card stays opaque around its picture: only the picture's window lets the flying kit and the glow show, so the kit
-   never passes under the card's text (ARCHITECTURE-v2: the product never under the text); the window's place comes from
-   story-v2-motion.js (--fig-top, --fig-h) */
-html.story:not(.no-gl):not(.flow) .kitcard { background: none; position: relative; isolation: isolate; }
-html.story:not(.no-gl):not(.flow) .kitcard::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
-  background: linear-gradient(160deg, #1c1b1f, #0e0e11);
-  -webkit-mask: linear-gradient(#000 0 0) 0 0 / 100% var(--fig-top, 0px) no-repeat, linear-gradient(#000 0 0) 0 100% / 100% calc(100% - var(--fig-top, 0px) - var(--fig-h, 0px)) no-repeat;
-  mask: linear-gradient(#000 0 0) 0 0 / 100% var(--fig-top, 0px) no-repeat, linear-gradient(#000 0 0) 0 100% / 100% calc(100% - var(--fig-top, 0px) - var(--fig-h, 0px)) no-repeat; }
-/* … and the flying kit never meets the card: as the card's top rises from 90 % to 80 % of the screen (above the kit's foot)
-   the 3D fades out and the card's own picture of the kit fades in (story-v2-motion.js: html.mt-land, --mt-land 1 → 0) */
+/* the kit card's picture comes first and its background starts under it (story-v2-motion.js: --body-top): the flying kit
+   comes down onto the card from above, never under its text (ARCHITECTURE-v2: the product never under the text) and never
+   cut straight across by a band of the card; the card's hairline and background are its body's only (no line, no shade
+   over the kit) */
+html.story:not(.no-gl):not(.flow) .kitcard { background: none; position: relative; isolation: isolate; border-color: transparent; box-shadow: none; }
+html.story:not(.no-gl):not(.flow) .kitcard .kc-fig { order: -1; }
+html.story:not(.no-gl):not(.flow) .kitcard::before { content: ''; position: absolute; inset: var(--body-top, 0px) -1px -1px; z-index: -1;
+  border-radius: inherit; border: 1px solid var(--hairline); background: linear-gradient(160deg, #1c1b1f, #0e0e11); }
+/* … and in the last 15 % of its flight into the window the 3D fades out and the card's own picture of the kit fades in
+   (story-v2-motion.js: html.mt-land, --mt-land 1 → 0) */
 html.mt-land:not(.flow) #seq { opacity: var(--mt-land, 0) !important; }
 html.mt-land:not(.flow) .kitcard .kc-live { opacity: calc(1 - var(--mt-land, 0)) !important; }
 /* phone: while the opening plays in its own block, S1's block below shows no still of the same kit (html.mt-open) */

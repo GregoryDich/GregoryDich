@@ -4,10 +4,10 @@
 // none under reduced motion (p is then rounded). Desktop: the live 3D steps aside while the step cards fill the middle of the
 // screen, by scroll (html.mt-cards, --mt-cards: out as card 01's picture rises from 85 % to 55 % of the screen, back in as
 // card 05's leaves; html.mt-cards0 while it is fully out: the scene does not draw), and it hands over to the kit card's own
-// picture in the last 15 % of its flight into the card's window (html.mt-land, --mt-land: the shrink is seen, the card's opaque
-// background clips the kit outside the window). Phone: until the opening has reached S1's pose (p 0.45), S1's block below does not
-// show its still of the same kit (html.mt-open). The kit card's picture window (--fig-top, --fig-h) for its opaque background
-// (story-v2.css).
+// picture in the last 15 % of its flight onto the card (html.mt-land, --mt-land: the shrink is seen; the kit comes down from
+// above onto the card, whose picture is first, so no band of the card crosses it). Phone: until the opening has reached S1's
+// pose (p 0.45), S1's block below does not show its still of the same kit (html.mt-open). Where the kit card's background
+// starts, under its picture (--body-top, story-v2.css).
 (function () {
   var root = document.documentElement, haze = document.querySelector('.mt-haze');
   var calm = matchMedia('(prefers-reduced-motion: reduce)'), small = matchMedia('(max-width: 899px)'), wide = matchMedia('(min-width: 900px)');
@@ -25,10 +25,9 @@
   function measure() {
     W = innerWidth; H = innerHeight; size = els.map(function (e) { return [e.offsetWidth, e.offsetHeight]; });
     var card = document.querySelector('.kitcard'), fig = card && card.querySelector('.kc-fig');
-    if (fig) {
-      var c = card.getBoundingClientRect(), f = fig.getBoundingClientRect();
-      card.style.setProperty('--fig-top', (f.top - c.top - card.clientTop).toFixed(1) + 'px');
-      card.style.setProperty('--fig-h', f.height.toFixed(1) + 'px');
+    if (fig) {   // the card's background starts under its picture (story-v2.css), half the card's gap below it
+      var c = card.getBoundingClientRect(), f = fig.getBoundingClientRect(), gap = parseFloat(getComputedStyle(card).rowGap) || 0;
+      card.style.setProperty('--body-top', (f.bottom - c.top - card.clientTop + gap / 2).toFixed(1) + 'px');
     }
     kick(true);
   }

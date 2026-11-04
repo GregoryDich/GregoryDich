@@ -407,11 +407,13 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     return out.copy(pts[pts.length - 1]);
   }
   const fracAt = (pts, seg) => { let L = 0, A = 0; for (let i = 1; i < pts.length; i++) { const s = pts[i].distanceTo(pts[i - 1]); L += s; if (i <= seg) A += s; } return A / L; };
-  // run 1 (and back in run 5): a kit vial's way round the box (box-local): sideways clear of its side, back along it,
-  // in behind its back (×0.9 of its place), a little up; the left four by the left side, the right four by the right
-  const SIDE = WR / 2 + 0.13, BACK = -BD - 0.12;
+  // run 1 (and back in run 5): a kit vial's way round the box (box-local): on a slant back to the box's front corner,
+  // clear of its side and just in front of its face (FRONT), then back along the side, in behind its back (×0.9 of its
+  // place), a little up; the left four by the left side, the right four by the right. Not sideways at the row's depth
+  // first: that near the camera the outer vials went wider than the box on screen and the canvas's edge cut them
+  const SIDE = WR / 2 + 0.13, BACK = -BD - 0.12, FRONT = 0.12;
   const ROUND = K_LOCAL.map((l, i) => { const sx = i < 4 ? -SIDE : SIDE;
-    return [l.clone(), new V3(sx, l.y, l.z), new V3(sx, l.y, BACK), new V3(l.x * 0.9, l.y + 0.03, BACK)]; });
+    return [l.clone(), new V3(sx, l.y, FRONT), new V3(sx, l.y, BACK), new V3(l.x * 0.9, l.y + 0.03, BACK)]; });
   const ROUND_HIDE = ROUND.map(p => fracAt(p, 2));   // from here on behind the box
   const OUT_ORDER = [0, 7, 1, 6, 2, 5, 3, 4];           // run 1: from the ends of the row to its middle
   const BACK_ORDER = [3, 5, 2, 6, 1, 7, 0];             // run 5: from the middle out (the fifth place is the hero's)
