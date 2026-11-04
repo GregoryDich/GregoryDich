@@ -691,4 +691,8 @@ Firefly (левая половина, ≥ 10 % от краёв, чистый ч�
 каталога. Новое в шаблоне — только под флагом этой страницы, 12 страниц не меняются (md5). До «ок» заказчика
 hub и `site/public` не трогаю. Решения по умолчанию (называю заказчику): цвет линейки — зелёный коробки #144434 и
 мята #78E0BC; значок «מקצועי»; «прозрачная / мутнеет» — как в каталоге, вопрос открыт.
+Запуск 04/11: workflow `mitotech-page-sample`, run `wf_f5434db7-b53` (Spec → platform + scene параллельно →
+assemble + QA → два ревью → правки). Скрипт: `~/.claude/projects/-home-user-GregoryDich/<session>/workflows/scripts/
+mitotech-page-sample-wf_f5434db7-b53.js`. После перезапуска контейнера — тот же скрипт с `resumeFromRunId`
+(готовые агенты берутся из кэша); у каждого агента `progress.jsonl` в `scratchpad/pages/mitotech-cell-booster/progress/`.
 
