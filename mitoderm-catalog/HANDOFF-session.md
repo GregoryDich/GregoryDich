@@ -53,7 +53,8 @@
 ## Что осталось (на 04/11 вечер)
 
 **Могу сам, без заказчика:**
-- **Образец страницы MITOTECH CELL BOOSTER** — в работе с 04/11 (план: `PLAN.md` §22). Материалы: текст
+- **Образец страницы MITOTECH CELL BOOSTER** — v1 опубликован 04/11: https://claude.ai/artifact/G3tdcwusRsVdw4E5HeGM5s
+  (ждёт «ок» заказчика; доработка стекла бустера и проверка — `PLAN.md` §22). Материалы: текст
   `state/mitotech/canon-v2.md`, рендер `site/design/mitotech/packshot-kit-r15.png`, печатные PDF
   `site/design/mitotech/print/`, сценарий v1 во временной папке `scenarios/mitotech-cell-booster.md`.
 - Правки аудита 31/10 без решения заказчика: T3, T4, T5, T7, T8, T10, T11, T13, M1–M3, M5, P1 (~день + переопубликовать
