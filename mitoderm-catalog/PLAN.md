@@ -715,6 +715,10 @@ https://claude.ai/artifact/G3tdcwusRsVdw4E5HeGM5s (сборка `scratchpad/page
 на телефоне и без WebGL/JS карточка прежняя. QA сборки v2: 12 страниц md5 те же; verify-live 51/51; HD все (картинку
 карточки `.kc-live` шаг теста в полэкрана не застал — окно, где она видна, стало уже); edges 9/9 с первого раза; scene 8/8
 (+2 SKIP), gel 11/11; кириллицы 0. Дальше — независимая проверка срезов/наложений/пустых кадров на всех экранах
-(workflow `mitotech-sample-cut-check`), найденное — правка по той же ссылке. Рабочая заметка по текстам на «ок» —
+(workflow `mitotech-sample-cut-check`, run `wf_1343f413-bd0`, только чтение: два проверяющих — компьютер/планшет
+горизонтально и телефон/планшет вертикально/без JS/без WebGL, каждую находку перепроверяет отдельный агент; папки
+`scratchpad/pages/mitotech-cell-booster/check3/<desk|flow|verify-*>/` с `progress.jsonl`; после перезапуска — тот же
+скрипт `workflows/scripts/mitotech-sample-cut-check-wf_1343f413-bd0.js` с `resumeFromRunId`), найденное — правка по той
+же ссылке. Рабочая заметка по текстам на «ок» —
 `state/mitotech/texts-for-approval.md`.
 
