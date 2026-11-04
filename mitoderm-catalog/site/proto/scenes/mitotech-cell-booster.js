@@ -20,7 +20,8 @@
 // comes out from behind its left edge, the powder first, then the booster, and stands large before the camera; run 3 the
 // camera goes into the booster's amber (a soft amber light inside, nothing drawn in it) and back; run 4 the R7 preparation
 // as the user guide's drawings show it: the white caps (with their aluminium rings) lift off, then the dark stoppers; the
-// booster lifts, turns over the open powder vial and pours slowly (no stream drawn); a stopper on the powder vial, a
+// booster lifts, turns over the open powder vial and pours slowly (no stream drawn: what leaves the booster rises in the
+// powder vial as a clear solution, the owner's «תמיסה שקופה», and stays there to the kit); a stopper on the powder vial, a
 // wait; the stopper off, the applicator down onto the neck; run 5 the empty booster goes into the dark, the ready vial
 // to the fifth place of the row, the box and the other seven come back: the kit, which flies into the offer card.
 // Five more poses (p 11…15) are the preparation's five steps as stills for the page's step cards (render-keys).
@@ -75,7 +76,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       m.position.set(x, y, z); m.lookAt(0, y, 0); room.add(m);
     };
     if (!glass) { panel(5, -5.7, 3, 8.2, 2.4, 9); panel(2.5, 6.4, 3, 7.7, 1.6, 9); }   // ±35–40° from the camera, the left one the key
-    else panel(0.4, 0, 1, 12, 24, 12);   // the glass: a broad dim wall behind the camera instead
+    else { panel(0.8, 0, 1, 12, 24, 12); panel(2.2, -5.7, 3, 8.2, 1.4, 9); panel(1.3, 6.4, 3, 7.7, 1.0, 9); }   // the glass: a light wall
+    // behind the camera and two soft boxes (R15's clear glass reads light grey with tall soft reflections, not the page's black)
     panel(2.5, -9, 1.5, -7, 2.5, 9); panel(2, 9, 2, -7, 2.5, 9);     // rims from behind
     const rt = pm.fromScene(room, 0.02); pm.dispose();
     room.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
@@ -87,7 +89,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const restored = () => {   // after a lost context three.js restores image textures, not the rendered environments
     const old = [roomEnv, glassEnv]; roomEnv = makeEnv(false); glassEnv = makeEnv(true); scene.environment = roomEnv.texture;
     for (const m of glassMats) m.envMap = glassEnv.texture;
-    old.forEach(t => t.dispose()); sizeW = -1; lastId = '';
+    old.forEach(t => t.dispose()); sizeW = -1; NOID();
     version++; if (onLoad) onLoad();   // the engine redraws (the kit picture too), also under reduced motion
   };
   canvas.addEventListener('webglcontextrestored', restored);
@@ -105,7 +107,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const ANISO = renderer.capabilities.getMaxAnisotropy(), NTEX = 4;
   const tex = (name, srgb) => {
     const t = new THREE.TextureLoader().load(new URL(`img/mitotech-cell-booster-3d/${name}`, base).href, () => {
-      t.needsUpdate = true; lastId = ''; if (++loaded === NTEX) { version++; if (onLoad) onLoad(); }
+      t.needsUpdate = true; NOID(); if (++loaded === NTEX) { version++; if (onLoad) onLoad(); }
     });
     if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = ANISO; return t;
   };
@@ -124,11 +126,18 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const GREEN = 0x154734;   // the print's green (box, labels), measured on the PDF
   const front = P(0xffffff, { color: new THREE.Color(SHADE, SHADE, SHADE), map: frontTex, emissiveMap: frontTex, metalnessMap: metalTex,
     roughnessMap: metalTex, metalness: 1, roughness: 1, specularIntensity: 1, envMapIntensity: 0.55 }, 'front');
-  // the inks (where the metal mask is 0) lit 1.16 ×: R15's mint plates read brighter than the PDF's (#6cf8d7 vs #7ae1bf); the
-  // ΔE probe aims between them (#73ecca); the bare green foil keeps its colour (between the PDF's and R15's)
+  // the inks (where the metal mask is 0) lit 1.16 ×, the saturated ones (the mint plates) a little less red and more green-blue:
+  // R15's mint reads brighter and cooler than the PDF's (#6cf8d7 vs #7ae1bf), the ΔE probe aims between them (#73ecca); white
+  // and grey inks keep their colour. The bare green foil keeps its colour (between the PDF's and R15's) under a broad, low
+  // satin sheen: the reflection of a soft box up left, placed by the view (it slides as the box turns; R15's satin foil)
   front.onBeforeCompile = sh => {
     sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-      totalEmissiveRadiance *= mix(1.16, 1.0, texture2D(metalnessMap, vMetalnessMapUv).b);`);
+      { float bare = texture2D(metalnessMap, vMetalnessMapUv).b; vec3 ec = emissiveColor.rgb;
+        float sat = max(max(ec.r, ec.g), ec.b) - min(min(ec.r, ec.g), ec.b);
+        vec3 ink = 1.16 * mix(vec3(1.0), vec3(0.8, 1.02, 1.035), smoothstep(0.15, 0.4, sat));
+        vec3 rv = reflect(-normalize(vViewPosition), normal);
+        float sheen = exp(-(pow(rv.x + 0.31, 2.0) + 1.6 * pow(rv.y + 0.43, 2.0)) / 0.012);   // S1's view: the face's upper left
+        totalEmissiveRadiance *= mix(ink, vec3(1.0 + 0.5 * sheen), bare); }`);
   };
   const foil = (hex, k) => P(hex, { metalness: 1, roughness: 0.26, specularIntensity: 1, envMapIntensity: 0.55 }, 'foil' + k);
   const sideMat = foil(GREEN, 's'), topMat = foil(0x1e5c42, 't');   // the top: the render's lit foil (#1e5c42)
@@ -169,23 +178,27 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // the booster's amber, clear and dark as rendered: the front colour where the body faces the camera (the ΔE probe),
   // the light behind coming through toward the right limb, the left limb in shade; thinner toward the limbs. Its cut
   // (the level, while it pours) shows the liquid's own back faces, flat in the surface's colour: no disc is drawn
-  const AMBER = [0x9e5c14, 0xc4833b, 0x3a1e05], SURF = 0xb47a36;
-  function liquidMat(clip) {
-    const m = P(AMBER[0], { roughness: 0.5, specularIntensity: 0.2, depthWrite: false, side: clip ? THREE.DoubleSide : THREE.FrontSide }, 'liq' + (clip ? 'c' : ''));
-    const L = new THREE.Color(AMBER[1]), S = new THREE.Color(AMBER[2]), U = new THREE.Color(SURF);
+  // The prepared solution in the powder vial (from the pour on): clear, the owner's «תמיסה שקופה» (its colour is still his
+  // open question): a darker refracting body, light toward its limbs, a light surface (the meniscus) so its level reads
+  const AMBER = { c: [0x965512, 0xc4833b, 0x3a1e05], surf: 0xb47a36, a: [0.98, 0.66], sa: 0.9, key: 'liq' };   // dense: the light far wall does not show through
+  const CLEAR = { c: [0x252b2a, 0xc8d0cf, 0x8f9796], surf: 0xe4eae9, a: [0.66, 0.8], sa: 0.92, key: 'clr' };
+  function liquidMat(clip, pal = AMBER) {
+    const m = P(pal.c[0], { roughness: 0.5, specularIntensity: 0.2, depthWrite: false, side: clip ? THREE.DoubleSide : THREE.FrontSide }, pal.key + (clip ? 'c' : ''));
+    const L = new THREE.Color(pal.c[1]), S = new THREE.Color(pal.c[2]), U = new THREE.Color(pal.surf);
     m.onBeforeCompile = sh => {
       sh.uniforms.uLimb = { value: new V3(L.r, L.g, L.b) }; sh.uniforms.uShade = { value: new V3(S.r, S.g, S.b) }; sh.uniforms.uSurf = { value: new V3(U.r, U.g, U.b) };
       sh.fragmentShader = 'uniform vec3 uLimb, uShade, uSurf;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>
       { float nx = normal.x, ax = abs(nx), up = normal.y;
         gl_FragColor.rgb = mix(gl_FragColor.rgb, uLimb, 0.8 * smoothstep(0.55, 0.85, nx) * (1.0 - smoothstep(0.93, 1.0, nx)));
         gl_FragColor.rgb = mix(gl_FragColor.rgb, uShade, 0.75 * smoothstep(-0.55, -0.9, nx));
-        gl_FragColor.a *= mix(0.92, 0.6, smoothstep(0.5, 0.97, ax));
-        if (up > 0.7) gl_FragColor.rgb = uSurf;   // the closed fill's top: the surface
-        ${clip ? 'if (!gl_FrontFacing) { gl_FragColor.rgb = uSurf; gl_FragColor.a = 0.9 * opacity; }' : ''} }`);
+        gl_FragColor.a *= mix(${pal.a[0].toFixed(2)}, ${pal.a[1].toFixed(2)}, smoothstep(0.5, 0.97, ax));
+        if (up > 0.7) { gl_FragColor.rgb = uSurf; gl_FragColor.a = ${pal.sa.toFixed(2)} * opacity; }   // the closed fill's top: the surface
+        ${clip ? `if (!gl_FrontFacing) { gl_FragColor.rgb = uSurf; gl_FragColor.a = ${pal.sa.toFixed(2)} * opacity; }` : ''} }`);
     };
     return m;
   }
-  const capMat = () => P(0xffffff, { emissiveIntensity: 0.9, roughness: 0.45, specularIntensity: 0.5 }, 'cap');     // white flip-off
+  const capMat = () => P(0xffffff, { color: new THREE.Color(0.36, 0.36, 0.36), emissiveIntensity: 0.64, roughness: 0.45, specularIntensity: 0.5 }, 'cap');   // white
+  // flip-off: less light of its own than the other parts, so the key and the room model its dome and its dent (R15's grey shading)
   const ringMat = () => P(0xd6d6d4, { metalness: 0.9, roughness: 0.3, specularIntensity: 1, emissiveIntensity: 0.55, envMapIntensity: 0.7 }, 'ring');   // aluminium
   const stopMat = () => P(0x2a2b2b, { roughness: 0.6 }, 'stop');   // grey rubber (R7 icon 1)
   const cakeMat = () => P(0xf2f0ea, { roughness: 0.95, specularIntensity: 0.05 }, 'cake');   // the freeze-dried cake
@@ -220,8 +233,9 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const inner = [V2(0, 0.028), V2(RI - 0.03, 0.028)].concat(arc(RI - 0.03, 0.058, 0.03, -Math.PI / 2, 0, 6));
   const FILL = 0.755;
   const fillGeo = new THREE.LatheGeometry(inner.concat([V2(RI, FILL), V2(0, FILL)]), SEG);   // the kit's boosters
+  const NECK = 0.83;   // the hero vials' fill ends inside the neck, short of the lip (no flat face across the open mouth)
   const fullGeo = new THREE.LatheGeometry(inner.concat([V2(RI, 0.735), V2(RI - 0.008, 0.758), V2(0.19, 0.775), V2(0.155, 0.787), V2(0.118, 0.796),
-    V2(0.112, 0.806), V2(0.112, 0.862), V2(0, 0.862)]), SEG);   // the hero booster's whole inside, cut at its level
+    V2(0.112, 0.806), V2(0.112, NECK), V2(0.07, NECK - 0.004), V2(0, NECK - 0.006)]), SEG);   // a hero vial's whole inside, cut at its level
   const cakeGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.22, 48).translate(0, 0.028 + 0.11, 0);
   const ringGeo = new THREE.LatheGeometry([V2(0.1, 0.872), V2(0.152, 0.872), V2(0.156, 0.866), V2(0.156, 0.82), V2(0.15, 0.815), V2(0.135, 0.815), V2(0.135, 0.86), V2(0.1, 0.866)], SEG);
   const capGeo = new THREE.LatheGeometry([V2(0, 0.872), V2(0.19, 0.872), V2(0.196, 0.878)].concat(arc(0.172, 0.976, 0.024, 0, Math.PI / 2, 8),
@@ -236,40 +250,42 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const APP_TOP = 1.32;
 
   // a vial: { g (foot centre, upright), parts, mats } — its moving parts in their own groups (cap with ring, stopper,
-  // applicator); each vial has its own materials (opacity per vial and part)
-  function makeVial(kind, hero) {
+  // applicator); each vial has its own materials (opacity per vial and part). The glass as R15 renders it: clear, but light
+  // grey on the dark page (its far wall catches the studio's light), the applicator a brighter clear plastic. `wet`: a powder
+  // vial already prepared (the kit's fifth, the one with the applicator): the clear solution, no cake
+  const GL = { backA: 0.76, backE: 0x8a8f8e, appA: 0.56, appE: 0xdce4e3, appBA: 0.66, appBE: 0xb4bcbb };
+  function makeVial(kind, hero, wet = false) {
     const g = new THREE.Group(); g.rotation.order = 'YXZ'; g.scale.setScalar(LW); scene.add(g);
     const capG = new THREE.Group(), stopG = new THREE.Group(), appG = new THREE.Group(); g.add(capG, stopG, appG);
-    // the far wall a little grey (R15: the empty glass over a powder's label reads dark grey, not the page's black)
-    const m = { back: glassMat(THREE.BackSide, 0.42, 0.3, 0.7, null, '', 0x0b0b0c, 0x3c3f3f), front: glassMat(THREE.FrontSide, 0.03, 0.55, 1.0, vialLit, 'v'),
+    const m = { back: glassMat(THREE.BackSide, GL.backA, 0.3, 0.7, null, '', 0x0b0b0c, GL.backE), front: glassMat(THREE.FrontSide, 0.03, 0.55, 1.0, vialLit, 'v'),
       label: labelMat(kind === 'B' ? boosterTex : powderTex), cap: capMat(), ring: ringMat(), stop: stopMat(),
-      app: glassMat(THREE.FrontSide, 0.22, 0.6, 1.0, vialLit, 'a', 0x0b0b0c, 0x8c9292), appB: glassMat(THREE.BackSide, 0.25, 0.3, 0.7, null, 'ab', 0x0b0b0c, 0x6a7070), tip: tipMat() };   // clear plastic
-    if (kind === 'B') m.liquid = liquidMat(hero); else m.cake = cakeMat();
+      app: glassMat(THREE.FrontSide, GL.appA, 0.6, 1.0, vialLit, 'a', 0x0b0b0c, GL.appE), appB: glassMat(THREE.BackSide, GL.appBA, 0.3, 0.7, null, 'ab', 0x0b0b0c, GL.appBE), tip: tipMat() };   // clear plastic
+    if (kind === 'B') m.liquid = liquidMat(hero); else { if (!wet) m.cake = cakeMat(); if (hero || wet) m.liquid = liquidMat(hero, CLEAR); }
     const parts = [];
     const add = (geo, mat, parent, j) => { const x = new THREE.Mesh(geo, mat); x.userData.j = j; parent.add(x); parts.push(x); return x; };
     add(glassGeo, m.back, g, 0);
-    if (kind === 'B') add(hero ? fullGeo : fillGeo, m.liquid, g, 1); else add(cakeGeo, m.cake, g, 1);
-    add(stopGeo, m.stop, stopG, 2); add(ringGeo, m.ring, capG, 3); add(capGeo, m.cap, capG, 4);
-    add(glassGeo, m.front, g, 5); add(labelGeo, m.label, g, 6);
-    add(appGeo, m.appB, appG, 7); add(appGeo, m.app, appG, 8); add(tipGeo, m.tip, appG, 9);
-    const clip = kind === 'B' && hero ? new THREE.Plane(new V3(0, -1, 0), 0) : null;
+    const cake = m.cake ? add(cakeGeo, m.cake, g, 1) : null, liq = m.liquid ? add(hero ? fullGeo : fillGeo, m.liquid, g, 2) : null;
+    add(stopGeo, m.stop, stopG, 3); add(ringGeo, m.ring, capG, 4); add(capGeo, m.cap, capG, 5);
+    add(glassGeo, m.front, g, 6); add(labelGeo, m.label, g, 7);
+    add(appGeo, m.appB, appG, 8); add(appGeo, m.app, appG, 9); add(tipGeo, m.tip, appG, 10);
+    const clip = hero ? new THREE.Plane(new V3(0, -1, 0), 0) : null;
     if (clip) m.liquid.clippingPlanes = [clip];
-    return { g, capG, stopG, appG, m, parts, kind, clip, D: 0 };
+    return { g, capG, stopG, appG, m, parts, kind, clip, cake, liq };
   }
-  // the kit's eight (R15 left to right: four boosters, four powders) and the travelling pair
-  const kitV = [0, 1, 2, 3, 4, 5, 6, 7].map(i => makeVial(i < 4 ? 'B' : 'P', false));
+  // the kit's eight (R15 left to right: four boosters, four powders; the fifth prepared) and the travelling pair
+  const kitV = [0, 1, 2, 3, 4, 5, 6, 7].map(i => makeVial(i < 4 ? 'B' : 'P', false, i === 4));
   const heroB = makeVial('B', true), heroP = makeVial('P', true);
   const ALL = kitV.concat([heroB, heroP]);
 
-  // ---- the hero booster's level: points spread evenly through its inside (vial units), so the level that keeps the
-  // remaining volume is a quantile of their heights in the world, whatever the vial's tilt
+  // ---- a hero vial's level: points spread evenly through its inside (vial units), so the level that holds a volume (the
+  // booster's amber left, the solution poured into the powder vial) is a quantile of their heights, whatever the vial's tilt
   const NS = 1500, SMP = new Float32Array(NS * 3), SY = new Float32Array(NS);
   {
     let s = 20261104 | 0; const rnd = () => { s = s + 0x6d2b79f5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
     const rAt = y => (y < 0.735 ? RI : y < 0.79 ? lerp(RI, 0.13, (y - 0.735) / 0.055) : 0.112);
     let n = 0;
     while (n < NS) {
-      const y = 0.03 + rnd() * 0.83, x = (rnd() * 2 - 1) * RI, z = (rnd() * 2 - 1) * RI, r = rAt(y);
+      const y = 0.03 + rnd() * (NECK - 0.03), x = (rnd() * 2 - 1) * RI, z = (rnd() * 2 - 1) * RI, r = rAt(y);
       if (x * x + z * z > r * r) continue;
       SMP[n * 3] = x; SMP[n * 3 + 1] = y; SMP[n * 3 + 2] = z; n++;
     }
@@ -297,6 +313,19 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     transparent: true, depthTest: false, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation,
     blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor }));
   quad.frustumCulled = false; qScene.add(quad);
+  // the dive's edges: while the camera is inside, the whole picture (the amber filling the view, the soft light over it)
+  // fades softly toward the canvas's edges, so the amber is a shapeless glow and never a panel cut by the canvas (also the
+  // phone's opening push-in, where the kit grows past its block: no straight cut through the box at the block's edge)
+  const vScene = new THREE.Scene(), vig = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+    uniforms: { uW: { value: 0 }, uF: { value: 0.5 }, uRes: quad.material.uniforms.uRes },
+    vertexShader: 'void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }',
+    fragmentShader: `uniform float uW, uF; uniform vec2 uRes;
+      void main() { vec2 q = gl_FragCoord.xy / uRes, d = min(q, 1.0 - q) * uRes; float m = min(uRes.x, uRes.y);
+        float v = smoothstep(0.0, uF * m, d.x) * smoothstep(0.0, uF * m, d.y);
+        gl_FragColor = vec4(0.0, 0.0, 0.0, mix(1.0, v * v, uW)); }`,
+    transparent: true, depthTest: false, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation,
+    blendSrc: THREE.ZeroFactor, blendDst: THREE.SrcAlphaFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.SrcAlphaFactor }));
+  vig.frustumCulled = false; vScene.add(vig);
 
   // ---- the poses. The kit K (R15, fitted): the box's front centre and yaw, the vials' foot centres, in the world
   const K_BOX = new V3(-0.84148, 1.77789, 5.93207), K_YAW = -0.063372;
@@ -322,9 +351,10 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const shiftPx = (pos, dx, dy) => { const w = 2 * depthOf(pos) * TAN / 1500; return pos.addScaledVector(RIGHT, dx * w).addScaledVector(UP, -dy * w); };
 
   // the state, written in place every frame (nothing allocated per frame)
-  const vs = () => ({ pos: new V3(), yaw: 0, tilt: 0, a: 0, cap: 0, stop: 0, app: 0, fill: 1, cake: 1, stopBack: 0, keep: 0 });
-  const ST = { box: { pos: new V3(), a: 0 }, kit: kitV.map(vs), B: vs(), P: vs(), cam: 0, dive: 0, quad: 0 };
-  const resetV = (o, pos, a = 1) => { o.pos.copy(pos); o.yaw = 0; o.tilt = 0; o.a = a; o.cap = 0; o.stop = 0; o.app = 0; o.fill = 1; o.cake = 1; o.stopBack = 0; o.keep = 0; return o; };
+  // fill: the booster's amber left (1 full); liq: the solution in the powder vial (0 … 1 of the same volume)
+  const vs = () => ({ pos: new V3(), yaw: 0, tilt: 0, a: 0, cap: 0, stop: 0, app: 0, fill: 1, liq: 0, cake: 1, stopBack: 0, keep: 0 });
+  const ST = { box: { pos: new V3(), a: 0 }, kit: kitV.map(vs), B: vs(), P: vs(), cam: 0, push: 0, dive: 0, quad: 0 };
+  const resetV = (o, pos, a = 1) => { o.pos.copy(pos); o.yaw = 0; o.tilt = 0; o.a = a; o.cap = 0; o.stop = 0; o.app = 0; o.fill = 1; o.liq = 0; o.cake = 1; o.stopBack = 0; o.keep = 0; return o; };
   const tmpM = new THREE.Matrix4(), tA = new V3(), tB = new V3(), tC = new V3();
   // a path through points (box-local or world), m 0…1 by length; returns the fraction where segment `seg` begins
   function along(pts, m, out) {
@@ -349,18 +379,21 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // run 2: the pair from behind the box's left edge (box-local): behind, to the left side, forward along it
   const PAIR = [-0.25, -0.05].map(x => [new V3(x, -BH / 2, BACK - 0.03), new V3(-SIDE - 0.03, -BH / 2, BACK - 0.03), new V3(-SIDE - 0.03, -BH / 2, 0.15)]);
   const PAIR_HIDE = fracAt(PAIR[0], 1);
+  const GO = [[ST.P, 0.1, P3, 0], [ST.B, 0.25, B3, 1]];   // run 2: the powder first, then the booster
 
   function story(p) {   // the state at story position p (phone: the same poses; only p0's camera differs)
     const st = ST, b = st.box;
-    st.cam = st.dive = st.quad = 0;
+    st.cam = st.push = st.dive = st.quad = 0;
     b.pos.copy(K_BOX); b.a = 0;
     for (let i = 0; i < 8; i++) resetV(st.kit[i], K_V[i], 0);
     resetV(st.B, B3, 0); resetV(st.P, P3, 0);
     if (p >= 10) return steps(p);
     const k = Math.min(5, Math.floor(p)), f = p - k;
-    if (k === 0) {   // open → meet: the kit as R15; the camera moves in from the opening's framing
-      b.a = 1; for (let i = 0; i < 8; i++) st.kit[i].a = 1;
-      st.cam = 1 - smooth(0.05, 0.95, f);
+    if (k === 0) {   // open → meet: the kit as R15, large under the name; the camera pushes in toward it and on into the
+      // box's green (the kit fading as it fills the screen); then S1's framing comes up out of the dark
+      const a = f < 0.6 ? 1 - smooth(0.3, 0.56, f) : smooth(0.62, 0.92, f);
+      b.a = a; for (let i = 0; i < 8; i++) st.kit[i].a = a;
+      if (f < 0.6) { st.cam = 1; st.push = smooth(0.04, 0.58, f); }
     } else if (k === 1) {   // meet → why: the eight go round the box's sides and in behind it; it steps back (0.92)
       b.a = 1; b.pos.lerpVectors(K_BOX, BOX2, smooth(0.1, 0.9, f));
       boxMatrix(b.pos, tmpM);
@@ -372,8 +405,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       // goes deeper and into the dark
       b.pos.copy(deeper(BOX2, lerp(1, 1.4, smooth(0, 0.6, f)), tA)); b.a = 1 - smooth(0.55, 0.9, f);
       boxMatrix(b.pos, tmpM);
-      for (const [o, t0, end, j] of [[st.P, 0.1, P3, 0], [st.B, 0.25, B3, 1]]) {
-        const m = smooth(t0, t0 + 0.3, f), w = smooth(t0 + 0.3, t0 + 0.65, f);
+      for (let n = 0; n < 2; n++) {
+        const o = GO[n][0], t0 = GO[n][1], end = GO[n][2], j = GO[n][3], m = smooth(t0, t0 + 0.3, f), w = smooth(t0 + 0.3, t0 + 0.65, f);
         along(PAIR[j], m, tB).applyMatrix4(tmpM);
         o.pos.lerpVectors(tB, end, w); o.a = smooth(0, PAIR_HIDE, m); o.yaw = rad(-30) * (1 - w);
       }
@@ -428,7 +461,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     tB.copy(POUR_B);
     B.pos.lerpVectors(tA, tB, over); if (back > 0) B.pos.lerpVectors(B.pos, B5, back);
     B.yaw = (facing(P5) - facing(B.pos)) * over * (1 - back); B.tilt = tilt;   // turned in P's plane
-    B.fill = 1 - smooth(0.44, 0.6, f); P.cake = 1 - smooth(0.46, 0.66, f);
+    B.fill = 1 - smooth(0.44, 0.6, f); P.liq = 1 - B.fill; P.cake = 1 - smooth(0.46, 0.66, f);   // what leaves the booster rises in the powder vial
     // the stopper back onto the powder vial, then off; the applicator down
     const sIn = smooth(0.66, 0.74, f), sOut = smooth(0.8, 0.86, f), aIn = smooth(0.84, 0.94, f);
     P.stop = f < 0.66 ? stop : 1 - sIn * (1 - sOut); P.stopBack = f >= 0.66 ? 1 : 0;
@@ -438,24 +471,25 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   function steps(p) {   // the five step stills: as the R7 drawings, no hands, no arrows, no stream, no drop
     const n = Math.round(p) - 10, B = ST.B, P = ST.P;
     if (n === 1) { resetV(B, S1B); resetV(P, S1P); B.cap = P.cap = 0.78; B.stop = P.stop = 0.64; B.keep = P.keep = 1; }     // lifted, as the arrows
-    else if (n === 2) { resetV(P, S2P); P.cap = P.stop = 1; resetV(B, pourFoot(S2P, tA)); B.cap = B.stop = 1; B.tilt = rad(115); B.yaw = facing(S2P) - facing(B.pos); B.fill = 0.5; P.cake = 0.5; }
-    else if (n === 3) { resetV(P, S3P); P.cap = 1; P.stop = 0; P.stopBack = 1; P.cake = 0; resetV(B, S3B); B.cap = B.stop = 1; B.fill = 0; }
-    else if (n === 4) { resetV(P, S4P); P.cap = P.stop = 1; P.app = 1; P.cake = 0; P.tilt = rad(12); }
-    else { resetV(P, S5P); P.cap = P.stop = 1; P.app = 1; P.cake = 0; P.tilt = rad(140); }
+    else if (n === 2) { resetV(P, S2P); P.cap = P.stop = 1; resetV(B, pourFoot(S2P, tA)); B.cap = B.stop = 1; B.tilt = rad(115); B.yaw = facing(S2P) - facing(B.pos); B.fill = 0.25; P.liq = 0.75; P.cake = 0.4; }   // the level risen above the label
+    else if (n === 3) { resetV(P, S3P); P.cap = 1; P.stop = 0; P.stopBack = 1; P.cake = 0; P.liq = 1; resetV(B, S3B); B.cap = B.stop = 1; B.fill = 0; }
+    else if (n === 4) { resetV(P, S4P); P.cap = P.stop = 1; P.app = 1; P.cake = 0; P.liq = 1; P.tilt = rad(12); }
+    else { resetV(P, S5P); P.cap = P.stop = 1; P.app = 1; P.cake = 0; P.liq = 1; P.tilt = rad(140); }
     const o = OFF[n]; if (o) for (const v of [B, P]) if (v.a > 0) shiftPx(v.pos, o[0], o[1]);
     return ST;
   }
 
   // ---- applying a state
-  const last = { clash: 0, level: 0 };
+  const last = { level: 0 };
   const DEPTH = new Float32Array(11), RANK = Array.from({ length: 11 }, (_, i) => i), farFirst = (i, j) => DEPTH[j] - DEPTH[i];
   const OBJ = ALL.concat([{ box: true }]);
+  const FADE = ['back', 'front', 'label', 'liquid', 'cake'];   // the parts that come and go with the vial
   function applyVial(v, s, t, live, sway) {
     const g = v.g; g.visible = s.a > 0.004; if (!g.visible) return;
     g.position.copy(s.pos); g.rotation.set(0, facing(s.pos) + s.yaw + rad(sway) * Math.sin(t * 0.45 + v.kind.length) * live, -s.tilt);
     g.updateMatrixWorld();
     const m = v.m, a = s.a;
-    for (const k of ['back', 'front', 'label', 'liquid', 'cake']) if (m[k]) m[k].opacity = a;
+    for (let i = 0; i < FADE.length; i++) if (m[FADE[i]]) m[FADE[i]].opacity = a;
     // the cap with its ring: up 0.45 L and gone; the stopper up 0.25 L and gone (or coming back down onto the neck)
     v.capG.position.y = 0.45 * smooth(0, 1, s.cap); v.capG.visible = s.cap < 0.999 && s.app < 0.001;
     m.cap.opacity = m.ring.opacity = a * (s.keep ? 1 : 1 - smooth(0.45, 1, s.cap));
@@ -465,10 +499,11 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     if (s.keep) m.stop.opacity = a;
     v.appG.visible = s.app > 0.001; v.appG.position.y = 0.5 * (1 - smooth(0, 1, s.app));
     m.app.opacity = m.appB.opacity = m.tip.opacity = a * smooth(0, 0.35, s.app);
-    if (m.cake) { const c = v.parts[1]; c.visible = s.cake > 0.01; c.scale.set(1, Math.max(0.01, s.cake), 1); }
-    if (v.clip) {   // the hero booster: its level as the world sees it
-      v.parts[1].visible = s.fill > 0.004;
-      if (v.parts[1].visible) { const L = levelOf(v, s.fill); v.clip.constant = L; last.level = L; }
+    if (v.cake) { v.cake.visible = s.cake > 0.01; v.cake.scale.set(1, Math.max(0.01, s.cake), 1); }
+    if (v.clip) {   // a hero vial: its level as the world sees it (the booster's amber left, the solution in the powder vial)
+      const fr = v.kind === 'B' ? s.fill : s.liq;
+      v.liq.visible = fr > 0.004;
+      if (v.liq.visible) { const L = levelOf(v, fr); v.clip.constant = L; if (v.kind === 'B') last.level = L; }
     }
   }
   const camPos = new V3(), openPos = new V3(), Q = new V3();
@@ -484,7 +519,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     // the camera: the story's, or moved back for the opening (the kit ×0.68 round (1200, 1010) on a desktop's full screen,
     // ×0.8 round the scene box's middle on a phone), or into the booster's amber
     camera.position.copy(lay.position); camera.quaternion.copy(lay.quaternion); camera.near = 1;
-    if (st.cam > 0) camera.position.lerpVectors(lay.position, openCam(openPos), st.cam);
+    if (st.cam > 0) camera.position.lerpVectors(lay.position, openCam(openPos, st.push), st.cam);
     if (st.dive > 0) {
       Q.copy(B3).addScaledVector(YAX, 0.66 * LW);
       tC.copy(lay.position).sub(Q).normalize().multiplyScalar(R * LW * 1.6).add(Q);
@@ -508,11 +543,14 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       if (o.box) { for (const c of box.children) c.renderOrder = 100 + r * 12; continue; }
       for (const x of o.parts) x.renderOrder = 100 + r * 12 + x.userData.j;
     }
-    last.clash = box.visible ? clashes() : 0;
   }
-  function openCam(out) {   // the opening's camera: back along the view so the kit is s × as large, shifted so its middle
-    // (frame (708, 750)) lands on the target pixel
-    const ph = phone.matches, s = ph ? 0.8 : 0.68, tx = ph ? 708 : 1200, ty = ph ? 750 : 1010;
+  // the opening's camera: along the view so the kit is s × as large as in S1, shifted so its middle (frame (708, 750)) lands
+  // on the target pixel; `push` 0 … 1 moves it on toward that point (× 2.3). A desktop: the kit ≈ 55 % of the screen's
+  // height (frame y 525 … 1355), centred under the name (its copy ends above 31 % of a 16:10 screen, 30 % of a 16:9 one) and
+  // above the dock; a phone: S1's own framing in the opening's block
+  const OPEN = { desk: [0.98, 1200, 940], phone: [1, 708, 750] }, PUSH = 2.3;
+  function openCam(out, push) {
+    const o = phone.matches ? OPEN.phone : OPEN.desk, tx = o[1], ty = o[2], s = o[0] * lerp(1, PUSH, push);
     const D = depthOf(K_BOX), D2 = D / s, wpp = 2 * D2 * TAN / 1500;
     const dx = tx - (1200 + s * (708 - 1200)), dy = ty - 750;
     return out.copy(lay.position).addScaledVector(fwd, -(D2 - D)).addScaledVector(RIGHT, -dx * wpp).addScaledVector(UP, dy * wpp);
@@ -523,7 +561,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
       if (!v.g.visible) continue;
       tA.copy(v.g.position).applyMatrix4(tmpM); const r = R * LW;
       tB.set(0, 1, 0).applyQuaternion(v.g.quaternion).multiplyScalar((v.appG.visible ? APP_TOP : 1) * LW).add(v.g.position).applyMatrix4(tmpM);
-      for (const u of [0, 0.5, 1]) {
+      for (let n = 0; n < 3; n++) { const u = n / 2;
         const x = lerp(tA.x, tB.x, u), y = lerp(tA.y, tB.y, u), z = lerp(tA.z, tB.z, u);
         if (Math.abs(x) < WR / 2 + r && z > -BD - r && z < r && y > -BH / 2 - 0.001 && y < BH / 2) { n++; break; }
       }
@@ -560,23 +598,41 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   }
   // the kit (from p 5.85 and every still) draws at the screen's full density whatever the cap; a pose that does not move
   // (p ≥ 6, a still) is drawn once
-  let lastId = '';
+  // the fixed pose last drawn (its key field by field, nothing allocated per frame; NaN: none, the next draw renders)
+  const ID = new Float64Array(11); ID[0] = NaN;
+  function NOID() { ID[0] = NaN; }
   function render(p, view) {
     const fixed = view.still || p >= 6, kitAt = fixed || p >= 5.85;
     pr = kitAt ? full(view) : Math.min(full(view), cap);
-    const id = fixed ? [p, view.box.x, view.box.y, view.box.w, view.box.h, view.cover.x, view.cover.y, view.cover.w, pr, version, phone.matches].join() : '';
-    if (id && id === lastId) return;
-    lastId = id; pose(p, view.still ? 0 : view.t, view.still); fit(view, pr);
+    if (fixed) {
+      const b = view.box, c = view.cover;
+      if (ID[0] === p && ID[1] === b.x && ID[2] === b.y && ID[3] === b.w && ID[4] === b.h && ID[5] === c.x && ID[6] === c.y && ID[7] === c.w
+        && ID[8] === pr && ID[9] === version && ID[10] === +phone.matches) return;
+      ID[0] = p; ID[1] = b.x; ID[2] = b.y; ID[3] = b.w; ID[4] = b.h; ID[5] = c.x; ID[6] = c.y; ID[7] = c.w; ID[8] = pr; ID[9] = version; ID[10] = +phone.matches;
+    } else NOID();
+    pose(p, view.still ? 0 : view.t, view.still); fit(view, pr);
     renderer.render(scene, camera);
-    const qa = ST.quad; quad.material.uniforms.uA.value = qa;
-    if (qa > 0.002) { renderer.autoClear = false; renderer.render(qScene, qCam); renderer.autoClear = true; }
+    // the edges fade while the camera is in the amber, and on a phone while the opening's push-in outgrows its block
+    const qa = ST.quad, vw = Math.max(smooth(0.1, 0.55, ST.dive), phone.matches ? smooth(0.02, 0.3, ST.push) : 0);
+    quad.material.uniforms.uA.value = qa; vig.material.uniforms.uW.value = vw; vig.material.uniforms.uF.value = ST.dive > 0 ? 0.5 : 0.16;   // the push: its edges only
+    if (qa > 0.002 || vw > 0.002) {
+      renderer.autoClear = false;
+      if (qa > 0.002) renderer.render(qScene, qCam);
+      if (vw > 0.002) renderer.render(vScene, qCam);
+      renderer.autoClear = true;
+    }
     renders++;
   }
-  function draw(p, view) { pace(performance.now(), view.still || p >= 5.85); lastP = p; lastView = view; render(p, view); }
+  const html = document.documentElement;
+  function draw(p, view) {
+    window.__mtP = p;   // the story position for the page's motion layer (story-v2-motion.js), without the QA state()
+    if (html.classList.contains('mt-cards')) return;   // desktop: the step cards stand in for the 3D (story-v2.css hides it): the last frame stays
+    pace(performance.now(), view.still || p >= 5.85); lastP = p; lastView = view; render(p, view);
+  }
   let kits = 0;   // kit pictures rendered (QA: none on a phone, none for a toolbar)
   function kit(view) {   // the kit pose rendered once into a picture (the offer card, the flight into it), then the current pose again
     kits++;
-    pose(6, 0, true); fit(view, view.dpr); renderer.render(scene, camera); lastId = '';
+    pose(6, 0, true); fit(view, view.dpr); renderer.render(scene, camera); NOID();
     const c = document.createElement('canvas'); c.width = canvas.width; c.height = canvas.height; c.getContext('2d').drawImage(canvas, 0, 0);
     if (lastView) render(lastP, lastView);
     return c;
@@ -620,9 +676,10 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const state = () => {
     const st = ST;
     return { quality: pr, cap, capped, pixelRatio: renderer.getPixelRatio(), width: canvas.width, height: canvas.height, renders, loaded, version, kits, lastP,
-      box: { o: r2(box.visible ? st.box.a : 0) }, shown: ALL.filter(v => v.g.visible).length, clash: last.clash,
+      box: { o: r2(box.visible ? st.box.a : 0) }, shown: ALL.filter(v => v.g.visible).length, clash: box.visible ? clashes() : 0,
+      kitP: 6, floor: FLOOR,   // this page's kit pose (six runs: the opening first) and the pace's floor (verify-scene)
       B: { o: r2(st.B.a), cap: r2(st.B.cap), stop: r2(st.B.stop), tilt: r1(THREE.MathUtils.radToDeg(st.B.tilt)), fill: r2(st.B.fill) },
-      P: { o: r2(st.P.a), cap: r2(st.P.cap), stop: r2(st.P.stop), app: r2(st.P.app) }, dive: r2(st.dive), inside: r2(st.quad),
+      P: { o: r2(st.P.a), cap: r2(st.P.cap), stop: r2(st.P.stop), app: r2(st.P.app), liq: r2(st.P.liq) }, dive: r2(st.dive), inside: r2(st.quad),
       probes: probes(), aabb: outline() };
   };
   // the step stills for the page's cards (render-keys: these positions, named step1…step5)

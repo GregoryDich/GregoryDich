@@ -1,6 +1,7 @@
 // Edge cases of the two three.js pages that the main checks do not reach (review of 19–21/10), in headless Chromium
 // with software GL. A 3D-scene product page (build-vtech.py --scene, e.g. EXOTECH GEL):
-//   switch      phone → desktop: the card turns live and the kit lands in it; the phone renders no kit picture
+//   switch      phone → desktop: the card turns live and the kit lands in it; the phone renders no kit picture; a site-v2
+//               page (its runs depend on the screen): a tablet turned across 899 px frames the opening (p = 0) as a fresh load
 //   toolbar     phone, the browser's toolbar shows and hides (the large viewport pinned): stage, canvas, kit unchanged
 //   reappear    reduced motion: the canvas comes back after a resize drawn in its new box, without another scroll
 //   cdn         three.js stalled (no answer) or missing (404): no-gl, the still, the page script still works
@@ -66,6 +67,23 @@ async function scene(b) {
       `phone ${JSON.stringify(ph)}, desktop ${JSON.stringify(dk)}, mid ${mid.tf.slice(0, 50)} z${mid.z}, landed ${JSON.stringify(landed)}`);
     ok('scene switch: no console errors', !errs.length, errs.join(' | ').slice(0, 200));
     await ctx.close();
+  }
+  if (OPEN) {   // site v2: turned across 899 px (both ways), the opening's canvas box and the kit's outline equal a fresh load's
+    const opening = async (w, h, from) => {
+      const { ctx, p, errs } = await open(b, from ? from[0] : w, from ? from[1] : h);
+      await p.waitForFunction(() => window.__seq && window.__seq().shown, null, { timeout: 60000 });
+      if (from) { await wait(p, 800); await p.setViewportSize({ width: w, height: h }); }
+      await p.evaluate(() => scrollTo(0, 0)); await wait(p, 1500);
+      const r = await p.evaluate(() => { const c = document.getElementById('seq').getBoundingClientRect(), s = window.__seq();
+        return { w: Math.round(c.width), h: Math.round(c.height), pos: +s.pos.toFixed(3), aabb: s.sceneState && s.sceneState.aabb }; });
+      await ctx.close(); return Object.assign(r, { errs: errs.length });
+    };
+    for (const [w, h, from] of [[1180, 820, [820, 1180]], [820, 1180, [1180, 820]]]) {
+      const fresh = await opening(w, h), turned = await opening(w, h, from);
+      ok(`scene switch: turned ${from[0]}×${from[1]} → ${w}×${h}, the opening is framed as on a fresh load`,
+        Math.abs(fresh.w - turned.w) <= 2 && Math.abs(fresh.h - turned.h) <= 2 && turned.pos < 0.01 && JSON.stringify(fresh.aabb) === JSON.stringify(turned.aabb) && !turned.errs,
+        `fresh ${JSON.stringify(fresh)}, turned ${JSON.stringify(turned)}`);
+    }
   }
   { // toolbar on the phone
     const { ctx, p } = await open(b, 390, 844, { dpr: 2, init: `document.addEventListener('DOMContentLoaded', () => { const s = document.createElement('style'); s.textContent = ${JSON.stringify(PIN(844))}; document.head.appendChild(s); });` });

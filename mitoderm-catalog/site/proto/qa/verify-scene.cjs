@@ -2,11 +2,14 @@
 // scene draws the full 16:10 frame at fixed story positions and the checks read its pixels and its state():
 //   seam       a closed jar's seam reads as a dark line (not the silver shoulder behind it);
 //   pearls     gel pearls only once the lid is up (never through or above a closed lid);
-//   kit        the live kit pose at p = 5, mid idle sway, is the picture kit() gives the offer card (no double image);
+//   kit        the live kit pose at p = 5 (or the scene's state().kitP: a site-v2 page has an opening run first, its kit is
+//              at p = 6), mid idle sway, is the picture kit() gives the offer card (no double image);
 //   restore    after a lost and restored WebGL context the gold is not black (the environment is rebuilt);
 //   step-down  on a fake clock, at DPR 2: a steady 30 Hz (a low-power cap) steps down once, finds no gain, goes back to
 //              2 and stops trying; slow frames that get faster at the lower ratio keep it, also when vsync steps hide the
 //              gain from a median; each step cuts ≥ 20 % of the pixels (DPR 2.125 goes to 1.5, DPR 1.5 tries 1.25).
+//              A scene whose state() reports a floor (site v2: never below 2, ARCHITECTURE-v2 / audit T13) is checked against
+//              it instead: at DPR 2 it stays at 2 whatever the frames; at DPR 3 it steps to 2, or back to 3 for a 30 Hz cap.
 // The seam, pearls and restore probes are written for the EXOTECH GEL jar (its places in the 2400 frame); a scene has that
 // jar when its state() reports lidUp and pearlsOn. Without them, seam and pearls are SKIPped with the reason (not counted),
 // and restore reads the whole frame instead of the jar's centre: not black, and ≥ 70 % of its light before the loss.
@@ -30,8 +33,8 @@ window.__draw = (p, t = 0, still = true) => { sc.draw(p, view(t, still)); return
 window.__frame = (p, t = 0) => { sc.draw(p, view(t, true)); return Array.from(pix(grab())); };
 window.__column = (p, x, y0, y1) => { sc.draw(p, view(0, true)); const d = pix(grab()), out = [];
   for (let y = y0; y <= y1; y++) { const i = (y * c.width + x) * 4; out.push(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]); } return out; };
-window.__kitVsLive = () => {   // the card's picture and the live pose at p = 5 mid-sway, pixel by pixel
-  const k = pix(sc.kit(view(0, true))); sc.draw(5, view(7.3, false)); const l = pix(grab()); let diff = 0, n = 0;
+window.__kitVsLive = (kp = 5) => {   // the card's picture and the live kit pose (p = 5, or the scene's kitP) mid-sway, pixel by pixel
+  const k = pix(sc.kit(view(0, true))); sc.draw(kp, view(7.3, false)); const l = pix(grab()); let diff = 0, n = 0;
   for (let i = 0; i < k.length; i += 4) { if (k[i + 3] > 8 || l[i + 3] > 8) { n++; diff += Math.abs(k[i] - l[i]) + Math.abs(k[i + 1] - l[i + 1]) + Math.abs(k[i + 2] - l[i + 2]); } }
   return { meanDiff: diff / Math.max(1, n) / 3, pixels: n };
 };
@@ -63,6 +66,7 @@ const lum = (d, x, y) => { const i = (y * W + x) * 4; return 0.299 * d[i] + 0.58
 
   // the EXOTECH GEL jar (a lid that unscrews, pearls under it): the scene reports lidUp and pearlsOn
   const gelJar = await p.evaluate(() => { window.__draw(0); return window.__has('lidUp') && window.__has('pearlsOn'); });   // a first still frame: every scene's state() is safe to read after a draw
+  const { kitP, floor } = await p.evaluate(() => { const s = window.__draw(0); return { kitP: s.kitP || 5, floor: s.floor || 0 }; });   // site v2: its own kit pose and pace floor
   const noJar = `no gel jar: state() of ${path.basename(sceneFile)} reports no lidUp/pearlsOn`;
 
   // seam: the darkest pixel down a column of the big 'why' jar (560 px high in the 2400 frame, centre x 720) that is
@@ -84,8 +88,8 @@ const lum = (d, x, y) => { const i = (y * W + x) * 4; return 0.299 * d[i] + 0.58
   } else skip('pearls: only once the lid is up', noJar);
 
   // kit: the card's picture equals the live pose at p = 5 (the sway has settled)
-  const kv = await p.evaluate(() => window.__kitVsLive());
-  ok('kit: the live pose at p = 5 is the card picture (no double image)', kv.meanDiff < 1.5 && kv.pixels > 1000, `mean diff ${kv.meanDiff.toFixed(2)} over ${kv.pixels} px`);
+  const kv = await p.evaluate(kp => window.__kitVsLive(kp), kitP);
+  ok(`kit: the live pose at p = ${kitP} is the card picture (no double image)`, kv.meanDiff < 1.5 && kv.pixels > 1000, `mean diff ${kv.meanDiff.toFixed(2)} over ${kv.pixels} px`);
 
   // context lost and restored: the gold is still gold
   const before = await p.evaluate(() => window.__frame(0));
@@ -105,8 +109,20 @@ const lum = (d, x, y) => { const i = (y * W + x) * 4; return 0.299 * d[i] + 0.58
   const run = (steps, dpr = 2) => p.evaluate(async ([steps, dpr]) => {
     window.__dpr = dpr; window.__k = 0.25; window.__fresh(); window.__fakeTime(true); let t = 1000, q = [];   // a small canvas: only the clock matters
     for (const [ms, n] of steps) for (let i = 0; i < n; i++) { t += ms; window.__clock(t); q.push(window.__draw(1, t / 1000, false).quality); }
-    window.__fakeTime(false); const s = window.__draw(1, 0, true); window.__dpr = 1; window.__k = 1; return { q: [...new Set(q)], quality: s.quality, capped: s.capped };
+    window.__fakeTime(false); const s = window.__draw(1, 0, true); window.__dpr = 1; window.__k = 1; return { q: [...new Set(q)], quality: s.quality, capped: s.capped, last: q[q.length - 1] };
   }, [steps, dpr]);
+  if (floor >= 2) {   // a floor of 2: no rung below it; a phone's DPR 3 still steps down to 2
+    const c2 = await run([[33.4, 400]]);
+    ok('floor: a steady 30 Hz at DPR 2 stays at 2 (no rung below the floor)', c2.quality === 2 && c2.q.length === 1, JSON.stringify(c2));
+    const s2 = await run([[30, 90], [16.7, 200]]);
+    ok('floor: slow frames at DPR 2 stay at 2', s2.quality === 2 && s2.q.length === 1, JSON.stringify(s2));
+    const s3 = await run([[30, 90], [16.7, 200]], 3);
+    ok('step-down: DPR 3, slow frames that get faster at 2 keep 2', s3.last === 2 && s3.q.includes(3) && !s3.capped, JSON.stringify(s3));   // (a still frame then draws at full density)
+    const c3 = await run([[33.4, 400]], 3);
+    ok('step-down: DPR 3, a steady 30 Hz (a cap) goes back to 3 and stops trying', c3.last === 3 && c3.q.includes(2) && c3.capped, JSON.stringify(c3));
+    const f3 = await run([[16.7, 400]], 3);
+    ok('step-down: DPR 3 at 60 Hz stays at 3', f3.quality === 3 && f3.q.length === 1, JSON.stringify(f3));
+  } else {
   const cap = await run([[33.4, 400]]);
   ok('step-down: a steady 30 Hz (a cap) goes back to 2 and stops trying', cap.quality === 2 && cap.capped, JSON.stringify(cap));
   const slow = await run([[30, 90], [16.7, 200]]);
@@ -120,6 +136,7 @@ const lum = (d, x, y) => { const i = (y * W + x) * 4; return 0.299 * d[i] + 0.58
   ok('step-down: DPR 2.125 skips the near-empty step to 2 and keeps 1.5', odd.q.includes(1.5) && !odd.q.includes(2) && odd.quality === 1.5, JSON.stringify(odd));
   const low = await run([[30, 90], [16.7, 200]], 1.5);
   ok('step-down: DPR 1.5 tries 1.25 (no empty trial at 1.5)', low.quality === 1.25 && !low.capped, JSON.stringify(low));
+  }
 
   ok('no page errors', !errs.filter(e => !/Context Lost|Context Restored/.test(e)).length, errs.join(' | ').slice(0, 300));
   await b.close();

@@ -238,11 +238,11 @@ RAW = {
     'open_sec': ('\n  <section id="open" class="sec open" aria-labelledby="open-h"><div class="wrap">\n'
                  f'    <h1 id="open-h" class="open-name" dir="ltr"><bdi><b>{esc(V2["open"]["name"].split(" ", 1)[0])}</b> {esc(V2["open"]["name"].split(" ", 1)[1])}</bdi></h1>\n'
                  f'    <p class="open-sub" dir="ltr" lang="en">{esc(V2["open"]["sub"])}</p>\n'
-                 '    <div class="head"><img class="slot" src="img/m0.webp" alt="" aria-hidden="true"><div class="stage" aria-hidden="true"></div></div>\n'
+                 '    <div class="head"><img class="slot" src="img/m1.webp" alt="" aria-hidden="true"><div class="stage" aria-hidden="true"></div></div>\n'
                  '  </div></section>') if V2 else '',
     'step_cards': ('\n    <section class="mt-prep" aria-labelledby="mt-prep-h">\n'
                    f'      <h3 id="mt-prep-h" class="mt-prep-h rv">{keep(V2["cards"]["h"])}</h3>\n      <ol class="mt-steps">'
-                   + ''.join(f'\n        <li class="mt-step rv"><figure><img src="img/step{i + 1}.webp" width="1200" height="900" loading="lazy" decoding="async" alt="{esc(NAME + ": " + t)}"></figure>'
+                   + ''.join(f'\n        <li class="mt-step rv"><figure><img src="img/step{i + 1}.webp" width="1200" height="900" loading="lazy" decoding="async" alt=""></figure>'
                              f'<div class="mt-st"><span class="n">0{i + 1}</span><h4>{keep(t)}</h4><p>{keep(d)}</p></div></li>'
                              for i, (t, d) in enumerate(V2['cards']['steps']))
                    + '\n      </ol>\n' + (f'      <p class="note rv">{text(V2["cards"]["note"])}</p>\n' if V2['cards']['note'] else '')
@@ -303,12 +303,13 @@ if FILES:   # the page's images: smoke, logos, kit card, related products, phone
         save(Image.open(src).convert('RGBA'), f'{FILES}/img/{c[3]}', 1000, quality=84, method=6)
     assert KEYS, '--keys <dir with the transparent key frames (render_series.py output)> is needed for the phone stills'
     SHOTS = ('v1-meet', 'v2-why', 'v3-inside', 'v4-feel', 'v5-protocol')   # the key frames of the story of 17/10
-    for n, shot in enumerate((('v1-meet',) if V2 else ()) + SHOTS, 0 if V2 else 1):   # v2: m0, the opening's block (the kit of S1)
+    for n, shot in enumerate(SHOTS, 1):
         im = Image.open(f'{KEYS}/{shot}.png').convert('RGBA'); x0, y0, x1, y1 = im.getchannel('A').point(lambda a: 255 if a > 8 else 0).getbbox()
         p = round(0.03 * max(x1 - x0, y1 - y0))   # a little air around the objects
         c = (max(0, x0 - p), max(0, y0 - p), min(im.width, x1 + p), min(im.height, y1 + p))
         save(im.crop(c), f'{FILES}/img/m{n}.webp', 900, quality=84, method=6)
         STILLS.append([round(c[0] / im.width, 5), round(c[1] / im.height, 5), round(c[2] / im.width, 5), round(c[3] / im.height, 5)])   # the phone blocks place it in the frame
+    if V2: STILLS.insert(0, STILLS[0])   # the opening's block starts in S1's framing on a phone: S1's still (m1), not a copy of it
     src = f'{SITE}/design/vtech-3d/cells'   # exosome sprites and the deep plate (render), when they exist
     kinds = (CELL if EXO else '') + ('m' if EXO and PDRN else '')   # glassy (c) or folded (f) cells, PDRN molecules (m)
     real = sorted(f for k in kinds for f in glob.glob(f'{src}/{k}[0-9][0-9]-[012].webp'))
@@ -371,15 +372,30 @@ assert not re.search(r'__[A-Z0-9_]+__|\{\{|</script', MOTION), 'story-v2-motion.
 assert not SCENE or (SRC.count('export function createScene(') == 1 and '</script' not in SRC)
 SCENE_INIT = ("(() => { try { if (!THREE) throw 0; return createScene(THREE, { canvas: $('seq'), base: document.baseURI, onLoad: () => story.measure() }); }\n"
               "  catch (e) { document.documentElement.classList.add('no-gl'); return null; } })()")
+# v2: the runs depend on the screen (a phone's or tablet's blocks up to 899 px; a desktop's full-screen opening), so a tablet
+# turned or a window resized across 899 px builds the story again with the other runs, on the same scene (the engine stays as
+# it is: the page wraps createFrameStory, and its `story` hands measure/state to the story in use)
+V2_STORY = '''// site v2 (build-vtech.py): the story is built again with the other screen's runs when the 899 px query flips
+window.__mtCfg = [__PHONE__, __DESK__];
+{ const make = createFrameStory, mq = matchMedia('(max-width: 899px)');
+  createFrameStory = o => {
+    let cur = null;
+    const build = () => make(Object.assign({}, o, { config: window.__mtCfg[mq.matches ? 0 : 1] }));
+    mq.addEventListener('change', () => { if (cur) cur.destroy(); cur = build(); });
+    cur = build();
+    return { measure: () => cur.measure(), destroy: () => cur.destroy(), state: () => cur.state() };
+  }; }
+'''
 SEQ = lambda runs: json.dumps({'runs': runs, 'tiers': TIERS, 'cells': CELLS, 'mols': MOLS, 'helix': HELIX, **({'stills': STILLS} if STILLS else {}), **HERO}, separators=(',', ':'))
 ASSETS = {'__WA_PRICE__': esc(WA_MAIN), '__STILL__': STILL,
-          '__SCENE_JS__': ('// story-v2-motion.js, inlined by build-vtech.py\n' + MOTION if V2 else '') + ("// three.js 0.160 from jsDelivr: failed or stalled (8 s), the page goes on without 3D (no-gl: the still)\n"
+          '__SCENE_JS__': ('// story-v2-motion.js, inlined by build-vtech.py\n' + MOTION + V2_STORY.replace('__PHONE__', SEQ(PHONE_RUNS or RUNS)).replace('__DESK__', SEQ(RUNS))
+                           if V2 else '') + ("// three.js 0.160 from jsDelivr: failed or stalled (8 s), the page goes on without 3D (no-gl: the still)\n"
                            "const THREE = await Promise.race([import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js').catch(() => null),\n"
                            "  new Promise(r => setTimeout(r, 8000, null))]);\n"
                            f'// scenes/{PRODUCT}.js, inlined by build-vtech.py\n' + SRC.replace('export function createScene(', 'function createScene(', 1)) if SCENE else '',
           '__SCENE__': SCENE_INIT if SCENE else 'null',
           '__SEQ__': SEQ(RUNS) if not PHONE_RUNS else   # v2: the runs by screen, chosen at load; the phone's blocks up to 899 px
-                     f"(matchMedia('(max-width: 899px)').matches ? {SEQ(PHONE_RUNS)} : {SEQ(RUNS)}), flowQuery: '(max-width: 899px)'",
+                     "window.__mtCfg[matchMedia('(max-width: 899px)').matches ? 0 : 1], flowQuery: '(max-width: 899px)'",
           '__SECTIONS__': repr(['open'] * bool(V2) + ['meet', 'why', 'inside', 'feel', 'protocol', 'offer']),
           # phone: three still cells around the S3 ampoules (soft and bokeh sprites, small)
           '__PH_CELLS__': ('<span class="ph-cells" aria-hidden="true">' + ''.join(
