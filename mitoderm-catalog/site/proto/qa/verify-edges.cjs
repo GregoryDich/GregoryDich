@@ -22,6 +22,7 @@ const html = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewp
 const ORIGIN = 'https://edge.test/', TYPES = { '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg' };
 const FONT_CSS = "@font-face{font-family:'Rubik';src:url(https://fonts.gstatic.com/local/0.ttf) format('truetype');font-weight:100 900;font-display:block}";
 const checks = [];
+const OPEN = +/<section id="open"/.test(html);   // a site-v2 page opens with its own run: S2 (#why) is then screen 2
 const ok = (name, pass, info = '') => { checks.push({ name, pass }); console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? '  ' + info : '')); };
 const wait = (p, ms) => p.waitForTimeout(ms);
 
@@ -89,7 +90,7 @@ async function scene(b) {
     const r = await p.evaluate(() => { const c = document.getElementById('seq').getBoundingClientRect(), s = window.__seq().sceneState; return { x: c.left, y: c.top, w: c.width, h: c.height, renders: s.renders, lastP: s.lastP }; });
     const cw = 1360, x0 = (1300 - cw) / 2, want = { x: x0 + 0.07 * cw, y: 0.19 * 850, w: 0.45 * cw, h: 0.62 * 850 };   // SCENE_BOX of the cover
     const near = ['x', 'y', 'w', 'h'].every(k => Math.abs(r[k] - want[k]) < 1.5);
-    ok('scene reappear (reduced motion): drawn at once, in its new box', hidden === 0 && r.renders > r0 && r.lastP === 1 && near, `hidden ${hidden}, ${JSON.stringify(r)} vs ${JSON.stringify(want)}`);
+    ok('scene reappear (reduced motion): drawn at once, in its new box', hidden === 0 && r.renders > r0 && r.lastP === 1 + OPEN && near, `hidden ${hidden}, ${JSON.stringify(r)} vs ${JSON.stringify(want)}`);
     await ctx.close();
   }
   for (const cdn of ['404', 'stall']) { // three.js missing or stalled

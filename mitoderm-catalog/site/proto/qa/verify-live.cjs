@@ -31,7 +31,10 @@ const FONTDIR = process.env.FONTDIR || path.join(require('os').tmpdir(), 'mitode
 const SYNTH = process.env.SYNTH, SYNTH_TIER = 2400, RATE = +(process.env.SYNTH_RATE || 4);   // SYNTH_RATE: CPU slow-down (4 by default)
 const FONTS = [['Rubik', 'Rubik[wght].ttf']];   // owner 17/10: Rubik in every role
 const FONT_CSS = FONTS.map(([f], i) => `@font-face{font-family:'${f}';src:url(https://fonts.gstatic.com/local/${i}.ttf) format('truetype');font-weight:100 900;font-display:block}`).join('\n');
-const STORY = ['meet', 'why', 'inside', 'feel', 'protocol', 'offer'];   // the anchors of the five runs
+// the anchors of the five runs; a site-v2 page (story_content.V2) opens with its own screen and run first (#open)
+const STORY = [...(/<section id="open"/.test(html) ? ['open'] : []), 'meet', 'why', 'inside', 'feel', 'protocol', 'offer'];
+// a section's heading as it is shown: the first rendered h1/h2 (v2 hides S1's h1 under JS: the opening names the product; its tagline heads S1)
+const HEADING = "s => [...s.querySelectorAll('h1, h2, .head .tag')].find(h => h.getClientRects().length)";
 const checks = [];
 const ok = (name, pass, info = '') => { checks.push({ name, pass, info }); console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? '  ' + info : '')); };
 const skip = name => console.log('SKIP ' + name + '  (not in this product)');
@@ -84,7 +87,7 @@ const layout = async (p, tag) => {
     const copyLeft = Math.min(...ids.map(id => document.querySelector(`#${id} .copy`).getBoundingClientRect().left), document.querySelector('.offer-copy').getBoundingClientRect().left);
     const card = document.querySelector('.kitcard').getBoundingClientRect();
     return { sw: document.documentElement.scrollWidth, iw: innerWidth, hb, offscreen, copyLeft, cardRight: card.right };
-  }, STORY.slice(0, 5));
+  }, STORY.filter(id => id !== 'open').slice(0, 5));
   if (r.iw >= 900) {
     ok(`${tag}: the story copy stays in the right half, clear of the 3D`, r.copyLeft >= r.iw * 0.47, `copy left edge ${r.copyLeft.toFixed(0)} of ${r.iw}`);
     ok(`${tag}: the offer card sits on the left`, r.cardRight <= r.iw * 0.53, `card right edge ${r.cardRight.toFixed(0)}`);
@@ -92,14 +95,14 @@ const layout = async (p, tag) => {
   ok(`${tag}: no horizontal scroll`, r.sw <= r.iw, `${r.sw}/${r.iw}`);
   ok(`${tag}: nothing outside the screen`, !r.offscreen.length, r.offscreen.join(' '));
   // every heading, scrolled to its reading position (its section at the top), sits below the sticky header
-  const under = await p.evaluate(async () => {
-    const bad = [], hb = () => document.querySelector('.top').getBoundingClientRect().bottom;
+  const under = await p.evaluate(async HEADING => {
+    const heading = eval(HEADING), bad = [], hb = () => document.querySelector('.top').getBoundingClientRect().bottom;
     for (const s of document.querySelectorAll('main section')) {
       s.scrollIntoView(); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-      const h = s.querySelector('h1, h2'); if (h && h.getBoundingClientRect().top < hb() - 1) bad.push(s.id || s.className);
+      const h = heading(s); if (h && h.getBoundingClientRect().top < hb() - 1) bad.push(s.id || s.className);
     }
     scrollTo(0, 0); return bad;
-  });
+  }, HEADING);
   ok(`${tag}: headings below the header`, !under.length, under.join(' '));
 };
 
@@ -295,14 +298,14 @@ async function synthRun(browser, tag, assert) {
     ok(`phone ${w}: the story plays in the stage`, r.canvas !== 'none' && r.seq.mode === 'full' && r.seq.tier > 0, `canvas ${r.canvas}, mode ${r.seq.mode}, tier ${r.seq.tier}, stage ${r.top.trim()} + ${r.st.trim()}`);
     let maxDec = 0; const held = [];
     const flow = await p.evaluate(() => document.documentElement.classList.contains('flow'));
-    ok(`phone ${w}: the 3D in its own block under each heading, below the copy's layer`, flow && await p.evaluate(() => {
-      const st = [...document.querySelectorAll('main .stage')], cv = document.getElementById('seq'), z = e => +getComputedStyle(e).zIndex || 0;
-      return st.length === 5 && st.every(b => { const h = b.closest('section').querySelector('h1, h2'); return b.offsetParent === h.offsetParent && b.offsetTop >= h.offsetTop + h.offsetHeight; })
-        && getComputedStyle(cv).position === 'absolute' && z(cv) < z(document.querySelector('main')); }), `flow ${flow}`);
+    ok(`phone ${w}: the 3D in its own block under each heading, below the copy's layer`, flow && await p.evaluate(([HEADING, nb]) => {
+      const heading = eval(HEADING), st = [...document.querySelectorAll('main .stage')], cv = document.getElementById('seq'), z = e => +getComputedStyle(e).zIndex || 0;
+      return st.length === nb && st.every(b => { const h = heading(b.closest('section')); return b.offsetParent === h.offsetParent && b.offsetTop >= h.offsetTop + h.offsetHeight; })
+        && getComputedStyle(cv).position === 'absolute' && z(cv) < z(document.querySelector('main')); }, [HEADING, STORY.length - 1]), `flow ${flow}`);
     for (const [n, id] of [...STORY, 'specialists'].entries()) {   // each heading as it is read: under the header (flow), or just under the stage
-      await p.evaluate(([i, flow]) => { const s = document.getElementById(i), hd = s.querySelector('h1, h2'), cs = getComputedStyle(document.documentElement);
+      await p.evaluate(([i, flow, HEADING]) => { const s = document.getElementById(i), hd = eval(HEADING)(s), cs = getComputedStyle(document.documentElement);
         const below = parseFloat(cs.getPropertyValue('--stage-top')) + (flow ? 0 : parseFloat(cs.getPropertyValue('--stage-h'))) + 14;
-        scrollTo(0, Math.max(0, hd.getBoundingClientRect().top + scrollY - below)); }, [id, flow]);
+        scrollTo(0, Math.max(0, hd.getBoundingClientRect().top + scrollY - below)); }, [id, flow, HEADING]);
       await p.waitForTimeout(900);
       const q = await p.evaluate(() => window.__seq()); maxDec = Math.max(maxDec, q.decoded);
       if (n < STORY.length - 1) held.push(`${STORY[n]}:${q.shown ? q.shown.join('.') : '-'}`);
