@@ -2,10 +2,12 @@
 // the motion layer z10, the line's soft shapeless haze (a mint glow, two green smokes) placed by the story position p
 // (window.__mtP, which the scene writes as it draws; window.__seq().pos without WebGL) screen by screen; a slow drift in time,
 // none under reduced motion (p is then rounded). Desktop: the live 3D steps aside while the step cards fill the middle of the
-// screen (html.mt-cards), and it hands over to the kit card's own picture before the rising card reaches it (html.mt-land,
-// --mt-land: the product is never cut by the card). Phone: while the canvas plays the opening in its block, S1's block below
-// does not show its still of the same kit (html.mt-open). The kit card's picture window (--fig-top, --fig-h) for its opaque
-// background (story-v2.css).
+// screen, by scroll (html.mt-cards, --mt-cards: out as card 01's picture rises from 85 % to 55 % of the screen, back in as
+// card 05's leaves; html.mt-cards0 while it is fully out: the scene does not draw), and it hands over to the kit card's own
+// picture in the last 15 % of its flight into the card's window (html.mt-land, --mt-land: the shrink is seen, the card's opaque
+// background clips the kit outside the window). Phone: until the opening has reached S1's pose (p 0.45), S1's block below does not
+// show its still of the same kit (html.mt-open). The kit card's picture window (--fig-top, --fig-h) for its opaque background
+// (story-v2.css).
 (function () {
   var root = document.documentElement, haze = document.querySelector('.mt-haze');
   var calm = matchMedia('(prefers-reduced-motion: reduce)'), small = matchMedia('(max-width: 899px)'), wide = matchMedia('(min-width: 900px)');
@@ -34,21 +36,22 @@
     if (typeof window.__mtP === 'number') return window.__mtP;
     try { return window.__seq ? window.__seq().pos || 0 : 0; } catch (e) { return 0; }
   }
-  function land() {   // desktop: the card's top from 90 % to 80 % of the screen fades the 3D out and the card's picture in
-    var on = false, v = 1;
+  function land() {   // desktop: the last 15 % of the kit's flight into the card's picture window (the engine's flight: the
+    var on = false, v = 1;   // card's top from 85 % to 25 % of the screen): the 3D out, the card's picture in
     if (card && wide.matches && root.classList.contains('story') && !root.classList.contains('flow')) {
-      var t = card.getBoundingClientRect().top / H; v = Math.max(0, Math.min(1, (t - 0.8) / 0.1)); on = t < 0.9;
+      var t = card.getBoundingClientRect().top / H, l = (0.85 - t) / 0.6;
+      on = t < 1; v = Math.max(0, Math.min(1, (1 - l) / 0.15));
     }
     if (on !== landOn) { root.classList.toggle('mt-land', on); landOn = on; }
     if (on && Math.abs(v - landV) > 0.002) { root.style.setProperty('--mt-land', v.toFixed(3)); landV = v; }
   }
-  function opening() {   // phone: the canvas is in the opening's block until that block has gone under the header (the engine's place())
-    var on = false;
-    if (openStage && root.classList.contains('flow')) on = openStage.getBoundingClientRect().bottom > (parseFloat(root.style.getPropertyValue('--stage-top')) || 0);
+  function opening() {   // phone: S1's still hidden until the opening has reached S1's pose (then it shows that same framing):
+    var on = false;       // the scene plays a phone's run in the first 45 % of its scroll (scenes/mitotech-cell-booster.js story())
+    if (openStage && root.classList.contains('flow')) on = pos() < 0.45;
     if (on !== openOn) { root.classList.toggle('mt-open', on); openOn = on; }
   }
   function frame(now) {
-    raf = 0; land(); opening(); if (!els.length || document.hidden) return;
+    raf = 0; land(); opening(); cards(); if (!els.length || document.hidden) return;
     var still = calm.matches, p = Math.max(0, Math.min(6, pos())); if (still) p = Math.round(p);
     var i = Math.min(5, Math.floor(p)), f = p - i, t = still ? 0 : now / 1000, ph = small.matches;
     var w4 = Math.max(0, 1 - Math.abs(p - 4)), tint = 0.5 + 0.5 * Math.sin(t * Math.PI / 8);   // S4: mint ↔ green, 16 s
@@ -73,16 +76,15 @@
   if (window.ResizeObserver) new ResizeObserver(measure).observe(document.querySelector('main') || root);
   measure();
 
-  var steps = document.querySelector('.mt-steps'), off = 0;
-  function cards(on) {
-    if (root.classList.contains('mt-cards') === on) return;
-    root.classList.add('mt-fade'); root.classList.toggle('mt-cards', on);
-    clearTimeout(off); off = setTimeout(function () { root.classList.remove('mt-fade'); }, 350);
-  }
-  if (steps && 'IntersectionObserver' in window) {
-    var inBand = false;
-    new IntersectionObserver(function (es) { inBand = es[es.length - 1].isIntersecting; cards(inBand && wide.matches); },
-      { rootMargin: '-15% 0px -15% 0px' }).observe(steps);
-    wide.addEventListener('change', function () { cards(inBand && wide.matches); });
+  var figs = Array.prototype.slice.call(document.querySelectorAll('.mt-step figure')), cardsV = -1;
+  function cards() {   // desktop: 1 (the 3D shown) … 0 (out) by the first card's picture top and the last one's bottom
+    var v = 1;
+    if (figs.length && wide.matches && root.classList.contains('story') && !root.classList.contains('flow')) {
+      var a = figs[0].getBoundingClientRect().top / H, b = figs[figs.length - 1].getBoundingClientRect().bottom / H;
+      v = Math.max(Math.min(1, Math.max(0, (a - 0.55) / 0.3)), Math.min(1, Math.max(0, (0.45 - b) / 0.3)));
+    }
+    if (Math.abs(v - cardsV) < 0.002) return;
+    cardsV = v; root.classList.toggle('mt-cards', v < 1); root.classList.toggle('mt-cards0', v === 0);
+    root.style.setProperty('--mt-cards', v.toFixed(3));
   }
 })();

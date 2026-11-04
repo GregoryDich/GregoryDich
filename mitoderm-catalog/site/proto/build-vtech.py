@@ -326,10 +326,13 @@ if FILES:   # the page's images: smoke, logos, kit card, related products, phone
         save(Image.open(plate_src).convert('RGB'), f'{FILES}/img/plate.webp', 2592, quality=82, method=6)
     if EXO and PDRN and os.path.exists(f'{src}/helix.webp'):   # the DNA helix loop (animated, over black: the page screens it)
         shutil.copyfile(f'{src}/helix.webp', f'{FILES}/img/helix.webp')
-    for i in range(1, 6) if V2 else ():   # v2: the step cards' pictures, stills of the scene (≥ 2× their 560 css px)
+    STEP_IMS = []   # v2: the step cards' pictures, stills of the scene (≥ 2× their 560 css px), all five at one scale (the
+    for i in range(1, 6) if V2 else ():   # scene draws them at one camera distance): the vials keep their size card to card
         im = Image.open(f'{KEYS}/step{i}.png').convert('RGBA'); x0, y0, x1, y1 = im.getchannel('A').point(lambda a: 255 if a > 8 else 0).getbbox()
-        p = round(0.06 * max(x1 - x0, y1 - y0)); im = im.crop((max(0, x0 - p), max(0, y0 - p), min(im.width, x1 + p), min(im.height, y1 + p)))
-        s = min(1200 / im.width, 900 / im.height, 1); im = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS) if s < 1 else im
+        p = round(0.06 * max(x1 - x0, y1 - y0)); STEP_IMS.append(im.crop((max(0, x0 - p), max(0, y0 - p), min(im.width, x1 + p), min(im.height, y1 + p))))
+    s = min([min(1200 / im.width, 900 / im.height, 1) for im in STEP_IMS] or [1])
+    for i, im in enumerate(STEP_IMS, 1):
+        im = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS) if s < 1 else im
         c = Image.new('RGBA', (1200, 900)); c.paste(im, ((1200 - im.width) // 2, (900 - im.height) // 2))
         c.save(f'{FILES}/img/step{i}.webp', quality=86, alpha_quality=92, method=6)
     if SCENE:   # the scene's textures; the first key frame as the still (no JS, no WebGL)
@@ -402,6 +405,8 @@ ASSETS = {'__WA_PRICE__': esc(WA_MAIN), '__STILL__': STILL,
               f'<img src="img/cells/{CELLS[j % len(CELLS)]}-{s}.webp" alt="" loading="lazy" decoding="async">' for j, s in ((0, 2), (3, 1), (6, 1)))
               + '</span>') if CELLS else ''}
 for k, val in ASSETS.items(): page = page.replace(k, val)
+if V2:   # the screens' stills (no JS, a phone's blocks) load only where they show: hidden under a desktop's live 3D they are not fetched
+    n = page.count('<img class="slot'); page = page.replace('<img class="slot', '<img loading="lazy" class="slot'); assert n == 6, n
 left = re.findall(r'__[A-Z0-9_]+__|\{\{', page)
 assert not left, f'unfilled placeholders: {sorted(set(left))}'
 # the frame engine (engine/story.js, the module a React app imports) goes into the page: one file to publish or open

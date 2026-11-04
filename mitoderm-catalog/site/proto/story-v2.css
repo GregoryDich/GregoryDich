@@ -12,9 +12,10 @@
 .mt-haze .a, .mt-haze .b { --c: 20 68 52; width: 110vmax; height: 80vmax; }   /* the green smoke */
 #seq, .still { z-index: 11 !important; }   /* the 3D under the content, also while the kit flies (the engine writes 3 inline) */
 main, .foot { z-index: 20; } .top { z-index: 40; } .dock { z-index: 45; } .bar { z-index: 50; }
-/* the cards: while the step cards fill the middle of a desktop screen the live 3D steps aside (the cards carry it) */
-html.mt-cards #seq { opacity: 0 !important; }
-html.mt-fade #seq { transition: opacity .3s; }
+/* the cards: while the step cards fill the middle of a desktop screen the live 3D steps aside (the cards carry it), by scroll:
+   it fades out as card 01's picture rises from 85 % to 55 % of the screen and back in as card 05's leaves (--mt-cards 1 → 0 → 1,
+   story-v2-motion.js) */
+html.mt-cards #seq { opacity: var(--mt-cards, 0) !important; }
 /* the lead form's panel: no smoke picture on v2, the same gradient and a soft mint glow behind the kit */
 .lead-panel { background: radial-gradient(60% 55% at 50% 45%, rgb(120 224 188 / .14), transparent 70%), linear-gradient(180deg, #0a0a0b, #111114); }
 /* only what exists (owner 22/10): no dot-ring on the pins, no rule after the kickers */
@@ -32,7 +33,8 @@ html.mt-fade #seq { transition: opacity .3s; }
 .open-sub { margin-top: 18px; font: 500 clamp(12px, 1.05vw, 16px)/1.3 var(--body); letter-spacing: .24em; color: var(--mt-mint); }
 html:not(.js) .open, .no-gl .open { display: none; }
 html.js:not(.no-gl) #meet .head h1 { display: none; }
-html.story:not(.flow) #meet { padding-top: calc(72px + 60svh); }   /* S1's copy arrives once the camera has moved in */
+html.story:not(.flow) #meet { padding-top: calc(72px + 45svh); }   /* S1's copy rises as the kit settles in S1's place */
+@media (min-width: 900px) { .story #meet { scroll-margin-top: -10svh; } }   /* the dock's «הכירו»: S1's copy whole, its buttons above the dock */
 
 /* the five preparation steps: picture and text side by side, alternating (the pictures: stills of the page's own scene) */
 .mt-prep { margin-top: clamp(96px, 16vh, 180px); display: grid; gap: clamp(40px, 7vh, 88px); }
@@ -41,8 +43,7 @@ html.story:not(.flow) #meet { padding-top: calc(72px + 60svh); }   /* S1's copy 
 .mt-step { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; column-gap: clamp(32px, 5vw, 80px); }
 .mt-step figure { margin: 0; order: 2; }   /* RTL: the text on the right, the picture on the left … */
 .mt-step:nth-child(even) figure { order: 0; }   /* … then the other way round */
-.mt-step img { width: 100%; max-width: 560px; height: auto; aspect-ratio: 4 / 3; object-fit: contain; border-radius: 24px;
-  background: rgba(26, 26, 31, .55); border: 1px solid var(--hairline-cream); }
+.mt-step img { width: 100%; max-width: 560px; height: auto; aspect-ratio: 4 / 3; object-fit: contain; }   /* no frame: the vials on the page's own gradient */
 .mt-st { display: grid; gap: 12px; justify-items: start; max-width: 460px; }
 .mt-st .n { font: 300 22px/1 var(--display); color: var(--gold); }
 .mt-st h4 { font: 500 clamp(22px, 2vw, 30px)/1.25 var(--display); color: var(--cream); }
@@ -67,6 +68,14 @@ html.mt-land:not(.flow) #seq { opacity: var(--mt-land, 0) !important; }
 html.mt-land:not(.flow) .kitcard .kc-live { opacity: calc(1 - var(--mt-land, 0)) !important; }
 /* phone: while the opening plays in its own block, S1's block below shows no still of the same kit (html.mt-open) */
 html.mt-open #meet .stage-still { visibility: hidden !important; }
+/* no JS, desktop: the first key frame only behind S1 (it scrolls away with it, never pinned behind the cards), and each
+   later screen's own still to the left of its copy (the product left, the text right) */
+html:not(.js) .still { position: absolute; inset: 0 0 auto; height: 100svh; }
+@media (min-width: 900px) {
+  html:not(.js) .copy { position: relative; }
+  html:not(.js) .sec:not(#meet) .head .slot { display: block; position: absolute; right: calc(100% + 64px); top: 50%; transform: translateY(-50%);
+    width: 100%; height: auto; max-height: 60svh; object-fit: contain; }
+}
 
 /* phone and tablet (≤ 899): the 3D in its own block under the heading (the engine's flow, up to 899 on this page) */
 @media (max-width: 899px) {
@@ -89,5 +98,6 @@ html.mt-open #meet .stage-still { visibility: hidden !important; }
   .stage-still { position: absolute; max-width: none; pointer-events: none; }
   html.flow .sec { scroll-margin-top: var(--stage-top, 72px); }
   html.flow .offer .kitcard { margin-top: 4px; }
+  html.flow .copy { width: 100%; margin-inline-end: 0; }   /* every stage block as wide as the opening's: the canvas fits them all */
 }
-@media (prefers-reduced-motion: reduce) { .mt-haze i { transition: none; } html.mt-fade #seq { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .mt-haze i { transition: none; } }

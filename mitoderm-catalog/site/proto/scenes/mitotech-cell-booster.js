@@ -335,8 +335,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     SY.sort(); const k = Math.floor(clamp(frac * FULL_FRAC) * (NS - 1)); return SY[k];
   }
 
-  // ---- inside the amber (run 3): a soft amber light over the scene's box, brighter toward its middle, its alpha
-  // feathered to nothing well inside the box's edges (no panel, no circle reads); drawn after the scene
+  // ---- inside the amber (run 3): a soft amber light over the scene's box, brighter toward its middle, its alpha a round
+  // gaussian falling to nothing well inside the box's edges (no panel, no rounded rectangle, no circle's edge); drawn after the scene
   const qScene = new THREE.Scene(), qCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
   const hexv = h => new V3(((h >> 16) & 255) / 255, ((h >> 8) & 255) / 255, (h & 255) / 255);   // sRGB as drawn
   const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
@@ -344,8 +344,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     vertexShader: 'void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }',
     fragmentShader: `uniform float uA; uniform vec2 uRes; uniform vec3 uC0, uC1;
       void main() { vec2 q = gl_FragCoord.xy / uRes, d = min(q, 1.0 - q) * uRes; float m = min(uRes.x, uRes.y);
-        float a = smoothstep(0.0, 0.32 * m, d.x) * smoothstep(0.0, 0.32 * m, d.y);
-        vec2 c = (q - 0.5) * uRes / length(uRes) * 2.0; float r = clamp(dot(c, c), 0.0, 1.0);
+        vec2 c = (gl_FragCoord.xy - 0.5 * uRes) / (0.5 * m); float r = clamp(dot(c, c), 0.0, 1.0), a = exp(-2.4 * dot(c, c));
         float n = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) - 0.5;
         gl_FragColor = vec4(mix(uC1, uC0, smoothstep(0.0, 1.0, r)) + n / 255.0, 1.0) * (uA * a); }`,
     transparent: true, depthTest: false, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation,
@@ -381,10 +380,12 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const B4 = vialPx(640, 1190, 300), P4 = vialPx(780, 1190, 300);   // S4: small and low
   const B5 = vialPx(560, 1150, 470), P5 = vialPx(820, 1150, 470);   // S5: the preparation
   const deeper = (pos, k, out) => out.copy(pos).sub(lay.position).multiplyScalar(k).add(lay.position);   // on its line of sight, k × as far
-  // the step stills (p 11…15): ≈ 1100 px tall, centred in the frame (their outline's middle on (1200, 750): OFF)
-  const S1B = vialPx(930, 1290, 820), S1P = vialPx(1470, 1290, 820);
-  const S2P = vialPx(1360, 1310, 640), S3P = vialPx(1440, 1300, 940), S3B = vialPx(900, 1300, 940);
-  const S4P = vialPx(1180, 1290, 745), S5P = vialPx(1270, 220, 830);
+  // the step stills (p 11…15): one camera distance for all five (a vial 640 frame px tall, so step 2's pour fits), each
+  // centred in the frame by its outline (its middle on (1200, 750): OFF), never scaled: the vials keep one size card to card
+  const SH = 640, sx = (x, h) => 1200 + (x - 1200) * SH / h;
+  const S1B = vialPx(sx(930, 820), 1290, SH), S1P = vialPx(sx(1470, 820), 1290, SH);
+  const S2P = vialPx(1360, 1310, SH), S3P = vialPx(sx(1440, 940), 1300, SH), S3B = vialPx(sx(900, 940), 1300, SH);
+  const S4P = vialPx(1180, 1290, SH), S5P = vialPx(1270, 220, SH);
   const OFF = [];   // per step: its shift in frame px, measured once on its first pose
   const shiftPx = (pos, dx, dy) => { const w = 2 * depthOf(pos) * TAN / 1500; return pos.addScaledVector(RIGHT, dx * w).addScaledVector(UP, -dy * w); };
 
@@ -421,17 +422,19 @@ export function createScene(THREE, { canvas, base, onLoad }) {
 
   function story(p) {   // the state at story position p (phone: the same poses; only p0's camera differs)
     const st = ST, b = st.box;
+    // a phone: each run plays in the first 45 % of its scroll window and holds its end pose, so it is whole while its
+    // block is still mostly on screen (the engine's flow moves the block up under the header as the run plays)
+    if (p < 6 && phone.matches) { const k0 = Math.floor(p); p = k0 + Math.min(1, (p - k0) / 0.45); }
     st.cam = st.push = st.dive = st.quad = 0;
     b.pos.copy(K_BOX); b.a = 0;
     for (let i = 0; i < 8; i++) resetV(st.kit[i], K_V[i], 0);
     resetV(st.B, B3, 0); resetV(st.P, P3, 0);
     if (p >= 10) return steps(p);
     const k = Math.min(5, Math.floor(p)), f = p - k;
-    if (k === 0) {   // open → meet: the kit as R15, large under the name; the camera pushes in toward it and on into the
-      // box's green (the kit fading as it fills the screen); then S1's framing comes up out of the dark
-      const a = f < 0.6 ? 1 - smooth(0.3, 0.56, f) : smooth(0.62, 0.92, f);
-      b.a = a; for (let i = 0; i < 8; i++) st.kit[i].a = a;
-      if (f < 0.6) { st.cam = 1; st.push = smooth(0.04, 0.58, f); }
+    if (k === 0) {   // open → meet: the kit as R15, large under the name; the camera moves in toward it, then on to S1's
+      // framing (one camera move, the kit solid throughout: no fade, no empty frame)
+      b.a = 1; for (let i = 0; i < 8; i++) st.kit[i].a = 1;
+      st.push = smooth(0.04, 0.55, f); st.cam = 1 - smooth(0.35, 0.95, f);
     } else if (k === 1) {   // meet → why: the eight go round the box's sides and in behind it; it steps back (0.92)
       b.a = 1; b.pos.lerpVectors(K_BOX, BOX2, smooth(0.1, 0.9, f));
       boxMatrix(b.pos, tmpM);
@@ -448,10 +451,11 @@ export function createScene(THREE, { canvas, base, onLoad }) {
         along(PAIR[j], m, tB).applyMatrix4(tmpM);
         o.pos.lerpVectors(tB, end, w); o.a = smooth(0, PAIR_HIDE, m); o.yaw = rad(-30) * (1 - w);
       }
-    } else if (k === 3) {   // inside → feel: into the booster's amber and back; the pair goes small and low
-      st.B.a = st.P.a = 1;
-      st.dive = smooth(0, 0.42, f) * (1 - smooth(0.54, 0.8, f));
-      st.quad = smooth(0.38, 0.46, f) * (1 - smooth(0.54, 0.62, f));
+    } else if (k === 3) {   // inside → feel: through the booster's amber and back (it passes, it does not hold); the glass
+      // fades before the camera is in (no straight glass edge in the glow); the pair goes small and low
+      st.B.a = st.P.a = 1 - smooth(0.16, 0.3, f) * (1 - smooth(0.55, 0.68, f));
+      st.dive = smooth(0, 0.4, f) * (1 - smooth(0.48, 0.74, f));
+      st.quad = smooth(0.22, 0.36, f) * (1 - smooth(0.48, 0.62, f));   // over the glass's fade: never an empty frame
       const g = smooth(0.6, 1, f); st.B.pos.lerpVectors(B3, B4, g); st.P.pos.lerpVectors(P3, P4, g);
     } else if (k === 4) {   // feel → protocol: the R7 preparation (prep())
       prep(f);
@@ -583,10 +587,10 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     }
   }
   // the opening's camera: along the view so the kit is s × as large as in S1, shifted so its middle (frame (708, 750)) lands
-  // on the target pixel; `push` 0 … 1 moves it on toward that point (× 2.3). A desktop: the kit ≈ 55 % of the screen's
+  // on the target pixel; `push` 0 … 1 moves it on toward that point (× 1.2: the kit stays whole on a desktop's screen, above the dock). A desktop: the kit ≈ 55 % of the screen's
   // height (frame y 525 … 1355), centred under the name (its copy ends above 31 % of a 16:10 screen, 30 % of a 16:9 one) and
   // above the dock; a phone: S1's own framing in the opening's block
-  const OPEN = { desk: [0.98, 1200, 940], phone: [1, 708, 750] }, PUSH = 2.3;
+  const OPEN = { desk: [0.98, 1200, 940], phone: [1, 708, 750] }, PUSH = 1.2;
   function openCam(out, push) {
     const o = phone.matches ? OPEN.phone : OPEN.desk, tx = o[1], ty = o[2], s = o[0] * lerp(1, PUSH, push);
     const D = depthOf(K_BOX), D2 = D / s, wpp = 2 * D2 * TAN / 1500;
@@ -651,8 +655,9 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     pose(p, view.still ? 0 : view.t, view.still); fit(view, pr);
     renderer.render(scene, camera);
     // the edges fade while the camera is in the amber, and on a phone while the opening's push-in outgrows its block
-    const qa = ST.quad, vw = Math.max(smooth(0.1, 0.55, ST.dive), phone.matches ? smooth(0.02, 0.3, ST.push) : 0);
-    quad.material.uniforms.uA.value = qa; vig.material.uniforms.uW.value = vw; vig.material.uniforms.uF.value = ST.dive > 0 ? 0.5 : 0.16;   // the push: its edges only
+    // (from the dive's first step: the pair is never cut flat by the canvas's edge as the camera moves in)
+    const qa = ST.quad, vw = Math.max(smooth(0, 0.25, ST.dive), phone.matches ? smooth(0.02, 0.3, ST.push) : 0);
+    quad.material.uniforms.uA.value = qa; vig.material.uniforms.uW.value = vw; vig.material.uniforms.uF.value = ST.dive > 0 ? lerp(0.16, 0.7, smooth(0.2, 0.7, ST.dive)) : 0.16;   // the push: its edges only; the dive: the edges first, then all soft
     if (qa > 0.002 || vw > 0.002) {
       renderer.autoClear = false;
       if (qa > 0.002) renderer.render(qScene, qCam);
@@ -664,7 +669,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const html = document.documentElement;
   function draw(p, view) {
     window.__mtP = p;   // the story position for the page's motion layer (story-v2-motion.js), without the QA state()
-    if (html.classList.contains('mt-cards')) return;   // desktop: the step cards stand in for the 3D (story-v2.css hides it): the last frame stays
+    if (html.classList.contains('mt-cards0')) return;   // desktop: the step cards stand in for the 3D (story-v2.css hides it): the last frame stays
     pace(performance.now(), view.still || p >= 5.85); lastP = p; lastView = view; render(p, view);
   }
   let kits = 0;   // kit pictures rendered (QA: none on a phone, none for a toolbar)
