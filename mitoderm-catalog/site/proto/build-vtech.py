@@ -50,6 +50,11 @@ if PRODUCT == 'v-tech-system':
 else:
     assert FILES, '--files <dir> is needed: the page is written there, next to its img/ and seq/'
     v = content(PRODUCT)
+# site v2 (story_content.V2, ARCHITECTURE-v2 31/10): an opening screen before S1 (the scene full screen, the name large over
+# it, the camera moving in: a sixth run), the layers z0 (a gradient, no smoke picture) / z10 (story-v2-motion.js: the line's
+# haze) / z20 (the content), the preparation steps as cards (stills of the page's own scene: <keys>/step1…5.png), the
+# phone's blocks up to 899 px. Every v2 addition is empty for the other pages: their HTML stays byte for byte the same.
+V2 = v.get('v2')
 PAGES = list(zip(load(SITE, 'product-pages.json'), load(SITE, 'product-pages.he.json')))
 cat = next(h for s, h in PAGES if s['slug'] == PRODUCT)
 SLUG = {h['name']: s['slug'] for s, h in PAGES}   # a related card names its product; its page is that product's slug
@@ -118,7 +123,7 @@ HERO = {'hero': [[1, [0.12, 0.25, 0.46, 0.85]], [2, [0.12, 0.25, 0.40, 0.85]]]} 
 LINE = v.get('line', 'V-TECH FACE')   # the line's smoke: V-TECH FACE and HAIR are black and gold (design-rules), the others
 SMOKE = (f'{SITE}/design/vtech-3d/layers/vt-bg-wide.jpg' if LINE in ('V-TECH FACE', 'HAIR')   # recoloured by tools/line_smoke.py
          else f'{SITE}/design/lines/{LINE.lower()}-smoke.jpg')
-assert os.path.exists(SMOKE), f'no smoke for the {LINE} line: run tools/line_smoke.py'
+assert V2 or os.path.exists(SMOKE), f'no smoke for the {LINE} line: run tools/line_smoke.py'   # v2: no smoke picture
 # the main button: the price form (WhatsApp without JS) for a professional product, WhatsApp for a home-care one
 WA_MAIN = wa(ui['wa_text_product'].format(name=NAME)) if HOME else wa(ui['wa_text_price'].replace('EXOCELL MASK', NAME))
 LEAD = '' if HOME else ' data-lead aria-haspopup="dialog"'
@@ -191,7 +196,7 @@ RAW = {
     's3_formula': (f'<details class="rv" style="--d:.3s"><summary>{esc(s3["formula"])}</summary><ul>{lis(cat["ingredients"], keep)}</ul></details>'
                    if s3['formula'] else ''),   # a device has features, not a formula
     's4_pins': lis(s4['pins']), 's5_chip': keep(s5['chip']),
-    's5_steps': ''.join(f'<li class="step rv" style="--d:{i * .08:.2f}s"><span class="n">0{i + 1}</span><h3>{keep(t)}</h3>{f"<p>{keep(p)}</p>" if p else ""}</li>'
+    's5_steps': '' if V2 else ''.join(f'<li class="step rv" style="--d:{i * .08:.2f}s"><span class="n">0{i + 1}</span><h3>{keep(t)}</h3>{f"<p>{keep(p)}</p>" if p else ""}</li>'
                         for i, (t, p) in enumerate(s5['steps'])),
     's5_note': f'<p class="note rv" style="--d:.24s">{text(s5["note"])}</p>' if s5['note'] else '',
     'lead': LEAD, 'use_cls': '' if HOME else ' pro',
@@ -229,16 +234,33 @@ RAW = {
         for k in ('line', 'more')) + '\n  </div></section>') if s9['line'] or s9['more'] else '',
     'dock': ''.join(f'<a href="#{h}" data-i="{i}">{esc(n)}</a>' for i, (h, n) in enumerate(zip(
         ('meet', 'why', 'inside', 'feel', 'protocol', 'offer', 'specialists'), nav))),
+    'motion_layer': '<div class="mt-haze" aria-hidden="true"><i class="g"></i><i class="a"></i><i class="b"></i></div>' if V2 else '',
+    'open_sec': ('\n  <section id="open" class="sec open" aria-labelledby="open-h"><div class="wrap">\n'
+                 f'    <h1 id="open-h" class="open-name" dir="ltr"><bdi><b>{esc(V2["open"]["name"].split(" ", 1)[0])}</b> {esc(V2["open"]["name"].split(" ", 1)[1])}</bdi></h1>\n'
+                 f'    <p class="open-sub" dir="ltr" lang="en">{esc(V2["open"]["sub"])}</p>\n'
+                 '    <div class="head"><img class="slot" src="img/m0.webp" alt="" aria-hidden="true"><div class="stage" aria-hidden="true"></div></div>\n'
+                 '  </div></section>') if V2 else '',
+    'step_cards': ('\n    <section class="mt-prep" aria-labelledby="mt-prep-h">\n'
+                   f'      <h3 id="mt-prep-h" class="mt-prep-h rv">{keep(V2["cards"]["h"])}</h3>\n      <ol class="mt-steps">'
+                   + ''.join(f'\n        <li class="mt-step rv"><figure><img src="img/step{i + 1}.webp" width="1200" height="900" loading="lazy" decoding="async" alt="{esc(NAME + ": " + t)}"></figure>'
+                             f'<div class="mt-st"><span class="n">0{i + 1}</span><h4>{keep(t)}</h4><p>{keep(d)}</p></div></li>'
+                             for i, (t, d) in enumerate(V2['cards']['steps']))
+                   + '\n      </ol>\n' + (f'      <p class="note rv">{text(V2["cards"]["note"])}</p>\n' if V2['cards']['note'] else '')
+                   + '    </section>') if V2 else '',
+    'page_css': '\n' + open(os.path.join(H, 'story-v2.css'), encoding='utf-8').read().rstrip('\n') if V2 else '',
     'form_fail': keep(ui['form.error']),
     'form_errors': json.dumps(dict(ff['errors'], consent_required=ui['form.consent_required']), ensure_ascii=False).replace('<', '\\u003c'),
 }
 PAIRS = [('v1-meet', 'v2-why'), ('v2-why', 'v3-inside'), ('v3-inside', 'v4-feel'), ('v4-feel', 'v5-protocol'), ('v5-protocol', 'v6-kit')]
+if V2: PAIRS = [('v0-open', 'v1-meet')] + PAIRS   # the opening's run: the camera moves in
 RUNS = [{'a': a, 'b': b, 'n': 40, 'box': [0, 0, 1, 1]} for a, b in PAIRS]
 SCENE_BOX = [0.07, 0.19, 0.52, 0.81]   # a live scene: the left of the 16:10 frame that the objects move in (all screens)
 SCENE_JS = os.path.join(H, 'scenes', f'{PRODUCT}.js')
+PHONE_RUNS = None   # v2: the runs on a phone or tablet (the opening in SCENE_BOX: every block at the scale of the 12 pages)
 if SCENE:
     assert PRODUCT != 'v-tech-system' and os.path.exists(SCENE_JS) and FILES and KEYS, '--scene needs --product with scenes/<slug>.js, --files, --keys'
     RUNS = [{'a': a, 'b': b, 'n': 60, 'box': SCENE_BOX} for a, b in PAIRS]
+    if V2: PHONE_RUNS, RUNS = RUNS, [dict(RUNS[0], box=[0, 0, 1, 1])] + RUNS[1:]   # desktop: the opening's run fills the screen
 elif FILES and os.path.exists(f'{FILES}/seq/runs.json'):   # crop boxes and frame counts from the render
     RUNS = json.load(open(f'{FILES}/seq/runs.json'))['runs']
     assert [(r['a'], r['b']) for r in RUNS] == PAIRS, 'runs.json must list the five runs in story order'
@@ -272,7 +294,7 @@ KIT_W = 1200   # the offer card's picture: up to ~320 css px tall on a phone at 
 kit_size = (min(KIT_W, k.width), round(min(KIT_W, k.width) * k.height / k.width))
 if FILES:   # the page's images: smoke, logos, kit card, related products, phone stills cut from the key frames
     os.makedirs(f'{FILES}/img', exist_ok=True)
-    save(Image.open(SMOKE).convert('RGB'), f'{FILES}/img/bg.webp', 3456, quality=80, method=6)   # the whole source
+    if not V2: save(Image.open(SMOKE).convert('RGB'), f'{FILES}/img/bg.webp', 3456, quality=80, method=6)   # the whole source
     save(Image.open(f'{SITE}/img/mitoderm-logo-white-mark.png').convert('RGBA'), f'{FILES}/img/logo-mark.png', 600, optimize=True)
     save(Image.open(f'{SITE}/img/mitoderm-logo-white.png').convert('RGBA'), f'{FILES}/img/logo.png', 420, optimize=True)
     save(k, f'{FILES}/img/kit.webp', KIT_W, quality=86, method=6)
@@ -280,7 +302,8 @@ if FILES:   # the page's images: smoke, logos, kit card, related products, phone
         src = next(f'{REPO}/protocols/{d}/img/{c[3]}' for d in ('assets', 'print') if os.path.exists(f'{REPO}/protocols/{d}/img/{c[3]}'))
         save(Image.open(src).convert('RGBA'), f'{FILES}/img/{c[3]}', 1000, quality=84, method=6)
     assert KEYS, '--keys <dir with the transparent key frames (render_series.py output)> is needed for the phone stills'
-    for n, shot in enumerate(('v1-meet', 'v2-why', 'v3-inside', 'v4-feel', 'v5-protocol'), 1):   # the key frames of the story of 17/10
+    SHOTS = ('v1-meet', 'v2-why', 'v3-inside', 'v4-feel', 'v5-protocol')   # the key frames of the story of 17/10
+    for n, shot in enumerate((('v1-meet',) if V2 else ()) + SHOTS, 0 if V2 else 1):   # v2: m0, the opening's block (the kit of S1)
         im = Image.open(f'{KEYS}/{shot}.png').convert('RGBA'); x0, y0, x1, y1 = im.getchannel('A').point(lambda a: 255 if a > 8 else 0).getbbox()
         p = round(0.03 * max(x1 - x0, y1 - y0))   # a little air around the objects
         c = (max(0, x0 - p), max(0, y0 - p), min(im.width, x1 + p), min(im.height, y1 + p))
@@ -302,6 +325,12 @@ if FILES:   # the page's images: smoke, logos, kit card, related products, phone
         save(Image.open(plate_src).convert('RGB'), f'{FILES}/img/plate.webp', 2592, quality=82, method=6)
     if EXO and PDRN and os.path.exists(f'{src}/helix.webp'):   # the DNA helix loop (animated, over black: the page screens it)
         shutil.copyfile(f'{src}/helix.webp', f'{FILES}/img/helix.webp')
+    for i in range(1, 6) if V2 else ():   # v2: the step cards' pictures, stills of the scene (≥ 2× their 560 css px)
+        im = Image.open(f'{KEYS}/step{i}.png').convert('RGBA'); x0, y0, x1, y1 = im.getchannel('A').point(lambda a: 255 if a > 8 else 0).getbbox()
+        p = round(0.06 * max(x1 - x0, y1 - y0)); im = im.crop((max(0, x0 - p), max(0, y0 - p), min(im.width, x1 + p), min(im.height, y1 + p)))
+        s = min(1200 / im.width, 900 / im.height, 1); im = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS) if s < 1 else im
+        c = Image.new('RGBA', (1200, 900)); c.paste(im, ((1200 - im.width) // 2, (900 - im.height) // 2))
+        c.save(f'{FILES}/img/step{i}.webp', quality=86, alpha_quality=92, method=6)
     if SCENE:   # the scene's textures; the first key frame as the still (no JS, no WebGL)
         shutil.copytree(os.path.join(H, 'img', f'{PRODUCT}-3d'), f'{FILES}/img/{PRODUCT}-3d', dirs_exist_ok=True)
         save(Image.open(f'{KEYS}/v1-meet.png').convert('RGBA'), f'{FILES}/img/still.webp', 3840, quality=86, alpha_quality=92, method=6)
@@ -328,6 +357,8 @@ used = set(re.findall(r'\{\{\{?(\w+)\}?\}\}', page))
 missing, unused = used - set(T) - set(RAW), (set(T) | set(RAW)) - used
 assert not missing, f'no text for {sorted(missing)}'
 assert not unused, f'texts never placed: {sorted(unused)}'
+for k in ('motion_layer', 'open_sec', 'step_cards', 'page_css'):   # filled before the {{text}} pass and the __ASSETS__: none may hold either
+    assert not re.search(r'__[A-Z0-9_]+__|\{\{', RAW[k]), f'{k} holds a placeholder'
 page = re.sub(r'\{\{\{(\w+)\}\}\}', lambda m: RAW[m.group(1)], page)
 KEEP = {'s1_lead', 's2_h2', 's2_p', 's2_kicker', 's3_h2', 's3_kicker', 's4_h2', 's4_p', 's5_h2', 's5_p', 's7_p'}   # text, not attributes: its Latin names whole
 SENT = {'tag'}   # a sentence («Measure what matters»): no nowrap, so that it still fits a phone's heading column without JS
@@ -335,16 +366,21 @@ page = re.sub(r'\{\{(\w+)\}\}', lambda m: keep(T[m.group(1)]) if m.group(1) in K
 # the live scene: three.js from jsDelivr (as the MASK page), imported so that a failed load (or no WebGL) leaves the
 # page whole, without 3D: no-gl, the still; then the scene module inlined
 SRC = open(SCENE_JS, encoding='utf-8').read() if SCENE else ''
+MOTION = open(os.path.join(H, 'story-v2-motion.js'), encoding='utf-8').read() if V2 else ''   # v2: the motion layer z10, before three.js loads
+assert not re.search(r'__[A-Z0-9_]+__|\{\{|</script', MOTION), 'story-v2-motion.js holds a placeholder or </script'
 assert not SCENE or (SRC.count('export function createScene(') == 1 and '</script' not in SRC)
 SCENE_INIT = ("(() => { try { if (!THREE) throw 0; return createScene(THREE, { canvas: $('seq'), base: document.baseURI, onLoad: () => story.measure() }); }\n"
               "  catch (e) { document.documentElement.classList.add('no-gl'); return null; } })()")
+SEQ = lambda runs: json.dumps({'runs': runs, 'tiers': TIERS, 'cells': CELLS, 'mols': MOLS, 'helix': HELIX, **({'stills': STILLS} if STILLS else {}), **HERO}, separators=(',', ':'))
 ASSETS = {'__WA_PRICE__': esc(WA_MAIN), '__STILL__': STILL,
-          '__SCENE_JS__': ("// three.js 0.160 from jsDelivr: failed or stalled (8 s), the page goes on without 3D (no-gl: the still)\n"
+          '__SCENE_JS__': ('// story-v2-motion.js, inlined by build-vtech.py\n' + MOTION if V2 else '') + ("// three.js 0.160 from jsDelivr: failed or stalled (8 s), the page goes on without 3D (no-gl: the still)\n"
                            "const THREE = await Promise.race([import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js').catch(() => null),\n"
                            "  new Promise(r => setTimeout(r, 8000, null))]);\n"
                            f'// scenes/{PRODUCT}.js, inlined by build-vtech.py\n' + SRC.replace('export function createScene(', 'function createScene(', 1)) if SCENE else '',
           '__SCENE__': SCENE_INIT if SCENE else 'null',
-          '__SEQ__': json.dumps({'runs': RUNS, 'tiers': TIERS, 'cells': CELLS, 'mols': MOLS, 'helix': HELIX, **({'stills': STILLS} if STILLS else {}), **HERO}, separators=(',', ':')),
+          '__SEQ__': SEQ(RUNS) if not PHONE_RUNS else   # v2: the runs by screen, chosen at load; the phone's blocks up to 899 px
+                     f"(matchMedia('(max-width: 899px)').matches ? {SEQ(PHONE_RUNS)} : {SEQ(RUNS)}), flowQuery: '(max-width: 899px)'",
+          '__SECTIONS__': repr(['open'] * bool(V2) + ['meet', 'why', 'inside', 'feel', 'protocol', 'offer']),
           # phone: three still cells around the S3 ampoules (soft and bokeh sprites, small)
           '__PH_CELLS__': ('<span class="ph-cells" aria-hidden="true">' + ''.join(
               f'<img src="img/cells/{CELLS[j % len(CELLS)]}-{s}.webp" alt="" loading="lazy" decoding="async">' for j, s in ((0, 2), (3, 1), (6, 1)))

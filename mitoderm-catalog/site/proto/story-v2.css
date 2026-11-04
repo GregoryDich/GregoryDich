@@ -1,0 +1,87 @@
+/* Site v2 (ARCHITECTURE-v2, owner 31/10): the CSS of a page in story_content.V2 only (MITOTECH CELL BOOSTER), placed by
+   build-vtech.py at the end of the template's <style>; the other pages never get it. Layers: z0 a solid vertical gradient
+   (no image, no parallax), z10 the motion layer (the line's soft shapeless haze, story-v2-motion.js), z11 the 3D canvas,
+   z20 the content, always above the motion. The line's colours live only around the product (owner 14/10). */
+:root { --mt-green: #144434; --mt-mint: #78E0BC; }
+.bg { background: linear-gradient(180deg, #0a0a0b 0%, #111114 100%); inset: 0; transform: none !important; }
+.plate { display: none; }
+.mt-haze { position: fixed; inset: 0; z-index: 10; pointer-events: none; overflow: hidden; contain: strict; }
+.mt-haze i { position: absolute; left: 0; top: 0; width: 80vmax; height: 64vmax; opacity: 0; will-change: transform, opacity;
+  background: radial-gradient(closest-side, rgb(var(--c) / .26), rgb(var(--c) / .17) 30%, rgb(var(--c) / .08) 58%, rgb(var(--c) / .02) 82%, transparent); }
+.mt-haze .g { --c: 120 224 188; }   /* the mint glow behind the product */
+.mt-haze .a, .mt-haze .b { --c: 20 68 52; width: 110vmax; height: 80vmax; }   /* the green smoke */
+#seq, .still { z-index: 11 !important; }   /* the 3D under the content, also while the kit flies (the engine writes 3 inline) */
+main, .foot { z-index: 20; } .top { z-index: 40; } .dock { z-index: 45; } .bar { z-index: 50; }
+/* the cards: while the step cards fill the middle of a desktop screen the live 3D steps aside (the cards carry it) */
+html.mt-cards #seq { opacity: 0 !important; }
+html.mt-fade #seq { transition: opacity .3s; }
+/* the lead form's panel: no smoke picture on v2, the same gradient and a soft mint glow behind the kit */
+.lead-panel { background: radial-gradient(60% 55% at 50% 45%, rgb(120 224 188 / .14), transparent 70%), linear-gradient(180deg, #0a0a0b, #111114); }
+/* only what exists (owner 22/10): no dot-ring on the pins, no rule after the kickers */
+.pins li::before, .kicker.line::after { display: none; }
+.mark-line[data-line="mitotech"] { color: var(--mt-mint); }
+.steps:empty { display: none; }
+.spec-sec .lead:empty { display: none; }
+
+/* the opening: the scene fills the screen, the name large over it (above the kit, never on it); the camera moves in as
+   the page scrolls. Without JS or WebGL there is no opening: S1's own heading names the product */
+.open.sec { align-items: flex-start; padding-top: calc(72px + 7vh); }
+.open .wrap { width: calc(100% - 2 * var(--gutter)); text-align: center; }
+.open-name { font: 300 clamp(48px, 6.4vw, 150px)/.95 var(--display); letter-spacing: -.01em; white-space: nowrap; }
+.open-name b { font-weight: 500; }   /* MITOTECH bold, CELL BOOSTER light, as on the box */
+.open-sub { margin-top: 18px; font: 500 clamp(12px, 1.05vw, 16px)/1.3 var(--body); letter-spacing: .24em; color: var(--mt-mint); }
+html:not(.js) .open, .no-gl .open { display: none; }
+html.js:not(.no-gl) #meet .head h1 { display: none; }
+html.story:not(.flow) #meet { padding-top: calc(72px + 60svh); }   /* S1's copy arrives once the camera has moved in */
+
+/* the five preparation steps: picture and text side by side, alternating (the pictures: stills of the page's own scene) */
+.mt-prep { margin-top: clamp(96px, 16vh, 180px); display: grid; gap: clamp(40px, 7vh, 88px); }
+.mt-prep-h { font: 500 clamp(26px, 2.6vw, 36px)/1.2 var(--display); }
+.mt-steps { display: grid; gap: clamp(48px, 9vh, 112px); margin: 0; padding: 0; list-style: none; }
+.mt-step { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; column-gap: clamp(32px, 5vw, 80px); }
+.mt-step figure { margin: 0; order: 2; }   /* RTL: the text on the right, the picture on the left … */
+.mt-step:nth-child(even) figure { order: 0; }   /* … then the other way round */
+.mt-step img { width: 100%; max-width: 560px; height: auto; aspect-ratio: 4 / 3; object-fit: contain; border-radius: 24px;
+  background: rgba(26, 26, 31, .55); border: 1px solid var(--hairline-cream); }
+.mt-st { display: grid; gap: 12px; justify-items: start; max-width: 460px; }
+.mt-st .n { font: 300 22px/1 var(--display); color: var(--gold); }
+.mt-st h4 { font: 500 clamp(22px, 2vw, 30px)/1.25 var(--display); color: var(--cream); }
+.mt-st p { color: var(--text-soft); }
+@media (min-width: 900px) {
+  .mt-prep-h, .mt-prep > .note { max-width: min(540px, 46%); margin-inline-end: auto; }   /* the copy's column: the 3D shows beside them */
+  html.story:not(.flow) .mt-prep { margin-top: 62vh; }   /* S5's copy is read with the live 3D: the cards come after it */
+  html.story:not(.flow) .offer .kitcard { margin-top: 150vh; }   /* room for the last run after the cards */
+  .story #offer { scroll-margin-top: calc(-72px - 127vh); }   /* the dock's «הצעה» lands where the kit has landed in the card */
+}
+/* the kit card stays opaque around its picture: only the picture's window lets the flying kit and the glow show, so the kit
+   never passes under the card's text (ARCHITECTURE-v2: the product never under the text); the window's place comes from
+   story-v2-motion.js (--fig-top, --fig-h) */
+html.story:not(.no-gl):not(.flow) .kitcard { background: none; position: relative; isolation: isolate; }
+html.story:not(.no-gl):not(.flow) .kitcard::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+  background: linear-gradient(160deg, #1c1b1f, #0e0e11);
+  -webkit-mask: linear-gradient(#000 0 0) 0 0 / 100% var(--fig-top, 0px) no-repeat, linear-gradient(#000 0 0) 0 100% / 100% calc(100% - var(--fig-top, 0px) - var(--fig-h, 0px)) no-repeat;
+  mask: linear-gradient(#000 0 0) 0 0 / 100% var(--fig-top, 0px) no-repeat, linear-gradient(#000 0 0) 0 100% / 100% calc(100% - var(--fig-top, 0px) - var(--fig-h, 0px)) no-repeat; }
+
+/* phone and tablet (≤ 899): the 3D in its own block under the heading (the engine's flow, up to 899 on this page) */
+@media (max-width: 899px) {
+  .open.sec { min-height: 0; padding-block: 28px 8px; }
+  .open-name { font-size: clamp(40px, 12vw, 64px); white-space: normal; }
+  .open-name b { display: block; }   /* two lines: MITOTECH / CELL BOOSTER */
+  .mt-prep { margin-top: 48px; gap: 24px; }
+  /* the steps scroll sideways, the next one peeking in (design-rules 14/10), as the 12 pages' steps */
+  .mt-steps { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 80%; gap: 12px; margin-inline: calc(-1 * var(--gutter));
+    padding: 0 var(--gutter) 6px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); scrollbar-width: none; overscroll-behavior-x: contain; }
+  .mt-steps::-webkit-scrollbar { display: none; }
+  .mt-step { grid-template-columns: minmax(0, 1fr); row-gap: 16px; align-content: start; scroll-snap-align: start; }
+  .mt-step figure, .mt-step:nth-child(even) figure { order: 0; }
+}
+@media (min-width: 761px) and (max-width: 899px) {   /* tablets: the phone's blocks under the headings (the template's ≤ 760 rules) */
+  .head, html.story .head { grid-template-columns: minmax(0, 1fr); }
+  .slot, #meet .slot, .slot.wide { grid-column: 1; grid-row: auto; width: 100%; height: auto; max-height: 46svh; object-fit: contain; margin-top: 4px; }
+  html.flow #seq { position: absolute; }
+  html.flow .stage { display: block; position: relative; width: 100%; height: var(--stage-h, 46svh); margin-top: 4px; }
+  .stage-still { position: absolute; max-width: none; pointer-events: none; }
+  html.flow .sec { scroll-margin-top: var(--stage-top, 72px); }
+  html.flow .offer .kitcard { margin-top: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { .mt-haze i { transition: none; } html.mt-fade #seq { transition: none; } }

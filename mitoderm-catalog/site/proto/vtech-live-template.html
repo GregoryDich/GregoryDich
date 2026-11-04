@@ -324,10 +324,10 @@ dialog.lead::backdrop { background: rgba(5,6,7,.74); backdrop-filter: blur(6px);
   .js .rv { opacity: 1; transform: none; transition: none; }
   .btn:hover, .card:hover .pic img { transform: none; }
   .submit i { animation-duration: 2.4s; }
-}
+}{{{page_css}}}
 </style>
 
-<div class="bg" aria-hidden="true"></div>
+<div class="bg" aria-hidden="true"></div>{{{motion_layer}}}
 <div class="plate" aria-hidden="true"></div>
 __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fetched) with JS -->
 <img class="helix" alt="" aria-hidden="true" decoding="async">
@@ -340,7 +340,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
   <a class="logo" href="#meet" aria-label="MITODERM"><img src="img/logo-mark.png" alt="MITODERM"></a>
   <a class="btn ghost" href="__WA_PRICE__" target="_blank" rel="noopener"{{{lead}}}>{{cta_price}}</a>
 </div></header>
-<main dir="rtl" lang="he">
+<main dir="rtl" lang="he">{{{open_sec}}}
   <section id="meet" class="sec" data-st="0"><div class="wrap"><div class="copy">
     <div class="badges rv">{{{line_badges}}}<span class="badge{{{use_cls}}}">{{use_pro}}</span></div>
     {{{s1_kicker}}}
@@ -401,7 +401,7 @@ __STILL__   <!-- no JS only: the first key frame in its box; hidden (so never fe
       <p class="pill rv" style="--d:.18s">{{{s5_chip}}}</p>
       {{{s5_note}}}
     </div>
-    <ol class="steps">{{{s5_steps}}}</ol>
+    <ol class="steps">{{{s5_steps}}}</ol>{{{step_cards}}}
   </div></section>
   <section id="offer" class="sec offer" data-st="5"><div class="wrap">
     <div class="offer-copy">
@@ -486,7 +486,7 @@ import { createFrameStory } from './engine/story.js';
 __SCENE_JS__
 const $ = id => document.getElementById(id), q = s => document.querySelector(s);
 const story = createFrameStory({
-  config: __SEQ__, scene: __SCENE__, canvas: $('seq'), sections: ['meet', 'why', 'inside', 'feel', 'protocol', 'offer'].map($), header: q('.top'),
+  config: __SEQ__, scene: __SCENE__, canvas: $('seq'), sections: __SECTIONS__.map($), header: q('.top'),
   stages: [...document.querySelectorAll('main .stage')], stills: [...document.querySelectorAll('main .slot')],   // phone ≤ 760: the 3D under each heading
   card: q('.kitcard'), bg: q('.bg'), plate: q('.plate'), helix: q('.helix'), cellLayers: [q('.cells.back'), q('.cells.front')],
   tier: window.__SEQ_TIER, noWorker: !!window.__SEQ_NO_WORKER });

@@ -2895,6 +2895,198 @@
    ]
   },
   {
+   "slug": "mitotech-cell-booster",
+   "name": "MITOTECH CELL BOOSTER",
+   "line": "MITOTECH",
+   "use": "professional",
+   "colour_env": "Новая линейка MITOTECH. Фон — вертикальный градиент базы бренда #0a0a0b → #111114 (z0, без картинки). Цвет линейки живёт только в окружении: бесформенный зелёный дым #144434 и мятное свечение #78E0BC — DOM-слой z10 по прокрутке. Сам набор — в цветах печати (#154734 фольга, #7ae1bf мята, белое), янтарь бустера — свой. Бейдж линейки: «MITOTECH» мятой без рамки рядом с залитым золотом «מקצועי». Золото бренда — кнопка цены, кикеры, номера шагов.",
+   "series_tint_screen": 0,
+   "hero_object": "Закрытая зелёная коробка MITOTECH® CELL BOOSTER (фасад — вектор BOX_FRONT_PRINT_R15, раскладка как на рендере R15) и 8 флаконов в ряд перед ней: 4 Boosting Ampoule с янтарём слева, 4 Concentrated Powder справа, у 5-го слева вместо крышки прозрачный аппликатор. Этикетки — PDF PRINT2. Персонаж истории — пара «порошок справа, бустер слева».",
+   "story_one_line": "Набор из рендера заказчика на весь экран под крупным именем; камера въезжает, набор встаёт в левую колонку; флаконы уходят за закрытую коробку, выходит одна пара, камера ныряет в янтарь бустера, пара проходит пять шагов приготовления R7, готовый флакон с аппликатором встаёт на 5-е место — снова набор как на рендере.",
+   "screens": [
+    {
+     "n": 1,
+     "block": "b0 Meet (с открывающим экраном #open)",
+     "screen_name_ru": "Открытие и набор",
+     "action_3d_ru": "Открытие: набор R15 ×0,68 внизу по центру во весь экран, над ним крупное имя и ADVANCED SKIN TO CELL DELIVERY SYSTEM. Прокрутка: камера въезжает (dolly-in), набор встаёт в левую колонку как на R15; копия S1 справа.",
+     "transition_ru": "Флаконы по очереди уходят в глубину за закрытую коробку; коробка отступает до 0,92, цвет не меняется.",
+     "kicker_key": "ui.use_pro",
+     "title_key": "b0.title",
+     "line_key": "b0.line",
+     "label_keys": [
+      "x.line_badge",
+      "b0.label1",
+      "b0.label2",
+      "b0.label3",
+      "b0.label4"
+     ],
+     "cta_key": "b0.cta",
+     "mobile_ru": "Имя, под ним блок сцены с набором (dolly-in внутри блока), затем бейджи, tag, lead, чипы, кнопки."
+    },
+    {
+     "n": 2,
+     "block": "b1 Why",
+     "screen_name_ru": "Барьер",
+     "action_3d_ru": "Одна закрытая коробка в глубине; зелёный дым z10 густеет.",
+     "transition_ru": "ИСПРАВЛЕНО (порядок по сценарию v1: порошок, затем бустер): из-за левого края коробки выходит порошок, за ним бустер; встают впереди (порошок справа); коробка уходит во тьму.",
+     "kicker_key": "nav[1]",
+     "title_key": "b1.title",
+     "line_key": "b1.line",
+     "label_keys": [
+      "b1.label1",
+      "b1.label2",
+      "b1.label3",
+      "b1.label4"
+     ],
+     "cta_key": "",
+     "mobile_ru": "Коробка в блоке под заголовком."
+    },
+    {
+     "n": 3,
+     "block": "b2 Inside",
+     "screen_name_ru": "Два шага",
+     "action_3d_ru": "Пара этикетками к зрителю: CONCENTRATED POWDER справа, BOOSTING AMPOULE слева.",
+     "transition_ru": "Камера въезжает в янтарь бустера над этикеткой (мягкий свет без частиц и ободов) и выходит; пара уходит вниз маленькой.",
+     "kicker_key": "nav[2]",
+     "title_key": "b2.title",
+     "line_key": "b2.line",
+     "label_keys": [
+      "b2.label1",
+      "b2.label2",
+      "b2.label3",
+      "b2.label4"
+     ],
+     "cta_key": "",
+     "mobile_ru": "Пара в блоке; наезд в янтарь в том же блоке."
+    },
+    {
+     "n": 4,
+     "block": "b3 Feel it",
+     "screen_name_ru": "Сияние",
+     "action_3d_ru": "Пара маленькая внизу колонки; ровное мятно-зелёное свечение z10 медленно меняет оттенок.",
+     "transition_ru": "Пара поднимается в центр и вживую проходит R7: колпачки и пробки вверх, перелив наклоном, пробка обратно, аппликатор вместо пробки.",
+     "kicker_key": "nav[3]",
+     "title_key": "b3.title",
+     "line_key": "b3.line",
+     "label_keys": [
+      "b3.label1",
+      "b3.label2",
+      "b3.label3",
+      "b3.label4"
+     ],
+     "cta_key": "",
+     "mobile_ru": "Пара в блоке, свечение за страницей."
+    },
+    {
+     "n": 5,
+     "block": "b4 Protocol",
+     "screen_name_ru": "Приготовление",
+     "action_3d_ru": "Готовый флакон с аппликатором в центре, пустой открытый бустер слева. Ниже копии — пять карточек «картинка/текст через одну» со стоп-кадрами сцены (шаги 1–5); пока они на экране, живая сцена скрыта.",
+     "transition_ru": "Пустой бустер уходит во тьму; флакон с аппликатором встаёт 5-м; коробка и остальные семь выходят из темноты в расстановку R15.",
+     "kicker_key": "nav[4]",
+     "title_key": "b4.title",
+     "line_key": "b4.line",
+     "label_keys": [
+      "b4.label4",
+      "cat.s02[1]",
+      "cat.steps",
+      "cat.prep_note"
+     ],
+     "cta_key": "",
+     "mobile_ru": "Пара в блоке; карточки листаются вбок (ИСПРАВЛЕНО: правило заказчика 14/10 «шаги протокола на телефоне листаются вбок», как .steps 12 страниц): картинка, номер и заголовок, текст."
+    },
+    {
+     "n": 6,
+     "block": "b5 Kit & facts",
+     "screen_name_ru": "Набор",
+     "action_3d_ru": "Набор ровно как на R15 летит в окно картинки карточки «מה באריזה» (ИСПРАВЛЕНО: карточка непрозрачна вокруг окна `.kc-fig`, продукт не проходит под её текстом — аудит T4, сценарий S6 «הקנבס מתחת לכרטיס»).",
+     "transition_ru": "",
+     "kicker_key": "cat.s04[1]",
+     "title_key": "b5.title",
+     "line_key": "",
+     "label_keys": [
+      "b5.label1",
+      "b5.label2",
+      "b5.label3",
+      "b5.label4"
+     ],
+     "cta_key": "",
+     "mobile_ru": "Карточка с HD-картинкой набора."
+    },
+    {
+     "n": 7,
+     "block": "b6 Offer",
+     "screen_name_ru": "Оффер",
+     "action_3d_ru": "Самое сильное мятное свечение z10 за карточкой набора.",
+     "transition_ru": "",
+     "kicker_key": "nav[5]",
+     "title_key": "b6.title",
+     "line_key": "b6.line",
+     "label_keys": [
+      "ui.use_pro",
+      "x.line_badge",
+      "x.contacts"
+     ],
+     "cta_key": "b6.cta",
+     "mobile_ru": "Заголовок, карточка, текст, кнопки, контакты."
+    }
+   ],
+   "inside": {
+    "components": [
+     {
+      "what": "Concentrated Powder (Freeze-Dried) — флакон с белым колпачком flip-off и алюминиевым кольцом, этикетка PRINT2",
+      "qty": "4×",
+      "volume_dose": "154 мг",
+      "source": "canon p.23; BOX_BACK R15 «154 mg × 4»; CONCENTRATED_POWDER_PRINT2"
+     },
+     {
+      "what": "Boosting Ampoule — флакон с янтарной жидкостью, такой же колпачок",
+      "qty": "4×",
+      "volume_dose": "15 мл",
+      "source": "canon p.23; BOX_BACK R15 «15 mL × 4»; BOOSTING_AMPOULE_PRINT2"
+     },
+     {
+      "what": "Applicator — прозрачный воротник и конический носик с белым кончиком (на рендере — на 5-м флаконе)",
+      "qty": "4×",
+      "volume_dose": "",
+      "source": "R7 Kit contents; каталог 959:90 (помечено заказчику)"
+     }
+    ],
+    "particles": "нет (видимых ингредиентов нет)"
+   },
+   "assets": [
+    {
+     "object": "Коробка",
+     "build": "кубоид W:H:D = 1,36:1:0,33 (ИСПРАВЛЕНО с 1,32, §3.1), закрыта всегда, поворот ≈ 4° (≤ 10°)",
+     "texture_source": "BOX_FRONT_PRINT_R15.pdf (вектор → box-front.png 4096); бока/верх — гладкая фольга #154734"
+    },
+    {
+     "object": "Флакон",
+     "build": "lathe по профилю R15 (ось 2,05 D, крышка Ø 0,84 D)",
+     "texture_source": "CONCENTRATED_POWDER_PRINT2.pdf / BOOSTING_AMPOULE_PRINT2.pdf → label-*.png 4096"
+    },
+    {
+     "object": "Аппликатор",
+     "build": "lathe по флакону 5 на R15",
+     "texture_source": "без печати"
+    }
+   ],
+   "new_strings": [
+    {
+     "key": "x.line_badge",
+     "en": "MITOTECH",
+     "where": "бейдж линейки S1 и карточки набора; подтвердить имя новой линейки"
+    }
+   ],
+   "questions_ru": [
+    "Цвет раствора после смешивания: «שקופה» (ваш текст) или «cloudy» (R7)? До ответа содержимое флакона скрыто этикеткой, струя, встряхивание и капля не показываются.",
+    "Размеры коробки и флаконов в мм или развёртка; поля печати на фасаде — как на рендере R15 (≈ 2 %) или как в PDF (≈ 20 мм)?",
+    "Фото открытого флакона (что под колпачком) и аппликатора отдельно — сейчас по иконкам R7 и рендеру.",
+    "Аппликаторы «4 יח׳» в наборе — показывать строкой карточки?",
+    "Имя бейджа новой линейки: MITOTECH или MITOTECH®?"
+   ]
+  },
+  {
    "slug": "home",
    "name": "Home — MITODERM",
    "line": "all lines: V-TECH FACE · PEELING · BIOSPICULE · DEVICES · HAIR (one line per screen 2–6)",
@@ -3878,6 +4070,12 @@
    "key": "catalog.filters.title",
    "en": "Choose a category",
    "where": "Экран 2, заголовок над полкой и чипами"
+  },
+  {
+   "slug": "mitotech-cell-booster",
+   "key": "x.line_badge",
+   "en": "MITOTECH",
+   "where": "Бейдж линейки на S1 и в карточке набора: латиница, мята #78E0BC, без рамки; новая линейка — имя подтвердить"
   }
  ],
  "hebrew": [
@@ -4060,6 +4258,12 @@
    "key": "catalog.filters.title",
    "he": "בחרו קטגוריה",
    "note": "Unchanged. A new UI string in the plural imperative, as the glossary requires. It is short and adds nothing to 'Choose a category'."
+  },
+  {
+   "slug": "mitotech-cell-booster",
+   "key": "x.line_badge",
+   "he": "MITOTECH",
+   "note": "Latin, as the catalogue writes the series (box: MITOTECH®)."
   }
  ]
 }

@@ -6576,6 +6576,412 @@
      "note": "Meet and Feel it are plural imperatives (הכירו, הרגישו). מה בפנים matches the 'what's inside' wording used on the product pages (גלו מה בפנים ↓). Glossary: kit = ערכה."
     }
    ]
+  },
+  {
+   "slug": "mitotech-cell-booster",
+   "name": "MITOTECH CELL BOOSTER",
+   "items": [
+    {
+     "key": "vp",
+     "kind": "value proposition (one sentence)",
+     "en": "A two-step booster system based on advanced transdermal delivery technology, for firm, smooth, well-hydrated-looking skin.",
+     "en_spec": "A two-step booster system based on advanced transdermal delivery technology, for firm, smooth, well-hydrated-looking skin.",
+     "he": "מערכת בוסטר דו־שלבית המבוססת על טכנולוגיית הולכה טרנסדרמלית מתקדמת, למראה עור מוצק, חלק ורווי בלחות.",
+     "note": "owner text verbatim: canon p.20 lead = 941:5"
+    },
+    {
+     "key": "b0.title",
+     "kind": "block 0 Meet — headline",
+     "en": "For firm, smooth, hydrated-looking skin",
+     "en_spec": "For firm, smooth, hydrated-looking skin",
+     "he": "למראה עור מוצק, חלק ורווי בלחות",
+     "note": "owner text verbatim: cut of the lead 941:5"
+    },
+    {
+     "key": "b0.line",
+     "kind": "block 0 Meet — one-sentence line",
+     "en": "A two-step booster system based on advanced transdermal delivery technology.",
+     "en_spec": "A two-step booster system based on advanced transdermal delivery technology.",
+     "he": "מערכת בוסטר דו־שלבית המבוססת על טכנולוגיית הולכה טרנסדרמלית מתקדמת.",
+     "note": "owner text, cut: lead 941:5 cut before «, למראה…»; full stop at the cut"
+    },
+    {
+     "key": "b0.label1",
+     "kind": "block 0 Meet — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "חומצה היאלורונית",
+     "note": "owner text verbatim: 941:11"
+    },
+    {
+     "key": "b0.label2",
+     "kind": "block 0 Meet — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "קולגן שעבר הידרוליזה",
+     "note": "owner text verbatim: 941:11"
+    },
+    {
+     "key": "b0.label3",
+     "kind": "block 0 Meet — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "DST-516",
+     "note": "owner text verbatim: 941:11"
+    },
+    {
+     "key": "b0.label4",
+     "kind": "block 0 Meet — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "ייבוש בהקפאה",
+     "note": "owner text verbatim: 941:30"
+    },
+    {
+     "key": "b0.cta",
+     "kind": "block 0 Meet — buttons and links (raw spec incl. developer notes)",
+     "en": "Contact for price · See what's inside ↓",
+     "en_spec": "Contact for price · See what's inside ↓",
+     "he": "לקבלת פרטים על מחירים · גלו מה בפנים ↓",
+     "note": "UI string of the 12 pages: UI of the 12 pages (MICRO BOOST 10% b0.cta)"
+    },
+    {
+     "key": "b1.title",
+     "kind": "block 1 Why — headline",
+     "en": "Through the skin barrier",
+     "en_spec": "Through the skin barrier",
+     "he": "דרך מחסום העור",
+     "note": "owner text verbatim: 941:11 ¶2 (cut)"
+    },
+    {
+     "key": "b1.line",
+     "kind": "block 1 Why — one-sentence line",
+     "en": "The technology was developed to address the penetration limits of active ingredients through the skin barrier.",
+     "en_spec": "The technology was developed to address the penetration limits of active ingredients through the skin barrier.",
+     "he": "הטכנולוגיה פותחה כדי להתמודד עם מגבלות החדירה של רכיבים פעילים דרך מחסום העור.",
+     "note": "owner text verbatim: 941:11 ¶2 sentence 1"
+    },
+    {
+     "key": "b1.label1",
+     "kind": "block 1 Why — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "מודל עור אנושי",
+     "note": "owner text verbatim: 941:11 ¶2 / 941:5 (cut)"
+    },
+    {
+     "key": "b1.label2",
+     "kind": "block 1 Why — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "יכולת הולכה של חומצה היאלורונית",
+     "note": "owner text verbatim: 941:11 ¶2 / 941:5 (cut)"
+    },
+    {
+     "key": "b1.label3",
+     "kind": "block 1 Why — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "שכבת הדרמיס",
+     "note": "owner text verbatim: 941:11 ¶2 / 941:5 (cut)"
+    },
+    {
+     "key": "b1.label4",
+     "kind": "block 1 Why — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "הולכה טרנסדרמלית מתקדמת",
+     "note": "owner text verbatim: 941:11 ¶2 / 941:5 (cut)"
+    },
+    {
+     "key": "b1.cta",
+     "kind": "block 1 Why — buttons and links (raw spec incl. developer notes)",
+     "en": "",
+     "en_spec": "",
+     "he": "",
+     "note": "owner text verbatim: none"
+    },
+    {
+     "key": "b2.title",
+     "kind": "block 2 Inside — headline",
+     "en": "Two steps activated on mixing",
+     "en_spec": "Two steps activated on mixing",
+     "he": "שני שלבים המופעלים בעת הערבוב",
+     "note": "owner text verbatim: 941:11 ¶3 (cut)"
+    },
+    {
+     "key": "b2.line",
+     "kind": "block 2 Inside — one-sentence line",
+     "en": "",
+     "en_spec": "",
+     "he": "המערכת מבוססת על שני שלבים המופעלים בעת הערבוב, ומיועדת לתמיכה בלחות העור, במוצקותו, בגמישותו ובשיפור מראה סימני הגיל.",
+     "note": "owner text verbatim: 941:11 ¶3"
+    },
+    {
+     "key": "b2.label1",
+     "kind": "block 2 Inside — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "CONCENTRATED POWDER – אבקה מרוכזת בטכנולוגיית ייבוש בהקפאה",
+     "note": "owner title + text joined: 941:30 title line + first clause (number «1.» dropped, cut at «:»)"
+    },
+    {
+     "key": "b2.label2",
+     "kind": "block 2 Inside — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "BOOSTING AMPOULE – אמפולת בוסטר להפעלת הפורמולה",
+     "note": "owner title + text joined: 941:31 title line + first clause (number «2.» dropped, cut at «:»)"
+    },
+    {
+     "key": "b2.label3",
+     "kind": "block 2 Inside — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "חומצה היאלורונית במשקל מולקולרי גבוה ונמוך ביחס 3:1",
+     "note": "owner text verbatim: 941:30 (cut)"
+    },
+    {
+     "key": "b2.label4",
+     "kind": "block 2 Inside — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "ניאצינאמיד, אדנוזין, לציטין וצרמידים",
+     "note": "owner text verbatim: 941:31 (cut)"
+    },
+    {
+     "key": "b2.cta",
+     "kind": "block 2 Inside — buttons and links (raw spec incl. developer notes)",
+     "en": "",
+     "en_spec": "",
+     "he": "רכיבים פעילים",
+     "note": "owner text verbatim: 941:29 heading (not shown: the page has no S3 button)"
+    },
+    {
+     "key": "b3.title",
+     "kind": "block 3 Feel it — headline",
+     "en": "A fresh, radiant-looking skin",
+     "en_spec": "A fresh, radiant-looking skin",
+     "he": "מראה עור רענן וזוהר",
+     "note": "owner text verbatim: 941:13 benefit 9"
+    },
+    {
+     "key": "b3.line",
+     "kind": "block 3 Feel it — one-sentence line",
+     "en": "",
+     "en_spec": "",
+     "he": "סרום פעיל במרקם קליל, הנספג במהירות ומעניק תחושת עור חלקה ולחות מוגברת.",
+     "note": "owner text verbatim: 941:31 (cut from «ליצירת …»)"
+    },
+    {
+     "key": "b3.label1",
+     "kind": "block 3 Feel it — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "לחות אינטנסיבית",
+     "note": "owner text verbatim: 941:13 benefits 1, 2, 3, 10"
+    },
+    {
+     "key": "b3.label2",
+     "kind": "block 3 Feel it — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "מראה עור מוצק ומתוח יותר",
+     "note": "owner text verbatim: 941:13 benefits 1, 2, 3, 10"
+    },
+    {
+     "key": "b3.label3",
+     "kind": "block 3 Feel it — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "שיפור מראה קמטוטים",
+     "note": "owner text verbatim: 941:13 benefits 1, 2, 3, 10"
+    },
+    {
+     "key": "b3.label4",
+     "kind": "block 3 Feel it — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "מערכת בוסטר ללא מחטים",
+     "note": "owner text verbatim: 941:13 benefits 1, 2, 3, 10"
+    },
+    {
+     "key": "b3.cta",
+     "kind": "block 3 Feel it — buttons and links (raw spec incl. developer notes)",
+     "en": "",
+     "en_spec": "",
+     "he": "",
+     "note": "owner text verbatim: none"
+    },
+    {
+     "key": "b4.title",
+     "kind": "block 4 Protocol — headline",
+     "en": "How to use",
+     "en_spec": "How to use",
+     "he": "אופן השימוש",
+     "note": "owner text verbatim: 950:2 heading"
+    },
+    {
+     "key": "b4.line",
+     "kind": "block 4 Protocol — one-sentence line",
+     "en": "",
+     "en_spec": "",
+     "he": "מערבבים אמפולת בוסטר אחת עם בקבוקון האבקה המרוכזת עד לקבלת תמיסה אחידה ושקופה. מורחים על עור נקי ויבש ומעסים עד לספיגה.",
+     "note": "owner text verbatim: 941:32 lines 1–2"
+    },
+    {
+     "key": "b4.label1",
+     "kind": "block 4 Protocol — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "1 · פתיחת הבקבוקונים",
+     "note": "NEW/recomposed, awaiting approval: 957:3 «1. פתיחת הבקבוקונים», numbering in the storyboard form «1 · »; not shown (the cards carry the steps)"
+    },
+    {
+     "key": "b4.label2",
+     "kind": "block 4 Protocol — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "2 · ללא ניעור",
+     "note": "NEW/recomposed, awaiting approval: 957:46, same form; not shown"
+    },
+    {
+     "key": "b4.label3",
+     "kind": "block 4 Protocol — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "3 · להמתין שעה",
+     "note": "NEW/recomposed, awaiting approval: 957:161, same form; not shown"
+    },
+    {
+     "key": "b4.label4",
+     "kind": "block 4 Protocol — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "כל זוג בקבוקונים מיועד לשימוש עד שבועיים.",
+     "note": "owner text, cut: 941:32 line 3 without the leading «– »"
+    },
+    {
+     "key": "b4.cta",
+     "kind": "block 4 Protocol — buttons and links (raw spec incl. developer notes)",
+     "en": "",
+     "en_spec": "",
+     "he": "",
+     "note": "owner text verbatim: none"
+    },
+    {
+     "key": "b5.title",
+     "kind": "block 5 Kit & facts — headline",
+     "en": "",
+     "en_spec": "",
+     "he": "סה״כ עד 60 טיפולים!",
+     "note": "owner text verbatim: 941:33"
+    },
+    {
+     "key": "b5.line",
+     "kind": "block 5 Kit & facts — one-sentence line",
+     "en": "",
+     "en_spec": "",
+     "he": "אבקה מרוכזת – ‏4 × 154 מ״ג · אמפולות בוסטר פעילות – ‏4 × 15 מ״ל",
+     "note": "NEW/recomposed, awaiting approval: 959:76 + 959:104 joined by « · » (kit_alt only)"
+    },
+    {
+     "key": "b5.label1",
+     "kind": "block 5 Kit & facts — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "4 × 154 מ״ג אבקה מרוכזת",
+     "note": "NEW/recomposed, awaiting approval: 959:76 «אבקה מרוכזת – ‏4 × 154 מ״ג» reordered to «N × …» (as EXO-NAD «5 × 5 מ״ל pH Normalizer»)"
+    },
+    {
+     "key": "b5.label2",
+     "kind": "block 5 Kit & facts — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "4 × 15 מ״ל אמפולות בוסטר פעילות",
+     "note": "NEW/recomposed, awaiting approval: 959:104 «אמפולות בוסטר פעילות – ‏4 × 15 מ״ל» reordered"
+    },
+    {
+     "key": "b5.label3",
+     "kind": "block 5 Kit & facts — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "4 × אפליקטורים",
+     "note": "NEW/recomposed, awaiting approval: 959:90 «אפליקטורים – 4 יח׳» (catalogue, from R7 «Kit contents»; not in the owner text) reordered"
+    },
+    {
+     "key": "b5.label4",
+     "kind": "block 5 Kit & facts — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "תוכנית טיפוח ביתית למשך 8 שבועות",
+     "note": "owner text, cut: 941:37 item 3 title (number «3.» dropped)"
+    },
+    {
+     "key": "b5.cta",
+     "kind": "block 5 Kit & facts — buttons and links (raw spec incl. developer notes)",
+     "en": "",
+     "en_spec": "",
+     "he": "",
+     "note": "owner text verbatim: none"
+    },
+    {
+     "key": "b6.title",
+     "kind": "block 6 Offer — headline",
+     "en": "Combining with devices and professional treatments",
+     "en_spec": "Combining with devices and professional treatments",
+     "he": "שילוב במכשור ובטיפולים מקצועיים",
+     "note": "owner text verbatim: 950:3 heading"
+    },
+    {
+     "key": "b6.line",
+     "kind": "block 6 Offer — one-sentence line",
+     "en": "",
+     "en_spec": "",
+     "he": "לאחר שימוש במזרק הביוספיקול: MICRO BOOST 10% – מחדירים ‎1–2 מ״ל של החומר המעורבב.",
+     "note": "owner title + text joined: 941:35 item title + its first line on one line (number «1.» dropped)"
+    },
+    {
+     "key": "b6.label1",
+     "kind": "block 6 Offer — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "לקבלת פרטים על מחירים",
+     "note": "UI string of the 12 pages: UI / 941:36 / 941:37 (not shown: story_content draws no S7 chips)"
+    },
+    {
+     "key": "b6.label2",
+     "kind": "block 6 Offer — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "MITOPEN",
+     "note": "owner text verbatim: UI / 941:36 / 941:37 (not shown: story_content draws no S7 chips)"
+    },
+    {
+     "key": "b6.label3",
+     "kind": "block 6 Offer — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "תוכנית טיפוח ביתית למשך 8 שבועות",
+     "note": "owner text, cut: UI / 941:36 / 941:37 (not shown: story_content draws no S7 chips)"
+    },
+    {
+     "key": "b6.label4",
+     "kind": "block 6 Offer — chip / label",
+     "en": "",
+     "en_spec": "",
+     "he": "כל זוג בקבוקונים מיועד לשימוש במשך שבועיים.",
+     "note": "owner text verbatim: UI / 941:36 / 941:37 (not shown: story_content draws no S7 chips)"
+    },
+    {
+     "key": "b6.cta",
+     "kind": "block 6 Offer — buttons and links (raw spec incl. developer notes)",
+     "en": "",
+     "en_spec": "",
+     "he": "לקבלת פרטים על מחירים · לתיאום הדרכה · טלפון · דוא״ל",
+     "note": "UI string of the 12 pages: UI of the 12 pages (EXO-NAD b6.cta)"
+    }
+   ]
   }
  ]
 }

@@ -38,6 +38,9 @@ S9 related      s9.line, s9.more               the rest of the line, then the pr
                                                name, tagline and tag from product-pages; a product whose packshot (in
                                                protocols/assets or protocols/print) is too small for an HD card is left out
 bar             bar                            name · ui.use_home / ui.use_pro
+v2 (V2 pages)   v2.open.name, sub · v2.cards   name, hero_sub · s02[1], steps, prep_note (catalogue p.22); s1.eyebrow '' (the
+                                               opening already says it), s8.p '' (the V-TECH paragraph is not about it: audit
+                                               T10), a related card's line from the home page's card in the Excel (HOME_CARD)
 OVERRIDE: per product, what the page shows instead of a reviewed source string, with the reason — for the editor:
   mitoscan  b0.label4 «מקצועית» → «מקצועי»: the chip stands next to the badge «מקצועי» (ui.use_pro) and must agree with it
             (story3d MITOSCAN: three chips); the storyboard's feminine form agrees with «מערכת», which the chip does not name
@@ -51,10 +54,14 @@ REPO = os.path.normpath(os.path.join(SITE, '..'))
 # the lines (design-rules.md, owner 10/10), each in its agreed order (spicules 10% → 2.5% → 1.5%)
 LINES = {'V-TECH FACE': ['v-tech-system', 'exocell-mask', 'exotech-gel'], 'HAIR': ['exosignal-hair', 'exosignal-spray'],
          'PEELING': ['exo-nad'], 'BIOSPICULE': ['micro-boost-10', 'cellular-age-defense-2-5', 'cell-renew-1-5', 'derma-recovery-cream'],
-         'DEVICES': ['mitoscan', 'mitopen']}
-MARK = {'BIOSPICULE': 'BIOSPICULE™', 'DEVICES': ''}   # the badge's Latin name (as the catalogue writes it; none for devices)
+         'DEVICES': ['mitoscan', 'mitopen'], 'MITOTECH': ['mitotech-cell-booster']}
+MARK = {'BIOSPICULE': 'BIOSPICULE™', 'DEVICES': '', 'MITOTECH': 'MITOTECH'}   # the badge's Latin name (as the catalogue writes it; none for devices)
 # the related cards, where they were chosen by hand (the gel: its line, then the protocols it joins)
-RELATED = {'exotech-gel': (['v-tech-system', 'exocell-mask'], ['exo-nad', 'micro-boost-10'])}
+RELATED = {'exotech-gel': (['v-tech-system', 'exocell-mask'], ['exo-nad', 'micro-boost-10']),
+           'mitotech-cell-booster': ([], ['micro-boost-10', 'mitopen'])}   # protocol he-final: with MICRO BOOST 10% or MITOPEN
+# site v2 pages (ARCHITECTURE-v2, owner 31/10): the opening screen, the layers 0/10/20, the step cards (build-vtech.py)
+V2 = {'mitotech-cell-booster'}
+HOME_CARD = {'mitopen': 'home.card-11'}   # v2: a related card's line from its card on the home page (audit T11), when it has one
 IMG = {'v-tech-system': 'vtech-system.webp', 'derma-recovery-cream': 'derma-recovery.webp',   # protocols/assets/img names
        'cell-renew-1-5': 'cell-renew-15.webp', 'cellular-age-defense-2-5': 'cellular-age-25.webp'}   # protocols/print/img
 PACKSHOTS = [os.path.join(REPO, 'protocols', d, 'img') for d in ('assets', 'print')]
@@ -97,7 +104,7 @@ def content(slug):
     sb = {i['key']: i['he'] for p in load(SITE, 'storyboard.he.json')['pages'] if p['slug'] == slug for i in p['items']}
     assert sb, f'no storyboard for {slug}'
     over = OVERRIDE.get(slug, {}); sb.update({k: t for k, t in over.items() if k in sb})
-    en, c = pages[slug]; name = c['name']
+    en, c = pages[slug]; name = c['name']; v2 = slug in V2
     use = 'home' if en['tag'] == 'HOME CARE' else 'pro'
     two = lambda k: [t.strip() for t in sb[k].split(' · ')]
     labels = lambda b, ks=(1, 2, 3, 4): [sb[f'{b}.label{i}'] for i in ks]
@@ -119,11 +126,11 @@ def content(slug):
         also = sorted((s for s in products if s != slug and s not in line and at(s) >= 0), key=at)
     left = [s for s in line + also if not packshot(s)]
     if left: print('related: no packshot of HD size, left out:', ' '.join(left))
-    card = lambda s: [pages[s][1]['name'], pages[s][1]['tagline'], 'home' if pages[s][0]['tag'] == 'HOME CARE' else 'pro', packshot(s)]
+    card = lambda s: [pages[s][1]['name'], home[HOME_CARD[s]] if v2 and s in HOME_CARD else pages[s][1]['tagline'], 'home' if pages[s][0]['tag'] == 'HOME CARE' else 'pro', packshot(s)]
     line, also = [s for s in line if packshot(s)][:4], [s for s in also if packshot(s)][:4]
     return {
         'use': use, 'nav': vt['nav'], 'cta_price': buy, 'line': line_id, 'exo': exo, 'pdrn': pdrn,
-        's1': {'line_mark': mark, 'line_name': lname, 'use_pro': ui['use_' + use], 'eyebrow': kicker(c['eyebrow'], mark, lname, ui['use_' + use], labels('b0')),
+        's1': {'line_mark': mark, 'line_name': lname, 'use_pro': ui['use_' + use], 'eyebrow': '' if v2 else kicker(c['eyebrow'], mark, lname, ui['use_' + use], labels('b0')),
                'h1': name, 'tag': sb['b0.title'], 'lead': sb['b0.line'], 'chips': labels('b0'), 'more': more},
         's2': {'h2': sb['b1.title'], 'p': sb['b1.line'], 'kicker': c['s05'][0], 'chips': labels('b1')},
         's3': {'h2': sb['b2.title'], 'legend': vt['s3']['legend'] if exo else '', 'p': sb['b2.line'], 'kicker': c['s03'][0],
@@ -135,8 +142,9 @@ def content(slug):
         's7': {'h2': sb['b6.title'], 'p': sb['b6.line'], 'training': ask, 'card_title': vt['s7']['card_title'],
                'card_lines': [[n + '×', t] for n, t in box] or ([[qty, sb['b5.line'][len(qty):].strip()]] if qty else []),
                'card_facts': sb['b5.title'], 'card_chips': [l for l in labels('b5', (3, 4)) if not re.fullmatch(r'\d+ ?× ?.+', l)]},
-        's8': {**vt['s8'], 'tag': ui['spec_tag_scalp'] if scalp else vt['s8']['tag']},
+        's8': {**vt['s8'], 'tag': ui['spec_tag_scalp'] if scalp else vt['s8']['tag'], **({'p': ''} if v2 else {})},
         's9': {**{k: vt['s9'][k] for k in ('more_h', 'go', 'pro', 'home')}, 'line_h': vt['s9']['line_h'].replace(ui['line_mark'], mark or 'ה' + lname),   # «עוד מקו המכשור»: a common noun takes the article
                'line': [card(s) for s in line], 'more': [card(s) for s in also]},
         'bar': [name, ui['use_' + use]],
+        **({'v2': {'open': {'name': name, 'sub': c['hero_sub']}, 'cards': {'h': c['s02'][1], 'steps': c['steps'], 'note': c['prep_note']}}} if v2 else {}),
     }

@@ -1664,5 +1664,135 @@
    "For professional use only. The soothing finishing step of every advanced aesthetic protocol.",
    "Contact for Price"
   ]
+ },
+ {
+  "page": "Product — MITOTECH CELL BOOSTER",
+  "frame": "MITOTECH CELL BOOSTER — Premium",
+  "slug": "mitotech-cell-booster",
+  "tag": "PRO",
+  "filter": "Boosters",
+  "eyebrow": "MITOTECH · ADVANCED SKIN TO CELL DELIVERY SYSTEM",
+  "name": "MITOTECH CELL BOOSTER",
+  "hero_sub": "ADVANCED SKIN TO CELL DELIVERY SYSTEM",
+  "tagline": "Two-step booster system",
+  "lead": "MITOTECH® CELL BOOSTER is a two-part skin care system for skin rejuvenation.",
+  "stats": [
+   [
+    "154 mg × 4",
+    "Concentrated Powder"
+   ],
+   [
+    "15 mL × 4",
+    "Boosting Ampoule"
+   ],
+   [
+    "8 weeks",
+    "Home programme"
+   ],
+   [
+    "60",
+    "Treatments"
+   ]
+  ],
+  "s01": [
+   "BENEFITS",
+   "Fresh, radiant-looking skin"
+  ],
+  "benefits": [
+   [
+    "Intensive hydration",
+    ""
+   ],
+   [
+    "Firmer, tighter-looking skin",
+    ""
+   ],
+   [
+    "Fewer visible fine lines",
+    ""
+   ],
+   [
+    "Needle-free booster system",
+    ""
+   ]
+  ],
+  "s02": [
+   "HOW TO USE",
+   "How to Prepare"
+  ],
+  "steps": [
+   [
+    "OPEN THE VIALS",
+    "Remove the caps from the freeze-dried powder vial and the boosting ampoule."
+   ],
+   [
+    "DO NOT SHAKE",
+    "Slowly add 15 mL of boosting ampoule to the powder vial. Be careful not to overflow. Do not shake."
+   ],
+   [
+    "LEAVE FOR 1 HOUR",
+    "Allow the powder to dissolve and activate. Leave for at least 1 hour without shaking."
+   ],
+   [
+    "SHAKE HARD",
+    "Upon activation, the mixture turns cloudy. Replace the cap with the applicator and shake hard to mix well."
+   ],
+   [
+    "APPLY",
+    "Lightly press the applicator to dispense the product."
+   ]
+  ],
+  "s03": [
+   "FORMULA",
+   "Two formulas, activated on mixing"
+  ],
+  "ingredients": [
+   "Sodium Hyaluronate",
+   "Hydrolyzed Collagen",
+   "Oligopeptide-191",
+   "Hexapeptide-61 Dimer",
+   "Niacinamide",
+   "Adenosine",
+   "Hydrogenated Lecithin",
+   "Ceramide NP"
+  ],
+  "s04": [
+   "KIT",
+   "What's in the box"
+  ],
+  "kit": [
+   [
+    "4×",
+    "Concentrated Powder (Freeze-Dried)",
+    "154 mg"
+   ],
+   [
+    "4×",
+    "Boosting Ampoule",
+    "15 mL"
+   ],
+   [
+    "4×",
+    "Applicators",
+    ""
+   ]
+  ],
+  "s05": [
+   "IN LAB STUDIES",
+   "Human skin model"
+  ],
+  "chips": [
+   "Intensive hydration",
+   "Firmness",
+   "Fine lines",
+   "Elasticity",
+   "Texture",
+   "Skin barrier"
+  ],
+  "cta": [
+   "Combining with devices and professional treatments",
+   "After MICRO BOOST 10%: apply 1–2 mL of the mixture.",
+   "Contact for Price"
+  ]
  }
 ]
