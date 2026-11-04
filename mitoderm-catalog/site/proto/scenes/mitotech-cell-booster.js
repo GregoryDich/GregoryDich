@@ -7,7 +7,7 @@
 //
 // The kit as the owner's render R15 shows it (design/mitotech/packshot-kit-r15.png, mapped into the frame as
 // X = 708 + 0.9 (x − 549.5), Y = 750 + 0.9 (y − 720.5)): the closed green box and before it a row of eight 20R vials, four
-// boosting ampoules (amber to the shoulder) and four concentrated powders (the white freeze-dried cake hidden by the label),
+// boosting ampoules (amber glass, see BOOSTER) and four concentrated powders (the white freeze-dried cake hidden by the label),
 // the fifth with its applicator. The box and the row were fitted in this camera (EL 15°: the render's own perspective is
 // not one pinhole's — its verticals converge as a wide lens does, its top shows as a 15° view would not — so the corners
 // stay within ≈ 12 px, the vials within 1 px). No dieline, no size in mm: the box is W : H : D = 1.332 : 1 : 0.33 (its
@@ -29,8 +29,15 @@
 // lines, rings, discs, particles, bubbles or drops; no hands. The line's green and mint live in the page's haze (z10),
 // not here. The product keeps its print's colours (emissive ≈ 85 % + neutral shading, toneMapped off).
 //
+// The booster's amber (the owner's render R15, 04/11): the GLASS is amber, from its foot to under the crimp (the shoulder
+// and the neck too, the thick base catching a yellow light), and what it holds is colourless: no level shows through the
+// amber. Run 4 pours that colourless content into the powder vial (the clear solution) and the booster stays amber glass,
+// empty. BOOSTER below switches it in one line: 'glass' (R15) or 'liquid' (the earlier reading: clear glass, an amber
+// liquid to the shoulder, poured out amber) — the owner's open question (texts-for-approval §6).
+//
 // createScene(THREE, { canvas, base, onLoad }) → { draw(p, view), kit(view) → canvas, steps, animated, state(), dispose() }
 //   p: the story position 0…6 (run index + progress), 11…15 the step stills; view: { cover, box, dpr, t, still }
+const BOOSTER = 'glass';   // 'glass' | 'liquid' (see above)
 export function createScene(THREE, { canvas, base, onLoad }) {
   const V3 = THREE.Vector3, rad = THREE.MathUtils.degToRad;
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
@@ -145,6 +152,10 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // glass (HAIR's): no transmission (on a transparent canvas it cannot see the page's haze, and a phone pays a pass for
   // it); its opacity follows Fresnel and its own highlights, so its edges and highlights read and the body stays clear
   const VIAL_H = { body: 0.735 };
+  // the amber glass (R15 pipetted: the body #9b6630 away from the highlights and the label, the edges a deep amber, the
+  // base's light #f9e929): its back wall's light of its own and opacity, the limbs' colours, the rim and the foot (linear)
+  const AG = { back: 0x92520a, backA: 0.94, dark: 0.62, light: 0xae6610, gold: 0.7, shade: 0x4a2604, env: [0.35, 0.7],
+    rim: '0.62, 0.3, 0.04', foot: '0.55, 0.45, 0.06', neck: '0.2, 0.08, 0.008' };
   function glassMat(side, a0, aF, aS, lit = null, key = '', color = 0x0b0b0c, emissive = 0) {   // emissive: a faint
     // milky light of its own (the far wall's grey, the applicator's clear plastic), so it reads on the dark page
     const m = new THREE.MeshPhysicalMaterial({ color, emissive, roughness: 0.04, ior: 1.5, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.6,
@@ -166,13 +177,34 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   }
   // the vial's outline: glass seen edge-on (the walls, the shoulder) catches the room's light, so clear glass on the dark
   // page reads; two soft tall reflections of the softboxes on the body, off the axis (the ΔE probes sit on it)
-  const vialLit = sh => {
+  // amber glass (BOOSTER 'glass'): the rim takes the glass's colour (R15's edges a deep saturated amber) and the thick
+  // base a soft yellow light toward its middle, below the label (R15)
+  const vialLitC = amber => sh => {
     sh.vertexShader = 'varying float vVy;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vVy = position.y;');
     sh.fragmentShader = 'varying float vVy;\n' + sh.fragmentShader.replace(/(gl_FragColor\.a = clamp\([^\n]*\n)/, `$1
       { float nx = normal.x, body = smoothstep(0.04, 0.1, vVy) * (1.0 - smoothstep(${(VIAL_H.body - 0.03).toFixed(3)}, ${(VIAL_H.body + 0.03).toFixed(3)}, vVy));
         float s = body * (0.85 * exp(-pow((nx + 0.45) / 0.08, 2.0)) + 0.4 * exp(-pow((nx - 0.55) / 0.05, 2.0)) + 0.05);
         float rim = 0.5 * pow(1.0 - clamp(abs(dot(nonPerturbedNormal, normalize(vViewPosition))), 0.0, 1.0), 3.0);
-        s += rim; gl_FragColor.rgb += vec3(s); gl_FragColor.a = max(gl_FragColor.a, s * opacity); }
+        ${amber ? `float foot = (1.0 - smoothstep(0.004, 0.03, vVy)) * exp(-pow(nx / 0.42, 2.0));
+        vec3 add = vec3(s - rim - 0.05 * body) + rim * vec3(${AG.rim}) + foot * vec3(${AG.foot});
+        gl_FragColor.rgb += add; gl_FragColor.a = max(gl_FragColor.a, max(max(add.r, add.g), add.b) * opacity);
+        float neck = smoothstep(0.745, 0.775, vVy);   // the shoulder and the neck: the stopper inside seen through amber
+        gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(${AG.neck}), neck * 0.85); gl_FragColor.a = max(gl_FragColor.a, neck * 0.85 * opacity); }`
+        : 's += rim; gl_FragColor.rgb += vec3(s); gl_FragColor.a = max(gl_FragColor.a, s * opacity); }'}
+`);
+  };
+  const vialLit = vialLitC(false), amberLit = vialLitC(true);
+  // the amber wall seen through the vial (its back faces): the body's colour (the ΔE probe); as R15, a deep brown just
+  // over the label (the label's back seen through), golden toward the shoulder, deeper again under the crimp, and
+  // deeper toward the limbs
+  const amberBack = sh => {
+    const v = h => { const c = new THREE.Color(h); return `vec3(${c.r.toFixed(4)}, ${c.g.toFixed(4)}, ${c.b.toFixed(4)})`; };
+    sh.vertexShader = 'varying float vVy;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vVy = position.y;');
+    sh.fragmentShader = 'varying float vVy;\n' + sh.fragmentShader.replace(/(gl_FragColor\.a = clamp\([^\n]*\n)/, `$1
+      { float y = vVy, ax = abs(normal.x);
+        float gold = smoothstep(0.3, 0.55, y) * (1.0 - smoothstep(0.74, 0.8, y));
+        gl_FragColor.rgb = mix(gl_FragColor.rgb * ${AG.dark.toFixed(2)}, ${v(AG.light)}, gold * ${AG.gold.toFixed(2)});
+        gl_FragColor.rgb = mix(gl_FragColor.rgb, ${v(AG.shade)}, 0.6 * smoothstep(0.55, 0.95, ax)); }
 `);
   };
   // the booster's amber, clear and dark as rendered: the front colour where the body faces the camera (the ΔE probe),
@@ -181,6 +213,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // The prepared solution in the powder vial (from the pour on): clear, the owner's «תמיסה שקופה» (its colour is still his
   // open question): a darker refracting body, light toward its limbs, a light surface (the meniscus) so its level reads
   const AMBER = { c: [0x965512, 0xc4833b, 0x3a1e05], surf: 0xb47a36, a: [0.98, 0.66], sa: 0.9, key: 'liq' };   // dense: the light far wall does not show through
+  // the colourless content seen through the amber glass (BOOSTER 'glass'): a faint deepening of the amber below its level
+  const THRU = { c: [0x6a3a08, 0x8a5418, 0x3a1c04], surf: 0x9a6024, a: [0.08, 0.05], sa: 0.12, key: 'thr' };
   const CLEAR = { c: [0x252b2a, 0xc8d0cf, 0x8f9796], surf: 0xe4eae9, a: [0.66, 0.8], sa: 0.92, key: 'clr' };
   function liquidMat(clip, pal = AMBER) {
     const m = P(pal.c[0], { roughness: 0.5, specularIntensity: 0.2, depthWrite: false, side: clip ? THREE.DoubleSide : THREE.FrontSide }, pal.key + (clip ? 'c' : ''));
@@ -221,8 +255,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // (fractions of L): the body Ø 0.466 to 0.735 (its foot rounded), the shoulder to Ø 0.336 at 0.79, the neck Ø 0.256, the
   // lip Ø 0.30 to 0.868; over the lip the aluminium crimp ring (Ø 0.31, 0.815…0.872) and the white flip-off cap (Ø 0.392,
   // 0.872…1, its top a soft dome with a centre dent); under them the grey stopper (its flange on the lip). The label: a
-  // band 0.03…0.488 round 74 % of the glass (the print's 71 × 30 mm), its left column toward the camera. The amber to
-  // 0.755 (the render's shoulder). The applicator (R15's fifth vial): a clear collar over the neck and a cone with a white
+  // band 0.03…0.488 round 74 % of the glass (the print's 71 × 30 mm), its left column toward the camera. The booster's
+  // content to 0.755 (the render's shoulder; BOOSTER 'liquid': its amber). The applicator (R15's fifth vial): a clear collar over the neck and a cone with a white
   // tip, 1.32 L at its top
   const R = 0.2331, LW = 0.2834, V2 = (r, y) => new THREE.Vector2(r, y), SEG = 72;
   const arc = (cx, cy, r, a0, a1, n) => Array.from({ length: n + 1 }, (_, i) => { const a = a0 + (a1 - a0) * i / n; return V2(cx + r * Math.cos(a), cy + r * Math.sin(a)); });
@@ -250,17 +284,21 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const APP_TOP = 1.32;
 
   // a vial: { g (foot centre, upright), parts, mats } — its moving parts in their own groups (cap with ring, stopper,
-  // applicator); each vial has its own materials (opacity per vial and part). The glass as R15 renders it: clear, but light
-  // grey on the dark page (its far wall catches the studio's light), the applicator a brighter clear plastic. `wet`: a powder
-  // vial already prepared (the kit's fifth, the one with the applicator): the clear solution, no cake
+  // applicator); each vial has its own materials (opacity per vial and part). The glass as R15 renders it: clear (the
+  // booster's amber glass: AG), but light grey on the dark page (its far wall catches the studio's light), the applicator a
+  // brighter clear plastic. `wet`: a powder vial already prepared (the kit's fifth, the one with the applicator): the clear
+  // solution, no cake
   const GL = { backA: 0.76, backE: 0x8a8f8e, appA: 0.56, appE: 0xdce4e3, appBA: 0.66, appBE: 0xb4bcbb };
   function makeVial(kind, hero, wet = false) {
     const g = new THREE.Group(); g.rotation.order = 'YXZ'; g.scale.setScalar(LW); scene.add(g);
     const capG = new THREE.Group(), stopG = new THREE.Group(), appG = new THREE.Group(); g.add(capG, stopG, appG);
-    const m = { back: glassMat(THREE.BackSide, GL.backA, 0.3, 0.7, null, '', 0x0b0b0c, GL.backE), front: glassMat(THREE.FrontSide, 0.03, 0.55, 1.0, vialLit, 'v'),
+    const amber = kind === 'B' && BOOSTER === 'glass';
+    const m = { back: amber ? glassMat(THREE.BackSide, AG.backA, 0.3, 0.7, amberBack, 'amb', 0x0b0b0c, AG.back) : glassMat(THREE.BackSide, GL.backA, 0.3, 0.7, null, '', 0x0b0b0c, GL.backE),
+      front: amber ? glassMat(THREE.FrontSide, 0.03, 0.55, 1.0, amberLit, 'va') : glassMat(THREE.FrontSide, 0.03, 0.55, 1.0, vialLit, 'v'),
       label: labelMat(kind === 'B' ? boosterTex : powderTex), cap: capMat(), ring: ringMat(), stop: stopMat(),
       app: glassMat(THREE.FrontSide, GL.appA, 0.6, 1.0, vialLit, 'a', 0x0b0b0c, GL.appE), appB: glassMat(THREE.BackSide, GL.appBA, 0.3, 0.7, null, 'ab', 0x0b0b0c, GL.appBE), tip: tipMat() };   // clear plastic
-    if (kind === 'B') m.liquid = liquidMat(hero); else { if (!wet) m.cake = cakeMat(); if (hero || wet) m.liquid = liquidMat(hero, CLEAR); }
+    if (amber) { m.back.envMapIntensity = AG.env[0]; m.front.envMapIntensity = AG.env[1]; }   // glass reflections over amber: fainter
+    if (kind === 'B') { if (!amber || hero) m.liquid = liquidMat(hero, amber ? THRU : AMBER); } else { if (!wet) m.cake = cakeMat(); if (hero || wet) m.liquid = liquidMat(hero, CLEAR); }
     const parts = [];
     const add = (geo, mat, parent, j) => { const x = new THREE.Mesh(geo, mat); x.userData.j = j; parent.add(x); parts.push(x); return x; };
     add(glassGeo, m.back, g, 0);
