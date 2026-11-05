@@ -12,9 +12,9 @@
 .mt-haze .a, .mt-haze .b { --c: 20 68 52; width: 110vmax; height: 80vmax; }   /* the green smoke */
 #seq, .still { z-index: 11 !important; }   /* the 3D under the content, also while the kit flies (the engine writes 3 inline) */
 main, .foot { z-index: 20; } .top { z-index: 40; } .dock { z-index: 45; } .bar { z-index: 50; }
-/* the cards: while the step cards fill the middle of a desktop screen the live 3D steps aside (the cards carry it), by scroll:
-   it fades out as card 01's picture rises from 85 % to 55 % of the screen and back in as card 05's leaves (--mt-cards 1 → 0 → 1,
-   story-v2-motion.js) */
+/* the cards: while the step cards are on a desktop screen the live 3D steps aside (the cards carry it), by scroll: it fades
+   out before card 01's picture enters the screen and back in only once card 05's has left it (--mt-cards 1 → 0 → 1,
+   story-v2-motion.js): never the 3D pair and a picture of it at once */
 html.mt-cards #seq { opacity: var(--mt-cards, 0) !important; }
 /* the lead form's panel: no smoke picture on v2, the same gradient and a soft mint glow behind the kit */
 .lead-panel { background: radial-gradient(60% 55% at 50% 45%, rgb(120 224 188 / .14), transparent 70%), linear-gradient(180deg, #0a0a0b, #111114); }
@@ -35,6 +35,9 @@ html:not(.js) .open, .no-gl .open { display: none; }
 html.js:not(.no-gl) #meet .head h1 { display: none; }
 html.story:not(.flow) #meet { padding-top: calc(72px + 45svh); }   /* S1's copy rises as the kit settles in S1's place */
 @media (min-width: 900px) { .story #meet { scroll-margin-top: -10svh; } }   /* the dock's «הכירו»: S1's copy whole, its buttons above the dock */
+/* phone and tablet (flow): room before a screen whose stage block would enter the screen while the block before it is still
+   on it (story-v2-motion.js --mt-gap): never the canvas's pose and the next block's still of the same pose at once */
+html.flow .sec { margin-top: var(--mt-gap, 0px); }
 
 /* the five preparation steps: picture and text side by side, alternating (the pictures: stills of the page's own scene) */
 .mt-prep { margin-top: clamp(96px, 16vh, 180px); display: grid; gap: clamp(40px, 7vh, 88px); }
@@ -50,9 +53,11 @@ html.story:not(.flow) #meet { padding-top: calc(72px + 45svh); }   /* S1's copy 
 .mt-st p { color: var(--text-soft); }
 @media (min-width: 900px) {
   .mt-prep-h, .mt-prep > .note { max-width: min(540px, 46%); margin-inline-end: auto; }   /* the copy's column: the 3D shows beside them */
-  html.story:not(.flow) .mt-prep { margin-top: 62vh; }   /* S5's copy is read with the live 3D: the cards come after it */
-  html.story:not(.flow) .offer .kitcard { margin-top: 150vh; }   /* room for the last run after the cards */
-  .story #offer { scroll-margin-top: calc(-72px - 127vh); }   /* the dock's «הצעה» lands where the kit has landed in the card */
+  html.story:not(.flow) .mt-prep { margin-top: 92vh; }   /* S5's copy is read with the live 3D: the 3D steps aside (before card
+     01's picture enters the screen) once the copy has gone up past a quarter of the screen */
+  html.story:not(.flow) .offer .kitcard { margin-top: 190vh; }   /* room for the last run after the cards (the 3D is back by
+     its middle: scenes/mitotech-cell-booster.js plays it from there) */
+  .story #offer { scroll-margin-top: calc(17px - 190vh); }   /* the dock's «הצעה»: the card just under the header, landed and read whole */
 }
 /* the kit card's picture comes first and its background starts under it (story-v2-motion.js: --body-top): the flying kit
    comes down onto the card from above, never under its text (ARCHITECTURE-v2: the product never under the text) and never
@@ -62,12 +67,13 @@ html.story:not(.no-gl):not(.flow) .kitcard { background: none; position: relativ
 html.story:not(.no-gl):not(.flow) .kitcard .kc-fig { order: -1; }
 html.story:not(.no-gl):not(.flow) .kitcard::before { content: ''; position: absolute; inset: var(--body-top, 0px) -1px -1px; z-index: -1;
   border-radius: inherit; border: 1px solid var(--hairline); background: linear-gradient(160deg, #1c1b1f, #0e0e11); }
-/* … and in the last 15 % of its flight into the window the 3D fades out and the card's own picture of the kit fades in
-   (story-v2-motion.js: html.mt-land, --mt-land 1 → 0) */
+/* … while the kit flies onto it the card's body and all on it but the picture wait, and show once it has landed (story-v2-motion.js
+   --mt-card 0 → 1): nothing of the card is ever under the flying kit; at the landing the 3D hands over to the card's own
+   picture of the same pose in one frame, no cross-fade (html.mt-land, --mt-land 1 → 0) */
+html.story:not(.no-gl):not(.flow) .kitcard::before, html.story:not(.no-gl):not(.flow) .kitcard > :not(.kc-fig) { opacity: var(--mt-card, 1); }
+html.story:not(.no-gl):not(.flow) .kitcard .kc-live { filter: drop-shadow(0 20px 30px rgb(0 0 0 / calc(.55 * var(--mt-card, 1)))); }   /* its shade comes with the card */
 html.mt-land:not(.flow) #seq { opacity: var(--mt-land, 0) !important; }
 html.mt-land:not(.flow) .kitcard .kc-live { opacity: calc(1 - var(--mt-land, 0)) !important; }
-/* phone: while the opening plays in its own block, S1's block below shows no still of the same kit (html.mt-open) */
-html.mt-open #meet .stage-still { visibility: hidden !important; }
 /* no JS, desktop: the first key frame only behind S1 (it scrolls away with it, never pinned behind the cards), and each
    later screen's own still to the left of its copy (the product left, the text right) */
 html:not(.js) .still { position: absolute; inset: 0 0 auto; height: 100svh; }
@@ -83,6 +89,7 @@ html:not(.js) .still { position: absolute; inset: 0 0 auto; height: 100svh; }
   .open-name { font-size: clamp(40px, 12vw, 64px); white-space: normal; }
   .open-name b { display: block; }   /* two lines: MITOTECH / CELL BOOSTER */
   .mt-prep { margin-top: 48px; gap: 24px; }
+  html.flow .mt-prep { margin-top: calc(48px + var(--mt-gap, 0px)); }   /* the step cards after the protocol's block has gone (story-v2-motion.js) */
   /* the steps scroll sideways, the next one peeking in (design-rules 14/10), as the 12 pages' steps */
   .mt-steps { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 80%; gap: 12px; margin-inline: calc(-1 * var(--gutter));
     padding: 0 var(--gutter) 6px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); scrollbar-width: none; overscroll-behavior-x: contain; }
