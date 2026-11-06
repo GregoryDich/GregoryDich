@@ -23,9 +23,11 @@
 // as the user guide's drawings show it: the white caps (with their aluminium rings) lift off, then the dark stoppers; the
 // booster lifts, turns over the open powder vial and pours slowly (no stream drawn: what leaves the booster rises in the
 // powder vial as a clear solution, the owner's «תמיסה שקופה», and stays there to the kit); a stopper on the powder vial, a
-// wait; the stopper off, the applicator down onto the neck; run 5 (once the step cards have gone) the empty booster
-// goes into the dark, the box comes back, the ready vial to the fifth place of the row and the other seven round the box:
-// the kit, which flies into the offer card. Nothing is ever cut straight by the canvas's edge (render(): the edges' fade).
+// wait; the stopper off, the applicator down onto the neck; on a desktop the pair steps back into the dark while the step
+// cards are on the screen, and comes back; run 5 (once the step cards have gone) the empty booster goes into the dark, the
+// box comes back, the ready vial to the fifth place of the row and the other seven round the box: the kit, which flies
+// into the offer card. Nothing is ever cut straight by the canvas's edge (render(): the edges' fade, the dive's round
+// fade). A phone or tablet plays each run in its own block as the block comes up the screen (flowP()).
 // Five more poses (p 11…15) are the preparation's five steps as stills for the page's step cards (render-keys).
 // Only what exists is drawn (the owner, 22/10): the box, the vials, their caps, stoppers and applicator, the liquid; no
 // lines, rings, discs, particles, bubbles or drops; no hands. The line's green and mint live in the page's haze (z10),
@@ -292,6 +294,11 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // brighter clear plastic. `wet`: a powder vial already prepared (the kit's fifth, the one with the applicator): the clear
   // solution, no cake
   const GL = { backA: 0.76, backE: 0x8a8f8e, appA: 0.56, appE: 0xdce4e3, appBA: 0.66, appBE: 0xb4bcbb };
+  // a solid part's volume for the depth test only (no colour), while it fades (applyVial): opaque, so three.js draws it
+  // before every transparent mesh; the part then fades as one solid into the page's dark (as the box with boxDepth), never
+  // into a see-through cap with its ring inside, a stopper with its plug, a label with the cake behind it. Pushed a hair
+  // back (polygon offset): the part's own front faces always pass, what is behind them does not
+  const PRE = new THREE.MeshBasicMaterial({ colorWrite: false, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2 });
   function makeVial(kind, hero, wet = false) {
     const g = new THREE.Group(); g.rotation.order = 'YXZ'; g.scale.setScalar(LW); scene.add(g);
     const capG = new THREE.Group(), stopG = new THREE.Group(), appG = new THREE.Group(); g.add(capG, stopG, appG);
@@ -309,9 +316,11 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     add(stopGeo, m.stop, stopG, 3); add(ringGeo, m.ring, capG, 4); add(capGeo, m.cap, capG, 5);
     add(glassGeo, m.front, g, 6); add(labelGeo, m.label, g, 7);
     add(appGeo, m.appB, appG, 8); add(appGeo, m.app, appG, 9); add(tipGeo, m.tip, appG, 10);
+    const pre = [add(capGeo, PRE, capG, 0), add(ringGeo, PRE, capG, 0), add(stopGeo, PRE, stopG, 0), add(labelGeo, PRE, g, 0)];   // cap, ring, stopper, label
+    pre.forEach(x => { x.visible = false; });
     const clip = hero ? new THREE.Plane(new V3(0, -1, 0), 0) : null;
     if (clip) m.liquid.clippingPlanes = [clip];
-    return { g, capG, stopG, appG, m, parts, kind, clip, cake, liq };
+    return { g, capG, stopG, appG, m, parts, kind, clip, cake, liq, pre };
   }
   // the kit's eight (R15 left to right: four boosters, four powders; the fifth prepared) and the travelling pair
   const kitV = [0, 1, 2, 3, 4, 5, 6, 7].map(i => makeVial(i < 4 ? 'B' : 'P', false, i === 4));
@@ -359,21 +368,22 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     transparent: true, depthTest: false, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation,
     blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor }));
   quad.frustumCulled = false; qScene.add(quad);
-  // the dive's edges: while the camera is inside, the whole picture (the amber filling the view, the soft light over it)
-  // fades softly toward the canvas's edges, so the amber is a shapeless glow and never a panel cut by the canvas (also the
-  // phone's opening push-in, where the kit grows past its block: no straight cut through the box at the block's edge).
-  // And by geometry, edge by edge (uE: left, bottom, right, top; uR: where each fades, in canvas px): an edge that the
-  // drawn objects come within 40 frame px of (or pass) fades its strip (uFe of the canvas), so nothing is ever cut
-  // straight by the canvas's edge or the screen's; in every hold they are ≥ 40 px away and nothing fades
+  // the dive (run 3): the light narrows on the booster: a round fade (uW its weight) over the canvas's part on the screen
+  // (uR, canvas px: left, bottom, right, top), whole inside uF of its half-axes and nothing on the ellipse inscribed in it,
+  // so what grows past the canvas as the camera goes in fades softly into the page's dark along round lines, never along a
+  // straight one (no band parallel to an edge), and the amber light inside stays a shapeless glow, its middle undimmed.
+  // And by geometry, edge by edge (uE: left, bottom, right, top): an edge that the drawn objects come within 40 frame px of
+  // (or pass) fades its strip (uFe of the canvas), so nothing is ever cut straight by the canvas's edge or the screen's;
+  // in every hold they are ≥ 40 px away and nothing fades
   const vScene = new THREE.Scene(), vig = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
-    uniforms: { uW: { value: 0 }, uF: { value: 0.5 }, uFe: { value: 0.12 }, uE: { value: new THREE.Vector4() }, uR: { value: new THREE.Vector4() }, uRes: quad.material.uniforms.uRes },
+    uniforms: { uW: { value: 0 }, uF: { value: 0.3 }, uFe: { value: 0.12 }, uE: { value: new THREE.Vector4() }, uR: { value: new THREE.Vector4() }, uRes: quad.material.uniforms.uRes },
     vertexShader: 'void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }',
     fragmentShader: `uniform float uW, uF, uFe; uniform vec4 uE, uR; uniform vec2 uRes;
-      void main() { vec2 q = gl_FragCoord.xy / uRes, d = min(q, 1.0 - q) * uRes; float m = min(uRes.x, uRes.y);
-        float v = smoothstep(0.0, uF * m, d.x) * smoothstep(0.0, uF * m, d.y);
+      void main() { float m = min(uRes.x, uRes.y);
+        float w = 1.0 - smoothstep(uF, 1.0, length((2.0 * gl_FragCoord.xy - uR.xy - uR.zw) / max(uR.zw - uR.xy, vec2(1.0))));
         vec4 e = smoothstep(0.0, uFe * m, vec4(gl_FragCoord.xy - uR.xy, uR.zw - gl_FragCoord.xy)); e *= e;
         float g = mix(1.0, e.x, uE.x) * mix(1.0, e.y, uE.y) * mix(1.0, e.z, uE.z) * mix(1.0, e.w, uE.w);
-        gl_FragColor = vec4(0.0, 0.0, 0.0, mix(1.0, v * v, uW) * g); }`,
+        gl_FragColor = vec4(0.0, 0.0, 0.0, mix(1.0, w, uW) * g); }`,
     transparent: true, depthTest: false, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation,
     blendSrc: THREE.ZeroFactor, blendDst: THREE.SrcAlphaFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.SrcAlphaFactor }));
   vig.frustumCulled = false; vScene.add(vig);
@@ -396,6 +406,10 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const B4 = vialPx(640, 1120, 300), P4 = vialPx(780, 1120, 300);   // S4: small and low
   const B5 = vialPx(560, 1105, 470), P5 = vialPx(820, 1105, 470);   // S5: the preparation
   const deeper = (pos, k, out) => out.copy(pos).sub(lay.position).multiplyScalar(k).add(lay.position);   // on its line of sight, k × as far
+  // the dive (run 3): the camera goes toward DIVE.q (the booster's amber over its label) to d1 from it at the most (pose1);
+  // `in`: the log of the zoom at which the glass has gone (×2), s4: the log of S3's size over S4's (×2)
+  const DIVE = { q: B3.clone().add(new V3(0, 0.66 * LW, 0)), in: Math.log(2), s4: Math.log(2), d1: R * LW * 1.6, d0: 0 };
+  DIVE.d0 = lay.position.distanceTo(DIVE.q);
   // the step stills (p 11…15): one camera distance for all five (a vial 640 frame px tall, so step 2's pour fits), each
   // centred in the frame by its outline (its middle on (1200, 750): OFF), never scaled: the vials keep one size card to card
   const SH = 640, sx = (x, h) => 1200 + (x - 1200) * SH / h;
@@ -408,7 +422,7 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // the state, written in place every frame (nothing allocated per frame)
   // fill: the booster's amber left (1 full); liq: the solution in the powder vial (0 … 1 of the same volume)
   const vs = () => ({ pos: new V3(), yaw: 0, tilt: 0, a: 0, cap: 0, stop: 0, app: 0, fill: 1, liq: 0, cake: 1, stopBack: 0, keep: 0 });
-  const ST = { box: { pos: new V3(), a: 0 }, kit: kitV.map(vs), B: vs(), P: vs(), cam: 0, push: 0, dive: 0, quad: 0 };
+  const ST = { box: { pos: new V3(), a: 0 }, kit: kitV.map(vs), B: vs(), P: vs(), cam: 0, push: 0, dive: 0, quad: 0, round: 0 };
   const resetV = (o, pos, a = 1) => { o.pos.copy(pos); o.yaw = 0; o.tilt = 0; o.a = a; o.cap = 0; o.stop = 0; o.app = 0; o.fill = 1; o.liq = 0; o.cake = 1; o.stopBack = 0; o.keep = 0; return o; };
   const tmpM = new THREE.Matrix4(), tA = new V3(), tB = new V3(), tC = new V3();
   // a path through points (box-local or world), m 0…1 by length; returns the fraction where segment `seg` begins
@@ -474,10 +488,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
 
   function story(p) {   // the state at story position p (phone: the same poses; only p0's camera differs)
     const st = ST, b = st.box;
-    // a phone: each run plays in the first 45 % of its scroll window and holds its end pose, so it is whole while its
-    // block is still mostly on screen (the engine's flow moves the block up under the header as the run plays)
-    if (p < 6 && phone.matches) { const k0 = Math.floor(p); p = k0 + Math.min(1, (p - k0) / 0.45); }
-    st.cam = st.push = st.dive = st.quad = 0;
+    // (a phone or tablet: flowP() in render() has placed each run by its block's place on the screen)
+    st.cam = st.push = st.dive = st.quad = st.round = 0;
     b.pos.copy(K_BOX); b.a = 0;
     for (let i = 0; i < 8; i++) resetV(st.kit[i], K_V[i], 0);
     resetV(st.B, B3, 0); resetV(st.P, P3, 0);
@@ -505,12 +517,19 @@ export function createScene(THREE, { canvas, base, onLoad }) {
         if (u > 0) approach(PAIR_OUT[j], end, u, o.pos); else along(PAIR[j], m, o.pos).applyMatrix4(tmpM);
         o.yaw = rad(-30) * (1 - u); o.a = m < PAIR_HIDE && hidden(o, 1) ? 0 : 1;
       }
-    } else if (k === 3) {   // inside → feel: through the booster's amber and back (it passes, it does not hold); the glass
-      // fades before the camera is in (no straight glass edge in the glow); the pair goes small and low
-      st.B.a = st.P.a = 1 - smooth(0.16, 0.3, f) * (1 - smooth(0.55, 0.68, f));
-      st.dive = smooth(0, 0.4, f) * (1 - smooth(0.48, 0.74, f));
-      st.quad = smooth(0.22, 0.36, f) * (1 - smooth(0.48, 0.62, f));   // over the glass's fade: never an empty frame
-      const g = ease(0.6, 1, f); approach(B3, B4, g, st.B.pos); approach(P3, P4, g, st.P.pos);
+    } else if (k === 3) {   // inside → feel: into the booster's amber and back (it passes, it does not hold). The light
+      // narrows on the booster first (st.round: render()'s round fade, whole before anything nears an edge); the camera goes
+      // in toward its amber, the size growing by an even ratio per step (L, the log of the zoom: never a jump near the
+      // camera), and the glass dissolves into the amber light as it nears, the light rising exactly as the glass goes (never
+      // darker between, never an empty frame; slowly: a phone's run is short); the light alone; then out in one move by an
+      // even ratio: the glass back as the camera comes out, and on, the pair going small and low to S4 (half S3's size);
+      // the light widens again once the pair is back inside S3's size
+      st.round = smooth(0, 0.1, f) * (1 - smooth(0.72, 0.86, f));
+      const L = f < 0.4 ? DIVE.in * ease(0.06, 0.38, f) : DIVE.in - (DIVE.in + DIVE.s4) * ease(0.42, 1, f);
+      st.quad = smooth(0.12, 0.38, f) * (1 - smooth(0.42, 0.7, f));
+      st.B.a = st.P.a = 1 - st.quad;
+      st.dive = L > 0 ? (1 - Math.exp(-L)) / (1 - DIVE.d1 / DIVE.d0) : 0;   // the camera on its line toward the booster (pose1)
+      const g = L < 0 ? -L / DIVE.s4 : 0; approach(B3, B4, g, st.B.pos); approach(P3, P4, g, st.P.pos);
     } else if (k === 4) {   // feel → protocol: the R7 preparation (prep())
       prep(f);
     } else {   // protocol → kit, once the 3D is back from the step cards (story-v2-motion.js cards(): by f ≈ 0.55): the empty
@@ -528,15 +547,26 @@ export function createScene(THREE, { canvas, base, onLoad }) {
         const i = BACK_ORDER[r], o = st.kit[i], mm = 1 - smooth(0.7 + 0.01 * r, 0.9 + 0.01 * r, f);
         along(ROUND[i], mm, o.pos, ROUND_WT).applyMatrix4(tmpM); o.a = b.a > 0.999 && !(mm > ROUND_HIDE[i] && hidden(o, 1)) ? 1 : 0;   // never before the box is whole
       }
+      // the step cards (a desktop: story-v2-motion.js cards(), window.__mtCards 1 → 0 before card 01's picture enters the
+      // screen, → 1 once card 05's has left it): the pair steps back into the dark together (its middle on its line of
+      // sight), solid, its size falling by an even ratio per step to a quarter, and fades only then; back the same way (run
+      // 5's own moves start at f 0.58, after it is back). Not for a still (reduced motion: the canvas fades, story-v2.css)
+      const away = p < 6 && curView && !curView.still ? 1 - clamp(window.__mtCards ?? 1) : 0;
+      if (away > 0) {
+        const d = Math.pow(4, ease(0, 0.75, away)), a = 1 - smooth(0.7, 1, away);
+        tA.addVectors(B.pos, P.pos).multiplyScalar(0.5); deeper(tA, d, tB).sub(tA);
+        B.pos.add(tB); P.pos.add(tB); B.a *= a; P.a *= a;
+      }
       if (p >= 6) { b.pos.copy(K_BOX); b.a = 1; for (let i = 0; i < 8; i++) if (i !== 4) resetV(st.kit[i], K_V[i]); P.pos.copy(K_V[4]); B.a = 0; }
     }
     if (p < 2) { st.kit[4].app = 1; st.kit[4].cap = 1; st.kit[4].stop = 1; }   // R15's fifth: the applicator on
     return st;
   }
-  // run 4: f 0–0.22 the pair rises and grows to S5; 0.22–0.36 the caps (with their rings) lift and go, then the stoppers;
-  // 0.36–0.66 the booster lifts, comes over the powder vial, turns 115° over it (its neck over the other's, a little
-  // behind) and pours slowly (its level falls 0.44–0.60), then goes back to its place, empty and open; 0.66–0.74 a
-  // stopper onto the powder vial; 0.74–0.80 the wait; 0.80–0.94 the stopper off, the applicator down onto the neck
+  // run 4: f 0–0.18 the pair rises and grows to S5; 0.16–0.35 the caps (with their rings) lift and go, then the stoppers;
+  // 0.33–0.74 the booster lifts, comes over the powder vial, turns 115° over it (its neck over the other's, a little
+  // behind; the turn over 0.14 of the run, the way back over 0.16: no jump of the bottle from one step of scroll to the
+  // next) and pours (its level falls 0.45–0.58), then goes back to its place, empty and open; 0.72–0.80 a stopper
+  // onto the powder vial; 0.80–0.82 the wait; 0.82–0.98 the stopper off, the applicator down onto the neck
   const tQ = new THREE.Quaternion(), tE = new THREE.Euler(0, 0, 0, 'YXZ');
   function pourFoot(P, out) {   // where the booster's foot is when its neck is over the powder vial's (tilt 115°)
     const yaw = facing(P), c = Math.cos(yaw), s = Math.sin(yaw), t = rad(115), n = 0.868 * LW;
@@ -547,23 +577,23 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   function prep(f) {
     const B = ST.B, P = ST.P;
     B.a = P.a = 1;
-    const g = ease(0, 0.22, f);
+    const g = ease(0, 0.18, f);
     approach(B4, B5, g, B.pos); approach(P4, P5, g, P.pos);
-    const cap = smooth(0.22, 0.3, f), stop = smooth(0.28, 0.36, f);
+    const cap = smooth(0.16, 0.27, f), stop = smooth(0.24, 0.35, f);
     B.cap = P.cap = cap; B.stop = P.stop = stop;
     // the pour
-    const up = smooth(0.36, 0.42, f), over = smooth(0.4, 0.48, f), back = smooth(0.6, 0.66, f);
-    const tilt = rad(115) * smooth(0.4, 0.48, f) * (1 - back);
+    const up = smooth(0.33, 0.4, f), over = smooth(0.36, 0.5, f), back = smooth(0.58, 0.74, f);
+    const tilt = rad(115) * over * (1 - back);
     tA.copy(B5); tA.y += 0.35 * LW * up;
     tB.copy(POUR_B);
     B.pos.lerpVectors(tA, tB, over); if (back > 0) B.pos.lerpVectors(B.pos, B5, back);
     B.yaw = (facing(P5) - facing(B.pos)) * over * (1 - back); B.tilt = tilt;   // turned in P's plane
-    B.fill = 1 - smooth(0.44, 0.6, f); P.liq = 1 - B.fill; P.cake = 1 - smooth(0.46, 0.66, f);   // what leaves the booster rises in the powder vial
+    B.fill = 1 - smooth(0.45, 0.58, f); P.liq = 1 - B.fill; P.cake = 1 - smooth(0.47, 0.62, f);   // what leaves the booster rises in the powder vial
     // the stopper back onto the powder vial, then off; the applicator down
-    const sIn = smooth(0.66, 0.74, f), sOut = smooth(0.8, 0.86, f), aIn = smooth(0.84, 0.94, f);
-    P.stop = f < 0.66 ? stop : 1 - sIn * (1 - sOut); P.stopBack = f >= 0.66 ? 1 : 0;
+    const sIn = smooth(0.72, 0.8, f), sOut = smooth(0.82, 0.88, f), aIn = smooth(0.86, 0.98, f);
+    P.stop = f < 0.72 ? stop : 1 - sIn * (1 - sOut); P.stopBack = f >= 0.72 ? 1 : 0;
     P.app = aIn;
-    if (f < 0.22) approach(B4, B5, g, B.pos);
+    if (f < 0.18) approach(B4, B5, g, B.pos);
   }
   function steps(p) {   // the five step stills: as the R7 drawings, no hands, no arrows, no stream, no drop
     const n = Math.round(p) - 10, B = ST.B, P = ST.P;
@@ -596,6 +626,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     if (s.keep) m.stop.opacity = a;
     v.appG.visible = s.app > 0.001; v.appG.position.y = 0.3 * (1 - smooth(0, 1, s.app));   // down from 0.3 L above: S5's raised hold keeps it ≥ 40 px under the canvas's top
     m.app.opacity = m.appB.opacity = m.tip.opacity = a * smooth(0, 0.35, s.app);
+    // a fading cap (with its ring), stopper or label: its depth first (PRE), so it fades as one solid
+    v.pre[0].visible = v.pre[1].visible = m.cap.opacity < 0.999; v.pre[2].visible = m.stop.opacity < 0.999; v.pre[3].visible = m.label.opacity < 0.999;
     if (v.cake) { v.cake.visible = s.cake > 0.01; v.cake.scale.set(1, Math.max(0.01, s.cake), 1); }
     if (v.clip) {   // a hero vial: its level as the world sees it (the booster's amber left, the solution in the powder vial)
       const fr = v.kind === 'B' ? s.fill : s.liq;
@@ -618,8 +650,8 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     camera.position.copy(lay.position); camera.quaternion.copy(lay.quaternion); camera.near = 1;
     if (st.cam > 0) camera.position.lerpVectors(lay.position, openCam(openPos, st.push), st.cam);
     if (st.dive > 0) {
-      Q.copy(B3).addScaledVector(YAX, 0.66 * LW);
-      tC.copy(lay.position).sub(Q).normalize().multiplyScalar(R * LW * 1.6).add(Q);
+      Q.copy(DIVE.q);
+      tC.copy(lay.position).sub(Q).normalize().multiplyScalar(DIVE.d1).add(Q);
       camera.position.lerpVectors(lay.position, tC, st.dive); camera.near = 0.02;
     }
     camPos.copy(camera.position);
@@ -649,8 +681,9 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // its foot, upward into the room the name leaves (never down toward the dock or the screen's foot, never up under the
   // header). Per view and band, by a few steps of dolly and shift on the kit's points (KP: fixed, in the story camera's
   // axes). Without a band (no motion layer, the keys renderer): along the view so the kit is s × as large as in S1, its
-  // middle (frame (708, 750)) on the target pixel, `push` moving on toward it. A phone: S1's own framing in its block
-  const OPEN = { desk: [0.98, 1200, 940], phone: [1, 708, 750] }, PUSH = 1.15, PUSH_PHONE = 1.2;
+  // middle (frame (708, 750)) on the target pixel, `push` moving on toward it. A phone: 1/1.2 of S1's framing in its
+  // block, round the kit's middle, the push (× 1.2) bringing it to S1's own: the kit grows into its block and never past it
+  const OPEN = { desk: [0.98, 1200, 940], phone: [1 / 1.2, 708, 750] }, PUSH = 1.15, PUSH_PHONE = 1.2;
   const KP = (() => {
     const pts = [], m = boxMatrix(K_BOX, new THREE.Matrix4()), q = new V3(), add = v => { q.copy(v).sub(lay.position); pts.push(q.dot(RIGHT), q.dot(UP), q.dot(fwd)); };
     for (let i = 0; i < 8; i++) add(tA.set((i & 1 ? 1 : -1) * WR / 2, (i & 2 ? 1 : -1) * BH / 2, i & 4 ? -BD : 0).applyMatrix4(m));
@@ -780,7 +813,27 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   // the fixed pose last drawn (its key field by field, nothing allocated per frame; NaN: none, the next draw renders)
   const ID = new Float64Array(11); ID[0] = NaN;
   function NOID() { ID[0] = NaN; }
+  // flow (a phone or tablet: the canvas in its block, the view's box in page coordinates): a run plays as its block comes
+  // up the screen, from its canvas whole above the bottom bar (the opening: from where it stands at the page's top) to
+  // the canvas's top 8 px under the header's foot, and holds its end pose from there. Nothing of the product is under the
+  // header or the bar while it moves, and each run has the block's whole way up the screen (the engine's own window starts
+  // only as the block meets the header: too late, and too short). Run 5 skips the desktop's wait for the step cards (a
+  // phone's come after its block): it starts at f 0.58, which is the S5 pose itself
+  const FLOW = { w: -1, h: -1, bar: 0 };
+  function flowP(p, view) {
+    if (p >= 6 || view.still || !phone.matches || !html.classList.contains('flow')) return p;
+    if (FLOW.w !== innerWidth || FLOW.h !== innerHeight) {   // the bottom bar's height (not its place: it steps aside at the offer)
+      const bar = document.querySelector('.bar'); FLOW.w = innerWidth; FLOW.h = innerHeight; FLOW.bar = bar ? bar.offsetHeight : 0;
+    }
+    const hb = parseFloat(html.style.getPropertyValue('--stage-top')) || 0, k = Math.floor(p), top = view.box.y - scrollY;
+    const y1 = hb + 8, y0 = Math.max(y1 + 80, Math.min(view.box.y, innerHeight - FLOW.bar - view.box.h - 8));
+    if (p === k && top < y1) return p;   // a block on its way out after its run: its end pose
+    const f = clamp((y0 - top) / (y0 - y1));
+    return k + (k === 5 ? lerp(0.58, 1, f) : f);
+  }
+  let drawnP = 0;   // QA (state()): the position drawn, after flowP
   function render(p, view) {
+    p = drawnP = flowP(p, view);
     const fixed = view.still || p >= 6, kitAt = fixed || p >= 5.85;
     pr = kitAt ? full(view) : Math.min(full(view), cap);
     if (fixed) {
@@ -791,11 +844,10 @@ export function createScene(THREE, { canvas, base, onLoad }) {
     } else NOID();
     curView = view; pose(p, view.still ? 0 : view.t, view.still); fit(view, pr);
     renderer.render(scene, camera);
-    // the edges fade while the camera is in the amber, and on a phone while the opening's push-in outgrows its block
-    // (from the dive's first step: the pair is never cut flat by the canvas's edge as the camera moves in)
-    const qa = ST.quad, vw = Math.max(smooth(0, 0.25, ST.dive), phone.matches ? smooth(0.02, 0.3, ST.push) : 0);
-    quad.material.uniforms.uA.value = qa; vig.material.uniforms.uW.value = vw; vig.material.uniforms.uF.value = ST.dive > 0 ? lerp(0.16, 0.7, smooth(0.2, 0.7, ST.dive)) : 0.16;   // the push: its edges only; the dive: the edges first, then all soft
-    const ew = edges(view);
+    // the edges' fade by geometry; in the dive the round fade (st.round) takes the edges too, whole as soon as anything
+    // comes within 40 frame px of one: no straight band across the pair as the camera goes in
+    const qa = ST.quad, ew = edges(view), vu = vig.material.uniforms, vw = ST.round > 0.001 ? Math.max(ST.round, ew) : 0;
+    quad.material.uniforms.uA.value = qa; vu.uW.value = vw; if (vw > 0) vu.uE.value.set(0, 0, 0, 0);
     if (qa > 0.002 || vw > 0.002 || ew > 0.002) {
       renderer.autoClear = false;
       if (qa > 0.002) renderer.render(qScene, qCam);
@@ -856,11 +908,11 @@ export function createScene(THREE, { canvas, base, onLoad }) {
   const r1 = v => Math.round(v * 10) / 10, r2 = v => Math.round(v * 100) / 100;
   const state = () => {
     const st = ST;
-    return { quality: pr, cap, capped, pixelRatio: renderer.getPixelRatio(), width: canvas.width, height: canvas.height, renders, loaded, version, kits, lastP,
+    return { quality: pr, cap, capped, pixelRatio: renderer.getPixelRatio(), width: canvas.width, height: canvas.height, renders, loaded, version, kits, lastP, drawn: Math.round(drawnP * 1e4) / 1e4,
       box: { o: r2(box.visible ? st.box.a : 0) }, shown: ALL.filter(v => v.g.visible).length, clash: box.visible ? clashes() : 0,
       kitP: 6, floor: FLOOR,   // this page's kit pose (six runs: the opening first) and the pace's floor (verify-scene)
       B: { o: r2(st.B.a), cap: r2(st.B.cap), stop: r2(st.B.stop), tilt: r1(THREE.MathUtils.radToDeg(st.B.tilt)), fill: r2(st.B.fill) },
-      P: { o: r2(st.P.a), cap: r2(st.P.cap), stop: r2(st.P.stop), app: r2(st.P.app), liq: r2(st.P.liq) }, dive: r2(st.dive), inside: r2(st.quad),
+      P: { o: r2(st.P.a), cap: r2(st.P.cap), stop: r2(st.P.stop), app: r2(st.P.app), liq: r2(st.P.liq) }, dive: r2(st.dive), inside: r2(st.quad), round: r2(st.round),
       probes: probes(), aabb: outline(), edge: Array.from(EW, (v, i) => i < 4 ? r1(v) : r2(v)) };   // edge: the margins (left, top, right, bottom) and their fade
   };
   // the step stills for the page's cards (render-keys: these positions, named step1…step5)

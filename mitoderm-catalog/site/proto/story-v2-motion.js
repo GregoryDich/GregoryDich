@@ -4,16 +4,21 @@
 // none under reduced motion (p is then rounded). And the page's geometry for the scene and the engine:
 // – the opening's free band (desktop: window.__mtBand, viewport css px at scroll 0: the subtitle's foot + 16 to the dock's
 //   top − 16, and the header's foot): the scene frames the kit in it (scenes/mitotech-cell-booster.js openCam());
-// – the step cards (desktop): the live 3D steps aside while they are on screen, by scroll (html.mt-cards, --mt-cards: out
-//   before card 01's picture enters the screen, back only once card 05's has left it; html.mt-cards0 while it is fully
-//   out: the scene does not draw), never two pairs on screen at once;
+// – the step cards (desktop): the live 3D steps aside while they are on screen, by scroll (window.__mtCards 1 → 0 → 1:
+//   the scene sends the pair back into the dark and brings it back; html.mt-cards0 while it is fully out: the canvas is
+//   hidden and the scene does not draw): out as card 01's drawn picture comes up to the screen's foot, back only once card
+//   05's has left the screen's top (each picture's transparent margins measured): never two pairs on screen at once,
+//   never a stage with neither;
 // – the kit card (desktop): while the kit flies onto it (the engine: the card's top from 85 % to 25 % of the screen) the
 //   card's body and all on it but the picture wait (--mt-card 0), then show (l 1 → 1.12); at the landing the 3D hands
 //   over to the card's own picture in one frame (html.mt-land, --mt-land 1 → 0: the same pose, no cross-fade);
-// – phone and tablet (flow): room after each stage block (--mt-gap on the next screen), so the next block's stage enters
-//   the screen only once the one before has gone under the header (each block holds its run's end pose, the next one
-//   shows its still of that same pose: never two at once); so too the step cards' pictures after the protocol's block,
-//   and the kit card's picture after the step cards.
+// – phone and tablet (flow): room after each stage block (--mt-gap on the next screen), so the next block's product
+//   enters the screen only once the one before has gone under the header (each block holds its run's end pose, the next
+//   one shows its still of that same pose, at the same place in its block: never two at once; measured on the products,
+//   not the blocks, so no screen between them is emptier than it must be); so too the step cards' pictures after the
+//   protocol's block, and the kit card's picture after the step cards;
+// – a tablet turned or a window resized across 899 px (desktop screens ↔ phone blocks: another page): the place being
+//   read is kept and put back under the screen's reading line once the other layout is in.
 (function () {
   var root = document.documentElement, haze = document.querySelector('.mt-haze');
   var calm = matchMedia('(prefers-reduced-motion: reduce)'), small = matchMedia('(max-width: 899px)'), wide = matchMedia('(min-width: 900px)');
@@ -26,7 +31,7 @@
     [[28, 68, 1.4, .90], [22, 74, 1, .60], [36, 56, 1, .55]],   // S4: an even glow, mint and green in turn
     [[27, 62, 1, .35], [20, 82, 1, .20], [38, 80, 1, .20]],     // S5: the haze settles
     [[27, 54, 1.2, .95], [18, 70, 1, .40], [40, 36, 1, .30]]];  // the kit and the offer: the strongest glow, behind the card
-  var els = haze ? Array.prototype.slice.call(haze.children) : [], size = [], W = 0, H = 0, raf = 0, tm = 0, lastP = -1;
+  var els = haze ? Array.prototype.slice.call(haze.children) : [], size = [], W = 0, H = 0, raf = 0, tm = 0, lastP = -1, hdr = 0;
   var card = document.querySelector('.kitcard'), landOn = false, landV = -1, cardV = -1, probe = null;
   var desk = function () { return wide.matches && root.classList.contains('story') && !root.classList.contains('flow'); };
   function measure() {
@@ -37,12 +42,13 @@
       card.style.setProperty('--body-top', (f.bottom - c.top - card.clientTop + gap / 2).toFixed(1) + 'px');
     }
     var sub = document.querySelector('#open .open-sub'), dock = document.querySelector('.dock'), head = document.querySelector('.top');
+    hdr = head ? head.getBoundingClientRect().bottom : 0;
     if (sub && wide.matches) {   // the opening's free band (scroll 0); the dock is fixed, the header sticky
       var dk = dock && getComputedStyle(dock).display !== 'none' ? dock.getBoundingClientRect() : null;
       window.__mtBand = { top: Math.round(sub.getBoundingClientRect().bottom + scrollY + 16), bottom: Math.round(dk ? dk.top - 16 : H - 24),
         head: head ? Math.round(head.getBoundingClientRect().bottom) : 0 };
     } else window.__mtBand = null;
-    gaps();
+    gaps(); remember();   // remember: also without a scroll yet (a page opened at a link)
     kick(true);
   }
   function lvh() {   // the large viewport (browser toolbars retracted): the room a block needs does not change as they move
@@ -63,12 +69,39 @@
       var box = seq[k][1]; if (!box) continue;
       var old = parseFloat(box.style.getPropertyValue('--mt-gap')) || 0, g = 0;
       if (flow && seq[k - 1][0].offsetHeight && seq[k][0].offsetHeight) {
-        var dist = seq[k][0].getBoundingClientRect().top - old - seq[k - 1][0].getBoundingClientRect().bottom;
+        var a = seq[k - 1][0].getBoundingClientRect(), b = seq[k][0].getBoundingClientRect(), dist = b.top - old - a.bottom;
+        // two stage blocks: the block before ends holding the pose the next one's still shows, at the same place in its
+        // block (the engine places both by one cover); its product's foot there against the still's top. The scene's run
+        // has ended by then (its canvas's top 8 px under the header), and the canvas moves on only after this block
+        var s = k < st.length && seq[k][0].querySelector('.stage-still'), r = s && s.getBoundingClientRect();
+        if (r && r.height) dist = (r.top - old) - (a.top + r.bottom - b.top);
         g = Math.max(0, Math.ceil(room - dist + 4));
       }
       if (Math.abs(g - old) > 0.5) set.push([box, g]);
     }
     set.forEach(function (x) { if (x[1]) x[0].style.setProperty('--mt-gap', x[1] + 'px'); else x[0].style.removeProperty('--mt-gap'); });
+    if (turned) restore();
+  }
+  // a tablet turned (or a window resized) across 899 px: desktop screens ↔ phone blocks, another page, where the browser's
+  // own anchoring lands the reader elsewhere (S5 → the footer). The place being read is kept on scroll (the stretch between
+  // two marks – a screen's top, the step cards', the footer's – that the screen's reading line is in, and how far into it)
+  // and put back under that line once the other layout's gaps are written (applyGaps, the frame after the flip)
+  var marks = Array.prototype.slice.call(document.querySelectorAll('main > section, .mt-prep, .foot')), at = null, atQ = small.matches, turned = false;
+  function stretch() {   // the marks shown and their tops in the page, the page's foot last
+    var m = marks.filter(function (e) { return e.getClientRects().length; });
+    return { m: m, t: m.map(function (e) { return e.getBoundingClientRect().top + scrollY; }).concat(root.scrollHeight) };
+  }
+  function remember() {
+    if (small.matches !== atQ) return;   // the query has flipped: this scroll is the browser's, not the reader's
+    var s = stretch(), y = scrollY + 0.4 * innerHeight, i = 0; if (!s.m.length) return;
+    while (i < s.m.length - 1 && s.t[i + 1] <= y) i++;
+    at = [s.m[i], Math.max(0, Math.min(1, (y - s.t[i]) / Math.max(1, s.t[i + 1] - s.t[i]))),
+      scrollY < 1 ? -1 : scrollY > root.scrollHeight - innerHeight - 2 ? 1 : 0];   // at the page's top or foot: stays there
+  }
+  function restore() {
+    turned = false; atQ = small.matches;
+    var s = stretch(), i = at ? s.m.indexOf(at[0]) : -1; if (i < 0) return;
+    scrollTo(0, at[2] < 0 ? 0 : at[2] > 0 ? root.scrollHeight : Math.round(s.t[i] + at[1] * (s.t[i + 1] - s.t[i]) - 0.4 * innerHeight));
   }
   function pos() {
     if (typeof window.__mtP === 'number') return window.__mtP;
@@ -102,22 +135,36 @@
     if (!still) { clearTimeout(tm); tm = setTimeout(kick, 50); }   // the drift: about 20 updates a second (one timer), scrolling redraws at once
   }
   function kick(force) { if (!raf && (force === true || !calm.matches || pos() !== lastP)) raf = requestAnimationFrame(frame); }
-  addEventListener('scroll', function () { kick(true); }, { passive: true });
+  addEventListener('scroll', function () { remember(); kick(true); }, { passive: true });
   addEventListener('resize', measure);
   addEventListener('load', measure);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) kick(true); });
-  calm.addEventListener('change', measure); small.addEventListener('change', measure);
+  calm.addEventListener('change', measure); small.addEventListener('change', function () { turned = true; measure(); });
   if (window.ResizeObserver) new ResizeObserver(measure).observe(document.querySelector('main') || root);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
   measure();
 
-  var figs = Array.prototype.slice.call(document.querySelectorAll('.mt-step figure')), cardsV = -1;
-  function cards() {   // desktop: 1 (the 3D shown) … 0 (out): out as card 01's picture top comes from 130 % to 100 % of the screen
-    var v = 1;          // (before it enters), back as card 05's picture foot goes from 0 to −30 % (after it has left)
-    if (figs.length && desk()) {
-      var a = figs[0].getBoundingClientRect().top / H, b = figs[figs.length - 1].getBoundingClientRect().bottom / H;
-      v = Math.max(Math.min(1, Math.max(0, (a - 1) / 0.3)), Math.min(1, Math.max(0, -b / 0.3)));
+  var figs = Array.prototype.slice.call(document.querySelectorAll('.mt-step img')), cardsV = -1, inked = [];
+  function ink(n) {   // a step picture's drawn part: [top, foot] as fractions of its box (its transparent margins), measured once
+    if (inked[n]) return inked[n];
+    var im = figs[n], r = [0, 1];
+    if (!im.complete || !im.naturalWidth) return r;   // not there yet: its box
+    try {
+      var w = 120, h = Math.max(1, Math.round(w * im.naturalHeight / im.naturalWidth)), c = document.createElement('canvas'), x, d, t = -1, b = -1;
+      c.width = w; c.height = h; x = c.getContext('2d'); x.drawImage(im, 0, 0, w, h); d = x.getImageData(0, 0, w, h).data;
+      for (var i = 3; i < d.length; i += 4) if (d[i] > 8) { if (t < 0) t = Math.floor(i / 4 / w); b = Math.floor(i / 4 / w); }
+      if (t >= 0) r = [t / h, (b + 1) / h];
+    } catch (e) {}
+    return (inked[n] = r);
+  }
+  function cards() {   // desktop: 1 (the 3D shown) … 0 (stepped aside): out as card 01's drawn picture comes from 145 % to 100 %
+    var v = 1;          // of the screen (before it enters), back as card 05's drawn picture goes on from the header's foot by 45 %
+    if (figs.length && desk()) {   // (and at least 400 px: the pair's steps into the dark stay small on a short screen)
+      var A = figs[0].getBoundingClientRect(), B = figs[figs.length - 1].getBoundingClientRect(), ia = ink(0), ib = ink(figs.length - 1);
+      var a = (A.top + ia[0] * A.height) / H, b = (B.top + ib[1] * B.height - hdr) / H, w = Math.max(0.45, 400 / H);
+      v = Math.max(Math.min(1, Math.max(0, (a - 1) / w)), Math.min(1, Math.max(0, -b / w)));
     }
+    window.__mtCards = v;   // the scene (run 5's branch) sends the pair back into the dark by it
     if (Math.abs(v - cardsV) < 0.002 && !(v !== cardsV && (v === 0 || v === 1))) return;
     cardsV = v; root.classList.toggle('mt-cards', v < 1); root.classList.toggle('mt-cards0', v === 0);
     root.style.setProperty('--mt-cards', v.toFixed(3));

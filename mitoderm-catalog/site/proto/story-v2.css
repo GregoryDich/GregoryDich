@@ -12,10 +12,14 @@
 .mt-haze .a, .mt-haze .b { --c: 20 68 52; width: 110vmax; height: 80vmax; }   /* the green smoke */
 #seq, .still { z-index: 11 !important; }   /* the 3D under the content, also while the kit flies (the engine writes 3 inline) */
 main, .foot { z-index: 20; } .top { z-index: 40; } .dock { z-index: 45; } .bar { z-index: 50; }
-/* the cards: while the step cards are on a desktop screen the live 3D steps aside (the cards carry it), by scroll: it fades
-   out before card 01's picture enters the screen and back in only once card 05's has left it (--mt-cards 1 → 0 → 1,
-   story-v2-motion.js): never the 3D pair and a picture of it at once */
-html.mt-cards #seq { opacity: var(--mt-cards, 0) !important; }
+/* the cards: while the step cards are on a desktop screen the live 3D steps aside (the cards carry it), by scroll: the
+   scene sends the pair back into the dark before card 01's picture enters the screen and brings it back only once card
+   05's has left it (story-v2-motion.js window.__mtCards); once it is out the canvas is hidden (html.mt-cards0): never the
+   3D pair and a picture of it at once, never a see-through pair alone. Reduced motion (no move): the canvas fades instead.
+   The step cards come in by scroll alone (no reveal: never a blank while a picture waits to fade in) */
+html.mt-cards0 #seq { opacity: 0 !important; }
+@media (prefers-reduced-motion: reduce) { html.mt-cards #seq { opacity: var(--mt-cards, 0) !important; } }
+html.story:not(.flow) .mt-step.rv { opacity: 1; transform: none; transition: none; }
 /* the lead form's panel: no smoke picture on v2, the same gradient and a soft mint glow behind the kit */
 .lead-panel { background: radial-gradient(60% 55% at 50% 45%, rgb(120 224 188 / .14), transparent 70%), linear-gradient(180deg, #0a0a0b, #111114); }
 /* only what exists (owner 22/10): no dot-ring on the pins, no rule after the kickers */
@@ -34,18 +38,18 @@ html.mt-cards #seq { opacity: var(--mt-cards, 0) !important; }
 html:not(.js) .open, .no-gl .open { display: none; }
 html.js:not(.no-gl) #meet .head h1 { display: none; }
 html.story:not(.flow) #meet { padding-top: calc(72px + 45svh); }   /* S1's copy rises as the kit settles in S1's place */
-@media (min-width: 900px) { .story #meet { scroll-margin-top: -10svh; } }   /* the dock's «הכירו»: S1's copy whole, its buttons above the dock */
+@media (min-width: 900px) { .story #meet { scroll-margin-top: calc(76px - 15svh); } }   /* the dock's «הכירו»: on the S1 hold, 3 px before run 1
+   (the engine starts it 15 % of the screen after #meet's offsetTop, which leaves out the 73 px above main), S1's copy whole, its buttons above the dock */
 /* phone and tablet (flow): room before a screen whose stage block would enter the screen while the block before it is still
    on it (story-v2-motion.js --mt-gap): never the canvas's pose and the next block's still of the same pose at once */
 html.flow .sec { margin-top: var(--mt-gap, 0px); }
 
-/* the five preparation steps: picture and text side by side, alternating (the pictures: stills of the page's own scene) */
+/* the five preparation steps: picture and text side by side (the pictures: stills of the page's own scene) */
 .mt-prep { margin-top: clamp(96px, 16vh, 180px); display: grid; gap: clamp(40px, 7vh, 88px); }
 .mt-prep-h { font: 500 clamp(26px, 2.6vw, 36px)/1.2 var(--display); }
 .mt-steps { display: grid; gap: clamp(48px, 9vh, 112px); margin: 0; padding: 0; list-style: none; }
 .mt-step { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; column-gap: clamp(32px, 5vw, 80px); }
-.mt-step figure { margin: 0; order: 2; }   /* RTL: the text on the right, the picture on the left … */
-.mt-step:nth-child(even) figure { order: 0; }   /* … then the other way round */
+.mt-step figure { margin: 0; order: 2; }   /* RTL: the text on the right, the picture on the left, in every card (the product left) */
 .mt-step img { width: 100%; max-width: 560px; height: auto; aspect-ratio: 4 / 3; object-fit: contain; }   /* no frame: the vials on the page's own gradient */
 .mt-st { display: grid; gap: 12px; justify-items: start; max-width: 460px; }
 .mt-st .n { font: 300 22px/1 var(--display); color: var(--gold); }
@@ -53,6 +57,8 @@ html.flow .sec { margin-top: var(--mt-gap, 0px); }
 .mt-st p { color: var(--text-soft); }
 @media (min-width: 900px) {
   .mt-prep-h, .mt-prep > .note { max-width: min(540px, 46%); margin-inline-end: auto; }   /* the copy's column: the 3D shows beside them */
+  html.story:not(.flow) #feel { margin-top: max(0px, 800px - 73vh); }   /* run 3 (the dive) gets at least 800 px of scroll: the
+     engine gives a run 73 % of the screen's height, so a short screen played it fast, step by step (the zoom: scenes/mitotech-cell-booster.js) */
   html.story:not(.flow) .mt-prep { margin-top: 92vh; }   /* S5's copy is read with the live 3D: the 3D steps aside (before card
      01's picture enters the screen) once the copy has gone up past a quarter of the screen */
   html.story:not(.flow) .offer .kitcard { margin-top: 190vh; }   /* room for the last run after the cards (the 3D is back by
@@ -74,13 +80,21 @@ html.story:not(.no-gl):not(.flow) .kitcard::before, html.story:not(.no-gl):not(.
 html.story:not(.no-gl):not(.flow) .kitcard .kc-live { filter: drop-shadow(0 20px 30px rgb(0 0 0 / calc(.55 * var(--mt-card, 1)))); }   /* its shade comes with the card */
 html.mt-land:not(.flow) #seq { opacity: var(--mt-land, 0) !important; }
 html.mt-land:not(.flow) .kitcard .kc-live { opacity: calc(1 - var(--mt-land, 0)) !important; }
-/* no JS, desktop: the first key frame only behind S1 (it scrolls away with it, never pinned behind the cards), and each
-   later screen's own still to the left of its copy (the product left, the text right) */
-html:not(.js) .still { position: absolute; inset: 0 0 auto; height: 100svh; }
+/* no JS or no WebGL (a scene that could not start: html.no-gl), desktop: the first key frame only behind S1 (it scrolls
+   away with it, never pinned behind the cards), and each later screen's own still to the left of its copy (the product
+   left, the text right); one product on the screen at a time (as html.flow's --mt-gap): a screen's still enters only once
+   the one before has gone under the header (a screen's copy is centred in 100svh, its still ≤ 60svh: ≥ 40svh from the one
+   before, so 60svh − 72px more; the protocol's still and the step cards after it have only ~140 px, so a whole band);
+   no dock (as on the phone: the fixed pill would ride across every still) */
+html:not(.js) .still, html.no-gl .still { position: absolute; inset: 0 0 auto; height: 100svh; }
 @media (min-width: 900px) {
-  html:not(.js) .copy { position: relative; }
-  html:not(.js) .sec:not(#meet) .head .slot { display: block; position: absolute; right: calc(100% + 64px); top: 50%; transform: translateY(-50%);
-    width: 100%; height: auto; max-height: 60svh; object-fit: contain; }
+  html:not(.js) .copy, html.no-gl .copy { position: relative; }
+  html:not(.js) .sec:not(#meet) .head .slot, html.no-gl .sec:not(#meet) .head .slot { display: block; position: absolute; right: calc(100% + 64px);
+    top: 50%; transform: translateY(-50%); width: 100%; height: auto; max-height: 60svh; object-fit: contain; }
+  html:not(.js) :is(#why, #inside, #feel, #offer), html.no-gl :is(#why, #inside, #feel, #offer) { margin-top: calc(60svh - 72px); }
+  html:not(.js) #protocol, html.no-gl #protocol { margin-top: calc(100svh - 72px); }
+  html:not(.js) .mt-prep, html.no-gl .mt-prep { padding-top: calc(100svh - 72px); }   /* padding: it adds to its own margin */
+  html:not(.js) .dock, html.no-gl .dock { display: none; }
 }
 
 /* phone and tablet (≤ 899): the 3D in its own block under the heading (the engine's flow, up to 899 on this page) */
@@ -95,7 +109,7 @@ html:not(.js) .still { position: absolute; inset: 0 0 auto; height: 100svh; }
     padding: 0 var(--gutter) 6px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); scrollbar-width: none; overscroll-behavior-x: contain; }
   .mt-steps::-webkit-scrollbar { display: none; }
   .mt-step { grid-template-columns: minmax(0, 1fr); row-gap: 16px; align-content: start; scroll-snap-align: start; }
-  .mt-step figure, .mt-step:nth-child(even) figure { order: 0; }
+  .mt-step figure { order: 0; }
 }
 @media (min-width: 761px) and (max-width: 899px) {   /* tablets: the phone's blocks under the headings (the template's ≤ 760 rules) */
   .head, html.story .head { grid-template-columns: minmax(0, 1fr); }
