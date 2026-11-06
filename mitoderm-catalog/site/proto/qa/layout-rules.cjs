@@ -10,6 +10,7 @@ const fs = require('fs'), path = require('path');
 const TOL = {
   L1: {
     fill: [0.4, 0.3],           // the product's height (or width, the tighter one) in its box: ≥ 0.4 passes, < 0.3 is high
+    overfill: [1, 1.1],         // … and not larger than its box: ≤ 1 passes, ≤ 1.1 low (wider than its column: it leaves it)
     over: [4, 16],              // px of the product past its room (desktop: the screen's left half; phone: its block)
     centreY: [0.15, 0.25],      // |gap above − gap below| / box height (desktop band, phone block)
     distortion: [0.01, 0.03],   // |drawn aspect / natural aspect − 1|
@@ -61,10 +62,21 @@ const RULES = {
   L7: 'Off-screen and overlap: nothing past the screen or the free band when read; no text on text, on the product or under the chrome',
 };
 
+const RULES_RU = {
+  L1: 'Картинка вписана в своё место: заполнение (0.4–1 места), центр по вертикали, без искажения; серия — один размер и одна линия донышек',
+  L2: 'Текстовая сетка: один правый край у блоков колонки и на всех экранах, длина строки, без висячих слов в заголовках, чипы и кнопки на сетке',
+  L3: 'Симметрия: центрированные блоки с равными полями; карточки в ряду равны, зазоры равны, ряд по центру',
+  L4: 'Ритм: каждый вид зазора одинаков на всех экранах; ровные расстояния между экранами (телефон)',
+  L5: 'Баланс: десктоп — продукт на уровне копии и по центру своей колонки; телефон — по центру блока, ровно над и под ним',
+  L6: 'Шрифт и касание: кегли со шкалы, тело не мельче 15 px, контраст ≥ 4.5:1, цели касания ≥ 44 px',
+  L7: 'За краем и наложения: ничего за экраном и свободной полосой в позиции чтения; текст не на тексте, не на продукте, не под шапкой и доком',
+};
 const r1 = v => v == null || isNaN(v) ? null : Math.round(v * 10) / 10, r3 = v => v == null || isNaN(v) ? null : Math.round(v * 1000) / 1000;
 const lowIsGood = (v, [t, h]) => v == null || isNaN(v) ? null : v <= t + 1e-9 ? 'pass' : v <= h + 1e-9 ? 'low' : 'high';
 const highIsGood = (v, [t, h]) => v == null || isNaN(v) ? null : v >= t - 1e-9 ? 'pass' : v >= h - 1e-9 ? 'low' : 'high';
 const spread = a => a.length ? Math.max(...a) - Math.min(...a) : 0;
+const fillSev = v => { const lo = highIsGood(v, TOL.L1.fill), hi = lowIsGood(v, TOL.L1.overfill); return [lo, hi].includes('high') ? 'high' : [lo, hi].includes('low') ? 'low' : lo; };
+const FILL_TOL = () => TOL.L1.fill[0] + '–' + TOL.L1.overfill[0];
 const median = a => { const s = a.slice().sort((x, y) => x - y); return s.length ? s[s.length >> 1] : null; };
 const H = r => r[3] - r[1], Wd = r => r[2] - r[0];
 const union = rs => rs.length ? [Math.min(...rs.map(r => r[0])), Math.min(...rs.map(r => r[1])), Math.max(...rs.map(r => r[2])), Math.max(...rs.map(r => r[3]))] : null;
@@ -103,7 +115,7 @@ function evalRaw(raw, scale) {
       const cy = Math.abs((P[1] - box[1]) - (box[3] - P[3])) / H(box), cx = Math.abs((P[0] - box[0]) - (box[2] - P[2])) / Wd(box);
       const ex = { box: box.map(r1), product: P.map(r1), src: prod.src, p: prod.p }, back = s.stepCards > 0;   // behind the screen's step cards: a backdrop
       const judge = v => back && v !== 'pass' ? 'pass' : v, bx = back ? { note: 'backdrop behind the step cards: reported, not judged' } : {};
-      add('L1', 'fill', s.id, 'product', r3(fill), '≥ ' + TOL.L1.fill[0] + ' of its column (band) in height or width', judge(highIsGood(fill, TOL.L1.fill)), Object.assign({ fillH: r3(H(P) / H(box)), fillW: r3(Wd(P) / Wd(box)) }, ex, bx));
+      add('L1', 'fill', s.id, 'product', r3(fill), FILL_TOL() + ' of its column (band) in height or width', judge(fillSev(fill)), Object.assign({ fillH: r3(H(P) / H(box)), fillW: r3(Wd(P) / Wd(box)) }, ex, bx));
       add('L1', 'inside box', s.id, 'product', r1(over), '≤ ' + TOL.L1.over[0] + ' px past the screen\'s left half (16 px from its edge, header to dock)', lowIsGood(over, TOL.L1.over), Object.assign({}, ex, { room: room.map(r1) }));
       add('L1', 'centre y', s.id, 'product', r3(cy), '≤ ' + TOL.L1.centreY[0] + ' (|gap above − below| / band)', judge(lowIsGood(cy, TOL.L1.centreY)), Object.assign({}, ex, bx));
       if (prod.pic) add('L1', 'distortion', s.id, 'product canvas', prod.pic.distortion, '≤ ' + TOL.L1.distortion[0], lowIsGood(prod.pic.distortion, TOL.L1.distortion));
@@ -121,7 +133,7 @@ function evalRaw(raw, scale) {
       const box = s.env.stage;
       const fill = Math.max(H(P) / H(box), Wd(P) / Wd(box)), cy = Math.abs((P[1] - box[1]) - (box[3] - P[3])) / H(box), cx = Math.abs((P[0] - box[0]) - (box[2] - P[2])) / Wd(box);
       const ex = { box: box.map(r1), product: P.map(r1) };
-      add('L1', 'fill', s.id, 'product in stage', r3(fill), '≥ ' + TOL.L1.fill[0], highIsGood(fill, TOL.L1.fill), ex);
+      add('L1', 'fill', s.id, 'product in stage', r3(fill), FILL_TOL(), fillSev(fill), ex);
       add('L1', 'centre y', s.id, 'product in stage', r3(cy), '≤ ' + TOL.L1.centreY[0], lowIsGood(cy, TOL.L1.centreY), ex);
       add('L5', 'centred in stage', s.id, 'product in stage', r3(cx), '≤ ' + TOL.L5.cx[0], lowIsGood(cx, TOL.L5.cx), ex);
     }
@@ -134,8 +146,8 @@ function evalRaw(raw, scale) {
         const fill = Math.max(H(Pp) / H(box), Wd(Pp) / Wd(box)), cy = Math.abs((Pp[1] - box[1]) - (box[3] - Pp[3])) / H(box), cx = Math.abs((Pp[0] - box[0]) - (box[2] - Pp[2])) / Wd(box);
         const over = Math.max(0, box[0] - Pp[0], Pp[2] - box[2], box[1] - Pp[1], Pp[3] - box[3]);
         const ex = { box: box.map(r1), product: Pp.map(r1), src };
-        add('L1', 'fill', s.id, 'product in block', r3(fill), '≥ ' + TOL.L1.fill[0], highIsGood(fill, TOL.L1.fill), Object.assign({ fillH: r3(H(Pp) / H(box)), fillW: r3(Wd(Pp) / Wd(box)) }, ex));
-        add('L1', 'inside box', s.id, 'product in block', r1(over), '0 px outside', lowIsGood(over, TOL.L1.over), ex);
+        add('L1', 'fill', s.id, 'product in block', r3(fill), FILL_TOL(), fillSev(fill), Object.assign({ fillH: r3(H(Pp) / H(box)), fillW: r3(Wd(Pp) / Wd(box)) }, ex));
+        add('L1', 'inside box', s.id, 'product in block', r1(over), '≤ ' + TOL.L1.over[0] + ' px outside its block', lowIsGood(over, TOL.L1.over), ex);
         add('L1', 'centre y', s.id, 'product in block', r3(cy), '≤ ' + TOL.L1.centreY[0], lowIsGood(cy, TOL.L1.centreY), ex);
         if (s.still && mode === 'flow' && s.id !== 'open') add('L1', 'distortion', s.id, 'block still', s.still.distortion, '≤ ' + TOL.L1.distortion[0], lowIsGood(s.still.distortion, TOL.L1.distortion));
         add('L5', 'centred in block', s.id, 'product in block', r3(cx), '≤ ' + TOL.L5.cx[0], lowIsGood(cx, TOL.L5.cx), ex);
@@ -195,11 +207,11 @@ function evalRaw(raw, scale) {
     const full = b.lines.length > 1 ? b.lines.slice(0, -1) : [];
     const longest = Math.max(...b.lines.map(l => l.chars));
     if (full.length) {
-      const cpl = Math.max(...full.map(l => l.chars)), lo = Math.min(...full.map(l => l.chars));
+      const cpl = Math.max(...full.map(l => l.chars)), lo = median(full.map(l => l.chars));   // one short line before a long word is not the measure
       const sevHi = cpl <= TOL.L2.cpl[0][1] ? 'pass' : cpl <= TOL.L2.cpl[1][1] ? 'low' : 'high';
       const sevLo = lo >= TOL.L2.cpl[0][0] ? 'pass' : lo >= TOL.L2.cpl[1][0] ? 'low' : 'high';
       const sev = [sevHi, sevLo].includes('high') ? 'high' : [sevHi, sevLo].includes('low') ? 'low' : 'pass';
-      add('L2', 'line length', where, label(b), cpl, TOL.L2.cpl[0].join('–') + ' chars per full line', sev, { min: lo, lines: b.lines.map(l => l.chars) });
+      add('L2', 'line length', where, label(b), cpl, TOL.L2.cpl[0].join('–') + ' chars per full line (longest; median ≥ ' + TOL.L2.cpl[0][0] + ')', sev, { median: lo, lines: b.lines.map(l => l.chars) });
     } else if (longest > TOL.L2.cpl[0][1]) add('L2', 'line length', where, label(b), longest, '≤ ' + TOL.L2.cpl[0][1] + ' chars', longest <= TOL.L2.cpl[1][1] ? 'low' : 'high');
   }
   function widows(b, where) {   // L2: no single short word on a heading's last line
@@ -395,7 +407,7 @@ function groups(fails) {
 const fmtV = f => {
   const v = typeof f.value === 'number' ? f.value : JSON.stringify(f.value);
   const x = [];
-  for (const k of ['fillH', 'fillW', 'dyPx', 'above', 'below', 'left', 'right', 'min', 'nearest', 'w', 'h']) if (f[k] != null) x.push(k + ' ' + f[k]);
+  for (const k of ['fillH', 'fillW', 'dyPx', 'above', 'below', 'left', 'right', 'median', 'nearest', 'w', 'h']) if (f[k] != null) x.push(k + ' ' + f[k]);
   if (f.heights) x.push('heights ' + f.heights.join('/')); if (f.feetAboveBox) x.push('feet ' + f.feetAboveBox.join('/')); if (f.feet) x.push('feet ' + f.feet.join('/'));
   if (f.gaps && typeof f.gaps[0] !== 'object') x.push('gaps ' + f.gaps.join('/'));
   if (f.gaps && typeof f.gaps[0] === 'object') x.push(f.gaps.map(g => g.join(' ')).join(', '));
@@ -411,7 +423,7 @@ function report(res, o = {}) {
   const target = o.target || 'mitotech-cell-booster', notes = o.notes || {}, L = [];
   const pg = res.pages[target];
   L.push(`# Вёрстка по замерам (L1–L7): ${target}`, '');
-  L.push(`Сгенерировано ${res.generated.slice(0, 16).replace('T', ' ')} скриптом \`site/proto/qa/layout-check.cjs\` (замеры DOM, Range-строк и альфы картинок, без скриншотов). ` +
+  L.push(`Сгенерировано ${res.generated.slice(0, 16).replace('T', ' ')} UTC скриптом \`site/proto/qa/layout-check.cjs\` (замеры DOM, Range-строк и альфы картинок, без скриншотов). ` +
     `Эталоны: ${res.refs.join(', ')}. Правила и допуски — \`design-rules.md\`, раздел «Сайт v2 — вёрстка по замерам (L1–L7)». Полные значения — \`${target}.layout.json\`.`, '');
   if (notes._summary) L.push(notes._summary, '');
   L.push('## Сводка', '', '| Страница | экраны | проверок | pass | low | high | L1 | L2 | L3 | L4 | L5 | L6 | L7 |', '|---|---|---|---|---|---|---|---|---|---|---|---|---|');
@@ -421,7 +433,7 @@ function report(res, o = {}) {
   }
   L.push('', 'В колонках L1–L7: high/low.', '');
   L.push('## Правила и допуски', '');
-  for (const [k, t] of Object.entries(RULES)) L.push(`- **${k}** — ${t}. Допуски: \`${JSON.stringify(res.tolerances[k])}\``);
+  for (const k of Object.keys(RULES)) L.push(`- **${k}** — ${RULES_RU[k]}. Допуски [pass, low]: \`${JSON.stringify(res.tolerances[k])}\``);
   L.push('');
   // the values: the main measures of the target page, screen by screen, on every viewport (✓ pass, · low, ✗ high)
   if (pg) {
@@ -441,7 +453,7 @@ function report(res, o = {}) {
     L.push(`## ${title}`, '');
     for (const g of groups(p.failures)) {
       const vps = g.items.map(i => i.vp), vals = g.items.slice(0, 4).map(i => `${i.vp}: ${fmtV(i)}`).join('; ') + (g.items.length > 4 ? `; … ещё ${g.items.length - 4}` : '');
-      const n = notes[slug + '|' + [g.rule, g.check, g.where, g.el].join('|')] || notes[slug + '|' + [g.rule, g.check].join('|')];
+      const n = notes[slug + '|' + [g.rule, g.check, g.where, g.el].join('|')] || notes[slug + '|' + [g.rule, g.check, g.where].join('|')] || notes[slug + '|' + [g.rule, g.check].join('|')];
       L.push(`- **${g.sev}** ${g.rule} ${g.check} — ${g.where} — ${g.el}. ${vps.length === Object.keys(p.viewports).length ? 'все экраны' : vps.join(', ')}. Допуск: ${g.tol}. Значения: ${vals}` + (n ? `\n  - ${n}` : ''));
     }
     if (!p.failures.length) L.push('Нарушений нет.');
@@ -465,9 +477,12 @@ function cli(args) {
   const notes = opt.notes && fs.existsSync(opt.notes) ? JSON.parse(fs.readFileSync(opt.notes, 'utf8')) : {};
   res.notes = notes;
   fs.mkdirSync(path.dirname(outJson), { recursive: true });
-  fs.writeFileSync(outJson, JSON.stringify(res, null, 1));
+  const out = Object.assign({}, res, { target, tool: 'site/proto/qa/layout-check.cjs', pages: {} });
+  for (const [k, p] of Object.entries(res.pages)) out.pages[k] = k === target ? p
+    : { slug: k, summary: p.summary, failures: p.failures, viewports: Object.fromEntries(Object.entries(p.viewports).map(([v, x]) => [v, { mode: x.mode, ms: x.ms, errs: x.errs, counts: x.counts }])) };
+  fs.writeFileSync(outJson, JSON.stringify(out));
   fs.writeFileSync(outMd, report(res, { target, notes }));
   for (const p of Object.values(res.pages)) console.log(p.slug, 'viewports', Object.keys(p.viewports).length, 'pass', p.summary.pass, 'low', p.summary.low, 'high', p.summary.high);
 }
 
-module.exports = { TOL, RULES, evaluate, evalRaw, report, groups, scaleOf, cli };
+module.exports = { TOL, RULES, RULES_RU, evaluate, evalRaw, report, groups, scaleOf, cli };

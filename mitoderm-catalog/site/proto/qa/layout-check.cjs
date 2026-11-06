@@ -9,10 +9,14 @@
 // usage:
 //   FONTDIR=<dir with Rubik[wght].ttf> THREE=<three.module.min.js of three@0.160.0> NODE_PATH=$(npm root -g) \
 //     node layout-check.cjs run <slug> <page.html> <files dir> <raw dir> [viewports, e.g. 1440x900x1,390x844x3t]
-//   node layout-check.cjs eval <raw dir> <out.json> <out.md> --target <slug> [--refs slug,slug]
+//   node layout-check.cjs eval <raw dir> <out.json> <out.md> --target <slug> [--refs slug,slug] [--notes notes.json]
 // A viewport is WxHxDPR, with a trailing t for a touch screen (isMobile + hasTouch). The raw file of a page and
 // viewport is <raw dir>/<slug>__<viewport>.json; run skips the ones that exist (a restart goes on where it stopped).
-// As a module (the page map): require('./layout-check.cjs') → { VIEWPORTS, install, measure, evaluate, report }.
+// The refs (default exotech-gel, exocell-mask: the owner-approved pages) give the type scale; notes.json holds the
+// verdicts on failures, keyed "<slug>|<rule>|<check>[|<where>[|<element>]]", and "_summary" for the report's top.
+// As a module (the page map): require('./layout-check.cjs') → install(context, { html, files }) before the page opens,
+// measure(page) → the raw record of the page at this viewport (or page.evaluate(() => __LC.plan() / __LC.screen(id) /
+// __LC.series(kind)) at its own scroll positions), evaluate(raws, { refs }) → values and verdicts, report(result).
 const fs = require('fs'), path = require('path');
 const PAGE_JS = path.join(__dirname, 'layout-page.js');
 const ORIGIN = 'https://live.test/';
