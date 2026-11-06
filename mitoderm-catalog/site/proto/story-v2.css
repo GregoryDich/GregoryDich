@@ -16,10 +16,11 @@ main, .foot { z-index: 20; } .top { z-index: 40; } .dock { z-index: 45; } .bar {
    scene sends the pair back into the dark before card 01's picture enters the screen and brings it back only once card
    05's has left it (story-v2-motion.js window.__mtCards); once it is out the canvas is hidden (html.mt-cards0): never the
    3D pair and a picture of it at once, never a see-through pair alone. Reduced motion (no move): the canvas fades instead.
-   The step cards come in by scroll alone (no reveal: never a blank while a picture waits to fade in) */
+   The step cards come in by scroll alone, on a desktop and in the phone's blocks (no reveal: never a blank while a
+   picture waits to fade in after the 3D has gone) */
 html.mt-cards0 #seq { opacity: 0 !important; }
 @media (prefers-reduced-motion: reduce) { html.mt-cards #seq { opacity: var(--mt-cards, 0) !important; } }
-html.story:not(.flow) .mt-step.rv { opacity: 1; transform: none; transition: none; }
+html.story .mt-step.rv { opacity: 1; transform: none; transition: none; }
 /* the lead form's panel: no smoke picture on v2, the same gradient and a soft mint glow behind the kit */
 .lead-panel { background: radial-gradient(60% 55% at 50% 45%, rgb(120 224 188 / .14), transparent 70%), linear-gradient(180deg, #0a0a0b, #111114); }
 /* only what exists (owner 22/10): no dot-ring on the pins, no rule after the kickers */

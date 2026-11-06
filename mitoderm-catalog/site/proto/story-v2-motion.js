@@ -75,6 +75,10 @@
         // has ended by then (its canvas's top 8 px under the header), and the canvas moves on only after this block
         var s = k < st.length && seq[k][0].querySelector('.stage-still'), r = s && s.getBoundingClientRect();
         if (r && r.height) dist = (r.top - old) - (a.top + r.bottom - b.top);
+        // the step cards after the protocol's block: that block ends on the kit, S1's own pose (scenes/mitotech-cell-booster.js
+        // story(): p 6 is p 1's kit, drawn alike in every block); its foot where S1's still has it in its block, not the block's foot
+        var s1 = k === st.length && st[1] && st[1].querySelector('.stage-still'), q = s1 && s1.getBoundingClientRect();
+        if (q && q.height) dist = b.top - old - (a.top + q.bottom - st[1].getBoundingClientRect().top);
         g = Math.max(0, Math.ceil(room - dist + 4));
       }
       if (Math.abs(g - old) > 0.5) set.push([box, g]);
@@ -84,12 +88,18 @@
   }
   // a tablet turned (or a window resized) across 899 px: desktop screens ↔ phone blocks, another page, where the browser's
   // own anchoring lands the reader elsewhere (S5 → the footer). The place being read is kept on scroll (the stretch between
-  // two marks – a screen's top, the step cards', the footer's – that the screen's reading line is in, and how far into it)
-  // and put back under that line once the other layout's gaps are written (applyGaps, the frame after the flip)
-  var marks = Array.prototype.slice.call(document.querySelectorAll('main > section, .mt-prep, .foot')), at = null, atQ = small.matches, turned = false;
-  function stretch() {   // the marks shown and their tops in the page, the page's foot last
-    var m = marks.filter(function (e) { return e.getClientRects().length; });
-    return { m: m, t: m.map(function (e) { return e.getBoundingClientRect().top + scrollY; }).concat(root.scrollHeight) };
+  // two marks – a screen's top, the step cards' top and foot, the footer's – that the screen's reading line is in, and how
+  // far into it) and put back under that line once the other layout's gaps are written (applyGaps, the frame after the flip)
+  var marks = Array.prototype.slice.call(document.querySelectorAll('main > section, .mt-prep, .foot')), prep = document.querySelector('.mt-prep');
+  var at = null, atQ = small.matches, turned = false;
+  function stretch() {   // the marks shown and their tops in the page, the page's foot last; the step cards' foot is one too (a
+    var m = [], t = [];   // desktop's five cards fill their stretch, a phone's single row ends long before the offer's gap)
+    marks.forEach(function (e) {
+      if (!e.getClientRects().length) return;
+      var r = e.getBoundingClientRect(); m.push(e); t.push(r.top + scrollY);
+      if (e === prep) { m.push('prep-foot'); t.push(r.bottom + scrollY); }
+    });
+    return { m: m, t: t.concat(root.scrollHeight) };
   }
   function remember() {
     if (small.matches !== atQ) return;   // the query has flipped: this scroll is the browser's, not the reader's
