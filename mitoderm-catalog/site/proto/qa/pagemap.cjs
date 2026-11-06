@@ -14,7 +14,8 @@
 //       [--raw <dir>] [--three <three.module.min.js>] [--fonts <dir with Rubik[wght].ttf>] [--step 10] [--slug <slug>]
 //   node qa/pagemap.cjs --from-raw <raw dir> [--out <dir>]     the checks and the map again from a probe's raw data
 //   node qa/pagemap.cjs --spot <map.json> <page.html> <files dir> [--viewports key|<list>] [--out <dir>]
-//       the pictures the numbers ask for (real three.js): each flag's worst step, the dive's light, the amber glass (spot())
+//       [--classes CUT,EMPTY,…,colour]  the pictures the numbers ask for (real three.js): each flag's worst step (≤ 3 per
+//       kind), the dive's light, the amber glass (spot())
 // Timing (06/11, 4 CPUs, no GPU): the 15 modes of one build in about 2 minutes (7–10 s a screen, 3–5 s without 3D).
 // <page.html>: the page as built (a body fragment: the host adds the document shell); <files dir>: the folder published
 // with it (img/…). Viewports: WxH[@dpr][t] (t: touch, a phone or tablet), nojs-… (no JavaScript: the page's scripts
@@ -793,6 +794,9 @@ function analyseAll(runs, out) {
 const KEYVP = ['1280x720', '1440x900', '1920x1080', '390x844@3t'];
 const CLS_RU = { CUT: 'срез', UNDER_CHROME: 'под шапкой/панелью', UNDER_TEXT: 'под текстом', TWO_PRODUCTS: 'два продукта', GHOST: 'просвечивает',
   POP: 'скачок', EMPTY: 'пустая сцена', RUN_SPAN: 'короткий прогон', LAYOUT: 'вёрстка', HD: 'HD' };
+const DES_RU = { solid: 'деталь гаснет целиком', 'round-edge': 'круглое затухание края', 'amber-glow': 'янтарный свет', handover: 'передача 3D ↔ картинка',
+  'into-the-dark': 'уход в темноту', 'small-part': 'малая деталь гаснет', 'edge-strip': 'мягкий край', 'faded-under-dock': 'погашено под док-панелью',
+  'faded-under-header': 'погашено под шапкой', 'faded-under-bar': 'погашено под панелью', 'faded-under-card': 'погашено под карточкой' };
 function fmtV(v) { return Object.entries(v || {}).map(([k, x]) => k + ' ' + (Array.isArray(x) ? x.join('/') : typeof x === 'object' && x ? JSON.stringify(x) : x)).join(', '); }
 function markdown(map, old) {
   const cfg = PAGES[map.page] || {}, sc = map.screens, ids = Object.keys(sc), key = KEYVP.filter(k => sc[k]);
@@ -801,11 +805,11 @@ function markdown(map, old) {
   const yr = y => y ? (y[0] === y[1] ? String(y[0]) : y[0] + '–' + y[1]) : '—';
   L.push(`# ${cfg.title || map.page} — карта страницы`, '',
     `Рабочая заметка (генерирует \`site/proto/qa/pagemap.cjs\`, данные — \`${map.page}.json\` рядом). Сборка \`${map.build.file}\` · md5 \`${map.build.md5}\` · проверка ${when} · шаг ${map.tool.step} px · ${ids.length} режимов за ${map.timing.total_s} с` + (cfg.link ? ` · ссылка ${cfg.link}` : '') + '.', '',
-    'Как читать: координата y — прокрутка страницы в px (scrollY) на данном экране; p — позиция истории (0 открытие … 5 S5, 6 набор на карточке; дробная часть — прогон). Пересобрать: `node qa/pagemap.cjs <page.html> <files dir> --out ../pagemap` (около 3 мин на все режимы); только проверки по сохранённым данным: `--from-raw <raw dir>`.', '');
+    'Как читать: координата y — прокрутка страницы в px (scrollY) на данном экране; p — позиция истории (0 открытие … 5 S5, 6 набор на карточке; дробная часть — прогон). Пересобрать: `node qa/pagemap.cjs <page.html> <files dir> --out ../pagemap` (около 2 мин на все 15 режимов); только проверки по сохранённым данным: `--from-raw <raw dir>`.', '');
   // 1. the result
   L.push('## Итог проверки', '', '| экран | режим | шагов | с | флаги | принятые затухания (дизайн) |', '|---|---|---|---|---|---|');
   for (const id of ids) { const m = sc[id];
-    L.push(`| ${id} | ${m.mode}${m.kind !== 'live' ? ' (' + m.kind + ')' : ''} | ${m.steps} | ${m.probe_s} | ${m.flags.length ? Object.entries(m.count).map(([k, v]) => `${k} ${v}`).join(', ') : 'нет'} | ${m.design.map(x => x.kind.replace('FADE:', '')).join(', ') || '—'} |`); }
+    L.push(`| ${id} | ${m.mode}${m.kind !== 'live' ? ' (' + m.kind + ')' : ''} | ${m.steps} | ${m.probe_s} | ${m.flags.length ? Object.entries(m.count).map(([k, v]) => `${k} ${v}`).join(', ') : 'нет'} | ${m.design.map(x => DES_RU[x.kind.replace('FADE:', '')] || x.kind.replace('FADE:', '')).join(', ') || '—'} |`); }
   L.push('');
   const flagged = ids.filter(id => sc[id].flags.length);
   if (flagged.length) {
@@ -837,13 +841,13 @@ function markdown(map, old) {
   // 5. the rules
   const th = map.tool.thresholds;
   L.push('', '## Правила заказчика → проверки по числам', '', '| правило | флаг | как считается |', '|---|---|---|',
-    `| продукт не режется прямой линией (край сцены, экрана) | CUT | рамка каждого объекта (коробка, флакон) вне видимой части сцены > ${th.cutPx} px; остаток на краю после затуханий > ${th.cutResid} → hard; закрыт мягкой прямой полосой, а продукт вышел за край ≥ ${th.softFrac * 100}% размера и ≥ ${th.softPx} px → soft-band; круглое затухание ≥ ${th.roundW} — норма |`,
+    `| продукт не режется прямой линией (край сцены, экрана) | CUT | рамка объекта (коробка, флакон) касается края видимой части сцены (≤ ${th.touchPx} px) или выходит за него, а затухания оставляют там > ${th.cutResid} → touch / hard; прямая мягкая полоса (старая виньетка, полоса края) гасит его > ${th.bandDim * 100} % на ≥ ${th.softFrac * 100} % размера и ≥ ${th.softPx} px → soft-band; круглое затухание ≥ ${th.roundW} — норма |`,
     `| не под шапкой, док-панелью, нижней панелью, телом карточки | UNDER_CHROME | пересечение рамки детали с панелью ≥ ${th.overPx} px (компьютер — всегда; телефон/планшет — пока идёт прогон; там же выход за край экрана) |`,
     `| продукт не под текстом, текст не на нём | UNDER_TEXT | строки текста (Range) против рамок деталей 3D и нарисованной части картинок, ≥ ${th.overPx}×${th.overPx} px |`,
     `| никогда два продукта сразу | TWO_PRODUCTS | 3D (видимые детали или янтарный свет) и каждая картинка продукта ниже шапки, ≥ ${th.twoH} px и ≥ ${th.twoArea} px²; карточки шагов — одна серия |`,
     `| ничего не просвечивает | GHOST | твёрдая деталь (коробка, этикетка, колпачок, пробка, порошок) с прозрачностью ${th.ghost[0]}–${th.ghost[1]} без копии глубины, ≥ ${th.ghostPart} px²: over — поверх другой детали, air — одна в воздухе; с копией глубины — FADE (дизайн) |`,
     `| без скачков | POP | размер тела объекта за ${th.popDy} px прокрутки × > ${th.popSize}; смещение > ${th.popMove} размера (без полёта холста); появление/исчезновение не за коробкой (закрыто < ${th.popHidden * 100}%) |`,
-    '| без пустой сцены | EMPTY | компьютер: история идёт (p < 6), а на экране нет продукта; телефон: прогон идёт, сцена видна, продукта нет |',
+    `| без пустой сцены | EMPTY | компьютер: история идёт (p < 6), а продукта на экране нет ≥ ${th.emptyPx} px прокрутки (короче — передача 3D ↔ картинка); телефон: прогон идёт, сцена видна, продукта нет; dim: в нырке сильнейшее из света и продукта < ${th.dim} (и посередине между шагами) — тёмный кадр |`,
     `| прогону хватает прокрутки | RUN_SPAN | телефон < ${th.runMin.flow} px, компьютер < ${th.runMin.desk} px |`,
     '| компьютер: продукт слева, текст справа; телефон: заголовок → сцена → текст; ничего за краем | LAYOUT | строка текста левее середины продукта рядом с ним; картинка карточки шага правее её текста; порядок блоков на телефоне; горизонтальная прокрутка; строки и картинки за краем экрана |',
     `| HD | HD | пиксели холста и картинок ≥ ${th.hd} × CSS × DPR (компьютер ≤ 2, телефон — DPR экрана) |`,
@@ -853,7 +857,11 @@ function markdown(map, old) {
   L.push('## Открытые вопросы заказчику', '');
   try { const q = fs.readFileSync(path.join(__dirname, cfg.questions), 'utf8'), m = /## 6\.[^\n]*\n([\s\S]*?)(?:\n## |\s*$)/.exec(q);
     const items = m ? m[1].split(/\n(?=\d+\. )/).map(x => x.trim()).filter(x => /^\d+\./.test(x)) : [];
-    for (const it of items) L.push('- ' + it.split('\n')[0].replace(/^\d+\.\s*/, '').slice(0, 300));
+    for (const it of items) {   // the question's first sentence (and its «Вопрос: …» one, or a second when the first is short)
+      const t = it.replace(/^\d+\.\s*/, '').replace(/\s*\n\s*/g, ' '), ss = t.split(/(?<=[.?!])\s+/);
+      const q = ss.find((x, k) => k > 0 && /^Вопрос/.test(x)), out = [ss[0]].concat(q ? [q] : ss[0].length < 120 && ss[1] ? [ss[1]] : []).join(' ');
+      L.push('- ' + (out.length > 420 ? out.slice(0, 400) + '…' : out));
+    }
     L.push('', 'Полный список (новые строки на «ок», бейдж линейки, аппликаторы в наборе) — `state/mitotech/texts-for-approval.md`.');
   } catch (e) { L.push('— (файл вопросов не найден)'); }
   return L.join('\n') + '\n';
@@ -888,11 +896,16 @@ async function spot(mapFile, pageFile, files, out) {
   for (const id of vids) {
     const m = map.screens[id], vp = parseVp(id), jobs = [];
     const b = vp.kind === 'nogl' ? (nogl = nogl || await chromium.launch({ args: ['--disable-3d-apis'] })) : live;
-    for (const f of m.flags) if (!/RUN_SPAN|HD|LAYOUT/.test(f.cls))   // a span, a resolution, a static layout: no picture needed
-      jobs.push({ why: f.cls + '/' + f.sub, y: f.at != null ? f.at : f.y[0], test: f.sub === 'dim' ? 'dive' : null });
-    const glow = (m.design.find(x => x.kind === 'FADE:amber-glow') || {}).y;
+    // a flag's worst step (a span, a resolution, a static layout need no picture); at most 3 per kind (--classes: only these)
+    const only = opt('--classes') ? opt('--classes').split(',') : null, per = {};
+    for (const f of m.flags.slice().sort((x, y) => (y.v && y.v.h || 0) - (x.v && x.v.h || 0))) {
+      if (/RUN_SPAN|HD|LAYOUT/.test(f.cls) || (only && !only.includes(f.cls))) continue;
+      const k = f.cls + '/' + f.sub; if ((per[k] = (per[k] || 0) + 1) > 3) continue;
+      jobs.push({ why: k, y: f.at != null ? f.at : f.y[0], test: f.sub === 'dim' ? 'dive' : null });
+    }
+    const colour = !only || only.includes('colour'), glow = colour && (m.design.find(x => x.kind === 'FADE:amber-glow') || {}).y;
     if (glow && glow[0]) for (const t of [0.25, 0.5, 0.75]) jobs.push({ why: 'dive-light-' + t * 100, y: Math.round(glow[0][0] + t * (glow[0][1] - glow[0][0])), test: 'dive' });
-    const s3 = (m.holds || []).find(h => h.p === 3);   // a phone's block holds its pose while it scrolls away: its start
+    const s3 = colour && (m.holds || []).find(h => h.p === 3);   // a phone's block holds its pose while it scrolls away: its start
     if (s3) jobs.push({ why: 'amber-glass', y: m.mode === 'flow' ? s3.y[0] : Math.round((s3.y[0] + s3.y[1]) / 2), test: 'amber' });
     if (!jobs.length) continue;
     const ctx = await b.newContext({ viewport: { width: vp.w, height: vp.h }, deviceScaleFactor: vp.dpr, isMobile: vp.touch, hasTouch: vp.touch });
