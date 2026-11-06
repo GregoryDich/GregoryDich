@@ -53,7 +53,7 @@
 ## Что осталось (на 04/11 вечер)
 
 **Могу сам, без заказчика:**
-- **Образец страницы MITOTECH CELL BOOSTER** — v2 опубликован 05/11 по той же ссылке: https://claude.ai/artifact/G3tdcwusRsVdw4E5HeGM5s
+- **Образец страницы MITOTECH CELL BOOSTER** — v3 опубликован 06/11 по той же ссылке: https://claude.ai/artifact/G3tdcwusRsVdw4E5HeGM5s
   (ждёт «ок» заказчика; что исправлено и QA — `PLAN.md` §22; вопросы по текстам — `state/mitotech/texts-for-approval.md`). Материалы: текст
   `state/mitotech/canon-v2.md`, рендер `site/design/mitotech/packshot-kit-r15.png`, печатные PDF
   `site/design/mitotech/print/`, сценарий v1 во временной папке `scenarios/mitotech-cell-booster.md`.
