@@ -1,0 +1,41 @@
+# EXOTECH GEL — production prompts (v3 clinic film)
+
+Companion of `src/exotech-gel.md` (the Hebrew chapter is the contract). Shared bible = `prompts/exo-nad.md` §0 (cast `cast-C01`,
+room `set-R01`, look, shared negative, aspect plan, MODEL classes): paste it on top of every prompt. Line accent GOLD `#c9a24b`.
+MODEL = `per costs.json → <class>` (costs.json not on disk at writing time; fill id + params before the first paid run; price +
+balance, run only after "approved"). Aspect: master 16:9 1920×1080 → upscale ×2; shots with people re-generated 9:16 from their
+own vertical still; product-only shots cropped. Each shot ≤ 5 s generated, trimmed to the listed length.
+
+**Product fidelity:** cube + sphere jar = OUR three.js scene `site/proto/scenes/exotech-gel.js` via `render-keys.cjs` (3840×2400,
+alpha; page copies `site/public/exotech-gel/img/still.webp`, `kit.webp`; print `site/proto/img/exotech-gel-3d/jar-print.png`,
+`box-print.png`). The scene already opens the jar as in the owner's photos 19/10 (quarter-turn unscrew, lift, tip back; silver
+collar and shoulder, white threaded cup, gel) — F04 and F08 use it: (a) composite stills, (b) i2v + `replace-object` with our render,
+(c) three.js lid motion composited over generated hands. The sphere never turns more than ±8° (back unphotographed); on-screen
+size limit until HD photos arrive (see `facts.json`). PACKAGING: mirror-gold cube, black diagonal panel on the left, black
+'EXOTECH' ('EXO' bold) + italic letter-spaced 'G E L'; polished gold sphere jar with a thin seam, 'EXOTECH' / italic 'GEL'.
+**GEL COLOUR IS BLOCKING:** "white like cream" (owner 18/10) vs pale translucent yellow (photos 19/10, scene). F04–F07 wait for it.
+**Extra negative (all shots):** `no spatula unless MITODERM confirms one, no other jars or cosmetics, no sparkles or gold flecks in
+the gel, no glow or smoothing added to the skin, the cube never opens`.
+
+**Stills first:** `exotech-gel-K01` client casting, 4:5 ×2 — `Portrait photograph in set-R01: a woman about 55, Fitzpatrick II–III,
+light natural make-up, hair down, a camel coat over her arm, standing by the mirror at the end of a clinic visit; real mature skin,
+dry and tired with fine lines, dignified and warm, 50mm, f/2, window light from the right, fine grain.` `clinic-table-exotech-gel` =
+`set-T01` with GOLD haze.
+
+| shot | purpose · s · scroll | start → end frame | still prompt (key) | video prompt | model · fidelity | QA |
+|---|---|---|---|---|---|---|
+| F01 | rung 1, cube on table · 3 · 0–100 | `clinic-table-exotech-gel` + our cube render → 12 % tighter | none (composite) | none (eased crop) | none · (a) | mirror gold reflects THIS room (re-render with an env map of `set-R01`); print sharp; frame 0 = home transition end |
+| F02 | rung 2, "and at home?" · 4 · 100–240 | S02a → S02b | S02a: `Over-the-shoulder into the brass-rimmed mirror: client exotech-gel-K01, coat over her arm, fingertips on her dry cheek, a quiet questioning look; right third dark wall; 50mm f/2, window light right, real skin, fine grain.` S02b: same + `cast-C01 behind her, hand on her shoulder, eyes meet in the mirror, reassuring half-smile.` | `Start exactly on the first frame and end exactly on the last. She touches her cheek and looks; the cosmetologist steps in and rests a hand on her shoulder; eyes meet in the reflection. Slow lateral dolly, 50mm, one take, 4 s.` | i2v-first-last, char refs C01+K01 · no product | fingers; mirror geometry; same face as F10 |
+| F03 | transition, the jar arrives · 4 · 240–340 | F01 still → sphere landed beside the cube + gloved hand (= F04 frame 0) | none | three.js: sphere from room depth, slow tumble with the back only in shadow/rim light, slows, print squares to camera, lands beside the cube, small settle, contact shadow; 40 frames 3840 alpha over the plate. Paid fallback: i2v-first-last + replace-object | none / i2v + replace-object | print sharp at the end; no float; never a clear view of the back |
+| F04 | rung 3, discovery · 3 · 340–460 | F03 last → our open-jar render (scene pose S3) composited → S04 | S04: `Three-quarter high angle over cast-C01's shoulder, pale nitrile gloves: she holds the lifted gold dome lid tipped back above an open gold sphere jar (our render composited), the white cup with the gel visible; eyebrow lifted, small smile; 50mm f/2.2, window light right.` | `Start on the first, end on the last. Her hands turn the gold lid a quarter turn, lift it and tip it back; the silver collar and the white cup with the gel appear; she looks in, eyebrow lifts. Slight crane down into the jar, 50mm, one take, 3 s.` | i2v-first-last + replace-object, or (c) three.js lid over hands | lid only turns then lifts; full print on the lid; cube stays closed |
+| F05 | rung 3, texture · 2 loop · 460–520 | M05 = M05 | M05: `Macro, 100mm f/4: the surface of the gel in a white jar cup, a soft swirl, warm window highlight, the cup lip at the frame edge; gel colour per MITODERM.` | `Seamless 2 s loop; only the highlight drifts across the gel. Locked.` | i2v-loop | colour per answer; no particles, no exosome "spheres" |
+| F06 | rung 4, demonstration · 3 · 520–620 | S06a → S06b | S06a: `Macro profile, 100mm: client K01 seated, eyes closed, calm; gloved fingertips with a small amount of gel touching her cheek.` S06b: same, `the thin layer massaged in and almost absorbed.` | `Start on the first, end on the last. Fingertips spread a thin layer over the cheek in small circles until it is absorbed. Short dolly along the cheek, one take, 3 s.` | i2v-first-last | thin layer, absorbed at the end; skin identical in both frames |
+| F07 | rung 4, "morning and evening" · 3 · 620–700 | S07a → S07b | S07a: `Over-the-shoulder into the mirror: client K01, no gloves, applying a thin layer to her own cheek with her fingertips; cast-C01 beside her, guiding with a small hand gesture; the open gold jar on the table (our render).` S07b: same, `a small "got it" smile.` | `Start on the first, end on the last. She smooths the gel in herself; the cosmetologist nods; she smiles. Locked, 50mm, 3 s.` | i2v-first-last + replace-object (jar) | mirror geometry; clean hands; jar print |
+| F08 | rung 4, it goes home · 2 · 700–760 | S08a → S08b | S08a: `Close, 85mm: cast-C01's hands closing the gold sphere jar (our render) above the client's open palms.` S08b: `the closed sphere resting in the client's cupped hands, 'EXOTECH GEL' toward camera.` | `Start on the first, end on the last. A quarter turn closes the lid; the jar is placed into the client's palms, her hands close around it. Locked, 2 s.` | i2v-first-last + replace-object (jar) | print sharp; same quarter-turn reversed; fingers |
+| F09 | proof · 5 · 760–900 | MITODERM material: `media/exotech-gel/testimonial-01.jpg` + quote, or `ba-01-before/after.jpg` (not in git) | none | quote card over the photo, or CSS wipe 800–900vh | none | consent; quote verbatim with name; dropped if nothing arrives |
+| F10 | joy · 4 · 900–1020 | S10a → S10b | S10a: `50mm: client K01 by the door, coat on, the gold cube in her hand, turning back toward cast-C01; skin exactly as in S02a.` S10b: same, `she smiles warmly; the cosmetologist smiles quietly, proud.` | `Start on the first, end on the last. She turns back and smiles a wordless thank-you; the cosmetologist smiles back. Slow dolly-in, one take, 4 s.` | i2v-first-last, char refs + replace-object (cube) | no skin change; same faces; cube print |
+| F11 | rung 5, offer · 3 · 1020–1120 | S11a → S11b | S11a: `35mm: cast-C01 alone leaning on the table, the gold cube and sphere beside her (our render, kit pose), eyes lowered; right third dark wall.` S11b: same, `eyes to camera, small warm smile.` | `Start on the first, end on the last. She lifts her eyes to the camera and holds the look. Locked, 3 s.` | i2v-first-last, very low motion | eyes alive; right third free for the form |
+| F12 | family · 2 · 1120–1200 | `site/design/home/hero/desktop-b.webp` → `desktop-a.webp` (phone `phone-b/a.webp`) | none | engine dissolve + zoom-out; EXOTECH GEL hotspot glows | none | no AI crowds/events |
+
+**Order:** after the EXO-NAD sample is approved and the gel colour is answered: K01 + table → owner OK → F08 as this film's sample
+(the hand-over is the story) → 480p → OK → rest. 2–4 attempts per paid item; nothing that fails QA goes to the site.
