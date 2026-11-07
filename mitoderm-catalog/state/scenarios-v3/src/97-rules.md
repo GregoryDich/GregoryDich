@@ -1,6 +1,6 @@
 # כללים: אמינות, חוק ואתיקה — רשימת בדיקה
 
-גרסה 3.0 · 08/11/2026 · מקורות: `state/scenarios-v3/BRIEF.md` (ד5) · `design-rules.md` (17/10: לפני/אחרי ופנים — רק אמיתיים) · `research/facts.json` (medical_claim_flags) · `site/sources/mitoderm-com/contacts.json` · `src/00-concept.md` · `src/02-production.md`
+גרסה 3.0 · 08/11/2026 · מקורות: `design-rules.md` (17/10: לפני/אחרי ופנים — רק אמיתיים) · `research/facts.json` (medical_claim_flags) · `site/sources/mitoderm-com/contacts.json` · `src/00-concept.md` · `src/02-production.md`
 
 זו רשימת עבודה של צוות התוכן וההפקה — לא ייעוץ משפטי. לפני הפרסום מומלצת בדיקה של עורך/ת דין בתחומי הגנת הצרכן, דיני התמרוקים
 והפרטיות (סעיף 7). כלל-על: מה שלא נוכל להוכיח לקוסמטיקאית שעומדת מולנו — לא עולה למסך.

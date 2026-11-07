@@ -267,19 +267,22 @@ const tBorder = { style: BorderStyle.SINGLE, size: 4, color: C.border };
 const tBorders = { top: tBorder, bottom: tBorder, left: tBorder, right: tBorder };
 function makeTable(header, rows, widths, opts = {}) {
   const total = widths.reduce((a, b) => a + b, 0);
-  const cell = (txt, w, isHead) => new TableCell({
+  // cost tables (a dollars row at the foot) stay on one page, so the totals never land alone under a repeated header: keepNext on every row but the last
+  const keepAll = rows.length <= 10 && !opts.wide && rows.some((r) => /בדולרים/.test(r[0] || ''));
+  const cell = (txt, w, isHead, keep = false) => new TableCell({
     width: { size: w, type: WidthType.DXA },
     borders: tBorders,
     margins: { top: 60, bottom: 60, left: 90, right: 90 },
     shading: isHead ? { type: ShadingType.CLEAR, color: 'auto', fill: C.head } : undefined,
     // keepNext on the header row: LibreOffice drops the body rows when a repeated header lands alone at a page foot
-    children: [new Paragraph({ bidirectional: true, spacing: { after: 0, line: 252 }, keepNext: isHead,
+    children: [new Paragraph({ bidirectional: true, spacing: { after: 0, line: 252 }, keepNext: isHead || keep,
       children: rtlRuns(txt, { table: true, wide: !!opts.wide, bold: isHead }) })],
   });
   const trs = [new TableRow({ tableHeader: true, cantSplit: true, children: header.map((h, i) => cell(h, widths[i], true)) })];
-  for (const r of rows) {
-    trs.push(new TableRow({ cantSplit: !!opts.cantSplit, children: widths.map((w, i) => cell(r[i] || '', w, false)) }));
-  }
+  rows.forEach((r, ri) => {
+    const keep = keepAll && ri < rows.length - 1;
+    trs.push(new TableRow({ cantSplit: !!opts.cantSplit, children: widths.map((w, i) => cell(r[i] || '', w, false, keep)) }));
+  });
   return new Table({
     width: { size: total, type: WidthType.DXA }, columnWidths: widths, layout: TableLayoutType.FIXED,
     visuallyRightToLeft: true, rows: trs,
@@ -393,7 +396,7 @@ function addChapter(slug, partNo) {
       const isWide = b.header.length >= WIDE_COLS;
       const total = land ? TEXT_W_LAND : TEXT_W;
       const size = isWide ? SZ.tableWide : SZ.table;
-      children.push(makeTable(b.header, b.rows, tableWidths(b.header, b.rows, total, size), { cantSplit: true, wide: isWide }));
+      children.push(makeTable(b.header, b.rows, tableWidths(b.header, b.rows, total, size), { cantSplit: true, wide: isWide, land }));
       children.push(new Paragraph({ spacing: { after: 120 }, children: [] }));
       return;
     }
@@ -436,7 +439,7 @@ PARTS.forEach((part, pi) => {
 
 // ---------- title page + TOC ----------
 const COVER_TITLE = 'תסריטי וידאו לדפי MITODERM — מהיכרות לאהבה';
-const COVER_SUB = 'גרסה 3.0 · 07/11/2026 · סרט בקליניקה · סולם המודעות · טופס מהבלוק הראשון';
+const COVER_SUB = 'גרסה 3.0 · 08/11/2026 · סרט בקליניקה · סולם המודעות · טופס מהבלוק הראשון';
 const titlePage = [
   new Paragraph({ spacing: { before: 3600 }, children: [] }),
   new Paragraph({ alignment: AlignmentType.CENTER, bidirectional: true, border: goldRule, spacing: { after: 480 },

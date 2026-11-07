@@ -28,6 +28,17 @@ grain, true colours, calm luxury editorial". Words never used: render, 3D, CGI, 
 One grade for the whole line: warm neutral, gently lifted blacks, no teal-and-orange. Grain is added later as a CSS/canvas
 overlay — ask the generator for CLEAN frames with only a trace of grain.
 
+Camera language block (moved here from `src/02-production.md` §2, item 3, so the client file stays Hebrew):
+
+```
+USE:   shot on a cinema camera · 35mm / 50mm / 85mm / 100mm macro · f/2–f/4, shallow depth of field
+       · natural window light from the right, late afternoon · real skin texture, pores visible
+       · fine natural film grain · true colours, calm editorial · one continuous take, N seconds
+       · start exactly on the first frame, end exactly on the last frame
+NEVER: render · 3D · CGI · octane · unreal · HDR · 4K (as a style word) · cinematic (alone) · glossy
+       · glowing skin · flawless · perfect · sparkles · light rays · dust motes · bokeh balls · lens flare
+```
+
 **Product fidelity (every frame that shows the kit):** the box, the peel bottle and the vials come from our three.js scene
 `site/proto/scenes/exo-nad.js` rendered with `render-keys.cjs` (3840×2400, alpha; `v1-meet.png` closed box, `v6-kit.png` open
 kit) or from the packshot `protocols/print/img/exo-nad.webp`. Method per shot: (a) STILLS — composite our render into the
