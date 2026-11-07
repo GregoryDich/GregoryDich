@@ -22,7 +22,8 @@ starts = [pages.get(e['bm'], 0) for e in man['toc']]
 print('toc numbers', nums, '== starts' if nums == starts else '!= starts %s' % starts)
 ok &= nums == starts
 if man['missing']: print('not printed (source missing):', ', '.join(man['missing']))
-tok = lambda s: re.findall(r'[\w׳״]+', s)
+# tokens split at script changes (Hebrew | Latin/digits): pdftotext reorders mixed runs like «ד8» around bidi marks
+tok = lambda s: re.findall(r'[\u05D0-\u05EA\uFB1D-\uFB4F׳״]+|[^\W\u05D0-\u05EA\uFB1D-\uFB4F]+', s)
 ents = man['toc']; total_miss = 0
 for i, e in enumerate(ents):
     if not e['slug']: continue
