@@ -1,0 +1,227 @@
+{
+ "models": [
+  {
+   "id": "seedance_2_5",
+   "role": "MAIN finals + drafts: image-to-video with start/end frame, omni_reference identity (cosmetologist), 4-30 s, 480/720/1080p, 9:16, audio",
+   "credits_known": "8 s: 24cr@480p, 56cr@720p, 128cr@1080p (Higgsfield blog Oct 2026); other source: 72cr per 8 s@1080p",
+   "status": "published by third parties, conflicting; draft 480p then finalize at 1080p within 7 d (billed full duration)"
+  },
+  {
+   "id": "kling3_0_turbo",
+   "role": "cheap exploration of motion/camera; start frame only; 3-15 s; 720/1080p; 16:9, 9:16",
+   "credits_known": "~6-10cr per 5 s (720p) third-party",
+   "status": "no end frame -> not for exact key-frame shots"
+  },
+  {
+   "id": "minimax_hailuo",
+   "role": "facial emotion ('wow'), start+end image, 6/10 s, 768/1080",
+   "credits_known": "not published; assumed ~4-6 cr/s at 1080p",
+   "status": "estimate"
+  },
+  {
+   "id": "gemini_omni_flash_1_2",
+   "role": "keyframes + references + 4K, 3-10 s with frames, 16:9 and 9:16, audio",
+   "credits_known": "not published for Higgsfield",
+   "status": "estimate; check cost button"
+  },
+  {
+   "id": "flux_3_video",
+   "role": "5-20 s, start/end frames, up to 4K; candidate for 4K hero shots",
+   "credits_known": "not published",
+   "status": "estimate"
+  },
+  {
+   "id": "hf_mult_replace_object",
+   "role": "Genjutsu object replacement: swap placeholder bottle for our packshot (reference images + source video 4-30 s)",
+   "credits_known": "~105cr for 14 s @720p (26 Oct 2026 cost check); 144cr@1080p for 15 s (other source)",
+   "status": "conflicting"
+  },
+  {
+   "id": "hf_mult_replace_object_flash",
+   "role": "Genjutsu Lite (Kling 4.0): ~1/3 of full cost, 720/1080p, up to 10 reference images",
+   "credits_known": "~30cr per 14 s",
+   "status": "use for drafts of the swap"
+  },
+  {
+   "id": "veo_3_1 (not in the partial list, check name)",
+   "role": "photoreal with audio, 4-8 s",
+   "credits_known": "~40cr/4 s, Fast ~16cr/4 s",
+   "status": "third-party"
+  },
+  {
+   "id": "gpt_image_2_6 / nano_banana_pro / soul_2",
+   "role": "photoreal stills: cast, clinic, key frames",
+   "credits_known": "Nano Banana Pro ~2cr (implied by 200cr = 100 images); Soul unknown",
+   "status": "estimate 2-6cr incl 4K"
+  }
+ ],
+ "unit_costs": {
+  "credits_per_second": {
+   "seedance_480p_draft": 3,
+   "seedance_720p": 7,
+   "seedance_1080p": {
+    "low": 9,
+    "likely": 12,
+    "high": 16
+   },
+   "genjutsu_swap_1080p": {
+    "low": 2.1,
+    "likely": 9.6,
+    "high": 9.6
+   },
+   "upscale_to_4k": {
+    "low": 0,
+    "likely": 4,
+    "high": 8
+   }
+  },
+  "credits_per_still": {
+   "low": 2,
+   "likely": 3,
+   "high": 6
+  },
+  "usd_per_credit": {
+   "low": 0.043,
+   "likely": 0.05,
+   "high": 0.07
+  },
+  "note": "upscale and Soul prices are NOT published; estimates"
+ },
+ "per_film": {
+  "definition": "10 shots x 4.5 s = 45 s at 1080p; 16:9 plus phone 9:16 (multiplier 1.3/1.6/2.0); 15 stills; 480p drafts (1/2/3 per shot); finals x2/x3/x4 attempts; swap on ~9/13.5/18 s; 4K on hero shots only",
+  "low": {
+   "finals": 1053,
+   "drafts": 176,
+   "stills": 60,
+   "object_replace": 25,
+   "upscale": 0,
+   "total": 1313,
+   "usd": 56
+  },
+  "likely": {
+   "finals": 2592,
+   "drafts": 432,
+   "stills": 135,
+   "object_replace": 415,
+   "upscale": 54,
+   "total": 3628,
+   "usd": 181
+  },
+  "high": {
+   "finals": 5760,
+   "drafts": 810,
+   "stills": 360,
+   "object_replace": 1037,
+   "upscale": 180,
+   "total": 8147,
+   "usd": 570
+  }
+ },
+ "transition": {
+  "definition": "one 3 s clip home->product, 1080p, plus 3 stills",
+  "credits": {
+   "low": 75,
+   "likely": 153,
+   "high": 291
+  }
+ },
+ "sample": {
+  "definition": "EXO-NAD film + its transition",
+  "credits": {
+   "low": 1388,
+   "likely": 3781,
+   "high": 8438
+  },
+  "usd": {
+   "low": 60,
+   "likely": 189,
+   "high": 591
+  },
+  "plan_needed": "likely 3.8k credits: Ultra (3000cr, $99-129/mo) + a credit pack, or Plus x4; low fits Plus (1000-1200cr) x1-2 months"
+ },
+ "series": {
+  "definition": "13 films + 13 transitions + home (0.5 film) + shared cast/clinic library of 40 stills (saves 7 stills per film after the first)",
+  "credits": {
+   "low": 18476,
+   "likely": 50463,
+   "high": 112424
+  },
+  "usd": {
+   "low": 794,
+   "likely": 2523,
+   "high": 7870
+  },
+  "plan_needed": "likely ~50k credits = ~17 months of Ultra; not sensible. Ask Higgsfield sales (Business/Enterprise) for a volume deal or price the same job on API (Seedance 1080p ~$0.59/s at Segmind -> comparable ~$130/film-pass)"
+ },
+ "plans": [
+  {
+   "set": "A (Higgsfield blog / early Nov 2026 sources)",
+   "Starter": {
+    "usd_month": 15,
+    "credits": 200
+   },
+   "Plus": {
+    "usd_month": 49,
+    "annual_per_month": 39,
+    "credits": 1000
+   },
+   "Ultra": {
+    "usd_month": 129,
+    "credits": 3000
+   }
+  },
+  {
+   "set": "B (Krea, 31 Aug 2026)",
+   "Starter": {
+    "usd_month": 19,
+    "credits": 270
+   },
+   "Plus": {
+    "usd_month": 59,
+    "annual_per_month": 47,
+    "credits": 1200
+   },
+   "Ultra": {
+    "usd_month": 129,
+    "annual_per_month": 99,
+    "credits": 3000
+   }
+  },
+  {
+   "set": "C (older/other names)",
+   "Basic": {
+    "usd_month": 9,
+    "credits": "70-150"
+   },
+   "Pro": {
+    "usd_month": 29,
+    "credits": 600
+   },
+   "Ultimate": {
+    "usd_month": 49,
+    "credits": 1200
+   },
+   "Creator": {
+    "usd_month": 249,
+    "credits": 6000
+   }
+  },
+  {
+   "note": "Seedance 2.5 requires Plus or above (Higgsfield changelog). Plan credits do not roll over; packs expire in 90 days. Free: no commercial use. Business: per-seat, unverified."
+  }
+ ],
+ "balance": {
+  "credits": 1,
+  "plan": "free",
+  "checked_at": "2026-11-08T00:45:00+02:00 (orchestrator; earlier 06/11 19:25)"
+ },
+ "assumptions": [
+  "No Higgsfield credit table is public and WebFetch to higgsfield.ai failed (ENOTFOUND); all prices come from WebSearch summaries of third-party and vendor blogs and conflict.",
+  "Seedance 1080p per second: 9 (72cr/8s), 12 (2.0: 60cr/5s), 16 (128cr/8s) = low/likely/high.",
+  "USD per credit 0.043 (Ultra annual-ish 129/3000) / 0.05 (Plus 49/1000) / 0.07 (Starter 19/270).",
+  "Draft workflow: 480p at ~3 cr/s; finalizing a draft bills the full duration at 1080p.",
+  "Phone 9:16 is regenerated, not cropped (multiplier 1.6 likely); cropping lowers cost but loses framing.",
+  "Upscale and Soul/Nano Banana prices unpublished: upscale 0/4/8 cr/s on hero shots, still 2/3/6 cr.",
+  "Cross-check: Segmind 1080p $0.5876/s x 45 s x 3 attempts x 1.6 = ~$127 vs ours 2592cr x $0.05 = $130 for finals."
+ ]
+}
