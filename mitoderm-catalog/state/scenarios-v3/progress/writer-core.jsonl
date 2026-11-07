@@ -1,1 +1,2 @@
 {"step":"start","t":"2026-11-07T23:07:59Z","label":"writer-core","note":"reading BRIEF, design-rules, ARCH, format v2.1, r1, r2, r4, exo-nad + 2 chapters; costs.json/r3 absent at start"}
+{"step":"inputs read","t":"2026-11-07T23:16:30Z","label":"writer-core","note":"BRIEF, design-rules (site v2), ARCH, format v2.1, r1, r2, r3+costs.json (arrived 01:05Z), r4/facts, exo-nad + exosignal-hair + v-tech-system + 01-home chapters, g1-g3 reviews, storyboard/contacts strings; writing 00-concept first"}
