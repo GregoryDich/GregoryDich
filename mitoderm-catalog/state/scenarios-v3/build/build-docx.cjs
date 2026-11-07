@@ -75,7 +75,8 @@ function parseMd(src) {
     if (isTable(l)) {
       const rows = [];
       while (i < L.length && isTable(L[i])) { rows.push(L[i]); i++; }
-      const cells = (r) => r.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((s) => s.trim());
+      // split on unescaped pipes; "\|" inside a cell prints as "|"
+      const cells = (r) => r.trim().replace(/^\|/, '').replace(/\|$/, '').split(/(?<!\\)\|/).map((c) => c.trim().replace(/\\\|/g, '|'));
       blocks.push({ type: 'table', header: cells(rows[0]), rows: rows.slice(2).map(cells) });
       continue;
     }
@@ -138,16 +139,14 @@ function inlineSegs(s) {
     buf += c;
   }
   push();
-  // LRM around code spans that start/end with a weak or neutral character
+  // Latin code spans (paths, hex, ids) are wrapped in LRI…PDI (U+2066/U+2069) so they read left to right inside the
+  // RTL line. v2.1 used separate LRM runs; LibreOffice then broke words like «#0a0a0b» at the line end.
   // (a code span with Hebrew in it is left to the normal bidi resolution)
   const out = [];
   for (const sg of segs) {
     if (sg.code && HEB.test(sg.text)) sg.code = 'he';
-    if (sg.code === true) {
-      if (!/^[A-Za-z]/.test(sg.text)) out.push({ text: '‎', lrm: true, tag: sg.tag });
-      out.push(sg);
-      if (!/[A-Za-z0-9]$/.test(sg.text)) out.push({ text: '‎', lrm: true, tag: sg.tag });
-    } else out.push(sg);
+    if (sg.code === true) out.push({ ...sg, text: '\u2066' + sg.text + '\u2069' });
+    else out.push(sg);
   }
   return out;
 }
@@ -272,7 +271,8 @@ function makeTable(header, rows, widths, opts = {}) {
     borders: tBorders,
     margins: { top: 60, bottom: 60, left: 90, right: 90 },
     shading: isHead ? { type: ShadingType.CLEAR, color: 'auto', fill: C.head } : undefined,
-    children: [new Paragraph({ bidirectional: true, spacing: { after: 0, line: 252 },
+    // keepNext on the header row: LibreOffice drops the body rows when a repeated header lands alone at a page foot
+    children: [new Paragraph({ bidirectional: true, spacing: { after: 0, line: 252 }, keepNext: isHead,
       children: rtlRuns(txt, { table: true, wide: !!opts.wide, bold: isHead }) })],
   });
   const trs = [new TableRow({ tableHeader: true, cantSplit: true, children: header.map((h, i) => cell(h, widths[i], true)) })];
@@ -293,7 +293,8 @@ function tableWidths(header, rows, total, size) {
   const floor = [], weight = [];
   for (let i = 0; i < n; i++) {
     const col = [header[i], ...rows.map((r) => r[i])].map(plain);
-    const longest = Math.max(...col.map((t) => Math.max(0, ...t.split(/\s+/).map((w) => w.length))));
+    // LibreOffice may break after "/" and "-", so the floor is the longest piece between those and spaces
+    const longest = Math.max(...col.map((t) => Math.max(0, ...t.split(/[\s\/]+|(?<=-)/).map((w) => w.length))));
     floor.push(Math.min(Math.max(longest * charW + 220, 650), total / 3));
     const mean = rows.length ? rows.reduce((a, r) => a + plain(r[i]).length, 0) / rows.length : plain(header[i]).length;
     weight.push(Math.pow(Math.max(mean, plain(header[i]).length, 4), 0.65));

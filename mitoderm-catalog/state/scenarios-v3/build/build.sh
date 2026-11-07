@@ -10,7 +10,9 @@ SRC=$(cd "$B/../src" && pwd)
 REPO=$(cd "$B/../../../.." && pwd)
 W=${W:-/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/scenarios-v3-build}
 N=MITODERM-video-scenarios-HE-v3
-O=$W/out; rm -rf "$O"; mkdir -p "$O/mark" "$O/final"
+O=$W/out; rm -rf "$O"; mkdir -p "$O/mark" "$O/final" "$O/src"
+# snapshot the sources: both passes and verify.py read the same files even while writers are still committing
+cp "$SRC"/*.md "$O/src/"; SRC="$O/src"
 export NODE_PATH=$(npm root -g)
 LO="-env:UserInstallation=file://$W/lo-profile"
 node "$B/build-docx.cjs" "$O/mark/$N.docx" --src "$SRC" --mark
