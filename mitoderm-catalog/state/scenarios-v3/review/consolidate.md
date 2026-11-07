@@ -46,10 +46,23 @@ MITOTECH, MITOSCAN, g4, g5) landed and were committed before the step that neede
   (3–7); §5 timeline per BRIEF; new §8 (the nine speed-ups) and §9 (what we decide alone / only the owner).
 - **format-v3.md**: §8 balance-line wording; Cyrillic-free check command.
 
+## Late course corrections (orchestrator notes 01:55, `review/notes-for-assembler.md`)
+
+- **Sample = V-TECH SYSTEM** (owner's decision 08/11); EXO-NAD stays the model chapter. Changed: 00-concept §7, 01-home §8, 02-production
+  §4 and §7 (sample shot F07 of V-TECH — MITOPEN on the cheek; sample page V-TECH), 95-materials §1 (heading, approval items, V-TECH
+  before/after, mechanics, offer), 98-costs §2, §5 (sample = V-TECH film + room, T02 plate, cosmetologist ×2), §8, §11; 99-roadmap
+  stage 3א (free skeleton page with our frames and storyboard boards), stages 4–5 on V-TECH, gate 3א, §4 work order; format-v3; §7 of
+  all 13 chapters (V-TECH chapter now says it is the sample film; EXO-NAD keeps its own sample shot F06 after V-TECH).
+- **99-roadmap**: token budgets and agent model names removed (internal; they stay in BRIEF); speed-ups reduced to the eight that
+  matter to the owner's team (skeleton-before-money added). Time and credit budgets and gates kept as in BRIEF.
+- **MITOTECH**: «אפקט פילר» / «מחקרים מעבדתיים» removed from 95-materials and 97-rules (no Hebrew source); not present in the chapter.
+- Costs chapter name «עלויות ויתרה» used everywhere.
+
 ## Final totals
 
 - Series: 153 shots, 477 s, 94 generator shots. Credits 13,586 / 31,966 / 58,011 (≈584 / 1,598 / 4,061 USD).
-- Sample (EXO-NAD film 11 shots, 36 s, + transition in three.js + 2 set stills): 1,031 / 2,299 / 4,244 cr (≈44 / 115 / 297 USD).
+- Sample (V-TECH SYSTEM film 12 shots, 37 s, 8 generator shots; + transition in three.js + 4 library stills): 1,102 / 2,566 / 4,696 cr
+  (≈47 / 128 / 329 USD).
 - Research-model caps kept in the roadmap: sample 1,388 / 3,781 / 8,438, series 18,476 / 50,463 / 112,424.
 
 ## Open questions for the owner
@@ -61,6 +74,7 @@ MITOTECH, MITOSCAN, g4, g5) landed and were committed before the step that neede
    name, photo, exact quote, signed approval.)
 5. MITOSCAN: the live page's b0.line and the catalogue kicker contain «אבחון» / «הוכחת תוצאה»; the film keeps them off screen — OK,
    or legal review first? Plate silver only or with the `#5aa9e6` drop?
-6. The roadmap names the agent models (Fable / Opus / Sonnet) as the BRIEF does — keep in the client file or move to internal notes?
+6. BRIEF stage 5 still reads "sample page EXO-NAD"; the file follows the 08/11 note (V-TECH). Confirm, and whether the home preview loop
+   (5 s of hands) should come from the V-TECH film instead of EXO-NAD.
 7. Camera/engine terms stay Latin (dolly, dissolve, I2V, WebP, clip-path) as `format-v3.md` allows — OK for the client file?
 8. Everything listed in §7 of each chapter and in `95-materials.md` (photos with consent, mechanics, offers, event dates, plan).
