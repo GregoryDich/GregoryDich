@@ -2,3 +2,5 @@
 {"step":"design","mitopen":"12 shots 37s 0-1205vh, face+V-TECH, F05 render macro, F08 reuse HAIR F07","mitoscan":"12 shots 37s 0-1205vh, male client, screen only render logo or real image","at":"2026-11-07T23:11:29Z"}
 {"step":"src/mitopen.md written","at":"2026-11-07T23:14:25Z"}
 {"step":"src/mitoscan.md written","at":"2026-11-07T23:17:39Z"}
+{"step":"prompts written","at":"2026-11-07T23:19:03Z"}
+{"step":"checks done: cyrillic 0, quotes verified, tables contiguous; committing","at":"2026-11-07T23:19:15Z"}
