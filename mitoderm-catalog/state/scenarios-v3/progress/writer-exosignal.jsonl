@@ -1,2 +1,3 @@
 {"step":"start","t":"2026-11-07T21:19:48Z","label":"writer-exosignal","note":"read BRIEF, exo-nad model, r4 facts, v2.1 chapters; format-v3/00-concept/costs.json absent"}
 {"step":"chapters+prompts written","t":"2026-11-07T21:28:49Z","note":"12 shots/36 s each; cyrillic 0; format-v3 still absent"}
+{"step":"done","t":"2026-11-07T22:05:20Z","gap":"format-v3.md, 00-concept.md, costs.json never appeared (waited ~40 min); chapters follow the prompt template + exo-nad model; section 8 in unit keys"}
