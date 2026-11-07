@@ -74,3 +74,11 @@ Claude Code с API-ключом (оплата за токены). Этот фа�
 - **Claude Code локально:** `npm i -g @anthropic-ai/claude-code`, ключ с console.anthropic.com в переменной
   `ANTHROPIC_API_KEY`, запуск `claude` в корне репозитория — подхватит `CLAUDE.md` и `.claude/skills/` сам; оплата по
   API за токены, без недельного лимита подписки.
+
+## Задания, остановленные из-за лимита (08/11 02:05, 97 % недели)
+Полные тексты заданий для агента (с найденными дефектами и цифрами) — `mitoderm-catalog/state/tasks/`:
+- `mitotech-fix4.workflow.js` — одна правка MITOTECH по всем находкам карты, правил и «глаза» (константа `FIX` —
+  готовый промпт с цифрами; `VALUES` — итоговая проверка). Пути к scratchpad облака в нём заменить на локальные.
+- `vtech-v3-skeleton.workflow.js` — каркас образца V-TECH (константы `BUILD`, `CHECK`, `FIX`).
+- `scenarios-v3-assemble.workflow.js` — сведение и сборка файла сценариев (если облако не успеет).
+В Cursor: открыть файл, взять текст константы как задание агенту; в Claude Code — то же или запустить как workflow.
