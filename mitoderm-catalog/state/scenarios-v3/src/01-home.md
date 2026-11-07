@@ -92,8 +92,8 @@ MICRO BOOST 10%.» (home.card-13).
 | CELLULAR AGE DEFENSE 2.5% | `site/public/cellular-age-defense-2-5/img/still.webp` (הקופסה) | כמו MICRO BOOST, איטי יותר | `clinic-table-cellular-age-defense-2-5` (ירוק) | 3 ש׳ | three.js |
 | CELL RENEW 1.5% | `site/public/cell-renew-1-5/img/still.webp` (הקופסה) | כמו MICRO BOOST | `clinic-table-cell-renew-1-5` (ירוק, קפל בצבע הטיפה) | 3 ש׳ | three.js |
 | DERMA RECOVERY CREAM | `site/public/derma-recovery-cream/img/still.webp` (הצנצנת והקופסה) | הצנצנת מובילה, הקופסה אחריה | `clinic-table-derma-recovery-cream` (ירוק-מרווה) | 3 ש׳ | three.js |
-| MITOPEN | `site/public/mitopen/img/still.webp` (העט) | העט מסתובב סביב צירו הארוך ונח על השולחן | `clinic-table-mitopen` (כסף) | 2 ש׳ | three.js (פקשוט HD חסר) |
-| MITOSCAN | `site/public/mitoscan/img/still.webp` (המכשיר) | המכשיר גולש, לא «עף»: פנייה קלה ונחיתה יציבה | `clinic-table-mitoscan` (כסף, טיפת כחול) | 3 ש׳ | three.js |
+| MITOPEN | `site/public/mitopen/img/still.webp` (העט) | העט פונה סביב צירו הארוך — עד 15° (הגב לא צולם) — ונח על השולחן | `clinic-table-mitopen` (כסף) | 3 ש׳ | three.js (פקשוט HD חסר) |
+| MITOSCAN | `site/public/mitoscan/img/still.webp` (המכשיר) | המכשיר גולש, לא «עף»: פנייה קלה ונחיתה יציבה | `clinic-table-mitoscan` (כסף) | 3 ש׳ | three.js |
 | MITOTECH CELL BOOSTER | `site/design/mitotech/packshot-kit-r15.png` עד שיירנדר מפתח 3840 מ-`mitotech-cell-booster.js` | הקופסה מסתובבת ונוחתת סגורה | `clinic-table-mitotech-cell-booster` (ירוק הקופסה ומנטה) | 3 ש׳ | three.js (מפתח 3840 חסר) |
 
 לכל הקליפים: 1080p (×2 לדסקטופ לפי כלל «≥2× מגודל ה-CSS»), גרסת טלפון 9:16 נפרדת מאותה סצנה; ≈1.5–3 MB לקליפ בדסקטופ, 0.8–1.5
