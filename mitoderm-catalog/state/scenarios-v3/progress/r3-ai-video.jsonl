@@ -1,2 +1,3 @@
 {"step":"balance","credits":1,"plan":"free","at":"2026-11-07T23:05:07Z"}
 {"step":"models_explore+pricing-search1","note":"WebFetch blocked for all hosts (ENOTFOUND); only WebSearch summaries usable. 60 video models listed; model data has no credit costs. Plans conflict across sources.","at":"2026-11-07T23:05:53Z"}
+{"step":"search: higgsfield plans/credits + realism fix","note":"plans conflict: (A) Basic $9/120cr, Pro $29/600, Max $79/1800; (B) Starter $19, Plus $47-59/1200, Ultra $99-129/3000. Seedance2.0 22cr/5s 720p, 45cr/5s 1080p (3rd party). Realism sources: invideo.io faq, atlabs.ai, flick.art","at":"2026-11-07T23:08:07Z"}
