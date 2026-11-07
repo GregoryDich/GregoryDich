@@ -57,6 +57,8 @@
   (ждёт «ок» заказчика; что исправлено и QA — `PLAN.md` §22; вопросы по текстам — `state/mitotech/texts-for-approval.md`). Материалы: текст
   `state/mitotech/canon-v2.md`, рендер `site/design/mitotech/packshot-kit-r15.png`, печатные PDF
   `site/design/mitotech/print/`, сценарий v1 во временной папке `scenarios/mitotech-cell-booster.md`.
+- **Передача в Cursor / локальный Claude Code (08/11):** `HANDOFF-cursor.md` (состояние, как доделать локально, следующие
+  задачи, как платить токенами); правила для Cursor — `.cursor/rules/mitoderm.mdc`, `AGENTS.md`.
 - **Сценарии v3 (06–07/11)** — по просьбе заказчика: фильм в кабинете косметолога по лестнице Бена Ханта, заявка с
   первого блока, моушен из Higgsfield. ТЗ и дорожная карта — `state/scenarios-v3/BRIEF.md`; исходники глав (иврит) —
   `state/scenarios-v3/src/`, промпты (EN) — `state/scenarios-v3/prompts/`; файл для заказчика —
