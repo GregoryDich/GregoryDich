@@ -145,7 +145,8 @@ function inlineSegs(s) {
   const out = [];
   for (const sg of segs) {
     if (sg.code && HEB.test(sg.text)) sg.code = 'he';
-    if (sg.code === true) out.push({ ...sg, text: '\u2066' + sg.text + '\u2069' });
+    // a zero-width space after each "/" gives LibreOffice a break point in long paths (else it cuts mid-name)
+    if (sg.code === true) out.push({ ...sg, text: '\u2066' + sg.text.replace(/\/(?=.)/g, '/\u200B') + '\u2069' });
     else out.push(sg);
   }
   return out;
@@ -293,7 +294,7 @@ function tableWidths(header, rows, total, size) {
   const floor = [], weight = [];
   for (let i = 0; i < n; i++) {
     const col = [header[i], ...rows.map((r) => r[i])].map(plain);
-    // LibreOffice may break after "/" and "-", so the floor is the longest piece between those and spaces
+    // LibreOffice breaks at spaces, after "-" and after the zero-width space put after "/" in code spans
     const longest = Math.max(...col.map((t) => Math.max(0, ...t.split(/[\s\/]+|(?<=-)/).map((w) => w.length))));
     floor.push(Math.min(Math.max(longest * charW + 220, 650), total / 3));
     const mean = rows.length ? rows.reduce((a, r) => a + plain(r[i]).length, 0) / rows.length : plain(header[i]).length;
