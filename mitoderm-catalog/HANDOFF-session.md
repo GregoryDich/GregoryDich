@@ -57,6 +57,13 @@
   (ждёт «ок» заказчика; что исправлено и QA — `PLAN.md` §22; вопросы по текстам — `state/mitotech/texts-for-approval.md`). Материалы: текст
   `state/mitotech/canon-v2.md`, рендер `site/design/mitotech/packshot-kit-r15.png`, печатные PDF
   `site/design/mitotech/print/`, сценарий v1 во временной папке `scenarios/mitotech-cell-booster.md`.
+- **Сценарии v3 (06–07/11)** — по просьбе заказчика: фильм в кабинете косметолога по лестнице Бена Ханта, заявка с
+  первого блока, моушен из Higgsfield. ТЗ и дорожная карта — `state/scenarios-v3/BRIEF.md`; исходники глав (иврит) —
+  `state/scenarios-v3/src/`, промпты (EN) — `state/scenarios-v3/prompts/`; файл для заказчика —
+  `site/xlsx-he/scenarios/MITODERM-video-scenarios-HE-v3.{pdf,docx}`. Прогоны и состояние — `PLAN.md` §23.
+  Баланс Higgsfield — 1 кредит (бесплатный план): генерация только после цены, баланса и «утверждаю»; образец — EXO-NAD.
+- Карта страницы и правила вёрстки MITOTECH (`site/proto/qa/pagemap.cjs`, `layout-check.cjs`; карты в
+  `site/pagemap/`) — `PLAN.md` §22, затем одна правка и публикация по той же ссылке.
 - Правки аудита 31/10 без решения заказчика: T3, T4, T5, T7, T8, T10, T11, T13, M1–M3, M5, P1 (~день + переопубликовать
   12 страниц). Отчёт: `state/site/audit-v2-report-3110.md`.
 - Главная: hero по `site/ARCHITECTURE-v2.md` (картинки `site/design/home/hero/`).
