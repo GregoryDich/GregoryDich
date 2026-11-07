@@ -10,7 +10,7 @@ const path = require('path');
 const {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, ShadingType,
   AlignmentType, HeadingLevel, BorderStyle, Header, Footer, PageNumber, TabStopType, LevelFormat,
-  TableOfContents, Bookmark, InternalHyperlink, Tab, TableLayoutType, PageOrientation,
+  TableOfContents, Bookmark, InternalHyperlink, Tab, TableLayoutType, PageOrientation, LineRuleType,
 } = require('docx');
 
 const args = process.argv.slice(2);
@@ -295,7 +295,9 @@ function tableWidths(header, rows, total, size) {
   for (let i = 0; i < n; i++) {
     const col = [header[i], ...rows.map((r) => r[i])].map(plain);
     // LibreOffice breaks at spaces, after "-" and after the zero-width space put after "/" in code spans
-    const longest = Math.max(...col.map((t) => Math.max(0, ...t.split(/[\s\/]+|(?<=-)/).map((w) => w.length))));
+    // a word up to 16 chars (shot ids like exo-nad-F01, long Hebrew words) stays whole; longer ones only need their pieces
+    const piece = (w) => (w.length <= 16 ? w.length : Math.max(...w.split(/\/|(?<=-)/).map((x) => x.length)));
+    const longest = Math.max(...col.map((t) => Math.max(0, ...t.split(/\s+/).map(piece))));
     floor.push(Math.min(Math.max(longest * charW + 220, 650), total / 3));
     const mean = rows.length ? rows.reduce((a, r) => a + plain(r[i]).length, 0) / rows.length : plain(header[i]).length;
     weight.push(Math.pow(Math.max(mean, plain(header[i]).length, 4), 0.65));
@@ -320,6 +322,7 @@ const setLand = (land) => {
 const tocEntries = []; // {bm, slug, title, part}
 const included = [], missing = [];
 let listInstance = 0, bmCount = 0;
+const numStarts = new Set();
 const nextBm = () => 'pg' + String(++bmCount).padStart(2, '0');
 const markRun = (bm) => new TextRun({ text: ' QQMARK' + bm, size: 16 });
 
@@ -395,8 +398,13 @@ function addChapter(slug, partNo) {
       return;
     }
     if (b.type === 'li') {
-      if (!prevList || prevList.ordered !== b.ordered) { listInstance++; prevList = { ordered: b.ordered, inst: listInstance }; }
-      const numbering = { reference: b.ordered ? 'num' : 'bul', level: 0, instance: prevList.inst };
+      if (!prevList || prevList.ordered !== b.ordered) {
+        // a numbered list that resumes after a paragraph or sub-heading keeps the source number (e.g. starts at 5)
+        let ref = b.ordered ? 'num' : 'bul';
+        if (b.ordered && b.num > 1) { ref = 'num' + b.num; numStarts.add(b.num); }
+        listInstance++; prevList = { ordered: b.ordered, inst: listInstance, ref };
+      }
+      const numbering = { reference: prevList.ref, level: 0, instance: prevList.inst };
       let first = true;
       for (const part of b.parts) {
         if (part.t === 'code') { children.push(...boxParas(codeParagraphs(part.lines), 360)); continue; }
@@ -471,7 +479,7 @@ const doc = new Document({
   features: { updateFields: false },
   styles: {
     default: { document: { run: { font: FONT, size: SZ.body, language: { value: 'en-US', bidirectional: 'he-IL' } },
-      paragraph: { spacing: { after: 100, line: 276 } } },
+      paragraph: { spacing: { after: 100, line: 276, lineRule: LineRuleType.AUTO } } },  // explicit AUTO: else LibreOffice sets 13.8 pt exact and the two-line cover title overlaps
       heading1: heading(44, C.ink, 0, 80, 0, { border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: C.gold, space: 6 } } }),
       heading2: heading(28, C.goldDark, 300, 120, 1),
       heading3: heading(23, C.ink, 240, 80, 2),
@@ -484,8 +492,9 @@ const doc = new Document({
   numbering: { config: [
     { reference: 'bul', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.START,
       style: { paragraph: { indent: { left: 360, hanging: 260 } }, run: { font: FONT } } }] },
-    { reference: 'num', levels: [{ level: 0, format: LevelFormat.DECIMAL, text: '%1.', alignment: AlignmentType.START,
-      style: { paragraph: { indent: { left: 400, hanging: 340 } }, run: { font: FONT } } }] },
+    ...[1, ...numStarts].map((st) => ({ reference: st === 1 ? 'num' : 'num' + st, levels: [{ level: 0, format: LevelFormat.DECIMAL,
+      text: '%1.', start: st, alignment: AlignmentType.START,
+      style: { paragraph: { indent: { left: 540, hanging: 400 } }, run: { font: FONT } } }] })),
   ] },
   sections: sections.filter((sec, i) => i === 0 || sec.children.length).map((sec, i) => ({
     properties: {
