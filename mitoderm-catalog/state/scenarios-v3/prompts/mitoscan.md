@@ -1,11 +1,17 @@
 # MITOSCAN — production prompts (v3 clinic film)
 
 Companion of `src/mitoscan.md` (the contract: shots, scroll ranges, approved texts). Shared bible = `prompts/exo-nad.md` §0
-(cast-C01, set-R01, set-T01, look, shared negative, MODEL classes, aspect plan); paste it on top of every prompt. Line overrides:
-accent detail on the tunic = thin SILVER piping (#d9d4cc); haze around the device #d9d4cc; NO blue glow (removed in v2.1).
-MODEL: class per `prompts/exo-nad.md` §0; candidate ids from `research/higgsfield-models.json` — i2v-first-last: `minimax_hailuo`
-(start+end image, 6 s, 1080) / `seedance_2_5` / `flux_3_video`; replace-object: `hf_mult_replace_object` (ref = our render);
-upscale-video-x2 and still-photoreal ids per `costs.json` (absent at writing time). Price + balance to the owner, run after "approved".
+(cast-C01, set-R01, the table plates set-T01…T06, look, shared negative, MODEL classes, aspect plan); paste it on top of every prompt.
+Line overrides: the table plate of this film is `set-T04` (silver haze #d9d4cc, `src/02-production.md` §3), not the champagne T01;
+accent detail on the tunic = thin SILVER piping (#d9d4cc); haze around the device #d9d4cc; NO blue glow (removed in v2.1; the blue
+drop #5aa9e6 of `design-rules.md` is an open decision, chapter F03).
+MODEL ids (`research/costs.json`, `r3-ai-video.md` §2, `src/02-production.md` §5; published prices conflict — confirm on the cost
+button before every run): i2v-first-last = `seedance_2_5` (start_image + end_image, 4–5 s, 1080p, 16:9 / 9:16, omni_reference for
+cast-C01 / K01; 480p draft → finalize 1080p within 7 days; needs the Plus plan or above); facial emotion (F02, F10) = `minimax_hailuo`
+(start + end image, 6 s, 1080); replace-object = `hf_mult_replace_object` (ref = our render; drafts `hf_mult_replace_object_flash`);
+stills = `gpt_image_2_6` (alternatives `nano_banana_pro`, `soul_2`); upscale = `upscale_video` ×2 (price unpublished); the screen
+region is always our planar-track composite, 0 credits. Balance 1 credit, free plan (08/11): nothing runs before the owner pays;
+price + balance to the owner, run after "approved".
 Every 16:9 shot with people is generated AGAIN in 9:16 from its own vertical still (suffix `-v`); device-only shots are rendered.
 
 **SYSTEM (what the camera may see — `packaging-text.json` mitoscan, `mitoscan.js`; never retyped by the generator):** white
@@ -36,9 +42,9 @@ right, fine grain.` QA: thinning subtle and dignified; the crown IDENTICAL in ev
 
 | shot | purpose · s · scroll · aspect | start → end frame | still prompt (key frame) | video prompt | extra negative | model + params · fidelity | QA |
 |---|---|---|---|---|---|---|---|
-| F01 | system on the table, rung 1, home continuity · 3 s · 0–100 · 16:9, 9:16 crop | `set-T01` + `still.webp`/`v1-meet.png` → tighter crop | — (composite) | — (dolly-in in our pipeline) | — | none, 0 credits | cable loops on the table; logo sharp; right third calm |
+| F01 | system on the table, rung 1, home continuity · 3 s · 0–100 · 16:9, 9:16 crop | `set-T04` + `still.webp`/`v1-meet.png` → tighter crop | — (composite) | — (dolly-in in our pipeline) | — | none, 0 credits | cable loops on the table; logo sharp; right third calm |
 | F02 | concern: he cannot see his own crown · 4 s · 100–240 · 16:9 + `-v` | `S02a` → `S02b` | `Over-the-shoulder into the round brass mirror in set-R01: mitoscan-K01 in the chair holds a hand mirror above and behind his head, tilting it, squinting, trying to see his crown.` / b: `same, cast-C01 behind him, a hand on his shoulder; he lowers the hand mirror with a shy smile; eyes meet in the big mirror.` | `Slow lateral dolly; he tilts the hand mirror, cannot quite see; the cosmetologist steps in and rests a hand on his shoulder; he lowers the mirror and smiles shyly; eyes meet. Ends exactly on the last frame.` | `no visible device` | i2v-first-last 5 s, 1080p | reflections consistent in both mirrors; 5 fingers; crown = K01 |
-| F03 | glide: system lands by the chair · 3 s · 240–315 · rendered 16:9 and 9:16 | `set-T01` → system on table + gloved hand on the stand (= F04 start) | — | — (three.js glide added to `mitoscan.js`: azimuth 26° → 18°, el ≤ 9°, all parts as one, per-frame shadow) | — | three.js, 0 credits; fallback i2v + replace-object | angles in range; scanner stays in cradle; cable rigid in loops; no hover |
+| F03 | glide: system lands by the chair · 3 s · 240–315 · rendered 16:9 and 9:16 | `set-T04` → system on table + gloved hand on the stand (= F04 start) | — | — (three.js glide added to `mitoscan.js`: azimuth 26° → 18°, el ≤ 9°, all parts as one, per-frame shadow) | — | three.js, 0 credits; fallback i2v + replace-object | angles in range; scanner stays in cradle; cable rigid in loops; no hover |
 | F04 | discovery: hand on the scanner, quiet wow · 3 s · 315–430 · 16:9 + `-v` | F03 end → `S04` | `cast-C01's gloved hand rests on the white handheld scanner in its cradle (reference render attached), black 'Mitoscan' panel toward camera; the tablet screen showing only its logo; her face in soft focus, eyebrow raised, small smile; 50mm.` | `Her hand closes around the scanner in its cradle; she looks from the scanner to the screen with a raised eyebrow and a quiet smile. The scanner stays in its cradle. Ends exactly on the last frame.` | — | i2v-first-last 5 s (use 3 s); scanner replace-object; screen composited | FULL version (lift from cradle) only after photos of all sides + empty cradle |
 | F05 | what the eye cannot see: ×50 → ×200 · 3 s · 430–505 | real captures `scan-01-x50.jpg` → `scan-01-x200.jpg` in our screen frame; fallback: render macro panel → logo | — | — (push-in + dissolve in our pipeline) | — | none, 0 credits | NEVER generated, upscaled with AI or retouched; consent signed |
 | F06 | ritual: scan at the parting · 2 s · 505–595 · 16:9 + `-v` · SAMPLE SHOT | `S06a` → `S06b` | `Three-quarter top view 85mm: cast-C01's gloved fingers open a parting at the crown of mitoscan-K01.` / b: `her other hand holds the white scanner (reference render) against the parting, black panel toward camera, the tip lost in the hair, the coiled cable falling naturally.` | `Gloved fingers open a parting at the crown; the other hand brings the scanner to it and holds it still; he sits calmly. Short dolly to the parting. Ends exactly on the last frame.` | `no lens visible` | i2v-first-last 3 s; scanner replace-object | tip hidden; cable relaxed; real hair |
