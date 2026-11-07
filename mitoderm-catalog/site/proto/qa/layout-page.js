@@ -11,8 +11,32 @@
     if (/webgl/i.test(String(type))) attrs = Object.assign({}, attrs || {}, { preserveDrawingBuffer: true });
     return gc.call(this, type, attrs);
   };
-  const LC = window.__LC = { version: 1 };
+  const LC = window.__LC = { version: 2 };
   const r1 = v => Math.round(v * 10) / 10, r3 = v => Math.round(v * 1000) / 1000;
+  // the page's own layout shifts from its first paint (the browser's layout-shift entries: elements on screen that moved
+  // without input), kept for LC.load(); nothing is changed
+  const shifts = [];
+  try {
+    new PerformanceObserver(l => { for (const e of l.getEntries()) shifts.push({ t: Math.round(e.startTime), v: Math.round(e.value * 1e4) / 1e4, input: e.hadRecentInput,
+      src: (e.sources || []).slice(0, 4).map(s => ({ el: s.node && s.node.nodeType === 1 ? (s.node.id ? '#' + s.node.id : s.node.tagName.toLowerCase() + (typeof s.node.className === 'string' && s.node.className ? '.' + s.node.className.trim().split(/\s+/)[0] : '')) : '',
+        dy: Math.round(s.currentRect.top - s.previousRect.top), from: Math.round(s.previousRect.top), to: Math.round(s.currentRect.top) })) }); })
+      .observe({ type: 'layout-shift', buffered: true });
+  } catch (e) {}
+  // the page as it loads, from the start (nothing is changed): every 100 ms for 30 s, a sample whenever its height, its
+  // classes, the engine's readiness or a section's top has changed
+  const loadLog = [];
+  const loadNow = () => {
+    const html = document.documentElement, secs = Array.from(document.querySelectorAll('main > section, main > .sec')).filter(e => e.id);
+    return { t: Math.round(performance.now()), h: html.scrollHeight, cls: html.className,
+      ready: !!((window.__seq && (html.classList.contains('story') || html.classList.contains('no-gl'))) || window.__glReady || html.classList.contains('nogl')),
+      tops: secs.map(s => [s.id, Math.round(s.getBoundingClientRect().top + scrollY)]) };
+  };
+  let lastKey = '';
+  const loadTick = setInterval(() => {
+    const s = loadNow(), key = [s.h, s.cls, s.ready].concat(s.tops.map(x => x[1])).join('|');
+    if (key !== lastKey) { loadLog.push(s); lastKey = key; }
+    if (performance.now() > 30000) clearInterval(loadTick);
+  }, 100);
   const R = r => [r1(r.left), r1(r.top), r1(r.right), r1(r.bottom)];
   const q = (s, el = document) => el.querySelector(s), qa = (s, el = document) => Array.from(el.querySelectorAll(s));
   const cs = el => getComputedStyle(el);
@@ -66,7 +90,7 @@
   const fontOf = s => `${s.fontStyle === 'italic' ? 'italic ' : ''}${s.fontWeight} ${s.fontSize} ${s.fontFamily}`;
   const textShown = n => { const p = n.parentElement; if (!p || !p.getClientRects().length) return false; const s = cs(p); return s.visibility !== 'hidden' && s.display !== 'none'; };
   function lines(el) {
-    const words = [], tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const words = [], tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let wi = 0;
     for (let n; (n = tw.nextNode());) {
       if (!/\S/.test(n.data) || !textShown(n)) continue;
       const s = cs(n.parentElement), font = fontOf(s), re = /\S+/g; let m;
@@ -74,7 +98,7 @@
         const rg = document.createRange(); rg.setStart(n, m.index); rg.setEnd(n, m.index + m[0].length);
         const rs = Array.from(rg.getClientRects()).filter(x => x.width > 0.2 && x.height > 0.2);
         rs.forEach((x, i) => { const mt = metrics(font, m[0]), base = x.top + mt.fa;
-          words.push({ l: x.left, t: x.top, r: x.right, b: x.bottom, s: m[0], n: i ? 0 : m[0].length, base, he: /[\u0590-\u05FF]/.test(m[0]),
+          words.push({ i: wi++, l: x.left, t: x.top, r: x.right, b: x.bottom, s: m[0], n: i ? 0 : m[0].length, base, he: /[\u0590-\u05FF]/.test(m[0]),
             capHe: base - metrics(font, '\u05D4').ia, capLa: base - metrics(font, 'H').ia, inkB: base + mt.id, fs: parseFloat(s.fontSize) }); });
       }
     }
@@ -90,9 +114,12 @@
     }
     out.sort((a, b) => a.t - b.t);
     for (const L of out) { const he = L.ws.some(w => w.he); L.inkT = Math.min(...L.ws.map(w => he ? w.capHe : w.capLa)); }
-    return out.map(L => ({ l: r1(L.l), t: r1(L.t), r: r1(L.r), b: r1(L.b), base: r1(L.base), inkT: r1(L.inkT), inkB: r1(L.inkB), fs: L.fs,
-      words: L.ws.filter(w => w.n).length, chars: L.ws.reduce((a, w) => a + w.n, 0) + Math.max(0, L.ws.filter(w => w.n).length - 1),
-      text: L.ws.slice().sort((a, b) => b.r - a.r).map(w => w.s).join(' ').slice(0, 120) }));
+    // the line's words in reading order (the text's own order: Hebrew right to left with Latin runs inside), its last two
+    // words too: a short word left at a line's end (a new sentence's first word after its full stop) shows there
+    return out.map(L => { const ord = L.ws.slice().sort((a, b) => a.i - b.i);
+      return { l: r1(L.l), t: r1(L.t), r: r1(L.r), b: r1(L.b), base: r1(L.base), inkT: r1(L.inkT), inkB: r1(L.inkB), fs: L.fs,
+        words: L.ws.filter(w => w.n).length, chars: L.ws.reduce((a, w) => a + w.n, 0) + Math.max(0, L.ws.filter(w => w.n).length - 1),
+        tail: ord.slice(-2).map(w => w.s), text: ord.map(w => w.s).join(' ').slice(0, 120) }; });
   }
 
   // ---------- picture content: the alpha box of an image at its natural size (cached), mapped through object-fit
@@ -169,6 +196,33 @@
   }
   const inter = (a, b) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
   LC.coverage = coverage;
+  // where a card is painted: its own background or border, else its ::before layer (story-v2: the kit card's body starts
+  // under its picture), with that layer's opacity (the body fades in once the kit has landed)
+  const visibleBg = s => { const c = parseColor(s.backgroundColor); return (c && c[3] > 0.05) || (s.backgroundImage && s.backgroundImage !== 'none'); };
+  function paintedBox(el) {
+    const r = el.getBoundingClientRect(), s = cs(el);
+    if (visibleBg(s) || (parseFloat(s.borderTopWidth) > 0 && (parseColor(s.borderTopColor) || [0, 0, 0, 0])[3] > 0.05))
+      return { rect: R(r), layer: 'own', op: r3(opac(el)) };
+    const b = getComputedStyle(el, '::before');
+    if (b && b.content && b.content !== 'none' && visibleBg(b) && b.position === 'absolute') {
+      const bl = parseFloat(s.borderLeftWidth), bt = parseFloat(s.borderTopWidth), br = parseFloat(s.borderRightWidth), bb = parseFloat(s.borderBottomWidth);
+      const px = v => (/px$/.test(v) ? parseFloat(v) : 0);
+      return { rect: [r1(r.left + bl + px(b.left)), r1(r.top + bt + px(b.top)), r1(r.right - br - px(b.right)), r1(r.bottom - bb - px(b.bottom))], layer: '::before', op: r3(+b.opacity * opac(el)) };
+    }
+    return { rect: R(r), layer: 'none', op: r3(opac(el)) };
+  }
+  // other sections' text on the screen between the header and the dock (a reading position should hold one screen)
+  function othersInBand(cur, F) {
+    const out = [];
+    for (const s of qa('main > section, main > .sec, .foot')) {
+      if (s === cur || s.contains(cur) || cur.contains(s) || !shown(s)) continue;
+      const tx = qa('h1, h2, h3, .kicker, p, .filter, .chips, .cards, .specs', s).filter(e => shown(e) && opac(e) > 0.05);
+      let top = Infinity, bot = -Infinity;
+      for (const e of tx) { const r = e.getBoundingClientRect(); if (r.bottom <= F[0] || r.top >= F[1]) continue; top = Math.min(top, r.top); bot = Math.max(bot, r.bottom); }
+      if (top < Infinity) out.push({ id: s.id || sig(s), top: r1(Math.max(top, F[0])), bottom: r1(Math.min(bot, F[1])), px: r1(Math.min(bot, F[1]) - Math.max(top, F[0])) });
+    }
+    return out;
+  }
 
   // ---------- page chrome and adapter
   function env() {
@@ -242,12 +296,15 @@
       if (rl === 'details') { b.inkR = r1(r.right); }
       if (rl === 'chips' || rl === 'pins' || rl === 'pill' || rl === 'badges') {   // their text: lines per item (contrast and line length)
         const it = el.matches('.pill, .dbl') ? [el] : Array.from(el.children).filter(shown);
-        b.itemText = it.map(c => ({ chars: (c.textContent || '').trim().length, lines: lines(c).length, contrast: textContrast(c).ratio, fs: parseFloat(cs(c).fontSize) }));
+        b.itemText = it.map(c => { const L = lines(c), last = L[L.length - 1], wide = L.length > 1 ? Math.max(...L.slice(0, -1).map(x => x.r - x.l)) : 0;
+          return { chars: (c.textContent || '').trim().length, lines: L.length, lastWords: last ? last.words : 0, lastShare: L.length > 1 ? r3((last.r - last.l) / wide) : 1,
+            lastText: L.length > 1 ? last.text.slice(0, 40) : '', contrast: textContrast(c).ratio, fs: parseFloat(cs(c).fontSize) }; });
       }
       return b;
     }
     const L = lines(el);
     b.lines = L.map(({ text, ...x }) => x); b.text = L.map(x => x.text).join(' / ').slice(0, 200);
+    if (L.length > 1) b.lastText = L[L.length - 1].text.slice(0, 60);
     if (L.length) { b.inkT = L[0].inkT; b.inkB = L[L.length - 1].base; b.inkL = Math.min(...L.map(x => x.l)); b.inkR = Math.max(...L.map(x => x.r)); }
     else { b.inkT = r1(r.top); b.inkB = r1(r.bottom); b.inkL = r1(r.left); b.inkR = r1(r.right); }
     b.contrast = textContrast(el);
@@ -316,6 +373,7 @@
     }
     if (sec.matches('.hero')) out.hero = true;
     out.overlap = overlaps(sec, blocks, prod);
+    if (!E.flow && !E.phone) out.others = othersInBand(sec, E.free);
     return out;
   };
 
@@ -340,8 +398,15 @@
   }
 
   // ---------- series and cards (step cards, the kit card, specialists, related)
+  // the line's colour layer (story-v2 .mt-haze: the mint glow and two green smokes): how strong it is here
+  function haze() {
+    const h = q('.mt-haze'); if (!h || !shown(h)) return null;
+    const it = Array.from(h.children).map(e => ({ cls: typeof e.className === 'string' ? e.className : '', op: r3(+cs(e).opacity * opac(h)) }));
+    return { glow: it.length ? it[0].op : 0, max: it.length ? Math.max(...it.map(x => x.op)) : 0, layers: it };
+  }
   LC.series = function (kind) {
     const E = env(), out = { kind, env: E };
+    if (kind === 'specialists' || kind === 'related') out.haze = haze();
     if (kind === 'steps') {
       const it = qa('.mt-steps > .mt-step').filter(shown);
       if (it.length) {
@@ -362,7 +427,7 @@
       const prod = LC.product(); if (prod && !prod.hidden) out.product = (({ pic, ...x }) => x)(prod);
       if (prod && prod.pic && out.items) out.productOverItems = out.items.map(i => coverage(prod.pic, i.rect));
     }
-    if (kind === 'kit') {
+    if (kind === 'kit' || kind === 'kit-land') {   // kit-land: the moment the kit lands on it (desktop: the card's top at 25 % of the screen)
       const c = q('.kitcard'); if (!c || !shown(c)) return Object.assign(out, { err: 'no kit card' });
       const s = cs(c), col = c.parentElement;
       out.card = R(c.getBoundingClientRect()); out.pad = [s.paddingLeft, s.paddingTop, s.paddingRight, s.paddingBottom].map(parseFloat);
@@ -374,7 +439,11 @@
       const live = q('.kc-live', c), img = q('.kc-pic', c), fig = q('.kc-fig', c);
       const pic = live && shown(live) ? pictureOf(live) : pictureOf(img);
       out.pic = pic && (({ _map, ...x }) => x)(pic); out.fig = fig ? R(fig.getBoundingClientRect()) : out.pic && out.pic.box;
-      out.blocks = Array.from(c.children).filter(shown).filter(e => !e.matches('.kc-fig, .kc-pic, .kc-live')).map(block);
+      out.painted = paintedBox(c);   // the card's painted body (its background), and how opaque it is here
+      const body = Array.from(c.children).filter(shown).filter(e => !e.matches('.kc-fig, .kc-pic, .kc-live'));
+      out.bodyOp = body.length ? r3(Math.min(...body.map(opac))) : null;
+      out.blocks = body.map(block);
+      out.others = E.flow || E.phone ? [] : othersInBand(q('#offer') || c.closest('section') || c, E.free);
       out.copy = q('.offer-copy') ? R(q('.offer-copy').getBoundingClientRect()) : (q('.offer .col') ? R(q('.offer .col').getBoundingClientRect()) : null);
       const prod = LC.product(); if (prod && !prod.hidden) out.product = (({ pic, ...x }) => x)(prod);
       if (out.pic) { const rows = []; out.blocks.forEach((b, i) => (b.lines || []).forEach(L => rows.push([L.l, L.inkT, L.r, L.base])));
@@ -431,6 +500,83 @@
     return { env: E, texts, targets, outside: out.slice(0, 40), outsideN: out.length };
   };
 
+  // ---------- the fixed chrome's own labels (read at the page's top): the phone's bottom bar (name + purpose)
+  LC.chrome = function () {
+    const bar = q('.bar'), out = {};
+    if (bar && shown(bar)) {
+      const lab = q('b', bar) || q('.name', bar);
+      if (lab) { const L = lines(lab); out.barLabel = { sel: path(lab), rect: R(lab.getBoundingClientRect()), lines: L.map(x => ({ l: x.l, r: x.r, t: x.t, b: x.b, text: x.text.slice(0, 40) })) }; }
+    }
+    return out;
+  };
+
+  // ---------- a phone's page as a stack (flow): what holds content, top to bottom, in page px; the rules slide the screen's
+  // free band (header → bottom bar) over it and find the largest stretch with nothing on it. Text: its lines; boxes with a
+  // painted background or border (buttons, chips, cards); pictures: their drawn pixels. A stage block (the product's block
+  // under a heading) shows its key pose (its still) as it comes up the screen and its run's end pose as it leaves (the next
+  // block's still at the same place in its block; the last block ends on the kit, S1's pose): it holds content from the
+  // first's top to the second's foot.
+  LC.scan = function () {
+    const E = env(), Y = scrollY, items = [];
+    const add = (t, b, what) => { if (b - t > 0.5) items.push([r1(t + Y), r1(b + Y), what]); };
+    const roots = [q('main'), q('.foot')].filter(Boolean), skip = '.stage, .ph-slot, dialog, [hidden], .sr-only, svg, .mt-haze, .bg, .plate, .still, #seq, .lvh-probe';
+    for (const root of roots) {
+      const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      for (let n; (n = tw.nextNode());) {
+        const p = n.parentElement; if (!/\S/.test(n.data) || !p || p.closest(skip) || !textShown(n) || opac(p) < 0.05) continue;
+        const rg = document.createRange(); rg.selectNodeContents(n);
+        for (const x of rg.getClientRects()) if (x.width > 0.5 && x.height > 0.5) add(x.top, x.bottom, sig(p));
+      }
+      for (const e of root.querySelectorAll('*')) {
+        if (e.closest(skip) || !shown(e) || opac(e) < 0.05) continue;
+        const s = cs(e);
+        if (e.tagName === 'IMG') { const pic = pictureOf(e); if (pic && pic.content) add(pic.content[1], pic.content[3], 'img ' + (pic.src || '').split('/').pop()); continue; }
+        if (visibleBg(s) || ['Top', 'Bottom'].some(k => parseFloat(s['border' + k + 'Width']) > 0 && (parseColor(s['border' + k + 'Color']) || [0, 0, 0, 0])[3] > 0.05)) {
+          const r = e.getBoundingClientRect(); if (r.width > 4 && r.height > 4 && r.width < E.W * 1.2 && r.height < 0.9 * E.H) add(r.top, r.bottom, sig(e));   // a painted section is a backdrop, not content
+        }
+      }
+    }
+    // the stage blocks: [top of its key pose, foot of its end pose], page px
+    const blocks = qa('main .stage').filter(shown), ph = qa('main .ph-slot').filter(shown);
+    const still = b => { const im = q('.stage-still', b); const pic = im && pictureOf(im, true); return pic && pic.content ? pic.content : null; };
+    const cv = q('#seq'), live = cv && shown(cv) && +cs(cv).opacity > 0.05 ? pictureOf(cv) : null;
+    const st = blocks.map(b => { const r = b.getBoundingClientRect(), c = still(b); return { r, rel: c ? [c[1] - r.top, c[3] - r.top] : null }; });
+    blocks.forEach((b, k) => {
+      let a = st[k].rel;
+      if (!a && live && live.content && inter(live.content, R(st[k].r)) > 0) a = [live.content[1] - st[k].r.top, live.content[3] - st[k].r.top];   // the opening: the live kit
+      if (!a) return;
+      const nx = k + 1 < st.length ? st[k + 1].rel : (window.__mtCfg && st[1] ? st[1].rel : null), end = nx || a;
+      add(st[k].r.top + a[0], st[k].r.top + Math.max(a[1], end[1]), 'stage ' + ((b.closest('section') || {}).id || k));
+      if (nx) items[items.length - 1].push({ start: [r1(a[0]), r1(a[1])], end: [r1(end[0]), r1(end[1])] });
+    });
+    for (const s of ph) { const r = s.getBoundingClientRect(); add(r.top, r.bottom, 'slot ' + ((s.closest('section') || {}).id || '')); }   // MASK: its objects fill the slot
+    items.sort((a, b) => a[0] - b[0]);
+    const merged = [];
+    for (const it of items) { const m = merged[merged.length - 1]; if (m && it[0] <= m[1] + 0.5) { if (it[1] > m[1]) { m[1] = it[1]; m[3] = it[2]; } } else merged.push([it[0], it[1], it[2], it[2]]); }
+    const gaps = []; for (let i = 1; i < merged.length; i++) gaps.push([merged[i - 1][1], merged[i][0], merged[i - 1][3], merged[i][2]]);
+    gaps.sort((a, b) => (b[1] - b[0]) - (a[1] - a[0]));
+    // the first screen as it is at the top: the live canvas as drawn there (the opening), not the block's later poses
+    let firstScreen = null;
+    if (Y < 1) {
+      const top = E.header ? E.header[3] : 0, foot = E.bar ? E.bar[1] : E.H;
+      const fs = items.filter(x => !/^stage /.test(x[2]) || !live || !live.content || x[0] > foot).map(x => [x[0], x[1]]);
+      if (live && live.content) fs.push([live.content[1], live.content[3]]);
+      const v = fs.map(x => [Math.max(x[0], top), Math.min(x[1], foot)]).filter(x => x[1] > x[0]).sort((a, b) => a[0] - b[0]);
+      let at = top, best = [0, top, top];
+      for (const x of v) { if (x[0] - at > best[0]) best = [x[0] - at, at, x[0]]; at = Math.max(at, x[1]); }
+      if (foot - at > best[0]) best = [foot - at, at, foot];
+      firstScreen = { px: r1(best[0]), from: r1(best[1]), to: r1(best[2]) };
+    }
+    return { env: E, docH: document.documentElement.scrollHeight, first: merged.length ? merged[0][0] : null, last: merged.length ? merged[merged.length - 1][1] : null, firstScreen,
+      n: items.length, gaps: gaps.slice(0, 12).map(g => ({ from: r1(g[0]), to: r1(g[1]), px: r1(g[1] - g[0]), above: g[2], below: g[3] })),
+      blocks: items.filter(x => /^stage /.test(x[2])).map(x => ({ id: x[2], top: x[0], foot: x[1], poses: x[3] || null })) };
+  };
+
+  // ---------- the page as it loads (nothing is changed): its height, the sections' tops and the engine's classes
+  LC.load = () => Object.assign(loadNow(), { fcp: Math.round((performance.getEntriesByName('first-contentful-paint')[0] || {}).startTime || 0) || null });
+  LC.loadLog = () => loadLog.slice();
+  LC.shifts = () => shifts.slice();
+
   // ---------- the scroll plan: each screen's hold (the engine's own windows) and where it is read
   LC.plan = function () {
     const E = env(), H = E.H, list = screens(), html = document.documentElement, plan = [];
@@ -462,6 +608,19 @@
     } else if (window.__anchorY) {
       list.forEach(s => { const y = window.__anchorY(s.st); plan.push({ id: s.id, y: Math.max(0, Math.round(y || 0)), hold: null, expectP: s.st }); });
     }
+    // the dock's landings (desktop, the template's dock: plain anchors with scroll-margin-top): where a click on the dock
+    // puts the reader, read once more where it is not the place above (the browser's own scroll to the anchor, then back)
+    if (window.__seq && !E.flow && !E.stageMode && E.dock) {
+      const y0 = scrollY;
+      for (const a of qa('.dock a[href^="#"]')) {
+        const id = a.getAttribute('href').slice(1), el = document.getElementById(id), s = plan.find(p => p.id === id && !p.via);
+        if (!el || !s) continue;   // the specialists: a series, read under the header anyway
+        el.scrollIntoView({ block: 'start', behavior: 'instant' });
+        const y = Math.round(scrollY);
+        if (Math.abs(y - s.y) > 4) plan.push({ id, y, via: 'dock', hold: s.hold, expectP: s.expectP }); else s.dock = true;
+      }
+      scrollTo(0, y0);
+    }
     // series views: their top just under the header (the free band's top) with a little air
     const ser = [];
     const at = (sel, k) => { const e = q(sel); if (e && shown(e)) ser.push({ id: k, y: Math.max(0, Math.round(e.getBoundingClientRect().top + scrollY - E.free[0] - 24)) }); };
@@ -469,8 +628,9 @@
     if (steps.length) steps.forEach((li, i) => { const r = li.getBoundingClientRect(); ser.push({ id: 'steps', i, y: Math.max(0, Math.round(r.top + scrollY + r.height / 2 - fc)) }); });
     else at('.steps', 'steps');
     const kc = q('.kitcard');
-    if (kc && shown(kc)) { const off = plan.find(p => p.id === 'offer'); const r = kc.getBoundingClientRect();
-      ser.push({ id: 'kit', y: off && !E.flow && !E.phone ? off.y : Math.max(0, Math.round(r.top + scrollY + r.height / 2 - fc)) }); }
+    if (kc && shown(kc)) { const off = plan.find(p => p.id === 'offer' && !p.via); const r = kc.getBoundingClientRect();
+      ser.push({ id: 'kit', y: off && !E.flow && !E.phone ? off.y : Math.max(0, Math.round(r.top + scrollY + r.height / 2 - fc)) });
+      if (window.__seq && !E.flow && !E.phone) ser.push({ id: 'kit-land', y: Math.max(0, Math.round(r.top + scrollY - 0.25 * H)) }); }   // the engine's landing (LAND1)
     at('#specialists .specs', 'specialists'); at('.related .cards', 'related');
     return { env: E, screens: plan, series: ser };
   };

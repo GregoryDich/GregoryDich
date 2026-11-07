@@ -1,10 +1,14 @@
-// Layout check of a product page (site v2 rules L1–L7, design-rules.md «Сайт v2 — вёрстка по замерам»): the values are
+// Layout check of a product page (site v2 rules L1–L8, design-rules.md «Сайт v2 — вёрстка по замерам»): the values are
 // computed from DOM geometry, computed styles, Range rects of the words and the alpha of the product pictures (image
 // files at their natural size, 2D canvases, the WebGL canvas's kept drawing buffer), plus the engines' QA state
 // (window.__seq().sceneState.aabb on the template pages, window.__objRects on MASK). No screenshots.
 // Each screen is measured at its reading position: inside the engine's hold for that screen (the key pose shown) with the
-// copy centred in the free band between the header and the dock (desktop), the anchor's landing (phone and tablet
-// blocks), MASK's own stage anchors; then the step cards, the kit card, the specialists and the related cards.
+// copy centred in the free band between the header and the dock (desktop), and again where the dock lands the reader
+// when that is elsewhere («<id> @dock»); the anchor's landing (phone and tablet blocks: the block's key frame and the live
+// canvas the reader sees there), MASK's own stage anchors; then the step cards, the kit card (read, and the moment the
+// kit lands on it), the specialists and the related cards. A phone's page is also read whole as a stack (the largest
+// empty stretch of the screen at any scroll), and the page logs its own load from the first frame (sections that jump
+// after the layout is shown; a phone is loaded three times: the gaps between its blocks are a race).
 //
 // usage:
 //   FONTDIR=<dir with Rubik[wght].ttf> THREE=<three.module.min.js of three@0.160.0> NODE_PATH=$(npm root -g) \
@@ -13,7 +17,8 @@
 // A viewport is WxHxDPR, with a trailing t for a touch screen (isMobile + hasTouch). The raw file of a page and
 // viewport is <raw dir>/<slug>__<viewport>.json; run skips the ones that exist (a restart goes on where it stopped).
 // The refs (default exotech-gel, exocell-mask: the owner-approved pages) give the type scale; notes.json holds the
-// verdicts on failures, keyed "<slug>|<rule>|<check>[|<where>[|<element>]]", and "_summary" for the report's top.
+// verdicts on failures, keyed "<slug>|<rule>|<check>[|<where>[|<element>]]", "_summary" for the report's top and "_eye"
+// (lines) for a section on an outside review's places.
 // As a module (the page map): require('./layout-check.cjs') → install(context, { html, files }) before the page opens,
 // measure(page) → the raw record of the page at this viewport (or page.evaluate(() => __LC.plan() / __LC.screen(id) /
 // __LC.series(kind)) at its own scroll positions), evaluate(raws, { refs }) → values and verdicts, report(result).
@@ -68,9 +73,29 @@ async function settle(p, ms = 450) {
 const storyPos = p => p.evaluate(() => { const st = window.__seq && window.__seq(); return { p: typeof window.__mtP === 'number' ? window.__mtP : st ? st.pos : null,
   drawn: st && st.sceneState ? st.sceneState.drawn : null, mask: window.__anchorY ? 1 : 0 }; });
 
+// the page as it loads, untouched (before the reveal and the eager pictures): its height and its sections' tops sampled
+// until the page is ready and nothing has moved for 4 s (≤ 30 s), and the browser's layout-shift entries; the rules
+// compare the tops when it became ready with the final ones (a block that jumps after the reader can see the page)
+async function loadTimeline(p, maxMs = 30000) {
+  const t0 = Date.now(); let readyT = null, last = '', since = 0, s = null;
+  while (Date.now() - t0 < maxMs) {   // the page keeps its own log from its start (layout-page.js); here: wait until it is ready and still
+    s = await p.evaluate(() => window.__LC.load());
+    const key = [s.h, s.cls, s.ready].concat(s.tops.map(x => x[1])).join('|');
+    if (key !== last) { last = key; since = s.t; }
+    if (s.ready && readyT == null) readyT = s.t;
+    if (readyT != null && s.t - since >= 4000) break;
+    await wait(150);
+  }
+  const samples = await p.evaluate(() => window.__LC.loadLog());
+  const first = samples.find(x => x.ready);
+  if (s) samples.push(s);   // the state now (the final one)
+  return { readyT: first ? first.t : readyT, fcp: s && s.fcp, samples, shifts: await p.evaluate(() => window.__LC.shifts()) };
+}
+
 // one page at one viewport: every screen at its reading position, then the series; returns the raw record
 async function measure(p, log = () => {}) {
   const t0 = Date.now(), errs = [];
+  const load = await loadTimeline(p).catch(e => ({ err: String(e).slice(0, 160) }));
   await p.waitForFunction(() => {
     const h = document.documentElement;
     return (window.__seq && (h.classList.contains('story') || h.classList.contains('no-gl'))) || window.__glReady || h.classList.contains('nogl');
@@ -84,14 +109,18 @@ async function measure(p, log = () => {}) {
     if (k === last) { if (++same >= 3) break; } else { same = 0; last = k; }
     await wait(400);
   }
+  await p.evaluate(() => scrollTo(0, 0)); await settle(p, 300);
   const plan = await p.evaluate(() => window.__LC.plan());
-  const raw = { t: new Date().toISOString(), env0: plan.env, plan, screens: [], series: [], errs };
+  const raw = { t: new Date().toISOString(), env0: plan.env, plan, screens: [], series: [], errs, load };
+  raw.chrome = await p.evaluate(() => window.__LC.chrome());
+  if (plan.env.flow || (plan.env.adapter === 'mask' && plan.env.phone)) raw.scan = await p.evaluate(() => window.__LC.scan());   // a phone's stack, at the top
   for (const s of plan.screens) {
     await p.evaluate(y => scrollTo(0, y), s.y); await settle(p);
     const pos = await storyPos(p);
     const m = await p.evaluate(id => window.__LC.screen(id), s.id);
     m.at = { y: s.y, hold: s.hold, expectP: s.expectP, p: pos.p, drawn: pos.drawn };
-    raw.screens.push(m); log(`  ${s.id} y${s.y} p${pos.p == null ? '-' : (+pos.p).toFixed(3)}`);
+    if (s.via) m.via = s.via; if (s.dock) m.dock = true;
+    raw.screens.push(m); log(`  ${s.id}${s.via ? ' @' + s.via : ''} y${s.y} p${pos.p == null ? '-' : (+pos.p).toFixed(3)}`);
   }
   const done = new Set();
   for (const s of plan.series) {
@@ -99,6 +128,17 @@ async function measure(p, log = () => {}) {
     await p.evaluate(y => scrollTo(0, y), s.y); await settle(p);
     const m = await p.evaluate(k => window.__LC.series(k), s.id);
     m.at = { y: s.y, i: s.i == null ? null : s.i };
+    if (s.id === 'kit-land' && !m.err) {   // the card's body after the landing: how much more scroll until it is there (≥ 0.9)
+      const H = plan.env.H; m.after = [];
+      for (let i = 1; i <= 12; i++) {
+        const dy = Math.round(i * 0.01 * H);
+        const o = await p.evaluate(async y => { scrollTo(0, y); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); await new Promise(r => setTimeout(r, 40));
+          const c = document.querySelector('.kitcard'), b = c && Array.from(c.children).filter(e => !e.matches('.kc-fig, .kc-pic, .kc-live'));
+          return b && b.length ? Math.min(...b.map(e => +getComputedStyle(e).opacity)) : null; }, s.y + dy);
+        m.after.push([dy, o == null ? null : Math.round(o * 1000) / 1000]);
+        if (o != null && o >= 0.9) break;
+      }
+    }
     raw.series.push(m); log(`  series ${s.id}${s.i == null ? '' : ' ' + s.i} y${s.y}`);
   }
   raw.page = await p.evaluate(() => window.__LC.pageLevel());
@@ -111,12 +151,14 @@ async function runCli(argv) {
   const { chromium } = require('playwright');
   fs.mkdirSync(rawDir, { recursive: true });
   const list = (vps ? vps.split(',') : VIEWPORTS).map(parseVp);
-  const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--disable-gpu-sandbox'] });
+  const launch = () => chromium.launch({ args: ['--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--disable-gpu-sandbox'] });
+  let browser = await launch();
   const prog = path.join(rawDir, 'progress.jsonl');
   for (const vp of list) {
     const f = path.join(rawDir, `${slug}__${vp.id}.json`);
     if (fs.existsSync(f)) { console.log(slug, vp.id, 'done before'); continue; }
     const t0 = Date.now();
+    if (!browser.isConnected()) { console.log('the browser has gone: a new one'); browser = await launch(); }   // a crash (the GPU process) ends one viewport, not the run
     const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, deviceScaleFactor: vp.dpr, isMobile: vp.touch, hasTouch: vp.touch });
     await install(ctx, { html, files });
     const p = await ctx.newPage(), errs = [];
@@ -125,6 +167,12 @@ async function runCli(argv) {
     try {
       await p.goto(ORIGIN, { waitUntil: 'load', timeout: 120000 });
       const raw = await measure(p, s => console.log(s));
+      // a phone's blocks: the gaps between them are written by script after the blocks are shown (a race that depends on the
+      // load's timing): two more loads, the cache warm, each logged from its start; the rules take the worst of the three
+      if (raw.env0.flow || (raw.env0.adapter === 'mask' && raw.env0.phone)) {
+        raw.loadRuns = [];
+        for (let i = 0; i < 2; i++) { await p.reload({ waitUntil: 'load', timeout: 120000 }); raw.loadRuns.push(await loadTimeline(p).catch(e => ({ err: String(e).slice(0, 160) }))); }
+      }
       raw.slug = slug; raw.vp = vp; raw.errs = raw.errs.concat(errs); raw.wallMs = Date.now() - t0;
       fs.writeFileSync(f, JSON.stringify(raw));
       fs.appendFileSync(prog, JSON.stringify({ t: new Date().toISOString(), slug, vp: vp.id, ms: raw.wallMs, screens: raw.screens.length, series: raw.series.length, errs: raw.errs.length }) + '\n');
@@ -133,9 +181,9 @@ async function runCli(argv) {
       console.log(slug, vp.id, 'FAILED', e.message.slice(0, 300));
       fs.appendFileSync(prog, JSON.stringify({ t: new Date().toISOString(), slug, vp: vp.id, fail: e.message.slice(0, 200) }) + '\n');
     }
-    await ctx.close();
+    await ctx.close().catch(() => {});
   }
-  await browser.close();
+  await browser.close().catch(() => {});
 }
 
 module.exports = { VIEWPORTS, parseVp, install, measure, settle, ORIGIN, PAGE_JS };
