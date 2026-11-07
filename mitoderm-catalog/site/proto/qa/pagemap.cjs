@@ -9,9 +9,11 @@
 // spans, the poses, the product's outline per 10 px, the pictures, the texts, the flags. Pictures are needed only where
 // a flag points, and for a last look at the key screens.
 //
-// usage:
-//   NODE_PATH=$(npm root -g) node qa/pagemap.cjs <page.html> <files dir> [--viewports all|key|<list>] [--out <dir>]
-//       [--raw <dir>] [--three <three.module.min.js>] [--fonts <dir with Rubik[wght].ttf>] [--step 10] [--slug <slug>]
+// usage (qa/pagemap.md: the tool's doc, the legend, the calibration):
+//   NODE_PATH=$(npm root -g) THREE=<three.module.min.js> node qa/pagemap.cjs <page.html> <files dir> [--viewports all|key|<list>]
+//       [--out <dir>] [--raw <dir>] [--three <file>] [--fonts <dir with Rubik[wght].ttf>] [--step 10] [--slug <slug>]
+//       [--keys <dir of the key frames the build cut its pictures from>] [--build-cmd "<the build's command>"]
+//       [--looked <spot.json of the last --spot run>]
 //   node qa/pagemap.cjs --from-raw <raw dir> [--out <dir>]     the checks and the map again from a probe's raw data
 //   node qa/pagemap.cjs --spot <map.json> <page.html> <files dir> [--viewports key|<list>] [--out <dir>]
 //       [--classes CUT,EMPTY,…,colour]  the pictures the numbers ask for (real three.js): each flag's worst step (≤ 3 per
@@ -20,10 +22,13 @@
 // <page.html>: the page as built (a body fragment: the host adds the document shell); <files dir>: the folder published
 // with it (img/…). Viewports: WxH[@dpr][t] (t: touch, a phone or tablet), nojs-… (no JavaScript: the page's scripts
 // removed), nogl-… (no WebGL: Chromium's --disable-3d-apis). all = the 11 screens of the page's QA and no JS / no WebGL at
-// 1440x900 and 390x844; key = 1280x720 1440x900 1920x1080 390x844@3t. Out: <out>/<slug>.json (the map) and <slug>.md
-// (a readable note; the part between <!-- notes --> and <!-- /notes --> of an existing one is kept); raw: one gzipped
-// JSON per screen (every step, every mesh), for --from-raw. Three.js: three@0.160.0's three.module.min.js (default: the
-// one NODE_PATH resolves, or $THREE); fonts: $FONTDIR (default <tmp>/mitoderm-fonts).
+// 1440x900 and 390x844; key = 1280x720 1440x900 1920x1080 390x844@3t. Out: <out>/<slug>.json (the map: slim, one screen
+// a line, a legend inside), <slug>.md (a readable note; the part between <!-- notes --> and <!-- /notes --> of an existing
+// one is kept) and README.md (the roadmap of the 13 pages); the 10 px track and the text boxes of every screen go to
+// <raw>/<slug>.track.json.gz (or <tmp>/pagemap/ without --raw); raw: one gzipped JSON per screen (every step, every mesh),
+// for --from-raw. Three.js: three@0.160.0's three.module.min.js (--three, $THREE or the one NODE_PATH resolves; e.g.
+// `npm i --no-save three@0.160.0` in a scratch folder); the font: qa/fonts/Rubik[wght].ttf (the variable Rubik, OFL; or
+// --fonts <dir>, $FONTDIR). Without the font or three.js the tool stops: a fallback font moves every line and the map.
 'use strict';
 const fs = require('fs'), path = require('path'), zlib = require('zlib'), crypto = require('crypto'), os = require('os');
 
@@ -56,6 +61,7 @@ const PROBE = function () {
     if (s.classList.contains('mt-step')) return 'step' + (Array.prototype.indexOf.call(s.parentElement.children, s) + 1);
     if (s.classList.contains('kitcard')) return 'kitcard'; if (s.classList.contains('mt-prep')) return 'prep';
     return s.id || s.className.split(' ')[0]; };
+  const fixOf = el => { for (let e = el; e && e !== document.body; e = e.parentElement) { const p = getComputedStyle(e).position; if (p === 'sticky' || p === 'fixed') return p; } return ''; };
   function scanTexts() {   // the text nodes of the content (main, footer), each under its owner: the nearest text element
     scanned = 1;
     for (const base of document.querySelectorAll('main, footer')) {
@@ -66,7 +72,7 @@ const PROBE = function () {
         const ow = pe.closest(TXT) || pe;
         if (!oid.has(ow)) { oid.set(ow, owners.length); owners.push({ el: ow, nodes: [] });
           tinfo.push({ tag: ow.tagName.toLowerCase(), cls: (ow.className && ow.className.baseVal === undefined ? ow.className : '').split(' ').filter(Boolean).slice(0, 2).join('.'),
-            sec: secOf(ow), text: ow.textContent.replace(/\s+/g, ' ').trim().slice(0, 48) }); }
+            sec: secOf(ow), text: ow.textContent.replace(/\s+/g, ' ').trim().slice(0, 48), fix: fixOf(ow) }); }   // fix: sticky or fixed (it or an ancestor): its page box moves with the scroll
         owners[oid.get(ow)].nodes.push(n);
       }
     }
@@ -149,7 +155,7 @@ const PROBE = function () {
       pid.set(el, pinfo.length);
       const kind = el.classList.contains('stage-still') ? 'stage-still' : el.classList.contains('slot') ? 'slot' : el.closest('.still') ? 'still'
         : el.closest('.mt-step') ? 'step' : el.classList.contains('kc-live') ? 'kc-live' : 'kc-pic';
-      pinfo.push({ kind, src: (el.getAttribute('src') || '').split('/').pop(), sec: secOf(el) });
+      pinfo.push({ kind, src: (el.getAttribute('src') || '').split('/').pop(), sec: secOf(el), nw: el.naturalWidth || el.width || 0, nh: el.naturalHeight || el.height || 0 });
     }
   }
   function pictures(out) {
@@ -217,7 +223,7 @@ const PROBE = function () {
     return s;
   }
   // a frame: a pixel's worth of change first, so the next frame comes at once (an unchanged page gets frames at 60 Hz only)
-  let ticker = null, tk = 0;
+  let ticker = null, tk = 0, wasHidden = false;
   const frame = () => new Promise(r => {
     if (!ticker) { ticker = document.createElement('div'); ticker.setAttribute('aria-hidden', 'true');
       ticker.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;background:#000;opacity:.01;pointer-events:none;z-index:-1'; document.body.appendChild(ticker); }
@@ -231,8 +237,14 @@ const PROBE = function () {
       for (let i = 0; i < settle; i++) await frame();
       // a live scene that draws now (shown, not stepped aside for the step cards): wait for a frame drawn after this scroll
       const cv = document.getElementById('seq'), de = document.documentElement;
-      if (window.__geo && window.__geo.main && de.classList.contains('story') && !de.classList.contains('mt-cards0') && cv && cv.style.opacity !== '0')
+      const shownNow = de.classList.contains('story') && !de.classList.contains('mt-cards0') && !!cv && cv.style.opacity !== '0';
+      if (window.__geo && window.__geo.main && shownNow) {
         for (let k = 0; k < 4 && window.__geo.main.t < t0; k++) await frame();
+        // coming back after the step cards: the engine draws it at once as it shows it, with that frame's cards value (the
+        // pair still away); the pair's real state is in the next drawn frame
+        if (wasHidden) { const tA = window.__geo.main.t; for (let k = 0; k < 6 && window.__geo.main.t <= tA; k++) await frame(); }
+      }
+      wasHidden = !shownNow;
       const t1 = performance.now(), rec = step(); if (window.__pmProfile) rec.tm.unshift(Math.round((t1 - t0) * 100) / 100); out.push(rec);
     }
     return out;
@@ -255,7 +267,9 @@ const PROBE = function () {
       heads[sec.id] = h; stages[sec.id] = pg(stg); copies[sec.id] = c;
     }
     const steps = Array.prototype.map.call(document.querySelectorAll('.mt-step'), li => ({ fig: pg(li.querySelector('figure')), text: pg(li.querySelector('.mt-st')) }));
-    return { blocks, heads, stages, copies, steps, band: window.__mtBand || null, docH: document.documentElement.scrollHeight, W: innerWidth, H: innerHeight, dpr: devicePixelRatio,
+    // the step cards as a sideways scroller (a phone: overflow-x): how many stand on the screen without scrolling it
+    const ms = q('.mt-steps'), stepsScroll = ms && ms.scrollWidth > ms.clientWidth + 1 ? { scrollW: ms.scrollWidth, clientW: ms.clientWidth, onScreen: steps.filter(s => s.fig && s.fig[0] >= -1 && s.fig[2] <= innerWidth + 1).length } : null;
+    return { blocks, heads, stages, copies, steps, stepsScroll, band: window.__mtBand || null, docH: document.documentElement.scrollHeight, W: innerWidth, H: innerHeight, dpr: devicePixelRatio,
       cls: CLS.filter(c => document.documentElement.classList.contains(c)), scrollW: document.documentElement.scrollWidth };
   }
   window.__pm = { step, sweep, statics, tables: () => ({ texts: tinfo, pics: pinfo, chrome: CHROME, keys: window.__geoKeys ? window.__geoKeys() : [] }) };
@@ -331,12 +345,12 @@ async function probeViewport(browser, vp, page, opts) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-module.exports = { PROBE, INIT, parseVp, SETS, probeViewport, analyse: (...a) => analyse(...a), readRaw: (...a) => readRaw(...a), TH: () => TH };
+module.exports = { PROBE, INIT, parseVp, SETS, probeViewport, analyse: (...a) => analyse(...a), readRaw: (...a) => readRaw(...a), TH: () => TH, PAGES: () => PAGES, RULE_CLS: () => RULE_CLS };
 
 async function main() {
   const fromRaw = opt('--from-raw');
   const out = path.resolve(opt('--out', '.'));
-  if (fromRaw) return analyseAll(readRaw(fromRaw), out);
+  if (fromRaw) return analyseAll(readRaw(fromRaw), out, path.resolve(fromRaw));
   if (opt('--spot')) return spot(opt('--spot'), POS[0], POS[1], out);
   if (POS.length < 2) { console.error('usage: node qa/pagemap.cjs <page.html> <files dir> [--viewports all|key|<list>] [--out dir] [--raw dir]'); process.exit(2); }
   const [pageFile, files] = POS;
@@ -345,11 +359,9 @@ async function main() {
   const shell = b => '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></head><body>' + b + '</body></html>';
   const page = { file: path.resolve(pageFile), md5: crypto.createHash('md5').update(html0).digest('hex'), html: shell(html0),
     htmlNoJs: shell(html0.replace(/<script\b[\s\S]*?<\/script>/gi, '')), slug: opt('--slug', path.basename(pageFile).replace(/-live\.html$|\.html$/, '')) };
-  let three = opt('--three', process.env.THREE);
-  if (!three) try { three = require.resolve('three/build/three.module.min.js'); } catch (e) { three = ''; }
-  const fontDir = opt('--fonts', process.env.FONTDIR || path.join(os.tmpdir(), 'mitoderm-fonts'));
-  const opts = { files: path.resolve(files), three, nodraw: path.join(__dirname, 'three-nodraw.mjs'), font: path.join(fontDir, 'Rubik[wght].ttf'), step: +opt('--step', 10) };
-  if (!three || !fs.existsSync(three)) { console.error('three.module.min.js not found: --three <file> or $THREE'); process.exit(2); }
+  const three = threeFile(), font = fontFile();
+  const opts = { files: path.resolve(files), three, nodraw: path.join(__dirname, 'three-nodraw.mjs'), font, step: +opt('--step', 10) };
+  page.build = provenance(page, opts);
   const vlist = opt('--viewports', 'all'); const vps = (SETS[vlist] || vlist.split(',')).map(parseVp);
   const rawDir = opt('--raw') ? path.resolve(opt('--raw')) : null; if (rawDir) fs.mkdirSync(rawDir, { recursive: true });
   const runs = [], T0 = Date.now();
@@ -358,17 +370,42 @@ async function main() {
     const b = vp.kind === 'nogl' ? (nogl = nogl || await chromium.launch({ args: ['--disable-3d-apis', '--disable-frame-rate-limit', '--disable-gpu-vsync'] }))
       : (live = live || await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--disable-frame-rate-limit', '--disable-gpu-vsync'] }));
     const run = await probeViewport(b, vp, page, opts);
-    run.page = { file: page.file, md5: page.md5, slug: page.slug };
+    run.page = { file: page.file, md5: page.md5, slug: page.slug, build: page.build };
     console.log(`${vp.id}: ${run.steps.length} steps in ${(run.ms / 1000).toFixed(1)} s (ready ${(run.ready / 1000).toFixed(1)} s), errors ${run.log.errs.length}`);
     if (rawDir) fs.writeFileSync(path.join(rawDir, vp.id + '.json.gz'), zlib.gzipSync(JSON.stringify(run)));
     runs.push(run);
   }
   if (live) await live.close(); if (nogl) await nogl.close();
   console.log(`probe: ${vps.length} screens in ${((Date.now() - T0) / 1000).toFixed(1)} s`);
-  if (typeof analyseAll === 'function') analyseAll(runs, out);
+  analyseAll(runs, out, rawDir);
 }
 function readRaw(dir) {
-  return fs.readdirSync(dir).filter(f => f.endsWith('.json.gz')).sort().map(f => JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(dir, f)))));
+  return fs.readdirSync(dir).filter(f => f.endsWith('.json.gz') && !f.endsWith('.track.json.gz')).sort().map(f => JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(dir, f)))));
+}
+// the files the probe needs, or a stop: without three.js nothing is measured, and a fallback font moves every line of the
+// page (the map's y's, the holds, the runs: 25 px on this page), so a missing one is an error, never a silent 404
+const md5f = f => { try { return crypto.createHash('md5').update(fs.readFileSync(f)).digest('hex'); } catch (e) { return null; } };
+function threeFile() {
+  let three = opt('--three', process.env.THREE);
+  if (!three) try { three = require.resolve('three/build/three.module.min.js'); } catch (e) { three = ''; }
+  if (!three || !fs.existsSync(three)) { console.error('three.module.min.js (three@0.160.0) not found: --three <file>, $THREE, or NODE_PATH with three installed (npm i --no-save three@0.160.0)'); process.exit(2); }
+  return path.resolve(three);
+}
+function fontFile() {
+  const dir = opt('--fonts', process.env.FONTDIR || path.join(__dirname, 'fonts')), f = path.join(dir, 'Rubik[wght].ttf');
+  if (!fs.existsSync(f)) { console.error('the page\'s font Rubik[wght].ttf (the variable Rubik, fonts.google.com, OFL) not found in ' + dir + ': qa/fonts/, --fonts <dir> or $FONTDIR'); process.exit(2); }
+  return f;
+}
+// where the build came from: the repository's HEAD, the last commit of the page's sources, the build's command, the key
+// frames its pictures were cut from (md5 of their list), the probe's own files
+function provenance(page, opts) {
+  const cfg = PAGES[page.slug] || {}, repo = path.resolve(__dirname, '..', '..', '..'), git = args => { try { return require('child_process').execFileSync('git', args, { cwd: repo, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch (e) { return null; } };
+  const b = { file: path.basename(page.file), md5: page.md5, rev: git(['rev-parse', '--short', 'HEAD']), sourcesRev: cfg.sources ? git(['log', '-1', '--format=%h', '--', ...cfg.sources]) : null,
+    sources: cfg.sources || null, cmd: opt('--build-cmd', cfg.build || null) };
+  const keys = opt('--keys'); if (keys && fs.existsSync(keys)) { const fl = fs.readdirSync(keys).filter(f => !f.startsWith('.')).sort(), lines = fl.map(f => f + ' ' + md5f(path.join(keys, f)));
+    b.keys = { dir: path.basename(keys), n: fl.length, md5: crypto.createHash('md5').update(lines.join('\n')).digest('hex') }; }
+  b.probe = { font: md5f(opts.font), three: md5f(opts.three), nodraw: md5f(opts.nodraw) };
+  return b;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -388,6 +425,7 @@ const TH = {
   ghost: [0.05, 0.95], ghostArea: 50,   // a see-through solid part: its opacity in this range, overlapping ≥ this px²
   ghostPart: 400,             // … and at least this large (px²): a smaller part fading is listed apart (design)
   popDy: 30, popSize: 1.38, popMove: 1.5,   // a pop: per 30 px of scroll the size × more than this, or the middle moved > this × size
+  popDy2: 60, popSize2: 1.75, // … and per 60 px: × more than this (a pop spread over two steps; the current build ≤ 1.57, the fd91489 dive 1.80)
   popHidden: 0.3,             // appearing or vanishing: a pop unless a nearer solid object covers at least this share of it
   frac: 0.002,                // a run in progress: the position's fraction in (frac, 1 − frac)
   emptyPx: 60,                // an empty stage for less scroll than this is a handover (design), not a flag
@@ -398,17 +436,37 @@ const TH = {
 // per page: the scene's top-level objects by index (scene.children) and the parts that are its body (for its size: the
 // cap lifting or the applicator coming on is not the vial growing); userData.j −1: the box's faces
 const PAGES = {
-  'mitotech-cell-booster': { objects: { 1: 'box', 2: 'k1', 3: 'k2', 4: 'k3', 5: 'k4', 6: 'k5', 7: 'k6', 8: 'k7', 9: 'k8', 10: 'B', 11: 'P' },
-    body: [-1, 0, 6, 7], clearJ: [10],   // the applicator's tip fades in and out with its clear plastic (one clear assembly)
+  'mitotech-cell-booster': {
+    title: 'MITOTECH CELL BOOSTER', link: 'https://claude.ai/artifact/G3tdcwusRsVdw4E5HeGM5s',
+    objects: { 1: 'box', 2: 'k1', 3: 'k2', 4: 'k3', 5: 'k4', 6: 'k5', 7: 'k6', 8: 'k7', 9: 'k8', 10: 'B', 11: 'P' },
+    body: [-1, 0, 6, 7],
     parts: { '-1': 'face', 0: 'glass', 1: 'cake', 2: 'liquid', 3: 'stopper', 4: 'ring', 5: 'cap', 6: 'glass', 7: 'label', 8: 'applicator', 9: 'applicator', 10: 'tip' },
-    title: 'MITOTECH CELL BOOSTER', link: 'https://claude.ai/artifact/G3tdcwusRsVdw4E5HeGM5s', questions: '../../../state/mitotech/texts-for-approval.md',
+    // the page's sources in the repository (their last commit goes into build.sourcesRev) and how it is built
+    sources: ['site/proto/scenes/mitotech-cell-booster.js', 'site/proto/story-v2-motion.js', 'site/proto/story-v2.css', 'site/proto/engine/story.js',
+      'site/proto/vtech-live-template.html', 'site/proto/build-vtech.py', 'site/proto/story_content.py'],
+    build: 'cd site/proto && python3 build-vtech.py --product mitotech-cell-booster --scene --files <dir> --keys <keys> --links artifact; rm -rf __pycache__',
+    pictures: 'step1–5, m1–m5, still, kit — `build-vtech.py` режет их из ключевых кадров сцены (`scenes/render-keys.cjs` → `--keys <dir>`: v0-open … v6-kit, step1–5)',
+    texts: 'из `site/proto/story_content.py` (MITOTECH: `state/mitotech/canon-v2.md`, кадры каталога 941:2, 941:21, 956:2, 956:23) и UI-строки 12 страниц; строки, которых нет дословно у заказчика, — `state/mitotech/texts-for-approval.md`',
+    textBlocks: ['open', 'meet', 'why', 'inside', 'feel', 'protocol', 'prep', 'step1', 'step2', 'step3', 'step4', 'step5', 'offer', 'kitcard'],   // the product's own blocks (the map lists these; the specialists, «see also», the footer are the site's)
+    questions: { file: '../../../state/mitotech/texts-for-approval.md', section: 6, short: '§6: цвет раствора, аппликаторы в наборе, заголовок оффера, янтарь — стекло или жидкость',
+      extra: ['§4: бейдж линейки `MITOTECH` — подтвердить имя (на коробке «MITOTECH®», в каталоге без ®)'] },
+    // what waits for a decision besides what the checks find (the checks' own items are added from the data)
+    pending: ['«ок» заказчика на образце карты (эта страница) — открывает карты остальных 12 страниц (PLAN: «карты остальных 12 — после «ок» на образце»)'],
+    // a desktop (html.story): the poses held and the runs between them
     holds: ['открытие: имя над набором (коробка и 8 флаконов, R15), набор в свободной полосе экрана', 'S1 #meet: набор слева, текст справа',
       'S2 #why: коробка одна, отступила вглубь', 'S3 #inside: пара (порошок и бустер) крупно', 'S4 #feel: пара мала и низко',
-      'S5 #protocol: приготовление R7 (пара), затем карточки шагов 01–05', 'оффер: набор на карточке «מה באריזה» (картинка карточки)'],
+      'S5 #protocol: приготовление R7 (пара); далее карточки шагов 01–05 (сцена скрыта)', 'оффер: набор на карточке «מה באריזה» (3D, затем картинка карточки)'],
     runs: ['камера въезжает в набор (открытие → S1)', 'восемь флаконов уходят за коробку, коробка отступает', 'пара выходит из-за левого края коробки и подходит к камере',
       'нырок в янтарь бустера и обратно (янтарный свет, круглое затухание)', 'приготовление R7: колпачки, пробки, переливание, пробка, аппликатор',
-      'пара уходит в темноту на время карточек шагов (компьютер), затем набор собирается и летит на карточку «מה באריזה»'] },
+      'набор собирается; компьютер: летит на карточку «מה באריזה»; телефон: уходит вверх, карточка показывает картинку'],
+    // a phone or tablet (html.flow): each block has its stage; run k plays in block k as the block comes up the screen
+    flow: ['#open: наезд открытия (прогон 0), к концу блока поза 1 (набор)', '#meet: набор (поза 1) → прогон 1 → коробка одна (поза 2)',
+      '#why: коробка (поза 2) → прогон 2 → пара крупно (поза 3)', '#inside: пара (поза 3) → прогон 3, нырок → пара (поза 4)',
+      '#feel: пара (поза 4) → прогон 4, приготовление R7 → поза 5', '#protocol: начало прогона 5 (поза 5.58, пара готова) → прогон 5, набор собирается → набор (поза 6) у заголовка «אופן השימוש»; дальше карточки шагов (боковая лента) и картинка набора на карточке'],
+  },
 };
+// the checks whose flag is a rule for the owner to decide, not a pixel defect on a frame (listed apart from the flags)
+const RULE_CLS = { RUN_SPAN: 1 };
 const CLEAR = /glass|liq|clr|thr|water|gel/;   // material keys of see-through matter (glass, liquids): never a ghost by itself
 const CHROME_NAME = ['header', 'dock', 'bar'];
 const isect = (a, b) => [Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.min(a[2], b[2]), Math.min(a[3], b[3])];
@@ -448,7 +506,7 @@ function fadeIn(d, r, part) {   // the most the fades leave anywhere in screen r
 }
 function derive(run) {   // per step: the mode, the canvas on the screen, every mesh on the screen, the objects, the products in view
   const vp = run.vp, W = vp.w, H = vp.h, T = run.end.tables, keys = T.keys || [], cfg = PAGES[run.page.slug] || { objects: {}, body: null, parts: {} };
-  const clear = keys.map(k => CLEAR.test(k)), view = [0, 0, W, H], clearJ = cfg.clearJ || [];
+  const clear = keys.map(k => CLEAR.test(k)), view = [0, 0, W, H], BL = (run.end.statics || {}).blocks || {};
   const name = t => cfg.objects[t] || 'o' + t, part = (m) => cfg.parts[m.j] || (keys[m.key] || '').replace(/^mtcb-/, '').replace(/[0-9.,]+.*$/, '') || 'part';
   const out = run.steps.map(s => {
     const d = { y: s.y, s, mode: s.cls & 2 ? (s.cls & 4 ? 'flow' : 'desk') : 'still' };
@@ -457,6 +515,8 @@ function derive(run) {   // per step: the mode, the canvas on the screen, every 
     d.V = d.C ? isect(d.C, view) : null;
     d.dp = d.mode === 'flow' && s.ss && s.ss.dp != null ? s.ss.dp : (s.pos != null ? s.pos : s.p);   // older builds draw the engine's position
     d.inView = !!(d.C && area(d.V) > 0 && d.cvop > 0);
+    d.blk = null;   // a phone or tablet: the block holding the canvas (its centre, in page coordinates)
+    if (d.mode === 'flow' && d.C) { const pc = (d.C[1] + d.C[3]) / 2 + s.y; for (const [k, b] of Object.entries(BL)) if (b && pc >= b[1] && pc < b[3]) { d.blk = k; break; } }
     d.running = d.mode === 'desk' && d.dp != null && d.dp < 6 && fr(d.dp) > TH.frac && fr(d.dp) < 1 - TH.frac;
     d.story = d.mode === 'desk' && d.dp != null && d.dp < 6;   // a desktop's story in progress: the product always on the screen
     const hd = s.ch.find(c => c[0] === 0), bar = s.ch.find(c => c[0] === 2);
@@ -467,7 +527,7 @@ function derive(run) {   // per step: the mode, the canvas on the screen, every 
       const kx = cv[2] / s.g.W, ky = cv[3] / s.g.H;
       for (const it of s.g.items) {
         const [top, key, j, op, fl, x0, y0, x1, y1, d0, d1] = it;
-        const m = { top, obj: name(top), key, j, op, fl, ope: op * d.cvop, clear: clear[key] || clearJ.includes(j), d0, d1, near: !!(fl & 4),
+        const m = { top, obj: name(top), key, j, op, fl, ope: op * d.cvop, clear: clear[key], d0, d1, near: !!(fl & 4),
           b: [cv[0] + x0 * kx, cv[1] + y0 * ky, cv[0] + x1 * kx, cv[1] + y1 * ky] };
         m.part = part(m); m.body = !cfg.body || cfg.body.includes(j);
         m.cb = isect(m.b, d.V); m.vis = m.ope >= TH.op && area(m.cb) > 0;
@@ -565,6 +625,16 @@ function analyse(run) {
       if (worst) hit('UNDER_CHROME', pn.name, pn.name + ':' + worst.obj, d, Object.assign({ panel: pn.name }, worst), worst.h);
       else if (faded) des('FADE', 'faded-under-' + pn.name, pn.name, d, {});
     }
+    // … and a picture of the product (its drawn part) under a panel, in every mode (no JS or WebGL too). On a desktop the
+    // dock pill stands over the reading column and the card's body is the kit's own panel: flagged. Under the header, or
+    // a phone's bar, a picture passes as the page scrolls by (and the dock there is the bar): listed apart as the page
+    for (const pn of panels) for (const p of d.pics) {
+      if (p.op < TH.op || (pn.name === 'card' && /^kc-/.test(p.kind))) continue;   // the card's own picture sits on the card
+      const q = isect(p.ink, pn.r); if (q[2] - q[0] < TH.overPx || q[3] - q[1] < TH.overPx) continue;
+      const v = { panel: pn.name, pic: p.kind + ' ' + p.src, h: R0(q[3] - q[1]), w: R0(q[2] - q[0]) };
+      if (vp.w >= 900 && (pn.name === 'dock' || pn.name === 'card')) hit('UNDER_CHROME', pn.name, pn.name + ':' + p.kind + ':' + p.src, d, v, q[3] - q[1]);
+      else des('SCROLL', 'under-' + pn.name, pn.name + ':' + p.kind + ':' + p.src, d, v);
+    }
     if (d.mode === 'flow' && d.running) for (const o of Object.values(d.objs)) {   // past the screen's edge while it moves
       if (!o.cb) continue;
       const up = -o.b[1], dn = o.b[3] - H;
@@ -596,10 +666,16 @@ function analyse(run) {
       if (m.fl & 2) { des('FADE', 'solid', m.obj + ':' + m.part, d, { obj: m.obj, part: m.part, op: R2(m.op) }); continue; }
       const hidden = d.meshes.some(n => n !== m && !n.clear && n.vis && (n.op >= 0.999 || n.fl & 2) && n.d0 < m.d0 && inside(n.b, m.b, 2));
       if (hidden) continue;
-      const over = d.meshes.filter(n => n !== m && n.vis && n.d1 > m.d0 && area(isect(isect(n.cb, m.cb), d.V)) >= TH.ghostArea);
+      // a solid part coming on with the clear assembly it belongs to (the applicator's tip on its clear nozzle): a clear
+      // mesh of the same object at the same opacity touches it, and nothing else is behind it — it reads as one clear
+      // thing, not a ghost (a stopper or a cap fading alone, its glass at full opacity, is still one: fd91489 y4820–4900)
+      const same = n => n !== m && n.clear && n.vis && n.obj === m.obj && Math.abs(n.op - m.op) <= 0.03;
+      const over = d.meshes.filter(n => n !== m && n.vis && !same(n) && n.d1 > m.d0 && area(isect(isect(n.cb, m.cb), d.V)) >= TH.ghostArea);
       const sz = { w: R0(m.cb[2] - m.cb[0]), h: R0(m.cb[3] - m.cb[1]) }, small = area(m.cb) < TH.ghostPart;
       const v = Object.assign({ obj: m.obj, part: m.part, op: R2(m.op) }, sz, over.length ? { behind: [...new Set(over.map(n => n.obj + ':' + n.part))].slice(0, 4) } : {});
-      if (small) des('FADE', 'small-part', m.obj + ':' + m.part, d, v);
+      const held = !over.length && d.meshes.find(n => same(n) && area(isect([n.b[0] - 2, n.b[1] - 2, n.b[2] + 2, n.b[3] + 2], m.b)) > 0);
+      if (held) des('FADE', 'clear-assembly', m.obj + ':' + m.part, d, Object.assign(v, { with: held.part }));
+      else if (small) des('FADE', 'small-part', m.obj + ':' + m.part, d, v);
       else hit('GHOST', over.length ? 'over' : 'air', m.obj + ':' + m.part, d, v, 1 - Math.abs(m.op - 0.5));
     }
     if (s.g && s.g.glow >= TH.op && d.cvop >= TH.op) des('FADE', 'amber-glow', 'glow', d, { glow: s.g.glow });
@@ -628,7 +704,7 @@ function analyse(run) {
     }
     // OFFSCREEN: a line of text or a picture's drawn part past the screen's side
     for (const t of lines) if (t[1] < -1 || t[3] > W + 1) hit('LAYOUT', 'offscreen', 'off:' + t[0], d, { text: textName(t[0]), x: [R0(t[1]), R0(t[3])] }, 1);
-    for (const p of d.pics) if (p.op >= TH.op && area(p.ink) > 0 && (p.ink[0] < -1 || p.ink[2] > W + 1)) hit('LAYOUT', 'offscreen', 'off:' + p.kind + p.src, d, { pic: p.kind + ' ' + p.src, x: [R0(p.ink[0]), R0(p.ink[2])] }, 1);
+    for (const p of d.pics) if (p.op >= TH.op && area(p.ink) > 0 && (p.ink[0] < -1 || p.ink[2] > W + 1)) hit('LAYOUT', 'offscreen', 'off:' + p.kind + ':' + p.src, d, { pic: p.kind + ' ' + p.src, x: [R0(p.ink[0]), R0(p.ink[2])] }, 1);
     if (s.sw) hit('LAYOUT', 'hscroll', 'hscroll', d, { scrollWidth: s.sw }, 1);
     // HD: the canvas and the pictures in view against CSS px × DPR (≤ 2 on a desktop), as verify-hd.cjs
     const cap = Math.min(vp.dpr, d.mode === 'flow' || vp.w < 900 ? 3 : 2);
@@ -636,13 +712,14 @@ function analyse(run) {
       const need = s.cv[2] * cap, have = s.cv[7];   // the canvas as shown (the flight scales it) against its pixels
       if (have < TH.hd * need) hit('HD', 'canvas', 'canvas', d, { have, need: R0(need), css: R0(s.cv[2]), pr: s.g && s.g.pr }, need - have);
     }
-    for (const p of d.pics) if (p.op >= TH.op && area(p.shown) > 0 && p.nat && p.nat < TH.hd * cap) hit('HD', 'pic', 'hd:' + p.kind + p.src, d, { pic: p.kind + ' ' + p.src, pxPerCss: p.nat, need: cap }, cap - p.nat);
+    for (const p of d.pics) if (p.op >= TH.op && area(p.shown) > 0 && p.nat && p.nat < TH.hd * cap) hit('HD', 'pic', 'hd:' + p.kind + ':' + p.src, d, { pic: p.kind + ' ' + p.src, pxPerCss: p.nat, need: cap }, cap - p.nat);
   });
   // POP: an object's size or place jumping between steps 30 px apart; appearing or vanishing from one step to the next
   // in view, not behind a nearer solid object (a vial switched on or off while the box hides it is no pop)
-  const k30 = Math.max(1, Math.round(TH.popDy / dy)), names = new Set(steps.flatMap(d => Object.keys(d.objs))), rates = [];
+  const names = new Set(steps.flatMap(d => Object.keys(d.objs))), rates = [];
   const sizeOf = b => Math.max(b[2] - b[0], b[3] - b[1]);
-  for (const nm of names) {
+  for (const nm of names) for (const [popDy, popSize] of [[TH.popDy, TH.popSize], [TH.popDy2, TH.popSize2]]) {
+    const k30 = Math.max(1, Math.round(popDy / dy));
     for (let i = 0; i + k30 < steps.length; i++) {
       const a = steps[i].objs[nm], b = steps[i + k30].objs[nm];
       if (!a || !b || !a.body || !b.body || a.near || b.near || a.op < 0.5 || b.op < 0.5 || !a.cb || !b.cb) continue;
@@ -654,18 +731,18 @@ function analyse(run) {
       // a desktop's flight into the card moves the whole canvas: its own motion, not the object's
       const cvMove = steps[i].C && steps[i + k30].C ? Math.hypot(steps[i].C[0] - steps[i + k30].C[0], steps[i].C[1] - steps[i + k30].C[1]) : 0;
       const rel = Math.max(0, mv - cvMove) / Math.max(sa, sb);
-      rates.push({ obj: nm, y: steps[i].y, ratio, rel, mode: steps[i].mode });
+      rates.push({ obj: nm, y: steps[i].y, per: popDy, ratio, rel, mode: steps[i].mode });
       // going into the dark (shrinking while it fades out: the booster after the pour, the pair before the cards) is the
-      // design's exit, listed apart; growing or shrinking at full opacity faster than TH.popSize per 30 px is a pop
-      if (Math.max(ratio, 1 / ratio) > TH.popSize) {
-        const v = { obj: nm, from: R0(sa), to: R0(sb), per: TH.popDy, ratio: R2(ratio), op: [R2(a.op), R2(b.op)] };
+      // design's exit, listed apart; growing or shrinking at full opacity faster than popSize per popDy px is a pop
+      if (Math.max(ratio, 1 / ratio) > popSize) {
+        const v = { obj: nm, from: R0(sa), to: R0(sb), per: popDy, ratio: R2(ratio), op: [R2(a.op), R2(b.op)] };
         let dark = false;   // shrinking and fading out over the next 100 px (or gone): its exit into the dark
         if (ratio < 1) for (let j = i; j < Math.min(steps.length, i + k30 + Math.round(100 / dy)) && !dark; j++) { const c = steps[j].objs[nm]; dark = !c || c.op < a.op - 0.3; }
         if (dark) des('FADE', 'into-the-dark', nm, steps[i], v); else hit('POP', 'size', nm, steps[i], v, Math.abs(Math.log(ratio)));
       }
-      else if (rel > TH.popMove) hit('POP', 'move', nm, steps[i], { obj: nm, move: R0(mv), size: R0(Math.max(sa, sb)), rel: R2(rel) }, rel);
+      else if (popDy === TH.popDy && rel > TH.popMove) hit('POP', 'move', nm, steps[i], { obj: nm, move: R0(mv), size: R0(Math.max(sa, sb)), rel: R2(rel) }, rel);
     }
-    for (let i = 0; i + 1 < steps.length; i++) {
+    if (popDy === TH.popDy) for (let i = 0; i + 1 < steps.length; i++) {
       const a = steps[i].objs[nm], b = steps[i + 1].objs[nm], d = a && !b ? steps[i] : !a && b ? steps[i + 1] : null, o = a || b;
       if (!d || !o.cb || o.solidOp < 0.95 || o.near || steps[i].mode !== steps[i + 1].mode) continue;
       if (steps[i].mode === 'flow' && Math.abs(steps[i].dp - steps[i + 1].dp) < 1e-4) continue;
@@ -691,6 +768,31 @@ function analyse(run) {
       if (span < TH.runMin[mode]) hits.push({ cls: 'RUN_SPAN', sub: mode, key: 'run' + k, y: yr[0], y1: yr[yr.length - 1], v: { run: k, px: span, min: TH.runMin[mode] }, sev: TH.runMin[mode] - span });
     }
   }
+  // what the screen shows inside each hold: the 3D, the step cards (the canvas stepped aside), the card's live picture
+  // (the flight's end), the card's own picture, nothing — as ranges, each with its frame (the box at its middle)
+  const what = d => d.pres.some(p => p.what === '3d') ? '3d' : (d.s.cls & 32) || d.pics.some(p => p.kind === 'step' && p.op >= TH.op && area(p.shown) > 0) ? 'cards'
+    : d.pres.some(p => p.what === 'kc-live:') || d.pics.some(p => p.kind === 'kc-live' && p.op >= TH.op && area(p.shown) > 0) ? 'kc-live'
+    : d.pics.some(p => p.kind === 'kc-pic' && p.op >= TH.op && area(p.shown) > 0) ? 'kc-pic' : 'none';
+  const frameOf = d => { const p = d.pres.find(q => q.what === '3d'); if (p && !p.glow) return box4(p.b); if (p) return 'glow';
+    const k = d.pics.find(q => /^kc-/.test(q.kind) && q.op >= TH.op && area(q.shown) > 0); return k ? box4(k.shown) : null; };
+  const segments = (list, key) => { const out = []; for (const d of list) { const k = key(d), l = out[out.length - 1];
+    if (l && l.what === k && d.y - l.y[1] <= 2 * dy) { l.y[1] = d.y; l.steps.push(d); } else out.push({ what: k, y: [d.y, d.y], steps: [d] }); } return out; };
+  for (const sc of screens) {
+    const inHold = steps.filter(d => d.mode !== 'still' && pAt(d) != null && Math.abs(pAt(d) - sc.p) < 1e-3 && d.y >= sc.y[0] && d.y <= sc.y[1]);
+    sc.parts = segments(inHold, what).map(g => { const mid = g.steps[Math.floor(g.steps.length / 2)], fr = frameOf(mid); return Object.assign({ what: g.what, y: g.y }, fr ? { at: mid.y, box: fr } : {}); });
+  }
+  // a phone or tablet, block by block: the pose held as the block comes up, run k playing in block k, the pose held after,
+  // and the frame at the first step where the whole stage stands between the header and the bar
+  const flow = [], BLOCKS = ['open', 'meet', 'why', 'inside', 'feel', 'protocol'];
+  if (steps.some(d => d.mode === 'flow')) BLOCKS.forEach((bk, k) => {
+    const ss = steps.filter(d => d.mode === 'flow' && d.blk === bk && d.inView); if (!ss.length) return;
+    const run = ss.filter(d => d.running && fr(d.dp) > TH.frac && fr(d.dp) < 1 - TH.frac), r0 = run.length ? run[0].y : Infinity, r1 = run.length ? run[run.length - 1].y : -Infinity;   // as runs[]
+    const before = ss.filter(d => !d.running && d.y < r0), after = ss.filter(d => !d.running && d.y > r1);
+    const full = ss.find(d => d.C[1] >= d.top - 0.5 && d.C[3] <= d.foot + 0.5 && frameOf(d)) || ss.find(d => frameOf(d));
+    const pose = list => list.length ? { p: R2(list[0].dp), y: [list[0].y, list[list.length - 1].y] } : null;
+    flow.push(Object.assign({ k, block: bk, y: [ss[0].y, ss[ss.length - 1].y], pose0: pose(before), run: run.length ? { y: [r0, r1], px: r1 - r0 + dy } : null, pose1: pose(after) },
+      full ? { frame: { y: full.y, box: frameOf(full), full: full.C[1] >= full.top - 0.5 && full.C[3] <= full.foot + 0.5 } } : {}));
+  });
   // LAYOUT from the page's blocks: the step cards (desktop: the picture left of its text), a phone's order (heading,
   // then its stage, then the text), the page wider than the screen
   const st = run.end.statics, mode0 = steps.find(d => d.mode !== 'still') ? steps.find(d => d.mode !== 'still').mode : 'still';
@@ -703,9 +805,9 @@ function analyse(run) {
   }
   if (st.scrollW > W + 1) hits.push({ cls: 'LAYOUT', sub: 'hscroll', key: 'hscroll', y: 0, y1: 0, v: { scrollWidth: st.scrollW }, sev: 1 });
   // EMPTY ranges shorter than TH.emptyPx: a handover between the 3D and a picture (one gives way as the other comes), design
-  const flags = merge(hits, dy), short = flags.filter(f => f.cls === 'EMPTY' && f.sub !== 'dim' && f.y[1] - f.y[0] + dy < TH.emptyPx);
+  const merged = merge(hits, dy), short = merged.filter(f => f.cls === 'EMPTY' && f.sub !== 'dim' && f.y[1] - f.y[0] + dy < TH.emptyPx);
   for (const f of short) design.push({ cls: 'FADE', sub: 'handover', key: 'empty', y: f.y[0], y1: f.y[1], v: f.v, sev: 1 });
-  return { steps, flags: flags.filter(f => !short.includes(f)), design: merge(design, dy), runs, screens, dy, rates };
+  return { steps, flags: merged.filter(f => !short.includes(f) && !RULE_CLS[f.cls]), rules: merged.filter(f => RULE_CLS[f.cls]), design: merge(design, dy), runs, screens, flow, dy, rates };
 }
 function merge(list, dy) {   // the steps of one kind and key into scroll ranges (neighbours ≤ 2 steps apart), with the worst step's numbers
   const by = new Map();
@@ -723,15 +825,33 @@ function merge(list, dy) {   // the steps of one kind and key into scroll ranges
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-// the map: <out>/<slug>.json (compact) and <out>/<slug>.md (a readable working note, Russian, as the repo's notes)
+// the map: <out>/<slug>.json (slim: one screen a line, a legend inside; the 10 px track and the texts' boxes for the key
+// screens only) and <out>/<slug>.md (a readable working note, Russian, as the repo's notes); every screen's track and
+// texts go to <raw>/<slug>.track.json.gz (they rebuild in two minutes: not for the repository)
 const rle = (vals, enc) => {   // consecutive equal tokens as «token*n»
   const out = []; let prev = null, n = 0;
   for (const v of vals) { const t = enc(v); if (t === prev) n++; else { if (prev !== null) out.push(n > 1 ? prev + '*' + n : prev); prev = t; n = 1; } }
   if (prev !== null) out.push(n > 1 ? prev + '*' + n : prev);
   return out.join(' ');
 };
+const KEYVP = ['1280x720', '1440x900', '1920x1080', '390x844@3t'];
+const LEGEND = {
+  y: 'прокрутка страницы в px (scrollY) на данном экране; диапазоны [y0, y1] включительно, шаг tool.step',
+  p: 'позиция истории: 0 открытие … 5 S5, 6 набор на карточке; дробь — доля прогона. Компьютер: __seq().pos = window.__mtP. Телефон/планшет: нарисованная поза sceneState.drawn (window.__mtP там — позиция по странице, не поза)',
+  holds: '{p, y, parts: [{what, y, at, box}]}: удержание позы p и что на экране внутри него (3d, cards — карточки шагов при скрытой сцене, kc-live — живая картинка карточки, kc-pic — картинка карточки, none); box — рамка на экране x0,y0,x1,y1 в px на шаге at',
+  runs: '{k, y, px}: прогон k→k+1 и его прокрутка',
+  flow: 'телефон/планшет, по блокам: {k, block, y, pose0:{p,y}, run:{y,px}, pose1:{p,y}, frame:{y, box, full}} — поза до прогона, прогон k в блоке k, поза после; кадр на первом шаге, где сцена целиком между шапкой и панелью (full)',
+  stepAside: 'компьютер: y, где сцена скрыта под карточки шагов (html.mt-cards0); landing: y посадки набора на карточку (html.mt-land)',
+  track: 'только ключевые экраны (остальные — в <raw>/<slug>.track.json.gz): RLE «значение*n» по шагам от y0 через dy; p ×1000 («-» нет); box «x0,y0,x1,y1» до 2 px — рамка видимого продукта: детали с прозрачностью ≥ tool.thresholds.op (0.05) ниже шапки («g» янтарный свет, «-» ничего видимого: пусто или прозрачнее 5 %); canvas — прозрачность холста ×100',
+  pictures: '{id, kind, src, sec, nat:[w,h] — пиксели файла, page:[x0,y0,x1,y1] — место на странице, где впервые видна, shown:[[y0,y1]…] — где показана}',
+  texts: 'ключевые экраны: [id, x0, y0, x1, y1(, sticky|fixed)] в координатах страницы, где строка впервые видна; pinned: [id, y0, y1, x0, top, x1, bottom] — диапазон прокрутки, где прижатая (sticky/fixed) строка стоит на месте, и её место на экране; словарь texts: id → [блок, тег, начало текста]',
+  flags: '{cls, sub, y:[y0,y1], at: худший шаг, n: шагов, v: числа худшего шага} — пиксельные дефекты по числам; rules — правила на решение заказчика (RUN_SPAN), не дефекты кадра; design — принятые затухания (FADE) и то, что даёт прокрутка страницы (SCROLL), по видам с диапазонами',
+  errors: 'ошибки консоли страницы в пробе (errs — первые различные; без WebGL ожидаемы «WebGL context could not be created»)',
+  build: '{file, md5, rev — HEAD репозитория при пробе, sourcesRev — последний коммит файлов страницы (sources), cmd — команда сборки, keys — папка ключевых кадров: число файлов и md5 их списка, probe — md5 шрифта, three.js и three-nodraw}',
+};
+const distinct = a => [...new Set(a)];
 function viewportMap(run, a) {
-  const vp = run.vp, st = run.end.statics, steps = a.steps, dy = a.dy;
+  const vp = run.vp, st = run.end.statics, steps = a.steps, dy = a.dy, T = run.end.tables, key = KEYVP.includes(vp.id);
   const mode = (steps.find(d => d.mode !== 'still') || { mode: 'still' }).mode;
   const blocks = {}; for (const [k, v] of Object.entries(st.blocks || {})) if (v) blocks[k] = [R0(v[1]), R0(v[3])];
   // the product on the screen per step: the 3D's visible outline (or none), the canvas's opacity, the story position
@@ -740,25 +860,34 @@ function viewportMap(run, a) {
     p: mode === 'still' ? '' : rle(steps.map(d => d.dp), v => v == null ? '-' : String(Math.round(v * 1000))),
     box: mode === 'still' ? '' : rle(prod, v => v == null ? '-' : v === 'glow' ? 'g' : v.map(x => 2 * Math.round(x / 2)).join(',')),   // px, to 2 px
     canvas: mode === 'still' ? '' : rle(steps.map(d => d.cvop), v => String(Math.round(v * 100))) };
-  // pictures: where each is shown (y ranges) and its place in the page
+  // pictures: where each is shown (y ranges), its place in the page, its file's pixels
   const pics = new Map();
   steps.forEach(d => { for (const p of d.pics) { if (p.op < TH.op || area(p.shown) <= 0) continue;
-    const e = pics.get(p.pid) || { id: 'p' + p.pid, kind: p.kind, src: p.src, sec: p.sec, page: null, shown: [] };
+    const info = T.pics[p.pid] || {}, e = pics.get(p.pid) || { id: 'p' + p.pid, kind: p.kind, src: p.src, sec: p.sec, nat: [info.nw || 0, info.nh || 0], page: null, shown: [] };
     if (!e.page) e.page = [R0(p.el[0]), R0(p.el[1] + d.y), R0(p.el[2]), R0(p.el[3] + d.y)];
     const last = e.shown[e.shown.length - 1]; if (last && d.y - last[1] <= 2 * dy) last[1] = d.y; else e.shown.push([d.y, d.y]);
     pics.set(p.pid, e); } });
-  // texts: each owner's lines in page coordinates (static content: once, where first seen)
-  const texts = new Map();
+  // texts: each owner's lines in page coordinates (static content: once, where first seen); a sticky or fixed owner moves
+  // with the scroll, so for it the scroll ranges where it stands still on the screen are kept too (pinned)
+  const texts = new Map(), vb = new Map();
   steps.forEach(d => { for (const t of d.s.tx) { const k = t[0], r = [t[1], t[2] + d.y, t[3], t[4] + d.y];
-    const e = texts.get(k); if (!e) texts.set(k, { y: d.y, r }); else if (e.y === d.y) e.r = uni(e.r, r); } });
-  const cards = steps.filter(d => d.s.cls & 32).map(d => d.y);
-  const land = steps.filter(d => d.s.cls & 64).map(d => d.y);
+    const e = texts.get(k); if (!e) texts.set(k, { y: d.y, r }); else if (e.y === d.y) e.r = uni(e.r, r);
+    if (T.texts[k] && T.texts[k].fix) { const q = vb.get(k) || new Map(), b = q.get(d.y); q.set(d.y, b ? uni(b, [t[1], t[2], t[3], t[4]]) : [t[1], t[2], t[3], t[4]]); vb.set(k, q); } } });
+  const pinned = [];
+  for (const [k, q] of vb) { let cur = null;
+    for (const [y, b] of q) { if (cur && y - cur.y1 <= dy && Math.abs(b[1] - cur.b[1]) < 0.6) { cur.y1 = y; cur.n++; } else { if (cur && cur.n >= 3) pinned.push(['t' + k, cur.y0, cur.y1, ...box4(cur.b)]); cur = { y0: y, y1: y, n: 1, b }; } }
+    if (cur && cur.n >= 3) pinned.push(['t' + k, cur.y0, cur.y1, ...box4(cur.b)]); }
+  const textsOut = [...texts.entries()].sort((x, y) => x[1].r[1] - y[1].r[1]).map(([k, e]) => ['t' + k, ...e.r.map(R0)].concat(T.texts[k] && T.texts[k].fix ? [T.texts[k].fix] : []));
+  const cards = steps.filter(d => d.s.cls & 32).map(d => d.y), land = steps.filter(d => d.s.cls & 64).map(d => d.y);
   const count = {}; for (const f of a.flags) count[f.cls] = (count[f.cls] || 0) + 1;
-  return { id: vp.id, kind: vp.kind, mode, w: vp.w, h: vp.h, dpr: vp.dpr, touch: vp.touch, docH: st.docH, steps: steps.length, probe_s: R1(run.ms / 1000),
-    errors: run.log.errs.length, band: st.band || null, blocks, holds: a.screens, runs: a.runs,
-    stepAside: cards.length ? [cards[0], cards[cards.length - 1]] : null, landing: land.length ? [land[0], land[land.length - 1]] : null,
-    track, pictures: [...pics.values()], texts: [...texts.entries()].sort((x, y) => x[1].r[1] - y[1].r[1]).map(([k, e]) => ['t' + k, ...e.r.map(R0)]),
-    flags: a.flags.map(f => ({ cls: f.cls, sub: f.sub, y: f.y, at: f.at, n: f.n, v: f.v })), design: summariseDesign(a.design), count };
+  const flag = f => ({ cls: f.cls, sub: f.sub, key: f.key, y: f.y, at: f.at, n: f.n, v: f.v });
+  const m = { id: vp.id, kind: vp.kind, mode, w: vp.w, h: vp.h, dpr: vp.dpr, touch: vp.touch, docH: st.docH, steps: steps.length, probe_s: R1(run.ms / 1000),
+    errors: run.log.errs.length, errs: distinct(run.log.errs).slice(0, 3).map(s => s.slice(0, 120)), band: st.band || null, blocks,
+    stepsScroll: st.stepsScroll ? Object.assign({ n: (st.steps || []).length }, st.stepsScroll) : null,
+    holds: a.screens, runs: a.runs, flow: a.flow, stepAside: cards.length ? [cards[0], cards[cards.length - 1]] : null, landing: land.length ? [land[0], land[land.length - 1]] : null,
+    pictures: [...pics.values()], flags: a.flags.map(flag), rules: a.rules.map(flag), design: summariseDesign(a.design), count };
+  if (key) { m.track = track; m.texts = textsOut; m.pinned = pinned; }
+  return { m, full: { id: vp.id, track, texts: textsOut, pinned } };
 }
 function summariseDesign(list) {   // the accepted fades by kind: their ranges, not every part
   const by = {};
@@ -767,110 +896,181 @@ function summariseDesign(list) {   // the accepted fades by kind: their ranges, 
     for (const y of ys) { const l = m[m.length - 1]; if (l && y[0] <= l[1] + 20) l[1] = Math.max(l[1], y[1]); else m.push(y.slice()); }
     return { kind: k, y: m }; });
 }
-function analyseAll(runs, out) {
+function layoutVerdict(out, slug) {   // the layout rules' map of the same page (qa/layout-check.cjs), when it lies beside
+  const f = path.join(out, slug + '.layout.json'); if (!fs.existsSync(f)) return null;
+  try { const j = JSON.parse(fs.readFileSync(f, 'utf8')), s = j.pages && j.pages[slug] && j.pages[slug].summary; if (!s) return null;
+    return { file: slug + '.layout.md', generated: j.generated, high: s.high, low: s.low, pass: s.pass, byRule: s.byRule }; } catch (e) { return null; }
+}
+function lookedSummary(file) {   // the last --spot run (the pictures the numbers asked for, and the colour tests)
+  try { const j = JSON.parse(fs.readFileSync(file, 'utf8')), st = fs.statSync(file);
+    return { file: path.basename(path.dirname(path.resolve(file))) + '/' + path.basename(file), date: st.mtime.toISOString(), n: j.length, pass: j.filter(x => x.pass === true).length,
+      fail: j.filter(x => x.pass === false).length, look: j.filter(x => x.pass == null).length, screens: distinct(j.map(x => x.screen)) }; } catch (e) { return { file, error: String(e).slice(0, 80) }; }
+}
+function analyseAll(runs, out, rawDir) {
   if (!runs.length) return;
   fs.mkdirSync(out, { recursive: true });
-  const page = runs[0].page, slug = page.slug, map = { page: slug, build: { file: path.basename(page.file), md5: page.md5 }, date: new Date().toISOString(),
-    tool: { script: 'site/proto/qa/pagemap.cjs', step: runs[0].steps.length > 1 ? runs[0].steps[1].y - runs[0].steps[0].y : 10, thresholds: TH },
+  const page = runs[0].page, slug = page.slug, cfg = PAGES[slug] || {}, dy = runs[0].steps.length > 1 ? runs[0].steps[1].y - runs[0].steps[0].y : 10;
+  const map = { page: slug, build: page.build || { file: path.basename(page.file), md5: page.md5 }, date: new Date().toISOString(),
+    tool: { script: 'site/proto/qa/pagemap.cjs', doc: 'site/proto/qa/pagemap.md', step: dy, thresholds: TH, probe: page.build && page.build.probe || null },
     timing: { total_s: R1(runs.reduce((s, r) => s + r.ms, 0) / 1000), per: Object.fromEntries(runs.map(r => [r.vp.id, R1(r.ms / 1000)])) },
-    texts: {}, screens: {} };
-  const T = runs[0].end.tables; (T.texts || []).forEach((t, i) => { map.texts['t' + i] = [t.sec, t.tag + (t.cls ? '.' + t.cls : ''), t.text]; });
-  const all = [];
+    legend: LEGEND, texts: {}, screens: {} };
+  const T = runs[0].end.tables, blocksOK = cfg.textBlocks || null;   // the texts' dictionary: the product's own blocks
+  (T.texts || []).forEach((t, i) => { if (!blocksOK || blocksOK.includes(t.sec)) map.texts['t' + i] = [t.sec, t.tag + (t.cls ? '.' + t.cls : ''), t.text]; });
+  const fulls = {};
   for (const run of runs) {
-    const a = analyse(run), m = viewportMap(run, a); map.screens[run.vp.id] = m; all.push([run, a, m]);
-    console.log(`${run.vp.id}: ${m.mode}, flags ${a.flags.length}` + (a.flags.length ? ' — ' + Object.entries(m.count).map(([k, v]) => k + ' ' + v).join(', ') : ''));
+    const a = analyse(run), { m, full } = viewportMap(run, a); map.screens[run.vp.id] = m; fulls[run.vp.id] = full;
+    console.log(`${run.vp.id}: ${m.mode}, flags ${a.flags.length}` + (a.flags.length ? ' — ' + Object.entries(m.count).map(([k, v]) => k + ' ' + v).join(', ') : '') + (a.rules.length ? `; rules ${a.rules.length}` : ''));
   }
-  const jf = path.join(out, slug + '.json');
-  fs.writeFileSync(jf, JSON.stringify(map));
+  map.layout = layoutVerdict(out, slug);
+  if (opt('--looked')) map.looked = lookedSummary(opt('--looked'));
+  // the slim JSON: one screen a line, so a regeneration's diff reads screen by screen
+  const jf = path.join(out, slug + '.json'), L = [];
+  for (const [k, v] of Object.entries(map)) if (k !== 'screens') L.push(` ${JSON.stringify(k)}: ${JSON.stringify(v)}`);
+  L.push(' "screens": {\n' + Object.entries(map.screens).map(([id, m]) => `  ${JSON.stringify(id)}: ${JSON.stringify(m)}`).join(',\n') + '\n }');
+  fs.writeFileSync(jf, '{\n' + L.join(',\n') + '\n}\n');
+  const tdir = rawDir || path.join(os.tmpdir(), 'pagemap'); fs.mkdirSync(tdir, { recursive: true });
+  const tf = path.join(tdir, slug + '.track.json.gz');
+  fs.writeFileSync(tf, zlib.gzipSync(JSON.stringify({ page: slug, md5: map.build.md5, date: map.date, legend: { track: LEGEND.track, texts: LEGEND.texts }, screens: fulls })));
   const mf = path.join(out, slug + '.md');
   fs.writeFileSync(mf, markdown(map, fs.existsSync(mf) ? fs.readFileSync(mf, 'utf8') : ''));
-  updateReadme(out, map);
-  console.log(`map: ${jf} (${(fs.statSync(jf).size / 1024).toFixed(0)} KB), ${mf}`);
+  writeReadme(out, map);
+  console.log(`map: ${jf} (${(fs.statSync(jf).size / 1024).toFixed(0)} KB), ${mf}; track: ${tf} (${(fs.statSync(tf).size / 1024).toFixed(0)} KB)`);
   return map;
 }
 
 // the readable note (Russian, as the repo's working notes): generated from the map; the part between <!-- notes --> and
-// <!-- /notes --> of the existing note (the calibration, remarks by hand) is kept as it is
-const KEYVP = ['1280x720', '1440x900', '1920x1080', '390x844@3t'];
+// <!-- /notes --> of the existing note (remarks by hand) is kept as it is. The tool's own matter (method, calibration,
+// thresholds, legend) is qa/pagemap.md, one for every page
 const CLS_RU = { CUT: 'срез', UNDER_CHROME: 'под шапкой/панелью', UNDER_TEXT: 'под текстом', TWO_PRODUCTS: 'два продукта', GHOST: 'просвечивает',
   POP: 'скачок', EMPTY: 'пустая сцена', RUN_SPAN: 'короткий прогон', LAYOUT: 'вёрстка', HD: 'HD' };
 const DES_RU = { solid: 'деталь гаснет целиком', 'round-edge': 'круглое затухание края', 'amber-glow': 'янтарный свет', handover: 'передача 3D ↔ картинка',
   'into-the-dark': 'уход в темноту', 'small-part': 'малая деталь гаснет', 'edge-strip': 'мягкий край', 'faded-under-dock': 'погашено под док-панелью',
-  'faded-under-header': 'погашено под шапкой', 'faded-under-bar': 'погашено под панелью', 'faded-under-card': 'погашено под карточкой' };
+  'faded-under-header': 'погашено под шапкой', 'faded-under-bar': 'погашено под панелью', 'faded-under-card': 'погашено под карточкой',
+  'clear-assembly': 'прозрачный узел (носик)', 'under-header': 'картинка под шапкой при прокрутке', 'under-bar': 'картинка под нижней панелью при прокрутке',
+  'under-dock': 'картинка под док-панелью при прокрутке (телефон)' };
+const WHAT_RU = { '3d': '3D', cards: 'карточки шагов, сцена скрыта', 'kc-live': 'картинка карточки (живой холст)', 'kc-pic': 'картинка карточки', none: 'пусто' };
 function fmtV(v) { return Object.entries(v || {}).map(([k, x]) => k + ' ' + (Array.isArray(x) ? x.join('/') : typeof x === 'object' && x ? JSON.stringify(x) : x)).join(', '); }
+const yr = y => y ? (y[0] === y[1] ? String(y[0]) : y[0] + '–' + y[1]) : '—';
+const bx = b => Array.isArray(b) ? `${b[0]},${b[1]}–${b[2]},${b[3]}` : b === 'glow' ? 'янтарный свет' : '';
+const whenRu = d => new Date(d).toLocaleString('ru-RU', { timeZone: 'Asia/Jerusalem', dateStyle: 'short', timeStyle: 'short' });
 function markdown(map, old) {
-  const cfg = PAGES[map.page] || {}, sc = map.screens, ids = Object.keys(sc), key = KEYVP.filter(k => sc[k]);
+  const cfg = PAGES[map.page] || {}, sc = map.screens, ids = Object.keys(sc), live = ids.filter(id => sc[id].mode !== 'still'), dy = map.tool.step;
+  const deskKey = KEYVP.filter(k => sc[k] && sc[k].mode === 'desk'), flowIds = ids.filter(id => sc[id].mode === 'flow'), stillIds = ids.filter(id => sc[id].mode === 'still');
   const notes = (/<!-- notes -->[\s\S]*?<!-- \/notes -->/.exec(old) || ['<!-- notes -->\n\n<!-- /notes -->'])[0];
-  const L = [], d = new Date(map.date), when = d.toLocaleString('ru-RU', { timeZone: 'Asia/Jerusalem', dateStyle: 'short', timeStyle: 'short' });
-  const yr = y => y ? (y[0] === y[1] ? String(y[0]) : y[0] + '–' + y[1]) : '—';
+  const L = [], b = map.build, when = whenRu(map.date);
+  const nFlags = ids.reduce((a, id) => a + sc[id].flags.length, 0), nLive = live.reduce((a, id) => a + sc[id].flags.length, 0), nRules = ids.reduce((a, id) => a + sc[id].rules.length, 0);
+  const byCls = list => { const c = {}; for (const id of list) for (const f of sc[id].flags) c[f.cls] = (c[f.cls] || 0) + 1; return Object.entries(c).map(([k, v]) => `${k} ${v}`).join(', '); };
   L.push(`# ${cfg.title || map.page} — карта страницы`, '',
-    `Рабочая заметка (генерирует \`site/proto/qa/pagemap.cjs\`, данные — \`${map.page}.json\` рядом). Сборка \`${map.build.file}\` · md5 \`${map.build.md5}\` · проверка ${when} · шаг ${map.tool.step} px · ${ids.length} режимов за ${map.timing.total_s} с` + (cfg.link ? ` · ссылка ${cfg.link}` : '') + '.', '',
-    'Как читать: координата y — прокрутка страницы в px (scrollY) на данном экране; p — позиция истории (0 открытие … 5 S5, 6 набор на карточке; дробная часть — прогон). Пересобрать: `node qa/pagemap.cjs <page.html> <files dir> --out ../pagemap` (около 2 мин на все 15 режимов); только проверки по сохранённым данным: `--from-raw <raw dir>`.', '');
+    `Рабочая заметка (генерирует \`site/proto/qa/pagemap.cjs\`; данные — \`${map.page}.json\` рядом, легенда внутри JSON и в \`site/proto/qa/pagemap.md\`). Сборка \`${b.file}\` · md5 \`${b.md5}\``
+    + (b.rev ? ` · репозиторий ${b.rev}` : '') + (b.sourcesRev ? `, файлы страницы последний раз менялись в ${b.sourcesRev}` : '') + (b.keys ? ` · ключевые кадры \`${b.keys.dir}\`: ${b.keys.n} файлов, md5 списка \`${b.keys.md5.slice(0, 8)}\`` : '')
+    + ` · проверка ${when} · шаг ${dy} px · ${ids.length} режимов за ${map.timing.total_s} с` + (cfg.link ? ` · ссылка ${cfg.link}` : '') + '.', '');
+  if (b.cmd) L.push(`Сборка: \`${b.cmd}\`.`, '');
+  L.push('**Итог.** ' + (nLive ? `По пикселям на живых экранах — ${nLive} флагов (${byCls(live)}): к исправлению, см. ниже.` : 'По пикселям на живых экранах (компьютер, телефоны и планшеты с 3D) — чисто.')
+    + (stillIds.some(id => sc[id].flags.length) ? ` Без JS / без WebGL — ${stillIds.reduce((a, id) => a + sc[id].flags.length, 0)} флагов (${byCls(stillIds)}): реальные, малые, только без JS или WebGL — решение заказчика.` : '')
+    + (nRules ? ` Правила на решение заказчика — ${nRules} (${distinct(ids.flatMap(id => sc[id].rules.map(r => r.cls))).join(', ')}).` : '')
+    + (map.layout ? ` Вёрстка L1–L8 (\`${map.layout.file}\`, ${whenRu(map.layout.generated)}): ${map.layout.high} high, ${map.layout.low} low, ${map.layout.pass} pass.` : ' Карта вёрстки L1–L8 рядом не найдена.')
+    + (map.looked ? ` Финальный взгляд картинками (\`--spot\`, ${whenRu(map.looked.date)}): ${map.looked.n} картинок на ${map.looked.screens.length} экранах — ${map.looked.pass} PASS, ${map.looked.fail} FAIL, ${map.looked.look} на глаз (${map.looked.file}).` : ' Финальный взгляд картинками (`--spot`) для этой сборки не записан (`--looked <spot.json>`).'), '');
+  L.push('Как читать: y — прокрутка страницы в px (scrollY) на данном экране, диапазоны включительно; p — позиция истории (0 открытие … 5 S5, 6 набор на карточке; дробная часть — доля прогона). На компьютере p = `__seq().pos` = `window.__mtP`; на телефоне и планшете p — нарисованная поза (`sceneState.drawn`): там `window.__mtP` — позиция по странице, не поза, и прогон k играет в блоке k, пока блок идёт вверх по экрану. Рамки — x0,y0–x1,y1 в px экрана.', '',
+    'Пересобрать карту (около 2 мин на 15 режимов): `cd site/proto && NODE_PATH=$(npm root -g) THREE=<three@0.160.0/build/three.module.min.js> node qa/pagemap.cjs <dir>/' + b.file + ' <dir> --out ../pagemap --raw <scratch>/raw --keys <keys> --build-cmd "…"`; шрифт — `qa/fonts/Rubik[wght].ttf` (без него и без three.js инструмент останавливается); только проверки по сохранённым данным — `--from-raw <raw dir>`; картинки по флагам и цвету — `--spot ../pagemap/' + map.page + '.json <page> <dir> --out <scratch>`.', '');
   // 1. the result
-  L.push('## Итог проверки', '', '| экран | режим | шагов | с | флаги | принятые затухания (дизайн) |', '|---|---|---|---|---|---|');
+  L.push('## Итог проверки', '', '| экран | режим | шагов | с | флаги (пиксели) | правила | принятые затухания и прокрутка (дизайн, страница) |', '|---|---|---|---|---|---|---|');
   for (const id of ids) { const m = sc[id];
-    L.push(`| ${id} | ${m.mode}${m.kind !== 'live' ? ' (' + m.kind + ')' : ''} | ${m.steps} | ${m.probe_s} | ${m.flags.length ? Object.entries(m.count).map(([k, v]) => `${k} ${v}`).join(', ') : 'нет'} | ${m.design.map(x => DES_RU[x.kind.replace('FADE:', '')] || x.kind.replace('FADE:', '')).join(', ') || '—'} |`); }
+    L.push(`| ${id} | ${m.mode}${m.kind !== 'live' ? ' (' + m.kind + ')' : ''} | ${m.steps} | ${m.probe_s} | ${m.flags.length ? Object.entries(m.count).map(([k, v]) => `${k} ${v}`).join(', ') : 'нет'} | ${m.rules.length ? m.rules.map(r => r.cls).join(', ') : '—'} | ${m.design.map(x => DES_RU[x.kind.split(':')[1]] || x.kind).join(', ') || '—'} |`); }
   L.push('');
   const flagged = ids.filter(id => sc[id].flags.length);
-  if (flagged.length) {
-    L.push('### Флаги по диапазонам', '');
-    for (const id of flagged) { L.push(`**${id}**`, '');
-      for (const f of sc[id].flags) L.push(`- ${f.cls} (${CLS_RU[f.cls] || ''}${f.sub ? ', ' + f.sub : ''}) y ${yr(f.y)}${/RUN_SPAN|LAYOUT/.test(f.cls) ? '' : ` (${f.n} шаг.)`}: ${fmtV(f.v)}`);
-      L.push(''); }
+  if (flagged.length) {   // one line per flag (class, kind, what), its ranges screen by screen, the worst step's numbers once
+    L.push('### Флаги по диапазонам (к исправлению)', '', 'Одна строка на флаг (класс, вид, что именно); по экранам — диапазон y, число шагов, худший шаг; числа — худшего шага первого экрана.', '');
+    const by = new Map();
+    for (const id of flagged) for (const f of sc[id].flags) { const k = `${f.cls}|${f.sub}|${f.key || ''}`; if (!by.has(k)) by.set(k, { f, at: [] }); by.get(k).at.push(`${id} y ${yr(f.y)}${/LAYOUT/.test(f.cls) ? '' : ` (${f.n} шаг., худший y${f.at})`}`); }
+    for (const { f, at } of by.values()) L.push(`- ${f.cls} (${CLS_RU[f.cls] || ''}${f.sub ? ', ' + f.sub : ''}) ${f.key ? '`' + f.key + '`' : ''}: ${at.join(' · ')} — ${fmtV(f.v)}`);
+    L.push('');
   }
-  // 2. what is where
-  L.push('## Что где: экраны истории', '', `Удержание экрана (p целое) — диапазон y на ключевых экранах; продукт — рамка 3D на экране в середине удержания (x0,y0–x1,y1, px).`, '',
-    '| p | экран | ' + key.join(' | ') + ' |', '|---|---|' + key.map(() => '---|').join(''));
-  for (let k = 0; k <= 6; k++) {
-    const cells = key.map(id => { const h = (sc[id].holds || []).find(x => x.p === k); if (!h) return '—';
-      const b = boxAt(sc[id], (h.y[0] + h.y[1]) / 2); return `${yr(h.y)}${b ? ' · ' + b : ''}`; });
-    L.push(`| ${k} | ${(cfg.holds || [])[k] || ''} | ${cells.join(' | ')} |`);
+  const ruled = ids.filter(id => sc[id].rules.length);
+  if (ruled.length) {
+    L.push('### Правила на решение заказчика (не пиксельные дефекты)', '');
+    for (const id of ruled) for (const f of sc[id].rules) L.push(`- ${id}: ${f.cls} (${CLS_RU[f.cls] || ''}, ${f.sub}) y ${yr(f.y)}: ${fmtV(f.v)}`);
+    L.push('');
   }
-  L.push('', '## Прогоны', '', '| прогон | что происходит | ' + ids.filter(id => sc[id].mode !== 'still').join(' | ') + ' |', '|---|---|' + ids.filter(id => sc[id].mode !== 'still').map(() => '---|').join(''));
-  for (let k = 0; k < 6; k++) L.push(`| ${k}→${k + 1} | ${(cfg.runs || [])[k] || ''} | ` + ids.filter(id => sc[id].mode !== 'still').map(id => { const r = (sc[id].runs || []).find(x => x.k === k); return r ? `${r.px} px (${yr(r.y)})` : '—'; }).join(' | ') + ' |');
-  L.push('', 'Компьютер: прогон 5 включает карточки шагов (3D отступает: ' + key.filter(id => sc[id].stepAside).map(id => `${id} ${yr(sc[id].stepAside)}`).join(', ') + '); посадка на карточку: ' + key.filter(id => sc[id].landing).map(id => `${id} ${yr(sc[id].landing)}`).join(', ') + '.', '');
-  // 3. the pictures
-  L.push('## Картинки продукта', '', '| картинка | файл | где | показана (y) на ключевых экранах и без JS/WebGL |', '|---|---|---|---|');
+  const errd = ids.filter(id => sc[id].errors);
+  if (errd.length) L.push('Ошибки консоли в пробе: ' + errd.map(id => `${id} — ${sc[id].errors} (${sc[id].errs.map(e => `«${e.slice(0, 60)}»`).join('; ')})`).join('; ') + '.', '');
+  // 2. what is where: a desktop
+  if (deskKey.length) {
+    L.push('## Что где: компьютер (html.story, сцена слева, текст справа)', '', `Удержание позы p — диапазон y на ключевых экранах и что на экране внутри него: 3D с рамкой (x0,y0–x1,y1 px на шаге at), карточки шагов при скрытой сцене, картинка карточки, пусто.`, '',
+      '| p | экран | ' + deskKey.join(' | ') + ' |', '|---|---|' + deskKey.map(() => '---|').join(''));
+    for (let k = 0; k <= 6; k++) {
+      const cells = deskKey.map(id => { const h = (sc[id].holds || []).find(x => x.p === k); if (!h) return '—';
+        const parts = h.parts || []; if (parts.length === 1 && parts[0].what === '3d') return `${yr(h.y)} · ${bx(parts[0].box)}`;
+        return `${yr(h.y)}: ` + parts.map(p => `${WHAT_RU[p.what] || p.what} ${yr(p.y)}${p.box ? ' (' + bx(p.box) + (p.at != null ? ' @' + p.at : '') + ')' : ''}`).join(' · '); });
+      L.push(`| ${k} | ${(cfg.holds || [])[k] || ''} | ${cells.join(' | ')} |`);
+    }
+    L.push('');
+    // run 5, the step cards and the landing, from the numbers of each key screen
+    for (const id of deskKey) { const m = sc[id], h5 = (m.holds || []).find(x => x.p === 5), r5 = (m.runs || []).find(x => x.k === 5), h6 = (m.holds || []).find(x => x.p === 6), sa = m.stepAside;
+      if (!sa || !r5 || !h5) continue;
+      const hid = Math.max(0, Math.min(sa[1], r5.y[1]) - r5.y[0] + dy), share = Math.round(100 * hid / r5.px), vis3 = (h5.parts || []).filter(p => p.what === '3d').map(p => yr(p.y)).join(', ');
+      L.push(`- ${id}: карточки шагов (сцена скрыта) ${yr(sa)} = конец удержания S5 (пара видна ${vis3 || '—'}) + первые ${share} % прогона 5 (${r5.y[0]}–${Math.min(sa[1], r5.y[1])} из ${yr(r5.y)}); видимый прогон 5 — ${Math.max(r5.y[0], sa[1] + dy)}–${r5.y[1]}` + (m.landing ? `; посадка на карточку ${yr(m.landing)}` : '') + (h6 ? `; удержание 6: ${(h6.parts || []).map(p => `${WHAT_RU[p.what] || p.what} ${yr(p.y)}`).join(', ')}` : '') + '.'); }
+    L.push('');
+  }
+  // 3. what is where: a phone or tablet, block by block
+  if (flowIds.length) {
+    L.push('## Что где: телефон и планшет (html.flow, у каждого блока своя сцена)', '', 'Сцена переезжает из блока в блок; прогон k играет в блоке k, пока блок идёт вверх. В ячейке: поза до прогона (y) → прогон (y, px) → поза после (y) · кадр — рамка 3D на первом шаге, где сцена целиком между шапкой и нижней панелью (иначе «частично»). В середине удержания продукта на экране может не быть (сцена ушла под шапку, кадр соседнего блока ещё под панелью) — это страница, не дефект.', '',
+      '| блок | что | ' + flowIds.join(' | ') + ' |', '|---|---|' + flowIds.map(() => '---|').join(''));
+    const BLOCKS = ['open', 'meet', 'why', 'inside', 'feel', 'protocol'];
+    BLOCKS.forEach((bk, k) => {
+      const cells = flowIds.map(id => { const f = (sc[id].flow || []).find(x => x.block === bk); if (!f) return '—';
+        const seg = [];
+        if (f.pose0) seg.push(`поза ${f.pose0.p} ${yr(f.pose0.y)}`);
+        if (f.run) seg.push(`прогон ${k} ${yr(f.run.y)} (${f.run.px} px)`);
+        if (f.pose1) seg.push(`поза ${f.pose1.p} ${yr(f.pose1.y)}`);
+        return seg.join(' → ') + (f.frame ? ` · кадр y${f.frame.y}: ${bx(f.frame.box)}${f.frame.full ? '' : ' (частично)'}` : ' · кадра нет'); });
+      L.push(`| #${bk} | ${(cfg.flow || [])[k] || ''} | ${cells.join(' | ')} |`);
+    });
+    const picRow = (kind, label) => '| ' + label + ' | — | ' + flowIds.map(id => { const ps = sc[id].pictures.filter(p => p.kind === kind); return ps.length ? ps.map(p => `${p.src || ''} ${p.shown.map(yr).join(', ')}`).join('; ') : '—'; }).join(' | ') + ' |';
+    L.push(picRow('step', 'карточки шагов (картинки)'), picRow('kc-pic', 'картинка набора на карточке'), '');
+    const scr = flowIds.map(id => sc[id].stepsScroll ? `${id}: целиком на экране ${sc[id].stepsScroll.onScreen} из ${sc[id].stepsScroll.n} (лента ${sc[id].stepsScroll.scrollW} px при ширине ${sc[id].stepsScroll.clientW})` : null).filter(Boolean);
+    if (scr.length) L.push(`Карточки шагов на телефоне — боковая лента (\`.mt-steps\`, overflow-x): без её прокрутки видны не все (${scr.join('; ')}); проба страницу вбок не листает, поэтому шаги за правым краем в таблицах телефона не показаны.`, '');
+  }
+  // 4. the runs
+  L.push('## Прогоны', '', '| прогон | что происходит | ' + live.join(' | ') + ' |', '|---|---|' + live.map(() => '---|').join(''));
+  for (let k = 0; k < 6; k++) L.push(`| ${k}→${k + 1} | ${(cfg.runs || [])[k] || ''} | ` + live.map(id => { const r = (sc[id].runs || []).find(x => x.k === k); return r ? `${r.px} px (${yr(r.y)})` : '—'; }).join(' | ') + ' |');
+  L.push('');
+  // 5. the pictures
+  L.push('## Картинки продукта', '', '| картинка | файл | пиксели | где | показана (y) на ключевых экранах и без JS/WebGL |', '|---|---|---|---|---|');
   const pics = new Map();
   for (const id of ids) for (const p of sc[id].pictures) { const k = p.kind + '|' + p.src + '|' + p.sec; if (!pics.has(k)) pics.set(k, { p, at: [] }); if (KEYVP.includes(id) || sc[id].kind !== 'live') pics.get(k).at.push(`${id}: ${p.shown.map(yr).join(', ')}`); }
-  for (const { p, at } of pics.values()) L.push(`| ${p.kind} | ${p.src || '(canvas)'} | ${p.sec || '—'} | ${at.join('; ') || '—'} |`);
-  // 4. the texts
-  L.push('', '## Тексты (по блокам) и источники', '', 'Тексты страницы — из `site/proto/story_content.py` (MITOTECH: `state/mitotech/canon-v2.md`, кадры каталога 941:2, 941:21, 956:2, 956:23) и UI-строки 12 страниц; строки, которых нет дословно у заказчика, — `state/mitotech/texts-for-approval.md`. Позиции строк по экранам — в JSON (`screens.<экран>.texts`: id, x0, y0, x1, y1 в координатах страницы).', '');
+  for (const { p, at } of pics.values()) L.push(`| ${p.kind} | ${p.src || '(canvas)'} | ${p.nat && p.nat[0] ? p.nat.join('×') : '—'} | ${p.sec || '—'} | ${at.join('; ') || '—'} |`);
+  L.push('', 'Источник картинок: ' + (cfg.pictures || '—') + '.', '');
+  // 6. the texts
+  L.push('## Тексты (блоки продукта) и источники', '', 'Тексты страницы — ' + (cfg.texts || '—') + '. Позиции строк по ключевым экранам — в JSON (`screens.<экран>.texts`: id, x0, y0, x1, y1 в координатах страницы, где строка впервые видна; прижатые строки (sticky: на компьютере копия оффера, `.offer-copy`) помечены и перечислены в `pinned` с диапазоном прокрутки, где они стоят на месте). Строки специалистов, «смотрите также» и подвала — общие для сайта, в карту не входят.', '');
   const bySec = {}; for (const [id, t] of Object.entries(map.texts)) (bySec[t[0] || '—'] = bySec[t[0] || '—'] || []).push([id, t]);
   for (const [sec, arr] of Object.entries(bySec)) L.push(`- **${sec}**: ` + arr.slice(0, 14).map(([id, t]) => `${id} ${t[1].split('.')[0]} «${t[2]}»`).join(' · ') + (arr.length > 14 ? ` · … (${arr.length})` : ''));
-  // 5. the rules
-  const th = map.tool.thresholds;
-  L.push('', '## Правила заказчика → проверки по числам', '', '| правило | флаг | как считается |', '|---|---|---|',
-    `| продукт не режется прямой линией (край сцены, экрана) | CUT | рамка объекта (коробка, флакон) касается края видимой части сцены (≤ ${th.touchPx} px) или выходит за него, а затухания оставляют там > ${th.cutResid} → touch / hard; прямая мягкая полоса (старая виньетка, полоса края) гасит его > ${th.bandDim * 100} % на ≥ ${th.softFrac * 100} % размера и ≥ ${th.softPx} px → soft-band; круглое затухание ≥ ${th.roundW} — норма |`,
-    `| не под шапкой, док-панелью, нижней панелью, телом карточки | UNDER_CHROME | пересечение рамки детали с панелью ≥ ${th.overPx} px (компьютер — всегда; телефон/планшет — пока идёт прогон; там же выход за край экрана) |`,
-    `| продукт не под текстом, текст не на нём | UNDER_TEXT | строки текста (Range) против рамок деталей 3D и нарисованной части картинок, ≥ ${th.overPx}×${th.overPx} px |`,
-    `| никогда два продукта сразу | TWO_PRODUCTS | 3D (видимые детали или янтарный свет) и каждая картинка продукта ниже шапки, ≥ ${th.twoH} px и ≥ ${th.twoArea} px²; карточки шагов — одна серия |`,
-    `| ничего не просвечивает | GHOST | твёрдая деталь (коробка, этикетка, колпачок, пробка, порошок) с прозрачностью ${th.ghost[0]}–${th.ghost[1]} без копии глубины, ≥ ${th.ghostPart} px²: over — поверх другой детали, air — одна в воздухе; с копией глубины — FADE (дизайн) |`,
-    `| без скачков | POP | размер тела объекта за ${th.popDy} px прокрутки × > ${th.popSize}; смещение > ${th.popMove} размера (без полёта холста); появление/исчезновение не за коробкой (закрыто < ${th.popHidden * 100}%) |`,
-    `| без пустой сцены | EMPTY | компьютер: история идёт (p < 6), а продукта на экране нет ≥ ${th.emptyPx} px прокрутки (короче — передача 3D ↔ картинка); телефон: прогон идёт, сцена видна, продукта нет; dim: в нырке сильнейшее из света и продукта < ${th.dim} (и посередине между шагами) — тёмный кадр |`,
-    `| прогону хватает прокрутки | RUN_SPAN | телефон < ${th.runMin.flow} px, компьютер < ${th.runMin.desk} px |`,
-    '| компьютер: продукт слева, текст справа; телефон: заголовок → сцена → текст; ничего за краем | LAYOUT | строка текста левее середины продукта рядом с ним; картинка карточки шага правее её текста; порядок блоков на телефоне; горизонтальная прокрутка; строки и картинки за краем экрана |',
-    `| HD | HD | пиксели холста и картинок ≥ ${th.hd} × CSS × DPR (компьютер ≤ 2, телефон — DPR экрана) |`,
-    '', 'Только по цвету числами не ловится: оттенок стекла и раствора, «чернота» кадра, читаемость на фоне — для них точечная проверка картинкой (ниже, в заметках калибровки).', '');
-  // 6. notes (kept) and the questions
-  L.push('## Калибровка и заметки', '', notes, '');
+  const pin = deskKey.map(id => ({ id, p: sc[id].pinned || [] })).filter(x => x.p.length);
+  if (pin.length) L.push('', 'Прижатые строки: ' + pin.map(({ id, p }) => `${id} — ${p.map(e => `${e[0]} y ${e[1]}–${e[2]} на экране x${e[3]},y${e[4]}–${e[5]},${e[6]}`).join('; ')}`).join('. ') + '.');
+  // 7. waiting for a decision
+  L.push('', '## Ждёт решения', '');
+  for (const s of cfg.pending || []) L.push('- ' + s);
+  if (nRules) { const rs = ids.flatMap(id => sc[id].rules.map(r => ({ id, r }))); for (const cls of distinct(rs.map(x => x.r.cls)))
+    L.push(`- ${cls} (${CLS_RU[cls] || ''}): ` + rs.filter(x => x.r.cls === cls).map(x => `${x.id} ${fmtV(x.r.v)}`).join('; ') + (cls === 'RUN_SPAN' ? ' — правило, не кадр: прогон начинается с верха страницы и кончается у шапки, длиннее станет только при более высоком блоке открытия; принять или удлинить' : '')); }
+  if (stillIds.some(id => sc[id].flags.length)) L.push(`- Без JS / без WebGL: ${stillIds.filter(id => sc[id].flags.length).map(id => `${id} — ${Object.entries(sc[id].count).map(([k, v]) => `${k} ${v}`).join(', ')}`).join('; ')} (кадры-картинки входят снизу, пока предыдущий ещё на экране; кадры m1–m5 показаны мельче 3× CSS): исправлять (полосы между кадрами, кадры ≥ 3×) или принять.`);
+  if (nLive) L.push(`- К исправлению на живых экранах: ${byCls(live)} — после правки страницы карту пересобрать.`);
+  if (map.layout) L.push(`- Вёрстка L1–L8: ${map.layout.high} high, ${map.layout.low} low (\`${map.layout.file}\`) — правки файлов страницы.`);
+  if (cfg.questions) L.push(`- Тексты: \`${path.posix.normalize(cfg.questions.file).replace(/^(\.\.\/)+/, '')}\` ${cfg.questions.short || ''}` + (cfg.questions.extra || []).map(e => '; ' + e).join(''));
+  L.push(map.looked ? `- Финальный взгляд картинками на ${map.looked.screens.join(', ')} (${whenRu(map.looked.date)}): ${map.looked.pass} PASS, ${map.looked.fail} FAIL, ${map.looked.look} на глаз — картинки в рабочей папке (${map.looked.file}), в репозиторий не идут.`
+    : '- Финальный взгляд картинками (`--spot`) для этой сборки не записан.');
+  // 8. notes (kept) and the questions
+  L.push('', '## Заметки по странице', '', 'Метод, калибровка на старых сборках, пороги и то, что числами не ловится, — `site/proto/qa/pagemap.md` (один документ на все страницы).', '', notes, '');
   L.push('## Открытые вопросы заказчику', '');
-  try { const q = fs.readFileSync(path.join(__dirname, cfg.questions), 'utf8'), m = /## 6\.[^\n]*\n([\s\S]*?)(?:\n## |\s*$)/.exec(q);
+  try { const q = fs.readFileSync(path.join(__dirname, cfg.questions.file), 'utf8'), sec = cfg.questions.section, m = new RegExp('## ' + sec + '\\.[^\\n]*\\n([\\s\\S]*?)(?:\\n## |\\s*$)').exec(q);
     const items = m ? m[1].split(/\n(?=\d+\. )/).map(x => x.trim()).filter(x => /^\d+\./.test(x)) : [];
     for (const it of items) {   // the question's first sentence (and its «Вопрос: …» one, or a second when the first is short)
       const t = it.replace(/^\d+\.\s*/, '').replace(/\s*\n\s*/g, ' '), ss = t.split(/(?<=[.?!])\s+/);
-      const q = ss.find((x, k) => k > 0 && /^Вопрос/.test(x)), out = [ss[0]].concat(q ? [q] : ss[0].length < 120 && ss[1] ? [ss[1]] : []).join(' ');
+      const qq = ss.find((x, k) => k > 0 && /^Вопрос/.test(x)), out = [ss[0]].concat(qq ? [qq] : ss[0].length < 120 && ss[1] ? [ss[1]] : []).join(' ');
       L.push('- ' + (out.length > 420 ? out.slice(0, 400) + '…' : out));
     }
-    L.push('', 'Полный список (новые строки на «ок», бейдж линейки, аппликаторы в наборе) — `state/mitotech/texts-for-approval.md`.');
+    for (const e of cfg.questions.extra || []) L.push('- ' + e);
+    L.push('', `Полный список — \`${path.posix.normalize(cfg.questions.file).replace(/^(\.\.\/)+/, '')}\` (§${sec} и новые строки на «ок»).`);
   } catch (e) { L.push('— (файл вопросов не найден)'); }
   return L.join('\n') + '\n';
-}
-function boxAt(m, y) {   // the 3D's outline on the screen at scroll y, from the track
-  if (!m.track || !m.track.box) return null;
-  const i = Math.round((y - m.track.y0) / m.track.dy); let n = 0;
-  for (const tok of m.track.box.split(' ')) { const [v, c] = tok.split('*'), k = c ? +c : 1; if (i < n + k) return v === '-' ? null : v === 'g' ? 'янтарный свет' : v.replace(/^(\d+),(\d+),(\d+),(\d+)$/, '$1,$2–$3,$4'); n += k; }
-  return null;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -883,8 +1083,7 @@ async function spot(mapFile, pageFile, files, out) {
   const { chromium } = require('playwright');
   const map = JSON.parse(fs.readFileSync(mapFile, 'utf8')), html0 = fs.readFileSync(pageFile, 'utf8');
   const shell = b => '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></head><body>' + b + '</body></html>';
-  const three = opt('--three', process.env.THREE) || require.resolve('three/build/three.module.min.js');
-  const font = path.join(opt('--fonts', process.env.FONTDIR || path.join(os.tmpdir(), 'mitoderm-fonts')), 'Rubik[wght].ttf');
+  const three = threeFile(), font = fontFile();
   const vids = (opt('--viewports', 'key') === 'key' ? KEYVP : opt('--viewports').split(',')).filter(v => map.screens[v]);
   const dir = path.join(out, 'spot'); fs.mkdirSync(dir, { recursive: true });
   const lab = (r, g, b) => { const f = c => { c /= 255; c = c > 0.04045 ? ((c + 0.055) / 1.055) ** 2.4 : c / 12.92; return c; };
@@ -961,7 +1160,9 @@ async function spot(mapFile, pageFile, files, out) {
   fs.writeFileSync(path.join(out, 'spot.json'), JSON.stringify(res, null, 1));
 }
 
-// <out>/README.md: the 13 pages as a roadmap; the row of this page is rewritten from its map, the others are kept
+
+// <out>/README.md: the roadmap of the 13 pages, regenerated whole: per page its kind, build, whether PAGES has its
+// configuration, what the map needs first, and the last map's facts (read from <out>/<slug>.json when it exists)
 const ALL13 = [['v-tech-system', 'V-TECH SYSTEM', 'https://claude.ai/artifact/NdQezU5bikrsuaWVVW5TBK'], ['exocell-mask', 'EXOCELL MASK', 'https://claude.ai/artifact/FA5ySxGihnDAmjQPvDftzn'],
   ['exotech-gel', 'EXOTECH GEL', 'https://claude.ai/artifact/LsJVky9GDssBuW1eQkLaTe'], ['exosignal-hair', 'EXOSIGNAL HAIR', 'https://claude.ai/artifact/2ws7qr1xL7Y7wp5xdbE1jh'],
   ['exosignal-spray', 'EXOSIGNAL SPRAY', 'https://claude.ai/artifact/GAUwhjxzqdk7jEg7JgSBJz'], ['exo-nad', 'EXO-NAD', 'https://claude.ai/artifact/NcP4v3p7KAdvqZGTnoGK8S'],
@@ -969,31 +1170,47 @@ const ALL13 = [['v-tech-system', 'V-TECH SYSTEM', 'https://claude.ai/artifact/Nd
   ['mitopen', 'MITOPEN', 'https://claude.ai/artifact/KAn13gS9E2on2ZikQSz4eW'], ['cell-renew-1-5', 'CELL RENEW 1.5%', 'https://claude.ai/artifact/2rVvsAFJ9NRUjymZDmANup'],
   ['mitoscan', 'MITOSCAN', 'https://claude.ai/artifact/KD3L1gfgVA8twY7HBvYofp'], ['derma-recovery-cream', 'DERMA RECOVERY CREAM', 'https://claude.ai/artifact/7a3EpTpcTbYMWjTypNk2pV'],
   ['mitotech-cell-booster', 'MITOTECH CELL BOOSTER', 'https://claude.ai/artifact/G3tdcwusRsVdw4E5HeGM5s']];
+// what each page is built from (site/proto): the kind decides what the probe can measure
+const ROADMAP = {
+  'v-tech-system': { kind: 'кадры Blender, история v1', build: 'cd site/proto && python3 build-vtech.py --files <dir> --keys <keys>',
+    needs: 'проба для движка кадров (рамки продукта по alpha-box кадров `seq/runs.json`, не three-nodraw); хуки `__seq` есть' },
+  'exocell-mask': { kind: 'EXOCELL 3D, свой шаблон `exocell-3d-template.html`', build: 'cd site/proto && python3 build-exocell.py 3d --out <dir>',
+    needs: 'хуки пробы в шаблоне (нет `window.__seq`) — только вместе со следующей публикацией страницы; конфиг PAGES' },
+  'mitotech-cell-booster': { kind: 'сцена three.js, история v2 (`story_content.V2`)' },
+};
+const SCENE_V1 = { kind: 'сцена three.js, история v1', build: 'cd site/proto && python3 build-vtech.py --product <slug> --scene --files <dir> --keys <keys> --links artifact',
+  needs: 'PAGES[<slug>] в pagemap.cjs: объекты по индексу `scene.children`, детали тела, подписи удержаний, прогонов и блоков; у v1 нет `__mtP`/`__mtCards`/`.mt-step` — поза берётся из `__seq().pos` (проба это уже умеет)' };
 const OPEN12 = { 'exosignal-spray': 'пакшот SPRAY', 'exo-nad': 'фото EXO-NAD в полном размере', 'derma-recovery-cream': 'банка DERMA в HD', 'mitopen': 'данные MITOPEN',
   'mitoscan': 'данные MITOSCAN', 'exotech-gel': 'цвет геля', 'exocell-mask': 'кадр зеркала MASK ≥ 1196 px', 'cell-renew-1-5': '«ок» телефонного образца (T1)' };
-function updateReadme(out, map) {
-  const f = path.join(out, 'README.md'), slug = map.page;
+function writeReadme(out, map) {
+  const f = path.join(out, 'README.md');
   const row = (sl, name, link) => {
-    if (sl !== slug) return `| ${name} | \`${sl}\` | ${link} | — | карта ещё не построена | — | ${OPEN12[sl] ? OPEN12[sl] + '; ' : ''}размеры коробки в мм; см. \`HANDOFF-session.md\` «Ждёт заказчика» |`;
-    const ids = Object.keys(map.screens), n = ids.reduce((a, id) => a + map.screens[id].flags.length, 0);
-    const cls = {}; for (const id of ids) for (const fl of map.screens[id].flags) cls[fl.cls] = (cls[fl.cls] || 0) + 1;
-    const when = new Date(map.date).toLocaleString('ru-RU', { timeZone: 'Asia/Jerusalem', dateStyle: 'short', timeStyle: 'short' });
-    return `| ${name} | \`${sl}\` | ${link} | md5 \`${map.build.md5.slice(0, 8)}\` | ${when}, ${ids.length} режимов за ${map.timing.total_s} с | ${n ? Object.entries(cls).map(([k, v]) => `${k} ${v}`).join(', ') : 'нет'} (\`${sl}.md\`) | \`state/mitotech/texts-for-approval.md\` §6: цвет раствора, аппликаторы в наборе, заголовок оффера, янтарь — стекло или жидкость; бейдж линейки |`;
+    const rm = ROADMAP[sl] || SCENE_V1, cfg = PAGES[sl], jf = path.join(out, sl + '.json');
+    let m = sl === map.page ? map : null; if (!m && fs.existsSync(jf)) try { m = JSON.parse(fs.readFileSync(jf, 'utf8')); } catch (e) { m = null; }
+    const kind = rm.kind, build = '`' + (cfg && cfg.build || rm.build || '—').replace(/<slug>/g, sl) + '`', has = cfg ? 'есть' : 'нет', needs = rm.needs || (cfg ? '—' : SCENE_V1.needs);
+    if (!m || !m.screens) return `| ${name} | \`${sl}\` | ${link} | ${kind} | ${build} | ${has} | ${needs} | — | карта ещё не построена | — | — | ${OPEN12[sl] ? OPEN12[sl] + '; ' : ''}размеры коробки в мм; см. \`HANDOFF-session.md\` «Ждёт заказчика» |`;
+    const ids = Object.keys(m.screens), live = ids.filter(id => m.screens[id].mode !== 'still'), still = ids.filter(id => m.screens[id].mode === 'still');
+    const cnt = list => { const c = {}; for (const id of list) for (const fl of m.screens[id].flags) c[fl.cls] = (c[fl.cls] || 0) + 1; return Object.entries(c).map(([k, v]) => `${k} ${v}`).join(', '); };
+    const nl = live.reduce((a, id) => a + m.screens[id].flags.length, 0), ns = still.reduce((a, id) => a + m.screens[id].flags.length, 0), nr = ids.reduce((a, id) => a + (m.screens[id].rules || []).length, 0);
+    const flags = [nl ? `живые экраны: ${cnt(live)}` : 'живые экраны: чисто', ns ? `без JS/WebGL: ${cnt(still)}` : null, nr ? `правила: ${distinct(ids.flatMap(id => (m.screens[id].rules || []).map(r => r.cls))).join(', ')}` : null].filter(Boolean).join('; ');
+    const lay = m.layout ? `L1–L8: ${m.layout.high} high, ${m.layout.low} low (\`${m.layout.file}\`)` : '—';
+    const pend = [].concat(cfg && cfg.pending ? ['«ок» на образце'] : [], nr ? ['длина прогона 0 на телефонах'] : [], ns ? ['кадры без JS/WebGL: править или принять'] : [],
+      cfg && cfg.questions ? [cfg.questions.short ? 'тексты ' + cfg.questions.short : 'тексты'] : [], cfg && cfg.questions && cfg.questions.extra ? cfg.questions.extra.map(e => e.split(' — ')[0]) : [],
+      [m.looked ? `взгляд картинками ${whenRu(m.looked.date)}: ${m.looked.fail ? m.looked.fail + ' FAIL' : 'PASS'}` : 'взгляд картинками не записан']);
+    return `| ${name} | \`${sl}\` | ${link} | ${kind} | ${build} | ${has} | ${needs} | md5 \`${m.build.md5.slice(0, 8)}\`${m.build.rev ? ' (' + m.build.rev + ')' : ''} | ${whenRu(m.date)}, ${ids.length} режимов за ${m.timing.total_s} с | ${flags} (\`${sl}.md\`) | ${lay} | ${pend.join('; ')} |`;
   };
-  let txt = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
-  if (!txt.includes('| страница |')) {
-    txt = ['# Карты страниц сайта — дорожная карта', '',
-      'Карта страницы — машиночитаемое описание того, что где на странице на каждом экране (`<slug>.json`) и рабочая заметка по ней (`<slug>.md`):',
-      'экраны и диапазоны прокрутки, прогоны и их длина, позиции истории p, рамка продукта через каждые 10 px, картинки, тексты, флаги проверок.',
-      'Строит её `site/proto/qa/pagemap.cjs` (three.js без рисования: секунды на экран вместо часов рендера) после каждой сборки страницы;',
-      'проверки правил заказчика идут по числам, картинки — только там, где числа нашли подозрение (`--spot`), и финальный взгляд на 4 экрана.',
-      'Ссылки страниц — `site/HANDOFF-dev.he.md` и `HANDOFF-session.md`.', '',
-      '| страница | slug | ссылка | последняя сборка | последняя проверка | флаги | открытые вопросы |', '|---|---|---|---|---|---|---|',
-      ...ALL13.map(([sl, name, link]) => row(sl, name, link)), ''].join('\n');
-  } else {
-    const me = ALL13.find(x => x[0] === slug);
-    if (me) txt = txt.split('\n').map(l => l.includes('| `' + slug + '` |') ? row(...me) : l).join('\n');
-  }
+  const txt = ['# Карты страниц сайта — дорожная карта', '',
+    'Карта страницы — машиночитаемое описание того, что где на странице на каждом экране (`<slug>.json`, легенда внутри) и рабочая заметка по ней (`<slug>.md`):',
+    'экраны и диапазоны прокрутки, прогоны и их длина, позиции истории p, удержания и что в них видно, рамка продукта через каждые 10 px (ключевые экраны), картинки, тексты, флаги проверок.',
+    'Строит её `site/proto/qa/pagemap.cjs` (three.js без рисования: секунды на экран вместо часов рендера) после каждой сборки страницы;',
+    'проверки правил заказчика идут по числам, картинки — только там, где числа нашли подозрение (`--spot`), и финальный взгляд на 4 экрана.',
+    'Инструмент, легенда, пороги и калибровка — `site/proto/qa/pagemap.md`; правила вёрстки L1–L8 — `site/proto/qa/layout-check.cjs` (`<slug>.layout.{json,md}`, `design-rules.md`).',
+    'Ссылки страниц — `site/HANDOFF-dev.he.md` и `HANDOFF-session.md`. Пути в таблице — от `mitoderm-catalog/`.', '',
+    '**Как пересобрать карту** (около 2 мин на 15 режимов, 4 CPU без GPU): `cd site/proto && NODE_PATH=$(npm root -g) THREE=<three@0.160.0/build/three.module.min.js> node qa/pagemap.cjs <dir>/<slug>-live.html <dir> --out ../pagemap --raw <scratch>/raw --keys <keys> --build-cmd "<команда сборки>" [--looked <spot.json>]`.',
+    'three.js: `npm i --no-save three@0.160.0` в рабочей папке (или `--three <file>`); шрифт — `qa/fonts/Rubik[wght].ttf` (в репозитории); без них инструмент останавливается. Сборки и ключевые кадры — вне репозитория (рабочая папка сессии); опубликованные сборки опознаются по md5 и ревизии файлов страницы в `build`.', '',
+    '**Порядок и ворота.** Карты остальных 12 страниц — после «ок» заказчика на образце MITOTECH (PLAN). Затем по одной: 1) 10 страниц-сцен истории v1 (одинаковый шаблон и движок: конфиг `PAGES[<slug>]` → карта → `--spot` → взгляд на 4 экрана), начиная с EXOTECH GEL и EXOCELL-подобных эталонов вёрстки; 2) EXOCELL MASK — хуки пробы в её шаблоне вместе со следующей публикацией; 3) V-TECH — проба для движка кадров. Опубликованные 12 страниц при этом не меняются: карта читает сборку, какая она есть.', '',
+    '| страница | slug | ссылка | тип | сборка | PAGES | что нужно до карты | последняя сборка | последняя проверка | флаги | вёрстка | ждёт решения |', '|---|---|---|---|---|---|---|---|---|---|---|---|',
+    ...ALL13.map(([sl, name, link]) => row(sl, name, link)), ''].join('\n');
   fs.writeFileSync(f, txt);
 }
 
