@@ -1,3 +1,4 @@
 {"ts":"2026-11-07T22:05:48Z","step":"start","note":"g2 editor started: reading BRIEF, format-v3, exo-nad model, 3 chapters + prompts"}
 {"ts":"2026-11-07T22:17:04Z","step":"edits applied","note":"40 anchored replacements in 3 chapters + 3 prompt files (satin foil, sphere yaw <= 8 deg, live-page b2 title, replace-object counts, stats format, blue layer #3a62b0, 03-mirror provenance, step-0 sentences, section-7 items); costs.json/format-v3.md still absent"}
 {"ts":"2026-11-07T22:18:17Z","step":"review written, committing","note":"review/g2.md; checks: cyr 0, shot tables intact, quotes verified"}
+{"ts":"2026-11-07T22:18:28Z","step":"done","commit":"da168d0","gap":"costs.json, r3-ai-video.md, format-v3.md still absent; unit keys/classes left symbolic in section 8 and prompt MODEL fields"}
