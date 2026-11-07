@@ -1,1 +1,5 @@
 {"step":"start","t":"2026-11-07T20:28:03Z","label":"writer-home-exo-nad","note":"read BRIEF, design-rules, ARCH, format v2.1, exo-nad v2.1, r1, r2, r4, facts.json, scene exo-nad.js; costs.json absent at start"}
+{"step":"exo-nad.md written+committed","t":"2026-11-07T20:38:50Z","note":"11 shots/36 s; §8 units only, costs.json still absent"}
+{"step":"01-home.md written+committed","t":"2026-11-07T20:42:24Z"}
+{"step":"prompts written+committed","t":"2026-11-07T20:46:21Z","note":"model ids pending costs.json"}
+{"step":"done","t":"2026-11-07T21:18:36Z","gap":"research/costs.json + r3-ai-video.md never appeared (waited 20:38-21:18 UTC); §8 of both chapters and MODEL fields of the prompts carry unit keys/classes to fill from costs.json"}
