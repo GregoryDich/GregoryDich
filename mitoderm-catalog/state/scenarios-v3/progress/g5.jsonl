@@ -1,3 +1,5 @@
 {"step":"start","read":["BRIEF","g1-g3","costs.json","r3","exo-nad model","mitopen/mitoscan src+prompts"],"at":"2026-11-07T23:20:22Z"}
 {"step":"audit done: facts/quotes ok; fixes planned: set-T04, cast one-liner, F06 mechanic, §8 credits method, MITOSCAN casting 3 stills, prompts MODEL ids","at":"2026-11-07T23:29:07Z"}
 {"step":"edits applied to src+prompts of mitopen and mitoscan; running checks","at":"2026-11-07T23:34:07Z"}
+{"step":"checks pass (structure, quotes, costs recomputed, cyrillic 0, prompts match); snapshot commits 9016199/6a63d73 swept the edits into HEAD; g5.md written","at":"2026-11-07T23:37:06Z"}
+{"step":"done: g5.md + commit + push","at":"2026-11-07T23:37:37Z"}
