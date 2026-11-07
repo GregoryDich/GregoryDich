@@ -1,1 +1,2 @@
 {"step":"start","t":"2026-11-08T01:20:11+02:00","note":"v2.1 tooling copied to build/"}
+{"step":"adapted build-docx.cjs (parts, landscape wide sections, content widths, manifest), build.sh, verify.py","t":"2026-11-08T01:22:09+02:00"}
