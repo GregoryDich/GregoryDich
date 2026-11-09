@@ -1,32 +1,47 @@
 'use client';
 
-import {useEffect,useRef,useState,type ReactNode,type CSSProperties} from 'react';
+import {useCallback,useEffect,useRef,useState,type ReactNode} from 'react';
 import {usePathname,useRouter} from 'next/navigation';
 import {products,assets} from '../data';
-import {mediaUrl} from '../media';
 import {LeadForm} from './LeadForm';
+import {ProductTransition,type ProductFlight} from './ProductTransition';
 import './product-flight.css';
 
 type Inquiry={productSlug:string;sourceBlock:string;comment:string};
-type Flight={slug:string;src:string;x:number;y:number;width:number;height:number;moveX:number;moveY:number;scale:number};
 
 export function SiteExperience({children}:{children:ReactNode}){
  const pathname=usePathname();
  const router=useRouter();
- const [inquiry,setInquiry]=useState<Inquiry|null>(null),[flight,setFlight]=useState<Flight|null>(null);
+ const [inquiry,setInquiry]=useState<Inquiry|null>(null),[flight,setFlight]=useState<ProductFlight|null>(null);
  const dialog=useRef<HTMLDialogElement>(null),returnFocus=useRef<HTMLElement|null>(null);
- const flightTimer=useRef<number|null>(null),navigationTimer=useRef<number|null>(null);
+ const navigationTimer=useRef<number|null>(null);
  const pendingHref=useRef<string|null>(null),previousPathname=useRef(pathname);
 
- // App Router navigation is not a promise: finish when the destination commits.
- // This also cancels a pending product flight after back/forward navigation.
+ const finishFlight=useCallback(()=>{
+  const destination=pendingHref.current;
+  if(navigationTimer.current!==null)window.clearTimeout(navigationTimer.current);
+  navigationTimer.current=null;pendingHref.current=null;setFlight(null);
+  // Finishing a visual effect must never cancel the user's chosen navigation.
+  if(destination&&window.location.pathname!==destination)window.location.assign(destination);
+ },[]);
+ const openProduct=useCallback((href:string)=>{
+  pendingHref.current=href;
+  navigationTimer.current=window.setTimeout(()=>{
+   if(pendingHref.current!==href)return;
+   navigationTimer.current=null;pendingHref.current=null;setFlight(null);
+   if(window.location.pathname!==href)window.location.assign(href);
+  },8000);
+  try{router.push(href,{scroll:true});}
+  catch{finishFlight();window.location.assign(href);}
+ },[router,finishFlight]);
+
+ // A measured landing, rather than pathname, finishes the product handoff.
  useEffect(()=>{
   if(previousPathname.current===pathname)return;
   previousPathname.current=pathname;
-  if(flightTimer.current!==null)window.clearTimeout(flightTimer.current);
   if(navigationTimer.current!==null)window.clearTimeout(navigationTimer.current);
-  flightTimer.current=null;navigationTimer.current=null;pendingHref.current=null;
-  setFlight(null);setInquiry(null);
+  navigationTimer.current=null;setInquiry(null);
+  if(pendingHref.current!==pathname||!flight){pendingHref.current=null;setFlight(null);}
  },[pathname]);
 
  useEffect(()=>{
@@ -45,40 +60,41 @@ export function SiteExperience({children}:{children:ReactNode}){
    const slug=href.slice('/products/'.length);
    if(!products.some(product=>product.slug===slug))return;
    event.preventDefault();
-   if(flightTimer.current!==null||pendingHref.current!==null)return;
+   if(flight||pendingHref.current!==null)return;
    // A same-page link cannot clear a flight through a pathname change.
    if(pathname===href){setFlight(null);window.scrollTo({top:0,left:0,behavior:'instant'});return;}
 
-   const openProduct=()=>{
-    pendingHref.current=href;
-    navigationTimer.current=window.setTimeout(()=>{
-     if(pendingHref.current!==href)return;
-     navigationTimer.current=null;pendingHref.current=null;setFlight(null);
-     if(window.location.pathname!==href)window.location.assign(href);
-    },8000);
-    try{router.push(href,{scroll:true});}
-    catch{
-     if(navigationTimer.current!==null)window.clearTimeout(navigationTimer.current);
-     navigationTimer.current=null;pendingHref.current=null;setFlight(null);
-     window.location.assign(href);
+   if(slug==='v-tech-system'&&anchor.dataset.flightPhoto==='true'&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    const frame=anchor.closest('[data-collection-frame]');
+    const poster=Array.from(frame?.querySelectorAll<HTMLImageElement>('img[data-collection-poster]')??[]).find(item=>item.getBoundingClientRect().width>0);
+    const sourceBox=anchor.querySelector<HTMLElement>('[data-flight-box]')??anchor;
+    if(poster?.complete&&poster.naturalWidth>0){
+     const measured=sourceBox.getBoundingClientRect(),photoRect=poster.getBoundingClientRect();
+     if(measured.width>0&&measured.height>0){
+      const rect={left:measured.left,top:measured.top,width:measured.width,height:measured.height};
+      pendingHref.current=href;
+      setFlight({id:performance.now(),slug,href,src:poster.currentSrc||poster.src,rect,box:rect,photo:{rect:{left:photoRect.left,top:photoRect.top,width:photoRect.width,height:photoRect.height},silhouette:sourceBox.dataset.photoSilhouette??'polygon(0% 2%,12% 0%,100% 1%,100% 99%,12% 100%,0% 97%)'}});
+      return;
+     }
     }
-   };
+   }
    const image=anchor.querySelector<HTMLImageElement>('[data-flight-image],img');
-   if(!image||window.matchMedia('(prefers-reduced-motion: reduce)').matches){openProduct();return;}
+   if(slug!=='v-tech-system'||anchor.dataset.flightSkip==='true'||!image||window.matchMedia('(prefers-reduced-motion: reduce)').matches){openProduct(href);return;}
    const rect=image.getBoundingClientRect();
-   if(rect.width<1||rect.height<1){openProduct();return;}
-   const targetHeight=Math.min(window.innerHeight*.58,500),scale=Math.min(targetHeight/rect.height,window.innerWidth*.66/rect.width);
-   const targetX=window.innerWidth*(window.innerWidth>860?.49:.5),targetY=window.innerHeight*.43;
-   setFlight({slug,src:image.currentSrc||assets[slug].src,x:rect.left,y:rect.top,width:rect.width,height:rect.height,moveX:targetX-(rect.left+rect.width/2),moveY:targetY-(rect.top+rect.height/2),scale});
-   if(slug==='v-tech-system'){const poster=new Image();poster.src=mediaUrl(window.matchMedia('(hover: none) and (pointer: coarse), (max-width: 860px)').matches?'/assets/world/vtech-intro-mobile-poster.webp':'/assets/world/vtech-intro-poster.webp');}
-   flightTimer.current=window.setTimeout(()=>{flightTimer.current=null;openProduct();},650);
+   if(rect.width<1||rect.height<1){openProduct(href);return;}
+   const scale=Math.min(rect.width/(image.naturalWidth||513),rect.height/(image.naturalHeight||875));
+   const width=(image.naturalWidth||513)*scale,height=(image.naturalHeight||875)*scale;
+   const rendered={left:rect.left+(rect.width-width)/2,top:rect.top+(rect.height-height)/2,width,height};
+   // Match the box, excluding the vials/sachet photographed beside the catalog kit.
+   const box={left:rendered.left,top:rendered.top,width:width*362/513,height:height*800/875};
+   pendingHref.current=href;
+   setFlight({id:performance.now(),slug,href,src:image.currentSrc||assets[slug].src,rect:rendered,box});
   };
   document.addEventListener('click',onClick);
   return()=>document.removeEventListener('click',onClick);
- },[pathname,router]);
+ },[pathname,router,flight,openProduct]);
 
  useEffect(()=>()=>{
-  if(flightTimer.current!==null)window.clearTimeout(flightTimer.current);
   if(navigationTimer.current!==null)window.clearTimeout(navigationTimer.current);
  },[]);
  useEffect(()=>{
@@ -96,6 +112,6 @@ export function SiteExperience({children}:{children:ReactNode}){
   <dialog ref={dialog} className="inquiry-dialog" onCancel={event=>{event.preventDefault();close();}} onClose={()=>setInquiry(null)} onClick={event=>{if(event.target===event.currentTarget)close();}} aria-labelledby="inquiry-heading">
    {inquiry&&<div className="inquiry-panel"><button className="inquiry-close" type="button" onClick={close} aria-label="סגירה">×</button><p className="inquiry-brand" dir="ltr">{selected?.name??'MITODERM'}</p><h2 id="inquiry-heading">מחיר, תנאים והדרכה</h2><p className="inquiry-intro">פרטים מקצועיים עבור הקליניקה שלכם.</p><LeadForm key={inquiry.productSlug+inquiry.sourceBlock} productSlug={inquiry.productSlug} sourceBlock={inquiry.sourceBlock} initialComment={inquiry.comment}/></div>}
   </dialog>
-  {flight&&<div className="vc-product-flight" aria-hidden="true"><div className="vc-product-flight-ground"/><img src={flight.src} alt="" style={{left:flight.x,top:flight.y,width:flight.width,height:flight.height,'--transfer-x':flight.moveX+'px','--transfer-y':flight.moveY+'px','--transfer-scale':flight.scale} as CSSProperties}/></div>}
+  {flight&&<ProductTransition flight={flight} onNavigate={openProduct} onFinish={finishFlight}/>}
  </>;
 }

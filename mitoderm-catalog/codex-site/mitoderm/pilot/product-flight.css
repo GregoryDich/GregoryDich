@@ -1,1 +1,20 @@
-.vc-product-flight{position:fixed;inset:0;z-index:9998;pointer-events:auto;isolation:isolate}.vc-product-flight-ground{position:absolute;inset:0;background:#08080a;animation:vc-flight-ground .65s ease both}.vc-product-flight>img{position:absolute;object-fit:contain;max-width:none;transform-origin:center;animation:vc-selected-product .65s cubic-bezier(.2,.7,.1,1) both;filter:drop-shadow(0 40px 50px rgba(0,0,0,.55));will-change:transform}.lead-product-context{border:1px solid rgba(223,186,116,.22);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:15px;min-height:48px;font-size:12px;color:#bcb5a8}.lead-product-context bdi{color:#e4c48c;font-size:12px}.lead-fields>.lead-product-context{align-self:end}@keyframes vc-selected-product{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(var(--transfer-x),var(--transfer-y),0) scale(var(--transfer-scale))}}@keyframes vc-flight-ground{from{opacity:0}to{opacity:.98}}@media(prefers-reduced-motion:reduce){.vc-product-flight{display:none}}
+.vc-product-flight{position:fixed;inset:0;z-index:9998;pointer-events:auto;isolation:isolate;overflow:hidden}
+.vc-product-flight-ground{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,#211c13,#09090b 68%);opacity:0}
+.vc-flight-cutout{position:absolute;background-repeat:no-repeat;max-width:none!important;max-height:none!important;transform-origin:0 0;filter:drop-shadow(0 24px 24px #0005);will-change:transform,opacity;z-index:3;pointer-events:none}
+.vc-flight-backdrop{position:absolute;max-width:none!important;object-fit:fill;z-index:1;pointer-events:none}
+.vc-flight-matched{position:absolute;transform-origin:0 0;background-repeat:no-repeat;opacity:0;will-change:transform,opacity;z-index:4}
+.vc-flight-glint{position:absolute;z-index:4;transform-origin:0 0;opacity:0;pointer-events:none;background:linear-gradient(105deg,#8c672b,#f1db9c 22%,#fff8df 47%,#e4c47b 76%,#b18c43);filter:blur(2px);will-change:transform,opacity}
+.vc-flight-room{position:absolute;object-fit:cover;object-position:50% 50%;max-width:none!important;opacity:0;z-index:2}
+.vc-flight-caption{position:absolute;z-index:5;inset:auto 24px max(7svh,40px);text-align:center;color:#e7d4a9;opacity:0;display:flex;flex-direction:column;gap:13px}
+.vc-flight-caption>span{font-size:9px;letter-spacing:.25em}.vc-flight-caption>bdi{font-size:clamp(16px,2vw,24px);letter-spacing:.14em;font-weight:300}
+.vc-flight-caption>p{font-size:13px;line-height:1.7;color:#e8dfcd;margin:0}.vc-flight-caption>p span{margin-inline-start:10px}
+.vc-flight-caption>button{display:inline-flex;align-items:center;justify-content:center;align-self:center;gap:22px;min-height:44px;padding:8px 19px;border:1px solid #d7ba8066;border-radius:24px;color:#e8d6b2;background:#0b0b0b88;font-size:12px;cursor:pointer}
+.vc-flight-caption>button:focus-visible{outline:2px solid #e8cb91;outline-offset:5px}
+.vc-flight-progress{position:absolute;bottom:0;left:0;right:0;height:2px;background:#e0c48e22;z-index:6}.vc-flight-progress>span{display:block;height:100%;width:100%;background:#e0c48e;transform-origin:right center;transform:scaleX(var(--flight-progress,0))}
+.vc-product-flight[data-phase=selecting] .vc-flight-caption>p{visibility:hidden}
+@media(min-width:861px){.vc-flight-caption{inset:auto auto 11svh 5vw;width:270px;text-align:start;align-items:flex-start}.vc-flight-caption>button{align-self:flex-start}}
+html[data-product-transit] .mc-home [data-flight]{transition:opacity .3s}
+html[data-product-transit="v-tech-system"] .mc-home [data-product="v-tech-system"] [data-flight-image]{visibility:hidden}
+html[data-product-transit] [data-vtech-story] .vs-copy,html[data-product-transit] [data-vtech-story] .vs-navigation{opacity:0!important;transition:none!important}
+.lead-product-context{border:1px solid rgba(223,186,116,.22);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:15px;min-height:48px;font-size:12px;color:#bcb5a8}.lead-product-context bdi{color:#e4c48c;font-size:12px}.lead-fields>.lead-product-context{align-self:end}
+@media(prefers-reduced-motion:reduce){.vc-product-flight{display:none}}

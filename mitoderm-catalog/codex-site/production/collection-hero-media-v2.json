@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-11-09",
+  "purpose": "MITODERM homepage collection: separate desktop motion and portrait fallback",
+  "desktop": {
+    "status": "completed_and_visually_reviewed",
+    "generation_model": "seedance_2_5",
+    "generation_job_id": "becd3efa-2fa9-4061-945c-a105747b2b15",
+    "quoted_credits": 96,
+    "reference_media_id": "9f5add6e-6539-41f2-97cf-1c77b0130925",
+    "reference_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/9f5add6e-6539-41f2-97cf-1c77b0130925.webp",
+    "poster_path": "public/assets/hero/collection-atelier-desktop.webp",
+    "raw_generation_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_063837_becd3efa-2fa9-4061-945c-a105747b2b15.mp4",
+    "web_media_id": "863547b6-0d08-4675-bbac-1b8b31264b1d",
+    "web_video_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/863547b6-0d08-4675-bbac-1b8b31264b1d.mp4",
+    "web_video": {
+      "codec": "h264",
+      "width": 1920,
+      "height": 1080,
+      "frame_rate": 24,
+      "frames": 144,
+      "duration_seconds": 6,
+      "bytes": 1620334,
+      "audio_streams": 0,
+      "faststart": true
+    },
+    "review": {
+      "sample_times_seconds": [
+        0,
+        2,
+        4,
+        5.962
+      ],
+      "findings": "All thirteen product positions remained visually stable in inspected frames. Lighting changes softly. No obvious added, missing or morphing packs observed. Fine label text inherits the generated source and was not treated as authoritative product data."
+    }
+  },
+  "mobile": {
+    "status": "static_portrait_fallback",
+    "reference_media_id": "5764e888-49b5-4fda-98d2-30f4f5429890",
+    "reference_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/5764e888-49b5-4fda-98d2-30f4f5429890.webp",
+    "poster_path": "public/assets/hero/collection-atelier-mobile.webp",
+    "poster_dimensions": {
+      "width": 1049,
+      "height": 1500
+    },
+    "video_url": null,
+    "generation_model": "seedance_2_5",
+    "params": {
+      "duration": 6,
+      "resolution": "1080p",
+      "aspect_ratio": "auto",
+      "generate_audio": false,
+      "bitrate_mode": "standard",
+      "same_start_and_end_image": true
+    },
+    "attempts": [
+      {
+        "job_id": "8d8a9152-4340-40ce-8253-39a8e8df471c",
+        "status": "failed",
+        "quoted_credits": 96,
+        "error_reason": null
+      },
+      {
+        "job_id": "13551521-68de-41a5-8924-796ef95423ec",
+        "status": "failed",
+        "quoted_credits": 96,
+        "error_reason": null
+      }
+    ],
+    "failure_note": "The supported jobs_wait response returned terminal failed without an error reason for both attempts. No further generations submitted.",
+    "display_instruction": "Use the separate complete portrait poster. Keep product selection and site transition interactive. Do not crop the desktop video for mobile."
+  },
+  "billing_note": "Credits recorded here are preflight quotes only. Actual charges and refunds are not established by these generation status responses.",
+  "generation_count": 3,
+  "successful_generations": 1,
+  "runtime_safety": "No signed upload URLs, credentials or local processing secrets are stored in this record."
+}
