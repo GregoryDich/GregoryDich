@@ -4,6 +4,7 @@ import {useCallback,useEffect,useRef,useState,type CSSProperties} from 'react';
 import {mediaUrl} from '../media';
 import {entryMedia,mobileMedia,getEntryBoxRect,type EntryRect} from './vtech-entry';
 import {vtechTimeline} from './vtech-timeline';
+import {mapVTechKitProgress} from './vtech-kit-timing';
 import {VTechEvidencePanel,VTechOfferPanel} from './VTechDetails';
 import {VTechPackFlight} from './VTechPackFlight';
 import './vtech-story.css';
@@ -120,15 +121,12 @@ export function VTechStory(){
    const timeline=vtechTimeline[environment.current.mobile?'mobile':'desktop'];
    const chapter=timeline.chapters.find(item=>item.id===scenes[next].id);
    const kit=scenes[next].kind==='offer';
-   // Reach the contents earlier, while retaining the exact returned camera
-   // frame before the photograph moves and the original opening takes over.
-   const videoLocal=kit?clamp(local/.33):local;
+   // The same closed pack moves, begins opening on arrival, and settles into
+   // the offer. Overlapping phases remove the previous static middle pose.
+   const kitMotion=mapVTechKitProgress(kit?local:0);
+   const videoLocal=kit?kitMotion.video:local;
    const mapped=chapter?chapter.start+(chapter.end-chapter.start)*videoLocal:0;
    targetTime.current=clamp(mapped,0,Math.max(0,timeline.duration-.04));
-   const pack=kit?clamp((local-.33)/.17):0;
-   const smoothPack=pack*pack*(3-2*pack);
-   const reveal=kit?clamp((local-.49)/.07):0;
-   const opening=kit?clamp((local-.56)/.24):0;
    const wasInside=inside.current;
    inside.current=position>=-1&&position<=(total+(arrivalUnits.current??0)+1.8)*height;
    element.dataset.storyProgress=(units/total).toFixed(4);
@@ -137,13 +135,15 @@ export function VTechStory(){
    screen.dataset.chapterProgress=local.toFixed(4);
    screen.style.setProperty('--vts-progress',String(units/total));
    screen.style.setProperty('--vts-kit-progress',String(kit?local:0));
-   screen.style.setProperty('--vts-pack-progress',String(smoothPack));
-   screen.style.setProperty('--vts-kit-reveal',String(reveal));
-   screen.style.setProperty('--vts-kit-open',String(opening));
+   screen.style.setProperty('--vts-pack-progress',String(kitMotion.pack));
+   screen.style.setProperty('--vts-kit-reveal',String(kitMotion.reveal));
+   screen.style.setProperty('--vts-kit-open',String(kitMotion.opening));
    screen.dataset.kitLoad=String(units>=starts[5]-.25);
-   screen.dataset.kitFrame=String(Math.round(opening*39));
-   screen.dataset.kitOpened=String(kit&&opening>=.99);
-   screen.dataset.kitOpening=String(kit&&opening>.05);
+   screen.dataset.kitFrame=String(Math.round(kitMotion.opening*39));
+   // Browser scroll positions round to a pixel; the fully eased pose can be
+   // visually complete a fraction of a pixel before the mathematical endpoint.
+   screen.dataset.kitOpened=String(kit&&kitMotion.opening>=.99999);
+   screen.dataset.kitOpening=String(kit&&kitMotion.openingRaw>.005);
    screen.dataset.introMoved=String(units>.001);
    document.documentElement.dataset.vtechImmersed=String(inside.current&&units>.12);
    if(next!==activeRef.current){

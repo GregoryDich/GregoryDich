@@ -20,6 +20,10 @@
    treatment; real HTML text occupies the lower fade without an opaque panel. */
 .vts-scene::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(8,8,10,.66),transparent 25%,transparent 50%,rgba(8,8,10,.42) 77%,rgba(8,8,10,.88)),linear-gradient(270deg,rgba(8,8,10,.42),transparent 44%);z-index:1}
 
+/* In the offer the light belongs to the product, while the reading scrim
+   follows the copy. Keep the moving pack clear throughout the handoff. */
+.vts-story[data-mode=cinema] .vts-stage .vts-scene[data-kind=offer]::after{background:linear-gradient(270deg,#08080ad6 0%,#08080a95 28%,transparent 57%),linear-gradient(180deg,#08080a38,transparent 20%,transparent 84%,#08080a80);opacity:1}
+
 /* Page navigation is above this row; these buttons select a chapter. */
 .vts-toolbar{position:absolute;z-index:8;top:153px;inset-inline:clamp(25px,4.5vw,75px);display:flex;align-items:center;justify-content:center;transition:top .28s ease,opacity .2s ease,visibility .2s}
 .vts-toolbar[data-hidden=true]{opacity:0;visibility:hidden;pointer-events:none}
@@ -60,6 +64,7 @@ html[data-product-transit] [data-vtech-hud]{opacity:0!important;pointer-events:n
 }
 
 @media(max-width:860px){
+ .vts-story[data-mode=cinema] .vts-stage .vts-scene[data-kind=offer]::after{background:linear-gradient(180deg,#08080a40,transparent 18%,transparent 48%,#08080a77 64%,#08080ae0);opacity:1}
  .vts-toolbar{top:137px;inset-inline:16px;display:block}
  html[data-vtech-immersed=true] .vts-toolbar{top:58px}
  .vts-chapter-nav{gap:4px;max-width:none}

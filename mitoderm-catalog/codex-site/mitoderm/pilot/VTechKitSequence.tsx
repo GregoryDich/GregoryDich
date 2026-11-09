@@ -1,88 +1,59 @@
 'use client';
 
-import {useEffect,useRef,type CSSProperties,type RefObject} from 'react';
+import {useEffect,useId,useState,type CSSProperties,type RefObject} from 'react';
 
-// Original owner-approved pack opening from the previous V-TECH page. These
-// transparent frames retain the actual sleeve, lid and 5 + 5 insert layout.
-export const kitSequence={width:1277,height:1266,count:40,box:{left:520,top:158,width:255,height:567}};
-const frameUrl=(index:number)=>'/assets/vtech/unboxing/open-'+String(index).padStart(3,'0')+'.webp';
+// Stable camera coordinates from the approved open kit. The sleeve uses the
+// actual clinic photograph in VTechPackFlight, so its gold/print never changes.
+// The original opening assets remain in the repository as source material.
+export const kitSequence={width:1277,height:1266,count:40,box:{left:420,top:260,height:900}};
+const closedParts='/assets/vtech/unboxing/open-000.webp';
+const openedParts='/assets/vtech/unboxing/open-039.webp';
+const tray='408,270 800,268 844,1108 501,1158 480,1118';
+const lid='827,270 1194,263 1209,1116 871,1155';
 
-export function VTechKitSequence({stage,style,onReady}:{stage:RefObject<HTMLDivElement|null>;style:CSSProperties;onReady:()=>void}){
- const canvas=useRef<HTMLCanvasElement>(null),group=useRef<HTMLDivElement>(null);
- const fallbackImage=useRef<HTMLImageElement>(null),fallbackLoaded=useRef<()=>void>(()=>{});
+/** Native layers move continuously with scroll. Two source images replace the
+ * old 40-frame zoom/shrink sequence; five caps and the actual insert stay intact.
+ * The brief serum/sachet composition is retained while both parts dock. */
+export function VTechKitSequence({stage,style,onReady}:{stage:RefObject<HTMLDivElement|null>;style:CSSProperties;onReady:(mode:'layers'|'fallback')=>void}){
+ const [state,setState]=useState<'loading'|'layers'|'fallback'>('loading');
+ const id=useId().replace(/:/g,'');
  useEffect(()=>{
-  const screen=stage.current,element=canvas.current,container=group.current;
-  const context=element?.getContext('2d',{alpha:true});
-  if(!screen||!element||!context||!container)return;
-  const controller=new AbortController();
-  const blobs=new Map<number,Promise<Blob>>(),decoded=new Map<number,ImageBitmap>();
-  let disposed=false,started=false,wanted=0,drawn=-1,busy=false,ready=false,wantsFallback=false;
-  const cacheSize=window.innerWidth<=860?4:6;
-  const blob=(index:number)=>{
-   let request=blobs.get(index);
-   if(!request){request=fetch(frameUrl(index),{signal:controller.signal}).then(response=>{if(!response.ok)throw new Error('Kit frame unavailable');return response.blob();});blobs.set(index,request);}
-   return request;
-  };
-  const showReady=()=>{if(!ready){ready=true;onReady();}};
-  const revealFallback=()=>{
-   if(disposed||!wantsFallback)return;
-   container.dataset.fallback='true';showReady();
-  };
-  fallbackLoaded.current=revealFallback;
-  const fallback=()=>{
-   if(disposed)return;wantsFallback=true;
-   const image=fallbackImage.current;if(!image)return;
-   image.loading='eager';
-   if(image.complete&&image.naturalWidth>0)revealFallback();
-  };
-  const paint=async()=>{
-   if(disposed||drawn===wanted||busy)return;
-   busy=true;
-   try{
-    while(!disposed&&drawn!==wanted){
-    const index=wanted;
-    let bitmap=decoded.get(index);
-    if(!bitmap){
-     const bytes=await blob(index);
-     if(disposed)return;
-     // Decode only a few adjacent frames. Keeping all40 RGBA frames decoded
-     // would use about259MB on a phone for a2MB compressed sequence.
-     bitmap=await createImageBitmap(bytes);
-     if(disposed){bitmap.close();return;}
-     decoded.set(index,bitmap);
-    }
-    if(index===wanted){
-     context.clearRect(0,0,kitSequence.width,kitSequence.height);
-     context.drawImage(bitmap,0,0);drawn=index;
-     wantsFallback=false;container.dataset.frame=String(index);container.dataset.fallback='false';showReady();
-    }
-    // LRU is bounded even after forward/backward scrubbing.
-    decoded.delete(index);decoded.set(index,bitmap);
-    while(decoded.size>cacheSize){const oldest=decoded.keys().next().value;if(oldest===undefined)break;decoded.get(oldest)?.close();decoded.delete(oldest);}
-    }
-   }catch{fallback();}
-   finally{busy=false;}
-  };
-  const start=()=>{
-   if(started)return;started=true;
-   // Compressed prefetch starts one chapter before the offer, not at entry.
-   // Three workers keep requests modest; the currently wanted frame has priority.
-   const queue=[0,39,...Array.from({length:38},(_,i)=>i+1)];
-   const worker=async()=>{while(!disposed&&queue.length){const index=queue.shift();if(index===undefined)return;try{await blob(index);}catch{if(disposed)return;}}};
-   void worker();void worker();void worker();
-  };
+  const screen=stage.current;if(!screen)return;
+  let disposed=false,started=false;
+  const images:HTMLImageElement[]=[];
+  const load=(src:string)=>new Promise<void>((resolve,reject)=>{
+   const image=new Image();images.push(image);image.decoding='async';
+   image.onload=()=>{void image.decode().then(resolve,reject);};image.onerror=reject;image.src=src;
+  });
   const sync=()=>{
-   if(screen.dataset.kitLoad!=='true')return;
-   wanted=Math.max(0,Math.min(kitSequence.count-1,Number(screen.dataset.kitFrame)||0));
-   if(typeof createImageBitmap!=='function'){fallback();return;}
-   start();
-   void paint();
+   if(started||screen.dataset.kitLoad!=='true')return;started=true;
+   void Promise.all([load(openedParts),load(closedParts)]).then(()=>{
+    if(disposed)return;setState('layers');onReady('layers');
+   }).catch(()=>{if(!disposed)setState('fallback');});
   };
-  const observer=new MutationObserver(sync);observer.observe(screen,{attributes:true,attributeFilter:['data-kit-frame','data-kit-load']});sync();
-  return()=>{disposed=true;fallbackLoaded.current=()=>{};observer.disconnect();controller.abort();decoded.forEach(bitmap=>bitmap.close());decoded.clear();blobs.clear();};
+  const observer=new MutationObserver(sync);observer.observe(screen,{attributes:true,attributeFilter:['data-kit-load']});sync();
+  return()=>{disposed=true;observer.disconnect();images.forEach(image=>{image.onload=null;image.onerror=null;});};
  },[stage,onReady]);
- return <div className="vts-kit-sequence" ref={group} style={style} data-fallback="false" aria-hidden="true">
-  <canvas ref={canvas} width={kitSequence.width} height={kitSequence.height}/>
-  <img ref={fallbackImage} className="vts-kit-sequence-fallback" src="/assets/vtech/kit-open.webp" alt="" width="1188" height="882" loading="lazy" onLoad={()=>fallbackLoaded.current()}/>
+ return <div className="vts-kit-sequence" style={style} data-renderer="continuous-layers" data-state={state} aria-hidden="true">
+  {state==='layers'&&<>
+   <svg className="vts-kit-tray vts-kit-layer" viewBox="0 0 1277 1266">
+    <defs>
+     <clipPath id={id+'-tray'}><polygon points={tray}/></clipPath>
+     <mask id={id+'-dock'} maskUnits="userSpaceOnUse" x="0" y="0" width="1277" height="1266">
+      <rect width="1277" height="1266" fill="white"/>
+      <g className="vts-kit-docking-mask" fill="black"><rect x="479" y="309" width="314" height="516" rx="12"/><ellipse cx="745" cy="877" rx="53" ry="54"/></g>
+     </mask>
+    </defs>
+    <polygon points={tray} fill="#0b0c0e"/>
+    <image href={openedParts} width="1277" height="1266" clipPath={'url(#'+id+'-tray)'} mask={'url(#'+id+'-dock)'}/>
+   </svg>
+   <svg className="vts-kit-lid vts-kit-layer" viewBox="0 0 1277 1266">
+    <defs><clipPath id={id+'-lid'}><polygon points={lid}/></clipPath></defs>
+    <image href={openedParts} width="1277" height="1266" clipPath={'url(#'+id+'-lid)'}/>
+   </svg>
+   <div className="vts-kit-pouch vts-kit-layer vts-kit-floating"><img src={closedParts} alt="" draggable={false}/></div>
+   <div className="vts-kit-vial vts-kit-layer vts-kit-floating"><img src={closedParts} alt="" draggable={false}/></div>
+  </>}
+  {state==='fallback'&&<img className="vts-kit-sequence-fallback" src="/assets/vtech/kit-open.webp" alt="" width="1188" height="882" onLoad={()=>onReady('fallback')}/>}
  </div>;
 }
