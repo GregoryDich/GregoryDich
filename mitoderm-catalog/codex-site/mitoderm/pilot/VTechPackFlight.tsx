@@ -1,17 +1,20 @@
 'use client';
 
-import {useEffect,useState,type CSSProperties,type RefObject} from 'react';
+import {useCallback,useEffect,useState,type CSSProperties,type RefObject} from 'react';
 import {getEntryBoxRect,getEntryMedia} from './vtech-entry';
+import {VTechKitSequence,kitSequence} from './VTechKitSequence';
 import './vtech-pack-flight.css';
 
-type Geometry={style:CSSProperties;poster:string;image:CSSProperties;silhouette:string};
+type Geometry={style:CSSProperties;sequence:CSSProperties;poster:string;image:CSSProperties;silhouette:string};
 
 /** The last camera frame returns to the original pack. Its exact photographic
  * silhouette then takes over, so the offer never introduces a second product. */
 export function VTechPackFlight({stage,reduced}:{stage:RefObject<HTMLDivElement|null>;reduced:boolean}){
  const [geometry,setGeometry]=useState<Geometry|null>(null);
+ const [sequenceReady,setSequenceReady]=useState(false);
+ const ready=useCallback(()=>setSequenceReady(true),[]);
  useEffect(()=>{
-  const screen=stage.current;if(!screen||reduced)return;
+  const screen=stage.current;if(reduced){setSequenceReady(false);return;}if(!screen)return;
   const target=screen.querySelector<HTMLElement>('[data-kit-product-target]');
   if(!target)return;
   let pending=0,disposed=false;
@@ -20,10 +23,14 @@ export function VTechPackFlight({stage,reduced}:{stage:RefObject<HTMLDivElement|
    const frame=screen.getBoundingClientRect(),slot=target.getBoundingClientRect();
    if(!frame.width||!frame.height||!slot.width||!slot.height)return;
    const media=getEntryMedia(frame.width),box=getEntryBoxRect(frame.width,frame.height);
-   const fit=Math.min(slot.width/box.width,slot.height/box.height)*.94;
-   const endWidth=box.width*fit,endHeight=box.height*fit;
-   const endLeft=slot.left-frame.left+(slot.width-endWidth)/2;
-   const endTop=slot.top-frame.top+(slot.height-endHeight)/2;
+   // Align the returning photograph to the closed box inside frame0 of the
+   // original opening. This preserves its position when the sequence takes over.
+   const sequenceScale=Math.min(slot.width/kitSequence.width,slot.height/1050)*.98;
+   const sequenceLeft=slot.left-frame.left+(slot.width-kitSequence.width*sequenceScale)/2;
+   const sequenceTop=slot.top-frame.top+(slot.height-1050*sequenceScale)/2-150*sequenceScale;
+   const endWidth=kitSequence.box.width*sequenceScale,endHeight=kitSequence.box.height*sequenceScale;
+   const endLeft=sequenceLeft+kitSequence.box.left*sequenceScale;
+   const endTop=sequenceTop+kitSequence.box.top*sequenceScale;
    const sourceScale=box.width/media.box.width;
    const next:Geometry={
     poster:media.poster,silhouette:media.silhouette,
@@ -31,11 +38,13 @@ export function VTechPackFlight({stage,reduced}:{stage:RefObject<HTMLDivElement|
      '--pack-left':box.left+'px','--pack-top':box.top+'px',
      '--pack-width':box.width+'px','--pack-height':box.height+'px',
      '--pack-dx':(endLeft-box.left)+'px','--pack-dy':(endTop-box.top)+'px',
-     '--pack-scale-delta':fit-1,
+     '--pack-scale-x-delta':endWidth/box.width-1,
+     '--pack-scale-y-delta':endHeight/box.height-1,
      '--pack-shadow-left':(endLeft-endWidth*.18)+'px',
      '--pack-shadow-top':(endTop+endHeight-8)+'px',
      '--pack-shadow-width':(endWidth*1.36)+'px',
     } as CSSProperties,
+    sequence:{left:sequenceLeft,top:sequenceTop,width:kitSequence.width*sequenceScale,height:kitSequence.height*sequenceScale},
     image:{width:media.width*sourceScale,height:media.height*sourceScale,left:-media.box.left*sourceScale,top:-media.box.top*sourceScale},
    };
    setGeometry(previous=>JSON.stringify(previous)===JSON.stringify(next)?previous:next);
@@ -53,9 +62,10 @@ export function VTechPackFlight({stage,reduced}:{stage:RefObject<HTMLDivElement|
   return()=>{disposed=true;observer.disconnect();if(pending)window.cancelAnimationFrame(pending);window.removeEventListener('resize',afterLayout);window.removeEventListener('mitoderm:vtech-section',afterLayout);};
  },[stage,reduced]);
  if(reduced||!geometry)return null;
- return <div className="vts-pack-flight" style={geometry.style} aria-hidden="true">
+ return <div className="vts-pack-flight" style={geometry.style} data-sequence-ready={sequenceReady} aria-hidden="true">
   <div className="vts-pack-backdrop"><img src={geometry.poster} alt=""/></div>
   <div className="vts-pack-ground"/>
   <div className="vts-pack-object"><div className="vts-pack-cutout" style={{clipPath:geometry.silhouette}}><img src={geometry.poster} style={geometry.image} alt="" draggable={false}/></div></div>
+  <VTechKitSequence stage={stage} style={geometry.sequence} onReady={ready}/>
  </div>;
 }

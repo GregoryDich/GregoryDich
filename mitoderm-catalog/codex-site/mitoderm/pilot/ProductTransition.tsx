@@ -70,23 +70,37 @@ export function ProductTransition({flight,onNavigate,onFinish}:{flight:ProductFl
    Object.assign(exact.style,{left:target.left+'px',top:target.top+'px',width:target.width+'px',height:target.height+'px',backgroundImage:`url("${entry.poster}")`,backgroundSize:`${renderedWidth}px ${renderedHeight}px`,backgroundPosition:`${stage.left+offsetX-target.left}px ${stage.top+offsetY-target.top}px`,clipPath:entry.silhouette});
    if(glint.current)Object.assign(glint.current.style,{left:target.left+'px',top:target.top+'px',width:target.width+'px',height:target.height+'px',clipPath:entry.silhouette});
    Object.assign(scene.style,{left:stage.left+'px',top:stage.top+'px',width:stage.width+'px',height:stage.height+'px'});
-   const scaleX=target.width/flight.box.width,scaleY=target.height/flight.box.height;
-   const dx=target.left-flight.box.left,dy=target.top-flight.box.top;
-   const endLeft=target.left-(flight.box.left-flight.rect.left)*scaleX,endTop=target.top-(flight.box.top-flight.rect.top)*scaleY;
-   const sourceEnd=`translate3d(${endLeft-flight.rect.left}px,${endTop-flight.rect.top}px,0) scale(${scaleX},${scaleY})`;
-   const exactStart=`translate3d(${-dx}px,${-dy-14}px,0) scale(${1.08/scaleX},${1.08/scaleY})`;
+   const smooth=(value:number)=>value*value*(3-2*value);
+   const start={left:flight.rect.left+(flight.box.left-flight.rect.left)*1.08,top:flight.rect.top+(flight.box.top-flight.rect.top)*1.08-14,width:flight.box.width*1.08,height:flight.box.height*1.08};
+   const direction=Math.sign(target.left+target.width/2-start.left-start.width/2);
+   const arcX=Math.min(24,stage.width*.025)*direction,arcY=-Math.min(28,stage.height*.035);
+   // Every photographic layer uses one measured box path. Moving the room with
+   // that same camera keeps its printed pack registered with the flying cutout.
+   const path=Array.from({length:41},(_,index)=>{
+    const offset=index/40,eased=smooth(offset),arc=Math.sin(Math.PI*eased);
+    const box={left:start.left+(target.left-start.left)*eased+arcX*arc,top:start.top+(target.top-start.top)*eased+arcY*arc,width:start.width+(target.width-start.width)*eased,height:start.height+(target.height-start.height)*eased};
+    const sourceX=box.width/flight.box.width,sourceY=box.height/flight.box.height;
+    const exactX=box.width/target.width,exactY=box.height/target.height;
+    return {
+     offset,
+     source:`translate3d(${box.left-flight.rect.left-(flight.box.left-flight.rect.left)*sourceX}px,${box.top-flight.rect.top-(flight.box.top-flight.rect.top)*sourceY}px,0) scale(${sourceX},${sourceY})`,
+     exact:`translate3d(${box.left-target.left}px,${box.top-target.top}px,0) scale(${exactX},${exactY})`,
+     room:`translate3d(${box.left-stage.left-(target.left-stage.left)*exactX}px,${box.top-stage.top-(target.top-stage.top)*exactY}px,0) scale(${exactX},${exactY})`,
+    };
+   });
    const scrub:Animation[]=[];
    const tracked=(element:HTMLElement,keyframes:Keyframe[])=>{const animation=animate(element,keyframes,{duration:1000,easing:'linear',fill:'both'});animation.pause();animation.currentTime=0;scrub.push(animation);};
-   tracked(source,[{transform:'translate3d(0,-14px,0) scale(1.08)'},{transform:sourceEnd}]);
-   // A brief foil highlight covers the change of photographic lighting. The two
-   // printed faces never overlap, even when the viewer stops halfway through.
-   tracked(source,[{opacity:1,offset:0},{opacity:1,offset:.57},{opacity:0,offset:.625},{opacity:0,offset:1}]);
-   tracked(exact,[{transform:exactStart},{transform:'translate3d(0,0,0) scale(1)'}]);
-   tracked(exact,[{opacity:0,offset:0},{opacity:0,offset:.625},{opacity:1,offset:.68},{opacity:1,offset:1}]);
-   if(glint.current){tracked(glint.current,[{transform:exactStart},{transform:'translate3d(0,0,0) scale(1)'}]);tracked(glint.current,[{opacity:0,offset:0},{opacity:0,offset:.56},{opacity:.98,offset:.625},{opacity:0,offset:.69},{opacity:0,offset:1}]);}
-   tracked(scene,[{opacity:0,offset:0},{opacity:0,offset:.6},{opacity:1,offset:.96},{opacity:1,offset:1}]);
-   tracked(label.current!,[{opacity:1,offset:0},{opacity:1,offset:.65},{opacity:0,offset:.94},{opacity:0,offset:1}]);
-   if(backdrop.current)tracked(backdrop.current,[{opacity:.24,offset:0},{opacity:0,offset:.35},{opacity:0,offset:1}]);
+   tracked(source,path.map(frame=>({offset:frame.offset,transform:frame.source})));
+   tracked(exact,path.map(frame=>({offset:frame.offset,transform:frame.exact})));
+   // A narrow moving foil reflection replaces a full-face flash. Complementary
+   // masks reveal the new lighting without superimposing two complete labels.
+   tracked(source,[{opacity:1,offset:0},{opacity:1,offset:.78},{opacity:0,offset:.79},{opacity:0,offset:1}]);
+   tracked(exact,[{opacity:0,offset:0},{opacity:0,offset:.48},{opacity:1,offset:.5},{opacity:1,offset:1}]);
+   if(glint.current){tracked(glint.current,path.map(frame=>({offset:frame.offset,transform:frame.exact})));tracked(glint.current,[{opacity:0,offset:0},{opacity:0,offset:.5},{opacity:.72,offset:.6},{opacity:.72,offset:.7},{opacity:0,offset:.79},{opacity:0,offset:1}]);}
+   tracked(scene,path.map(frame=>({offset:frame.offset,transform:frame.room})));
+   tracked(scene,[{opacity:0,offset:0},{opacity:0,offset:.42},{opacity:.14,offset:.56},{opacity:.6,offset:.74},{opacity:1,offset:.94},{opacity:1,offset:1}]);
+   tracked(label.current!,[{opacity:1,offset:0},{opacity:1,offset:.52},{opacity:0,offset:.88},{opacity:0,offset:1}]);
+   if(backdrop.current)tracked(backdrop.current,[{opacity:.24,offset:0},{opacity:.12,offset:.22},{opacity:0,offset:.46},{opacity:0,offset:1}]);
    const entryUnits=Number(story?.dataset.entryUnits)||.9;
    const entryStart=()=>Number(story?.dataset.entryStart)||0;
    const entryDistance=()=>Math.max(1,(stageElement?.clientHeight??stage.height)*entryUnits);
@@ -97,6 +111,8 @@ export function ProductTransition({flight,onNavigate,onFinish}:{flight:ProductFl
     if(preference.matches){finishWithoutMotion();return;}
     const progress=Math.max(0,Math.min(1,(window.scrollY-entryStart())/entryDistance()));
     scrub.forEach(animation=>{animation.currentTime=progress*1000;});root.current?.style.setProperty('--flight-progress',String(progress));
+    const reveal=smooth(Math.max(0,Math.min(1,(progress-.5)/.28)));
+    root.current?.style.setProperty('--flight-reveal',(-3+106*reveal)+'%');
     if(progress>=.999)void finish();
    };
    skip.current=()=>{if(preference.matches){finishWithoutMotion();return;}window.scrollTo({top:entryStart()+entryDistance()+1,behavior:'instant'});readScroll();};

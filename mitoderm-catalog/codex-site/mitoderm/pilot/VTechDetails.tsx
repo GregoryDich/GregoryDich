@@ -43,8 +43,11 @@ export function VTechEvidencePanel(){
   <div className="vc-story-case-footer"><a className="vc-story-panel-cta" href="#contact" data-product="v-tech-system" data-source="vtech-case-request" data-topic="cases">לבירור תיעוד והתאמה <span aria-hidden="true">←</span></a><p className="vc-story-panel-note">סרטון הרקע הוא המחשת AI. תמונות המקרים מוצגות בנפרד עם פרטי התוכנית.</p></div>
  </div>;
 }
-export function VTechOfferPanel({staticProduct=false}:{staticProduct?:boolean}){return <div className="vc-story-offer-panel" data-vtech-hud="true">
- <div className="vc-story-kit-target" data-kit-product-target="true" aria-hidden="true">{staticProduct&&<ProductImage slug="v-tech-system" className="vc-story-kit-fallback"/>}</div>
+export function VTechOfferPanel({staticProduct=false,onReveal}:{staticProduct?:boolean;onReveal?:()=>void}){return <div className="vc-story-offer-panel" data-vtech-hud="true">
+ <div className="vc-story-kit-display">
+  <div className="vc-story-kit-target" data-kit-product-target="true" aria-hidden="true">{staticProduct&&<img src="/assets/vtech/kit-open.webp" width="1188" height="882" className="vc-story-kit-fallback" alt="" loading="lazy"/>}</div>
+  {!staticProduct&&<button className="vc-story-kit-reveal" type="button" onClick={onReveal}>גללו לפתיחת הערכה <span aria-hidden="true">↓</span><span className="vc-story-kit-reveal-direct">או לחצו להצצה פנימה</span></button>}
+ </div>
  <div className="vc-story-offer-copy">
   <p className="vc-story-panel-kicker"><bdi dir="ltr">V-TECH SYSTEM</bdi> · הערכה המקצועית</p>
   <h2 id="vtech-kit-title" tabIndex={-1}>הכניסו את <bdi dir="ltr">V-TECH</bdi><br/>לקליניקה שלכם</h2>

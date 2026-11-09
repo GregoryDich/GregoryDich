@@ -16,7 +16,7 @@ const scenes:Scene[]=[
  {id:'vtech-serum',label:'סרום',name:'V-TECH SERUM',title:'אותו אזור. הסרום של המערכת.',body:'מבט קרוב על הסרום באזור הלחי, כחלק מתוכנית העבודה שנבחרה.',alt:'המחשת יישום סרום V-TECH באזור הלחי שנבחר בתחילת הסיפור',kind:'clinical',weight:1.25,poster:mediaUrl('/assets/world/vtech-serum-poster.webp'),mobilePoster:mediaUrl('/assets/world/vtech-serum-mobile-poster.webp')},
  {id:'vtech-mask',label:'מסכת ג׳ל',name:'V-TECH GEL MASK',title:'משלימים עם מסכת הג׳ל',body:'מסכת הג׳ל של V-TECH נמרחת על אותו אזור לאחר העבודה עם הסרום.',alt:'המחשת מריחת V-TECH GEL MASK על אותו אזור בלחי לאחר הסרום',kind:'clinical',weight:1.25,poster:mediaUrl('/assets/world/vtech-mask-poster.webp'),mobilePoster:mediaUrl('/assets/world/vtech-mask-mobile-poster.webp')},
  {id:'vtech-results',label:'המבט המקצועי',name:'V-TECH',title:'המבט המקצועי',body:'',alt:'המחשת הטיפול ב-V-TECH לצד מידע על תיעוד ותוכנית עבודה; התמונה אינה תיעוד של תוצאה',kind:'evidence',weight:1.45,poster:mediaUrl('/assets/world/vtech-mask-poster.webp'),mobilePoster:mediaUrl('/assets/world/vtech-mask-mobile-poster.webp')},
- {id:'vtech-kit',label:'הערכה',name:'V-TECH SYSTEM',title:'הערכה המקצועית',body:'',alt:'אריזת V-TECH SYSTEM בקליניקה',kind:'offer',weight:2,poster:entryMedia.poster,mobilePoster:mobileMedia.poster},
+ {id:'vtech-kit',label:'הערכה',name:'V-TECH SYSTEM',title:'הערכה המקצועית',body:'',alt:'אריזת V-TECH SYSTEM נפתחת ומציגה את הסרום ומסכת הג׳ל',kind:'offer',weight:3.15,poster:entryMedia.poster,mobilePoster:mobileMedia.poster},
 ];
 const procedureCount=5;
 const starts=scenes.map((_,index)=>scenes.slice(0,index).reduce((sum,scene)=>sum+scene.weight,0));
@@ -120,11 +120,13 @@ export function VTechStory(){
    const timeline=vtechTimeline[environment.current.mobile?'mobile':'desktop'];
    const chapter=timeline.chapters.find(item=>item.id===scenes[next].id);
    const kit=scenes[next].kind==='offer';
-   const videoLocal=kit?clamp(local/.6):local;
+   const videoLocal=kit?clamp(local/.38):local;
    const mapped=chapter?chapter.start+(chapter.end-chapter.start)*videoLocal:0;
    targetTime.current=clamp(mapped,0,Math.max(0,timeline.duration-.04));
-   const pack=kit?clamp((local-.6)/.4):0;
+   const pack=kit?clamp((local-.38)/.18):0;
    const smoothPack=pack*pack*(3-2*pack);
+   const reveal=kit?clamp((local-.55)/.07):0;
+   const opening=kit?clamp((local-.62)/.30):0;
    const wasInside=inside.current;
    inside.current=position>=-1&&position<=(total+(arrivalUnits.current??0)+1.8)*height;
    element.dataset.storyProgress=(units/total).toFixed(4);
@@ -134,6 +136,12 @@ export function VTechStory(){
    screen.style.setProperty('--vts-progress',String(units/total));
    screen.style.setProperty('--vts-kit-progress',String(kit?local:0));
    screen.style.setProperty('--vts-pack-progress',String(smoothPack));
+   screen.style.setProperty('--vts-kit-reveal',String(reveal));
+   screen.style.setProperty('--vts-kit-open',String(opening));
+   screen.dataset.kitLoad=String(units>=starts[5]-.25);
+   screen.dataset.kitFrame=String(Math.round(opening*39));
+   screen.dataset.kitOpened=String(kit&&opening>=.99);
+   screen.dataset.kitOpening=String(kit&&opening>.05);
    screen.dataset.introMoved=String(units>.001);
    document.documentElement.dataset.vtechImmersed=String(inside.current&&units>.12);
    if(next!==activeRef.current){
@@ -206,7 +214,7 @@ export function VTechStory(){
   }
  },[active,settings,seekScrollVideo]);
 
- const jumpTo=useCallback((index:number,moveFocus=false,hashId=scenes[index].id)=>{
+ const jumpTo=useCallback((index:number,moveFocus=false,hashId=scenes[index].id,local=0)=>{
   const element=root.current,screen=stage.current;if(!element||!screen)return;
   window.history.replaceState(window.history.state,'','#'+hashId);
   if(environment.current.reduced){
@@ -217,7 +225,7 @@ export function VTechStory(){
   }
   if(moveFocus){if(activeRef.current===index)document.getElementById(scenes[index].id+'-title')?.focus({preventScroll:true});else focusAfterJump.current=index;}
   snapSeek.current=true;
-  const top=element.getBoundingClientRect().top+window.scrollY+(starts[index]+(arrivalUnits.current??0))*screen.clientHeight+(index===0?0:1);
+  const top=element.getBoundingClientRect().top+window.scrollY+(starts[index]+clamp(local)*scenes[index].weight+(arrivalUnits.current??0))*screen.clientHeight+(index===0?0:1);
   // Chapter links jump to the corresponding pinned interval. Wheel and touch
   // keep native scrolling, and never wait for a long animation to catch up.
   window.scrollTo({top:Math.max(0,top),behavior:'instant'});
@@ -300,7 +308,7 @@ export function VTechStory(){
        {scene.kind!=='offer'&&<picture><source media="(max-width: 860px)" srcSet={scene.mobilePoster}/><img data-vtech-entry-poster={index===0?'true':undefined} className="vts-poster" src={scene.poster} alt={scene.alt} width={index===0?entryMedia.width:1920} height="1080" loading={index===0?'eager':'lazy'} decoding="async"/></picture>}
       </div></div>}
       {index===0&&<span className="vts-entry-target" data-flight-target="v-tech-system" aria-hidden="true" style={entryRect}/>}
-      {scene.kind==='evidence'?<VTechEvidencePanel/>:scene.kind==='offer'?<VTechOfferPanel staticProduct={settings.reduced}/>:<div className="vts-caption" data-vtech-hud="true">
+      {scene.kind==='evidence'?<VTechEvidencePanel/>:scene.kind==='offer'?<VTechOfferPanel staticProduct={settings.reduced} onReveal={()=>jumpTo(index,false,scene.id,.94)}/>:<div className="vts-caption" data-vtech-hud="true">
        {index>0&&<p className="vts-kicker" dir={index===1?'rtl':'ltr'}>{scene.name}</p>}
        <Heading id={scene.id+'-title'} tabIndex={-1} dir={index===0?'ltr':undefined}>{scene.title}</Heading>
        <p className="vts-body">{scene.body}</p>

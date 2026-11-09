@@ -1,0 +1,331 @@
+{
+  "repo": "GregoryDich/GregoryDich",
+  "branch": "claude/mitoderm-figma-catalog-74tbuw",
+  "sourceCommit": "370fccb7a28c3e9806a780972b44b422b9a898ed",
+  "frameCount": 40,
+  "totalBytes": 2057958,
+  "width": 1277,
+  "height": 1266,
+  "files": [
+    {
+      "index": 0,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_000.webp",
+      "sha": "3a393915d6d869ea58c011fe82d3ee4902c998c3",
+      "bytes": 48108,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_000.webp",
+      "local": "open-000.webp"
+    },
+    {
+      "index": 1,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_001.webp",
+      "sha": "fba11ce4021fa341ad28c05204d159d07565447c",
+      "bytes": 48148,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_001.webp",
+      "local": "open-001.webp"
+    },
+    {
+      "index": 2,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_002.webp",
+      "sha": "c2b2457a91394207fb357cad075c83e1dc54fb15",
+      "bytes": 47266,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_002.webp",
+      "local": "open-002.webp"
+    },
+    {
+      "index": 3,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_003.webp",
+      "sha": "083194871094a6808e1bb4071bde91f1cd06d9c8",
+      "bytes": 48336,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_003.webp",
+      "local": "open-003.webp"
+    },
+    {
+      "index": 4,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_004.webp",
+      "sha": "26d9c1336cb386d7927127b553e26e72d0680dd1",
+      "bytes": 48746,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_004.webp",
+      "local": "open-004.webp"
+    },
+    {
+      "index": 5,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_005.webp",
+      "sha": "7e4ffc0e26dc7ed057570eb7d8be8c3408023168",
+      "bytes": 48628,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_005.webp",
+      "local": "open-005.webp"
+    },
+    {
+      "index": 6,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_006.webp",
+      "sha": "18f4c8ff917e6604e57a2f6e0d1a6214b89e41e3",
+      "bytes": 48498,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_006.webp",
+      "local": "open-006.webp"
+    },
+    {
+      "index": 7,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_007.webp",
+      "sha": "be5c1e3481858e6a9a22c4eb06bb46c52ab0e6f6",
+      "bytes": 47380,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_007.webp",
+      "local": "open-007.webp"
+    },
+    {
+      "index": 8,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_008.webp",
+      "sha": "28c2f414ef1621effad8804cd89bbc6c47fef966",
+      "bytes": 45092,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_008.webp",
+      "local": "open-008.webp"
+    },
+    {
+      "index": 9,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_009.webp",
+      "sha": "9e5baf9cf4649ab9a56555deae6cb41ffa7e3f34",
+      "bytes": 45372,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_009.webp",
+      "local": "open-009.webp"
+    },
+    {
+      "index": 10,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_010.webp",
+      "sha": "ba9194163ba561ac3ccc7f89da79cc7aeb8e7669",
+      "bytes": 46276,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_010.webp",
+      "local": "open-010.webp"
+    },
+    {
+      "index": 11,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_011.webp",
+      "sha": "d0d64aacb0ccd9b9d328975ab6843b5e75fcc73d",
+      "bytes": 45436,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_011.webp",
+      "local": "open-011.webp"
+    },
+    {
+      "index": 12,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_012.webp",
+      "sha": "295b893608d4f877a138b76296cad760c90a30ae",
+      "bytes": 45176,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_012.webp",
+      "local": "open-012.webp"
+    },
+    {
+      "index": 13,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_013.webp",
+      "sha": "e3793e400d270ed3a67453681b00740dd1fe4cd2",
+      "bytes": 44088,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_013.webp",
+      "local": "open-013.webp"
+    },
+    {
+      "index": 14,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_014.webp",
+      "sha": "fec26db9ed2a32694f45f806095b092491d587b3",
+      "bytes": 46734,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_014.webp",
+      "local": "open-014.webp"
+    },
+    {
+      "index": 15,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_015.webp",
+      "sha": "37cfd844c26dd05aa0b6ad3c8905e2e9037fa9fa",
+      "bytes": 46576,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_015.webp",
+      "local": "open-015.webp"
+    },
+    {
+      "index": 16,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_016.webp",
+      "sha": "83274a3118b86edaaaf7b89c29815472ac5eab83",
+      "bytes": 44384,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_016.webp",
+      "local": "open-016.webp"
+    },
+    {
+      "index": 17,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_017.webp",
+      "sha": "a76c94e1416cfdb92e359f5dee9da77c1e88bbf5",
+      "bytes": 44152,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_017.webp",
+      "local": "open-017.webp"
+    },
+    {
+      "index": 18,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_018.webp",
+      "sha": "f326a048fb2104c4cdaf2b28b5dc9dc228acfaaa",
+      "bytes": 45406,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_018.webp",
+      "local": "open-018.webp"
+    },
+    {
+      "index": 19,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_019.webp",
+      "sha": "94a8a119b62c442e163cdb78df87070669b2e17b",
+      "bytes": 46258,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_019.webp",
+      "local": "open-019.webp"
+    },
+    {
+      "index": 20,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_020.webp",
+      "sha": "d73c8a46b8aac60cf347c7e4424a911c5361595c",
+      "bytes": 47878,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_020.webp",
+      "local": "open-020.webp"
+    },
+    {
+      "index": 21,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_021.webp",
+      "sha": "eb6e80bf83bb40d599e1963347932fe2976a4a9e",
+      "bytes": 48968,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_021.webp",
+      "local": "open-021.webp"
+    },
+    {
+      "index": 22,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_022.webp",
+      "sha": "3a3e8548106857962b5c4ade3a9910ffda37056d",
+      "bytes": 52998,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_022.webp",
+      "local": "open-022.webp"
+    },
+    {
+      "index": 23,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_023.webp",
+      "sha": "4c77b64671c844e4697a8926f2ca22c351574c19",
+      "bytes": 52496,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_023.webp",
+      "local": "open-023.webp"
+    },
+    {
+      "index": 24,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_024.webp",
+      "sha": "0b407f28e24cc877df2a3ea83cb1b0bab2018b25",
+      "bytes": 52360,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_024.webp",
+      "local": "open-024.webp"
+    },
+    {
+      "index": 25,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_025.webp",
+      "sha": "e28f2e85061d7ec1bcecf63caf8c5cf04497e42f",
+      "bytes": 53058,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_025.webp",
+      "local": "open-025.webp"
+    },
+    {
+      "index": 26,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_026.webp",
+      "sha": "da87929add07293626b170db854ca6a82d2a74eb",
+      "bytes": 54110,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_026.webp",
+      "local": "open-026.webp"
+    },
+    {
+      "index": 27,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_027.webp",
+      "sha": "8717398e9dd6e47eecb40d32d53d0d81fe48fc51",
+      "bytes": 54582,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_027.webp",
+      "local": "open-027.webp"
+    },
+    {
+      "index": 28,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_028.webp",
+      "sha": "a3dc59e92cc3d54669aec88a2c1dbd047ec148b8",
+      "bytes": 55438,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_028.webp",
+      "local": "open-028.webp"
+    },
+    {
+      "index": 29,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_029.webp",
+      "sha": "81f79624a9a6d4903fa6ef9cc26583df5934e66c",
+      "bytes": 59918,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_029.webp",
+      "local": "open-029.webp"
+    },
+    {
+      "index": 30,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_030.webp",
+      "sha": "e90c5dd77864af6d5f5291a9c12f719f292284db",
+      "bytes": 61064,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_030.webp",
+      "local": "open-030.webp"
+    },
+    {
+      "index": 31,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_031.webp",
+      "sha": "b08671edbca65c688c47c656bf12ca4af8359d22",
+      "bytes": 60932,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_031.webp",
+      "local": "open-031.webp"
+    },
+    {
+      "index": 32,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_032.webp",
+      "sha": "499d3d5710bafbaaf439c8c47e6759ed94103cf7",
+      "bytes": 61040,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_032.webp",
+      "local": "open-032.webp"
+    },
+    {
+      "index": 33,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_033.webp",
+      "sha": "f536bf2627d716d90bcc5470f82635818dbbfffe",
+      "bytes": 61368,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_033.webp",
+      "local": "open-033.webp"
+    },
+    {
+      "index": 34,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_034.webp",
+      "sha": "839b55c81626e8fc407a582eb8039a9a038ccd37",
+      "bytes": 59894,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_034.webp",
+      "local": "open-034.webp"
+    },
+    {
+      "index": 35,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_035.webp",
+      "sha": "2db62cb4bcb1677d42024888e479459ef7bc5af3",
+      "bytes": 59232,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_035.webp",
+      "local": "open-035.webp"
+    },
+    {
+      "index": 36,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_036.webp",
+      "sha": "556522633fd65f57ec26d368b43edd92bfeb8263",
+      "bytes": 58350,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_036.webp",
+      "local": "open-036.webp"
+    },
+    {
+      "index": 37,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_037.webp",
+      "sha": "5a6f3a03da8333a2f5dc5183c870314fe786ae36",
+      "bytes": 58140,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_037.webp",
+      "local": "open-037.webp"
+    },
+    {
+      "index": 38,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_038.webp",
+      "sha": "2500d506a381187de648adcefa333cdf5be05ba2",
+      "bytes": 58036,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_038.webp",
+      "local": "open-038.webp"
+    },
+    {
+      "index": 39,
+      "path": "mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_039.webp",
+      "sha": "2500d506a381187de648adcefa333cdf5be05ba2",
+      "bytes": 58036,
+      "url": "https://raw.githubusercontent.com/GregoryDich/GregoryDich/claude/mitoderm-figma-catalog-74tbuw/mitoderm-catalog/site/public/v-tech-system/seq/2400/v5-protocol_v6-kit_039.webp",
+      "local": "open-039.webp"
+    }
+  ]
+}

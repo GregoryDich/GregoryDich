@@ -8,13 +8,13 @@ Use Node22 or newer and pnpm. Install from the committed lockfile, then run `pnp
 
 ## Content
 
-The opening always shows the whole collection, including MITOTECH and all4 BIOSPICULE products. Selecting V-TECH leads through package, consultation, MITOPEN, serum, gel mask, documented-case request, kit5+5 and related products. Other product routes are retained.
+The opening always shows the whole collection, including MITOTECH and all4 BIOSPICULE products. Selecting V-TECH leads through package, consultation, MITOPEN, serum, gel mask, documented-case request, a scroll-controlled opening of the original kit5+5 and related products. Other product routes are retained.
 
 The case dataset is deliberately empty until approved, attributable V-TECH results are supplied. Generated process footage is labelled as an illustration and is not used as proof of outcomes.
 
 ## Media
 
-`mitoderm/media-urls.json` maps the approved logical media names to permanent media-storage URLs. Videos and images containing people are not committed to the public source repository. The encoded desktop/mobile videos and their exact-frame posters have already been uploaded; no new generation is required to run this code. Product cutouts and Rubik fonts are included.
+`mitoderm/media-urls.json` maps the approved logical media names to permanent media-storage URLs. Videos and images containing people are not committed to the public source repository. The encoded desktop/mobile videos and their exact-frame posters have already been uploaded; no new generation is required to run this code. Product cutouts, the original40-frame kit opening and Rubik fonts are included. The kit frames are reused unchanged from the existing project; see `production/VTECH-V6-RELEASE.md` and `production/vtech-unboxing-source.json`.
 
 ## Leads
 
