@@ -50,6 +50,7 @@ html[data-vtech-immersed=true] .vtech-cinema .site-header{transform:translateY(-
 html[data-vtech-immersed=true] .vc-section-nav{top:0}
 .vc-section-brand{font-size:12px;letter-spacing:.12em;color:#dfba74}
 .vc-section-brand{display:flex;align-items:center;gap:12px;min-height:44px}
+.vc-section-collection-icon{flex-shrink:0}.vc-section-inquiry-short{display:none}
 .vc-section-links{display:flex;justify-content:center;align-items:center;gap:32px}
 .vc-section-links>a{position:relative;display:flex;align-items:center;justify-content:center;min-height:44px;padding-inline:5px;font-size:13px;white-space:nowrap}
 .vc-section-links>a::after{content:'';position:absolute;bottom:4px;inset-inline:5px;height:1px;background:#dfba74;transform:scaleX(0);transition:transform .2s}
@@ -95,9 +96,9 @@ html[data-vtech-immersed=true] .vc-section-nav{top:0}
 @media(min-width:1600px){.vc-training{padding-inline:max(var(--page-gutter),calc((100vw - 1420px)/2))}}
 @media(max-width:1050px){.vc-training-heading,.vc-faq{gap:40px}.vc-related-care .vc-related-card{flex-direction:row;text-align:right}.vc-related-care .vc-related-image{width:33%}.vc-related-alternative .vc-related-card{flex-direction:row;text-align:right}.vc-related-link{justify-content:space-between}}
 @media(max-width:860px){
- .vc-section-nav{top:78px;min-height:50px;padding:3px 16px;grid-template-columns:minmax(0,1fr) auto;gap:12px}
- .vc-section-brand{display:none}.vc-section-links{justify-content:space-between;gap:4px}.vc-section-links>a{font-size:12px;min-height:44px;padding-inline:3px}
- .vc-section-inquiry{font-size:12px;min-height:42px;padding:10px 13px;gap:12px}.vc-section-inquiry>span{display:none}
+ .vc-section-nav{top:78px;min-height:50px;padding:3px 14px;grid-template-columns:44px minmax(0,1fr) auto;gap:8px}
+ .vc-section-brand{display:flex;justify-content:center;width:44px;height:44px;gap:0;border:1px solid #dfba7438;border-radius:50%}.vc-section-brand-title{display:none}.vc-section-links{justify-content:space-between;gap:4px}.vc-section-links>a{font-size:12px;min-height:44px;padding-inline:3px}
+ .vc-section-inquiry{font-size:12px;min-height:44px;min-width:52px;padding:10px;justify-content:center;gap:0}.vc-section-inquiry-long,.vc-section-inquiry-arrow{display:none}.vc-section-inquiry-short{display:inline}
  .vtech-cinema :is(#vtech-results,#vtech-kit,#vtech-training,#vtech-related){scroll-margin-top:146px}
  .vc-section-eyebrow,.vc-results-intro>.vc-section-eyebrow{font-size:12px;margin-bottom:13px}
  .vc-evidence-grid{grid-template-columns:1fr;gap:23px;margin-top:31px}.vc-evidence-grid>article{display:grid;grid-template-columns:27px 1fr;gap:6px 14px;padding-top:20px}.vc-evidence-grid article>span{grid-row:1/3;margin:5px 0 0;font-size:11px}.vc-evidence-grid h3{font-size:21px}.vc-evidence-grid p{font-size:14px;line-height:1.75;max-width:none;margin:0}
@@ -110,4 +111,4 @@ html[data-vtech-immersed=true] .vc-section-nav{top:0}
  .vc-faq{display:block;margin-top:45px}.vc-faq>h3{font-size:29px;margin-bottom:24px}.vc-faq summary{font-size:15px;padding:19px 0;gap:20px;min-height:58px}.vc-faq details>p{font-size:14px;line-height:1.9;padding-bottom:24px}
  .vc-related-care .vc-related-grid{grid-template-columns:1fr}.vc-related-group>h3{font-size:16px}.vc-related-care .vc-related-image,.vc-related-alternative .vc-related-image{width:30%;height:140px}.vc-related-card p{font-size:13px;line-height:1.8}.vc-related-card h4{font-size:14px}.vc-related-link{font-size:13px;min-height:34px}
 }
-@media(max-width:360px){.vc-section-nav{padding-inline:12px;gap:8px}.vc-section-links>a{font-size:11px}.vc-section-inquiry{font-size:11px;padding-inline:11px}.vc-related-card{padding:20px 17px;gap:16px}.vc-related-card h4{font-size:13px}}
+@media(max-width:360px){.vc-section-nav{padding-inline:10px;gap:6px}.vc-section-links{gap:2px}.vc-section-links>a{font-size:12px;padding-inline:1px}.vc-section-inquiry{font-size:12px;padding-inline:9px}.vc-related-card{padding:20px 17px;gap:16px}.vc-related-card h4{font-size:13px}}

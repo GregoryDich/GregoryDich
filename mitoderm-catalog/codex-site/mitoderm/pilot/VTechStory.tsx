@@ -7,8 +7,8 @@ import './vtech-story.css';
 
 type Scene={id:string;label:string;name:string;title:string;body:string;alt:string;kind:'intro'|'bridge'|'clinical';weight:number;poster:string;mobilePoster:string;clip?:string;mobileClip?:string};
 const scenes:Scene[]=[
- {id:'vtech-hero',label:'המערכת',name:'V-TECH SYSTEM',title:'V-TECH SYSTEM',body:'סרום ומסכת ג׳ל. מערכת אחת לעבודה מקצועית על עור הפנים.',alt:'אריזת V-TECH על שולחן בקליניקה',kind:'intro',weight:1.65,poster:entryMedia.poster,mobilePoster:mobileMedia.poster,clip:entryMedia.clip,mobileClip:mobileMedia.clip},
- {id:'vtech-consultation',label:'הבקשה',name:'בקשה אחת · אזור הלחי',title:'מראה הקמטוטים ומרקם העור',body:'מתחילים בבקשת המטופלת ובבחינת עור הלחי. משם מתקרבים לאזור העבודה.',alt:'המחשה: הקוסמטיקאית בוחנת את עור הלחי בעקבות בקשה הנוגעת למראה קמטוטים ולמרקם העור',kind:'bridge',weight:1.35,poster:mediaUrl('/assets/world/vtech-consultation.webp'),mobilePoster:mediaUrl('/assets/world/vtech-consultation-mobile.webp'),clip:mediaUrl('/assets/world/vtech-bridge.mp4'),mobileClip:mediaUrl('/assets/world/vtech-bridge-mobile.mp4')},
+ {id:'vtech-hero',label:'המערכת',name:'V-TECH SYSTEM',title:'V-TECH SYSTEM',body:'סרום ומסכת ג׳ל. מערכת אחת לעבודה מקצועית על עור הפנים.',alt:'אריזת V-TECH על שולחן בקליניקה',kind:'intro',weight:1.67,poster:entryMedia.poster,mobilePoster:mobileMedia.poster},
+ {id:'vtech-consultation',label:'הבקשה',name:'בקשה אחת · אזור הלחי',title:'מראה הקמטוטים ומרקם העור',body:'מתחילים בבקשת המטופלת ובבחינת עור הלחי. משם מתקרבים לאזור העבודה.',alt:'המחשה: הקוסמטיקאית בוחנת את עור הלחי בעקבות בקשה הנוגעת למראה קמטוטים ולמרקם העור',kind:'bridge',weight:1.33,poster:mediaUrl('/assets/world/vtech-consultation.webp'),mobilePoster:mediaUrl('/assets/world/vtech-consultation-mobile.webp')},
  {id:'vtech-pen',label:'MITOPEN',name:'MITOPEN',title:'מתמקדים באזור שנבחר',body:'הקוסמטיקאית עובדת באזור הלחי. מיקרונידלינג דורש הכשרה ופרוטוקול מקצועי.',alt:'המחשת עבודה מקצועית עם MITOPEN באזור הלחי של אותה מטופלת',kind:'clinical',weight:1.25,poster:mediaUrl('/assets/world/vtech-pen-poster.webp'),mobilePoster:mediaUrl('/assets/world/vtech-pen-mobile-poster.webp'),clip:mediaUrl('/assets/world/vtech-pen.mp4'),mobileClip:mediaUrl('/assets/world/vtech-pen-mobile.mp4')},
  {id:'vtech-serum',label:'סרום',name:'V-TECH SERUM',title:'אותו אזור. הסרום של המערכת.',body:'מבט קרוב על הסרום באזור הלחי, כחלק מתוכנית העבודה שנבחרה.',alt:'המחשת יישום סרום V-TECH באזור הלחי שנבחר בתחילת הסיפור',kind:'clinical',weight:1.25,poster:mediaUrl('/assets/world/vtech-serum-poster.webp'),mobilePoster:mediaUrl('/assets/world/vtech-serum-mobile-poster.webp'),clip:mediaUrl('/assets/world/vtech-serum.mp4'),mobileClip:mediaUrl('/assets/world/vtech-serum-mobile.mp4')},
  {id:'vtech-mask',label:'מסכת ג׳ל',name:'V-TECH GEL MASK',title:'משלימים עם מסכת הג׳ל',body:'מסכת הג׳ל של V-TECH נמרחת על אותו אזור לאחר העבודה עם הסרום.',alt:'המחשת מריחת V-TECH GEL MASK על אותו אזור בלחי לאחר הסרום',kind:'clinical',weight:1.25,poster:mediaUrl('/assets/world/vtech-mask-poster.webp'),mobilePoster:mediaUrl('/assets/world/vtech-mask-mobile-poster.webp'),clip:mediaUrl('/assets/world/vtech-mask.mp4'),mobileClip:mediaUrl('/assets/world/vtech-mask-mobile.mp4')},
@@ -23,10 +23,11 @@ const initialClips=():ClipState[]=>scenes.map(()=>({phase:'loading',painted:fals
 
 export function VTechStory(){
  const root=useRef<HTMLElement>(null),stage=useRef<HTMLDivElement>(null);
+ const cameraVideo=useRef<HTMLVideoElement|null>(null),cameraProgress=useRef(0);
  const videos=useRef<Array<HTMLVideoElement|null>>(scenes.map(()=>null));
  const playback=useRef<Playback[]>(scenes.map(()=>({time:0,ended:false,userPaused:false,trying:false})));
  const activeRef=useRef(0),introProgress=useRef(0),inside=useRef(true);
- const scrubProgress=useRef(scenes.map(()=>0)),seekFrame=useRef<number|null>(null);
+ const seekFrame=useRef<number|null>(null);
  const arrivalUnits=useRef<number|null>(null);
  const [arrivalLength,setArrivalLength]=useState(0);
  const environment=useRef({mobile:false,reduced:false,ready:false});
@@ -45,16 +46,22 @@ export function VTechStory(){
   });
  },[]);
 
+ const updateCamera=useCallback((patch:Partial<ClipState>)=>{
+  updateClip(0,patch);updateClip(1,patch);
+ },[updateClip]);
+
  const seekScrollVideo=useCallback(()=>{
   if(seekFrame.current!==null||environment.current.reduced||document.hidden)return;
   const began=performance.now();
   const tick=()=>{
    seekFrame.current=null;
-   const index=activeRef.current,video=videos.current[index];
+   const index=activeRef.current,video=cameraVideo.current;
    if(!video||scenes[index].kind==='clinical'||environment.current.reduced||document.hidden||!inside.current||video.readyState<2||!Number.isFinite(video.duration)||video.duration<=0)return;
    // Only the camera moves follow scroll in both directions. Medical actions
    // stay forward-only and retain their own pause/replay control.
-   const target=clamp(scrubProgress.current[index])*Math.max(0,video.duration-.04);
+   // One encoded camera move and one persistent decoder span both chapters.
+   // Changing the HTML caption never swaps, scales or restarts the picture.
+   const target=clamp(cameraProgress.current)*Math.max(0,video.duration-.04);
    const distance=target-video.currentTime;
    if(Math.abs(distance)<.025)return;
    // Settle small wheel/touch increments gently. Direct chapter navigation or
@@ -80,6 +87,7 @@ export function VTechStory(){
  },[updateClip]);
 
  const reconcileVideos=useCallback(()=>{
+  cameraVideo.current?.pause();
   videos.current.forEach((video,index)=>{
    if(!video)return;
    if(scenes[index].kind!=='clinical'||index!==activeRef.current||!inside.current||environment.current.reduced||document.hidden)video.pause();
@@ -121,10 +129,7 @@ export function VTechStory(){
    for(let index=0;index<scenes.length;index++)if(units<starts[index]+scenes[index].weight){next=index;break;}
    const local=clamp((units-starts[next])/scenes[next].weight);
    introProgress.current=clamp(units/scenes[0].weight);
-   scrubProgress.current[0]=introProgress.current;
-   // Let the request register before approaching the cheek, then hold the
-   // matched pen frame briefly so the following procedure joins cleanly.
-   scrubProgress.current[1]=clamp(((units-starts[1])/scenes[1].weight-.12)/.8);
+   cameraProgress.current=clamp(units/starts[2]);
    const wasInside=inside.current;
    inside.current=position>=-1&&position<=(total+(arrivalUnits.current??0)+.8)*height;
    element.dataset.storyProgress=(units/total).toFixed(4);
@@ -135,6 +140,10 @@ export function VTechStory(){
    document.documentElement.dataset.vtechImmersed=String(inside.current&&units>.12);
    if(next!==activeRef.current){
     const previous=activeRef.current;activeRef.current=next;
+    if(previous<2&&next>=2){
+     const camera=cameraVideo.current;
+     if(camera&&Number.isFinite(camera.duration))try{camera.currentTime=Math.max(0,camera.duration-.04);}catch{/* Keep the last decoded camera frame during the blend. */}
+    }
     setOutgoing(previous);setActive(next);
     if(fadingTimer.current!==null)window.clearTimeout(fadingTimer.current);
     fadingTimer.current=window.setTimeout(()=>{setOutgoing(null);fadingTimer.current=null;},380);
@@ -162,7 +171,7 @@ export function VTechStory(){
    if(fadingTimer.current!==null)window.clearTimeout(fadingTimer.current);
    window.removeEventListener('scroll',schedule);window.removeEventListener('resize',resized);window.removeEventListener('orientationchange',resized);
    document.removeEventListener('visibilitychange',visibility);preference.removeEventListener('change',motionChanged);
-   videoElements.forEach(video=>video?.pause());updatePosition.current=()=>{};
+   videoElements.forEach(video=>video?.pause());cameraVideo.current?.pause();updatePosition.current=()=>{};
   };
  },[reconcileVideos,seekScrollVideo]);
 
@@ -177,7 +186,7 @@ export function VTechStory(){
  const jumpTo=useCallback((index:number,moveFocus=false)=>{
   const element=root.current,screen=stage.current;if(!element||!screen)return;
   window.history.replaceState(window.history.state,'','#'+scenes[index].id);
-  if(environment.current.reduced){document.getElementById(scenes[index].id)?.scrollIntoView({behavior:'instant',block:'start'});if(moveFocus)document.getElementById(scenes[index].id+'-title')?.focus({preventScroll:true});return;}
+  if(environment.current.reduced){activeRef.current=index;setActive(index);document.getElementById(scenes[index].id)?.scrollIntoView({behavior:'instant',block:'start'});if(moveFocus)document.getElementById(scenes[index].id+'-title')?.focus({preventScroll:true});return;}
   if(moveFocus){if(activeRef.current===index)document.getElementById(scenes[index].id+'-title')?.focus({preventScroll:true});else focusAfterJump.current=index;}
   const top=element.getBoundingClientRect().top+window.scrollY+(starts[index]+(arrivalUnits.current??0))*screen.clientHeight+(index===0?0:1);
   // An explicit chapter choice jumps directly; wheel/touch scrolling stays native.
@@ -192,6 +201,20 @@ export function VTechStory(){
   fromHash();window.addEventListener('hashchange',fromHash);window.addEventListener('mitoderm:vtech-chapter',fromNavigation);
   return()=>{window.removeEventListener('hashchange',fromHash);window.removeEventListener('mitoderm:vtech-chapter',fromNavigation);};
  },[settings.ready,jumpTo]);
+
+ useEffect(()=>{
+  if(!settings.ready||!settings.reduced)return;
+  const update=()=>{
+   const anchor=Math.min(window.innerHeight*.35,220);
+   let selected=0;
+   scenes.forEach((scene,index)=>{const section=document.getElementById(scene.id);if(section&&section.getBoundingClientRect().top<=anchor)selected=index;});
+   if(activeRef.current!==selected){activeRef.current=selected;setActive(selected);}
+  };
+  let frame=0;
+  const schedule=()=>{if(!frame)frame=window.requestAnimationFrame(()=>{frame=0;update();});};
+  window.addEventListener('scroll',schedule,{passive:true});update();
+  return()=>{window.removeEventListener('scroll',schedule);window.cancelAnimationFrame(frame);};
+ },[settings.ready,settings.reduced]);
 
  function loaded(index:number){
   const video=videos.current[index];if(!video)return;
@@ -211,6 +234,15 @@ export function VTechStory(){
   // Paused seeks do not consistently schedule a subsequent video frame callback.
   window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>{if(video.readyState>=2&&!video.seeking)show();}));
  }
+ function paintedCamera(){
+  const video=cameraVideo.current;if(!video)return;
+  const show=()=>{
+   const target=cameraProgress.current*Math.max(0,video.duration-.04);
+   if(cameraVideo.current===video&&Number.isFinite(target)&&Math.abs(video.currentTime-target)<.09)updateCamera({painted:true});
+  };
+  if('requestVideoFrameCallback' in video)video.requestVideoFrameCallback(show);
+  window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>{if(video.readyState>=2&&!video.seeking)show();}));
+ }
  function toggle(index:number){
   const video=videos.current[index];if(!video)return;
   const memory=playback.current[index];
@@ -221,11 +253,27 @@ export function VTechStory(){
   playForward(index);
  }
 
+ const cameraClip=mediaUrl(settings.mobile?'/assets/world/vtech-camera-mobile.mp4':'/assets/world/vtech-camera.mp4');
+ const cameraScene=scenes[active<2?active:1];
+ const cameraEligible=active<3||(outgoing!==null&&outgoing<2);
+
  return <section id="vtech-intro" className="vts-story" ref={root} data-vtech-story="true" data-mode={settings.reduced?'linear':'cinema'} data-active-chapter={scenes[active].id} data-active-index={active} style={{'--vts-length':total+1+arrivalLength} as CSSProperties} aria-label="הכירו את מערכת V-TECH">
   <div className="vts-stage" ref={stage} data-vtech-stage="true" data-active-chapter={scenes[active].id} data-active-index={active} data-intro-moved="false">
    <div className="vts-toolbar" data-vtech-hud="true">
     <nav className="vts-chapter-nav" aria-label="פרקי הסיפור של V-TECH">{scenes.map((scene,index)=><button type="button" key={scene.id} onClick={()=>jumpTo(index)} aria-current={active===index?'step':undefined} aria-label={(index+1)+'. '+scene.label}><span className="vts-nav-number" aria-hidden="true">{String(index+1).padStart(2,'0')}</span><span className="vts-nav-label">{scene.label}</span></button>)}</nav>
    </div>
+   {!settings.reduced&&cameraEligible&&<div className="vts-camera-media vts-media" data-active={active<2} data-outgoing={outgoing!==null&&outgoing<2} aria-hidden={active>=2}>
+    <div className="vts-footage">
+     <picture><source media="(max-width: 860px)" srcSet={cameraScene.mobilePoster}/><img className="vts-poster" data-vtech-entry-poster={active===0?'true':undefined} src={cameraScene.poster} alt={cameraScene.alt} width={entryMedia.width} height={entryMedia.height} loading="eager" fetchPriority="high" decoding="async"/></picture>
+     {settings.ready&&<video key={cameraClip} ref={cameraVideo} className={'vts-video'+(clips[0].painted?' is-painted':'')} src={cameraClip} muted playsInline preload="auto" aria-hidden="true" tabIndex={-1}
+      onLoadStart={()=>updateCamera({painted:false,phase:'loading'})}
+      onLoadedData={()=>{updateCamera({phase:'ready'});if(cameraProgress.current<.001)paintedCamera();seekScrollVideo();}}
+      onCanPlay={seekScrollVideo}
+      onSeeked={()=>{paintedCamera();seekScrollVideo();}}
+      onError={()=>updateCamera({phase:'error',painted:false})}/>
+     }
+    </div>
+   </div>}
    <div className="vts-scenes">
     {scenes.map((scene,index)=>{
      const isActive=index===active;
@@ -235,8 +283,8 @@ export function VTechStory(){
      const Heading=index===0?'h1':'h2';
      const replay=state.phase==='ended';
      return <article key={scene.id} id={scene.id} className="vts-scene" data-kind={scene.kind} data-active={isActive} data-outgoing={index===outgoing} data-media-state={state.phase} aria-hidden={settings.reduced?undefined:!isActive} inert={!settings.reduced&&!isActive} aria-labelledby={scene.id+'-title'}>
-      <div className="vts-media">
-       {eligible&&<div className="vts-atmosphere" aria-hidden="true" style={{backgroundImage:`url("${settings.mobile?scene.mobilePoster:scene.poster}")`}}/>}
+      {(settings.reduced||index>=2)&&<div className="vts-media">
+       <div className="vts-footage">
        <picture>{eligible&&<source media="(max-width: 860px)" srcSet={scene.mobilePoster}/>}<img data-vtech-entry-poster={index===0?'true':undefined} className="vts-poster" src={eligible?scene.poster:undefined} alt={scene.alt} width={index===0?entryMedia.width:1920} height="1080" loading={index===0||(!settings.reduced&&eligible)?'eager':'lazy'} fetchPriority={index===0?'high':'auto'} decoding="async"/></picture>
        {settings.ready&&!settings.reduced&&eligible&&clip&&<video key={clip} ref={node=>{videos.current[index]=node;}} className={'vts-video'+(state.painted?' is-painted':'')} src={clip} muted playsInline preload={isActive?'auto':'metadata'} aria-hidden="true" tabIndex={-1}
         onLoadStart={()=>updateClip(index,{painted:false,phase:playback.current[index].ended?'ended':'loading'})}
@@ -249,7 +297,8 @@ export function VTechStory(){
         onEnded={()=>{const memory=playback.current[index];memory.ended=true;memory.time=videos.current[index]?.duration??memory.time;updateClip(index,{phase:'ended',painted:true});}}
         onError={()=>updateClip(index,{phase:'error',painted:false})}/>
        }
-      </div>
+       </div>
+      </div>}
       {index===0&&<span className="vts-entry-target" data-flight-target="v-tech-system" aria-hidden="true" style={entryRect}/>}
       <div className="vts-caption" data-vtech-hud="true">
        {index>0&&<p className="vts-kicker" dir={index===1?'rtl':'ltr'}>{scene.name}</p>}

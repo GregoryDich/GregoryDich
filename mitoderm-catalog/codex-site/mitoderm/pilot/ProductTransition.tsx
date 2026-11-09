@@ -15,6 +15,7 @@ export function ProductTransition({flight,onNavigate,onFinish}:{flight:ProductFl
  useEffect(()=>{
   const source=cutout.current,exact=matched.current,scene=room.current,ground=veil.current;
   if(!source||!exact||!scene||!ground)return;
+  const preference=window.matchMedia('(prefers-reduced-motion: reduce)');
   let cancelled=false,finishing=false,skipRequested=false,scrollFrame=0;
   let readScroll:()=>void=()=>{},resize:()=>void=()=>{};
   const animations:Animation[]=[],timers=new Set<number>();
@@ -22,20 +23,33 @@ export function ProductTransition({flight,onNavigate,onFinish}:{flight:ProductFl
   const animate=(element:HTMLElement,keyframes:Keyframe[],options:KeyframeAnimationOptions)=>{
    const animation=element.animate(keyframes,{fill:'forwards',...options});animations.push(animation);return animation;
   };
-  const onScroll=()=>{if(!scrollFrame)scrollFrame=window.requestAnimationFrame(()=>{scrollFrame=0;readScroll();});};
+  const finishWithoutMotion=()=>{
+   if(cancelled)return;
+   cancelled=true;
+   timers.forEach(id=>window.clearTimeout(id));timers.clear();
+   animations.forEach(animation=>animation.cancel());window.cancelAnimationFrame(scrollFrame);scrollFrame=0;
+   readScroll=()=>{};resize=()=>{};skip.current=()=>{};
+   delete document.documentElement.dataset.productTransit;
+   // The parent preserves the chosen route, including before onNavigate runs.
+   // Do not use the old cinema distance after the page becomes linear.
+   onFinish();
+  };
+  const onMotionChange=()=>{if(preference.matches)finishWithoutMotion();};
+  const onScroll=()=>{if(!cancelled&&!scrollFrame)scrollFrame=window.requestAnimationFrame(()=>{scrollFrame=0;readScroll();});};
   const onResize=()=>resize();
   const onKey=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();skip.current();}};
   skip.current=()=>{skipRequested=true;};
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('resize',onResize,{passive:true});
   window.addEventListener('keydown',onKey);
+  preference.addEventListener('change',onMotionChange);
   document.documentElement.dataset.productTransit=flight.slug;
   const run=async()=>{
    animate(ground,[{opacity:0},{opacity:.96}],{duration:400,easing:'ease-out'});
    animate(source,[{transform:'translate3d(0,0,0) scale(1)'},{transform:'translate3d(0,-14px,0) scale(1.08)'}],{duration:230,easing:'ease-out'});
    animate(label.current!,[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'translateY(0)'}],{duration:280,delay:200});
    if(backdrop.current)animate(backdrop.current,[{opacity:1},{opacity:.24}],{duration:420,easing:'ease-out'});
-   await delay(230);if(cancelled)return;
+   await delay(230);if(cancelled)return;if(preference.matches){finishWithoutMotion();return;}
    onNavigate(flight.href);
    const started=performance.now();let destination:HTMLElement|null=null;
    while(!cancelled&&performance.now()-started<6000){
@@ -80,17 +94,18 @@ export function ProductTransition({flight,onNavigate,onFinish}:{flight:ProductFl
    const finish=async()=>{if(finishing||cancelled)return;finishing=true;root.current?.setAttribute('data-phase','settled');animate(root.current!,[{opacity:1},{opacity:0}],{duration:160});await delay(170);if(!cancelled)onFinish();};
    readScroll=()=>{
     if(finishing||cancelled)return;
+    if(preference.matches){finishWithoutMotion();return;}
     const progress=Math.max(0,Math.min(1,(window.scrollY-entryStart())/entryDistance()));
     scrub.forEach(animation=>{animation.currentTime=progress*1000;});root.current?.style.setProperty('--flight-progress',String(progress));
     if(progress>=.999)void finish();
    };
-   skip.current=()=>{window.scrollTo({top:entryStart()+entryDistance()+1,behavior:'instant'});readScroll();};
+   skip.current=()=>{if(preference.matches){finishWithoutMotion();return;}window.scrollTo({top:entryStart()+entryDistance()+1,behavior:'instant'});readScroll();};
    resize=()=>skip.current();if(skipRequested)skip.current();else readScroll();
   };
-  void run().catch(()=>{if(!cancelled)onFinish();});
+  if(preference.matches)finishWithoutMotion();else void run().catch(()=>{if(!cancelled)onFinish();});
   return()=>{
    cancelled=true;timers.forEach(id=>window.clearTimeout(id));animations.forEach(animation=>animation.cancel());window.cancelAnimationFrame(scrollFrame);
-   window.removeEventListener('scroll',onScroll);window.removeEventListener('resize',onResize);window.removeEventListener('keydown',onKey);delete document.documentElement.dataset.productTransit;
+   window.removeEventListener('scroll',onScroll);window.removeEventListener('resize',onResize);window.removeEventListener('keydown',onKey);preference.removeEventListener('change',onMotionChange);delete document.documentElement.dataset.productTransit;
   };
  // One effect owns one selected-product transition across the route boundary.
  // eslint-disable-next-line react-hooks/exhaustive-deps

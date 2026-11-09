@@ -1,0 +1,145 @@
+{
+  "created_at": "2026-11-09T10:03:06.127Z",
+  "purpose": "Exact intro end to exact pen start camera transition",
+  "quoted_credits": 128,
+  "requests": [
+    {
+      "index": 0,
+      "params": {
+        "model": "seedance_2_5",
+        "mode": "omni_reference",
+        "duration": 4,
+        "resolution": "1080p",
+        "generate_audio": false,
+        "bitrate_mode": "standard",
+        "count": 1,
+        "aspect_ratio": "16:9",
+        "prompt": "Create one uninterrupted, photorealistic 4-second camera move that joins two existing shots in a luxury aesthetic clinic. The supplied START IMAGE is the exact last frame of the preceding shot: frame zero must reproduce this exact framing, scale, positions, expressions, lighting and all objects with no re-composition, no initial zoom jump and no added transition. The supplied END IMAGE is the exact first frame of the following shot: finish on precisely that composition, scale, face position and instrument position. Begin with the same professional in her white uniform with fine pink piping and pendant, and the same mature patient with bob haircut, beige headband and blouse, sitting behind the marble table and the gold V-TECH package. The patient naturally lowers her pointing hand. In a single smooth dolly-in and slight camera arc, approach that same cheek. The professional's gloved hand brings the exact champagne-gold MITOPEN into view, ready against the cheek, and settle exactly into the supplied end frame. All movement must be true coherent camera and subject motion. Preserve identity, natural skin texture and fine lines, facial anatomy, hand anatomy, wardrobe, jewelry, room, furniture, packaging and device geometry. No edits or cuts, no dissolve, no double exposure, no morphing between images, no ghosting, no skin smoothing, no treatment outcome, no healing transformation, no needle insertion, no blood, no syringe, no text, no titles, no graphic overlays, no logo added, no audio.",
+        "medias": [
+          {
+            "role": "start_image",
+            "value": "c79dc9cc-844a-4f2a-9d88-d37edd5566ec"
+          },
+          {
+            "role": "end_image",
+            "value": "b50f1389-6fc4-412d-8ef4-03ffbb954150"
+          }
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "params": {
+        "model": "seedance_2_5",
+        "mode": "omni_reference",
+        "duration": 4,
+        "resolution": "1080p",
+        "generate_audio": false,
+        "bitrate_mode": "standard",
+        "count": 1,
+        "aspect_ratio": "9:16",
+        "prompt": "Create one uninterrupted, photorealistic 4-second camera move that joins two existing shots in a luxury aesthetic clinic. The supplied START IMAGE is the exact last frame of the preceding shot: frame zero must reproduce this exact framing, scale, positions, expressions, lighting and all objects with no re-composition, no initial zoom jump and no added transition. The supplied END IMAGE is the exact first frame of the following shot: finish on precisely that composition, scale, face position and instrument position. Begin with the same professional in her white uniform with fine pink piping and pendant, and the same mature patient with bob haircut, beige headband and blouse, sitting behind the marble table and the gold V-TECH package. The patient naturally lowers her pointing hand. In a single smooth dolly-in and slight camera arc, approach that same cheek. The professional's gloved hand brings the exact champagne-gold MITOPEN into view, ready against the cheek, and settle exactly into the supplied end frame. All movement must be true coherent camera and subject motion. Preserve identity, natural skin texture and fine lines, facial anatomy, hand anatomy, wardrobe, jewelry, room, furniture, packaging and device geometry. No edits or cuts, no dissolve, no double exposure, no morphing between images, no ghosting, no skin smoothing, no treatment outcome, no healing transformation, no needle insertion, no blood, no syringe, no text, no titles, no graphic overlays, no logo added, no audio. Portrait composition: maintain the exact central framing of the two supplied portrait frames. Do not widen or pull back the final cheek close-up.",
+        "medias": [
+          {
+            "role": "start_image",
+            "value": "93ab263c-ae2e-4959-bb6a-af6a407a84cb"
+          },
+          {
+            "role": "end_image",
+            "value": "bef033ac-163b-4b68-9fa4-7d1ee4c3626c"
+          }
+        ]
+      }
+    }
+  ],
+  "jobs": [
+    {
+      "index": 0,
+      "job_id": "7d00b4d9-9c22-4284-a4b8-06a431bc3702",
+      "status": "completed",
+      "raw_result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_100305_7d00b4d9-9c22-4284-a4b8-06a431bc3702.mp4",
+      "duration_seconds": 4.041667,
+      "frames": 97
+    },
+    {
+      "index": 1,
+      "job_id": "4632078a-f798-4546-ba45-db764f23041f",
+      "status": "completed",
+      "raw_result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_100305_4632078a-f798-4546-ba45-db764f23041f.mp4",
+      "duration_seconds": 4.041667,
+      "frames": 97
+    }
+  ],
+  "release_media": {
+    "desktop": {
+      "media_id": "797818a4-5a16-4b0b-83c8-a125c114c73c",
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/797818a4-5a16-4b0b-83c8-a125c114c73c.mp4",
+      "width": 1912,
+      "height": 1080,
+      "bytes": 7488865
+    },
+    "mobile": {
+      "media_id": "8d6f873a-401d-44eb-9982-259124e5f719",
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/8d6f873a-401d-44eb-9982-259124e5f719.mp4",
+      "width": 812,
+      "height": 1440,
+      "bytes": 3671846
+    }
+  },
+  "assembly": {
+    "recipe": "assemble-vtech-continuity.py",
+    "intro_frames": 121,
+    "join_frames": 6,
+    "bridge_frames": 97,
+    "total_frames": 224,
+    "fps": 24,
+    "duration_seconds": 9.334,
+    "codec": "h264",
+    "keyframe_interval_frames": 6,
+    "audio_streams": 0,
+    "faststart": true,
+    "join": "bidirectional DIS optical-flow motion compensation; no opacity dissolve",
+    "intro_geometry_preserved": true,
+    "upload_status": "Both HTTP 200; both media IDs confirmed uploaded"
+  },
+  "validation": {
+    "actual_midpoints": "Viewed both real t=3/7 interpolation frames: no doubled face or box contours. Checked that all six frames differ and progressively move from A to B.",
+    "mean_absolute_difference_from_A": {
+      "desktop": [
+        7.64,
+        10.925,
+        13.317,
+        15.401,
+        17.185,
+        18.799
+      ],
+      "mobile": [
+        2.862,
+        5.288,
+        7.097,
+        8.605,
+        9.748,
+        10.841
+      ]
+    },
+    "mean_absolute_difference_from_B": {
+      "desktop": [
+        18.529,
+        16.658,
+        14.63,
+        12.349,
+        9.786,
+        6.414
+      ],
+      "mobile": [
+        10.728,
+        9.525,
+        8.326,
+        6.829,
+        5.094,
+        2.78
+      ]
+    },
+    "limits": "Frame-sampled visual inspection. Generated footage illustrates a procedure and is not clinical before/after evidence."
+  }
+}

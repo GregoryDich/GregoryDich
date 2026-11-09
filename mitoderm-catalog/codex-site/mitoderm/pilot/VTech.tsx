@@ -15,9 +15,9 @@ function SectionNavigation(){
   return()=>observer.disconnect();
  },[]);
  return <nav className="vc-section-nav" aria-label="ניווט בעמוד V-TECH" data-vtech-hud="true">
-  <a className="vc-section-brand" dir="ltr" href="/" aria-label="V-TECH — חזרה לכל המוצרים">V-TECH <span aria-hidden="true">↗</span></a>
+  <a className="vc-section-brand" dir="ltr" href="/" aria-label="חזרה לכל המוצרים" title="כל המוצרים"><span className="vc-section-brand-title">V-TECH</span><svg className="vc-section-collection-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></a>
   <div className="vc-section-links">{pageSections.map(item=><a key={item.id} href={'#'+item.id} aria-current={active===item.id?'location':undefined} onClick={item.id==='vtech-intro'?event=>{event.preventDefault();window.dispatchEvent(new CustomEvent('mitoderm:vtech-chapter',{detail:'vtech-consultation'}));}:undefined}>{item.label}</a>)}</div>
-  <a className="vc-section-inquiry" href="#contact" data-product="v-tech-system" data-source="vtech-section-nav">לקבלת מחיר <span aria-hidden="true">←</span></a>
+  <a className="vc-section-inquiry" href="#contact" data-product="v-tech-system" data-source="vtech-section-nav"><span className="vc-section-inquiry-long">לקבלת מחיר</span><span className="vc-section-inquiry-short">הצעה</span><span className="vc-section-inquiry-arrow" aria-hidden="true">←</span></a>
  </nav>;
 }
 

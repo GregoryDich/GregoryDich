@@ -3,7 +3,7 @@
 import {useCallback,useEffect,useRef,useState,type ReactNode} from 'react';
 import {usePathname,useRouter} from 'next/navigation';
 import {products,assets} from '../data';
-import {LeadForm} from './LeadForm';
+import {LeadForm,type LeadDraft} from './LeadForm';
 import {ProductTransition,type ProductFlight} from './ProductTransition';
 import './product-flight.css';
 
@@ -14,6 +14,7 @@ export function SiteExperience({children}:{children:ReactNode}){
  const router=useRouter();
  const [inquiry,setInquiry]=useState<Inquiry|null>(null),[flight,setFlight]=useState<ProductFlight|null>(null);
  const dialog=useRef<HTMLDialogElement>(null),returnFocus=useRef<HTMLElement|null>(null);
+ const inquiryDrafts=useRef(new Map<string,LeadDraft>());
  const navigationTimer=useRef<number|null>(null);
  const pendingHref=useRef<string|null>(null),previousPathname=useRef(pathname);
 
@@ -111,10 +112,11 @@ export function SiteExperience({children}:{children:ReactNode}){
   if(returnFocus.current?.isConnected)returnFocus.current.focus({preventScroll:true});
  };
  const selected=inquiry?products.find(product=>product.slug===inquiry.productSlug):null;
+ const inquiryKey=inquiry?inquiry.productSlug+':'+inquiry.topic:'';
  const inquiryTitles:Record<string,string>={offer:'הצעה מקצועית לקליניקה',training:'הדרכה וליווי מקצועי',protocol:'מידע על הפרוטוקול',cases:'מקרי טיפול ומידע מקצועי',demo:'היכרות והדגמה מקצועית'};
  return <><a className="mitoderm-skip" href="#main-content">דלגו לתוכן</a>{children}
   <dialog ref={dialog} className="inquiry-dialog" onCancel={event=>{event.preventDefault();close();}} onClose={()=>setInquiry(null)} onClick={event=>{if(event.target===event.currentTarget)close();}} aria-labelledby="inquiry-heading">
-   {inquiry&&<div className="inquiry-panel"><button className="inquiry-close" type="button" onClick={close} aria-label="סגירה">×</button><p className="inquiry-brand" dir="ltr">{selected?.name??'MITODERM'}</p><h2 id="inquiry-heading">{inquiryTitles[inquiry.topic]??inquiryTitles.offer}</h2><p className="inquiry-intro">השאירו פרטים לשיחה על התאמה, מידע ותנאים מקצועיים.</p><LeadForm key={inquiry.productSlug+inquiry.sourceBlock+inquiry.topic} productSlug={inquiry.productSlug} sourceBlock={inquiry.sourceBlock} initialComment={inquiry.comment}/></div>}
+   {inquiry&&<div className="inquiry-panel"><button className="inquiry-close" type="button" onClick={close} aria-label="סגירה">×</button><p className="inquiry-brand" dir="ltr">{selected?.name??'MITODERM'}</p><h2 id="inquiry-heading">{inquiryTitles[inquiry.topic]??inquiryTitles.offer}</h2><p className="inquiry-intro">השאירו פרטים לשיחה על התאמה, מידע ותנאים מקצועיים.</p><LeadForm key={inquiryKey} productSlug={inquiry.productSlug} sourceBlock={inquiry.sourceBlock} initialComment={inquiry.comment} initialDraft={inquiryDrafts.current.get(inquiryKey)} onDraftChange={draft=>inquiryDrafts.current.set(inquiryKey,draft)} onSuccess={()=>inquiryDrafts.current.delete(inquiryKey)}/></div>}
   </dialog>
   {flight&&<ProductTransition flight={flight} onNavigate={openProduct} onFinish={finishFlight}/>}
  </>;

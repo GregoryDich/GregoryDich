@@ -2,11 +2,12 @@ import {useId,useRef,useState,type FormEvent} from 'react';
 import {products,contact} from '../data';
 
 const professionLabels=[['cosmetologist','קוסמטיקאי/ת'],['doctor','רופא/ה'],['nurse','אח/ות'],['clinic_owner','בעל/ת קליניקה'],['other','תחום מקצועי אחר']];
-type Props={productSlug?:string;sourceBlock?:string;initialComment?:string;onSuccess?:()=>void};
+export type LeadDraft={name:string;phone:string;profession:string;productSlug:string;comment:string;privacyConsent:boolean};
+type Props={productSlug?:string;sourceBlock?:string;initialComment?:string;initialDraft?:LeadDraft;onDraftChange?:(draft:LeadDraft)=>void;onSuccess?:()=>void};
 type Result={ok:boolean;code:string;id?:string;fields?:Record<string,string>};
-export function LeadForm({productSlug='unsure',sourceBlock='contact',initialComment='',onSuccess}:Props){
+export function LeadForm({productSlug='unsure',sourceBlock='contact',initialComment='',initialDraft,onDraftChange,onSuccess}:Props){
  const prefix=useId();
- const [values,setValues]=useState({name:'',phone:'',profession:'',productSlug,comment:initialComment,privacyConsent:false,website:''});
+ const [values,setValues]=useState(()=>({name:initialDraft?.name??'',phone:initialDraft?.phone??'',profession:initialDraft?.profession??'',productSlug:initialDraft?.productSlug??productSlug,comment:initialDraft?.comment??initialComment,privacyConsent:initialDraft?.privacyConsent??false,website:''}));
  const [status,setStatus]=useState<'idle'|'sending'|'error'|'success'>('idle');
  const [message,setMessage]=useState('');
  const [fields,setFields]=useState<Record<string,string>>({});
@@ -14,11 +15,19 @@ export function LeadForm({productSlug='unsure',sourceBlock='contact',initialComm
  const requestId=useRef<string|null>(null);
  const formRef=useRef<HTMLFormElement>(null);
  function update<K extends keyof typeof values>(key:K,value:(typeof values)[K]){
-  setValues(current=>({...current,[key]:value}));requestId.current=null;setFields(current=>({...current,[key]:''}));
+  const next={...values,[key]:value};
+  if(key==='productSlug'&&value!==values.productSlug)next.privacyConsent=false;
+  setValues(next);
+  // The dialog owns this draft only for its current mount. Never store the
+  // honeypot or copy consent to a different selected product.
+  const {website:discarded,...draft}=next;
+  void discarded;onDraftChange?.(draft);
+  requestId.current=null;setFields(current=>({...current,[key]:''}));
   if(status==='error')setStatus('idle');
  }
  const selected=products.find(product=>product.slug===values.productSlug);
- const whatsapp=contact.whatsapp_url+'?text='+encodeURIComponent('שלום, אשמח לקבל מידע מקצועי והצעה לקליניקה בנושא '+(selected?.name??'מוצרי MITODERM')+'.');
+ const question=values.comment.trim();
+ const whatsapp=contact.whatsapp_url+'?text='+encodeURIComponent('שלום, אשמח לקבל מידע מקצועי והצעה לקליניקה בנושא '+(selected?.name??'מוצרי MITODERM')+'.'+(question?'\n\n'+question:''));
  async function submit(event:FormEvent<HTMLFormElement>){
   event.preventDefault();if(status==='sending')return;
   setStatus('sending');setMessage('');setFields({});
