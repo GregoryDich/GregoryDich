@@ -2,6 +2,7 @@ import {useRef,useState,type PointerEvent} from 'react';
 import {ProductImage} from '../shared';
 import {productHref} from '../data';
 import {vtechCases} from './case-data';
+import './vtech-training.css';
 
 const approvedCases=vtechCases.filter(item=>item.publicationApproved&&item.sourceVerified&&item.product==='v-tech-system');
 const related=[
@@ -64,11 +65,11 @@ const trainingQuestions=[
  {question:'כמה מפגשים נדרשים ומתי בוחנים תוצאה?',answer:'מספר המפגשים, המרווחים ומועד ההערכה נקבעים במסגרת תוכנית מקצועית ובהתאם למצב העור. בקשו את הפרוטוקול העדכני ואת התיעוד הרלוונטי; ההמחשה בעמוד אינה הבטחה לתוצאה או ללוח זמנים.'},
  {question:'מה קורה אחרי השארת פרטים?',answer:'הפנייה כוללת את המוצר שנבחר, תחום העיסוק והשאלה שלכם. בהמשך השיחה עם הצוות ניתן לברר התאמה, מחיר, תנאי רכישה ואפשרויות הדרכה. הפרטים והתנאים מסוכמים באופן אישי.'},
 ];
-export function VTechTraining(){return <section id="vtech-training" className="vc-training" aria-labelledby="vc-training-title">
- <div className="vc-training-heading"><div><p className="vc-section-eyebrow">ידע מקצועי, לפני שמתחילים</p><h2 id="vc-training-title">מכירים את המערכת.<br/>בונים את דרך העבודה.</h2></div><p>הצעד הבא הוא שיחה על הקליניקה, הניסיון והמטרה שלכם. כך אפשר לברר את הפרוטוקול ואת ההדרכה המתאימה לפני תחילת העבודה.</p></div>
+export function VTechTraining(){return <section id="vtech-training" className="vc-training vc-training-cinematic" aria-labelledby="vc-training-title">
+ <div className="vc-training-heading"><div><p className="vc-section-eyebrow"><bdi dir="ltr">V-TECH SYSTEM</bdi><span aria-hidden="true"> · </span> הדרכה וליווי</p><h2 id="vc-training-title">מכירים את המערכת.<br/><span>בונים את דרך העבודה.</span></h2></div><div className="vc-training-introduction"><p>הצעד הבא הוא שיחה על הקליניקה, הניסיון והמטרה שלכם. כך אפשר לברר את הפרוטוקול ואת ההדרכה המתאימה לפני תחילת העבודה.</p><a href="#contact" data-product="v-tech-system" data-source="vtech-training-intro" data-topic="training">לשיחה עם הצוות <span aria-hidden="true">←</span></a></div></div>
  <ol className="vc-training-steps"><li><span aria-hidden="true">01</span><h3>משאירים פנייה ממוקדת</h3><p>מציינים את תחום העיסוק ומה תרצו לדעת על V-TECH, המכשור או ההדרכה.</p></li><li><span aria-hidden="true">02</span><h3>מבררים התאמה מקצועית</h3><p>בשיחה עם הצוות מבררים ניסיון, הכשרה ותוכנית עבודה רלוונטית לקליניקה.</p></li><li><span aria-hidden="true">03</span><h3>מסכמים את הפרטים</h3><p>תכולת הערכה, תנאי הרכישה ואפשרויות ההדרכה מוצגים ומאושרים מול הצוות.</p></li></ol>
- <div className="vc-training-contact"><div><h3>מה חשוב לכם לדעת לפני שמתחילים?</h3><p>אפשר להתחיל משאלה אחת על התאמה, פרוטוקול או הדרכה.</p></div><a href="#contact" data-product="v-tech-system" data-source="vtech-training" data-topic="training">לשיחה על הדרכה <span aria-hidden="true">←</span></a></div>
- <div className="vc-faq" aria-labelledby="vc-faq-title"><h3 id="vc-faq-title">שאלות לפני בחירה</h3><div>{trainingQuestions.map(item=><details key={item.question}><summary>{item.question}<span aria-hidden="true">+</span></summary><p>{item.answer}</p></details>)}</div></div>
+ <div className="vc-training-contact"><div><p className="vc-training-contact-kicker">הקליניקה שלכם. השאלות שלכם.</p><h3>מה חשוב לכם לדעת לפני שמתחילים?</h3><p>אפשר להתחיל משאלה אחת על התאמה, פרוטוקול או הדרכה.</p></div><a href="#contact" data-product="v-tech-system" data-source="vtech-training" data-topic="training">לשיחה על הדרכה <span aria-hidden="true">←</span></a></div>
+ <div className="vc-faq" aria-labelledby="vc-faq-title"><div className="vc-training-faq-heading"><p className="vc-section-eyebrow">פרטים שכדאי להכיר</p><h3 id="vc-faq-title">שאלות לפני בחירה</h3></div><div>{trainingQuestions.map(item=><details key={item.question}><summary>{item.question}<span aria-hidden="true">+</span></summary><p>{item.answer}</p></details>)}</div></div>
  </section>;}
 export function VTechRelated(){return <section id="vtech-related" className="vc-related" aria-labelledby="vc-related-title"><h2 id="vc-related-title">עוד מהעולם של <bdi dir="ltr">MITODERM</bdi></h2>
  <p className="vc-related-intro">לצד הסרום ומסכת הג׳ל אפשר לברר התאמה של מכשור וטיפוח משלים. כל המוצרים כאן נבחרים בנפרד; הצוות מסייע להבחין בין תוספת לתוכנית לבין פרוטוקול אחר.</p>

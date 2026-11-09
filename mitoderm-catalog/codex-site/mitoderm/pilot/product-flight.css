@@ -1,9 +1,12 @@
 .vc-product-flight{position:fixed;inset:0;z-index:9998;pointer-events:auto;isolation:isolate;overflow:hidden}
 .vc-product-flight-ground{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,#211c13,#09090b 68%);opacity:0}
 .vc-flight-cutout{position:absolute;background-repeat:no-repeat;max-width:none!important;max-height:none!important;transform-origin:0 0;filter:drop-shadow(0 24px 24px #0005);will-change:transform,opacity;z-index:3;pointer-events:none;mask-image:linear-gradient(90deg,transparent calc(var(--flight-reveal,-3%) - 1%),#000 calc(var(--flight-reveal,-3%) + 1%))}
-.vc-flight-backdrop{position:absolute;max-width:none!important;object-fit:fill;z-index:1;pointer-events:none}
+.vc-flight-backdrop{position:absolute;max-width:none!important;z-index:1;pointer-events:none}
+.vc-flight-backdrop>img{position:absolute;inset:0;width:100%;height:100%;max-width:none!important;object-fit:fill}
 .vc-flight-matched{position:absolute;transform-origin:0 0;background-repeat:no-repeat;opacity:0;will-change:transform,opacity;z-index:4;mask-image:linear-gradient(90deg,#000 calc(var(--flight-reveal,-3%) - 1%),transparent calc(var(--flight-reveal,-3%) + 1%))}
 .vc-flight-glint{position:absolute;z-index:4;transform-origin:0 0;opacity:0;pointer-events:none;background:linear-gradient(90deg,transparent calc(var(--flight-reveal,-3%) - 7%),#b7914e44 calc(var(--flight-reveal,-3%) - 3%),#f1dfb8b3 var(--flight-reveal,-3%),#d0aa5b55 calc(var(--flight-reveal,-3%) + 2%),transparent calc(var(--flight-reveal,-3%) + 6%));filter:blur(1px);will-change:transform,opacity}
+.vc-product-flight[data-canonical=true] .vc-flight-cutout{mask-image:none;filter:none}
+.vc-product-flight[data-canonical=true] :is(.vc-flight-matched,.vc-flight-glint){display:none}
 .vc-flight-room{position:absolute;object-fit:cover;object-position:50% 50%;max-width:none!important;opacity:0;z-index:2;transform-origin:0 0;will-change:transform,opacity}
 .vc-flight-caption{position:absolute;z-index:5;inset:auto 24px max(7svh,40px);text-align:center;color:#e7d4a9;opacity:0;display:flex;flex-direction:column;gap:13px}
 .vc-flight-caption>span{font-size:9px;letter-spacing:.25em}.vc-flight-caption>bdi{font-size:clamp(16px,2vw,24px);letter-spacing:.14em;font-weight:300}
@@ -15,6 +18,7 @@
 @media(min-width:861px){.vc-flight-caption{inset:auto auto 11svh 5vw;width:270px;text-align:start;align-items:flex-start}.vc-flight-caption>button{align-self:flex-start}}
 html[data-product-transit] .mc-home [data-flight]{transition:opacity .3s}
 html[data-product-transit="v-tech-system"] .mc-home [data-product="v-tech-system"] [data-flight-image]{visibility:hidden}
+html[data-product-transit="v-tech-system"] .mc-home [data-canonical-pack]{visibility:hidden}
 html[data-product-transit] [data-vtech-story] .vs-copy,html[data-product-transit] [data-vtech-story] .vs-navigation{opacity:0!important;transition:none!important}
 .lead-product-context{border:1px solid rgba(223,186,116,.22);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:15px;min-height:48px;font-size:12px;color:#bcb5a8}.lead-product-context bdi{color:#e4c48c;font-size:12px}.lead-fields>.lead-product-context{align-self:end}
 @media(prefers-reduced-motion:reduce){.vc-product-flight{display:none}}

@@ -10,6 +10,8 @@ Use Node22 or newer and pnpm. Install from the committed lockfile, then run `pnp
 
 The opening always shows the whole collection, including MITOTECH and all4 BIOSPICULE products. Selecting V-TECH leads through package, consultation, MITOPEN, serum, gel mask, documented-case request, a scroll-controlled opening of the original kit5+5 and related products. Other product routes are retained.
 
+The collection uses a gentle light-and-camera loop that pauses on selection and respects reduced motion. V-TECH uses the same photograph from the collection through the clinic entry, with a proportionate desktop scale. The faster kit opening and dark/gold training section are documented in `production/VTECH-V7-RELEASE.md`, including the current release status.
+
 The case dataset is deliberately empty until approved, attributable V-TECH results are supplied. Generated process footage is labelled as an illustration and is not used as proof of outcomes.
 
 ## Media

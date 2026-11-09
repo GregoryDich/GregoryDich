@@ -16,7 +16,7 @@ const scenes:Scene[]=[
  {id:'vtech-serum',label:'סרום',name:'V-TECH SERUM',title:'אותו אזור. הסרום של המערכת.',body:'מבט קרוב על הסרום באזור הלחי, כחלק מתוכנית העבודה שנבחרה.',alt:'המחשת יישום סרום V-TECH באזור הלחי שנבחר בתחילת הסיפור',kind:'clinical',weight:1.25,poster:mediaUrl('/assets/world/vtech-serum-poster.webp'),mobilePoster:mediaUrl('/assets/world/vtech-serum-mobile-poster.webp')},
  {id:'vtech-mask',label:'מסכת ג׳ל',name:'V-TECH GEL MASK',title:'משלימים עם מסכת הג׳ל',body:'מסכת הג׳ל של V-TECH נמרחת על אותו אזור לאחר העבודה עם הסרום.',alt:'המחשת מריחת V-TECH GEL MASK על אותו אזור בלחי לאחר הסרום',kind:'clinical',weight:1.25,poster:mediaUrl('/assets/world/vtech-mask-poster.webp'),mobilePoster:mediaUrl('/assets/world/vtech-mask-mobile-poster.webp')},
  {id:'vtech-results',label:'המבט המקצועי',name:'V-TECH',title:'המבט המקצועי',body:'',alt:'המחשת הטיפול ב-V-TECH לצד מידע על תיעוד ותוכנית עבודה; התמונה אינה תיעוד של תוצאה',kind:'evidence',weight:1.45,poster:mediaUrl('/assets/world/vtech-mask-poster.webp'),mobilePoster:mediaUrl('/assets/world/vtech-mask-mobile-poster.webp')},
- {id:'vtech-kit',label:'הערכה',name:'V-TECH SYSTEM',title:'הערכה המקצועית',body:'',alt:'אריזת V-TECH SYSTEM נפתחת ומציגה את הסרום ומסכת הג׳ל',kind:'offer',weight:3.15,poster:entryMedia.poster,mobilePoster:mobileMedia.poster},
+ {id:'vtech-kit',label:'הערכה',name:'V-TECH SYSTEM',title:'הערכה המקצועית',body:'',alt:'אריזת V-TECH SYSTEM נפתחת ומציגה את הסרום ומסכת הג׳ל',kind:'offer',weight:2.15,poster:entryMedia.poster,mobilePoster:mobileMedia.poster},
 ];
 const procedureCount=5;
 const starts=scenes.map((_,index)=>scenes.slice(0,index).reduce((sum,scene)=>sum+scene.weight,0));
@@ -120,13 +120,15 @@ export function VTechStory(){
    const timeline=vtechTimeline[environment.current.mobile?'mobile':'desktop'];
    const chapter=timeline.chapters.find(item=>item.id===scenes[next].id);
    const kit=scenes[next].kind==='offer';
-   const videoLocal=kit?clamp(local/.38):local;
+   // Reach the contents earlier, while retaining the exact returned camera
+   // frame before the photograph moves and the original opening takes over.
+   const videoLocal=kit?clamp(local/.33):local;
    const mapped=chapter?chapter.start+(chapter.end-chapter.start)*videoLocal:0;
    targetTime.current=clamp(mapped,0,Math.max(0,timeline.duration-.04));
-   const pack=kit?clamp((local-.38)/.18):0;
+   const pack=kit?clamp((local-.33)/.17):0;
    const smoothPack=pack*pack*(3-2*pack);
-   const reveal=kit?clamp((local-.55)/.07):0;
-   const opening=kit?clamp((local-.62)/.30):0;
+   const reveal=kit?clamp((local-.49)/.07):0;
+   const opening=kit?clamp((local-.56)/.24):0;
    const wasInside=inside.current;
    inside.current=position>=-1&&position<=(total+(arrivalUnits.current??0)+1.8)*height;
    element.dataset.storyProgress=(units/total).toFixed(4);

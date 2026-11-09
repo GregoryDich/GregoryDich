@@ -1,0 +1,72 @@
+/* The professional handoff continues the warm black/gold world of the kit.
+   Scope every override to this section, including legacy responsive rules. */
+.vc-training.vc-training-cinematic{
+ position:relative;
+ isolation:isolate;
+ overflow:hidden;
+ color:#f5f0e8;
+ background:radial-gradient(ellipse at 16% 7%,#5e432822,transparent 57%),linear-gradient(180deg,#17120e 0%,#100e0c 43%,#08080a 100%);
+ border:0;
+ padding:clamp(78px,8vw,126px) clamp(24px,6.5vw,110px) clamp(76px,8vw,120px);
+}
+.vc-training-cinematic::before{content:'';position:absolute;inset:0 0 auto;height:120px;background:linear-gradient(180deg,#0d0b0955,transparent);pointer-events:none;z-index:-1}
+.vc-training-cinematic :is(.vc-training-heading,.vc-training-steps,.vc-training-contact,.vc-faq){max-width:1320px;margin-inline:auto}
+.vc-training-cinematic .vc-section-eyebrow{color:#dfba74;font-size:12px;line-height:1.65;letter-spacing:.025em;margin:0 0 17px}
+.vc-training-cinematic .vc-training-heading{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:clamp(36px,6vw,90px);align-items:end}
+.vc-training-cinematic .vc-training-heading h2{margin:0;font-size:clamp(33px,3.8vw,56px);font-weight:400;line-height:1.15;letter-spacing:-.025em;text-wrap:balance;color:#fff}
+.vc-training-cinematic .vc-training-heading h2>span{color:#e4c58f}
+.vc-training-cinematic .vc-training-introduction{max-width:41ch;justify-self:end}
+.vc-training-cinematic .vc-training-introduction>p{font-size:16px;line-height:1.85;color:#cec4b5;margin:0}
+.vc-training-cinematic .vc-training-introduction>a{display:inline-flex;align-items:center;gap:28px;min-height:44px;padding:9px 0;margin-top:18px;border-bottom:1px solid #dfba7459;color:#f0d7a3;font-size:13px;line-height:1.5}
+.vc-training-cinematic .vc-training-introduction>a>span{font-size:20px}
+.vc-training-cinematic .vc-training-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(28px,4vw,64px);padding:0;list-style:none;margin-top:clamp(46px,5vw,75px)}
+.vc-training-cinematic .vc-training-steps>li{min-width:0;display:block;border-top:1px solid #dfba743d;padding-top:24px}
+.vc-training-cinematic .vc-training-steps li>span{display:block;direction:ltr;text-align:start;color:#dfba74;font-size:12px;font-variant-numeric:tabular-nums;letter-spacing:.1em;line-height:1.4;margin:0 0 18px}
+.vc-training-cinematic .vc-training-steps h3{font-size:clamp(20px,1.9vw,25px);font-weight:400;line-height:1.35;color:#f5f0e8;margin:0}
+.vc-training-cinematic .vc-training-steps p{font-size:14px;line-height:1.85;color:#bfb5a6;max-width:34ch;margin:13px 0 0}
+.vc-training-cinematic .vc-training-contact{display:flex;align-items:center;justify-content:space-between;gap:40px;margin-top:clamp(46px,5vw,72px);padding:32px 0;border:0;border-block:1px solid #dfba7433;background:transparent}
+.vc-training-cinematic .vc-training-contact .vc-training-contact-kicker{font-size:11px;line-height:1.6;letter-spacing:.03em;color:#dfba74;margin:0 0 10px}
+.vc-training-cinematic .vc-training-contact h3{font-size:clamp(22px,2.2vw,30px);font-weight:400;line-height:1.3;color:#fff;margin:0}
+.vc-training-cinematic .vc-training-contact p{font-size:14px;line-height:1.75;color:#c8beaf;margin:10px 0 0}
+.vc-training-cinematic .vc-training-contact>a{display:inline-flex;align-items:center;justify-content:space-between;gap:40px;flex-shrink:0;min-height:51px;max-width:100%;border-radius:30px;padding:14px 25px;background:#dfba74;color:#17130d;font-size:14px;line-height:1.5;font-weight:500;margin:0;box-shadow:inset 0 1px 0 #ffffff36;transition:background .2s}
+.vc-training-cinematic .vc-training-contact>a:hover{background:#ebcb8c}
+.vc-training-cinematic .vc-faq{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr);gap:clamp(35px,6vw,90px);margin-top:clamp(52px,6vw,85px)}
+.vc-training-cinematic .vc-training-faq-heading h3{font-size:clamp(25px,2.7vw,36px);font-weight:400;line-height:1.25;letter-spacing:-.02em;color:#f5f0e8;margin:0}
+.vc-training-cinematic .vc-training-faq-heading .vc-section-eyebrow{margin-bottom:11px}
+.vc-training-cinematic .vc-faq details{border-top:1px solid #dfba7433}
+.vc-training-cinematic .vc-faq details:last-child{border-bottom:1px solid #dfba7433}
+.vc-training-cinematic .vc-faq summary{display:flex;align-items:center;justify-content:space-between;gap:25px;min-height:62px;padding:20px 0;font-size:16px;line-height:1.5;color:#eee5d9;list-style:none;cursor:pointer}
+.vc-training-cinematic .vc-faq summary>span{color:#dfba74;font-size:24px;font-weight:300}
+.vc-training-cinematic .vc-faq details>p{font-size:14px;line-height:1.9;color:#c6bcac;max-width:68ch;padding:0 0 23px;margin:0}
+.vc-training-cinematic :is(a,summary):focus-visible{outline:2px solid #f3d89f;outline-offset:5px}
+
+@media(max-width:860px){
+ .vc-training.vc-training-cinematic{padding:66px 24px 76px}
+ .vc-training-cinematic .vc-training-heading{display:block}
+ .vc-training-cinematic .vc-training-heading h2{font-size:clamp(29px,7.3vw,42px);line-height:1.17}
+ .vc-training-cinematic .vc-section-eyebrow{font-size:11px;margin-bottom:14px}
+ .vc-training-cinematic .vc-training-introduction{max-width:48ch;margin-top:24px}
+ .vc-training-cinematic .vc-training-introduction>p{font-size:14px;line-height:1.8}
+ .vc-training-cinematic .vc-training-introduction>a{margin-top:12px;font-size:13px}
+ .vc-training-cinematic .vc-training-steps{grid-template-columns:1fr;gap:26px;margin-top:36px}
+ .vc-training-cinematic .vc-training-steps>li{display:grid;grid-template-columns:25px minmax(0,1fr);gap:7px 16px;padding-top:22px}
+ .vc-training-cinematic .vc-training-steps li>span{grid-row:1/3;font-size:11px;margin:5px 0 0}
+ .vc-training-cinematic .vc-training-steps h3{font-size:22px}
+ .vc-training-cinematic .vc-training-steps p{font-size:14px;line-height:1.8;max-width:none;margin:0}
+ .vc-training-cinematic .vc-training-contact{display:block;margin-top:37px;padding:28px 0}
+ .vc-training-cinematic .vc-training-contact h3{font-size:25px;line-height:1.3}
+ .vc-training-cinematic .vc-training-contact p{font-size:14px;line-height:1.75}
+ .vc-training-cinematic .vc-training-contact>a{margin-top:22px;min-height:48px;font-size:13px;padding:13px 23px;gap:35px}
+ .vc-training-cinematic .vc-faq{display:block;margin-top:43px}
+ .vc-training-cinematic .vc-training-faq-heading{margin-bottom:25px}
+ .vc-training-cinematic .vc-training-faq-heading h3{font-size:28px}
+ .vc-training-cinematic .vc-faq summary{font-size:15px;padding:19px 0;min-height:59px;gap:20px}
+ .vc-training-cinematic .vc-faq details>p{font-size:14px;line-height:1.85;padding-bottom:22px}
+}
+@media(max-width:360px){
+ .vc-training.vc-training-cinematic{padding-inline:18px}
+ .vc-training-cinematic .vc-training-heading h2{font-size:27px}
+ .vc-training-cinematic .vc-training-contact h3{font-size:23px}
+ .vc-training-cinematic .vc-training-steps h3{font-size:20px}
+}
+@media(prefers-reduced-motion:reduce){.vc-training-cinematic .vc-training-contact>a{transition:none}}

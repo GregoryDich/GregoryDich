@@ -22,7 +22,7 @@ export function VTechPackFlight({stage,reduced}:{stage:RefObject<HTMLDivElement|
    if(disposed)return;
    const frame=screen.getBoundingClientRect(),slot=target.getBoundingClientRect();
    if(!frame.width||!frame.height||!slot.width||!slot.height)return;
-   const media=getEntryMedia(frame.width),box=getEntryBoxRect(frame.width,frame.height);
+   const media=getEntryMedia(window.innerWidth),box=getEntryBoxRect(frame.width,frame.height);
    // Align the returning photograph to the closed box inside frame0 of the
    // original opening. This preserves its position when the sequence takes over.
    const sequenceScale=Math.min(slot.width/kitSequence.width,slot.height/1050)*.98;

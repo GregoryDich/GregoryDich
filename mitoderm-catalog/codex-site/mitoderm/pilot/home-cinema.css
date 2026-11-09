@@ -93,3 +93,16 @@
  .mc-collection{padding-inline:19px}
 }
 @media(prefers-reduced-motion:reduce){.mc-collection-video{display:none!important}.mc-photo-marker,.mc-photo-tooltip,.mc-collection-card .mc-cutout{transition:none!important}.mc-collection-card .mc-cutout{transform:none!important}}
+
+/* v7: unchanged package artwork, continuous atmosphere and a single V-TECH
+   photograph shared with the clinic. Every hotspot moves with its own scene. */
+.mc-photo-hero{overflow:hidden}
+.mc-collection-clean{z-index:1}
+.mc-collection-frame{animation:mc-collection-breathe 14s ease-in-out infinite;transform-origin:50% 65%}
+.mc-photo-hero[data-motion=paused] .mc-collection-frame,.mc-photo-hero[data-motion=paused] .mc-collection-ambient{animation-play-state:paused}
+.mc-collection-ambient{position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at 25% 20%,#f0cf7b25,transparent 48%),linear-gradient(108deg,transparent 20%,#e8cb8f13 45%,transparent 65%);mix-blend-mode:screen;animation:mc-collection-light 12s ease-in-out infinite}
+.mc-canonical-pack{position:absolute;display:block;overflow:hidden;pointer-events:none;isolation:isolate;filter:drop-shadow(0 4px 5px #0008)}
+.mc-canonical-pack img{position:absolute;display:block;max-width:none;user-select:none;pointer-events:none}
+@keyframes mc-collection-breathe{0%,100%{transform:scale(1) translateY(0)}50%{transform:scale(1.009) translateY(-3px)}}
+@keyframes mc-collection-light{0%,100%{opacity:.4;transform:translateX(-8%)}50%{opacity:1;transform:translateX(8%)}}
+@media(prefers-reduced-motion:reduce){.mc-collection-frame,.mc-collection-ambient{animation:none}.mc-collection-ambient{opacity:.4}}

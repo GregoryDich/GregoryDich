@@ -1,0 +1,68 @@
+{
+  "version": "v7",
+  "createdDate": "2026-11-09",
+  "mode": "builtin-imagegen-edit",
+  "purpose": "Remove baked-in V-TECH from homepage compositions so same film-frame pack can be composited in HTML throughout entry.",
+  "assets": [
+    {
+      "variant": "desktop",
+      "input": "public/assets/hero/collection-atelier-desktop.webp",
+      "output": "public/assets/hero/collection-clean-desktop-v7.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "sha256": "928975d26773ed20baeb7d24ee8c19ae9d95637b23fd4388539aabb759e24e9b",
+      "prompt": "Use case: precise-object-edit. Asset type: exact background clean plate for an existing live website; fixed hotspot layout. Image 1 is the EDIT TARGET. REMOVE ONLY the central tall gold and black V-TECH SYSTEM box with huge V symbol, and ONLY its own two small amber vials and its gold sachet immediately in front on the CENTRAL circular gold podium. Leave that central round gold podium present, empty, with physically correct warm lighting and subtle empty-surface reflections. Reconstruct the vacated area with the same warm nearly-black brown studio background. CRITICAL: preserve every other product, ALL other 12 product groups, exactly in their existing pixel positions, scale, perspective, shape, labels, packaging text, and original lighting. Preserve the entire left side EXO-NAD, blue EXOCELL mask, open EXOTECH black-and-gold gel case, lower-left EXOSIGNAL HAIR and spray, emerald MITOTECH box; preserve right-side four white BIOSPICULE cartons, MITOSCAN, and MITOPEN. Do not remove or change the small bottles belonging to other product groups. Do not move or redesign any shelf, podium, or edge. Keep same framing, camera angle, dark background, overall light gradients, and visible floor. Do not crop, zoom, or reposition. Output same 1672x941 landscape composition as reference. No replacement V-TECH box or new product. No text, numbers, badges, new reflections of V-TECH, or watermark. This is only object removal, not a new composition.",
+      "suggestedCentralPatchBounds": {
+        "x": 720,
+        "y": 205,
+        "width": 340,
+        "height": 585
+      }
+    },
+    {
+      "variant": "mobile",
+      "input": "public/assets/hero/collection-atelier-mobile.webp",
+      "output": "public/assets/hero/collection-clean-mobile-v7.png",
+      "dimensions": [
+        1049,
+        1500
+      ],
+      "sha256": "951b60d79c5bfa060bc888475f6fc46b3fcca899658abe22128cbc10f048471e",
+      "prompt": "Use case: precise-object-edit. Asset type: exact portrait background clean plate for an existing live website; fixed hotspot layout. Image 1 is the EDIT TARGET. REMOVE ONLY the top-middle tall gold and black V-TECH SYSTEM box with huge V symbol, and ONLY its own two small amber vials and its gold sachet immediately in front on the top-middle circular gold podium. Leave that circular gold podium present and EMPTY, with physically correct warm lighting and empty surface. Reconstruct the vacated area with the same warm nearly-black brown studio background. CRITICAL: preserve ALL other 12 product groups exactly in their existing pixel positions, scale, perspective, shape, labels, packaging text, and lighting. Top left EXO-NAD with its bottles stays; top right turquoise EXOCELL mask stays; second row open EXOTECH black-and-gold gel case, emerald MITOTECH box and gold MITOPEN stay; third row EXOSIGNAL HAIR with its ampoules, spray, MITOSCAN stay; bottom row all FOUR white BIOSPICULE cartons stay exactly as they are. Do not remove small bottles belonging to other product groups. Do not move or redesign any shelf, podium, or edge. Keep same framing, camera angle, dark backdrop, light gradients, and floor. Do not crop, zoom, or reposition. Output same 1049x1500 portrait composition as reference. No replacement V-TECH box or new product. No text, numbers, badges, new reflections of V-TECH, or watermark. This is only object removal, not a new composition.",
+      "suggestedCentralPatchBounds": {
+        "x": 415,
+        "y": 235,
+        "width": 240,
+        "height": 397
+      }
+    }
+  ],
+  "verification": {
+    "visual": "Central V-TECH box, its two vials, and its gold sachet removed. Empty central podium retained. All remaining 12 product groups present in original layout. Original pixel dimensions preserved.",
+    "limitation": "Imagegen subtly redraws some small packaging lettering elsewhere, so images are not pixel-identical outside the requested removal.",
+    "recommendation": "For exact retention of all other products, use original source as base, and composite only central region of this clean plate using CSS clip/mask. Then add exact V-TECH film-frame layer. Suggested patch bounds encompass removed packaging without crossing neighboring product bodies; allow a small soft feather."
+  },
+  "web_exports": [
+    {
+      "variant": "desktop",
+      "path": "public/assets/hero/collection-clean-desktop-v7.webp",
+      "bytes": 124284,
+      "sha256": "75c29e3811ae56cb93509f4584e682b38e06c0e6c77f562e14cee7becfc19ebd",
+      "encoder": "ffmpeg/libwebp",
+      "quality": 92,
+      "compression_level": 6
+    },
+    {
+      "variant": "mobile",
+      "path": "public/assets/hero/collection-clean-mobile-v7.webp",
+      "bytes": 147256,
+      "sha256": "7fdd6a5078194ac10981d80f0190705bf5451e31f97d1d0a0cbd7ff7c6a265ce",
+      "encoder": "ffmpeg/libwebp",
+      "quality": 92,
+      "compression_level": 6
+    }
+  ],
+  "original_png_source_commit": "07c961af13c2b4a9d5bdbaef6e9f646b8bcfcd03"
+}

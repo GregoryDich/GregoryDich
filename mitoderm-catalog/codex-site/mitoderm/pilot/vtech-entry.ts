@@ -23,7 +23,7 @@ export const mobileMedia={
 export function getEntryMedia(width:number){return width<=860?mobileMedia:entryMedia;}
 
 export function getEntryBoxRect(width:number,height:number):EntryRect{
- const media=getEntryMedia(width);
+ const media=getEntryMedia(typeof window==='undefined'?width:window.innerWidth);
  const scale=Math.max(width/media.width,height/media.height);
  return {
   left:(width-media.width*scale)/2+media.box.left*scale,

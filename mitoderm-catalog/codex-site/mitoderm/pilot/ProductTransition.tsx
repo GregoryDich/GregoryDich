@@ -3,12 +3,12 @@
 import {useEffect,useRef,type CSSProperties} from 'react';
 import {getEntryMedia,type EntryRect} from './vtech-entry';
 
-export type ProductFlight={id:number;slug:string;src:string;rect:EntryRect;box:EntryRect;href:string;photo?:{rect:EntryRect;silhouette:string}};
+export type ProductFlight={id:number;slug:string;src:string;rect:EntryRect;box:EntryRect;href:string;photo?:{rect:EntryRect;silhouette:string};canonical?:boolean;backdrop?:{src:string;rect:EntryRect;cleanSrc?:string;cleanMask?:string}};
 
 /** A selected photograph survives navigation and grows with native scroll. */
 export function ProductTransition({flight,onNavigate,onFinish}:{flight:ProductFlight;onNavigate:(href:string)=>void;onFinish:()=>void}){
  const root=useRef<HTMLDivElement>(null),cutout=useRef<HTMLDivElement>(null);
- const matched=useRef<HTMLDivElement>(null),glint=useRef<HTMLDivElement>(null),room=useRef<HTMLImageElement>(null),backdrop=useRef<HTMLImageElement>(null);
+ const matched=useRef<HTMLDivElement>(null),glint=useRef<HTMLDivElement>(null),room=useRef<HTMLImageElement>(null),backdrop=useRef<HTMLDivElement>(null);
  const veil=useRef<HTMLDivElement>(null),label=useRef<HTMLDivElement>(null),enterButton=useRef<HTMLButtonElement>(null);
  const skip=useRef<()=>void>(()=>{});
  const media=getEntryMedia(typeof window==='undefined'?1200:window.innerWidth);
@@ -17,7 +17,7 @@ export function ProductTransition({flight,onNavigate,onFinish}:{flight:ProductFl
   if(!source||!exact||!scene||!ground)return;
   const preference=window.matchMedia('(prefers-reduced-motion: reduce)');
   let cancelled=false,finishing=false,skipRequested=false,scrollFrame=0;
-  let readScroll:()=>void=()=>{},resize:()=>void=()=>{};
+  let readScroll:()=>void=()=>{},resize:()=>void=()=>{skipRequested=true;};
   const animations:Animation[]=[],timers=new Set<number>();
   const delay=(ms:number)=>new Promise<void>(resolve=>{const id=window.setTimeout(()=>{timers.delete(id);resolve();},ms);timers.add(id);});
   const animate=(element:HTMLElement,keyframes:Keyframe[],options:KeyframeAnimationOptions)=>{
@@ -45,7 +45,7 @@ export function ProductTransition({flight,onNavigate,onFinish}:{flight:ProductFl
   preference.addEventListener('change',onMotionChange);
   document.documentElement.dataset.productTransit=flight.slug;
   const run=async()=>{
-   animate(ground,[{opacity:0},{opacity:.96}],{duration:400,easing:'ease-out'});
+   animate(ground,[{opacity:0},{opacity:flight.canonical?1:.96}],{duration:400,easing:'ease-out'});
    animate(source,[{transform:'translate3d(0,0,0) scale(1)'},{transform:'translate3d(0,-14px,0) scale(1.08)'}],{duration:230,easing:'ease-out'});
    animate(label.current!,[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'translateY(0)'}],{duration:280,delay:200});
    if(backdrop.current)animate(backdrop.current,[{opacity:1},{opacity:.24}],{duration:420,easing:'ease-out'});
@@ -64,7 +64,7 @@ export function ProductTransition({flight,onNavigate,onFinish}:{flight:ProductFl
    const stageElement=document.querySelector<HTMLElement>('[data-vtech-stage]');
    const target=destination.getBoundingClientRect();
    const stage=stageElement?.getBoundingClientRect()??{left:0,top:0,width:window.innerWidth,height:window.innerHeight};
-   const entry=getEntryMedia(stage.width),cover=Math.max(stage.width/entry.width,stage.height/entry.height);
+   const entry=getEntryMedia(window.innerWidth),cover=Math.max(stage.width/entry.width,stage.height/entry.height);
    const renderedWidth=entry.width*cover,renderedHeight=entry.height*cover;
    const offsetX=(stage.width-renderedWidth)/2,offsetY=(stage.height-renderedHeight)/2;
    Object.assign(exact.style,{left:target.left+'px',top:target.top+'px',width:target.width+'px',height:target.height+'px',backgroundImage:`url("${entry.poster}")`,backgroundSize:`${renderedWidth}px ${renderedHeight}px`,backgroundPosition:`${stage.left+offsetX-target.left}px ${stage.top+offsetY-target.top}px`,clipPath:entry.silhouette});
@@ -91,12 +91,18 @@ export function ProductTransition({flight,onNavigate,onFinish}:{flight:ProductFl
    const scrub:Animation[]=[];
    const tracked=(element:HTMLElement,keyframes:Keyframe[])=>{const animation=animate(element,keyframes,{duration:1000,easing:'linear',fill:'both'});animation.pause();animation.currentTime=0;scrub.push(animation);};
    tracked(source,path.map(frame=>({offset:frame.offset,transform:frame.source})));
-   tracked(exact,path.map(frame=>({offset:frame.offset,transform:frame.exact})));
-   // A narrow moving foil reflection replaces a full-face flash. Complementary
-   // masks reveal the new lighting without superimposing two complete labels.
-   tracked(source,[{opacity:1,offset:0},{opacity:1,offset:.78},{opacity:0,offset:.79},{opacity:0,offset:1}]);
-   tracked(exact,[{opacity:0,offset:0},{opacity:0,offset:.48},{opacity:1,offset:.5},{opacity:1,offset:1}]);
-   if(glint.current){tracked(glint.current,path.map(frame=>({offset:frame.offset,transform:frame.exact})));tracked(glint.current,[{opacity:0,offset:0},{opacity:0,offset:.5},{opacity:.72,offset:.6},{opacity:.72,offset:.7},{opacity:0,offset:.79},{opacity:0,offset:1}]);}
+   if(flight.canonical){
+    // The collection now carries the exact first-frame photograph. Keep that
+    // one print and silhouette visible throughout; there is no photographic
+    // substitution, wipe or morph to conceal. The room shares its box geometry.
+    tracked(source,[{opacity:1},{opacity:1}]);
+   }else{
+    tracked(exact,path.map(frame=>({offset:frame.offset,transform:frame.exact})));
+    // Older catalog cutouts still use the photographic lighting handoff.
+    tracked(source,[{opacity:1,offset:0},{opacity:1,offset:.78},{opacity:0,offset:.79},{opacity:0,offset:1}]);
+    tracked(exact,[{opacity:0,offset:0},{opacity:0,offset:.48},{opacity:1,offset:.5},{opacity:1,offset:1}]);
+    if(glint.current){tracked(glint.current,path.map(frame=>({offset:frame.offset,transform:frame.exact})));tracked(glint.current,[{opacity:0,offset:0},{opacity:0,offset:.5},{opacity:.72,offset:.6},{opacity:.72,offset:.7},{opacity:0,offset:.79},{opacity:0,offset:1}]);}
+   }
    tracked(scene,path.map(frame=>({offset:frame.offset,transform:frame.room})));
    tracked(scene,[{opacity:0,offset:0},{opacity:0,offset:.42},{opacity:.14,offset:.56},{opacity:.6,offset:.74},{opacity:1,offset:.94},{opacity:1,offset:1}]);
    tracked(label.current!,[{opacity:1,offset:0},{opacity:1,offset:.52},{opacity:0,offset:.88},{opacity:0,offset:1}]);
@@ -111,8 +117,7 @@ export function ProductTransition({flight,onNavigate,onFinish}:{flight:ProductFl
     if(preference.matches){finishWithoutMotion();return;}
     const progress=Math.max(0,Math.min(1,(window.scrollY-entryStart())/entryDistance()));
     scrub.forEach(animation=>{animation.currentTime=progress*1000;});root.current?.style.setProperty('--flight-progress',String(progress));
-    const reveal=smooth(Math.max(0,Math.min(1,(progress-.5)/.28)));
-    root.current?.style.setProperty('--flight-reveal',(-3+106*reveal)+'%');
+    if(!flight.canonical){const reveal=smooth(Math.max(0,Math.min(1,(progress-.5)/.28)));root.current?.style.setProperty('--flight-reveal',(-3+106*reveal)+'%');}
     if(progress>=.999)void finish();
    };
    skip.current=()=>{if(preference.matches){finishWithoutMotion();return;}window.scrollTo({top:entryStart()+entryDistance()+1,behavior:'instant'});readScroll();};
@@ -127,9 +132,13 @@ export function ProductTransition({flight,onNavigate,onFinish}:{flight:ProductFl
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[flight.id]);
  const sourceStyle:CSSProperties={...flight.rect,backgroundImage:`url("${flight.src}")`,backgroundSize:flight.photo?`${flight.photo.rect.width}px ${flight.photo.rect.height}px`:'100% 100%',backgroundPosition:flight.photo?`${flight.photo.rect.left-flight.rect.left}px ${flight.photo.rect.top-flight.rect.top}px`:'0 0',clipPath:flight.photo?.silhouette};
- return <div ref={root} className="vc-product-flight" data-phase="selecting" role="region" aria-label="כניסה לחוויית V-TECH">
+ const sourceBackdrop:ProductFlight['backdrop']=flight.backdrop??(!flight.canonical&&flight.photo?{src:flight.src,rect:flight.photo.rect}:undefined);
+ return <div ref={root} className="vc-product-flight" data-phase="selecting" data-canonical={flight.canonical?'true':'false'} role="region" aria-label="כניסה לחוויית V-TECH">
   <div ref={veil} className="vc-product-flight-ground"/>
-  {flight.photo&&<img ref={backdrop} className="vc-flight-backdrop" src={flight.src} alt="" style={flight.photo.rect}/>}
+  {sourceBackdrop&&<div ref={backdrop} className="vc-flight-backdrop" style={sourceBackdrop.rect} aria-hidden="true">
+   <img src={sourceBackdrop.src} alt=""/>
+   {sourceBackdrop.cleanSrc&&sourceBackdrop.cleanMask&&<img src={sourceBackdrop.cleanSrc} alt="" style={{maskImage:sourceBackdrop.cleanMask,maskComposite:'intersect',WebkitMaskComposite:'source-in'}}/>}
+  </div>}
   <img ref={room} className="vc-flight-room" src={media.poster} alt="" decoding="async"/>
   <div ref={cutout} className="vc-flight-cutout" style={sourceStyle}/><div ref={matched} className="vc-flight-matched"/><div ref={glint} className="vc-flight-glint" aria-hidden="true"/>
   <div ref={label} className="vc-flight-caption"><span>MITODERM · THE CLINIC EXPERIENCE</span><bdi dir="ltr">V-TECH SYSTEM</bdi><p>גללו כדי להיכנס לקליניקה <span aria-hidden="true">↓</span></p><button ref={enterButton} type="button" onClick={()=>skip.current()}>למעבר ישיר <span aria-hidden="true">←</span></button></div>

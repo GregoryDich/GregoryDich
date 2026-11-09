@@ -76,6 +76,19 @@ export function SiteExperience({children}:{children:ReactNode}){
      const measured=sourceBox.getBoundingClientRect(),photoRect=poster.getBoundingClientRect();
      if(measured.width>0&&measured.height>0){
       const rect={left:measured.left,top:measured.top,width:measured.width,height:measured.height};
+      const canonical=sourceBox.hasAttribute('data-canonical-pack')?sourceBox.dataset:undefined;
+      const sheetWidth=Number(canonical?.canonicalWidth),sheetHeight=Number(canonical?.canonicalHeight);
+      const boxLeft=Number(canonical?.canonicalLeft),boxTop=Number(canonical?.canonicalTop);
+      const boxWidth=Number(canonical?.canonicalBoxWidth),boxHeight=Number(canonical?.canonicalBoxHeight);
+      if(canonical?.canonicalSrc&&[sheetWidth,sheetHeight,boxWidth,boxHeight].every(value=>Number.isFinite(value)&&value>0)&&[boxLeft,boxTop].every(Number.isFinite)){
+       const scaleX=rect.width/boxWidth,scaleY=rect.height/boxHeight;
+       pendingHref.current=href;
+       setFlight({id:performance.now(),slug,href,src:canonical.canonicalSrc,rect,box:rect,canonical:true,
+        photo:{rect:{left:rect.left-boxLeft*scaleX,top:rect.top-boxTop*scaleY,width:sheetWidth*scaleX,height:sheetHeight*scaleY},silhouette:sourceBox.dataset.photoSilhouette??'inset(0)'},
+        backdrop:{src:poster.currentSrc||poster.src,rect:{left:photoRect.left,top:photoRect.top,width:photoRect.width,height:photoRect.height},cleanSrc:poster.dataset.cleanSrc,cleanMask:poster.dataset.cleanMask},
+       });
+       return;
+      }
       pendingHref.current=href;
       setFlight({id:performance.now(),slug,href,src:poster.currentSrc||poster.src,rect,box:rect,photo:{rect:{left:photoRect.left,top:photoRect.top,width:photoRect.width,height:photoRect.height},silhouette:sourceBox.dataset.photoSilhouette??'polygon(0% 2%,12% 0%,100% 1%,100% 99%,12% 100%,0% 97%)'}});
       return;
