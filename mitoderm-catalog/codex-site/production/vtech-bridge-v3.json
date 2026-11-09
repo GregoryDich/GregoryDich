@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-11-09T07:49:00.548Z",
+  "purpose": "V-TECH consultation to MITOPEN camera bridge",
+  "model": "seedance_2_5",
+  "max_jobs": 2,
+  "quoted_total_credits": 192,
+  "billing_note": "Preflight quotes are not receipts of charges or refunds.",
+  "jobs": [
+    {
+      "index": 0,
+      "job_id": "1cb82390-a093-46f6-8226-6af185717dd5",
+      "variant": "desktop",
+      "status": "completed",
+      "quoted_credits": 96,
+      "params": {
+        "model": "seedance_2_5",
+        "mode": "omni_reference",
+        "duration": 6,
+        "resolution": "1080p",
+        "generate_audio": false,
+        "bitrate_mode": "standard",
+        "count": 1,
+        "aspect_ratio": "16:9",
+        "prompt": "A single continuous photorealistic camera move in the exact same warm daylight aesthetic clinic. Start exactly on the supplied consultation frame: the same dark wavy-haired female professional in the white uniform with pink piping and pendant, the same mature female patient with short light brown bob, beige headband and blouse, the gold V-TECH box on the marble table. The patient calmly lowers her pointing hand. The camera slowly dollies toward the patient’s selected cheek and gently arcs to the supplied final close-up. The specialist’s gloved hand brings the exact champagne-gold MITOPEN from the end reference into the shot and holds it at the cheek, ending on the supplied end frame. Preserve both identities, ages, natural skin texture, fine lines, anatomy, outfit, clinic furniture, window light, instrument geometry and branding. Calm precise cinematic realism; seamless spatial continuity; no cuts, no wipes, no new objects, no text overlays, no dialogue or audio, no skin smoothing, no before/after transformation, no healing or hair growth, no blood or visible needle insertion. Do not turn the device into a syringe.",
+        "medias": [
+          {
+            "role": "start_image",
+            "value": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/a3505927-c46b-4c9f-a499-fad8e95b6c6e.webp"
+          },
+          {
+            "role": "end_image",
+            "value": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/e1675a82-692f-4cbf-bb4a-40e50fcd2d36.webp"
+          }
+        ]
+      },
+      "raw_result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_074817_1cb82390-a093-46f6-8226-6af185717dd5.mp4"
+    },
+    {
+      "index": 1,
+      "job_id": "6f070203-6292-45b4-8c57-087bab865642",
+      "variant": "mobile",
+      "status": "completed",
+      "quoted_credits": 96,
+      "params": {
+        "model": "seedance_2_5",
+        "mode": "omni_reference",
+        "duration": 6,
+        "resolution": "1080p",
+        "generate_audio": false,
+        "bitrate_mode": "standard",
+        "count": 1,
+        "aspect_ratio": "9:16",
+        "prompt": "A single continuous photorealistic camera move in the exact same warm daylight aesthetic clinic. Start exactly on the supplied consultation frame: the same dark wavy-haired female professional in the white uniform with pink piping and pendant, the same mature female patient with short light brown bob, beige headband and blouse, the gold V-TECH box on the marble table. The patient calmly lowers her pointing hand. The camera slowly dollies toward the patient’s selected cheek and gently arcs to the supplied final close-up. The specialist’s gloved hand brings the exact champagne-gold MITOPEN from the end reference into the shot and holds it at the cheek, ending on the supplied end frame. Preserve both identities, ages, natural skin texture, fine lines, anatomy, outfit, clinic furniture, window light, instrument geometry and branding. Calm precise cinematic realism; seamless spatial continuity; no cuts, no wipes, no new objects, no text overlays, no dialogue or audio, no skin smoothing, no before/after transformation, no healing or hair growth, no blood or visible needle insertion. Do not turn the device into a syringe. Portrait 9:16 composition. Keep the central cheek, MITOPEN and gloved hand readable in a natural portrait crop, preserving their geometry even where the instrument naturally leaves the frame; never stretch faces, bodies or objects. The end reference is 4:5: adapt its framing to 9:16 with a natural crop centered on the selected cheek and tool while preserving their geometry.",
+        "medias": [
+          {
+            "role": "start_image",
+            "value": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/82d8101c-cf11-4dc9-a045-8e1b8283bf08.webp"
+          },
+          {
+            "role": "end_image",
+            "value": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/25a7f24c-d69c-424b-8e1f-995aed5fd444.webp"
+          }
+        ]
+      },
+      "raw_result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_074827_6f070203-6292-45b4-8c57-087bab865642.mp4"
+    }
+  ],
+  "completed_at": "2026-11-09T07:56:08.676Z",
+  "outputs": [
+    {
+      "key": "intro_desktop",
+      "variant": "desktop",
+      "type": "intro",
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/dc6588ba-d274-434a-8829-27b0ac5f4083.mp4",
+      "media_id": "dc6588ba-d274-434a-8829-27b0ac5f4083",
+      "filename": "intro-desktop-seek.mp4",
+      "width": 1912,
+      "height": 1080,
+      "duration_seconds": 5.042,
+      "frames": 121,
+      "size_bytes": 4071549,
+      "crf": 21
+    },
+    {
+      "key": "intro_mobile",
+      "variant": "mobile",
+      "type": "intro",
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/83b1e1d4-baf7-4bb5-8fd9-d4c78959dc77.mp4",
+      "media_id": "83b1e1d4-baf7-4bb5-8fd9-d4c78959dc77",
+      "filename": "intro-mobile-seek.mp4",
+      "width": 406,
+      "height": 720,
+      "duration_seconds": 5.042,
+      "frames": 121,
+      "size_bytes": 783279,
+      "crf": 22
+    },
+    {
+      "key": "bridge_desktop",
+      "variant": "desktop",
+      "type": "bridge",
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/8856575a-0844-48f9-80bc-37217872e5b7.mp4",
+      "media_id": "8856575a-0844-48f9-80bc-37217872e5b7",
+      "filename": "bridge-desktop-seek.mp4",
+      "width": 1920,
+      "height": 1080,
+      "duration_seconds": 6.042,
+      "frames": 145,
+      "size_bytes": 4587060,
+      "crf": 21
+    },
+    {
+      "key": "bridge_mobile",
+      "variant": "mobile",
+      "type": "bridge",
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/71a0a880-65d0-4aeb-82cb-d8620cfcfe7c.mp4",
+      "media_id": "71a0a880-65d0-4aeb-82cb-d8620cfcfe7c",
+      "filename": "bridge-mobile-seek.mp4",
+      "width": 1080,
+      "height": 1920,
+      "duration_seconds": 6.042,
+      "frames": 145,
+      "size_bytes": 3709720,
+      "crf": 22
+    }
+  ],
+  "encoding": {
+    "codec": "h264",
+    "pixel_format": "yuv420p",
+    "fps": 24,
+    "keyframe_interval_frames": 6,
+    "keyframe_interval_seconds": 0.25,
+    "audio_streams": 0,
+    "faststart_verified": true,
+    "notes": "All source frames preserved; generated bridge has 145 frames (6.042s container duration) and existing intro has 121 frames (5.042s). Intro dimensions and temporal beginning preserved; no intro generation performed."
+  },
+  "visual_inspection": {
+    "method": "Decoded and viewed six samples per generated bridge at 0,1.2,2.4,3.6,4.8,5.9 seconds, both before and after H.264 conversion.",
+    "observations": [
+      "Both bridges move from consultation toward the selected cheek and MITOPEN close-up.",
+      "Patient lowers her pointing hand; specialist's gloved hand and champagne-gold device enter the frame.",
+      "Same character appearance, clothing, headband, chair and warm daylight are retained in inspected samples.",
+      "Portrait is a separate 1080x1920 generation; cheek and visible instrument are readable, with natural edge cropping.",
+      "No obvious cut, syringe substitution, blood or skin transformation in inspected samples."
+    ],
+    "limit": "Sample-based visual inspection, not a claim that every frame or clinical technique has been independently validated. The generated portrait is 9:16 while the supplied pen end reference is 4:5; subject/tool continuity is present but final framing is not pixel-identical. Match object-position and blend into the existing pen clip."
+  }
+}

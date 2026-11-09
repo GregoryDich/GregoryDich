@@ -7,7 +7,7 @@ import {LeadForm} from './LeadForm';
 import {ProductTransition,type ProductFlight} from './ProductTransition';
 import './product-flight.css';
 
-type Inquiry={productSlug:string;sourceBlock:string;comment:string};
+type Inquiry={productSlug:string;sourceBlock:string;comment:string;topic:string};
 
 export function SiteExperience({children}:{children:ReactNode}){
  const pathname=usePathname();
@@ -53,8 +53,11 @@ export function SiteExperience({children}:{children:ReactNode}){
    const href=anchor.getAttribute('href')??'';
    if(href==='#contact'){
     event.preventDefault();returnFocus.current=anchor;
-    const comments:Record<string,string>={training:'אשמח לקבל מידע על הדרכה.',protocol:'אשמח לקבל מידע על הפרוטוקול המקצועי.',cases:'אשמח לקבל מקרי טיפול מתועדים ומידע מקצועי על V-TECH.'};
-    setInquiry({productSlug:anchor.dataset.product??pageProduct?.slug??'unsure',sourceBlock:anchor.dataset.source??(pageProduct?'product-cta':'home-cta'),comment:comments[anchor.dataset.topic??'']??''});return;
+    const productSlug=anchor.dataset.product??pageProduct?.slug??'unsure';
+    const productName=products.find(product=>product.slug===productSlug)?.name??'MITODERM';
+    const topic=anchor.dataset.topic??'offer';
+    const comments:Record<string,string>={training:'אשמח לקבל מידע על הדרכה ושילוב '+productName+' בעבודה המקצועית.',protocol:'אשמח לקבל מידע על הפרוטוקול המקצועי של '+productName+'.',cases:'אשמח לקבל מקרי טיפול מתועדים ומידע מקצועי על '+productName+'.',demo:'אשמח לתאם היכרות מקצועית והדגמה של '+productName+'.'};
+    setInquiry({productSlug,sourceBlock:anchor.dataset.source??(pageProduct?'product-cta':'home-cta'),comment:comments[topic]??'',topic});return;
    }
    if(!href.startsWith('/products/'))return;
    const slug=href.slice('/products/'.length);
@@ -108,9 +111,10 @@ export function SiteExperience({children}:{children:ReactNode}){
   if(returnFocus.current?.isConnected)returnFocus.current.focus({preventScroll:true});
  };
  const selected=inquiry?products.find(product=>product.slug===inquiry.productSlug):null;
+ const inquiryTitles:Record<string,string>={offer:'הצעה מקצועית לקליניקה',training:'הדרכה וליווי מקצועי',protocol:'מידע על הפרוטוקול',cases:'מקרי טיפול ומידע מקצועי',demo:'היכרות והדגמה מקצועית'};
  return <><a className="mitoderm-skip" href="#main-content">דלגו לתוכן</a>{children}
   <dialog ref={dialog} className="inquiry-dialog" onCancel={event=>{event.preventDefault();close();}} onClose={()=>setInquiry(null)} onClick={event=>{if(event.target===event.currentTarget)close();}} aria-labelledby="inquiry-heading">
-   {inquiry&&<div className="inquiry-panel"><button className="inquiry-close" type="button" onClick={close} aria-label="סגירה">×</button><p className="inquiry-brand" dir="ltr">{selected?.name??'MITODERM'}</p><h2 id="inquiry-heading">מחיר, תנאים והדרכה</h2><p className="inquiry-intro">פרטים מקצועיים עבור הקליניקה שלכם.</p><LeadForm key={inquiry.productSlug+inquiry.sourceBlock} productSlug={inquiry.productSlug} sourceBlock={inquiry.sourceBlock} initialComment={inquiry.comment}/></div>}
+   {inquiry&&<div className="inquiry-panel"><button className="inquiry-close" type="button" onClick={close} aria-label="סגירה">×</button><p className="inquiry-brand" dir="ltr">{selected?.name??'MITODERM'}</p><h2 id="inquiry-heading">{inquiryTitles[inquiry.topic]??inquiryTitles.offer}</h2><p className="inquiry-intro">השאירו פרטים לשיחה על התאמה, מידע ותנאים מקצועיים.</p><LeadForm key={inquiry.productSlug+inquiry.sourceBlock+inquiry.topic} productSlug={inquiry.productSlug} sourceBlock={inquiry.sourceBlock} initialComment={inquiry.comment}/></div>}
   </dialog>
   {flight&&<ProductTransition flight={flight} onNavigate={openProduct} onFinish={finishFlight}/>}
  </>;

@@ -3,10 +3,11 @@
 .vts-story{position:relative;height:calc(var(--vts-length)*var(--vts-viewport,100svh));background:#08080a;color:#fff;isolation:isolate}
 .vts-stage{position:sticky;top:0;height:100svh;width:100%;overflow:hidden;background:#08080a;isolation:isolate;--vts-progress:0}
 .vts-scenes,.vts-scene,.vts-media,.vts-media picture,.vts-poster,.vts-video{position:absolute;inset:0;width:100%;height:100%}
-.vts-scene{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .24s ease,visibility .24s;z-index:0}
+.vts-scene{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s ease,visibility .35s;z-index:0}
 .vts-scene[data-active=true]{opacity:1;visibility:visible;pointer-events:auto;z-index:2}
 .vts-scene[data-outgoing=true]{visibility:visible;z-index:1}
 .vts-media{overflow:hidden;background:#d9d4ca}
+.vts-atmosphere{display:none;position:absolute;inset:-25px;background-size:cover;background-position:center;filter:blur(26px) brightness(.85);transform:scale(1.08);pointer-events:none}
 .vts-poster,.vts-video{display:block;object-fit:cover;object-position:50% 50%;max-width:none}
 .vts-video{opacity:0;transition:opacity .16s linear}
 .vts-video.is-painted{opacity:1}
@@ -91,3 +92,53 @@ html[data-product-transit] [data-vtech-hud]{opacity:0!important;pointer-events:n
  .vts-story{height:auto!important}.vts-stage{position:relative;height:auto;overflow:visible}.vts-scenes{position:relative;height:auto}.vts-scene{position:relative;height:auto;opacity:1;visibility:visible;transition:none}.vts-video{display:none}.vts-media{position:relative;inset:auto!important;width:100%!important;height:auto!important;aspect-ratio:16/9}.vts-caption{position:relative;inset:auto!important;width:auto!important;max-width:none;padding:30px 24px 45px}.vts-scene::after{display:none}.vts-toolbar{position:relative;inset:auto;padding:110px 24px 25px}.vts-bottom{position:relative;inset:auto;padding:20px 24px}.vts-progress,.vts-entry-target{display:none}
 }
 @media(max-width:860px){.vts-story[data-mode=linear] .vts-media{aspect-ratio:9/13}.vts-story[data-mode=linear] .vts-toolbar{padding-top:95px}.vts-story[data-mode=linear] .vts-media :is(.vts-poster,.vts-video){object-fit:contain}.vts-story[data-mode=linear] .vts-caption h1{font-size:36px}}
+
+/* The page navigation stays above the story; these controls choose a shot. */
+.vts-toolbar{top:153px;display:flex;justify-content:center;gap:0}
+.vts-toolbar{transition:top .28s ease}
+html[data-vtech-immersed=true] .vts-toolbar{top:64px}
+.vts-chapter-nav{gap:6px;max-width:720px;width:100%}
+.vts-chapter-nav button{font-size:12px;min-height:44px;padding:11px 16px;gap:9px}
+.vts-nav-number{font-size:11px}.vts-kicker{font-size:13px}
+.vts-disclosure{font-size:11px}.vts-counter>bdi{font-size:12px}
+.vts-story[data-mode=linear] .vts-toolbar{padding-top:158px;justify-content:center}
+.vts-story[data-mode=linear] .vts-scene{display:block;padding:0;scroll-margin-top:158px}
+@media(max-width:860px){
+ .vts-toolbar{top:137px;inset-inline:16px;display:block}
+ .vts-atmosphere{display:block}
+ html[data-vtech-immersed=true] .vts-toolbar{top:58px}
+ .vts-chapter-nav{gap:4px;max-width:none}
+ .vts-chapter-nav button{flex:1;min-width:0;min-height:44px;font-size:12px;padding:8px 3px;gap:0;border-radius:23px}
+ .vts-nav-number{display:none}.vts-nav-label{display:inline}
+ .vts-scene:not([data-kind=intro]){display:grid;grid-template-rows:minmax(0,1fr) auto;padding:192px 0 43px}
+ html[data-vtech-immersed=true] .vts-scene:not([data-kind=intro]){padding-top:112px}
+ .vts-scene:not([data-kind=intro]) .vts-media{position:relative;inset:auto;width:100%;height:100%;min-height:0;grid-row:1}
+ .vts-scene:not([data-kind=intro])::after{background:linear-gradient(180deg,#08080a 0,rgba(8,8,10,.96) 181px,transparent 192px)}
+ html[data-vtech-immersed=true] .vts-scene:not([data-kind=intro])::after{background:linear-gradient(180deg,#08080a 0,rgba(8,8,10,.96) 102px,transparent 112px)}
+ .vts-scene:not([data-kind=intro]) .vts-caption{position:relative;inset:auto;width:100%;max-width:none;grid-row:2;padding:15px 22px 9px}
+ .vts-caption h2{font-size:clamp(24px,6.4vw,30px);line-height:1.14}
+ .vts-kicker{font-size:12px;letter-spacing:.045em;margin-bottom:7px}
+ .vts-scene:not([data-kind=intro]) .vts-body{font-size:15px;line-height:1.5;margin-top:9px;max-width:none}
+ .vts-clinical-actions{margin-top:10px;gap:16px;min-height:44px}
+ .vts-play{font-size:12px;min-height:44px;padding:10px 15px}
+ .vts-clinical-actions>a{font-size:13px;min-height:44px;gap:13px}
+ .vts-fallback{font-size:12px}.vts-disclosure{font-size:11px}.vts-counter>bdi{font-size:11px}
+ .vts-bottom{bottom:14px;inset-inline:22px;gap:12px}
+ .vts-story[data-mode=linear] .vts-toolbar{padding-top:137px}
+ .vts-story[data-mode=linear] .vts-scene{display:block;padding:0;scroll-margin-top:145px}
+ .vts-story[data-mode=linear] .vts-scene .vts-media{height:auto;aspect-ratio:9/13}
+ .vts-story[data-mode=linear] .vts-scene .vts-caption{padding:28px 23px 45px;grid-row:auto}
+}
+@media(max-width:360px){.vts-chapter-nav button{font-size:11px}.vts-scene:not([data-kind=intro]) .vts-caption{padding-inline:18px}.vts-caption h2{font-size:23px}.vts-kicker{font-size:11px}.vts-bottom{inset-inline:18px;gap:8px}.vts-disclosure{font-size:10px}}
+@media(max-width:860px) and (max-height:560px){
+ .vts-toolbar{top:131px;display:block}.vts-chapter-nav{max-width:560px;margin:auto}.vts-nav-label{display:inline}.vts-chapter-nav button{flex:1}
+ .vts-scene:not([data-kind=intro]){display:block;padding:0}
+ .vts-scene:not([data-kind=intro]) .vts-media{position:absolute;inset:185px 47% 39px 0;width:auto;height:auto}
+ html[data-vtech-immersed=true] .vts-scene:not([data-kind=intro]){padding-top:0}
+ html[data-vtech-immersed=true] .vts-scene:not([data-kind=intro]) .vts-media{top:111px}
+ .vts-scene:not([data-kind=intro])::after{background:linear-gradient(180deg,#08080a 0,#08080a 174px,transparent 185px)}
+ .vts-scene:not([data-kind=intro]) .vts-caption{position:absolute;inset-inline-start:20px;inset-inline-end:auto;bottom:42px;width:42%;padding:0}
+ .vts-caption h2{font-size:22px}.vts-scene:not([data-kind=intro]) .vts-body{font-size:13px}.vts-kicker{font-size:11px}
+ .vts-story[data-mode=linear] .vts-scene .vts-media{position:relative;inset:auto;width:100%;height:auto}
+ .vts-story[data-mode=linear] .vts-scene .vts-caption{position:relative;inset:auto;width:100%;padding:28px 23px 45px}
+}

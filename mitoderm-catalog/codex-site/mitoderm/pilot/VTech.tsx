@@ -3,8 +3,23 @@
 import {useEffect,useState} from 'react';
 import {SiteHeader,SiteFooter} from '../shared';
 import {VTechStory} from './VTechStory';
-import {VTechCases,VTechOffer,VTechRelated} from './VTechDetails';
+import {VTechCases,VTechOffer,VTechTraining,VTechRelated} from './VTechDetails';
 import './vtech-cinema.css';
+
+const pageSections=[{id:'vtech-intro',label:'הטיפול'},{id:'vtech-results',label:'תוצאות'},{id:'vtech-kit',label:'הערכה'},{id:'vtech-training',label:'הדרכה'}];
+function SectionNavigation(){
+ const [active,setActive]=useState('vtech-intro');
+ useEffect(()=>{
+  const observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting)setActive(entry.target.id);},{rootMargin:'-20% 0px -65% 0px',threshold:0});
+  pageSections.forEach(({id})=>{const section=document.getElementById(id);if(section)observer.observe(section);});
+  return()=>observer.disconnect();
+ },[]);
+ return <nav className="vc-section-nav" aria-label="ניווט בעמוד V-TECH" data-vtech-hud="true">
+  <a className="vc-section-brand" dir="ltr" href="/" aria-label="V-TECH — חזרה לכל המוצרים">V-TECH <span aria-hidden="true">↗</span></a>
+  <div className="vc-section-links">{pageSections.map(item=><a key={item.id} href={'#'+item.id} aria-current={active===item.id?'location':undefined} onClick={item.id==='vtech-intro'?event=>{event.preventDefault();window.dispatchEvent(new CustomEvent('mitoderm:vtech-chapter',{detail:'vtech-consultation'}));}:undefined}>{item.label}</a>)}</div>
+  <a className="vc-section-inquiry" href="#contact" data-product="v-tech-system" data-source="vtech-section-nav">לקבלת מחיר <span aria-hidden="true">←</span></a>
+ </nav>;
+}
 
 function FloatingInquiry(){
  const [visible,setVisible]=useState(false);
@@ -17,7 +32,7 @@ function FloatingInquiry(){
  },[]);
  return <a className="vc-floating-inquiry" data-visible={visible} href="#contact" data-product="v-tech-system" data-source="vtech-mobile-sticky" tabIndex={visible?0:-1} aria-hidden={!visible}><bdi dir="ltr">V-TECH</bdi><span>לקבלת מחיר ←</span></a>;
 }
-export default function VTech(){return <div className="vtech-cinema"><SiteHeader/><main id="main-content">
+export default function VTech(){return <div className="vtech-cinema"><SiteHeader/><SectionNavigation/><main id="main-content">
  <VTechStory/>
- <VTechCases/><VTechOffer/><VTechRelated/>
+ <VTechCases/><VTechOffer/><VTechTraining/><VTechRelated/>
  </main><SiteFooter/><FloatingInquiry/></div>;}

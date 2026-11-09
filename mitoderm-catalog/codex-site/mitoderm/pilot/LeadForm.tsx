@@ -42,7 +42,7 @@ export function LeadForm({productSlug='unsure',sourceBlock='contact',initialComm
  }
  function fieldError(name:string){return fields[name]?<span className="lead-field-error" id={prefix+'-'+name+'-error'}>{name==='phone'?'בדקו את מספר הטלפון.':name==='privacyConsent'?'יש לאשר יצירת קשר בנוגע לפנייה.':'יש לבדוק את השדה.'}</span>:null;}
  if(status==='success')return <div className="lead-success" role="status" tabIndex={-1}>
-  <span className="lead-success-mark" aria-hidden="true">✓</span><h3>הפנייה התקבלה</h3><p>תודה שפניתם ל-MITODERM.</p><p className="lead-receipt">מספר פנייה: <bdi dir="ltr">{receipt}</bdi></p><a className="lead-whatsapp" href={whatsapp} target="_blank" rel="noopener noreferrer">להמשך שיחה ב-WhatsApp <span aria-hidden="true">↗</span></a>
+  <span className="lead-success-mark" aria-hidden="true">✓</span><h3>הפנייה התקבלה</h3><p>תודה שפניתם ל-MITODERM.</p>{selected&&<p>הבקשה נשמרה בנושא <bdi dir="ltr">{selected.name}</bdi>.</p>}<p>לשיחה ישירה עם הצוות אפשר להמשיך ב-WhatsApp.</p><p className="lead-receipt">מספר פנייה: <bdi dir="ltr">{receipt}</bdi></p><a className="lead-whatsapp" href={whatsapp} target="_blank" rel="noopener noreferrer">להמשך שיחה ב-WhatsApp <span aria-hidden="true">↗</span></a>
  </div>;
  return <form className="lead-form" ref={formRef} onSubmit={submit}>
   <div className="lead-fields">
@@ -55,7 +55,7 @@ export function LeadForm({productSlug='unsure',sourceBlock='contact',initialComm
   <div className="lead-honeypot" aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off" value={values.website} onChange={event=>update('website',event.target.value)}/></label></div>
   <label className="lead-consent"><input type="checkbox" name="privacyConsent" checked={values.privacyConsent} onChange={event=>update('privacyConsent',event.target.checked)} required/><span>אני מאשר/ת ליצור איתי קשר בנוגע לפנייה זו, בהתאם ל<a href="/privacy" target="_blank" rel="noopener noreferrer">מדיניות הפרטיות</a>.</span></label>
   {fieldError('privacyConsent')}
-  <p className="lead-professional-note">מיועד לאנשי מקצוע. רכישה מקצועית כפופה לאימות מתאים.</p>
+  <p className="lead-professional-note">מיועד לאנשי מקצוע. לפרטים על תנאי רכישה והדרכה פנו לצוות MITODERM.</p>
   {status==='error'&&<p className="lead-error" role="alert">{message}</p>}
   <button type="submit" className="lead-submit" disabled={status==='sending'} aria-busy={status==='sending'}>{status==='sending'?'שולחים את הפנייה…':'שליחת פנייה'}<span aria-hidden="true">{status==='sending'?'…':'←'}</span></button>
   <a className="lead-whatsapp" href={whatsapp} target="_blank" rel="noopener noreferrer">לפנייה ב-WhatsApp <span aria-hidden="true">↗</span></a>
