@@ -1,0 +1,181 @@
+{
+  "status": "encoded_and_verified_for_deployment",
+  "updated": "2026-11-08",
+  "website": "https://mitoderm-v2.higgsfield.app",
+  "website_id": "2871bc92-c197-4308-8c10-4c7bb0d53dcb",
+  "product": "V-TECH SYSTEM",
+  "opening": "All13-product collection -> selected V-TECH package -> camera withdraws into consultation",
+  "model": {
+    "keyframes": "gpt_image_2_6",
+    "video": "kling4_0",
+    "output": "1080p"
+  },
+  "shots": [
+    {
+      "id": "intro-desktop",
+      "job_id": "96cacb21-d3f7-4440-8e79-1dabf1a00af9",
+      "seconds": 5,
+      "aspect": "16:9",
+      "mode": "scroll-scrub",
+      "clip": "/assets/world/vtech-intro.mp4",
+      "poster": "/assets/world/vtech-intro-poster.webp",
+      "end_still": "/assets/world/vtech-consultation.webp"
+    },
+    {
+      "id": "intro-mobile",
+      "job_id": "585a3256-1787-400d-98c0-2ffcbb580afc",
+      "seconds": 5,
+      "aspect": "9:16",
+      "mode": "scroll-scrub",
+      "clip": "/assets/world/vtech-intro-mobile.mp4",
+      "poster": "/assets/world/vtech-intro-mobile-poster.webp",
+      "end_still": "/assets/world/vtech-consultation-mobile.webp"
+    },
+    {
+      "id": "pen",
+      "job_id": "b1c0ffa0-d7f0-4a8c-93d9-d2c69731cb18",
+      "seconds": 4,
+      "mode": "forward-only",
+      "clip": "/assets/world/vtech-pen.mp4",
+      "mobileClip": "/assets/world/vtech-pen-mobile.mp4",
+      "poster": "/assets/world/vtech-pen-poster.webp",
+      "mobilePoster": "/assets/world/vtech-pen-mobile-poster.webp"
+    },
+    {
+      "id": "serum",
+      "job_id": "301c0ead-66ef-465d-a6fc-1e8d56533e72",
+      "seconds": 4,
+      "mode": "forward-only",
+      "clip": "/assets/world/vtech-serum.mp4",
+      "mobileClip": "/assets/world/vtech-serum-mobile.mp4",
+      "poster": "/assets/world/vtech-serum-poster.webp",
+      "mobilePoster": "/assets/world/vtech-serum-mobile-poster.webp"
+    },
+    {
+      "id": "mask",
+      "job_id": "33091537-b3c1-43d5-906a-2c25f7ee6def",
+      "seconds": 4,
+      "mode": "forward-only",
+      "clip": "/assets/world/vtech-mask.mp4",
+      "mobileClip": "/assets/world/vtech-mask-mobile.mp4",
+      "poster": "/assets/world/vtech-mask-poster.webp",
+      "mobilePoster": "/assets/world/vtech-mask-mobile-poster.webp"
+    }
+  ],
+  "kit": {
+    "job_id": "2e6713bd-a273-4132-9fb9-a48e49ddc5b8",
+    "image": "/assets/world/vtech-kit.webp",
+    "serum_count": 5,
+    "gel_mask_count": 5,
+    "visually_counted": true
+  },
+  "discarded": {
+    "serum_video_job_id": "947330cf-0665-4c6d-b818-b5ccd72452e0",
+    "reason": "Visible incorrect threaded vial opening. Replaced with corrected smooth crimp-rim source and new clip."
+  },
+  "cost": {
+    "starting_credits": 2979,
+    "verified_remaining_credits": 2869.75,
+    "verified_spend": 109.25,
+    "approved_ceiling": 500,
+    "scope": "9 image jobs and6 video jobs, including one discarded serum video and its source correction"
+  },
+  "integration": {
+    "clinical": "Forward-only playback after35% visibility; no reverse procedure, no loop.",
+    "reduced_motion": "Full still/HTML experience, no clinical autoplay fetch.",
+    "before_after": "No synthetic proof; only approved cases tied to V-TECH.",
+    "mobile": "Separate portrait intro, clinically framed4:5 crops for procedure clips."
+  },
+  "source_material": [
+    "User-supplied actress/model reference",
+    "Original product packaging from MITODERM source repository and catalog",
+    "MITODERM-Protocols-HE.pdf pages2-3",
+    "Figma catalog frames824:94,824:112,824:114"
+  ],
+  "patient_provenance": "Generated illustrative patient, not a documented clinical case.",
+  "verification": {
+    "clip_count": 8,
+    "asset_count": 19,
+    "desktop_bytes": 17754805,
+    "mobile_bytes": 5291229,
+    "total_selected_asset_bytes": 24431426,
+    "exact_encoded_posters": true,
+    "visual_boundary_review": true,
+    "source_ui_contract": "passed",
+    "platform_build": "pending_deploy",
+    "videos": [
+      {
+        "file": "assets/world/vtech-intro.mp4",
+        "bytes": 4433181,
+        "width": 1912,
+        "height": 1080,
+        "seconds": 5.042,
+        "silent": true,
+        "faststart": true
+      },
+      {
+        "file": "assets/world/vtech-intro-mobile.mp4",
+        "bytes": 1025801,
+        "width": 406,
+        "height": 720,
+        "seconds": 5.042,
+        "silent": true,
+        "faststart": true
+      },
+      {
+        "file": "assets/world/vtech-pen.mp4",
+        "bytes": 4041970,
+        "width": 1912,
+        "height": 1080,
+        "seconds": 4.042,
+        "silent": true,
+        "faststart": true
+      },
+      {
+        "file": "assets/world/vtech-pen-mobile.mp4",
+        "bytes": 1343814,
+        "width": 576,
+        "height": 720,
+        "seconds": 4.042,
+        "silent": true,
+        "faststart": true
+      },
+      {
+        "file": "assets/world/vtech-serum.mp4",
+        "bytes": 4533907,
+        "width": 1912,
+        "height": 1080,
+        "seconds": 4.042,
+        "silent": true,
+        "faststart": true
+      },
+      {
+        "file": "assets/world/vtech-serum-mobile.mp4",
+        "bytes": 1527728,
+        "width": 576,
+        "height": 720,
+        "seconds": 4.042,
+        "silent": true,
+        "faststart": true
+      },
+      {
+        "file": "assets/world/vtech-mask.mp4",
+        "bytes": 4745747,
+        "width": 1912,
+        "height": 1080,
+        "seconds": 4.042,
+        "silent": true,
+        "faststart": true
+      },
+      {
+        "file": "assets/world/vtech-mask-mobile.mp4",
+        "bytes": 1393886,
+        "width": 576,
+        "height": 720,
+        "seconds": 4.042,
+        "silent": true,
+        "faststart": true
+      }
+    ]
+  }
+}

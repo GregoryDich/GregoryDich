@@ -1,0 +1,280 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "e5f9bd3b-dfd2-4181-8fba-dd6226f739fa",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "mitoderm_lead_rate_config": {
+      "name": "mitoderm_lead_rate_config",
+      "columns": {
+        "singleton": {
+          "name": "singleton",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "salt": {
+          "name": "salt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "mitoderm_lead_rate_config_singleton": {
+          "name": "mitoderm_lead_rate_config_singleton",
+          "value": "\"mitoderm_lead_rate_config\".\"singleton\" = 1"
+        },
+        "mitoderm_lead_rate_config_salt_length": {
+          "name": "mitoderm_lead_rate_config_salt_length",
+          "value": "length(\"mitoderm_lead_rate_config\".\"salt\") = 64"
+        }
+      }
+    },
+    "mitoderm_lead_rate_limits": {
+      "name": "mitoderm_lead_rate_limits",
+      "columns": {
+        "bucket_key": {
+          "name": "bucket_key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "hits": {
+          "name": "hits",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "mitoderm_lead_rate_limits_expiry": {
+          "name": "mitoderm_lead_rate_limits_expiry",
+          "columns": [
+            "expires_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "mitoderm_lead_rate_limits_hits": {
+          "name": "mitoderm_lead_rate_limits_hits",
+          "value": "\"mitoderm_lead_rate_limits\".\"hits\" > 0"
+        }
+      }
+    },
+    "mitoderm_leads": {
+      "name": "mitoderm_leads",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "payload_hash": {
+          "name": "payload_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "profession": {
+          "name": "profession",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "product_slug": {
+          "name": "product_slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "comment": {
+          "name": "comment",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "locale": {
+          "name": "locale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'he'"
+        },
+        "source_block": {
+          "name": "source_block",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "privacy_consent": {
+          "name": "privacy_consent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "privacy_version": {
+          "name": "privacy_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'new'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "mitoderm_leads_request_id_unique": {
+          "name": "mitoderm_leads_request_id_unique",
+          "columns": [
+            "request_id"
+          ],
+          "isUnique": true
+        },
+        "mitoderm_leads_created_at": {
+          "name": "mitoderm_leads_created_at",
+          "columns": [
+            "\"created_at\" desc"
+          ],
+          "isUnique": false
+        },
+        "mitoderm_leads_status_created_at": {
+          "name": "mitoderm_leads_status_created_at",
+          "columns": [
+            "status",
+            "\"created_at\" desc"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "mitoderm_leads_payload_hash_length": {
+          "name": "mitoderm_leads_payload_hash_length",
+          "value": "length(\"mitoderm_leads\".\"payload_hash\") = 64"
+        },
+        "mitoderm_leads_name_length": {
+          "name": "mitoderm_leads_name_length",
+          "value": "length(\"mitoderm_leads\".\"name\") BETWEEN 2 AND 100"
+        },
+        "mitoderm_leads_phone_length": {
+          "name": "mitoderm_leads_phone_length",
+          "value": "length(\"mitoderm_leads\".\"phone\") BETWEEN 9 AND 16"
+        },
+        "mitoderm_leads_profession": {
+          "name": "mitoderm_leads_profession",
+          "value": "\"mitoderm_leads\".\"profession\" IN ('cosmetologist', 'doctor', 'nurse', 'clinic_owner', 'other')"
+        },
+        "mitoderm_leads_product_slug_length": {
+          "name": "mitoderm_leads_product_slug_length",
+          "value": "length(\"mitoderm_leads\".\"product_slug\") BETWEEN 1 AND 64"
+        },
+        "mitoderm_leads_comment_length": {
+          "name": "mitoderm_leads_comment_length",
+          "value": "\"mitoderm_leads\".\"comment\" IS NULL OR length(\"mitoderm_leads\".\"comment\") <= 1000"
+        },
+        "mitoderm_leads_locale": {
+          "name": "mitoderm_leads_locale",
+          "value": "\"mitoderm_leads\".\"locale\" IN ('he', 'ru', 'en')"
+        },
+        "mitoderm_leads_source_block_length": {
+          "name": "mitoderm_leads_source_block_length",
+          "value": "length(\"mitoderm_leads\".\"source_block\") BETWEEN 1 AND 64"
+        },
+        "mitoderm_leads_privacy_consent": {
+          "name": "mitoderm_leads_privacy_consent",
+          "value": "\"mitoderm_leads\".\"privacy_consent\" = 1"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {
+      "mitoderm_leads_created_at": {
+        "columns": {
+          "\"created_at\" desc": {
+            "isExpression": true
+          }
+        }
+      },
+      "mitoderm_leads_status_created_at": {
+        "columns": {
+          "\"created_at\" desc": {
+            "isExpression": true
+          }
+        }
+      }
+    }
+  }
+}

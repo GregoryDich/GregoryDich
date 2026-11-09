@@ -1,0 +1,93 @@
+{
+  "cell-renew-1-5": {
+    "src": "/assets/products/cell-renew-1-5.webp",
+    "width": 311,
+    "height": 1012,
+    "maxWidth": 138.395,
+    "source": "assets/Cell RENEW 1.5% Biospicule(2).png"
+  },
+  "micro-boost-10": {
+    "src": "/assets/products/micro-boost-10.webp",
+    "width": 386,
+    "height": 1253,
+    "maxWidth": 171.77,
+    "source": "assets/Microboost 10% biospicule(1).png"
+  },
+  "cellular-age-defense-2-5": {
+    "src": "/assets/products/cellular-age-defense-2-5.webp",
+    "width": 309,
+    "height": 1023,
+    "maxWidth": 137.505,
+    "source": "assets/Cellular Defense 2.5% Biospicule(3).png"
+  },
+  "derma-recovery-cream": {
+    "src": "/assets/products/derma-recovery-cream.webp",
+    "width": 688,
+    "height": 946,
+    "maxWidth": 306.16,
+    "source": "assets/Derma recovery cream Biospicule(1).png"
+  },
+  "exosignal-hair": {
+    "src": "/assets/products/exosignal-hair.webp",
+    "width": 1245,
+    "height": 819,
+    "maxWidth": 480,
+    "source": "assets/Exosignal Hair photo(20260829-203630).png"
+  },
+  "mitopen": {
+    "src": "/assets/products/mitopen.webp",
+    "width": 466,
+    "height": 1521,
+    "maxWidth": 207.37,
+    "source": "assets/Mitopen 2(20260829-203631).png"
+  },
+  "v-tech-system": {
+    "src": "/assets/products/v-tech-system.webp",
+    "width": 513,
+    "height": 875,
+    "maxWidth": 228.285,
+    "source": "actual V-TECH packshot cropped from user-provided Screenshot 2025-05-09 at 17_LE_upscale_balanced_x4 (10).png"
+  },
+  "exosignal-spray": {
+    "src": "/assets/products/exosignal-spray.webp",
+    "width": 195,
+    "height": 306,
+    "maxWidth": 86.775,
+    "source": "official MITODERM EXOSIGNAL SPRAY preview"
+  },
+  "exotech-gel": {
+    "src": "/assets/products/exotech-gel.webp",
+    "width": 696,
+    "height": 931,
+    "maxWidth": 309.72,
+    "source": "lossless conversion of user-provided exotech-gel-produktbilde.psd"
+  },
+  "mitoscan": {
+    "src": "/assets/products/mitoscan.webp",
+    "width": 340,
+    "height": 288,
+    "maxWidth": 151.3,
+    "source": "crop of user-supplied original MITODERM lineup; no invented packaging"
+  },
+  "exocell-mask": {
+    "src": "/assets/products/exocell-mask.webp",
+    "width": 428,
+    "height": 331,
+    "maxWidth": 190.46,
+    "source": "crop of user-supplied original MITODERM lineup; no invented packaging"
+  },
+  "exo-nad": {
+    "src": "/assets/products/exo-nad.webp",
+    "width": 303,
+    "height": 332,
+    "maxWidth": 134.835,
+    "source": "crop of user-supplied original MITODERM lineup; no invented packaging"
+  },
+  "mitotech-cell-booster": {
+    "src": "/assets/products/mitotech-cell-booster.webp",
+    "width": 1207,
+    "height": 916,
+    "maxWidth": 480,
+    "source": "approved MITOTECH Blender render from this project, actual package crop"
+  }
+}

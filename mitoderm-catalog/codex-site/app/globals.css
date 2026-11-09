@@ -1,0 +1,26 @@
+/* Original MITODERM styling without the former host's app UI packages. */
+@layer reset;
+@import '../mitoderm/mitoderm.css';
+@import '../mitoderm/pilot/pilot.css';
+@import '../components/scroll-scrub/scroll-scrub.css';
+@import '../mitoderm/product-story.css';
+@import '../mitoderm/pilot/product-flight.css';
+@import '../mitoderm/pilot/home-cinema.css';
+@import '../mitoderm/pilot/vtech-cinema.css';
+
+/* Low-priority normalization retains the original preflight baseline. */
+@layer reset {
+ *,::before,::after {box-sizing:border-box;border:0 solid currentColor;}
+ html {line-height:1.5;-webkit-text-size-adjust:100%;tab-size:4;}
+ body,h1,h2,h3,h4,h5,h6,p,figure,blockquote,dl,dd,ul,ol {margin:0;}
+ h1,h2,h3,h4,h5,h6 {font-size:inherit;font-weight:inherit;}
+ ul,ol {padding:0;list-style:none;}
+ a {color:inherit;text-decoration:inherit;}
+ button,input,optgroup,select,textarea {font:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;background:transparent;border-radius:0;}
+ button,input:where([type='button'],[type='reset'],[type='submit']) {appearance:button;}
+ button:not(:disabled),summary {cursor:pointer;}
+ img,svg,video,canvas {display:block;vertical-align:middle;}
+ img,video {max-width:100%;height:auto;}
+ table {text-indent:0;border-collapse:collapse;}
+ [hidden]:where(:not([hidden='until-found'])) {display:none!important;}
+}
