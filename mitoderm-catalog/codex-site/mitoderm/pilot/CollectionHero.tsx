@@ -109,7 +109,6 @@ function PhotoFrame({variant, products, video, showVideo, onInspect}: {
               height:`${box.height / spot.height * 100}%`,
             }}
           />}
-          <span className="mc-photo-marker" aria-hidden="true">{product.number}</span>
           <span className="mc-photo-tooltip" aria-hidden="true"><bdi dir="ltr">{product.name}</bdi><span>לפרטי המוצר ←</span></span>
         </a>;
       })}

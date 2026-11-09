@@ -1,7 +1,6 @@
-import {mediaUrl} from '../media';
 import {useRef,useState,type PointerEvent} from 'react';
 import {ProductImage} from '../shared';
-import {contact,productHref} from '../data';
+import {productHref} from '../data';
 import {vtechCases} from './case-data';
 
 const approvedCases=vtechCases.filter(item=>item.publicationApproved&&item.sourceVerified&&item.product==='v-tech-system');
@@ -12,24 +11,27 @@ const related=[
  {slug:'exotech-gel',name:'EXOTECH GEL',role:'טיפוח ביתי משלים. ההתאמה נעשית בנפרד מתוכנית העבודה עם V-TECH.',group:'care'},
  {slug:'micro-boost-10',name:'MICRO BOOST 10%',role:'מערכת BIOSPICULE מקצועית לפרוטוקול נוסף. אינה חלק מהערכה או מרצף ההמחשה שמעל.',group:'alternative'}
 ];
-export function VTechCases(){
+export function VTechEvidencePanel(){
  const [index,setIndex]=useState(0);
  const touch=useRef<{x:number;y:number}|null>(null);
- function go(step:number){setIndex(current=>(current+step+approvedCases.length)%approvedCases.length);}
+ function go(step:number){if(approvedCases.length>1)setIndex(current=>(current+step+approvedCases.length)%approvedCases.length);}
  function pointerUp(event:PointerEvent<HTMLElement>){
   if(!touch.current)return;const dx=event.clientX-touch.current.x,dy=event.clientY-touch.current.y;
   touch.current=null;if(Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy)*1.5)go(dx>0?1:-1);
  }
- if(!approvedCases.length)return <section id="vtech-results" className="vc-results vc-results-request" aria-labelledby="vc-results-title">
-  <div className="vc-results-intro"><p className="vc-section-eyebrow">מההמחשה להחלטה מקצועית</p><h2 id="vc-results-title">תיעוד ותיאום ציפיות</h2><p>מראה הקמטוטים ומרקם העור הם הבקשה בסיפור. כדי להעריך תוצאה, בוחנים מקרה אמיתי עם נקודת התחלה, תוכנית עבודה וזמן הערכה מוגדר.</p></div>
-  <div className="vc-evidence-grid"><article><span aria-hidden="true">01</span><h3>נקודת ההתחלה</h3><p>בקשת המטופלת, מצב העור ואזור העבודה לפני תחילת התוכנית.</p></article><article><span aria-hidden="true">02</span><h3>תוכנית העבודה</h3><p>המוצרים והפעולות שנבחרו, מספר המפגשים וההקשר המקצועי.</p></article><article><span aria-hidden="true">03</span><h3>תנאי ההשוואה</h3><p>מועד התיעוד, זווית וצילום בתנאים דומים, כדי להבין מה באמת מוצג.</p></article></div>
-  <div className="vc-case-request"><div><h3>נבדוק מה רלוונטי לקליניקה שלכם</h3><p>בקשו מהצוות תיעוד זמין ופרטים על יישום V-TECH. השיחה מאפשרת לבחון את ההתאמה והציפיות לפני בחירת תוכנית.</p><p className="vc-case-availability">בעמוד מוצגת המחשת טיפול. תמונות לפני ואחרי מאושרות לפרסום אינן מוצגות כאן בשלב זה.</p></div><a href="#contact" data-product="v-tech-system" data-source="vtech-case-request" data-topic="cases">לבקשת תיעוד ופרטים <span aria-hidden="true">←</span></a></div>
- </section>;
+ if(!approvedCases.length)return <div className="vc-story-evidence-panel" data-vtech-hud="true">
+  <p className="vc-story-panel-kicker"><bdi dir="ltr">V-TECH</bdi> · המבט המקצועי</p>
+  <h2 id="vtech-results-title" tabIndex={-1}>רוצים לראות<br/>את התמונה המלאה?</h2>
+  <p className="vc-story-panel-body">שאלו על תיעוד מקרים ועל תוכנית העבודה עם <bdi dir="ltr">V-TECH</bdi>, כדי לבחון התאמה לקליניקה שלכם.</p>
+  <ul className="vc-story-evidence-facts" aria-label="מה בוחנים בתיעוד"><li>נקודת ההתחלה</li><li>תוכנית העבודה</li><li>מועד ההערכה</li></ul>
+  <a className="vc-story-panel-cta" href="#contact" data-product="v-tech-system" data-source="vtech-case-request" data-topic="cases">לבירור תיעוד והתאמה <span aria-hidden="true">←</span></a>
+  <p className="vc-story-panel-note">הסרטון הוא המחשה שנוצרה באמצעות AI, ולא תיעוד של תוצאה.</p>
+ </div>;
  const item=approvedCases[index];
- return <section id="vtech-results" className="vc-results" aria-labelledby="vc-results-title">
-  <div className="vc-results-intro"><h2 id="vc-results-title">מקרים מהקליניקה</h2><p>אותו אזור, תיעוד לפני ואחרי, ופרטי התוכנית.</p></div>
+ return <div className="vc-story-evidence-panel vc-story-evidence-approved" data-vtech-hud="true">
+  <div className="vc-story-case-heading"><p className="vc-story-panel-kicker"><bdi dir="ltr">V-TECH</bdi> · תיעוד מאושר</p><h2 id="vtech-results-title" tabIndex={-1}>מקרים מהקליניקה</h2></div>
   <div className="vc-case-carousel" role="region" aria-roledescription="קרוסלה" aria-label="מקרי טיפול ב-V-TECH" tabIndex={0}
-   onKeyDown={event=>{if(event.key==='ArrowLeft'){event.preventDefault();go(1);}if(event.key==='ArrowRight'){event.preventDefault();go(-1);}}}
+   onKeyDown={event=>{if(event.target!==event.currentTarget)return;if(event.key==='ArrowLeft'){event.preventDefault();go(1);}if(event.key==='ArrowRight'){event.preventDefault();go(-1);}}}
    onPointerDown={event=>{if(event.target instanceof Element&&event.target.closest('button,a'))return;touch.current={x:event.clientX,y:event.clientY};}}
    onPointerUp={pointerUp} onPointerCancel={()=>{touch.current=null;}}>
    <article className="vc-case" aria-label={item.title} aria-roledescription="שקופית">
@@ -38,22 +40,20 @@ export function VTechCases(){
    </article>
    {approvedCases.length>1&&<><button className="vc-case-arrow vc-case-prev" type="button" onClick={()=>go(-1)} aria-label="המקרה הקודם">›</button><button className="vc-case-arrow vc-case-next" type="button" onClick={()=>go(1)} aria-label="המקרה הבא">‹</button><div className="vc-case-dots" aria-label="בחירת מקרה">{approvedCases.map((entry,i)=><button type="button" key={entry.id} aria-label={'מקרה '+(i+1)} aria-current={i===index?'true':undefined} onClick={()=>setIndex(i)}/>)}</div></>}
   </div>
- </section>;
+  <div className="vc-story-case-footer"><a className="vc-story-panel-cta" href="#contact" data-product="v-tech-system" data-source="vtech-case-request" data-topic="cases">לבירור תיעוד והתאמה <span aria-hidden="true">←</span></a><p className="vc-story-panel-note">סרטון הרקע הוא המחשת AI. תמונות המקרים מוצגות בנפרד עם פרטי התוכנית.</p></div>
+ </div>;
 }
-export function VTechOffer(){return <section id="vtech-kit" className="vc-offer" aria-labelledby="vc-offer-title">
- <div className="vc-kit-card"><div className="vc-kit-top"><h3>מה בערכה</h3><bdi dir="ltr">V-TECH SYSTEM</bdi></div>
-  <img className="vc-kit-image" src={mediaUrl('/assets/world/vtech-kit.webp')} alt="ערכת V-TECH: חמש אמפולות סרום וחמישה שקיקי מסכת ג׳ל" width="1800" height="1200" loading="lazy" decoding="async"/>
-  <dl className="vc-kit-counts"><div><dt><bdi dir="ltr">5 × 5 ml</bdi></dt><dd><bdi dir="ltr">V-TECH SERUM</bdi><span>אמפולות סרום</span></dd></div><div><dt><bdi dir="ltr">5 × 5 ml</bdi></dt><dd><bdi dir="ltr">V-TECH GEL MASK</bdi><span>שקיקי מסכת ג׳ל</span></dd></div></dl>
-  <p className="vc-kit-separate">המכשור והמוצרים המשלימים נבחרים בנפרד מהערכה.</p>
+export function VTechOfferPanel({staticProduct=false}:{staticProduct?:boolean}){return <div className="vc-story-offer-panel" data-vtech-hud="true">
+ <div className="vc-story-kit-target" data-kit-product-target="true" aria-hidden="true">{staticProduct&&<ProductImage slug="v-tech-system" className="vc-story-kit-fallback"/>}</div>
+ <div className="vc-story-offer-copy">
+  <p className="vc-story-panel-kicker"><bdi dir="ltr">V-TECH SYSTEM</bdi> · הערכה המקצועית</p>
+  <h2 id="vtech-kit-title" tabIndex={-1}>הכניסו את <bdi dir="ltr">V-TECH</bdi><br/>לקליניקה שלכם</h2>
+  <dl className="vc-story-kit-contents"><div><dt><bdi dir="ltr">5 × 5 ml</bdi></dt><dd><bdi dir="ltr">V-TECH SERUM</bdi><span>אמפולות סרום</span></dd></div><div><dt><bdi dir="ltr">5 × 5 ml</bdi></dt><dd><bdi dir="ltr">V-TECH GEL MASK</bdi><span>שקיקי מסכת ג׳ל</span></dd></div></dl>
+  <p className="vc-story-kit-separate">המכשור והמוצרים המשלימים אינם כלולים בערכה.</p>
+  <div className="vc-story-offer-actions"><a className="vc-story-panel-cta" href="#contact" data-product="v-tech-system" data-source="vtech-kit">לקבלת מחיר <span aria-hidden="true">←</span></a><a className="vc-story-panel-secondary" href="#contact" data-product="v-tech-system" data-source="vtech-kit-training" data-topic="training">לתיאום הדרכה <span aria-hidden="true">↗</span></a></div>
+  <p className="vc-story-panel-note">לשימוש מקצועי. התאמה, תנאי רכישה והדרכה מול צוות <bdi dir="ltr">MITODERM</bdi>.</p>
  </div>
- <div className="vc-offer-copy"><h2 id="vc-offer-title">הכניסו את <bdi dir="ltr">V-TECH</bdi><br/>לקליניקה שלכם</h2><p>הכירו את המערכת, בדקו התאמה לעבודה שלכם וקבלו תנאים מקצועיים מהצוות.</p>
-  <dl className="vc-decision-facts"><div><dt>אזורי עבודה</dt><dd>פנים, צוואר ומחשוף, לפי התאמה מקצועית.</dd></div><div><dt>המערכת</dt><dd>סרום ומסכת ג׳ל במסגרת פרוטוקול מקצועי. בהמחשה מתמקדים בלחי.</dd></div><div><dt>לפני שמתחילים</dt><dd>מבררים הכשרה, פרוטוקול עדכני ואפשרויות הדרכה עם צוות MITODERM.</dd></div></dl>
-  <div className="vc-offer-actions"><a className="vc-offer-price" href="#contact" data-product="v-tech-system" data-source="vtech-kit">לקבלת מחיר <span aria-hidden="true">←</span></a><a className="vc-offer-training" href="#contact" data-product="v-tech-system" data-source="vtech-kit-training" data-topic="training">לתיאום הדרכה <span aria-hidden="true">↗</span></a></div>
-  <p className="vc-professional-note">לשימוש מקצועי. לפרטים על התאמה, תנאי רכישה והדרכה פנו לצוות MITODERM.</p>
-  <details className="vc-formula"><summary>מרכיבי המערכת <span aria-hidden="true">+</span></summary><div><h3>הסרום</h3><p>אקסוזומים סינתטיים, PDRN, פפטידים ביומימטיים ותמצית תאי גזע של תפוח, לפי תיאור המוצר בקטלוג.</p><h3>מסכת הג׳ל</h3><p>PDRN, פפטידים, חומצה היאלורונית, אלוורה ורכיבים משלימים המתוארים בקטלוג.</p><a href="#contact" data-product="v-tech-system" data-source="vtech-formula" data-topic="protocol">לפרטים על הפרוטוקול ←</a></div></details>
-  <a className="vc-direct-contact" href={contact.whatsapp_url+'?text='+encodeURIComponent('שלום, אשמח לקבל מחיר ומידע מקצועי על V-TECH SYSTEM.')} target="_blank" rel="noopener noreferrer">WhatsApp <bdi dir="ltr">{contact.phone}</bdi></a>
- </div>
- </section>;}
+ </div>;}
 const trainingQuestions=[
  {question:'למי מיועדת המערכת?',answer:'V-TECH מיועדת לעבודה מקצועית בקליניקה. לשאלות על התאמה לתחום העיסוק שלכם, תנאי רכישה ואפשרויות הדרכה, פנו לצוות MITODERM.'},
  {question:'מה כדאי לברר לקראת הדרכה?',answer:'אפשר לשוחח על תפקיד הסרום ומסכת הג׳ל, בחירת אזור העבודה, שילוב המכשור והנחיות להמשך הטיפוח. תוכן ההדרכה, המתכונת, הזמינות והתנאים מאושרים מול הצוות.'},

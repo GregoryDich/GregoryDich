@@ -1,0 +1,13 @@
+/* A photograph moves from the returned camera frame into the offer layout.
+   All dimensions are measured in the same stage coordinate system. */
+.vts-pack-flight{position:absolute;inset:0;z-index:1;pointer-events:none;visibility:hidden;isolation:isolate;perspective:1500px}
+.vts-stage[data-active-chapter="vtech-kit"] .vts-pack-flight{visibility:visible}
+.vts-pack-backdrop{position:absolute;inset:0;overflow:hidden;background:#15110d;opacity:clamp(0,calc(var(--vts-pack-progress,0)*8),1)}
+.vts-pack-backdrop::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 27% 56%,#6c4e2b12,transparent 60%),linear-gradient(90deg,#110d0888,#100d0bd1)}
+.vts-pack-backdrop img{display:block;width:100%;height:100%;max-width:none;object-fit:cover;filter:blur(34px) brightness(.43) saturate(.65);transform:scale(1.09)}
+.vts-pack-object{position:absolute;left:var(--pack-left);top:var(--pack-top);width:var(--pack-width);height:var(--pack-height);transform-origin:0 0;transform:translate3d(calc(var(--vts-pack-progress,0)*var(--pack-dx)),calc(var(--vts-pack-progress,0)*var(--pack-dy)),0) scale(calc(1 + var(--vts-pack-progress,0)*var(--pack-scale-delta))) rotateY(calc(var(--vts-pack-progress,0)*-7deg)) rotateZ(calc(var(--vts-pack-progress,0)*-.6deg));opacity:clamp(0,calc(var(--vts-pack-progress,0)*100),1);filter:drop-shadow(0 24px 35px #0008);will-change:transform}
+.vts-pack-cutout{position:absolute;inset:0;overflow:hidden;background:#45331c}
+.vts-pack-cutout img{position:absolute;display:block;max-width:none;user-select:none}
+.vts-pack-ground{position:absolute;left:var(--pack-shadow-left);top:var(--pack-shadow-top);width:var(--pack-shadow-width);height:35px;border-radius:50%;background:#0009;filter:blur(13px);opacity:var(--vts-pack-progress,0);transform:scaleX(calc(.6 + var(--vts-pack-progress,0)*.4))}
+@media(max-width:860px){.vts-pack-backdrop::after{background:linear-gradient(180deg,#100d0b30,#100d0bdc)}.vts-pack-ground{height:22px;filter:blur(9px)}}
+@media(prefers-reduced-motion:reduce){.vts-pack-flight{display:none}}

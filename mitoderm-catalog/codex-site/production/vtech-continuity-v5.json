@@ -1,0 +1,704 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-11-09T10:53:18.391Z",
+  "status": "completed_and_confirmed",
+  "purpose": "V-TECH continuous camera from product through procedure to kit",
+  "quoted_total_credits": 384,
+  "billing_note": "Preflight quotes are not payment receipts.",
+  "max_generation_jobs": 6,
+  "requests": [
+    {
+      "index": 0,
+      "params": {
+        "model": "seedance_2_5",
+        "mode": "omni_reference",
+        "duration": 4,
+        "resolution": "1080p",
+        "generate_audio": false,
+        "bitrate_mode": "standard",
+        "count": 1,
+        "aspect_ratio": "16:9",
+        "prompt": "Create a single continuous photorealistic camera shot in the same warm daylight aesthetic clinic. Frame zero must match the supplied START IMAGE exactly: framing, positions, scale, expression, skin texture, clothing, jewelry, light, objects. Finish on the exact supplied END IMAGE, with no cut or new composition. Preserve the same dark wavy-haired female professional in white uniform with pink piping and pendant, and the same mature female patient with beige headband and light-brown bob. All motion is coherent camera motion and ordinary hands/object movement in real physical space. Begin at the exact final MITOPEN close-up. The professional gently lifts the champagne-gold MITOPEN away from the selected cheek and moves it out of frame. The camera makes a subtle continuous reposition toward the serum reference. Gloved hands bring the exact small brown V-TECH SERUM bottle and clear dropper into place, ending with one clear drop poised at the same cheek exactly as in the end image. The pen never transforms into the dropper: it exits before the new objects enter. Preserve natural fine lines and skin texture throughout; no beautification, skin smoothing, improvement transformation, before/after effect, morphing faces, double exposure, dissolve, wipe, hard cuts, extra fingers, duplicate people, syringe, bleeding, text overlays or added graphics. No audio. Existing product markings stay attached to their objects.",
+        "medias": [
+          {
+            "role": "start_image",
+            "value": "e9184527-2ca8-4708-9590-e6447ceae9e4"
+          },
+          {
+            "role": "end_image",
+            "value": "b046c839-79d9-404c-b715-13ce4dd3adca"
+          }
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "params": {
+        "model": "seedance_2_5",
+        "mode": "omni_reference",
+        "duration": 4,
+        "resolution": "1080p",
+        "generate_audio": false,
+        "bitrate_mode": "standard",
+        "count": 1,
+        "aspect_ratio": "16:9",
+        "prompt": "Create a single continuous photorealistic camera shot in the same warm daylight aesthetic clinic. Frame zero must match the supplied START IMAGE exactly: framing, positions, scale, expression, skin texture, clothing, jewelry, light, objects. Finish on the exact supplied END IMAGE, with no cut or new composition. Preserve the same dark wavy-haired female professional in white uniform with pink piping and pendant, and the same mature female patient with beige headband and light-brown bob. All motion is coherent camera motion and ordinary hands/object movement in real physical space. Begin with the exact serum close-up. The professional withdraws the glass dropper and brown bottle out of frame. In one smooth camera arc and gentle pullback, show the same patient reclined and the professional ready with the flat white spatula applying clear V-TECH gel mask on the same cheek. End with the exact pose, cheek, white spatula, gloved hand, professional and gold pouch composition of the supplied end frame. Objects leave and enter physically; nothing transforms into another object. Preserve natural fine lines and skin texture throughout; no beautification, skin smoothing, improvement transformation, before/after effect, morphing faces, double exposure, dissolve, wipe, hard cuts, extra fingers, duplicate people, syringe, bleeding, text overlays or added graphics. No audio. Existing product markings stay attached to their objects.",
+        "medias": [
+          {
+            "role": "start_image",
+            "value": "a63d960e-2fde-49a9-a50b-6b48f16a3d50"
+          },
+          {
+            "role": "end_image",
+            "value": "6bae7f95-8eaf-4aa7-a8ba-20ec3569a8d6"
+          }
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "params": {
+        "model": "seedance_2_5",
+        "mode": "omni_reference",
+        "duration": 4,
+        "resolution": "1080p",
+        "generate_audio": false,
+        "bitrate_mode": "standard",
+        "count": 1,
+        "aspect_ratio": "16:9",
+        "prompt": "Create a single continuous photorealistic camera shot in the same warm daylight aesthetic clinic. Frame zero must match the supplied START IMAGE exactly: framing, positions, scale, expression, skin texture, clothing, jewelry, light, objects. Finish on the exact supplied END IMAGE, with no cut or new composition. Preserve the same dark wavy-haired female professional in white uniform with pink piping and pendant, and the same mature female patient with beige headband and light-brown bob. All motion is coherent camera motion and ordinary hands/object movement in real physical space. Begin on the exact final gel-mask application frame. The professional lowers the flat white spatula and moves her gloved hands out of view. The camera slowly pulls back while the same patient naturally returns to an upright seated position behind the marble table; the professional stands beside her. Re-establish the exact wider consultation composition of the supplied end image, with the gold V-TECH box centered on the table and the patient gently indicating her cheek. Keep the skin unchanged, including visible fine lines. This is a change of camera framing and pose only, never a treatment-result reveal. Preserve natural fine lines and skin texture throughout; no beautification, skin smoothing, improvement transformation, before/after effect, morphing faces, double exposure, dissolve, wipe, hard cuts, extra fingers, duplicate people, syringe, bleeding, text overlays or added graphics. No audio. Existing product markings stay attached to their objects.",
+        "medias": [
+          {
+            "role": "start_image",
+            "value": "7bd57d74-0893-4906-94ea-3e5c8611636f"
+          },
+          {
+            "role": "end_image",
+            "value": "c79dc9cc-844a-4f2a-9d88-d37edd5566ec"
+          }
+        ]
+      }
+    },
+    {
+      "index": 3,
+      "params": {
+        "model": "seedance_2_5",
+        "mode": "omni_reference",
+        "duration": 4,
+        "resolution": "1080p",
+        "generate_audio": false,
+        "bitrate_mode": "standard",
+        "count": 1,
+        "aspect_ratio": "9:16",
+        "prompt": "Create a single continuous photorealistic camera shot in the same warm daylight aesthetic clinic. Frame zero must match the supplied START IMAGE exactly: framing, positions, scale, expression, skin texture, clothing, jewelry, light, objects. Finish on the exact supplied END IMAGE, with no cut or new composition. Preserve the same dark wavy-haired female professional in white uniform with pink piping and pendant, and the same mature female patient with beige headband and light-brown bob. All motion is coherent camera motion and ordinary hands/object movement in real physical space. Begin at the exact final MITOPEN close-up. The professional gently lifts the champagne-gold MITOPEN away from the selected cheek and moves it out of frame. The camera makes a subtle continuous reposition toward the serum reference. Gloved hands bring the exact small brown V-TECH SERUM bottle and clear dropper into place, ending with one clear drop poised at the same cheek exactly as in the end image. The pen never transforms into the dropper: it exits before the new objects enter. Preserve natural fine lines and skin texture throughout; no beautification, skin smoothing, improvement transformation, before/after effect, morphing faces, double exposure, dissolve, wipe, hard cuts, extra fingers, duplicate people, syringe, bleeding, text overlays or added graphics. No audio. Existing product markings stay attached to their objects. Portrait framing must follow the supplied portrait references. Keep the selected cheek and tool in their reference positions.",
+        "medias": [
+          {
+            "role": "start_image",
+            "value": "9a26e186-709f-4468-b90f-181d303a88b4"
+          },
+          {
+            "role": "end_image",
+            "value": "e34db786-0617-45a9-aa33-3360cf75d5dd"
+          }
+        ]
+      }
+    },
+    {
+      "index": 4,
+      "params": {
+        "model": "seedance_2_5",
+        "mode": "omni_reference",
+        "duration": 4,
+        "resolution": "1080p",
+        "generate_audio": false,
+        "bitrate_mode": "standard",
+        "count": 1,
+        "aspect_ratio": "9:16",
+        "prompt": "Create a single continuous photorealistic camera shot in the same warm daylight aesthetic clinic. Frame zero must match the supplied START IMAGE exactly: framing, positions, scale, expression, skin texture, clothing, jewelry, light, objects. Finish on the exact supplied END IMAGE, with no cut or new composition. Preserve the same dark wavy-haired female professional in white uniform with pink piping and pendant, and the same mature female patient with beige headband and light-brown bob. All motion is coherent camera motion and ordinary hands/object movement in real physical space. Begin with the exact serum close-up. The professional withdraws the glass dropper and brown bottle out of frame. In one smooth camera arc and gentle pullback, show the same patient reclined and the professional ready with the flat white spatula applying clear V-TECH gel mask on the same cheek. End with the exact pose, cheek, white spatula, gloved hand, professional and gold pouch composition of the supplied end frame. Objects leave and enter physically; nothing transforms into another object. Preserve natural fine lines and skin texture throughout; no beautification, skin smoothing, improvement transformation, before/after effect, morphing faces, double exposure, dissolve, wipe, hard cuts, extra fingers, duplicate people, syringe, bleeding, text overlays or added graphics. No audio. Existing product markings stay attached to their objects. Portrait framing must follow the supplied portrait references. Keep the selected cheek and tool in their reference positions.",
+        "medias": [
+          {
+            "role": "start_image",
+            "value": "0d2bcc0b-ce40-47ec-a231-ff692ae07f6c"
+          },
+          {
+            "role": "end_image",
+            "value": "043b6499-c892-4e0d-8061-4cd839350717"
+          }
+        ]
+      }
+    },
+    {
+      "index": 5,
+      "params": {
+        "model": "seedance_2_5",
+        "mode": "omni_reference",
+        "duration": 4,
+        "resolution": "1080p",
+        "generate_audio": false,
+        "bitrate_mode": "standard",
+        "count": 1,
+        "aspect_ratio": "9:16",
+        "prompt": "Create a single continuous photorealistic camera shot in the same warm daylight aesthetic clinic. Frame zero must match the supplied START IMAGE exactly: framing, positions, scale, expression, skin texture, clothing, jewelry, light, objects. Finish on the exact supplied END IMAGE, with no cut or new composition. Preserve the same dark wavy-haired female professional in white uniform with pink piping and pendant, and the same mature female patient with beige headband and light-brown bob. All motion is coherent camera motion and ordinary hands/object movement in real physical space. Begin on the exact final gel-mask application frame. The professional lowers the flat white spatula and moves her gloved hands out of view. The camera slowly pulls back while the same patient naturally returns to an upright seated position behind the marble table; the professional stands beside her. Re-establish the exact wider consultation composition of the supplied end image, with the gold V-TECH box centered on the table and the patient gently indicating her cheek. Keep the skin unchanged, including visible fine lines. This is a change of camera framing and pose only, never a treatment-result reveal. Preserve natural fine lines and skin texture throughout; no beautification, skin smoothing, improvement transformation, before/after effect, morphing faces, double exposure, dissolve, wipe, hard cuts, extra fingers, duplicate people, syringe, bleeding, text overlays or added graphics. No audio. Existing product markings stay attached to their objects. Portrait framing must follow the supplied portrait references. Keep the selected cheek and tool in their reference positions.",
+        "medias": [
+          {
+            "role": "start_image",
+            "value": "026a41cf-2942-46ae-8431-45439b5644b0"
+          },
+          {
+            "role": "end_image",
+            "value": "93ab263c-ae2e-4959-bb6a-af6a407a84cb"
+          }
+        ]
+      }
+    }
+  ],
+  "jobs": [
+    {
+      "index": 0,
+      "job_id": "8b2b62cb-3ddb-45dd-a913-14d2748e33af",
+      "status": "completed",
+      "type": "video",
+      "model": "seedance_2_5",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_105317_8b2b62cb-3ddb-45dd-a913-14d2748e33af.mp4"
+    },
+    {
+      "index": 1,
+      "job_id": "97d786c7-7753-4b82-91c0-b1dac44ff9d1",
+      "status": "completed",
+      "type": "video",
+      "model": "seedance_2_5",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_105317_97d786c7-7753-4b82-91c0-b1dac44ff9d1.mp4"
+    },
+    {
+      "index": 2,
+      "job_id": "2e2416a0-f279-4cfa-9973-1bf0d8a80776",
+      "status": "completed",
+      "type": "video",
+      "model": "seedance_2_5",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_105317_2e2416a0-f279-4cfa-9973-1bf0d8a80776.mp4"
+    },
+    {
+      "index": 3,
+      "job_id": "bc26dda7-0ba8-47ce-b870-d334728308f7",
+      "status": "completed",
+      "type": "video",
+      "model": "seedance_2_5",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_105317_bc26dda7-0ba8-47ce-b870-d334728308f7.mp4"
+    },
+    {
+      "index": 4,
+      "job_id": "0edd9da8-8d26-4f90-858a-38ea55ac636e",
+      "status": "completed",
+      "type": "video",
+      "model": "seedance_2_5",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_105317_0edd9da8-8d26-4f90-858a-38ea55ac636e.mp4"
+    },
+    {
+      "index": 5,
+      "job_id": "e8dbf857-818a-4091-abff-2d13fb38158b",
+      "status": "completed",
+      "type": "video",
+      "model": "seedance_2_5",
+      "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_105317_e8dbf857-818a-4091-abff-2d13fb38158b.mp4"
+    }
+  ],
+  "source_urls": {
+    "pen-desktop": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/b1599f02-e15a-410f-9747-a198c9282310.mp4",
+    "pen-mobile": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/08ff906c-e31f-4220-abd1-c92d39213ffa.mp4",
+    "serum-desktop": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/4d416054-def9-40cb-b787-7667e19b1558.mp4",
+    "serum-mobile": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/74b489fc-7854-47d2-b795-a5e4b8d9a85b.mp4",
+    "mask-desktop": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/eac0473a-76f1-4511-8482-e7cfb38f576b.mp4",
+    "mask-mobile": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/466a7524-2ea8-4701-b95d-95075a854c81.mp4"
+  },
+  "generation_summary": {
+    "total": 6,
+    "completed": 6,
+    "failed": 0,
+    "active": 0,
+    "errors": 0
+  },
+  "generation_qa": {
+    "reviewed_midpoints": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "issue": "Mobile pen_to_serum contains baked-in dissolve at source frame 48. Frames 24 and 72 are clean. Parent notified; no retry submitted."
+  },
+  "assembly_adaptations": [
+    {
+      "variant": "mobile",
+      "segment": "pen_to_serum",
+      "source_job_id": "8b2b62cb-3ddb-45dd-a913-14d2748e33af",
+      "rejected_job_id": "bc26dda7-0ba8-47ce-b870-d334728308f7",
+      "reason": "Portrait generation has baked-in double exposure at n48. Use verified physical transition from desktop with central portrait crop. No paid retry.",
+      "crop": "Endpoint-registered portrait view from full landscape source; similarity transforms interpolated with smoothstep. Exact matrices in assembly_config.",
+      "reviewed_frames": [
+        0,
+        48,
+        96
+      ]
+    }
+  ],
+  "completed_at": "2026-11-09T11:12:50.381Z",
+  "assembly_config": {
+    "variants": {
+      "desktop": {
+        "camera": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/797818a4-5a16-4b0b-83c8-a125c114c73c.mp4",
+        "intro": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/dc6588ba-d274-434a-8829-27b0ac5f4083.mp4",
+        "pen": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/b1599f02-e15a-410f-9747-a198c9282310.mp4",
+        "serum": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/4d416054-def9-40cb-b787-7667e19b1558.mp4",
+        "mask": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/eac0473a-76f1-4511-8482-e7cfb38f576b.mp4",
+        "pen_to_serum": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_105317_8b2b62cb-3ddb-45dd-a913-14d2748e33af.mp4",
+        "serum_to_mask": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_105317_97d786c7-7753-4b82-91c0-b1dac44ff9d1.mp4",
+        "mask_to_wide": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_105317_2e2416a0-f279-4cfa-9973-1bf0d8a80776.mp4"
+      },
+      "mobile": {
+        "camera": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/8d6f873a-401d-44eb-9982-259124e5f719.mp4",
+        "intro": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/83b1e1d4-baf7-4bb5-8fd9-d4c78959dc77.mp4",
+        "pen": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/08ff906c-e31f-4220-abd1-c92d39213ffa.mp4",
+        "serum": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/74b489fc-7854-47d2-b795-a5e4b8d9a85b.mp4",
+        "mask": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/466a7524-2ea8-4701-b95d-95075a854c81.mp4",
+        "pen_to_serum": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_105317_8b2b62cb-3ddb-45dd-a913-14d2748e33af.mp4",
+        "serum_to_mask": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_105317_0edd9da8-8d26-4f90-858a-38ea55ac636e.mp4",
+        "mask_to_wide": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261109_105317_e8dbf857-818a-4091-abff-2d13fb38158b.mp4"
+      }
+    },
+    "local_sources": {
+      "desktop": {
+        "camera": "/home/user/vtech-v4-flow-final/camera-desktop.mp4",
+        "intro": "/home/user/vtech-v4-matched/intro-desktop.mp4",
+        "pen": "/home/user/vtech-v5/pen-desktop.mp4",
+        "serum": "/home/user/vtech-v5/serum-desktop.mp4",
+        "mask": "/home/user/vtech-v5/mask-desktop.mp4",
+        "pen_to_serum": "/home/user/vtech-v5/generated/pen_to_serum-desktop.mp4",
+        "serum_to_mask": "/home/user/vtech-v5/generated/serum_to_mask-desktop.mp4",
+        "mask_to_wide": "/home/user/vtech-v5/generated/mask_to_wide-desktop.mp4"
+      },
+      "mobile": {
+        "camera": "/home/user/vtech-v4-flow-final/camera-mobile.mp4",
+        "intro": "/home/user/vtech-v4-matched/intro-mobile.mp4",
+        "pen": "/home/user/vtech-v5/pen-mobile.mp4",
+        "serum": "/home/user/vtech-v5/serum-mobile.mp4",
+        "mask": "/home/user/vtech-v5/mask-mobile.mp4",
+        "pen_to_serum": "/home/user/vtech-v5/generated/pen_to_serum-desktop.mp4",
+        "serum_to_mask": "/home/user/vtech-v5/generated/serum_to_mask-mobile.mp4",
+        "mask_to_wide": "/home/user/vtech-v5/generated/mask_to_wide-mobile.mp4"
+      }
+    },
+    "portrait_p2s_alignment": {
+      "start": [
+        [
+          1.0272111111447289,
+          0.008699346479596371,
+          101.6258965923977
+        ],
+        [
+          -0.008699346479596371,
+          1.0272111111447289,
+          3.4614228300644365
+        ]
+      ],
+      "end": [
+        [
+          1.0376985763658424,
+          0.003808949734943328,
+          35.43204168030082
+        ],
+        [
+          -0.003808949734943328,
+          1.0376985763658424,
+          -0.579713263776271
+        ]
+      ],
+      "registration_metrics": {
+        "start": {
+          "matrix": [
+            [
+              1.0272111111447289,
+              0.008699346479596371,
+              101.6258965923977
+            ],
+            [
+              -0.008699346479596371,
+              1.0272111111447289,
+              3.4614228300644365
+            ]
+          ],
+          "matches": 177,
+          "inliers": 95,
+          "before": 37.58215515515516,
+          "after": 8.857527027027027
+        },
+        "end": {
+          "matrix": [
+            [
+              1.0376985763658424,
+              0.003808949734943328,
+              35.43204168030082
+            ],
+            [
+              -0.003808949734943328,
+              1.0376985763658424,
+              -0.579713263776271
+            ]
+          ],
+          "matches": 201,
+          "inliers": 127,
+          "before": 18.519181681681683,
+          "after": 8.083976976976977
+        }
+      }
+    }
+  },
+  "assembly_recipe": "assemble-vtech-continuity-v5.py",
+  "reproduce_command": "python3 production/assemble-vtech-continuity-v5.py --config production/vtech-continuity-v5.json --root /home/user/vtech-v5-render",
+  "gallery_shown_once": true,
+  "media_metadata": {
+    "desktop": {
+      "width": 1912,
+      "height": 1080,
+      "fps": 24,
+      "frames": 873,
+      "duration_seconds": 36.375,
+      "size_bytes": 34576310,
+      "pack_zoom_start_seconds": 31.333333333333332,
+      "pack_locked_at_seconds": 36.333333333333336,
+      "max_keyframe_gap": 6,
+      "faststart": true,
+      "audio_streams": 0,
+      "terminal_mae_after_concat": 0,
+      "segments": [
+        [
+          "camera",
+          0,
+          9.333333333333334,
+          224
+        ],
+        [
+          "pen",
+          9.583333333333334,
+          13.625,
+          97
+        ],
+        [
+          "to_serum",
+          13.875,
+          15.916666666666666,
+          49
+        ],
+        [
+          "serum",
+          16.166666666666668,
+          20.208333333333332,
+          97
+        ],
+        [
+          "to_mask",
+          20.458333333333332,
+          22.5,
+          49
+        ],
+        [
+          "mask",
+          22.75,
+          26.791666666666668,
+          97
+        ],
+        [
+          "to_wide",
+          27.041666666666668,
+          31.083333333333332,
+          97
+        ],
+        [
+          "pack_zoom",
+          31.333333333333332,
+          36.375,
+          121
+        ]
+      ],
+      "joins": [
+        [
+          "camera-to-pen",
+          15.847,
+          6
+        ],
+        [
+          "pen-to-to_serum",
+          15.769,
+          6
+        ],
+        [
+          "to_serum-to-serum",
+          17.489,
+          6
+        ],
+        [
+          "serum-to-to_mask",
+          17.794,
+          6
+        ],
+        [
+          "to_mask-to-mask",
+          19.505,
+          6
+        ],
+        [
+          "mask-to-to_wide",
+          18.729,
+          6
+        ],
+        [
+          "to_wide-to-pack_zoom",
+          20.484,
+          6
+        ]
+      ]
+    },
+    "mobile": {
+      "width": 812,
+      "height": 1440,
+      "fps": 24,
+      "frames": 873,
+      "duration_seconds": 36.375,
+      "size_bytes": 15974915,
+      "pack_zoom_start_seconds": 31.333333333333332,
+      "pack_locked_at_seconds": 36.333333333333336,
+      "max_keyframe_gap": 6,
+      "faststart": true,
+      "audio_streams": 0,
+      "terminal_mae_after_concat": 0,
+      "segments": [
+        [
+          "camera",
+          0,
+          9.333333333333334,
+          224
+        ],
+        [
+          "pen",
+          9.583333333333334,
+          13.625,
+          97
+        ],
+        [
+          "to_serum",
+          13.875,
+          15.916666666666666,
+          49
+        ],
+        [
+          "serum",
+          16.166666666666668,
+          20.208333333333332,
+          97
+        ],
+        [
+          "to_mask",
+          20.458333333333332,
+          22.5,
+          49
+        ],
+        [
+          "mask",
+          22.75,
+          26.791666666666668,
+          97
+        ],
+        [
+          "to_wide",
+          27.041666666666668,
+          31.083333333333332,
+          97
+        ],
+        [
+          "pack_zoom",
+          31.333333333333332,
+          36.375,
+          121
+        ]
+      ],
+      "joins": [
+        [
+          "camera-to-pen",
+          7.957,
+          6
+        ],
+        [
+          "pen-to-to_serum",
+          7.789,
+          6
+        ],
+        [
+          "to_serum-to-serum",
+          9.223,
+          6
+        ],
+        [
+          "serum-to-to_mask",
+          13.409,
+          6
+        ],
+        [
+          "to_mask-to-mask",
+          17.198,
+          6
+        ],
+        [
+          "mask-to-to_wide",
+          16.542,
+          6
+        ],
+        [
+          "to_wide-to-pack_zoom",
+          15.054,
+          6
+        ]
+      ]
+    }
+  },
+  "timeline": {
+    "desktop": {
+      "duration": 36.375,
+      "chapters": [
+        {
+          "id": "vtech-hero",
+          "start": 0,
+          "end": 5.041666666666667
+        },
+        {
+          "id": "vtech-consultation",
+          "start": 5.041666666666667,
+          "end": 9.583333333333334
+        },
+        {
+          "id": "vtech-pen",
+          "start": 9.583333333333334,
+          "end": 16.166666666666668
+        },
+        {
+          "id": "vtech-serum",
+          "start": 16.166666666666668,
+          "end": 22.75
+        },
+        {
+          "id": "vtech-mask",
+          "start": 22.75,
+          "end": 27.041666666666668
+        },
+        {
+          "id": "vtech-results",
+          "start": 27.041666666666668,
+          "end": 31.333333333333332
+        },
+        {
+          "id": "vtech-kit",
+          "start": 31.333333333333332,
+          "end": 36.375
+        }
+      ],
+      "packStart": 31.333333333333332,
+      "packEnd": 36.375
+    },
+    "mobile": {
+      "duration": 36.375,
+      "chapters": [
+        {
+          "id": "vtech-hero",
+          "start": 0,
+          "end": 5.041666666666667
+        },
+        {
+          "id": "vtech-consultation",
+          "start": 5.041666666666667,
+          "end": 9.583333333333334
+        },
+        {
+          "id": "vtech-pen",
+          "start": 9.583333333333334,
+          "end": 16.166666666666668
+        },
+        {
+          "id": "vtech-serum",
+          "start": 16.166666666666668,
+          "end": 22.75
+        },
+        {
+          "id": "vtech-mask",
+          "start": 22.75,
+          "end": 27.041666666666668
+        },
+        {
+          "id": "vtech-results",
+          "start": 27.041666666666668,
+          "end": 31.333333333333332
+        },
+        {
+          "id": "vtech-kit",
+          "start": 31.333333333333332,
+          "end": 36.375
+        }
+      ],
+      "packStart": 31.333333333333332,
+      "packEnd": 36.375
+    }
+  },
+  "outputs": {
+    "desktop": {
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/9b6bc72c-4550-423f-8753-24937ce6068f.mp4",
+      "media_id": "9b6bc72c-4550-423f-8753-24937ce6068f",
+      "terminalPosterUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/d3242869-63a4-4c3d-927a-2da885ec2005.webp",
+      "terminal_poster_media_id": "d3242869-63a4-4c3d-927a-2da885ec2005",
+      "confirmed": true,
+      "http_put_status": 200,
+      "bytes": 34576310,
+      "width": 1912,
+      "height": 1080,
+      "fps": 24,
+      "frames": 873,
+      "duration": 36.375,
+      "last_frame_time": 36.333333333333336
+    },
+    "mobile": {
+      "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/ceb92198-869b-4ae8-b19b-4d3fe218a499.mp4",
+      "media_id": "ceb92198-869b-4ae8-b19b-4d3fe218a499",
+      "terminalPosterUrl": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/76bc4237-ff8b-44b1-b833-3a525f1a83d9.webp",
+      "terminal_poster_media_id": "76bc4237-ff8b-44b1-b833-3a525f1a83d9",
+      "confirmed": true,
+      "http_put_status": 200,
+      "bytes": 15974915,
+      "width": 812,
+      "height": 1440,
+      "fps": 24,
+      "frames": 873,
+      "duration": 36.375,
+      "last_frame_time": 36.333333333333336
+    }
+  },
+  "qa": {
+    "all_six_jobs_terminal": true,
+    "paid_retry_count": 0,
+    "raw_midpoints_reviewed": 6,
+    "rejected_raw_clip": "bc26dda7-0ba8-47ce-b870-d334728308f7",
+    "desktop_join_midpoints_reviewed": 7,
+    "mobile_join_midpoints_reviewed": 7,
+    "mobile_corrected_join_midpoints_reviewed": 2,
+    "visible_double_faces_or_boxes_in_accepted_midpoints": false,
+    "render_checks": [
+      "873 frames each; 24 fps",
+      "H264 GOP ≤6, faststart, zero audio streams",
+      "Final concat frame has zero MAE vs normalized reversed intro last frame"
+    ],
+    "terminal_frame_provenance": "Original intro frame 0, reversed, normalized once to target dimensions. No additional geometric transform. The final mobile transition correction only changes pen_to_serum.",
+    "limitation": "Visual review used keyframes and join midpoints; generated footage is illustrative, not evidence of treatment efficacy."
+  },
+  "discarded_output_ids": [
+    "180b5af5-85e8-41a3-8dc7-3932465b323e",
+    "f8dceacb-3f8e-4a5c-b847-989f5e36694d"
+  ],
+  "upload_note": "Higgsfield upload destinations are write-once (If-None-Match). Corrected mobile files were losslessly remuxed/extracted and PUT to newly allocated destinations before confirm."
+}

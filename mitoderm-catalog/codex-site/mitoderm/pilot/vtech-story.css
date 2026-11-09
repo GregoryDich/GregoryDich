@@ -1,15 +1,14 @@
 /* The camera always fills one viewport. Copy and controls sit above the footage,
    so chapter changes never turn the film into a card or change its frame. */
 .vts-story{position:relative;height:calc(var(--vts-length)*var(--vts-viewport,100svh));background:#08080a;color:#fff;isolation:isolate}
-.vts-stage{position:sticky;top:0;height:100svh;width:100%;overflow:hidden;background:#08080a;isolation:isolate;--vts-progress:0}
+.vts-stage{position:sticky;top:0;height:100svh;width:100%;overflow:hidden;background:#08080a;isolation:isolate;--vts-progress:0;--vts-kit-progress:0;--vts-pack-progress:0}
 .vts-scenes,.vts-scene,.vts-media,.vts-footage,.vts-media picture,.vts-poster,.vts-video{position:absolute;inset:0;width:100%;height:100%}
-.vts-scenes{z-index:1}
+.vts-scenes{z-index:2}
 .vts-scene{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s ease,visibility .35s;z-index:0;isolation:isolate}
 .vts-scene[data-active=true]{opacity:1;visibility:visible;pointer-events:auto;z-index:2}
 .vts-scene[data-outgoing=true]{visibility:visible;z-index:1}
 .vts-media{overflow:hidden;background:#08080a}
-.vts-camera-media{z-index:0;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s ease,visibility .35s}
-.vts-camera-media[data-active=true],.vts-camera-media[data-outgoing=true]{opacity:1;visibility:visible}
+.vts-camera-media{z-index:0;pointer-events:none}
 .vts-atmosphere{display:none}
 .vts-poster,.vts-video{display:block;object-fit:cover;object-position:50% 50%;max-width:none}
 .vts-video{opacity:0;transition:opacity .16s linear}
@@ -22,7 +21,8 @@
 .vts-scene::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(8,8,10,.66),transparent 25%,transparent 50%,rgba(8,8,10,.42) 77%,rgba(8,8,10,.88)),linear-gradient(270deg,rgba(8,8,10,.42),transparent 44%);z-index:1}
 
 /* Page navigation is above this row; these buttons select a chapter. */
-.vts-toolbar{position:absolute;z-index:8;top:153px;inset-inline:clamp(25px,4.5vw,75px);display:flex;align-items:center;justify-content:center;transition:top .28s ease}
+.vts-toolbar{position:absolute;z-index:8;top:153px;inset-inline:clamp(25px,4.5vw,75px);display:flex;align-items:center;justify-content:center;transition:top .28s ease,opacity .2s ease,visibility .2s}
+.vts-toolbar[data-hidden=true]{opacity:0;visibility:hidden;pointer-events:none}
 html[data-vtech-immersed=true] .vts-toolbar{top:64px}
 .vts-chapter-nav{display:flex;align-items:center;justify-content:center;gap:6px;max-width:720px;width:100%}
 .vts-chapter-nav button{display:flex;align-items:center;justify-content:center;gap:9px;min-height:44px;padding:11px 16px;color:#e2ddd4;background:rgba(8,8,10,.48);border:1px solid transparent;border-radius:25px;font-size:12px;white-space:nowrap;transition:background .2s,border-color .2s}
@@ -40,10 +40,6 @@ html[data-vtech-immersed=true] .vts-toolbar{top:64px}
 .vts-hero-actions>button{display:flex;align-items:center;gap:14px;min-height:44px;border-bottom:1px solid #fff7;font-size:13px;color:#fff}
 .vts-clinical-actions{display:flex;align-items:center;gap:18px;min-height:44px;margin-top:22px;flex-wrap:wrap}
 .vts-clinical-actions>a{display:inline-flex;align-items:center;justify-content:center;gap:16px;min-height:44px;max-width:100%;padding:10px 18px;border-radius:25px;background:#dfba74;color:#17130d;font-size:13px;line-height:1.35;font-weight:500;text-shadow:none}
-.vts-play{display:inline-flex;align-items:center;justify-content:center;gap:11px;flex:0 0 auto;min-height:44px;padding:9px 17px;border:1px solid #fff9;border-radius:25px;background:rgba(8,8,10,.38);color:#fff;font-size:12px;line-height:1.35}
-.vts-play>span{font-size:18px;line-height:1}
-.vts-play:disabled{opacity:.5;cursor:wait}
-.vts-fallback{font-size:11px;color:#ded6c6}
 
 .vts-bottom{position:absolute;z-index:8;inset-inline:clamp(25px,4.5vw,75px);bottom:max(25px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:25px;color:#d4cabb;font-size:10px;text-shadow:0 1px 9px #000}
 .vts-counter{display:flex;align-items:center;gap:14px}
@@ -83,20 +79,18 @@ html[data-product-transit] [data-vtech-hud]{opacity:0!important;pointer-events:n
  .vts-hero-actions>button{gap:10px;font-size:12px}
  .vts-clinical-actions{gap:12px;margin-top:13px;min-height:44px}
  .vts-clinical-actions>a{gap:12px;padding:10px 15px;font-size:13px}
- .vts-play{gap:9px;min-height:44px;padding:10px 14px;font-size:12px}
- .vts-play>span{font-size:17px}
- .vts-fallback{font-size:12px;color:#ded6c6}
 
  /* Crop around the point of treatment, keeping the upper/middle frame open. */
  #vtech-pen :is(.vts-poster,.vts-video){object-position:60% 50%}
  #vtech-serum :is(.vts-poster,.vts-video){object-position:40% 50%}
  #vtech-mask :is(.vts-poster,.vts-video){object-position:67% 50%}
 
- .vts-bottom{inset-inline:22px;bottom:max(14px,env(safe-area-inset-bottom));gap:12px}
+ .vts-bottom{inset-inline:22px;bottom:max(14px,env(safe-area-inset-bottom));display:grid;grid-template-columns:auto 1fr;gap:5px 12px}
  .vts-counter{gap:9px}
  .vts-counter>bdi{font-size:11px}
- .vts-counter>span,.vts-scroll-cue{display:none}
- .vts-disclosure{font-size:11px}
+ .vts-counter>span{display:none}
+ .vts-scroll-cue{grid-column:2;grid-row:1;justify-self:end;font-size:11px}
+ .vts-disclosure{grid-column:1/-1;grid-row:2;justify-self:end;font-size:11px}
 }
 
 @media(max-width:360px){
@@ -111,7 +105,6 @@ html[data-product-transit] [data-vtech-hud]{opacity:0!important;pointer-events:n
  .vts-hero-actions{gap:15px}
  .vts-clinical-actions{gap:8px}
  .vts-clinical-actions>a{gap:8px;padding-inline:12px;font-size:12px}
- .vts-play{gap:7px;padding-inline:12px;font-size:11px}
  .vts-bottom{inset-inline:18px;gap:8px}
  .vts-disclosure{font-size:10px}
 }
@@ -127,6 +120,8 @@ html[data-product-transit] [data-vtech-hud]{opacity:0!important;pointer-events:n
 
 /* Landscape keeps footage edge-to-edge; copy occupies one side of the image. */
 @media(max-width:860px) and (min-width:601px) and (max-height:560px){
+ .vts-bottom{display:flex;bottom:max(10px,env(safe-area-inset-bottom));gap:12px}
+ .vts-disclosure{margin-inline-start:auto;font-size:10px}
  .vts-chapter-nav{max-width:560px;margin-inline:auto}
  .vts-caption{inset-inline-start:24px;inset-inline-end:auto;bottom:calc(48px + env(safe-area-inset-bottom));width:46%;max-width:420px}
  .vts-caption h1{font-size:30px;max-width:none}
