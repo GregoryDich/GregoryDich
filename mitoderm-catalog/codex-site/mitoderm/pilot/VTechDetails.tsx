@@ -65,9 +65,34 @@ const trainingQuestions=[
  {question:'כמה מפגשים נדרשים ומתי בוחנים תוצאה?',answer:'מספר המפגשים, המרווחים ומועד ההערכה נקבעים במסגרת תוכנית מקצועית ובהתאם למצב העור. בקשו את הפרוטוקול העדכני ואת התיעוד הרלוונטי; ההמחשה בעמוד אינה הבטחה לתוצאה או ללוח זמנים.'},
  {question:'מה קורה אחרי השארת פרטים?',answer:'הפנייה כוללת את המוצר שנבחר, תחום העיסוק והשאלה שלכם. בהמשך השיחה עם הצוות ניתן לברר התאמה, מחיר, תנאי רכישה ואפשרויות הדרכה. הפרטים והתנאים מסוכמים באופן אישי.'},
 ];
-export function VTechTraining(){return <section id="vtech-training" className="vc-training vc-training-cinematic" aria-labelledby="vc-training-title">
- <div className="vc-training-heading"><div><p className="vc-section-eyebrow"><bdi dir="ltr">V-TECH SYSTEM</bdi><span aria-hidden="true"> · </span> הדרכה וליווי</p><h2 id="vc-training-title">מכירים את המערכת.<br/><span>בונים את דרך העבודה.</span></h2></div><div className="vc-training-introduction"><p>הצעד הבא הוא שיחה על הקליניקה, הניסיון והמטרה שלכם. כך אפשר לברר את הפרוטוקול ואת ההדרכה המתאימה לפני תחילת העבודה.</p><a href="#contact" data-product="v-tech-system" data-source="vtech-training-intro" data-topic="training">לשיחה עם הצוות <span aria-hidden="true">←</span></a></div></div>
- <ol className="vc-training-steps"><li><span aria-hidden="true">01</span><h3>משאירים פנייה ממוקדת</h3><p>מציינים את תחום העיסוק ומה תרצו לדעת על V-TECH, המכשור או ההדרכה.</p></li><li><span aria-hidden="true">02</span><h3>מבררים התאמה מקצועית</h3><p>בשיחה עם הצוות מבררים ניסיון, הכשרה ותוכנית עבודה רלוונטית לקליניקה.</p></li><li><span aria-hidden="true">03</span><h3>מסכמים את הפרטים</h3><p>תכולת הערכה, תנאי הרכישה ואפשרויות ההדרכה מוצגים ומאושרים מול הצוות.</p></li></ol>
+export function VTechTraining(){return <section id="vtech-training" className="vc-training vc-training-cinematic vc-training-editorial" aria-labelledby="vc-training-title">
+ <div className="vc-training-film">
+  <div className="vc-training-film-photo" aria-hidden="true">
+   <picture>
+    <source media="(max-width: 860px)" srcSet="/assets/world/vtech-consultation-mobile.webp"/>
+    <img src="/assets/world/vtech-consultation.webp" alt="" loading="lazy" decoding="async"/>
+   </picture>
+  </div>
+  <div className="vc-training-film-copy">
+   <p className="vc-section-eyebrow"><bdi dir="ltr">V-TECH SYSTEM</bdi> · הדרכה וליווי מקצועי</p>
+   <h2 id="vc-training-title">מכירים את המערכת.<br/><span>בונים את דרך העבודה.</span></h2>
+   <p>השלב הבא לא מתחיל בעוד מצגת. הוא מתחיל בשיחה מקצועית על הקליניקה, תחום העיסוק והפרוטוקול המתאים לכם.</p>
+   <a href="#contact" data-product="v-tech-system" data-source="vtech-training-intro" data-topic="training">לשיחה עם הצוות <span aria-hidden="true">←</span></a>
+  </div>
+  <span className="vc-training-film-label" aria-hidden="true">MITODERM <span>·</span> PROFESSIONAL CARE</span>
+ </div>
+ <div className="vc-training-editorial-body">
+  <div className="vc-training-editorial-lead">
+   <p className="vc-section-eyebrow">מהקליניקה שלכם · למערכת מתאימה</p>
+   <h3>החלטה מקצועית<br/><em>מתחילה בהתאמה.</em></h3>
+   <p>לפני הזמנה בודקים עם הצוות מה מתאים לניסיון שלכם, מה כולל המארז ואילו אפשרויות הדרכה קיימות. בלי הבטחות שאין מאחוריהן תיעוד.</p>
+  </div>
+  <div className="vc-training-editorial-points">
+   <div><span aria-hidden="true" className="vc-training-editorial-rule"/><h4>התאמה לקליניקה</h4><p>אזור העבודה, הצרכים המקצועיים, ניסיון קודם והמכשור הזמין אצלכם.</p></div>
+   <div><span aria-hidden="true" className="vc-training-editorial-rule"/><h4>ידע ופרוטוקול</h4><p>מבהירים את תפקיד הסרום, מסכת הג׳ל והאפשרויות לעבודה בהתאם להנחיות המקצועיות.</p></div>
+   <div><span aria-hidden="true" className="vc-training-editorial-rule"/><h4>תנאים וליווי</h4><p>מקבלים מידע על המארז, מחיר, אפשרויות הדרכה והמשך הקשר עם צוות MITODERM.</p></div>
+  </div>
+ </div>
  <div className="vc-training-contact"><div><p className="vc-training-contact-kicker">הקליניקה שלכם. השאלות שלכם.</p><h3>מה חשוב לכם לדעת לפני שמתחילים?</h3><p>אפשר להתחיל משאלה אחת על התאמה, פרוטוקול או הדרכה.</p></div><a href="#contact" data-product="v-tech-system" data-source="vtech-training" data-topic="training">לשיחה על הדרכה <span aria-hidden="true">←</span></a></div>
  <div className="vc-faq" aria-labelledby="vc-faq-title"><div className="vc-training-faq-heading"><p className="vc-section-eyebrow">פרטים שכדאי להכיר</p><h3 id="vc-faq-title">שאלות לפני בחירה</h3></div><div>{trainingQuestions.map(item=><details key={item.question}><summary>{item.question}<span aria-hidden="true">+</span></summary><p>{item.answer}</p></details>)}</div></div>
  </section>;}
