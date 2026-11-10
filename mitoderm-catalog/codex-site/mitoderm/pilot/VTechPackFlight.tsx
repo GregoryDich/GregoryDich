@@ -2,6 +2,7 @@
 
 import {useCallback,useEffect,useState,type CSSProperties,type RefObject} from 'react';
 import {getEntryBoxRect,getEntryMedia} from './vtech-entry';
+import {mediaUrl} from '../media';
 import {VTechKitSequence,kitSequence} from './VTechKitSequence';
 import './vtech-pack-flight.css';
 
@@ -37,7 +38,7 @@ export function VTechPackFlight({stage,reduced}:{stage:RefObject<HTMLDivElement|
    const mobile=window.innerWidth<=860;
    const polygon=(points:number[][])=>'polygon('+points.map(([x,y])=>`${(x-media.box.left)/media.box.width*100}% ${(y-media.box.top)/media.box.height*100}%`).join(',')+')';
    const next:Geometry={
-    poster:media.poster,backdrop:mobile?'/assets/world/vtech-consultation-mobile.webp':'/assets/world/vtech-consultation.webp',silhouette:media.silhouette,
+    poster:media.poster,backdrop:mediaUrl(mobile?'/assets/world/vtech-consultation-mobile.webp':'/assets/world/vtech-consultation.webp'),silhouette:media.silhouette,
     triangle:polygon(mobile?[[178,294],[207,294],[193,326]]:[[899,260],[975,259],[938,340]]),
     window:polygon(mobile?[[145,313],[159,313],[195,390],[228,312],[242,312],[195,416]]:[[816,309],[849,308],[940,494],[1023,307],[1056,307],[941,565]]),
     style:{
