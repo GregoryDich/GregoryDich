@@ -1,32 +1,73 @@
-/* One photographic sleeve, fixed camera scale and a continuously opening kit.
-   No image dissolve, material ramp or second camera zoom at the handoff. */
-.vts-pack-flight{position:absolute;inset:0;z-index:1;pointer-events:none;visibility:hidden;isolation:isolate;--kit-open:0;--kit-dock:clamp(0,calc((var(--kit-open) - .18)*1.6),1);--kit-seat:clamp(0,calc((var(--kit-open) - .57)*3.7),1)}
+/* V-TECH unboxing v9: sleeve rises AXIALLY off the inner box. The black
+   book-case door then opens on its actual right hinge; no exploded parts.
+   The identical gold photograph is retained in every sleeve position. */
+.vts-pack-flight{
+ position:absolute;inset:0;z-index:1;pointer-events:none;visibility:hidden;isolation:isolate;
+ --kit-open:0;
+ --kit-lift:clamp(0,calc(var(--kit-open)*2.6),1);
+ --kit-core:clamp(0,calc((var(--kit-open) - .07)*8),1);
+ --kit-unfold:clamp(0,calc((var(--kit-open) - .38)*2.65),1);
+ --kit-finish:clamp(0,calc((var(--kit-open) - .74)*3.85),1);
+ --kit-seat:clamp(0,calc((var(--kit-open) - .79)*4.8),1);
+}
 .vts-stage[data-active-chapter="vtech-kit"] .vts-pack-flight{visibility:visible}
 .vts-pack-flight[data-sequence-ready=true]{--kit-open:var(--vts-kit-open,0)}
-.vts-pack-backdrop{position:absolute;inset:0;overflow:hidden;background:#1c1813;opacity:clamp(0,calc(var(--vts-pack-progress,0)*8),1)}
-.vts-pack-backdrop::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 27% 48%,#9c805329,transparent 65%),linear-gradient(90deg,#15120e50,#100e0bb8)}
-.vts-pack-backdrop img{display:block;width:100%;height:100%;max-width:none;object-fit:cover;filter:blur(38px) brightness(.56) saturate(.72);transform:scale(1.09)}
-.vts-pack-object{position:absolute;z-index:4;left:var(--pack-left);top:var(--pack-top);width:var(--pack-width);height:var(--pack-height);transform-origin:0 0;transform:translate3d(calc(var(--vts-pack-progress,0)*var(--pack-dx) + var(--kit-open)*var(--pack-open-dx)),calc(var(--vts-pack-progress,0)*var(--pack-dy) + var(--kit-open)*var(--pack-open-dy)),0) scale(calc(1 + var(--vts-pack-progress,0)*var(--pack-scale-delta)));opacity:clamp(0,calc(var(--vts-pack-progress,0)*100),1);filter:drop-shadow(0 16px 20px #0005);will-change:transform}
-.vts-pack-sleeve{position:absolute;inset:0;transform:rotate(calc(var(--kit-open)*-3deg));transform-origin:50% 50%;clip-path:inset(calc(var(--kit-open)*6.45%) 0 calc(var(--kit-open)*5.3%) 0)}
-.vts-pack-cutout{position:absolute;inset:0;overflow:hidden;background:#9a762f}
+
+/* The clinic remains a legible environment; do not transition through a
+   vacant brown blur (previously blur 38px) to conceal the product handoff. */
+.vts-pack-backdrop{position:absolute;inset:0;overflow:hidden;opacity:clamp(0,calc(var(--vts-pack-progress,0)*7),1);background:#18130f}
+.vts-pack-backdrop img{display:block;width:100%;height:100%;max-width:none;object-fit:cover;filter:brightness(.62) saturate(.83);transform:scale(1.02)}
+.vts-pack-backdrop::after{
+ content:'';position:absolute;inset:0;pointer-events:none;
+ background:linear-gradient(90deg,#100d0ba8,transparent 42%,#100d0b89),linear-gradient(180deg,#100d0b33,transparent 40%,#100d0baa);
+}
+.vts-pack-object{
+ position:absolute;z-index:4;left:var(--pack-left);top:var(--pack-top);
+ width:var(--pack-width);height:var(--pack-height);transform-origin:0 0;
+ transform:translate3d(
+   calc(var(--vts-pack-progress,0)*var(--pack-dx) + var(--kit-finish)*var(--pack-open-dx)),
+   calc(var(--vts-pack-progress,0)*var(--pack-dy) + var(--kit-lift)*var(--pack-lift-dy) + var(--kit-finish)*var(--pack-return-dy)),
+   0
+ ) scale(calc(1 + var(--vts-pack-progress,0)*var(--pack-scale-delta)));
+ opacity:clamp(0,calc(var(--vts-pack-progress,0)*100),1);
+ filter:drop-shadow(0 12px 18px #0005);will-change:transform;
+}
+.vts-pack-sleeve{position:absolute;inset:0;transform:none;clip-path:none}
+.vts-pack-cutout{position:absolute;inset:0;overflow:hidden;background:#a88b4d}
 .vts-pack-cutout img{position:absolute;display:block;max-width:none;user-select:none}
-/* The V is a die-cut in the real sleeve: its pale inner board becomes visible
-   as it leaves the black lid. Silver VM and the photographic foil stay fixed. */
-.vts-pack-window{position:absolute;inset:0;background:linear-gradient(120deg,#e9e0c9,#f3ead4 52%,#d2c5a6);opacity:clamp(0,calc((var(--kit-open) - .13)*1.9),1)}
-.vts-pack-softlight{position:absolute;inset:0;background:linear-gradient(100deg,transparent 8%,#fff8e812 42%,transparent 77%);opacity:var(--vts-pack-progress,0);mix-blend-mode:screen}
-.vts-kit-sequence{position:absolute;pointer-events:none}
-.vts-kit-layer{position:absolute;inset:0;width:100%;height:100%;max-width:none;overflow:visible;opacity:var(--vts-kit-reveal,0);filter:drop-shadow(0 10px 14px #0004)}
-.vts-kit-tray{z-index:1}
-.vts-kit-docking-mask{opacity:calc(1 - var(--kit-seat))}
-.vts-kit-lid{z-index:2;transform-origin:65% 56%;transform:translate3d(calc((1 - var(--kit-open))*-32.1%),calc((1 - var(--kit-open))*.8%),0)}
-.vts-kit-floating{z-index:5;opacity:calc(clamp(0,var(--kit-open)*12,1) * (1 - var(--kit-seat)));will-change:transform}
-.vts-kit-floating img{display:block;width:100%;height:100%;max-width:none;user-select:none}
-.vts-kit-pouch{transform-origin:31.72% 65.24%;transform:translate3d(calc(-3.52% + var(--kit-dock)*21.3%),calc(3.48% - var(--kit-dock)*22.91%),0) rotate(calc(var(--kit-dock)*90deg)) scale(calc(.67 + var(--kit-dock)*.09))}
-.vts-kit-pouch img{clip-path:polygon(13.4% 52.6%,57.1% 52.6%,57.2% 77.6%,13.5% 77.6%,13.4% 67.8%,6% 67.8%,6% 62.5%,13.4% 62.5%)}
-.vts-kit-vial{transform-origin:73.14% 59.24%;transform:translate3d(calc(3.99% - var(--kit-dock)*17.93%),calc(-1.58% + var(--kit-dock)*11.3%),0) rotate(calc((1 - var(--kit-dock))*-8deg)) scale(calc(.78 - var(--kit-dock)*.62))}
-.vts-kit-vial img{clip-path:polygon(64.8% 40.6%,82.2% 40.6%,82.2% 79%,64.8% 79%)}
+.vts-pack-window,.vts-pack-softlight{display:none} /* no invented foil reflections */
+
+.vts-kit-sequence{position:absolute;z-index:3;pointer-events:none;transform-style:preserve-3d}
+.vts-kit-layer{position:absolute;inset:0;width:100%;height:100%;max-width:none;overflow:visible;filter:drop-shadow(0 9px 13px #0005)}
+.vts-kit-tray{z-index:1;opacity:var(--kit-core)}
+.vts-kit-lid{z-index:2;opacity:var(--kit-seat)}
+/* The black face initially conceals the real tray, then physically swings
+   open TO THE SIDE as one rigid hinged panel; no left/right explosion. */
+.vts-kit-black-door{
+ position:absolute;z-index:3;
+ left:32.6%;top:21.4%;width:33.5%;height:70.7%;
+ transform-origin:100% 50%;transform-style:preserve-3d;
+ transform:perspective(1200px) rotateY(calc(var(--kit-unfold)*-172deg));
+ opacity:calc(var(--kit-core)*(1 - var(--kit-seat)));will-change:transform;
+}
+.vts-kit-door-face{
+ position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+ color:#9b8a67;background:linear-gradient(103deg,#242326 0%,#131418 53%,#232326 100%);
+ border:2px solid #353438;box-shadow:inset 6px 0 13px #0007,inset -4px 0 9px #0006;
+ backface-visibility:hidden;-webkit-backface-visibility:hidden;
+}
+.vts-kit-door-front{transform:translateZ(1px)}
+.vts-kit-door-reverse{transform:rotateY(180deg) translateZ(1px);background:linear-gradient(95deg,#1b1a1c,#101013 65%,#272629)}
+.vts-kit-door-vm{margin-top:12%;font:400 clamp(9px,1.3vw,28px)/1.2 Arial,sans-serif;letter-spacing:.13em}
+.vts-kit-door-vmark{margin-top:12%;font:300 clamp(70px,11vw,190px)/1 Arial,sans-serif;color:#08080b;opacity:.66;transform:scaleX(1.15)}
+.vts-kit-door-wordmark{margin-top:auto;margin-bottom:11%;font:500 clamp(7px,1vw,20px)/1.2 Arial,sans-serif;letter-spacing:.25em;white-space:nowrap}
+.vts-kit-door-wordmark small{display:block;text-align:center;font-size:.56em;letter-spacing:.5em;margin-top:5px}
 .vts-kit-sequence-fallback{position:absolute;left:1.25%;top:21.3%;width:93.3%;height:70%;max-width:none;object-fit:contain;opacity:var(--vts-kit-reveal,0)}
 .vts-pack-flight[data-kit-renderer=fallback] .vts-pack-object{opacity:calc(clamp(0,var(--vts-pack-progress,0)*100,1) * (1 - var(--vts-kit-reveal,0)))}
-.vts-pack-ground{position:absolute;left:var(--pack-shadow-left);top:var(--pack-shadow-top);width:var(--pack-shadow-width);height:30px;border-radius:50%;background:#0007;filter:blur(13px);opacity:var(--vts-pack-progress,0);transform:scaleX(calc(1 + var(--kit-open)*1.35))}
-@media(max-width:860px){.vts-pack-backdrop::after{background:radial-gradient(ellipse at 50% 25%,#b8996530,transparent 58%),linear-gradient(180deg,#100d0b14,#100d0bbf)}.vts-pack-ground{height:18px;filter:blur(9px)}}
+.vts-pack-ground{position:absolute;left:var(--pack-shadow-left);top:var(--pack-shadow-top);width:var(--pack-shadow-width);height:24px;border-radius:50%;background:#0009;filter:blur(11px);opacity:var(--vts-pack-progress,0);transform:scaleX(calc(1 + var(--kit-finish)*1.3))}
+@media(max-width:860px){
+ .vts-pack-backdrop::after{background:linear-gradient(180deg,#100d0b35,transparent 36%,#100d0be8)}
+ .vts-pack-ground{height:16px;filter:blur(8px)}
+ .vts-kit-door-vm{font-size:13px}.vts-kit-door-vmark{font-size:95px}.vts-kit-door-wordmark{font-size:9px}
+}
 @media(prefers-reduced-motion:reduce){.vts-pack-flight{display:none}}
