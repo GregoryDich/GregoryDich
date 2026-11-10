@@ -70,3 +70,140 @@
  .vc-training-cinematic .vc-training-steps h3{font-size:20px}
 }
 @media(prefers-reduced-motion:reduce){.vc-training-cinematic .vc-training-contact>a{transition:none}}
+
+
+/* v9: editorial after-film chapter — not three identical instruction cards.
+   The treatment room bridges out of the opening pack, and the content stays
+   a first-class HTML layer above the photograph. */
+.vc-training.vc-training-cinematic.vc-training-editorial{padding:0;background:#0b0a0a;overflow:hidden}
+.vc-training-editorial .vc-training-film{
+ position:relative;min-height:clamp(670px,100svh,1080px);display:flex;
+ align-items:center;justify-content:flex-start;isolation:isolate;
+ padding:clamp(100px,12vw,190px) max(6.5vw,32px);
+ border:0;
+}
+.vc-training-editorial .vc-training-film-photo{position:absolute;inset:0;z-index:-2}
+.vc-training-editorial .vc-training-film-photo img{
+ display:block;width:100%;height:100%;object-fit:cover;object-position:52% 45%;
+ filter:brightness(.62) saturate(.75);transform:scale(1.015);
+}
+.vc-training-editorial .vc-training-film::after{
+ content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background:linear-gradient(180deg,#0b0a0a 0%,#0b0a0a08 20%,#0b0a0a14 72%,#0b0a0a 100%),
+ linear-gradient(270deg,#090909ed 0%,#090909ca 30%,#09090959 56%,transparent 82%);
+}
+.vc-training-editorial .vc-training-film-copy{position:relative;z-index:1;max-width:min(690px,62vw);margin:0}
+.vc-training-editorial .vc-training-film-copy .vc-section-eyebrow{font-size:12px;color:#e1ba78;margin:0 0 22px;letter-spacing:.06em}
+.vc-training-editorial .vc-training-film-copy h2{margin:0;color:#fff;font-size:clamp(43px,5.3vw,82px);line-height:1.12;font-weight:400;letter-spacing:-.035em;text-wrap:balance}
+.vc-training-editorial .vc-training-film-copy h2 span{color:#e8c68b}
+.vc-training-editorial .vc-training-film-copy>p:not(.vc-section-eyebrow){max-width:38ch;color:#e0d8cc;font-size:clamp(16px,1.25vw,19px);line-height:1.9;margin:28px 0 0}
+.vc-training-editorial .vc-training-film-copy>a{
+ display:inline-flex;gap:52px;align-items:center;justify-content:space-between;
+ margin-top:33px;padding:16px 28px;min-height:52px;background:#dfba74;
+ color:#17120d;border-radius:100px;font-size:15px;font-weight:500;
+ transition:background .2s ease,transform .2s ease;
+}
+.vc-training-editorial .vc-training-film-copy>a:hover{background:#efcc8b;transform:translateY(-2px)}
+.vc-training-editorial .vc-training-film-label{
+ position:absolute;bottom:60px;inset-inline-end:6.5vw;color:#d3c0a4;
+ letter-spacing:.2em;font-size:10px;opacity:.8;direction:ltr;
+}
+.vc-training-editorial .vc-training-film-label span{color:#dfba74}
+.vc-training-editorial .vc-training-editorial-body{
+ max-width:1360px;margin:auto;display:grid;
+ grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);
+ gap:clamp(60px,8vw,135px);align-items:start;
+ padding:clamp(90px,10vw,152px) clamp(28px,6.5vw,108px) clamp(80px,8vw,125px);
+}
+.vc-training-editorial .vc-training-editorial-lead{max-width:590px}
+.vc-training-editorial .vc-training-editorial-lead h3{
+ font-size:clamp(35px,4.1vw,65px);line-height:1.18;
+ font-weight:400;color:#fff;letter-spacing:-.024em;margin:0;
+}
+.vc-training-editorial .vc-training-editorial-lead h3 em{font-style:normal;color:#dfba74}
+.vc-training-editorial .vc-training-editorial-lead>p:last-child{
+ color:#c8beae;line-height:1.9;font-size:16px;max-width:48ch;margin-top:26px;
+}
+.vc-training-editorial .vc-training-editorial-points{display:flex;flex-direction:column;gap:0}
+.vc-training-editorial .vc-training-editorial-points>div{
+ position:relative;border-top:1px solid #dfba7441;padding:24px 0 31px;
+}
+.vc-training-editorial .vc-training-editorial-points>div:last-child{border-bottom:1px solid #dfba7441}
+.vc-training-editorial .vc-training-editorial-rule{
+ position:absolute;top:-1px;right:0;display:block;width:64px;height:1px;background:#dfba74;
+}
+.vc-training-editorial .vc-training-editorial-points h4{
+ margin:0;color:#f5eee3;font-size:clamp(19px,1.85vw,25px);font-weight:400;
+}
+.vc-training-editorial .vc-training-editorial-points p{
+ color:#bfb6a8;line-height:1.8;font-size:14px;margin:11px 0 0;max-width:37ch;
+}
+.vc-training-editorial .vc-training-contact{max-width:1210px;margin:0 auto;border-block:1px solid #dfba743b;padding:38px 0}
+.vc-training-editorial .vc-faq{max-width:1210px;margin:0 auto;padding-block:clamp(70px,8vw,125px)}
+/* Related: an editorial gallery with objects on a quiet surface, not a
+   wall of equal cards. Continuous black/gold and light responsive borders. */
+.vtech-cinema .vc-related{
+ position:relative;padding:clamp(80px,8vw,130px) clamp(28px,7vw,125px);
+ background:linear-gradient(180deg,#09090b,#0d0c0b);border-top:1px solid #dfba7426;
+}
+.vtech-cinema .vc-related>h2{font-size:clamp(35px,4.3vw,66px);font-weight:400;letter-spacing:-.03em;color:#f6efe7}
+.vtech-cinema .vc-related-intro{font-size:16px;line-height:1.85;color:#c5bcaf;max-width:60ch}
+.vtech-cinema .vc-related-group{margin-top:clamp(52px,6vw,95px)}
+.vtech-cinema .vc-related-group>h3{font-size:12px;letter-spacing:.08em;color:#dfba74;margin:0 0 15px}
+.vtech-cinema .vc-related-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 44px;border-top:1px solid #dfba7438}
+.vtech-cinema .vc-related-card{
+ min-height:275px;padding:34px 0;display:flex;align-items:center;gap:clamp(20px,3vw,44px);
+ background:transparent;border:0;border-bottom:1px solid #dfba7438;border-radius:0;box-shadow:none;
+ transform:none;transition:background .2s ease;
+}
+.vtech-cinema .vc-related-card:hover{background:linear-gradient(90deg,transparent,#c9a24b08)}
+.vtech-cinema .vc-related-image{
+ width:42%;height:215px;flex-shrink:0;border-radius:0;
+ background:radial-gradient(ellipse at center,#b6965022,#151310 60%,transparent 80%);
+}
+.vtech-cinema .vc-related-image .product-image{max-height:195px;max-width:100%}
+.vtech-cinema .vc-related-card h4{font-size:clamp(18px,2vw,27px);font-weight:400;color:#fff}
+.vtech-cinema .vc-related-card p{font-size:14px;color:#bdb3a5;line-height:1.85;max-width:31ch}
+.vtech-cinema .vc-related-link{font-size:13px;margin-top:20px;color:#dfba74}
+.vtech-cinema .vc-related-alternative .vc-related-grid{grid-template-columns:1fr}
+.vtech-cinema .vc-related-alternative .vc-related-card{max-width:780px}
+@media(max-width:860px){
+ .vc-training-editorial .vc-training-film{min-height:100svh;padding:0 23px 80px;align-items:flex-end}
+ .vc-training-editorial .vc-training-film-photo img{object-position:56% 25%;filter:brightness(.65) saturate(.76)}
+ .vc-training-editorial .vc-training-film::after{
+  background:linear-gradient(180deg,#0b0a0a 0%,transparent 18%,#0b0a0a0e 32%,#0b0a0ad9 63%,#0b0a0a 100%)
+ }
+ .vc-training-editorial .vc-training-film-copy{max-width:580px;width:100%;margin:0 auto}
+ .vc-training-editorial .vc-training-film-copy .vc-section-eyebrow{font-size:11px;margin-bottom:14px}
+ .vc-training-editorial .vc-training-film-copy h2{font-size:clamp(34px,8vw,50px)}
+ .vc-training-editorial .vc-training-film-copy>p:not(.vc-section-eyebrow){font-size:14px;line-height:1.75;margin-top:18px}
+ .vc-training-editorial .vc-training-film-copy>a{margin-top:21px;font-size:13px;min-height:48px;padding:12px 24px}
+ .vc-training-editorial .vc-training-film-label{display:none}
+ .vc-training-editorial .vc-training-editorial-body{display:block;padding:65px 23px 60px}
+ .vc-training-editorial .vc-training-editorial-lead h3{font-size:clamp(31px,7vw,45px)}
+ .vc-training-editorial .vc-training-editorial-lead>p:last-child{font-size:14px;line-height:1.85}
+ .vc-training-editorial .vc-training-editorial-points{margin-top:42px}
+ .vc-training-editorial .vc-training-editorial-points>div{padding:22px 0}
+ .vc-training-editorial .vc-training-contact{margin-inline:23px}
+ .vc-training-editorial .vc-faq{margin-inline:23px;padding-block:63px}
+ .vtech-cinema .vc-related{padding:70px 23px 95px}
+ .vtech-cinema .vc-related>h2{font-size:clamp(32px,7vw,42px)}
+ .vtech-cinema .vc-related-intro{font-size:14px}
+ .vtech-cinema .vc-related-grid{grid-template-columns:1fr;gap:0}
+ .vtech-cinema .vc-related-card{flex-direction:row;text-align:start;min-height:180px;gap:22px;padding:24px 0}
+ .vtech-cinema .vc-related-image{width:37%;height:155px}
+ .vtech-cinema .vc-related-image .product-image{max-height:150px}
+ .vtech-cinema .vc-related-card h4{font-size:18px}
+ .vtech-cinema .vc-related-card p{font-size:12px;line-height:1.7}
+}
+@media(max-width:360px){
+ .vc-training-editorial .vc-training-film{padding-inline:18px}
+ .vc-training-editorial .vc-training-film-copy h2{font-size:32px}
+ .vc-training-editorial .vc-training-editorial-body{padding-inline:18px}
+ .vtech-cinema .vc-related{padding-inline:18px}
+ .vtech-cinema .vc-related-card{gap:13px}
+ .vtech-cinema .vc-related-image{width:33%;height:130px}
+}
+@media(prefers-reduced-motion:reduce){
+ .vc-training-editorial .vc-training-film-copy>a,.vtech-cinema .vc-related-card{transition:none}
+}
