@@ -5,7 +5,7 @@ import {getEntryBoxRect,getEntryMedia} from './vtech-entry';
 import {VTechKitSequence,kitSequence} from './VTechKitSequence';
 import './vtech-pack-flight.css';
 
-type Geometry={style:CSSProperties;sequence:CSSProperties;poster:string;image:CSSProperties;silhouette:string;window:string;triangle:string};
+type Geometry={style:CSSProperties;sequence:CSSProperties;poster:string;backdrop:string;image:CSSProperties;silhouette:string;window:string;triangle:string};
 
 /** The last camera frame returns to the original pack. Its exact photographic
  * silhouette then takes over, so the offer never introduces a second product. */
@@ -37,7 +37,7 @@ export function VTechPackFlight({stage,reduced}:{stage:RefObject<HTMLDivElement|
    const mobile=window.innerWidth<=860;
    const polygon=(points:number[][])=>'polygon('+points.map(([x,y])=>`${(x-media.box.left)/media.box.width*100}% ${(y-media.box.top)/media.box.height*100}%`).join(',')+')';
    const next:Geometry={
-    poster:media.poster,silhouette:media.silhouette,
+    poster:media.poster,backdrop:mobile?'/assets/world/vtech-consultation-mobile.webp':'/assets/world/vtech-consultation.webp',silhouette:media.silhouette,
     triangle:polygon(mobile?[[178,294],[207,294],[193,326]]:[[899,260],[975,259],[938,340]]),
     window:polygon(mobile?[[145,313],[159,313],[195,390],[228,312],[242,312],[195,416]]:[[816,309],[849,308],[940,494],[1023,307],[1056,307],[941,565]]),
     style:{
@@ -71,7 +71,7 @@ export function VTechPackFlight({stage,reduced}:{stage:RefObject<HTMLDivElement|
  },[stage,reduced]);
  if(reduced||!geometry)return null;
  return <div className="vts-pack-flight" style={geometry.style} data-sequence-ready={sequenceMode!=='loading'} data-kit-renderer={sequenceMode} aria-hidden="true">
-  <div className="vts-pack-backdrop"><img src={geometry.poster} alt=""/></div>
+  <div className="vts-pack-backdrop"><img src={geometry.backdrop} alt=""/></div>
   <div className="vts-pack-ground"/>
   <div className="vts-pack-object"><div className="vts-pack-sleeve"><div className="vts-pack-cutout" style={{clipPath:geometry.silhouette}}>
    <img src={geometry.poster} style={geometry.image} alt="" draggable={false}/>
