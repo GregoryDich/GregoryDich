@@ -1,6 +1,7 @@
 import {useRef,useState,type PointerEvent} from 'react';
 import {ProductImage} from '../shared';
 import {productHref} from '../data';
+import {mediaUrl} from '../media';
 import {vtechCases} from './case-data';
 import './vtech-training.css';
 
@@ -69,8 +70,8 @@ export function VTechTraining(){return <section id="vtech-training" className="v
  <div className="vc-training-film">
   <div className="vc-training-film-photo" aria-hidden="true">
    <picture>
-    <source media="(max-width: 860px)" srcSet="/assets/world/vtech-consultation-mobile.webp"/>
-    <img src="/assets/world/vtech-consultation.webp" alt="" loading="lazy" decoding="async"/>
+    <source media="(max-width: 860px)" srcSet={mediaUrl("/assets/world/vtech-consultation-mobile.webp")}/>
+    <img src={mediaUrl("/assets/world/vtech-consultation.webp")} alt="" loading="lazy" decoding="async"/>
    </picture>
   </div>
   <div className="vc-training-film-copy">
