@@ -39,18 +39,7 @@ export function VTechKitSequence({stage,style,onReady}:{stage:RefObject<HTMLDivE
     <polygon points={tray} fill="#101114"/>
     <image href={openedParts} width="1277" height="1266" clipPath={'url(#'+id+'-tray)'}/>
    </svg>
-   <div className="vts-kit-black-door" role="presentation">
-    <div className="vts-kit-door-face vts-kit-door-front">
-     <span className="vts-kit-door-vm">VM</span>
-     <span className="vts-kit-door-vmark">V</span>
-     <span className="vts-kit-door-wordmark">V - T E C H<small>S Y S T E M</small></span>
-    </div>
-    <div className="vts-kit-door-face vts-kit-door-reverse">
-     <span className="vts-kit-door-vm">VM</span>
-     <span className="vts-kit-door-vmark">V</span>
-     <span className="vts-kit-door-wordmark">V - T E C H<small>S Y S T E M</small></span>
-    </div>
-   </div>
+   {/* Hinged black door is the approved real-photo layer, not a redrawn surface. */}
    <svg className="vts-kit-lid vts-kit-layer" viewBox="0 0 1277 1266" preserveAspectRatio="none">
     <defs><clipPath id={id+'-lid'}><polygon points={lid}/></clipPath></defs>
     <image href={openedParts} width="1277" height="1266" clipPath={'url(#'+id+'-lid)'}/>
