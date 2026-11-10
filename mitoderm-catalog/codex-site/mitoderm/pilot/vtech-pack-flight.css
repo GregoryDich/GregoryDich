@@ -40,34 +40,24 @@
 .vts-kit-sequence{position:absolute;z-index:3;pointer-events:none;transform-style:preserve-3d}
 .vts-kit-layer{position:absolute;inset:0;width:100%;height:100%;max-width:none;overflow:visible;filter:drop-shadow(0 9px 13px #0005)}
 .vts-kit-tray{z-index:1;opacity:var(--kit-core)}
-.vts-kit-lid{z-index:2;opacity:var(--kit-seat)}
-/* The black face initially conceals the real tray, then physically swings
-   open TO THE SIDE as one rigid hinged panel; no left/right explosion. */
-.vts-kit-black-door{
- position:absolute;z-index:3;
- left:32.6%;top:21.4%;width:33.5%;height:70.7%;
- transform-origin:100% 50%;transform-style:preserve-3d;
- transform:perspective(1200px) rotateY(calc(var(--kit-unfold)*-172deg));
- opacity:calc(var(--kit-core)*(1 - var(--kit-seat)));will-change:transform;
+/* The right black cover uses the source photo and hinges around its LEFT edge.
+   At closed angle -175deg it folds over the central tray; at zero it occupies
+   the real photographed right-side position. This is a rigid motion, not flight. */
+.vts-kit-lid{
+ z-index:3;
+ opacity:var(--kit-core);
+ transform-origin:64.8% 55%;
+ transform-box:view-box;
+ transform:perspective(1150px) rotateY(calc((1 - var(--kit-unfold))*-175deg));
+ backface-visibility:visible;
+ will-change:transform;
 }
-.vts-kit-door-face{
- position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
- color:#9b8a67;background:linear-gradient(103deg,#242326 0%,#131418 53%,#232326 100%);
- border:2px solid #353438;box-shadow:inset 6px 0 13px #0007,inset -4px 0 9px #0006;
- backface-visibility:hidden;-webkit-backface-visibility:hidden;
-}
-.vts-kit-door-front{transform:translateZ(1px)}
-.vts-kit-door-reverse{transform:rotateY(180deg) translateZ(1px);background:linear-gradient(95deg,#1b1a1c,#101013 65%,#272629)}
-.vts-kit-door-vm{margin-top:12%;font:400 clamp(9px,1.3vw,28px)/1.2 Arial,sans-serif;letter-spacing:.13em}
-.vts-kit-door-vmark{margin-top:12%;font:300 clamp(70px,11vw,190px)/1 Arial,sans-serif;color:#08080b;opacity:.66;transform:scaleX(1.15)}
-.vts-kit-door-wordmark{margin-top:auto;margin-bottom:11%;font:500 clamp(7px,1vw,20px)/1.2 Arial,sans-serif;letter-spacing:.25em;white-space:nowrap}
-.vts-kit-door-wordmark small{display:block;text-align:center;font-size:.56em;letter-spacing:.5em;margin-top:5px}
 .vts-kit-sequence-fallback{position:absolute;left:1.25%;top:21.3%;width:93.3%;height:70%;max-width:none;object-fit:contain;opacity:var(--vts-kit-reveal,0)}
 .vts-pack-flight[data-kit-renderer=fallback] .vts-pack-object{opacity:calc(clamp(0,var(--vts-pack-progress,0)*100,1) * (1 - var(--vts-kit-reveal,0)))}
 .vts-pack-ground{position:absolute;left:var(--pack-shadow-left);top:var(--pack-shadow-top);width:var(--pack-shadow-width);height:24px;border-radius:50%;background:#0009;filter:blur(11px);opacity:var(--vts-pack-progress,0);transform:scaleX(calc(1 + var(--kit-finish)*1.3))}
 @media(max-width:860px){
  .vts-pack-backdrop::after{background:linear-gradient(180deg,#100d0b35,transparent 36%,#100d0be8)}
  .vts-pack-ground{height:16px;filter:blur(8px)}
- .vts-kit-door-vm{font-size:13px}.vts-kit-door-vmark{font-size:95px}.vts-kit-door-wordmark{font-size:9px}
+ 
 }
 @media(prefers-reduced-motion:reduce){.vts-pack-flight{display:none}}
