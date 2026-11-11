@@ -19,6 +19,7 @@ concurrency:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: mitoderm-catalog/codex-site
@@ -36,3 +37,35 @@ jobs:
         run: pnpm exec tsc --noEmit
       - name: Production build
         run: pnpm build
+      - name: Prepare Playwright (no project dependency change)
+        run: |
+          npm install --prefix /tmp/mitoderm-qa --no-save --no-audit --no-fund playwright-core@1.58.2
+          which google-chrome || which chromium
+      - name: Start local V-TECH preview
+        run: |
+          nohup pnpm dev --host 127.0.0.1 > /tmp/mitoderm-preview.log 2>&1 &
+          echo $! > /tmp/mitoderm-preview.pid
+          for i in $(seq 1 45); do
+            if curl -fsS -o /dev/null http://127.0.0.1:5173/products/v-tech-system; then
+              echo "V-TECH preview is responding"
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/mitoderm-preview.log
+          exit 1
+      - name: Browser QA (forward/reverse, 5 sizes, reduced motion)
+        env:
+          MITODERM_URL: http://127.0.0.1:5173
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/vtech-visual-qa.cjs
+      - name: Upload screenshot and QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mitoderm-vtech-v9-visual-proof
+          path: |
+            mitoderm-catalog/codex-site/production/proof/ci-v9/
+            /tmp/mitoderm-preview.log
+          retention-days: 14
+          if-no-files-found: warn
