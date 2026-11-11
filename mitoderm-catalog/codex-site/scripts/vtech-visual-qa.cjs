@@ -129,6 +129,11 @@ async function snapshot(page,config,name,local){
     const images=[...document.querySelectorAll('#vtech-related img')];
     return images.length>=5 && images.every(img=>img.complete && img.naturalWidth>0);
    },null,{timeout:15000});
+   await page.evaluate(async()=>{
+    const images=[...document.querySelectorAll('#vtech-related img')];
+    await Promise.all(images.map(img=>img.decode()));
+   });
+   await page.waitForTimeout(250); /* allow a post-decode compositor paint */
    check((await page.locator('#vtech-related img').count())>=5,cfg.name+': all related product images loaded');
    const relatedDiagnostics=await page.evaluate(()=>[...document.querySelectorAll('#vtech-related img')].map(img=>{
     const r=img.getBoundingClientRect(),st=getComputedStyle(img);
