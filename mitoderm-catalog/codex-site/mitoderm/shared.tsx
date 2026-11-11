@@ -33,10 +33,10 @@ export function Chapter({id,line,className='',children}:{id:string;line?:string;
   return <section ref={ref} id={id} className={`chapter ${className}`} data-line={lineKeys[line??'']??line??'neutral'}>{children}</section>;
 }
 
-export function ProductImage({slug,className=''}:{slug:string;className?:string}) {
+export function ProductImage({slug,className='',decoding='async'}:{slug:string;className?:string;decoding?:'async'|'sync'}) {
   const asset=assets[slug];const product=products.find(p=>p.slug===slug);
   if(!asset||!product)return null;
-  return <img className={`product-image ${className}`} src={asset.src} alt={product.name} width={asset.width} height={asset.height} loading="lazy" decoding="async" style={{'--asset-max':`${Math.min(asset.maxWidth,asset.width/2)}px`,'--asset-height':`${asset.height/2}px`} as CSSProperties}/>;
+  return <img className={`product-image ${className}`} src={asset.src} alt={product.name} width={asset.width} height={asset.height} loading="lazy" decoding={decoding} style={{'--asset-max':`${Math.min(asset.maxWidth,asset.width/2)}px`,'--asset-height':`${asset.height/2}px`} as CSSProperties}/>;
 }
 
 export function Smoke(){return <div className="soft-smoke" aria-hidden="true"><i/><i/><i/></div>;}
