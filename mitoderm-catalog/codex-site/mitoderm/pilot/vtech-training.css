@@ -207,3 +207,33 @@
 @media(prefers-reduced-motion:reduce){
  .vc-training-editorial .vc-training-film-copy>a,.vtech-cinema .vc-related-card{transition:none}
 }
+
+/* v9 product-gallery photography: premium neutral bounce light instead of
+   black items vanishing into pure-black panels. Each product stays its own
+   photograph (no synthesized replacement art or invented pack changes). */
+.vtech-cinema .vc-related-image{
+ isolation:isolate;
+ position:relative;
+ background:radial-gradient(ellipse at 50% 48%,rgba(190,170,136,.33) 0%,rgba(102,86,66,.27) 42%,rgba(28,25,21,.78) 73%,transparent 91%);
+ border-radius:18px;
+}
+.vtech-cinema .vc-related-image::before{
+ content:'';position:absolute;inset:12%;z-index:-1;border-radius:50%;
+ background:radial-gradient(ellipse,#d6cbb333,transparent 74%);
+ filter:blur(5px);pointer-events:none;
+}
+.vtech-cinema .vc-related-image .product-image{
+ position:relative;z-index:1;
+ filter:brightness(1.22) contrast(1.08) drop-shadow(0 15px 13px #0008);
+ transition:transform .35s ease;
+}
+.vtech-cinema .vc-related-card:hover .product-image{transform:translateY(-5px) scale(1.025)}
+.vtech-cinema .vc-related-card-mitopen .product-image,
+.vtech-cinema .vc-related-card-exotech-gel .product-image{
+ filter:brightness(1.7) contrast(1.08) drop-shadow(0 14px 16px #0009);
+}
+.vtech-cinema .vc-related-card-exocell-mask .product-image,
+.vtech-cinema .vc-related-card-derma-recovery-cream .product-image{
+ filter:brightness(1.06) contrast(1.1) drop-shadow(0 12px 13px #0008);
+}
+@media(prefers-reduced-motion:reduce){.vtech-cinema .vc-related-image .product-image{transition:none;transform:none}}
