@@ -1,0 +1,38 @@
+name: MITODERM V-TECH quality gates
+
+on:
+  push:
+    branches:
+      - claude/mitoderm-figma-catalog-74tbuw
+    paths:
+      - 'mitoderm-catalog/codex-site/**'
+      - '.github/workflows/mitoderm-vtech-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mitoderm-vtech-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mitoderm-catalog/codex-site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install pnpm and Node with cached dependencies
+        uses: pnpm/setup@v3
+        with:
+          working-directory: mitoderm-catalog/codex-site
+          runtime: node@22
+          cache: true
+          require-lockfile: true
+      - name: TypeScript
+        run: pnpm exec tsc --noEmit
+      - name: Production build
+        run: pnpm build
