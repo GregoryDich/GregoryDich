@@ -130,6 +130,15 @@ async function snapshot(page,config,name,local){
     return images.length>=5 && images.every(img=>img.complete && img.naturalWidth>0);
    },null,{timeout:15000});
    check((await page.locator('#vtech-related img').count())>=5,cfg.name+': all related product images loaded');
+   const relatedDiagnostics=await page.evaluate(()=>[...document.querySelectorAll('#vtech-related img')].map(img=>{
+    const r=img.getBoundingClientRect(),st=getComputedStyle(img);
+    return {src:img.getAttribute('src'),naturalWidth:img.naturalWidth,naturalHeight:img.naturalHeight,
+     box:[Math.round(r.x),Math.round(r.y),Math.round(r.width),Math.round(r.height)],
+     opacity:st.opacity,display:st.display,visibility:st.visibility,filter:st.filter,
+     objectFit:st.objectFit,mixBlendMode:st.mixBlendMode,transform:st.transform};
+   }));
+   fs.writeFileSync(path.join(outDir,cfg.name+'-related-diagnostics.json'),JSON.stringify(relatedDiagnostics,null,2));
+   process.stdout.write('IMAGE DIAGNOSTICS '+cfg.name+' '+JSON.stringify(relatedDiagnostics)+'\\n');
    await page.screenshot({path:path.join(outDir,cfg.name+'-related.png'),animations:'disabled',timeout:30000});
    await page.close();
   }
