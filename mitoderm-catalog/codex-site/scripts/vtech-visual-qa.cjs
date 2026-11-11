@@ -115,7 +115,8 @@ async function snapshot(page,config,name,local){
    check(three===0,cfg.name+': no obsolete 3-step cards');
    const editorial=await page.locator('.vc-training-film-copy').count();
    check(editorial===1,cfg.name+': editorial education section');
-   await page.locator('#vtech-training').scrollIntoViewIfNeeded();
+   await page.evaluate(()=>{const node=document.querySelector('#vtech-training');window.scrollTo({top:window.scrollY+node.getBoundingClientRect().top,left:0,behavior:'instant'});});
+   await page.waitForTimeout(120);
    await page.screenshot({path:path.join(outDir,cfg.name+'-training.png'),animations:'disabled',timeout:30000});
    await page.locator('#vtech-related').scrollIntoViewIfNeeded();
    await page.screenshot({path:path.join(outDir,cfg.name+'-related.png'),animations:'disabled',timeout:30000});
@@ -124,6 +125,7 @@ async function snapshot(page,config,name,local){
   const reduced=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
   await reduced.goto(base+'/products/v-tech-system',{waitUntil:'domcontentloaded',timeout:30000});
   await reduced.waitForSelector('[data-vtech-story]');
+  await reduced.waitForFunction(()=>document.querySelector('[data-vtech-story]')?.getAttribute('data-mode')==='linear',null,{timeout:12000});
   check((await reduced.locator('[data-vtech-story]').getAttribute('data-mode'))==='linear','reduced motion uses semantic linear mode');
   await reduced.screenshot({path:path.join(outDir,'reduced-motion.png'),animations:'disabled'});
   await reduced.close();
