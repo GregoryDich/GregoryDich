@@ -119,6 +119,11 @@ async function snapshot(page,config,name,local){
    await page.waitForTimeout(120);
    await page.screenshot({path:path.join(outDir,cfg.name+'-training.png'),animations:'disabled',timeout:30000});
    await page.locator('#vtech-related').scrollIntoViewIfNeeded();
+   await page.waitForFunction(()=>{
+    const images=[...document.querySelectorAll('#vtech-related img')];
+    return images.length>=5 && images.every(img=>img.complete && img.naturalWidth>0);
+   },null,{timeout:15000});
+   check((await page.locator('#vtech-related img').count())>=5,cfg.name+': all related product images loaded');
    await page.screenshot({path:path.join(outDir,cfg.name+'-related.png'),animations:'disabled',timeout:30000});
    await page.close();
   }
