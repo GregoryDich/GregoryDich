@@ -44,7 +44,13 @@ async function goToLocal(page,local){
  },local,{timeout:12000});
 }
 async function snapshot(page,config,name,local){
- if(local!==null) await goToLocal(page,local);
+ if(local!==null) {
+  await goToLocal(page,local);
+  await page.waitForFunction(()=>{
+   const img=document.querySelector('.vts-pack-backdrop img');
+   return img?.complete && img.naturalWidth>0;
+  },null,{timeout:15000});
+ }
  else {
   const y=await page.evaluate(()=>{
    const el=document.querySelector('[data-vtech-story]');
