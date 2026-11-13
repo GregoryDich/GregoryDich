@@ -21,3 +21,13 @@
 - Document discrepancies between historical promotional brochures and current professional protocols; never silently resolve conflicting doses/timings by guessing.
 - The user's skin age groupings are for CASTING cosmetologists, not clinical eligibility.
 - Clinical results require actual before/after images, timing and consent. Show a documentary placeholder until verified evidence is available.
+
+## Direct source verification — 2026-11-13
+
+Retrieved repository `mitoderm-catalog/protocols/print/MITODERM-Protocols-HE.pdf` at commit `716a4e403faedb715e05c5ca3d37d94cb3d59e9e`; 14 pages; SHA-256 `3c75f4b9b9db6c793409d8ace94717520e2aa221065e3eb79ac78368f4df111f`. EXO-NAD pp.9–10 were read as text and rendered pages.
+
+- EXO-NAD: shake biphasic solution; professionally selected peel variant; pH NORMALIZER; rinse thoroughly and dry completely; LONGEVITY SERUM absorbed without rinsing. Change gloves/withdrawal needles/syringes between stages. Shots 03–05 now map these actions explicitly. No injection is depicted.
+- Conflict: PDF p.9 gives 1.5–2 ml normalizer; `state/protocols/he-final.md` says approximately 2 ml. The storyboard contains no doses and uses the PDF as its checked source.
+- EXOSIGNAL HAIR pp.7–8 text checked for the next package: preparation/cleaning, complete drying, serum before stamping in the same zone, gentle gloved massage to absorption. MITOSCAN is optional. PDF and text differ on serum amount and device depth; do not copy the text values into a consumer-facing film.
+- Full professional settings, exposure variants and treatment intervals remain outside the visual preview. Film seconds never represent exposure time.
+- Current commercial kit counts remain pending physical-pack confirmation; `source-texts.md` p.07 supports 15 ml peel and 5×5 ml of each other component.

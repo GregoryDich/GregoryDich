@@ -34,7 +34,9 @@ jobs:
           cache: true
           require-lockfile: true
       - name: Validate product-page bible against registry
-        run: node scripts/generate-page-bible.mjs --check
+        run: |
+          node scripts/generate-page-bible.mjs --check
+          node scripts/render-approval-package.mjs --check
       - name: TypeScript
         run: pnpm exec tsc --noEmit
       - name: Production build
@@ -43,6 +45,11 @@ jobs:
         run: |
           npm install --prefix /tmp/mitoderm-qa --no-save --no-audit --no-fund playwright-core@1.58.2
           which google-chrome || which chromium
+      - name: Validate EXO-NAD approval preview
+        env:
+          MITODERM_PLAYWRIGHT_MODULE: /tmp/mitoderm-qa/node_modules/playwright-core
+          MITODERM_CHROME: /usr/bin/google-chrome
+        run: node scripts/verify-approval-package.cjs
       - name: Start local V-TECH preview
         run: |
           nohup pnpm dev --host 127.0.0.1 > /tmp/mitoderm-preview.log 2>&1 &
@@ -68,6 +75,10 @@ jobs:
           name: mitoderm-vtech-v9-visual-proof
           path: |
             mitoderm-catalog/codex-site/production/proof/ci-v9/
+            mitoderm-catalog/codex-site/production/page-bible/pages/exo-nad/QA*.png
+            mitoderm-catalog/codex-site/production/page-bible/pages/exo-nad/QA.json
+            mitoderm-catalog/codex-site/production/page-bible/pages/exo-nad/STORYBOARD*.png
             /tmp/mitoderm-preview.log
           retention-days: 14
           if-no-files-found: warn
+

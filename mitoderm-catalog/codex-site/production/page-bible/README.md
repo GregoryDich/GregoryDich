@@ -1,6 +1,6 @@
 # MITODERM — Production Page Bible (13 products)
 
-**One source of truth:** [REGISTRY.json](./REGISTRY.json) stores per-product stage, palette, cast status, scene durations, scroll lengths, draft CTA and protocol provenance. Per-product [PAGE.md] files are generated from the registry by `scripts/generate-page-bible.mjs`. **Do not manually edit the PAGE.md files.**
+**One source of truth:** [REGISTRY.json](./REGISTRY.json) stores per-product stage, palette, cast status, scene durations, scroll lengths, draft CTA and protocol provenance. Approved-for-review packages add a referenced `STORYBOARD.json` for shot direction and source/approval metadata; timing remains in the registry. Per-product [PAGE.md] files are generated from the registry by `scripts/generate-page-bible.mjs`. **Do not manually edit the PAGE.md files.**
 
 ### Current workflow
 1. Check user original product photos. **NAD.png** is the EXO-NAD gold/ivory canonical reference; the repo's product crops corroborate original appearance.
@@ -20,3 +20,15 @@
 - `../../scripts/generate-page-bible.mjs` — generate/check command.
 
 **V-TECH is frozen:** do not change its code, film, timing or live page while implementing this architecture. One character, one identity across all sections. **Current status: PREPRODUCTION ONLY.** No new pages/video published.
+
+## EXO-NAD review package — 2026-11-13
+
+[Open the complete Hebrew PAGE.md](pages/exo-nad/PAGE.md) · [Visual storyboard](pages/exo-nad/STORYBOARD.png) · [Live RTL preview source](pages/exo-nad/STORYBOARD.html) · [QA](pages/exo-nad/QA.md). Download the files with their relative assets to open HTML locally; GitHub blob view displays source, not a deployed website.
+
+Status: `approval_ready_with_reference_holds`. Real product image and PDF pp.9–10 verified; cast, exact permitted procedure footage, clinical evidence and final copy approval remain open. No paid generations, production routes or V-TECH changes.
+
+Generate with `node scripts/generate-page-bible.mjs` and `node scripts/render-approval-package.mjs`; validate both with `--check`. Browser verification: `node scripts/verify-approval-package.cjs` using installed Playwright/Chrome (see QA.md). Do not manually edit generated PAGE.md or STORYBOARD.html. No new dependencies are required by the generators.
+
+Units: registry `scrollVh` is a count of **full viewport heights**, retained for compatibility; 10.35 means 1035 CSS vh. Film edit seconds are not treatment duration.
+
+Next: [EXOSIGNAL HAIR source preparation](pages/exosignal-hair/NEXT-PACKAGE.md), then `continuation.queue`. Existing automation `6af73a565af08191bf0a4b0d3ee94430` remains unchanged; never create a duplicate.

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>EXO-NAD · ערכת אישור</title><style>@@CSS@@</style></head>
+<body>
+<a class="skip" href="#storyboard">מעבר ללוח הסצנות</a>
+<header class="topbar"><bdi class="wordmark">MITODERM</bdi><span>ערכת אישור · 13.11.2026</span><a href="#contact">פרטים לקליניקה ↙</a></header>
+<main>
+<section class="intro">
+ <div class="intro-copy"><span class="eyebrow">VM / מקצועי / הצעה — לאישור</span><h1>EXO-NAD</h1><h2>@@TITLE@@</h2><p>@@SUBTITLE@@</p><a href="#storyboard" class="text-link">ללוח שמונה הסצנות ↓</a></div>
+ <div class="hero-product"><img src="assets/NAD.png" width="795" height="489" alt="ערכת EXO-NAD בתצלום המקורי: אריזה זהובה, בקבוק שקוף, בקבוקון ענברי ובקבוקון טורקיז"></div>
+</section>
+<div class="facts"><div><strong>08</strong><span>סצנות</span></div><div><strong><bdi>36.5 s</bdi></strong><span>משך עריכה</span></div><div><strong><bdi>10.35 H</bdi></strong><span>גבהי חלון · <bdi>1035vh</bdi></span></div><div><strong>02</strong><span>זהויות קבועות · טרם אושרו</span></div></div>
+<aside class="notice"><strong>מוכן לבדיקת כיוון. לא להפקה.</strong> התצלום והפרוטוקול נבדקו. צילומי הדמויות, הפעולה והתוצאות עדיין חסרים. כל טקסט חדש הוא הצעה לאישור.</aside>
+<section class="preview-section" aria-labelledby="preview-title">
+<div class="section-top"><span>תצוגת קצב</span><span>המחשה, לא סרט טיפול</span></div><h2 id="preview-title">הסיפור, ברצף אחד.</h2>
+<div class="preview-stage"><div id="preview-visual" class="preview-visual pack">@@FIRST_VISUAL@@</div><div class="preview-copy"><span id="preview-number" class="eyebrow">01 / 08</span><h3 id="preview-headline" dir="auto">EXO-NAD</h3><p id="preview-copy">מערכת מקצועית בשלושה שלבים</p><span id="preview-status">צילום מקור · המחשת קומפוזיציה</span></div></div>
+<div class="controls"><button id="play" type="button">ניגון המחשת קצב</button><label for="seek">זמן עריכה</label><input id="seek" type="range" min="0" max="36.5" step="0.1" value="0" dir="ltr" aria-label="זמן עריכה בשניות"><output id="time" for="seek" dir="ltr">0.0 / 36.5 s</output></div>
+<p class="micro">המעברים מדגימים את חלוקת הזמן בלבד. החשיפה, ההמתנה והחלפת הכלים אינן מוצגות בזמן אמת. ללא דמויות מאושרות אין תחליף פנים.</p>
+<nav class="timeline" aria-label="מעבר לסצנות">@@TIMELINE@@</nav>
+</section>
+<section id="storyboard" class="storyboard-section"><div class="section-top"><span>לוח הסצנות המלא</span><span>01–08 / עברית חיה / Rubik</span></div><h2>מהמוצר. אל המפגש. ובחזרה.</h2><p class="section-lead">תצלומים מקוריים לצד חלונות צילום מסומנים. בכל סצנה אפשר לפתוח את הערות הבימוי והמקור.</p><div class="shots">@@CARDS@@</div></section>
+<section class="kit-section"><span class="eyebrow">תכולה לפי תמליל הקטלוג · לאישור מול אריזה נוכחית</span><h2>שלושה רכיבים, לפי הסדר.</h2><div class="kit-list">@@KIT@@</div><p class="micro">הצילום מציג שלושה סוגי בקבוקים. הוא אינו צילום של כל יחידות הערכה. לא הומצאו אריזה פתוחה, דפנות או תוויות.</p></section>
+@@LOWER@@
+<section class="references" id="references"><div class="section-top"><span>בדיקת רפרנסים</span><span>מקומות שמורים, ללא תחליפים</span></div><h2>מה קיים. מה צריך לאשר.</h2><ul>@@REFERENCES@@</ul><p class="micro">מקור הרצף: MITODERM-Protocols-HE.pdf, עמודים 9–10. המקור הטקסטואלי המקביל מכיל הבדלים; ההכרעה בתכנון נשענת על ה־PDF שנבדק.</p></section>
+</main>
+<footer><bdi>MITODERM / EXO-NAD</bdi><span>ערכת אישור בלבד · ללא פרסום וללא יצירה בתשלום</span><a href="PAGE.md">תסריט מלא ↗</a></footer>
+<script id="scene-data" type="application/json">@@DATA@@</script>
+<script>
+const scenes=JSON.parse(document.getElementById('scene-data').textContent);
+const seek=document.getElementById('seek'),play=document.getElementById('play'),visual=document.getElementById('preview-visual');
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+let playing=false,raf=0,last=0,active=-1,elapsed=0;
+function stop(){playing=false;cancelAnimationFrame(raf);play.textContent='ניגון המחשת קצב';play.setAttribute('aria-pressed','false');}
+function render(){
+ const t=Number(seek.value),index=scenes.findIndex(s=>t<s.end),i=index<0?scenes.length-1:index,s=scenes[i];
+ if(active!==i){active=i;visual.className='preview-visual '+s.visual;visual.innerHTML=s.html;document.getElementById('preview-number').textContent=String(i+1).padStart(2,'0')+' / 08';document.getElementById('preview-headline').textContent=s.headline;document.getElementById('preview-copy').textContent=s.copy;document.getElementById('preview-status').textContent=['pack','kit'].includes(s.visual)?'צילום מקור · המחשת קומפוזיציה':'מקום שמור לצילום מאושר';}
+ const p=(t-s.start)/(s.end-s.start),photo=visual.querySelector('.pack');
+ if(photo)photo.style.transform=reduced.matches?'none':'scale('+(1+0.04*(i===0?p:1-p))+')';
+ document.getElementById('time').textContent=t.toFixed(1)+' / 36.5 s';seek.setAttribute('aria-valuetext',t.toFixed(1)+' שניות; סצנה '+(i+1));
+}
+function tick(now){if(!playing)return;if(!last)last=now;elapsed=Math.min(36.5,elapsed+(now-last)/1000);seek.value=elapsed;last=now;render();if(elapsed>=36.5)stop();else raf=requestAnimationFrame(tick);}
+play.addEventListener('click',()=>{if(playing){stop();return;}if(reduced.matches){document.getElementById('preview-status').textContent='תנועה מופחתת פעילה — בחרו זמן ידנית';return;}if(Number(seek.value)>=36.5)seek.value=0;playing=true;elapsed=Number(seek.value);last=0;play.textContent='השהיה';play.setAttribute('aria-pressed','true');raf=requestAnimationFrame(tick);});
+seek.addEventListener('input',()=>{stop();render();});
+reduced.addEventListener('change',()=>{stop();render();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
+render();
+</script>
+</body></html>

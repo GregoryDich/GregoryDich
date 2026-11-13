@@ -242,13 +242,28 @@
         }
       ],
       "isFrozen": false,
-      "status": "storyboard_only",
+      "status": "approval_ready_with_reference_holds",
       "packImage": "/assets/products/exo-nad.webp",
       "timeline": {
         "seconds": 36.5,
         "scrollVh": 10.35
       },
-      "line": "VM — профессиональный трёхэтапный пилинг"
+      "line": "VM — профессиональный трёхэтапный пилинг",
+      "approvalPackage": {
+        "data": "pages/exo-nad/STORYBOARD.json",
+        "preview": "pages/exo-nad/STORYBOARD.html",
+        "qa": "pages/exo-nad/QA.md",
+        "status": "approval_ready_with_reference_holds",
+        "protocolVerifiedPages": [
+          9,
+          10
+        ],
+        "sourceCommit": "716a4e403faedb715e05c5ca3d37d94cb3d59e9e",
+        "castApproved": false,
+        "evidenceApproved": false,
+        "deployed": false,
+        "paidGenerationUsed": false
+      }
     },
     {
       "slug": "exosignal-hair",
@@ -1100,5 +1115,24 @@
       },
       "line": "BIOSPICULE — домашний уход"
     }
-  ]
+  ],
+  "continuation": {
+    "nextSlug": "exosignal-hair",
+    "queue": [
+      "exosignal-hair",
+      "exocell-mask",
+      "micro-boost-10",
+      "mitotech-cell-booster",
+      "mitopen",
+      "mitoscan",
+      "exotech-gel",
+      "derma-recovery-cream",
+      "exosignal-spray",
+      "cell-renew-1-5",
+      "cellular-age-defense-2-5"
+    ],
+    "mode": "preproduction_only",
+    "automationId": "6af73a565af08191bf0a4b0d3ee94430",
+    "createDuplicateAutomation": false
+  }
 }

@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-13",
+  "structural": "pass",
+  "viewports": [
+    {
+      "width": 1280,
+      "height": 720,
+      "scrollWidth": 1280,
+      "viewport": 1280,
+      "overflow": [],
+      "shots": 8,
+      "lower": true,
+      "rubik": true,
+      "direction": "rtl",
+      "images": true
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "overflow": [],
+      "shots": 8,
+      "lower": true,
+      "rubik": true,
+      "direction": "rtl",
+      "images": true
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "scrollWidth": 1920,
+      "viewport": 1920,
+      "overflow": [],
+      "shots": 8,
+      "lower": true,
+      "rubik": true,
+      "direction": "rtl",
+      "images": true
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "viewport": 390,
+      "overflow": [],
+      "shots": 8,
+      "lower": true,
+      "rubik": true,
+      "direction": "rtl",
+      "images": true
+    }
+  ],
+  "interactions": {
+    "playback": "pass",
+    "seekStages": "pass",
+    "evidenceEmpty": "pass",
+    "finalShot": "pass",
+    "reducedMotion": "pass",
+    "faq": "pass",
+    "firstScreenCta": "pass",
+    "formNonSubmitting": "pass",
+    "noJavaScript": "pass"
+  },
+  "limits": [
+    "No approved people, procedure footage, or before/after evidence.",
+    "Source photograph is 795×489; no HD detail invented.",
+    "Language and clinical/commercial approval pending."
+  ],
+  "browserErrors": []
+}

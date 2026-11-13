@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 // Generate or validate per-product PAGE.md files from the only source: REGISTRY.json.
 import fs from 'node:fs';
+import {readBoard,renderApprovalPage} from './render-approval-package.mjs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../production/page-bible');
 const registry=JSON.parse(fs.readFileSync(path.join(root,'REGISTRY.json'),'utf8'));
 const renderPage=(function renderPage(p){
+ if(p.approvalPackage)return renderApprovalPage(p,readBoard(p),registry);
  const f=(x,n=2)=>Number(x).toFixed(n);
  let sec=0,vh=0;
  const rows=p.shots.map(s=>{const a=sec,b=vh;sec+=s.seconds;vh+=s.vh;const shotType=s.type==="pack"?"rigged 3D / real packshot":s.type==="evidence"?"verified real case / neutral placeholder":s.type==="patient"?"one locked patient + professional":s.type==="home"?"same patient at home":s.type==="device"?"real device/reference":s.type==="record"?"verified real interface":"real clinic technique / approved reference";return `| ${String(s.index).padStart(2,"0")} | ${f(a)}–${f(sec)} | ${f(b)}–${f(vh)} | **${s.title}** | ${shotType} |`;});
