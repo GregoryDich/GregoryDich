@@ -61,3 +61,24 @@
  
 }
 @media(prefers-reduced-motion:reduce){.vts-pack-flight{display:none}}
+
+
+/* v9.1: keep the clinic set without competing with the hero object.
+   The previous treatment still contained a large patient face directly
+   behind the opening carton. A controlled neutral exposure/vignette makes
+   the real kit the single focal point without blurring the photographic set. */
+.vts-pack-backdrop img{
+ filter:brightness(.39) saturate(.66);
+}
+.vts-pack-backdrop::after{
+ background:
+ radial-gradient(ellipse at 54% 42%,rgba(9,9,10,.68) 0%,rgba(9,9,10,.42) 32%,transparent 76%),
+ linear-gradient(90deg,rgba(10,9,9,.78),rgba(10,9,9,.16) 47%,rgba(10,9,9,.78)),
+ linear-gradient(180deg,rgba(10,9,9,.38),transparent 34%,rgba(10,9,9,.64));
+}
+@media(max-width:860px){
+ .vts-pack-backdrop img{filter:brightness(.42) saturate(.67)}
+ .vts-pack-backdrop::after{
+  background:linear-gradient(180deg,rgba(8,8,10,.6),rgba(8,8,10,.46) 40%,rgba(8,8,10,.75));
+ }
+}
