@@ -2,7 +2,7 @@
 
 **STORYBOARD ONLY:** No implementation, new model, paid generation or site edit authorized by this specification.
 
-> Category: **undefined** · slug `mitoscan` · 7 filmed sections · 32.000 s · 9.50 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
+> Category: **Оборудование — визуальная диагностика скальпа** · slug `mitoscan` · 7 filmed sections · 32.000 s · 9.50 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
 
 ## Production reference and color
 

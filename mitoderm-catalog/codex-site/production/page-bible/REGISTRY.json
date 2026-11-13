@@ -164,7 +164,8 @@
         "seconds": 36.37,
         "scrollVh": 10.35,
         "measured": true
-      }
+      },
+      "line": "VM — клиническая система"
     },
     {
       "slug": "exo-nad",
@@ -246,7 +247,8 @@
       "timeline": {
         "seconds": 36.5,
         "scrollVh": 10.35
-      }
+      },
+      "line": "VM — профессиональный трёхэтапный пилинг"
     },
     {
       "slug": "exosignal-hair",
@@ -321,7 +323,8 @@
       "timeline": {
         "seconds": 35,
         "scrollVh": 9.75
-      }
+      },
+      "line": "VM — профессиональная трихологическая процедура"
     },
     {
       "slug": "exocell-mask",
@@ -403,7 +406,8 @@
       "timeline": {
         "seconds": 35,
         "scrollVh": 9.95
-      }
+      },
+      "line": "VM — белая биоцеллюлозная маска"
     },
     {
       "slug": "micro-boost-10",
@@ -478,7 +482,8 @@
       "timeline": {
         "seconds": 34.5,
         "scrollVh": 9.4
-      }
+      },
+      "line": "BIOSPICULE — профессиональная процедура"
     },
     {
       "slug": "mitotech-cell-booster",
@@ -560,7 +565,8 @@
       "timeline": {
         "seconds": 38,
         "scrollVh": 10.65
-      }
+      },
+      "line": "MITOTECH — профессиональная процедура"
     },
     {
       "slug": "mitopen",
@@ -635,7 +641,8 @@
       "timeline": {
         "seconds": 33.5,
         "scrollVh": 9.35
-      }
+      },
+      "line": "Оборудование — микронидлинг"
     },
     {
       "slug": "mitoscan",
@@ -710,7 +717,8 @@
       "timeline": {
         "seconds": 32,
         "scrollVh": 9.5
-      }
+      },
+      "line": "Оборудование — визуальная диагностика скальпа"
     },
     {
       "slug": "exotech-gel",
@@ -785,7 +793,8 @@
       "timeline": {
         "seconds": 31,
         "scrollVh": 8.85
-      }
+      },
+      "line": "VM — отдельный домашний уход"
     },
     {
       "slug": "derma-recovery-cream",
@@ -860,7 +869,8 @@
       "timeline": {
         "seconds": 30.5,
         "scrollVh": 8.8
-      }
+      },
+      "line": "BIOSPICULE — домашний уход"
     },
     {
       "slug": "exosignal-spray",
@@ -935,7 +945,8 @@
       "timeline": {
         "seconds": 30.5,
         "scrollVh": 8.9
-      }
+      },
+      "line": "VM — домашний уход за скальпом"
     },
     {
       "slug": "cell-renew-1-5",
@@ -1010,7 +1021,8 @@
       "timeline": {
         "seconds": 30.5,
         "scrollVh": 8.9
-      }
+      },
+      "line": "BIOSPICULE — домашний уход"
     },
     {
       "slug": "cellular-age-defense-2-5",
@@ -1085,7 +1097,8 @@
       "timeline": {
         "seconds": 30.5,
         "scrollVh": 8.9
-      }
+      },
+      "line": "BIOSPICULE — домашний уход"
     }
   ]
 }

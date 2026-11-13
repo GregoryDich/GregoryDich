@@ -2,7 +2,7 @@
 
 **STORYBOARD ONLY:** No implementation, new model, paid generation or site edit authorized by this specification.
 
-> Category: **undefined** · slug `exosignal-hair` · 7 filmed sections · 35.000 s · 9.75 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
+> Category: **VM — профессиональная трихологическая процедура** · slug `exosignal-hair` · 7 filmed sections · 35.000 s · 9.75 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
 
 ## Production reference and color
 

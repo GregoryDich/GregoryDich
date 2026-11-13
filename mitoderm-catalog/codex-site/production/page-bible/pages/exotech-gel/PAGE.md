@@ -2,7 +2,7 @@
 
 **STORYBOARD ONLY:** No implementation, new model, paid generation or site edit authorized by this specification.
 
-> Category: **undefined** · slug `exotech-gel` · 7 filmed sections · 31.000 s · 8.85 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
+> Category: **VM — отдельный домашний уход** · slug `exotech-gel` · 7 filmed sections · 31.000 s · 8.85 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
 
 ## Production reference and color
 

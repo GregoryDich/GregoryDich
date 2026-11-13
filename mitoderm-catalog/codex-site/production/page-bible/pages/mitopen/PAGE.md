@@ -2,7 +2,7 @@
 
 **STORYBOARD ONLY:** No implementation, new model, paid generation or site edit authorized by this specification.
 
-> Category: **undefined** · slug `mitopen` · 7 filmed sections · 33.500 s · 9.35 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
+> Category: **Оборудование — микронидлинг** · slug `mitopen` · 7 filmed sections · 33.500 s · 9.35 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
 
 ## Production reference and color
 

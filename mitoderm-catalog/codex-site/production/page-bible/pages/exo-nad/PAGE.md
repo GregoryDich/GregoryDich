@@ -2,7 +2,7 @@
 
 **STORYBOARD ONLY:** No implementation, new model, paid generation or site edit authorized by this specification.
 
-> Category: **undefined** · slug `exo-nad` · 8 filmed sections · 36.500 s · 10.35 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
+> Category: **VM — профессиональный трёхэтапный пилинг** · slug `exo-nad` · 8 filmed sections · 36.500 s · 10.35 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
 
 ## Production reference and color
 

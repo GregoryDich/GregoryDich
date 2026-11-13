@@ -2,7 +2,7 @@
 
 **STORYBOARD ONLY:** No implementation, new model, paid generation or site edit authorized by this specification.
 
-> Category: **undefined** · slug `derma-recovery-cream` · 7 filmed sections · 30.500 s · 8.80 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
+> Category: **BIOSPICULE — домашний уход** · slug `derma-recovery-cream` · 7 filmed sections · 30.500 s · 8.80 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
 
 ## Production reference and color
 

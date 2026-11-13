@@ -2,7 +2,7 @@
 
 **FROZEN: Do not edit the already published V-TECH page or its film. This is only a reference entry.**
 
-> Category: **undefined** · slug `v-tech-system` · 7 filmed sections · 36.370 s · 10.35 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
+> Category: **VM — клиническая система** · slug `v-tech-system` · 7 filmed sections · 36.370 s · 10.35 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
 
 ## Production reference and color
 

@@ -2,7 +2,7 @@
 
 **STORYBOARD ONLY:** No implementation, new model, paid generation or site edit authorized by this specification.
 
-> Category: **undefined** · slug `mitotech-cell-booster` · 8 filmed sections · 38.000 s · 10.65 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
+> Category: **MITOTECH — профессиональная процедура** · slug `mitotech-cell-booster` · 8 filmed sections · 38.000 s · 10.65 viewport heights · font **Rubik** · Hebrew RTL + EN/RU · Last planned review: 2026-11-13
 
 ## Production reference and color
 
