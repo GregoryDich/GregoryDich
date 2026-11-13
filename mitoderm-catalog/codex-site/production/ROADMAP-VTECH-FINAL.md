@@ -27,3 +27,11 @@ Main collection → same pack reaches clinic table → same clinician and patien
 - The training section is an editorial scene (not three equal steps) and the related product images load; their WebP files require proper decoding before first visual capture. ProductImage can request synchronous decoding for this small gallery.
 - Human screenshot review is recorded for desktop/mobile in the CI artifact, but **Safari, production live refresh, and real lead-form delivery remain unverified**.
 - Higgsfield was NOT used and no paid credits were charged. Previous approved procedural story remains unchanged. Synthetic face/skin refinements need a separate locked-identity media review.
+
+
+## V9.2 QA update — 13 November 2026
+
+- **Automated Chromium QA: 222/222 PASS**, 0 issues — [GitHub Actions run #43414323156](https://github.com/GregoryDich/GregoryDich/actions/runs/43414323156). This covers TypeScript, production build, desktop 1440/1920, phones 320/390/430, scrubbing forwards and backwards, image decode, reduced motion, and full-height training poster.
+- **Visual fixes made since v9:** remove overlapping second navigation during cinematic playback; hide mobile offer copy while the sleeve is being removed and restore it when the kit is opened; suppress distracting face behind the product while retaining an unblurred clinic environment; correct the `<picture>` wrapper to full height in block 8; await decoded patient poster for reliable scene-to-scene visual QA.
+- **Visual evidence:** [screenshots artifact](https://github.com/GregoryDich/GregoryDich/actions/runs/43414323156) with closed/sleeve/hinge/opened/training/product-gallery frames on five screen sizes. Mobile training now includes the clinician and patient through the full section instead of only at the top.
+- **Remaining limitations:** no access in this session to the original ChatGPT Sites publisher for `mitoderm-cinematic.evenradish1.chatgpt.site`. Live v8 remains unchanged; do **not** advertise v9.2 as deployed. Safari-specific test, real lead delivery, final visual signoff, and any Higgsfield patient-skin retouch are pending. Do not use AI-generated before/after as evidence.
