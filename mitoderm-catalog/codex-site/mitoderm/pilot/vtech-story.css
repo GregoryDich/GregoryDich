@@ -190,3 +190,22 @@ html[data-product-transit] [data-vtech-hud]{opacity:0!important;pointer-events:n
   bottom:0;z-index:6;text-shadow:0 1px 7px #000c;
  }
 }
+
+
+/* v9.1: one site-level navigation, not two overlapping navigation systems.
+   The primary section navigation remains fixed (treatment/results/kit/training)
+   and the bottom scroll progress remains. In reduced motion all navigation
+   remains available in natural document flow. */
+.vts-story[data-mode="cinema"] .vts-toolbar{
+ display:none;
+}
+.vts-story[data-mode="cinema"] .vts-stage .vts-scene[data-kind="offer"]::after{
+ background:
+ linear-gradient(270deg,rgba(8,8,10,.75) 0%,rgba(8,8,10,.42) 32%,transparent 68%),
+ linear-gradient(180deg,rgba(8,8,10,.18),transparent 25%,transparent 79%,rgba(8,8,10,.8));
+}
+@media(max-width:860px){
+ .vts-story[data-mode="cinema"] .vts-stage .vts-scene[data-kind="offer"]::after{
+ background:linear-gradient(180deg,rgba(8,8,10,.26),transparent 37%,rgba(8,8,10,.22) 61%,rgba(8,8,10,.88));
+ }
+}
