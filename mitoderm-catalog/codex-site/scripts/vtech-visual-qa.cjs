@@ -79,6 +79,8 @@ async function snapshot(page,config,name,local){
    packVisible:box?getComputedStyle(box).visibility:null,
    render:render?.dataset.state,
    roomLoaded:!!room?.complete&&room.naturalWidth>0,
+   offerOpacity:Number(getComputedStyle(document.querySelector('.vc-story-offer-copy')).opacity),
+   chapterToolbarDisplay:getComputedStyle(document.querySelector('.vts-toolbar')).display,
    width:document.documentElement.scrollWidth,
    viewport:window.innerWidth
   };
@@ -88,6 +90,9 @@ async function snapshot(page,config,name,local){
  if(local!==null){
   check(s.chapter==='vtech-kit',config.name+' '+name+': product kit chapter');
   check(s.packVisible==='visible',config.name+' '+name+': pack flight visible');
+  check(s.chapterToolbarDisplay==='none',config.name+' '+name+': no overlapping secondary navigation');
+  if(config.mobile&&name==='closed')check(s.offerOpacity<.08,config.name+': closed kit stays unobstructed by offer copy');
+  if(config.mobile&&name==='opened')check(s.offerOpacity>.94,config.name+': offer copy visible after opening');
   check(s.render==='layers'||s.render==='fallback'||s.render==='loading',config.name+' '+name+': kit renderer available');
   if(name==='closed')check(s.openAmount<.01,config.name+' closed: sealed pose');
   if(name==='opened')check(s.opened==='true'&&s.openAmount>.999,config.name+' opened: full pack reveal');
