@@ -1,0 +1,1091 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedOn": "2026-11-13",
+  "status": "preproduction_only",
+  "type": "MITODERM Product Storyboard Registry",
+  "font": "Rubik",
+  "rtlPrimary": true,
+  "siteBase": "#0A0A0B",
+  "paletteByFamily": {
+    "vm_gold": {
+      "bg": "#100D0B",
+      "surface": "#241B15",
+      "accent": "#D4AE68",
+      "text": "#F7F0E6",
+      "source": "black/gold V-TECH packaging"
+    },
+    "vm_nad": {
+      "bg": "#160F0A",
+      "surface": "#2B2118",
+      "accent": "#D7B579",
+      "text": "#FFF8EE",
+      "source": "EXO-NAD champagne/gold/ivory pack, NO green"
+    },
+    "vm_hair": {
+      "bg": "#0E0D0E",
+      "surface": "#24201B",
+      "accent": "#CFAB66",
+      "text": "#F5F0E8",
+      "source": "EXOSIGNAL black gold pack"
+    },
+    "vm_exocell": {
+      "bg": "#0B1A1B",
+      "surface": "#19383A",
+      "accent": "#78C7BF",
+      "text": "#F7FCFA",
+      "source": "EXOCELL turquoise pack / white mask"
+    },
+    "vm_spray": {
+      "bg": "#0E1013",
+      "surface": "#252220",
+      "accent": "#D2B16D",
+      "text": "#F7F5F1",
+      "source": "EXOSIGNAL black pack, light bottle and gold cap"
+    },
+    "vm_exotech": {
+      "bg": "#11100E",
+      "surface": "#2E2417",
+      "accent": "#C9A24B",
+      "text": "#FBF5E9",
+      "source": "EXOTECH GEL actual gold sphere and black/gold box"
+    },
+    "biospicule": {
+      "bg": "#11281D",
+      "surface": "#1E4634",
+      "accent": "#CAA86B",
+      "text": "#F8F4EB",
+      "source": "cream pack with green label; not VM palette"
+    },
+    "mitotech": {
+      "bg": "#103C2B",
+      "surface": "#1C4D39",
+      "accent": "#A4E2C7",
+      "text": "#FFFFFF",
+      "source": "Pantone 3435 C and 3375 C printing; these HEX are approximate screen values"
+    },
+    "devices": {
+      "bg": "#101317",
+      "surface": "#20262A",
+      "accent": "#D9D4CC",
+      "text": "#FAFAF9",
+      "source": "silver instruments, metal and black"
+    }
+  },
+  "assetsMeta": "Actual current product images from mitoderm/assets.json and user's NAD.png reference",
+  "globalCastingRules": [
+    "Clinicians: women age ranges 18–35, 35–50, 50–80 are provisional casting groups awaiting user-supplied approved identities, not patient indications.",
+    "Patient is independently selected for appropriate procedure; age alone does not authorize a protocol.",
+    "No character may change identity from opening through clinic/home action to footer, training or contact.",
+    "No synthetic before/after cases; only approved real evidence with dates and consent."
+  ],
+  "protocolHierarchy": [
+    "Current approved professional MITODERM-Protocols-HE.pdf",
+    "Physical packaging/user photos NAD.png / current original product renders",
+    "Approved product catalog",
+    "Instagram videos for visual action ONLY after exact video and permission verified"
+  ],
+  "instagram": {
+    "accountCandidate": "@mitoderm",
+    "procedureVideoStatus": "no exact approved Instagram procedure reel URL found; require direct URL or uploaded footage before using visuals",
+    "rights": "not assumed"
+  },
+  "pages": [
+    {
+      "slug": "v-tech-system",
+      "name": "V-TECH SYSTEM",
+      "palette": "vm_gold",
+      "track": "clinic",
+      "cast": {
+        "suggestedFemaleCosmetologistBand": "LOCKED existing approved cast",
+        "referenceStatus": "previously_approved",
+        "patientReference": "existing_VTECH_patient",
+        "meaning": "Age band is CASTING, not medical indication; maintain same person through entire page"
+      },
+      "source": "Current VTechStory.tsx + vtech-timeline.ts",
+      "pages": "",
+      "heroHE": "V-TECH SYSTEM",
+      "uspHE": "הטיפול המקצועי מתחיל במערכת שמתאימה לקליניקה",
+      "ctaHE": "לקבלת פרטים",
+      "shots": [
+        {
+          "title": "Исходная упаковка",
+          "seconds": 5.04,
+          "vh": 1.67,
+          "type": "pack",
+          "index": 1
+        },
+        {
+          "title": "Задача пациентки",
+          "seconds": 4.54,
+          "vh": 1.33,
+          "type": "patient",
+          "index": 2
+        },
+        {
+          "title": "Работа MITOPEN",
+          "seconds": 6.59,
+          "vh": 1.25,
+          "type": "device",
+          "index": 3
+        },
+        {
+          "title": "Нанесение сыворотки",
+          "seconds": 6.58,
+          "vh": 1.25,
+          "type": "procedure",
+          "index": 4
+        },
+        {
+          "title": "V-TECH GEL MASK",
+          "seconds": 4.29,
+          "vh": 1.25,
+          "type": "procedure",
+          "index": 5
+        },
+        {
+          "title": "Клиническая документация",
+          "seconds": 4.29,
+          "vh": 1.45,
+          "type": "evidence",
+          "index": 6
+        },
+        {
+          "title": "Раскрытие комплекта",
+          "seconds": 5.04,
+          "vh": 2.15,
+          "type": "pack",
+          "index": 7
+        }
+      ],
+      "isFrozen": true,
+      "status": "reference_frozen",
+      "packImage": "/assets/products/v-tech-system.webp",
+      "timeline": {
+        "seconds": 36.37,
+        "scrollVh": 10.35,
+        "measured": true
+      }
+    },
+    {
+      "slug": "exo-nad",
+      "name": "EXO-NAD SKIN LONGEVITY PEELING",
+      "palette": "vm_nad",
+      "track": "clinic",
+      "cast": {
+        "suggestedFemaleCosmetologistBand": "35–50",
+        "referenceStatus": "awaiting_user_images",
+        "patientReference": "awaiting_user_images",
+        "meaning": "Age band is CASTING, not medical indication; maintain same person through entire page"
+      },
+      "source": "MITODERM-Protocols-HE.pdf",
+      "pages": "9–10",
+      "heroHE": "EXO-NAD · מערכת מקצועית בשלושה שלבים",
+      "uspHE": "שלושה שלבים. מערכת מקצועית אחת.",
+      "ctaHE": "לקבלת פרוטוקול והדרכה",
+      "shots": [
+        {
+          "title": "Подлинная упаковка NAD.png",
+          "seconds": 4.5,
+          "vh": 1.45,
+          "type": "pack",
+          "index": 1
+        },
+        {
+          "title": "Консультация и оценка кожи",
+          "seconds": 4,
+          "vh": 1.1,
+          "type": "patient",
+          "index": 2
+        },
+        {
+          "title": "EXO BIPHASIC PEEL",
+          "seconds": 4.5,
+          "vh": 1.2,
+          "type": "procedure",
+          "index": 3
+        },
+        {
+          "title": "pH NORMALIZER",
+          "seconds": 4.5,
+          "vh": 1.2,
+          "type": "procedure",
+          "index": 4
+        },
+        {
+          "title": "LONGEVITY SERUM",
+          "seconds": 5.5,
+          "vh": 1.6,
+          "type": "procedure",
+          "index": 5
+        },
+        {
+          "title": "Естественное завершение",
+          "seconds": 4,
+          "vh": 1.2,
+          "type": "patient",
+          "index": 6
+        },
+        {
+          "title": "Реальные результаты / запрос кейсов",
+          "seconds": 4,
+          "vh": 1.05,
+          "type": "evidence",
+          "index": 7
+        },
+        {
+          "title": "Реальная комплектация + CTA",
+          "seconds": 5.5,
+          "vh": 1.55,
+          "type": "pack",
+          "index": 8
+        }
+      ],
+      "isFrozen": false,
+      "status": "storyboard_only",
+      "packImage": "/assets/products/exo-nad.webp",
+      "timeline": {
+        "seconds": 36.5,
+        "scrollVh": 10.35
+      }
+    },
+    {
+      "slug": "exosignal-hair",
+      "name": "EXOSIGNAL HAIR",
+      "palette": "vm_hair",
+      "track": "clinic",
+      "cast": {
+        "suggestedFemaleCosmetologistBand": "50–80",
+        "referenceStatus": "awaiting_user_images",
+        "patientReference": "awaiting_user_images",
+        "meaning": "Age band is CASTING, not medical indication; maintain same person through entire page"
+      },
+      "source": "MITODERM-Protocols-HE.pdf",
+      "pages": "7–8",
+      "heroHE": "EXOSIGNAL HAIR · טיפול מקצועי בקרקפת",
+      "uspHE": "תוכנית עבודה מקצועית לקרקפת",
+      "ctaHE": "להיכרות עם הפרוטוקול",
+      "shots": [
+        {
+          "title": "Чёрный комплект EXOSIGNAL HAIR",
+          "seconds": 4.5,
+          "vh": 1.5,
+          "type": "pack",
+          "index": 1
+        },
+        {
+          "title": "Запрос по коже головы",
+          "seconds": 5,
+          "vh": 1.3,
+          "type": "patient",
+          "index": 2
+        },
+        {
+          "title": "Осмотр той же зоны пробора",
+          "seconds": 5,
+          "vh": 1.3,
+          "type": "device",
+          "index": 3
+        },
+        {
+          "title": "Ампула и подготовка",
+          "seconds": 5,
+          "vh": 1.3,
+          "type": "pack",
+          "index": 4
+        },
+        {
+          "title": "Сыворотка + MITOPEN по протоколу",
+          "seconds": 6,
+          "vh": 1.6,
+          "type": "procedure",
+          "index": 5
+        },
+        {
+          "title": "Наблюдение и фактическая документация",
+          "seconds": 4,
+          "vh": 1.1,
+          "type": "evidence",
+          "index": 6
+        },
+        {
+          "title": "Комплект + предложение клинике",
+          "seconds": 5.5,
+          "vh": 1.65,
+          "type": "pack",
+          "index": 7
+        }
+      ],
+      "isFrozen": false,
+      "status": "storyboard_only",
+      "packImage": "/assets/products/exosignal-hair.webp",
+      "timeline": {
+        "seconds": 35,
+        "scrollVh": 9.75
+      }
+    },
+    {
+      "slug": "exocell-mask",
+      "name": "EXOCELL MASK",
+      "palette": "vm_exocell",
+      "track": "clinic/home",
+      "cast": {
+        "suggestedFemaleCosmetologistBand": "18–35",
+        "referenceStatus": "awaiting_user_images",
+        "patientReference": "awaiting_user_images",
+        "meaning": "Age band is CASTING, not medical indication; maintain same person through entire page"
+      },
+      "source": "MITODERM-Protocols-HE.pdf",
+      "pages": "11",
+      "heroHE": "EXOCELL MASK · מסכה לבנה אחת",
+      "uspHE": "מסכה לבנה אחת. הכנה מקצועית מדויקת.",
+      "ctaHE": "לפרטים מקצועיים",
+      "shots": [
+        {
+          "title": "Бирюзовая коробка и белая маска",
+          "seconds": 4,
+          "vh": 1.25,
+          "type": "pack",
+          "index": 1
+        },
+        {
+          "title": "Консультация",
+          "seconds": 4,
+          "vh": 1.05,
+          "type": "patient",
+          "index": 2
+        },
+        {
+          "title": "Один продукт, три слоя",
+          "seconds": 4.5,
+          "vh": 1.1,
+          "type": "pack",
+          "index": 3
+        },
+        {
+          "title": "Снятие вспомогательного слоя 1",
+          "seconds": 3.5,
+          "vh": 0.9,
+          "type": "procedure",
+          "index": 4
+        },
+        {
+          "title": "Снятие вспомогательного слоя 2",
+          "seconds": 3.5,
+          "vh": 0.9,
+          "type": "procedure",
+          "index": 5
+        },
+        {
+          "title": "Нанесение только белой маски",
+          "seconds": 6.5,
+          "vh": 1.9,
+          "type": "procedure",
+          "index": 6
+        },
+        {
+          "title": "Завершение без фейковых результатов",
+          "seconds": 3.5,
+          "vh": 1.05,
+          "type": "patient",
+          "index": 7
+        },
+        {
+          "title": "Комплект + предложение",
+          "seconds": 5.5,
+          "vh": 1.8,
+          "type": "pack",
+          "index": 8
+        }
+      ],
+      "isFrozen": false,
+      "status": "storyboard_only",
+      "packImage": "/assets/products/exocell-mask.webp",
+      "timeline": {
+        "seconds": 35,
+        "scrollVh": 9.95
+      }
+    },
+    {
+      "slug": "micro-boost-10",
+      "name": "BIOSPICULE MICRO BOOST 10%",
+      "palette": "biospicule",
+      "track": "clinic",
+      "cast": {
+        "suggestedFemaleCosmetologistBand": "35–50",
+        "referenceStatus": "awaiting_user_images",
+        "patientReference": "awaiting_user_images",
+        "meaning": "Age band is CASTING, not medical indication; maintain same person through entire page"
+      },
+      "source": "MITODERM-Protocols-HE.pdf",
+      "pages": "4–5",
+      "heroHE": "MICRO BOOST 10% · מקצועי",
+      "uspHE": "עבודה מבוקרת לפי אבחון מקצועי",
+      "ctaHE": "לקבלת הכשרה מקצועית",
+      "shots": [
+        {
+          "title": "Реальная бело-зелёная коробка",
+          "seconds": 4.5,
+          "vh": 1.4,
+          "type": "pack",
+          "index": 1
+        },
+        {
+          "title": "Оценка состояния кожи",
+          "seconds": 4.5,
+          "vh": 1.1,
+          "type": "patient",
+          "index": 2
+        },
+        {
+          "title": "Белый аппликатор — настоящая форма",
+          "seconds": 4.5,
+          "vh": 1.1,
+          "type": "device",
+          "index": 3
+        },
+        {
+          "title": "Профессиональная работа без инъекции",
+          "seconds": 6.5,
+          "vh": 1.75,
+          "type": "procedure",
+          "index": 4
+        },
+        {
+          "title": "Контроль кожи",
+          "seconds": 5,
+          "vh": 1.3,
+          "type": "patient",
+          "index": 5
+        },
+        {
+          "title": "Завершение и рекомендации",
+          "seconds": 4,
+          "vh": 1.1,
+          "type": "patient",
+          "index": 6
+        },
+        {
+          "title": "Комплект + обучение",
+          "seconds": 5.5,
+          "vh": 1.65,
+          "type": "pack",
+          "index": 7
+        }
+      ],
+      "isFrozen": false,
+      "status": "storyboard_only",
+      "packImage": "/assets/products/micro-boost-10.webp",
+      "timeline": {
+        "seconds": 34.5,
+        "scrollVh": 9.4
+      }
+    },
+    {
+      "slug": "mitotech-cell-booster",
+      "name": "MITOTECH CELL BOOSTER",
+      "palette": "mitotech",
+      "track": "clinic",
+      "cast": {
+        "suggestedFemaleCosmetologistBand": "35–50",
+        "referenceStatus": "awaiting_user_images",
+        "patientReference": "awaiting_user_images",
+        "meaning": "Age band is CASTING, not medical indication; maintain same person through entire page"
+      },
+      "source": "MITODERM-Protocols-HE.pdf",
+      "pages": "6",
+      "heroHE": "MITOTECH CELL BOOSTER",
+      "uspHE": "שני מרכיבים. תוכנית עבודה מקצועית.",
+      "ctaHE": "לקבלת פרטי הערכה",
+      "shots": [
+        {
+          "title": "Подлинный комплект MITOTECH",
+          "seconds": 4.5,
+          "vh": 1.35,
+          "type": "pack",
+          "index": 1
+        },
+        {
+          "title": "Другая пациентка, не V-TECH",
+          "seconds": 4.5,
+          "vh": 1.2,
+          "type": "patient",
+          "index": 2
+        },
+        {
+          "title": "Лиофилизат и бустер",
+          "seconds": 5.5,
+          "vh": 1.35,
+          "type": "pack",
+          "index": 3
+        },
+        {
+          "title": "Подготовка по протоколу",
+          "seconds": 4.5,
+          "vh": 1.25,
+          "type": "procedure",
+          "index": 4
+        },
+        {
+          "title": "MITOPEN по разрешённой технике",
+          "seconds": 6,
+          "vh": 1.65,
+          "type": "device",
+          "index": 5
+        },
+        {
+          "title": "CELL BOOSTER, без GEL MASK",
+          "seconds": 4.5,
+          "vh": 1.25,
+          "type": "procedure",
+          "index": 6
+        },
+        {
+          "title": "Документация / завершение",
+          "seconds": 3.5,
+          "vh": 1,
+          "type": "evidence",
+          "index": 7
+        },
+        {
+          "title": "Комплектация и CTA",
+          "seconds": 5,
+          "vh": 1.6,
+          "type": "pack",
+          "index": 8
+        }
+      ],
+      "isFrozen": false,
+      "status": "storyboard_only",
+      "packImage": "/assets/products/mitotech-cell-booster.webp",
+      "timeline": {
+        "seconds": 38,
+        "scrollVh": 10.65
+      }
+    },
+    {
+      "slug": "mitopen",
+      "name": "MITOPEN",
+      "palette": "devices",
+      "track": "device",
+      "cast": {
+        "suggestedFemaleCosmetologistBand": "18–35",
+        "referenceStatus": "awaiting_user_images",
+        "patientReference": "awaiting_user_images",
+        "meaning": "Age band is CASTING, not medical indication; maintain same person through entire page"
+      },
+      "source": "MITODERM-Protocols-HE.pdf",
+      "pages": "2, 6–7",
+      "heroHE": "MITOPEN · מכשור מיקרונידלינג",
+      "uspHE": "דיוק בעבודה המקצועית",
+      "ctaHE": "לתיאום הדגמה",
+      "shots": [
+        {
+          "title": "Реальный серебристый прибор",
+          "seconds": 4.5,
+          "vh": 1.35,
+          "type": "device",
+          "index": 1
+        },
+        {
+          "title": "Оценка зоны пациентки",
+          "seconds": 4.5,
+          "vh": 1.15,
+          "type": "patient",
+          "index": 2
+        },
+        {
+          "title": "Хват и реальные элементы управления",
+          "seconds": 5,
+          "vh": 1.35,
+          "type": "device",
+          "index": 3
+        },
+        {
+          "title": "Микронидлинг под протокол",
+          "seconds": 6,
+          "vh": 1.7,
+          "type": "procedure",
+          "index": 4
+        },
+        {
+          "title": "Макро инструмент/зона",
+          "seconds": 4.5,
+          "vh": 1.25,
+          "type": "device",
+          "index": 5
+        },
+        {
+          "title": "Завершение",
+          "seconds": 3.5,
+          "vh": 0.95,
+          "type": "patient",
+          "index": 6
+        },
+        {
+          "title": "Устройство + демонстрация",
+          "seconds": 5.5,
+          "vh": 1.6,
+          "type": "pack",
+          "index": 7
+        }
+      ],
+      "isFrozen": false,
+      "status": "storyboard_only",
+      "packImage": "/assets/products/mitopen.webp",
+      "timeline": {
+        "seconds": 33.5,
+        "scrollVh": 9.35
+      }
+    },
+    {
+      "slug": "mitoscan",
+      "name": "MITOSCAN",
+      "palette": "devices",
+      "track": "device",
+      "cast": {
+        "suggestedFemaleCosmetologistBand": "50–80",
+        "referenceStatus": "awaiting_user_images",
+        "patientReference": "awaiting_user_images",
+        "meaning": "Age band is CASTING, not medical indication; maintain same person through entire page"
+      },
+      "source": "Product catalog + device manual pending",
+      "pages": "",
+      "heroHE": "MITOSCAN · תיעוד קרקפת",
+      "uspHE": "מתיעוד לאבחון מקצועי",
+      "ctaHE": "לתיאום הדגמה",
+      "shots": [
+        {
+          "title": "Оригинальный прибор и экран",
+          "seconds": 4,
+          "vh": 1.3,
+          "type": "device",
+          "index": 1
+        },
+        {
+          "title": "Запрос пациента",
+          "seconds": 4.5,
+          "vh": 1.1,
+          "type": "patient",
+          "index": 2
+        },
+        {
+          "title": "Съёмка кожи головы",
+          "seconds": 4.5,
+          "vh": 1.3,
+          "type": "device",
+          "index": 3
+        },
+        {
+          "title": "Только реальный интерфейс",
+          "seconds": 5,
+          "vh": 1.5,
+          "type": "record",
+          "index": 4
+        },
+        {
+          "title": "Совместная оценка",
+          "seconds": 5,
+          "vh": 1.5,
+          "type": "patient",
+          "index": 5
+        },
+        {
+          "title": "Документирование",
+          "seconds": 4,
+          "vh": 1.1,
+          "type": "record",
+          "index": 6
+        },
+        {
+          "title": "Устройство + CTA",
+          "seconds": 5,
+          "vh": 1.7,
+          "type": "pack",
+          "index": 7
+        }
+      ],
+      "isFrozen": false,
+      "status": "storyboard_only",
+      "packImage": "/assets/products/mitoscan.webp",
+      "timeline": {
+        "seconds": 32,
+        "scrollVh": 9.5
+      }
+    },
+    {
+      "slug": "exotech-gel",
+      "name": "EXOTECH GEL",
+      "palette": "vm_exotech",
+      "track": "home",
+      "cast": {
+        "suggestedFemaleCosmetologistBand": "18–35",
+        "referenceStatus": "awaiting_user_images",
+        "patientReference": "awaiting_user_images",
+        "meaning": "Age band is CASTING, not medical indication; maintain same person through entire page"
+      },
+      "source": "MITODERM-Protocols-HE.pdf",
+      "pages": "13",
+      "heroHE": "EXOTECH GEL · המשך הטיפוח בבית",
+      "uspHE": "מהקליניקה לטיפוח בבית",
+      "ctaHE": "לפרטים על המשך הטיפוח",
+      "shots": [
+        {
+          "title": "Золотой шар и отдельная коробка",
+          "seconds": 4,
+          "vh": 1.3,
+          "type": "pack",
+          "index": 1
+        },
+        {
+          "title": "Рекомендация косметолога",
+          "seconds": 4.5,
+          "vh": 1.25,
+          "type": "patient",
+          "index": 2
+        },
+        {
+          "title": "Та же пациентка дома",
+          "seconds": 4.5,
+          "vh": 1.2,
+          "type": "home",
+          "index": 3
+        },
+        {
+          "title": "Открытие сферической банки",
+          "seconds": 4.5,
+          "vh": 1.2,
+          "type": "pack",
+          "index": 4
+        },
+        {
+          "title": "Нанесение геля дома",
+          "seconds": 5,
+          "vh": 1.45,
+          "type": "procedure",
+          "index": 5
+        },
+        {
+          "title": "Обычное продолжение, не до/после",
+          "seconds": 3.5,
+          "vh": 0.95,
+          "type": "patient",
+          "index": 6
+        },
+        {
+          "title": "Отдельный EXOTECH GEL + CTA",
+          "seconds": 5,
+          "vh": 1.5,
+          "type": "pack",
+          "index": 7
+        }
+      ],
+      "isFrozen": false,
+      "status": "storyboard_only",
+      "packImage": "/assets/products/exotech-gel.webp",
+      "timeline": {
+        "seconds": 31,
+        "scrollVh": 8.85
+      }
+    },
+    {
+      "slug": "derma-recovery-cream",
+      "name": "DERMA RECOVERY CREAM",
+      "palette": "biospicule",
+      "track": "home",
+      "cast": {
+        "suggestedFemaleCosmetologistBand": "50–80",
+        "referenceStatus": "awaiting_user_images",
+        "patientReference": "awaiting_user_images",
+        "meaning": "Age band is CASTING, not medical indication; maintain same person through entire page"
+      },
+      "source": "MITODERM-Protocols-HE.pdf",
+      "pages": "12–13",
+      "heroHE": "DERMA RECOVERY CREAM",
+      "uspHE": "טיפוח המשך לפי המלצה מקצועית",
+      "ctaHE": "למידע על טיפוח משלים",
+      "shots": [
+        {
+          "title": "Белая коробка с зелёной полосой",
+          "seconds": 4,
+          "vh": 1.25,
+          "type": "pack",
+          "index": 1
+        },
+        {
+          "title": "Рекомендация косметолога",
+          "seconds": 4,
+          "vh": 1.15,
+          "type": "patient",
+          "index": 2
+        },
+        {
+          "title": "Пациентка дома",
+          "seconds": 4.5,
+          "vh": 1.2,
+          "type": "home",
+          "index": 3
+        },
+        {
+          "title": "Текстура крема",
+          "seconds": 4,
+          "vh": 1.2,
+          "type": "pack",
+          "index": 4
+        },
+        {
+          "title": "Применение по инструкции",
+          "seconds": 5.5,
+          "vh": 1.55,
+          "type": "procedure",
+          "index": 5
+        },
+        {
+          "title": "Завершение ухода",
+          "seconds": 3.5,
+          "vh": 0.95,
+          "type": "patient",
+          "index": 6
+        },
+        {
+          "title": "Крем + профессиональный CTA",
+          "seconds": 5,
+          "vh": 1.5,
+          "type": "pack",
+          "index": 7
+        }
+      ],
+      "isFrozen": false,
+      "status": "storyboard_only",
+      "packImage": "/assets/products/derma-recovery-cream.webp",
+      "timeline": {
+        "seconds": 30.5,
+        "scrollVh": 8.8
+      }
+    },
+    {
+      "slug": "exosignal-spray",
+      "name": "EXOSIGNAL SPRAY",
+      "palette": "vm_spray",
+      "track": "home",
+      "cast": {
+        "suggestedFemaleCosmetologistBand": "35–50",
+        "referenceStatus": "awaiting_user_images",
+        "patientReference": "awaiting_user_images",
+        "meaning": "Age band is CASTING, not medical indication; maintain same person through entire page"
+      },
+      "source": "Product catalog; MITODERM-Protocols-HE.pdf",
+      "pages": "13",
+      "heroHE": "EXOSIGNAL SPRAY · טיפול ביתי",
+      "uspHE": "שגרת טיפוח לקרקפת בבית",
+      "ctaHE": "לקבלת פרטים מקצועיים",
+      "shots": [
+        {
+          "title": "Чёрная коробка, светлый флакон",
+          "seconds": 4,
+          "vh": 1.25,
+          "type": "pack",
+          "index": 1
+        },
+        {
+          "title": "Консультация по пробору",
+          "seconds": 4.5,
+          "vh": 1.25,
+          "type": "patient",
+          "index": 2
+        },
+        {
+          "title": "Та же пациентка дома",
+          "seconds": 4,
+          "vh": 1.2,
+          "type": "home",
+          "index": 3
+        },
+        {
+          "title": "Дозатор спрея в макро",
+          "seconds": 4.5,
+          "vh": 1.25,
+          "type": "device",
+          "index": 4
+        },
+        {
+          "title": "Применение на ту же область",
+          "seconds": 6,
+          "vh": 1.65,
+          "type": "procedure",
+          "index": 5
+        },
+        {
+          "title": "Без генерации роста волос",
+          "seconds": 3,
+          "vh": 0.9,
+          "type": "patient",
+          "index": 6
+        },
+        {
+          "title": "SPRAY + CTA",
+          "seconds": 4.5,
+          "vh": 1.4,
+          "type": "pack",
+          "index": 7
+        }
+      ],
+      "isFrozen": false,
+      "status": "storyboard_only",
+      "packImage": "/assets/products/exosignal-spray.webp",
+      "timeline": {
+        "seconds": 30.5,
+        "scrollVh": 8.9
+      }
+    },
+    {
+      "slug": "cell-renew-1-5",
+      "name": "CELL RENEW 1.5%",
+      "palette": "biospicule",
+      "track": "home",
+      "cast": {
+        "suggestedFemaleCosmetologistBand": "18–35",
+        "referenceStatus": "awaiting_user_images",
+        "patientReference": "awaiting_user_images",
+        "meaning": "Age band is CASTING, not medical indication; maintain same person through entire page"
+      },
+      "source": "MITODERM-Protocols-HE.pdf",
+      "pages": "13",
+      "heroHE": "CELL RENEW 1.5%",
+      "uspHE": "בחירת טיפוח ביתי בהתאמה מקצועית",
+      "ctaHE": "לקבלת פרטים והתאמה",
+      "shots": [
+        {
+          "title": "Белая коробка BIOSPICULE 1.5%",
+          "seconds": 4,
+          "vh": 1.3,
+          "type": "pack",
+          "index": 1
+        },
+        {
+          "title": "Консультация о домашнем уходе",
+          "seconds": 4.5,
+          "vh": 1.25,
+          "type": "patient",
+          "index": 2
+        },
+        {
+          "title": "Та же пациентка дома",
+          "seconds": 4,
+          "vh": 1.15,
+          "type": "home",
+          "index": 3
+        },
+        {
+          "title": "Настоящая текстура и упаковка",
+          "seconds": 4.5,
+          "vh": 1.25,
+          "type": "pack",
+          "index": 4
+        },
+        {
+          "title": "Применение по инструкции",
+          "seconds": 5,
+          "vh": 1.5,
+          "type": "procedure",
+          "index": 5
+        },
+        {
+          "title": "Тот же человек в завершении",
+          "seconds": 3.5,
+          "vh": 0.95,
+          "type": "patient",
+          "index": 6
+        },
+        {
+          "title": "CELL RENEW + CTA",
+          "seconds": 5,
+          "vh": 1.5,
+          "type": "pack",
+          "index": 7
+        }
+      ],
+      "isFrozen": false,
+      "status": "storyboard_only",
+      "packImage": "/assets/products/cell-renew-1-5.webp",
+      "timeline": {
+        "seconds": 30.5,
+        "scrollVh": 8.9
+      }
+    },
+    {
+      "slug": "cellular-age-defense-2-5",
+      "name": "CELLULAR AGE DEFENSE 2.5%",
+      "palette": "biospicule",
+      "track": "home",
+      "cast": {
+        "suggestedFemaleCosmetologistBand": "50–80",
+        "referenceStatus": "awaiting_user_images",
+        "patientReference": "awaiting_user_images",
+        "meaning": "Age band is CASTING, not medical indication; maintain same person through entire page"
+      },
+      "source": "MITODERM-Protocols-HE.pdf",
+      "pages": "13",
+      "heroHE": "CELLULAR AGE DEFENSE 2.5%",
+      "uspHE": "בחירת ריכוז לפי התאמה מקצועית",
+      "ctaHE": "למידע על התאמה מקצועית",
+      "shots": [
+        {
+          "title": "Белая коробка BIOSPICULE 2.5%",
+          "seconds": 4,
+          "vh": 1.3,
+          "type": "pack",
+          "index": 1
+        },
+        {
+          "title": "Подбор по потребностям, не только возрасту",
+          "seconds": 4.5,
+          "vh": 1.25,
+          "type": "patient",
+          "index": 2
+        },
+        {
+          "title": "Та же пациентка дома",
+          "seconds": 4,
+          "vh": 1.15,
+          "type": "home",
+          "index": 3
+        },
+        {
+          "title": "Крупный план продукта",
+          "seconds": 4,
+          "vh": 1.2,
+          "type": "pack",
+          "index": 4
+        },
+        {
+          "title": "Нанесение по инструкции",
+          "seconds": 5.5,
+          "vh": 1.55,
+          "type": "procedure",
+          "index": 5
+        },
+        {
+          "title": "Рутина без AI-эффекта",
+          "seconds": 3.5,
+          "vh": 0.95,
+          "type": "patient",
+          "index": 6
+        },
+        {
+          "title": "CELLULAR AGE DEFENSE + CTA",
+          "seconds": 5,
+          "vh": 1.5,
+          "type": "pack",
+          "index": 7
+        }
+      ],
+      "isFrozen": false,
+      "status": "storyboard_only",
+      "packImage": "/assets/products/cellular-age-defense-2-5.webp",
+      "timeline": {
+        "seconds": 30.5,
+        "scrollVh": 8.9
+      }
+    }
+  ]
+}
