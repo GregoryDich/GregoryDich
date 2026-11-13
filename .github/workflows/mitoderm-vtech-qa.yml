@@ -33,6 +33,8 @@ jobs:
           runtime: node@22
           cache: true
           require-lockfile: true
+      - name: Validate product-page bible against registry
+        run: node scripts/generate-page-bible.mjs --check
       - name: TypeScript
         run: pnpm exec tsc --noEmit
       - name: Production build
