@@ -170,3 +170,23 @@ html[data-product-transit] [data-vtech-hud]{opacity:0!important;pointer-events:n
  .vts-scene,.vts-camera-media,.vts-video,.vts-toolbar,.vts-chapter-nav button{transition:none}
  .vts-video{display:none}
 }
+
+
+/* v9.1 — Story first, offer second. On a phone the closed/sleeve/hinge
+   reveal must be legible as an object, not obscured by the price inquiry.
+   The copy remains real HTML and enters only once the box is substantially
+   open; the permanent header inquiry remains available throughout. */
+@media (max-width:860px){
+ .vts-story[data-mode="cinema"] .vts-stage[data-active-chapter="vtech-kit"] .vc-story-offer-copy{
+  opacity:clamp(0,calc((var(--vts-kit-open,0) - .73)*4.6),1);
+  transform:translateY(calc((1 - clamp(0,calc((var(--vts-kit-open,0) - .73)*4.6),1))*20px));
+  pointer-events:none;
+  will-change:opacity,transform;
+ }
+ .vts-story[data-mode="cinema"] .vts-stage[data-kit-opened="true"] .vc-story-offer-copy{
+  opacity:1;transform:none;pointer-events:auto;
+ }
+ .vts-story[data-mode="cinema"] .vts-stage[data-active-chapter="vtech-kit"] .vc-story-kit-reveal{
+  bottom:0;z-index:6;text-shadow:0 1px 7px #000c;
+ }
+}
