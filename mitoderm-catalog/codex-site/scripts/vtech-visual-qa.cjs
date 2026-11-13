@@ -60,6 +60,7 @@ async function snapshot(page,config,name,local){
   });
   await page.evaluate(y=>window.scrollTo({top:y,left:0,behavior:'instant'}),y);
   await page.waitForFunction(()=>document.querySelector('[data-vtech-stage]')?.dataset.activeChapter==='vtech-mask',{timeout:12000});
+  await page.locator('.vts-camera-media .vts-poster').evaluate(async img=>{await img.decode()});
  }
  await page.screenshot({path:path.join(outDir,config.name+'-'+name+'.png'),animations:'disabled',timeout:30000});
  const s=await page.evaluate(()=>{
@@ -127,6 +128,14 @@ async function snapshot(page,config,name,local){
    const editorial=await page.locator('.vc-training-film-copy').count();
    check(editorial===1,cfg.name+': editorial education section');
    await page.evaluate(()=>{const node=document.querySelector('#vtech-training');window.scrollTo({top:window.scrollY+node.getBoundingClientRect().top,left:0,behavior:'instant'});});
+   await page.locator('.vc-training-film-photo img').evaluate(async img=>{await img.decode()});
+   const photoBounds=await page.evaluate(()=>{
+    const stage=document.querySelector('.vc-training-film-photo').getBoundingClientRect();
+    const picture=document.querySelector('.vc-training-film-photo picture').getBoundingClientRect();
+    const img=document.querySelector('.vc-training-film-photo img').getBoundingClientRect();
+    return {stage:stage.height,picture:picture.height,image:img.height};
+   });
+   check(photoBounds.picture>=photoBounds.stage*.98 && photoBounds.image>=photoBounds.stage*.98,cfg.name+': training photo spans full chapter, not a top strip');
    await page.waitForTimeout(120);
    await page.screenshot({path:path.join(outDir,cfg.name+'-training.png'),animations:'disabled',timeout:30000});
    await page.locator('#vtech-related').scrollIntoViewIfNeeded();
