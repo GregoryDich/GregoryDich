@@ -237,3 +237,25 @@
  filter:brightness(1.06) contrast(1.1) drop-shadow(0 12px 13px #0008);
 }
 @media(prefers-reduced-motion:reduce){.vtech-cinema .vc-related-image .product-image{transition:none;transform:none}}
+
+
+/* v9.2 — Critical mobile backdrop fix: <picture> is an auto-height inline
+   wrapper unless explicitly sized. It previously let the clinic photograph
+   occupy only a narrow strip at the top of the training chapter. */
+.vc-training-editorial .vc-training-film-photo picture{
+ position:absolute;inset:0;display:block;width:100%;height:100%;
+}
+.vc-training-editorial .vc-training-film-photo picture img{
+ position:absolute;inset:0;display:block;width:100%;height:100%;
+ object-fit:cover;
+}
+@media(max-width:860px){
+ .vc-training-editorial .vc-training-film::after{
+  background:linear-gradient(180deg,
+   rgba(8,8,10,.25) 0%,
+   rgba(8,8,10,.12) 28%,
+   rgba(8,8,10,.2) 43%,
+   rgba(8,8,10,.58) 65%,
+   rgba(8,8,10,.94) 100%);
+ }
+}
