@@ -39,7 +39,8 @@ fs.mkdirSync(out,{recursive:true});
     await page.waitForFunction(()=>[...document.querySelectorAll('.pc-object img')].every(i=>i.complete&&i.naturalWidth>0),null,{timeout:15000});
     const shot2=await page.evaluate(()=>{
      const story=document.querySelector('.pc-story'),s=story.getBoundingClientRect().top+window.scrollY;
-     window.scrollTo({top:s+1.1*innerHeight,left:0,behavior:'instant'});
+     const first=Number(document.querySelector('.pc-scene')?.dataset.startVh||0);
+     window.scrollTo({top:s+1.68*innerHeight,left:0,behavior:'instant'});
      return s;
     });
     await page.waitForFunction(()=>document.querySelector('.pc-story')?.dataset.activeShot==='1',null,{timeout:8000});
