@@ -68,6 +68,11 @@ jobs:
           MITODERM_URL: http://127.0.0.1:5173
           CHROME_BIN: /usr/bin/google-chrome
         run: node scripts/vtech-visual-qa.cjs
+      - name: Browser QA for 12 cinematic product pages
+        env:
+          MITODERM_URL: http://127.0.0.1:5173
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/product-cinema-qa.cjs
       - name: Upload screenshot and QA evidence
         if: always()
         uses: actions/upload-artifact@v4
