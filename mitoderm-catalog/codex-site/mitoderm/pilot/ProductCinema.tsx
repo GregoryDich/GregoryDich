@@ -116,7 +116,8 @@ function Related({slug}:{slug:string}){
 
 export default function ProductCinema({product}:{product:Product}){
  const config=registry.pages.find(p=>p.slug===product.slug);
- const theme=registry.paletteByFamily[config?.palette??'vm_gold'];
+ const palettes:Record<string,{bg:string;surface:string;accent:string;text:string;source:string}>=registry.paletteByFamily;
+ const theme=palettes[config?.palette??'vm_gold']??palettes.vm_gold;
  const chapters:Chapter[]=useMemo(()=>config?.shots.map((s,i)=>({...s,index:i+1}))??[],[config]);
  const starts=useMemo(()=>chapters.map((_,i)=>chapters.slice(0,i).reduce((n,x)=>n+x.vh,0)),[chapters]);
  const total=chapters.reduce((n,c)=>n+c.vh,0);
