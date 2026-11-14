@@ -128,9 +128,9 @@ export default function ProductCinema({product}:{product:Product}){
  const nad=product.slug==='exo-nad';
  const pack=nad?'/assets/product-cinema/exo-nad/NAD.png':(assets[product.slug]?.src??'/assets/brand/cover.webp');
  // Approved real-pack photo must not morph into older invented vial colors.
- // Use the same authentic original in each no-film fallback and final CTA.
+ // Match original product types during scene closeups; true kit photo used only in final kit shot.
  const vials=pack;
- const openKit=pack;
+ const openKit=nad?'/assets/product-cinema/exo-nad/kit.webp':pack;
  const jump=(i:number)=>{
   if(linear){document.getElementById('pc-shot-'+(i+1))?.scrollIntoView({behavior:'smooth',block:'start'});return;}
   if(!root.current)return;
@@ -165,7 +165,9 @@ export default function ProductCinema({product}:{product:Product}){
  if(!config||!chapters.length)return null;
  const current=chapters[active];
  const style={'--pc-bg':theme.bg,'--pc-surface':theme.surface,'--pc-accent':theme.accent,'--pc-ink':theme.text,'--pc-scroll':total+1} as CSSProperties;
- const mediaPhase=nad?(active===7?'kit':active>=2&&active<=4?'vials':'hero'):'hero';
+ // One canonical product photograph supplies all three actual EXO-NAD bottles.
+ // Never hallucinate numbered flacons or morph bottle colors during a scroll.
+ const mediaPhase=nad?(['hero','hero','peel','normalizer','serum','hero','hero','kit'][active]??'hero'):'hero';
  const chapterName=(i:number)=>sceneryCopy(product.slug,chapters[i],i);
  return <div className="pc-page" style={style} data-linear={linear}>
   <SiteHeader/>
@@ -174,13 +176,19 @@ export default function ProductCinema({product}:{product:Product}){
     <div className="pc-stage" ref={stage}>
      <div className="pc-atmosphere" aria-hidden="true"><span className="pc-aura pc-aura-a"/><span className="pc-aura pc-aura-b"/><span className="pc-arc"/></div>
      <div className="pc-object" aria-hidden="true" data-phase={mediaPhase}>
-      <figure data-visible={mediaPhase==='hero'}><img src={pack} alt="" width={nad?803:800} height={nad?489:800}/></figure>
-      {nad&&<><figure data-visible={mediaPhase==='vials'}><img src={vials} alt="" width="500" height="490"/></figure>
-      <figure data-visible={mediaPhase==='kit'}><img src={openKit} alt="" width="500" height="720"/></figure></>}
+      <figure data-visible={mediaPhase==='hero'}><img src={pack} alt="" width={nad?795:800} height={nad?489:800}/></figure>
+      {nad&&<>
+       {(['peel','normalizer','serum'] as const).map((bottle)=>
+        <figure className="pc-nad-focus" key={bottle} data-visible={mediaPhase===bottle} data-bottle={bottle}>
+         <div className="pc-nad-focus-photo" style={{backgroundImage:'url('+pack+')'}}/>
+         <span className="pc-nad-focus-legend" dir="ltr">{bottle==='peel'?'EXO BIPHASIC PEEL':bottle==='normalizer'?'pH NORMALIZER':'LONGEVITY SERUM'}</span>
+        </figure>)}
+       <figure className="pc-nad-kit" data-visible={mediaPhase==='kit'}><img src="/assets/product-cinema/exo-nad/kit.webp" alt="" width="500" height="720"/></figure>
+      </>}
      </div>
      <div className="pc-scenes">
       {chapters.map((chapter,i)=>{const copy=chapterName(i),Heading=i===0?'h1':'h2';return <article key={i} id={'pc-shot-'+(i+1)} className="pc-scene" data-visible={active===i} data-kind={chapter.type} aria-hidden={!linear&&active!==i} inert={!linear&&active!==i}>
-       {linear&&<div className="pc-linear-product"><img src={nad&&i===7?openKit:nad&&i>=2&&i<=4?vials:pack} alt={'מוצר '+product.name} loading={i===0?'eager':'lazy'}/></div>}
+       {linear&&<div className="pc-linear-product"><img src={nad&&i===7?'/assets/product-cinema/exo-nad/kit.webp':pack} alt={'מוצר '+product.name} loading={i===0?'eager':'lazy'}/></div>}
        <div className="pc-caption" dir="rtl">
         <p className="pc-kicker"><span>{String(i+1).padStart(2,'0')} / {String(chapters.length).padStart(2,'0')}</span><bdi dir="ltr">{product.name}</bdi></p>
         <Heading dir={i===0?'ltr':undefined}>{copy.title}</Heading>

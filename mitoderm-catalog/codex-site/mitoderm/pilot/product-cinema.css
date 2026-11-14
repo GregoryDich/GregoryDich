@@ -16,6 +16,24 @@
 .pc-object figure{position:absolute;inset:0;display:grid;place-items:center;opacity:0;transition:opacity .4s ease;transform:translateY(calc((.5 - var(--pc-local))*16px)) scale(calc(.96 + var(--pc-local)*.075));}
 .pc-object figure[data-visible=true]{opacity:1}
 .pc-object img{max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 28px 45px #0008)}
+/* Exact-bottle photographic closeups from the user-approved canonical NAD.png.
+   CSS crops the source photograph; no synthetic bottle or altered label. */
+.pc-nad-focus{isolation:isolate;min-height:300px}
+.pc-nad-focus-photo{width:min(100%,430px);height:min(69vh,550px);margin:auto;
+ background-repeat:no-repeat;background-size:auto 240%;background-position:var(--nad-crop-x,13%) 85%;
+ filter:drop-shadow(0 12px 28px #0006);
+ -webkit-mask-image:linear-gradient(90deg,transparent 1%,#000 18%,#000 85%,transparent 100%);
+ mask-image:linear-gradient(90deg,transparent 1%,#000 18%,#000 85%,transparent 100%)}
+.pc-nad-focus[data-bottle=peel]{--nad-crop-x:13%}
+.pc-nad-focus[data-bottle=normalizer]{--nad-crop-x:-5%}
+.pc-nad-focus[data-bottle=serum]{--nad-crop-x:5%}
+.pc-nad-focus-legend{position:absolute;inset:auto 12% 8px;text-align:center;letter-spacing:.22em;font-size:clamp(10px,1vw,13px);
+ color:var(--pc-accent);text-shadow:0 2px 16px #000}
+.pc-nad-kit img{object-fit:contain;max-height:78vh}
+@media(max-width:860px){
+ .pc-nad-focus-photo{height:min(45vh,410px);width:min(78vw,340px);background-size:auto 235%;background-position-y:88%}
+ .pc-nad-focus-legend{bottom:2px;font-size:10px}
+}
 .pc-scenes{z-index:3;pointer-events:none}
 .pc-scene{visibility:hidden;opacity:0;pointer-events:none;transition:opacity .35s ease,visibility .35s;display:flex;align-items:flex-end;justify-content:flex-start;padding:110px var(--pc-pad) 110px;background:linear-gradient(270deg,rgba(0,0,0,.43),transparent 52%);z-index:0}
 .pc-scene[data-visible=true]{visibility:visible;opacity:1;pointer-events:auto;z-index:2}
