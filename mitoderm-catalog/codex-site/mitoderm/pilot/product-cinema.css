@@ -84,7 +84,6 @@
 .pc-page :is(a,button,summary):focus-visible{outline:2px solid var(--pc-accent);outline-offset:4px}
 .pc-linear-product{display:none}
 @media(max-width:860px){
- .pc-story{--pc-scroll:10.35}
  .pc-atmosphere::after{background:linear-gradient(0deg,var(--pc-bg),transparent 36%,transparent 75%,var(--pc-bg))}
  .pc-object{inset:11vh 4vw 29vh;opacity:.94}
  .pc-object img{max-height:100%}
