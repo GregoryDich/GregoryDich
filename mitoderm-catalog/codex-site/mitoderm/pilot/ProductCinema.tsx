@@ -71,12 +71,13 @@ function Evidence({product}:{product:Product}){
 
 function Offer({product,pack,openKit,usp}:{product:Product;pack:string;openKit:string;usp:string}){
  const nad=product.slug==='exo-nad';
+ const home=['exotech-gel','derma-recovery-cream','exosignal-spray','cell-renew-1-5','cellular-age-defense-2-5'].includes(product.slug);
  return <section className="pc-offer" id="pc-offer" aria-labelledby="pc-offer-title">
   <div className="pc-width pc-offer-grid">
    <div className="pc-offer-product"><img src={nad?openKit:pack} alt={'הערכה המקורית של '+product.name} loading="lazy" decoding="async"/><span>המוצר המקורי</span></div>
    <div className="pc-offer-copy">
     <p className="pc-eyebrow">MITODERM · הצעה מקצועית</p>
-    <h2 id="pc-offer-title">הכירו את <bdi dir="ltr">{product.name}</bdi><br/>בקליניקה שלכם.</h2>
+    <h2 id="pc-offer-title">הכירו את <bdi dir="ltr">{product.name}</bdi><br/>{home?'כהמשך לטיפוח בבית.':'בקליניקה שלכם.'}</h2>
     <p>{usp}</p>
     {nad?<dl className="pc-components">
      <div><dt>EXO BIPHASIC PEEL</dt><dd><bdi dir="ltr">1 × 15 ml</bdi></dd></div>
@@ -95,9 +96,10 @@ function Professional({product}:{product:Product}){
  [{q:'למי מיועד המוצר?',a:'התאמה מקצועית או המלצה להמשך טיפוח לפי הייעוד וההנחיות של המוצר.'},
   {q:'כיצד מקבלים מידע על הפרוטוקול?',a:'מוזמנים להשאיר פרטים ולבקש מידע מקצועי, הדרכה ותנאי רכישה.'},
   {q:'האם התמונות מציגות תוצאה טיפולית?',a:'המחשת מוצר אינה תיעוד קליני. מקרים יוצגו רק לאחר אישור המקור וההסכמה לפרסום.'}];
+ const home=['exotech-gel','derma-recovery-cream','exosignal-spray','cell-renew-1-5','cellular-age-defense-2-5'].includes(product.slug);
  return <section id="pc-training" className="pc-training" aria-labelledby="pc-training-title"><div className="pc-width">
   <div className="pc-training-title"><p className="pc-eyebrow">לשימוש מקצועי · MITODERM</p>
-   <h2 id="pc-training-title">מכירים את המערכת.<br/><em>בונים את דרך העבודה.</em></h2>
+   <h2 id="pc-training-title">מכירים את {home?'המוצר.':'המערכת.'}<br/><em>{home?'מחברים בין קליניקה לבית.':'בונים את דרך העבודה.'}</em></h2>
    <p>לומדים את התפקיד של <bdi dir="ltr">{product.name}</bdi> במסגרת תוכנית עבודה ומבררים על הדרכה מקצועית.</p>
    <a className="pc-primary" href="#contact" data-product={product.slug} data-source="pc-training" data-topic="training">מידע על הדרכה <span aria-hidden="true">←</span></a>
   </div>
@@ -125,8 +127,10 @@ export default function ProductCinema({product}:{product:Product}){
  const root=useRef<HTMLElement>(null),stage=useRef<HTMLDivElement>(null);
  const nad=product.slug==='exo-nad';
  const pack=nad?'/assets/product-cinema/exo-nad/NAD.png':(assets[product.slug]?.src??'/assets/brand/cover.webp');
- const vials=nad?'/assets/product-cinema/exo-nad/vials.webp':pack;
- const openKit=nad?'/assets/product-cinema/exo-nad/kit.webp':pack;
+ // Approved real-pack photo must not morph into older invented vial colors.
+ // Use the same authentic original in each no-film fallback and final CTA.
+ const vials=pack;
+ const openKit=pack;
  const jump=(i:number)=>{
   if(linear){document.getElementById('pc-shot-'+(i+1))?.scrollIntoView({behavior:'smooth',block:'start'});return;}
   if(!root.current)return;
