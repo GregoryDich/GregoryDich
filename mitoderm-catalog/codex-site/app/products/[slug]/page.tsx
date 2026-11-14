@@ -1,7 +1,7 @@
 import type {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 import {products} from '@/mitoderm/data';
-import ProductStory from '@/mitoderm/ProductStory';
+import ProductCinema from '@/mitoderm/pilot/ProductCinema';
 import VTech from '@/mitoderm/pilot/VTech';
 
 type Props={params:Promise<{slug:string}>};
@@ -25,5 +25,5 @@ export default async function ProductPage({params}:Props){
  const {slug}=await params;
  const product=products.find(item=>item.slug===slug);
  if(!product)notFound();
- return product.slug==='v-tech-system'?<VTech/>:<ProductStory product={product}/>;
+ return product.slug==='v-tech-system'?<VTech/>:<ProductCinema product={product}/>;
 }
