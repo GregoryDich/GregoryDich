@@ -1,0 +1,297 @@
+{
+ "meta": {
+  "route": "/products/exosignal-hair",
+  "status": 200,
+  "pageHeight": 7207,
+  "loadMs": 12277,
+  "transferMB": 0.5,
+  "requests": 21,
+  "consoleErrors": [],
+  "failed": []
+ },
+ "title": "EXOSIGNAL HAIR | MITODERM",
+ "lang": "he",
+ "dir": "rtl",
+ "metaDescription": "מערכת אקסוזומים סינתטיים מקצועית לקרקפת, שפותחה במעבדות VM באיטליה – PDRN 2% ושמונה פפטידים ביומימטיים.",
+ "headings": [
+  "H1: EXOSIGNAL HAIR · האות שזקיקי השיער מחכים לו",
+  "H2: לנשירת שיער יש נקודת פתיחה",
+  "H2: אמפולה אחת, שמונה פפטידים",
+  "H2: ארבע פעולות, קרקפת אחת",
+  "H2: מודדים, פותחים, מחדירים",
+  "H2: חמישה טיפולים באריזה אחת",
+  "H2: הכניסו את EXOSIGNAL HAIR לקליניקה שלכם",
+  "H2: בואו נדבר על הקליניקה שלכם"
+ ],
+ "buttons": [
+  {
+   "t": "דלגו לתוכן",
+   "href": "#main-content",
+   "aria": ""
+  },
+  {
+   "t": "",
+   "href": "/",
+   "aria": "MITODERM"
+  },
+  {
+   "t": "מוצרים",
+   "href": "/#products",
+   "aria": ""
+  },
+  {
+   "t": "V-TECH",
+   "href": "/products/v-tech-system",
+   "aria": ""
+  },
+  {
+   "t": "הדרכה וליווי",
+   "href": "/#support",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה ↗",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "☰",
+   "href": "",
+   "aria": "קטלוג"
+  },
+  {
+   "t": "לקבלת פרטים על מחירים",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "גלו מה בפנים ↓",
+   "href": "#exosignal-hair-chapter-2",
+   "aria": ""
+  },
+  {
+   "t": "גלו את MITOPEN ו-MITOSCAN",
+   "href": "#exosignal-hair-chapter-6",
+   "aria": ""
+  },
+  {
+   "t": "לקבלת הפרוטוקול המלא",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "לקבלת פרטים על מחירים",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "לתיאום הדגמת MITOSCAN",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "טלפון",
+   "href": "tel:+972543262182",
+   "aria": ""
+  },
+  {
+   "t": "דוא״ל",
+   "href": "mailto:info@mitoderm.com",
+   "aria": ""
+  },
+  {
+   "t": "WhatsApp ↗",
+   "href": "https://wa.me/972543262182",
+   "aria": ""
+  },
+  {
+   "t": "טלפון +972 54-326-2182",
+   "href": "tel:+972543262182",
+   "aria": ""
+  },
+  {
+   "t": "דוא״ל info@mitoderm.com",
+   "href": "mailto:info@mitoderm.com",
+   "aria": ""
+  },
+  {
+   "t": "מדיניות הפרטיות",
+   "href": "/privacy",
+   "aria": ""
+  },
+  {
+   "t": "שליחת פנייה ←",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "לפנייה ב-WhatsApp ↗",
+   "href": "https://wa.me/972543262182?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%9E%D7%99%D7%93%D7%A2%20%D7%9E%D7%A7%D7%A6%D7%95%D7%A2%D7%99%20%D7%95%D7%94%D7%A6%D7%A2%D7%94%20%D7%9C%D7%A7%D7%9C%D7%99%D7%A0%D7%99%D7%A7%D7%94%20%D7%91%D7%A0%D7%95%D7%A9%D7%90%20EXOSIGNAL%20HAIR.",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "פרטיות",
+   "href": "/privacy",
+   "aria": ""
+  }
+ ],
+ "forms": [
+  [
+   {
+    "tag": "INPUT",
+    "type": "text",
+    "name": "name",
+    "ph": "",
+    "req": true,
+    "label": "שם מלא"
+   },
+   {
+    "tag": "INPUT",
+    "type": "tel",
+    "name": "phone",
+    "ph": "",
+    "req": true,
+    "label": "טלפון לחזרה"
+   },
+   {
+    "tag": "SELECT",
+    "type": "select-one",
+    "name": "profession",
+    "ph": "",
+    "req": true,
+    "label": "תחום העיסוק בחרו תחום קוסמטיקאי/ת רופא/ה אח/ות בעל/ת קליניקה תחום מקצועי אחר"
+   },
+   {
+    "tag": "INPUT",
+    "type": "hidden",
+    "name": "productSlug",
+    "ph": "",
+    "req": false,
+    "label": ""
+   },
+   {
+    "tag": "TEXTAREA",
+    "type": "textarea",
+    "name": "comment",
+    "ph": "",
+    "req": false,
+    "label": "מה תרצו לדעת? (לא חובה)"
+   },
+   {
+    "tag": "INPUT",
+    "type": "text",
+    "name": "website",
+    "ph": "",
+    "req": false,
+    "label": "Website"
+   },
+   {
+    "tag": "INPUT",
+    "type": "checkbox",
+    "name": "privacyConsent",
+    "ph": "",
+    "req": true,
+    "label": "אני מאשר/ת ליצור איתי קשר בנוגע לפנייה זו, בהתאם למדיניות הפרטיות."
+   },
+   {
+    "tag": "BUTTON",
+    "type": "submit",
+    "name": "",
+    "ph": "",
+    "req": false,
+    "label": ""
+   }
+  ]
+ ],
+ "images": [
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 164,
+   "ch": 48
+  },
+  {
+   "src": "products/exosignal-hair.webp",
+   "alt": "EXOSIGNAL HAIR",
+   "nw": 1245,
+   "nh": 819,
+   "cw": 478,
+   "ch": 320
+  },
+  {
+   "src": "products/exosignal-hair.webp",
+   "alt": "EXOSIGNAL HAIR",
+   "nw": 1245,
+   "nh": 819,
+   "cw": 478,
+   "ch": 320
+  },
+  {
+   "src": "products/exosignal-hair.webp",
+   "alt": "EXOSIGNAL HAIR",
+   "nw": 1245,
+   "nh": 819,
+   "cw": 478,
+   "ch": 320
+  },
+  {
+   "src": "products/exosignal-hair.webp",
+   "alt": "EXOSIGNAL HAIR",
+   "nw": 1245,
+   "nh": 819,
+   "cw": 478,
+   "ch": 320
+  },
+  {
+   "src": "products/exosignal-hair.webp",
+   "alt": "EXOSIGNAL HAIR",
+   "nw": 1245,
+   "nh": 819,
+   "cw": 478,
+   "ch": 320
+  },
+  {
+   "src": "products/exosignal-hair.webp",
+   "alt": "EXOSIGNAL HAIR",
+   "nw": 1245,
+   "nh": 819,
+   "cw": 478,
+   "ch": 320
+  },
+  {
+   "src": "products/exosignal-hair.webp",
+   "alt": "EXOSIGNAL HAIR",
+   "nw": 1245,
+   "nh": 819,
+   "cw": 478,
+   "ch": 320
+  },
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 136,
+   "ch": 40
+  }
+ ],
+ "videos": [],
+ "jsonld": 0
+}

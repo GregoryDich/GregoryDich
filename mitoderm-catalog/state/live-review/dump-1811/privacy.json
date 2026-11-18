@@ -1,0 +1,117 @@
+{
+ "meta": {
+  "route": "/privacy",
+  "status": 200,
+  "pageHeight": 1295,
+  "loadMs": 5129,
+  "transferMB": 0.4,
+  "requests": 18,
+  "consoleErrors": [],
+  "failed": []
+ },
+ "title": "פרטיות ופניות | MITODERM",
+ "lang": "he",
+ "dir": "rtl",
+ "metaDescription": "מידע על הפרטים שנמסרים בטופס הפנייה של MITODERM ועל אופן השימוש בהם.",
+ "headings": [
+  "H1: פרטיות ופניות",
+  "H2: הפרטים שאנו מקבלים",
+  "H2: לשם מה נשמר המידע",
+  "H2: אחסון והגנה",
+  "H2: פנייה דרך WhatsApp",
+  "H2: שאלות, תיקון או בקשת מחיקה"
+ ],
+ "buttons": [
+  {
+   "t": "דלגו לתוכן",
+   "href": "#main-content",
+   "aria": ""
+  },
+  {
+   "t": "",
+   "href": "/",
+   "aria": "MITODERM"
+  },
+  {
+   "t": "מוצרים",
+   "href": "/#products",
+   "aria": ""
+  },
+  {
+   "t": "V-TECH",
+   "href": "/products/v-tech-system",
+   "aria": ""
+  },
+  {
+   "t": "הדרכה וליווי",
+   "href": "/#support",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה ↗",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "☰",
+   "href": "",
+   "aria": "קטלוג"
+  },
+  {
+   "t": "info@mitoderm.com",
+   "href": "mailto:info@mitoderm.com",
+   "aria": ""
+  },
+  {
+   "t": "+972 54-326-2182",
+   "href": "tel:+972543262182",
+   "aria": ""
+  },
+  {
+   "t": "חזרה לאתר ←",
+   "href": "/",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "פרטיות",
+   "href": "/privacy",
+   "aria": ""
+  }
+ ],
+ "forms": [],
+ "images": [
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 164,
+   "ch": 48
+  },
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 136,
+   "ch": 40
+  }
+ ],
+ "videos": [],
+ "jsonld": 0
+}

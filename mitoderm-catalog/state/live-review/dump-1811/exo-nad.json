@@ -1,0 +1,382 @@
+{
+ "meta": {
+  "route": "/products/exo-nad",
+  "status": 200,
+  "pageHeight": 13833,
+  "loadMs": 25214,
+  "transferMB": 7.8,
+  "requests": 33,
+  "consoleErrors": [],
+  "failed": []
+ },
+ "title": "EXO-NAD | MITODERM",
+ "lang": "he",
+ "dir": "rtl",
+ "metaDescription": "פילינג ביוהאקינג תלת־שלבי ממעבדות VM באיטליה: פילינג דו-פאזי, מנטרל pH וסרום Longevity עם אקסוזומים ו-NAD⁺.",
+ "headings": [
+  "H1: EXO-NAD",
+  "H2: הכול מתחיל כאן.",
+  "H2: EXO BIPHASIC PEEL",
+  "H2: pH NORMALIZER",
+  "H2: LONGEVITY SERUM",
+  "H2: רואים כל פרט.",
+  "H2: לכל שלב יש תפקיד.",
+  "H2: מהפרוטוקול. לקליניקה שלך.",
+  "H2: רוצים לראות את התמונה המלאה?",
+  "H2: הכירו את EXO-NAD בקליניקה שלכם.",
+  "H2: מכירים את המערכת. בונים את דרך העבודה.",
+  "H3: מה כדאי לדעת לפני שמתחילים?",
+  "H2: הטיפוח ממשיך בדרך המתאימה.",
+  "H2: בואו נדבר על הקליניקה שלכם"
+ ],
+ "buttons": [
+  {
+   "t": "דלגו לתוכן",
+   "href": "#main-content",
+   "aria": ""
+  },
+  {
+   "t": "",
+   "href": "/",
+   "aria": "MITODERM"
+  },
+  {
+   "t": "מוצרים",
+   "href": "/#products",
+   "aria": ""
+  },
+  {
+   "t": "V-TECH",
+   "href": "/products/v-tech-system",
+   "aria": ""
+  },
+  {
+   "t": "הדרכה וליווי",
+   "href": "/#support",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה ↗",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "☰",
+   "href": "",
+   "aria": "קטלוג"
+  },
+  {
+   "t": "פתחו את הערכה ←",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "אל התהליך ↓",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "01ערבוב הפאזות",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "02שאיבת החומר",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "03יישום ועיסוי",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "01ניטרול",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "02שטיפה במים",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "03ייבוש",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "לערכה המקצועית ↓",
+   "href": "#pc-offer",
+   "aria": ""
+  },
+  {
+   "t": "01",
+   "href": "",
+   "aria": "שלב 1: המערכת"
+  },
+  {
+   "t": "02",
+   "href": "",
+   "aria": "שלב 2: בתוך הערכה"
+  },
+  {
+   "t": "03",
+   "href": "",
+   "aria": "שלב 3: השלב הראשון"
+  },
+  {
+   "t": "04",
+   "href": "",
+   "aria": "שלב 4: ניטרול, שטיפה וייבוש"
+  },
+  {
+   "t": "05",
+   "href": "",
+   "aria": "שלב 5: השלב השלישי"
+  },
+  {
+   "t": "06",
+   "href": "",
+   "aria": "שלב 6: מבט מקרוב"
+  },
+  {
+   "t": "07",
+   "href": "",
+   "aria": "שלב 7: רצף העבודה"
+  },
+  {
+   "t": "08",
+   "href": "",
+   "aria": "שלב 8: המערכת השלמה"
+  },
+  {
+   "t": "למידע על הפרוטוקול ←",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "לקבלת פרטים והצעה ←",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "למידע על פרוטוקול והדרכה",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "מידע על הדרכה ←",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "EXOCELL MASK ←",
+   "href": "/products/exocell-mask",
+   "aria": ""
+  },
+  {
+   "t": "DERMA RECOVERY CREAM ←",
+   "href": "/products/derma-recovery-cream",
+   "aria": ""
+  },
+  {
+   "t": "EXOTECH GEL ←",
+   "href": "/products/exotech-gel",
+   "aria": ""
+  },
+  {
+   "t": "WhatsApp ↗",
+   "href": "https://wa.me/972543262182",
+   "aria": ""
+  },
+  {
+   "t": "טלפון +972 54-326-2182",
+   "href": "tel:+972543262182",
+   "aria": ""
+  },
+  {
+   "t": "דוא״ל info@mitoderm.com",
+   "href": "mailto:info@mitoderm.com",
+   "aria": ""
+  },
+  {
+   "t": "מדיניות הפרטיות",
+   "href": "/privacy",
+   "aria": ""
+  },
+  {
+   "t": "שליחת פנייה ←",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "לפנייה ב-WhatsApp ↗",
+   "href": "https://wa.me/972543262182?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%9E%D7%99%D7%93%D7%A2%20%D7%9E%D7%A7%D7%A6%D7%95%D7%A2%D7%99%20%D7%95%D7%94%D7%A6%D7%A2%D7%94%20%D7%9C%D7%A7%D7%9C%D7%99%D7%A0%D7%99%D7%A7%D7%94%20%D7%91%D7%A0%D7%95%D7%A9%D7%90%20EXO-NAD.",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "פרטיות",
+   "href": "/privacy",
+   "aria": ""
+  }
+ ],
+ "forms": [
+  [
+   {
+    "tag": "INPUT",
+    "type": "text",
+    "name": "name",
+    "ph": "",
+    "req": true,
+    "label": "שם מלא"
+   },
+   {
+    "tag": "INPUT",
+    "type": "tel",
+    "name": "phone",
+    "ph": "",
+    "req": true,
+    "label": "טלפון לחזרה"
+   },
+   {
+    "tag": "SELECT",
+    "type": "select-one",
+    "name": "profession",
+    "ph": "",
+    "req": true,
+    "label": "תחום העיסוק בחרו תחום קוסמטיקאי/ת רופא/ה אח/ות בעל/ת קליניקה תחום מקצועי אחר"
+   },
+   {
+    "tag": "INPUT",
+    "type": "hidden",
+    "name": "productSlug",
+    "ph": "",
+    "req": false,
+    "label": ""
+   },
+   {
+    "tag": "TEXTAREA",
+    "type": "textarea",
+    "name": "comment",
+    "ph": "",
+    "req": false,
+    "label": "מה תרצו לדעת? (לא חובה)"
+   },
+   {
+    "tag": "INPUT",
+    "type": "text",
+    "name": "website",
+    "ph": "",
+    "req": false,
+    "label": "Website"
+   },
+   {
+    "tag": "INPUT",
+    "type": "checkbox",
+    "name": "privacyConsent",
+    "ph": "",
+    "req": true,
+    "label": "אני מאשר/ת ליצור איתי קשר בנוגע לפנייה זו, בהתאם למדיניות הפרטיות."
+   },
+   {
+    "tag": "BUTTON",
+    "type": "submit",
+    "name": "",
+    "ph": "",
+    "req": false,
+    "label": ""
+   }
+  ]
+ ],
+ "images": [
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 164,
+   "ch": 48
+  },
+  {
+   "src": "originals/IMG_9803.JPG",
+   "alt": "",
+   "nw": 3808,
+   "nh": 5712,
+   "cw": 913,
+   "ch": 784
+  },
+  {
+   "src": "exo-nad/NAD.png",
+   "alt": "",
+   "nw": 795,
+   "nh": 489,
+   "cw": 0,
+   "ch": 0
+  },
+  {
+   "src": "exo-nad/kit-photo.png",
+   "alt": "הערכה המקורית של EXO-NAD",
+   "nw": 960,
+   "nh": 1637,
+   "cw": 626,
+   "ch": 620
+  },
+  {
+   "src": "products/exocell-mask.webp",
+   "alt": "EXOCELL MASK",
+   "nw": 428,
+   "nh": 331,
+   "cw": 240,
+   "ch": 120
+  },
+  {
+   "src": "products/derma-recovery-cream.webp",
+   "alt": "DERMA RECOVERY CREAM",
+   "nw": 688,
+   "nh": 946,
+   "cw": 240,
+   "ch": 120
+  },
+  {
+   "src": "products/exotech-gel.webp",
+   "alt": "EXOTECH GEL",
+   "nw": 696,
+   "nh": 931,
+   "cw": 240,
+   "ch": 120
+  },
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 136,
+   "ch": 40
+  }
+ ],
+ "videos": [
+  {
+   "src": "123.mp4",
+   "w": 476,
+   "h": 844,
+   "dur": 21.1
+  }
+ ],
+ "jsonld": 0
+}

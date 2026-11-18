@@ -1,0 +1,572 @@
+{
+ "meta": {
+  "route": "/",
+  "status": 200,
+  "pageHeight": 3018,
+  "loadMs": 7875,
+  "transferMB": 1.9,
+  "requests": 38,
+  "consoleErrors": [],
+  "failed": []
+ },
+ "title": "MITODERM",
+ "lang": "he",
+ "dir": "rtl",
+ "metaDescription": "מוצרים מקצועיים לעור ולקרקפת, טיפוח ביתי משלים ומכשור לקליניקות. הכירו את MITODERM וקבלו ייעוץ והצעה מקצועית.",
+ "headings": [
+  "H1: הקולקציה של MITODERM",
+  "H2: לכל מוצר, המקום שלו",
+  "H2: מוצר טוב צריך גם ליווי",
+  "H3: בחירה שמתאימה לקליניקה",
+  "H3: ידע ופרוטוקולים",
+  "H3: קשר עם הצוות",
+  "H2: בואו נדבר על הקליניקה שלכם"
+ ],
+ "buttons": [
+  {
+   "t": "דלגו לתוכן",
+   "href": "#main-content",
+   "aria": ""
+  },
+  {
+   "t": "",
+   "href": "/",
+   "aria": "MITODERM"
+  },
+  {
+   "t": "מוצרים",
+   "href": "/#products",
+   "aria": ""
+  },
+  {
+   "t": "V-TECH",
+   "href": "/products/v-tech-system",
+   "aria": ""
+  },
+  {
+   "t": "הדרכה וליווי",
+   "href": "/#support",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה ↗",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "☰",
+   "href": "",
+   "aria": "קטלוג"
+  },
+  {
+   "t": "ייעוץ והצעה ←",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "לעמוד V-TECH ↗",
+   "href": "/products/v-tech-system",
+   "aria": ""
+  },
+  {
+   "t": "V-TECH SYSTEMלפרטי המוצר ←",
+   "href": "/products/v-tech-system",
+   "aria": "לפרטי V-TECH SYSTEM"
+  },
+  {
+   "t": "EXO-NADלפרטי המוצר ←",
+   "href": "/products/exo-nad",
+   "aria": "לפרטי EXO-NAD"
+  },
+  {
+   "t": "EXOCELL MASKלפרטי המוצר ←",
+   "href": "/products/exocell-mask",
+   "aria": "לפרטי EXOCELL MASK"
+  },
+  {
+   "t": "EXOTECH GELלפרטי המוצר ←",
+   "href": "/products/exotech-gel",
+   "aria": "לפרטי EXOTECH GEL"
+  },
+  {
+   "t": "EXOSIGNAL HAIRלפרטי המוצר ←",
+   "href": "/products/exosignal-hair",
+   "aria": "לפרטי EXOSIGNAL HAIR"
+  },
+  {
+   "t": "EXOSIGNAL SPRAYלפרטי המוצר ←",
+   "href": "/products/exosignal-spray",
+   "aria": "לפרטי EXOSIGNAL SPRAY"
+  },
+  {
+   "t": "MITOTECH CELL BOOSTERלפרטי המוצר ←",
+   "href": "/products/mitotech-cell-booster",
+   "aria": "לפרטי MITOTECH CELL BOOSTER"
+  },
+  {
+   "t": "CELL RENEW 1.5%לפרטי המוצר ←",
+   "href": "/products/cell-renew-1-5",
+   "aria": "לפרטי CELL RENEW 1.5%"
+  },
+  {
+   "t": "CELLULAR AGE DEFENSE 2.5%לפרטי המוצר ←",
+   "href": "/products/cellular-age-defense-2-5",
+   "aria": "לפרטי CELLULAR AGE DEFENSE 2.5%"
+  },
+  {
+   "t": "MICRO BOOST 10%לפרטי המוצר ←",
+   "href": "/products/micro-boost-10",
+   "aria": "לפרטי MICRO BOOST 10%"
+  },
+  {
+   "t": "DERMA RECOVERY CREAMלפרטי המוצר ←",
+   "href": "/products/derma-recovery-cream",
+   "aria": "לפרטי DERMA RECOVERY CREAM"
+  },
+  {
+   "t": "MITOSCANלפרטי המוצר ←",
+   "href": "/products/mitoscan",
+   "aria": "לפרטי MITOSCAN"
+  },
+  {
+   "t": "MITOPENלפרטי המוצר ←",
+   "href": "/products/mitopen",
+   "aria": "לפרטי MITOPEN"
+  },
+  {
+   "t": "V-TECH SYSTEMלפרטי המוצר ←",
+   "href": "/products/v-tech-system",
+   "aria": "לפרטי V-TECH SYSTEM"
+  },
+  {
+   "t": "EXO-NADלפרטי המוצר ←",
+   "href": "/products/exo-nad",
+   "aria": "לפרטי EXO-NAD"
+  },
+  {
+   "t": "EXOCELL MASKלפרטי המוצר ←",
+   "href": "/products/exocell-mask",
+   "aria": "לפרטי EXOCELL MASK"
+  },
+  {
+   "t": "EXOTECH GELלפרטי המוצר ←",
+   "href": "/products/exotech-gel",
+   "aria": "לפרטי EXOTECH GEL"
+  },
+  {
+   "t": "MITOTECH CELL BOOSTERלפרטי המוצר ←",
+   "href": "/products/mitotech-cell-booster",
+   "aria": "לפרטי MITOTECH CELL BOOSTER"
+  },
+  {
+   "t": "MITOPENלפרטי המוצר ←",
+   "href": "/products/mitopen",
+   "aria": "לפרטי MITOPEN"
+  },
+  {
+   "t": "EXOSIGNAL HAIRלפרטי המוצר ←",
+   "href": "/products/exosignal-hair",
+   "aria": "לפרטי EXOSIGNAL HAIR"
+  },
+  {
+   "t": "EXOSIGNAL SPRAYלפרטי המוצר ←",
+   "href": "/products/exosignal-spray",
+   "aria": "לפרטי EXOSIGNAL SPRAY"
+  },
+  {
+   "t": "MITOSCANלפרטי המוצר ←",
+   "href": "/products/mitoscan",
+   "aria": "לפרטי MITOSCAN"
+  },
+  {
+   "t": "CELL RENEW 1.5%לפרטי המוצר ←",
+   "href": "/products/cell-renew-1-5",
+   "aria": "לפרטי CELL RENEW 1.5%"
+  },
+  {
+   "t": "CELLULAR AGE DEFENSE 2.5%לפרטי המוצר ←",
+   "href": "/products/cellular-age-defense-2-5",
+   "aria": "לפרטי CELLULAR AGE DEFENSE 2.5%"
+  },
+  {
+   "t": "MICRO BOOST 10%לפרטי המוצר ←",
+   "href": "/products/micro-boost-10",
+   "aria": "לפרטי MICRO BOOST 10%"
+  },
+  {
+   "t": "DERMA RECOVERY CREAMלפרטי המוצר ←",
+   "href": "/products/derma-recovery-cream",
+   "aria": "לפרטי DERMA RECOVERY CREAM"
+  },
+  {
+   "t": "Ⅱ השהיה",
+   "href": "",
+   "aria": "השהיית תנועת הקולקציה"
+  },
+  {
+   "t": "כל 13 המוצרים ↓",
+   "href": "#products",
+   "aria": ""
+  },
+  {
+   "t": "V-TECH SYSTEM סרום ומסכת ג׳ל ↗",
+   "href": "/products/v-tech-system",
+   "aria": "לפרטי V-TECH SYSTEM"
+  },
+  {
+   "t": "EXO-NAD מערכת פילינג מקצועית ↗",
+   "href": "/products/exo-nad",
+   "aria": "לפרטי EXO-NAD"
+  },
+  {
+   "t": "EXOCELL MASK מסכת ביו-צלולוז ↗",
+   "href": "/products/exocell-mask",
+   "aria": "לפרטי EXOCELL MASK"
+  },
+  {
+   "t": "EXOTECH GEL ג׳ל לטיפוח משלים ↗",
+   "href": "/products/exotech-gel",
+   "aria": "לפרטי EXOTECH GEL"
+  },
+  {
+   "t": "EXOSIGNAL HAIR אמפולות לשימוש מקצועי ↗",
+   "href": "/products/exosignal-hair",
+   "aria": "לפרטי EXOSIGNAL HAIR"
+  },
+  {
+   "t": "EXOSIGNAL SPRAY טיפוח ביתי לקרקפת ↗",
+   "href": "/products/exosignal-spray",
+   "aria": "לפרטי EXOSIGNAL SPRAY"
+  },
+  {
+   "t": "MITOPEN מכשור מיקרונידלינג ↗",
+   "href": "/products/mitopen",
+   "aria": "לפרטי MITOPEN"
+  },
+  {
+   "t": "MICRO BOOST 10% BIOSPICULE · מקצועי ↗",
+   "href": "/products/micro-boost-10",
+   "aria": "לפרטי MICRO BOOST 10%"
+  },
+  {
+   "t": "CELL RENEW 1.5% BIOSPICULE · טיפוח ביתי ↗",
+   "href": "/products/cell-renew-1-5",
+   "aria": "לפרטי CELL RENEW 1.5%"
+  },
+  {
+   "t": "CELLULAR AGE DEFENSE 2.5% BIOSPICULE · טיפוח ביתי ↗",
+   "href": "/products/cellular-age-defense-2-5",
+   "aria": "לפרטי CELLULAR AGE DEFENSE 2.5%"
+  },
+  {
+   "t": "DERMA RECOVERY CREAM טיפוח משלים לעור ↗",
+   "href": "/products/derma-recovery-cream",
+   "aria": "לפרטי DERMA RECOVERY CREAM"
+  },
+  {
+   "t": "MITOSCAN סקירת הקרקפת והשיער ↗",
+   "href": "/products/mitoscan",
+   "aria": "לפרטי MITOSCAN"
+  },
+  {
+   "t": "MITOTECH CELL BOOSTER מערכת דו-רכיבית ↗",
+   "href": "/products/mitotech-cell-booster",
+   "aria": "לפרטי MITOTECH CELL BOOSTER"
+  },
+  {
+   "t": "מידע על הדרכה ↗",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "WhatsApp ↗",
+   "href": "https://wa.me/972543262182",
+   "aria": ""
+  },
+  {
+   "t": "טלפון +972 54-326-2182",
+   "href": "tel:+972543262182",
+   "aria": ""
+  },
+  {
+   "t": "דוא״ל info@mitoderm.com",
+   "href": "mailto:info@mitoderm.com",
+   "aria": ""
+  },
+  {
+   "t": "מדיניות הפרטיות",
+   "href": "/privacy",
+   "aria": ""
+  },
+  {
+   "t": "שליחת פנייה ←",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "לפנייה ב-WhatsApp ↗",
+   "href": "https://wa.me/972543262182?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%9E%D7%99%D7%93%D7%A2%20%D7%9E%D7%A7%D7%A6%D7%95%D7%A2%D7%99%20%D7%95%D7%94%D7%A6%D7%A2%D7%94%20%D7%9C%D7%A7%D7%9C%D7%99%D7%A0%D7%99%D7%A7%D7%94%20%D7%91%D7%A0%D7%95%D7%A9%D7%90%20%D7%9E%D7%95%D7%A6%D7%A8%D7%99%20MITODERM.",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "פרטיות",
+   "href": "/privacy",
+   "aria": ""
+  }
+ ],
+ "forms": [
+  [
+   {
+    "tag": "INPUT",
+    "type": "text",
+    "name": "name",
+    "ph": "",
+    "req": true,
+    "label": "שם מלא"
+   },
+   {
+    "tag": "INPUT",
+    "type": "tel",
+    "name": "phone",
+    "ph": "",
+    "req": true,
+    "label": "טלפון לחזרה"
+   },
+   {
+    "tag": "SELECT",
+    "type": "select-one",
+    "name": "profession",
+    "ph": "",
+    "req": true,
+    "label": "תחום העיסוק בחרו תחום קוסמטיקאי/ת רופא/ה אח/ות בעל/ת קליניקה תחום מקצועי אחר"
+   },
+   {
+    "tag": "SELECT",
+    "type": "select-one",
+    "name": "productSlug",
+    "ph": "",
+    "req": false,
+    "label": "המוצר שמעניין אותי עדיין לא בחרתי V-TECH SYSTEM EXO-NAD EXOCELL MASK EXOSIGNAL HAIR EXOSIGNAL SPRAY EXOTECH GEL MICRO BOOST 10% CELL RENEW 1.5% CELLULAR AGE DEFENSE 2.5% DERMA RECOVERY CREAM MITOPEN MITOSCAN MITOTECH CELL BOOSTER"
+   },
+   {
+    "tag": "TEXTAREA",
+    "type": "textarea",
+    "name": "comment",
+    "ph": "",
+    "req": false,
+    "label": "מה תרצו לדעת? (לא חובה)"
+   },
+   {
+    "tag": "INPUT",
+    "type": "text",
+    "name": "website",
+    "ph": "",
+    "req": false,
+    "label": "Website"
+   },
+   {
+    "tag": "INPUT",
+    "type": "checkbox",
+    "name": "privacyConsent",
+    "ph": "",
+    "req": true,
+    "label": "אני מאשר/ת ליצור איתי קשר בנוגע לפנייה זו, בהתאם למדיניות הפרטיות."
+   },
+   {
+    "tag": "BUTTON",
+    "type": "submit",
+    "name": "",
+    "ph": "",
+    "req": false,
+    "label": ""
+   }
+  ]
+ ],
+ "images": [
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 164,
+   "ch": 48
+  },
+  {
+   "src": "hero/collection-atelier-desktop.webp",
+   "alt": "קולקציית MITODERM: שלושה עשר מוצרים מקצועיים",
+   "nw": 1672,
+   "nh": 941,
+   "cw": 1451,
+   "ch": 816
+  },
+  {
+   "src": "hero/collection-clean-desktop-v7.webp",
+   "alt": "",
+   "nw": 1672,
+   "nh": 941,
+   "cw": 1451,
+   "ch": 816
+  },
+  {
+   "src": "_2wup4xNeevN3QH5Pxv4g6PWRmPW/99be3b2a-02b2-44a9-a511-3129f419f341.webp",
+   "alt": "",
+   "nw": 1912,
+   "nh": 1080,
+   "cw": 458,
+   "ch": 259
+  },
+  {
+   "src": "hero/collection-atelier-mobile.webp",
+   "alt": "קולקציית MITODERM: שלושה עשר מוצרים מקצועיים",
+   "nw": 1049,
+   "nh": 1500,
+   "cw": 0,
+   "ch": 0
+  },
+  {
+   "src": "hero/collection-clean-mobile-v7.webp",
+   "alt": "",
+   "nw": 1049,
+   "nh": 1500,
+   "cw": 0,
+   "ch": 0
+  },
+  {
+   "src": "_2wup4xNeevN3QH5Pxv4g6PWRmPW/99be3b2a-02b2-44a9-a511-3129f419f341.webp",
+   "alt": "",
+   "nw": 1912,
+   "nh": 1080,
+   "cw": 0,
+   "ch": 0
+  },
+  {
+   "src": "products/v-tech-system.webp",
+   "alt": "",
+   "nw": 513,
+   "nh": 875,
+   "cw": 49,
+   "ch": 83
+  },
+  {
+   "src": "products/exo-nad.webp",
+   "alt": "",
+   "nw": 303,
+   "nh": 332,
+   "cw": 61,
+   "ch": 67
+  },
+  {
+   "src": "products/exocell-mask.webp",
+   "alt": "",
+   "nw": 428,
+   "nh": 331,
+   "cw": 61,
+   "ch": 47
+  },
+  {
+   "src": "products/exotech-gel.webp",
+   "alt": "",
+   "nw": 696,
+   "nh": 931,
+   "cw": 61,
+   "ch": 82
+  },
+  {
+   "src": "products/exosignal-hair.webp",
+   "alt": "",
+   "nw": 1245,
+   "nh": 819,
+   "cw": 61,
+   "ch": 40
+  },
+  {
+   "src": "products/exosignal-spray.webp",
+   "alt": "",
+   "nw": 195,
+   "nh": 306,
+   "cw": 53,
+   "ch": 83
+  },
+  {
+   "src": "products/mitopen.webp",
+   "alt": "",
+   "nw": 466,
+   "nh": 1521,
+   "cw": 25,
+   "ch": 83
+  },
+  {
+   "src": "products/micro-boost-10.webp",
+   "alt": "",
+   "nw": 386,
+   "nh": 1253,
+   "cw": 26,
+   "ch": 83
+  },
+  {
+   "src": "products/cell-renew-1-5.webp",
+   "alt": "",
+   "nw": 311,
+   "nh": 1012,
+   "cw": 26,
+   "ch": 83
+  },
+  {
+   "src": "products/cellular-age-defense-2-5.webp",
+   "alt": "",
+   "nw": 309,
+   "nh": 1023,
+   "cw": 25,
+   "ch": 83
+  },
+  {
+   "src": "products/derma-recovery-cream.webp",
+   "alt": "",
+   "nw": 688,
+   "nh": 946,
+   "cw": 60,
+   "ch": 83
+  },
+  {
+   "src": "products/mitoscan.webp",
+   "alt": "",
+   "nw": 340,
+   "nh": 288,
+   "cw": 61,
+   "ch": 52
+  },
+  {
+   "src": "products/mitotech-cell-booster.webp",
+   "alt": "",
+   "nw": 1207,
+   "nh": 916,
+   "cw": 112,
+   "ch": 85
+  },
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 136,
+   "ch": 40
+  }
+ ],
+ "videos": [],
+ "jsonld": 0
+}

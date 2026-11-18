@@ -1,0 +1,282 @@
+{
+ "meta": {
+  "route": "/products/exotech-gel",
+  "status": 200,
+  "pageHeight": 7207,
+  "loadMs": 11616,
+  "transferMB": 0.5,
+  "requests": 21,
+  "consoleErrors": [],
+  "failed": []
+ },
+ "title": "EXOTECH GEL | MITODERM",
+ "lang": "he",
+ "dir": "rtl",
+ "metaDescription": "אקסוזומים סינתטיים בג׳ל קליל לשימוש יומיומי – ההמשך הביתי של הטיפול המקצועי.",
+ "headings": [
+  "H1: שומרים על תוצאות הקליניקה גם בבית.",
+  "H2: ההתחדשות מתחילה בקליניקה.",
+  "H2: אקסוזומים סינתטיים. PDRN. זהב.",
+  "H2: קליל. מעניק לחות. אף פעם לא מכביד.",
+  "H2: בוקר. ערב. כל יום.",
+  "H2: צנצנת כדורית אחת. 30 מ״ל. יומיומי.",
+  "H2: המשיכו את פרוטוקול הקליניקה בבית",
+  "H2: בואו נדבר על הקליניקה שלכם"
+ ],
+ "buttons": [
+  {
+   "t": "דלגו לתוכן",
+   "href": "#main-content",
+   "aria": ""
+  },
+  {
+   "t": "",
+   "href": "/",
+   "aria": "MITODERM"
+  },
+  {
+   "t": "מוצרים",
+   "href": "/#products",
+   "aria": ""
+  },
+  {
+   "t": "V-TECH",
+   "href": "/products/v-tech-system",
+   "aria": ""
+  },
+  {
+   "t": "הדרכה וליווי",
+   "href": "/#support",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה ↗",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "☰",
+   "href": "",
+   "aria": "קטלוג"
+  },
+  {
+   "t": "איפה לקנות",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "פתחו את הכדור",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "התייעצו עם המומחה שלכם",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "איפה לקנות",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "התייעצו עם מומחה",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "WhatsApp ↗",
+   "href": "https://wa.me/972543262182",
+   "aria": ""
+  },
+  {
+   "t": "טלפון +972 54-326-2182",
+   "href": "tel:+972543262182",
+   "aria": ""
+  },
+  {
+   "t": "דוא״ל info@mitoderm.com",
+   "href": "mailto:info@mitoderm.com",
+   "aria": ""
+  },
+  {
+   "t": "מדיניות הפרטיות",
+   "href": "/privacy",
+   "aria": ""
+  },
+  {
+   "t": "שליחת פנייה ←",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "לפנייה ב-WhatsApp ↗",
+   "href": "https://wa.me/972543262182?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%9E%D7%99%D7%93%D7%A2%20%D7%9E%D7%A7%D7%A6%D7%95%D7%A2%D7%99%20%D7%95%D7%94%D7%A6%D7%A2%D7%94%20%D7%9C%D7%A7%D7%9C%D7%99%D7%A0%D7%99%D7%A7%D7%94%20%D7%91%D7%A0%D7%95%D7%A9%D7%90%20EXOTECH%20GEL.",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "פרטיות",
+   "href": "/privacy",
+   "aria": ""
+  }
+ ],
+ "forms": [
+  [
+   {
+    "tag": "INPUT",
+    "type": "text",
+    "name": "name",
+    "ph": "",
+    "req": true,
+    "label": "שם מלא"
+   },
+   {
+    "tag": "INPUT",
+    "type": "tel",
+    "name": "phone",
+    "ph": "",
+    "req": true,
+    "label": "טלפון לחזרה"
+   },
+   {
+    "tag": "SELECT",
+    "type": "select-one",
+    "name": "profession",
+    "ph": "",
+    "req": true,
+    "label": "תחום העיסוק בחרו תחום קוסמטיקאי/ת רופא/ה אח/ות בעל/ת קליניקה תחום מקצועי אחר"
+   },
+   {
+    "tag": "INPUT",
+    "type": "hidden",
+    "name": "productSlug",
+    "ph": "",
+    "req": false,
+    "label": ""
+   },
+   {
+    "tag": "TEXTAREA",
+    "type": "textarea",
+    "name": "comment",
+    "ph": "",
+    "req": false,
+    "label": "מה תרצו לדעת? (לא חובה)"
+   },
+   {
+    "tag": "INPUT",
+    "type": "text",
+    "name": "website",
+    "ph": "",
+    "req": false,
+    "label": "Website"
+   },
+   {
+    "tag": "INPUT",
+    "type": "checkbox",
+    "name": "privacyConsent",
+    "ph": "",
+    "req": true,
+    "label": "אני מאשר/ת ליצור איתי קשר בנוגע לפנייה זו, בהתאם למדיניות הפרטיות."
+   },
+   {
+    "tag": "BUTTON",
+    "type": "submit",
+    "name": "",
+    "ph": "",
+    "req": false,
+    "label": ""
+   }
+  ]
+ ],
+ "images": [
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 164,
+   "ch": 48
+  },
+  {
+   "src": "products/exotech-gel.webp",
+   "alt": "EXOTECH GEL",
+   "nw": 696,
+   "nh": 931,
+   "cw": 309,
+   "ch": 418
+  },
+  {
+   "src": "products/exotech-gel.webp",
+   "alt": "EXOTECH GEL",
+   "nw": 696,
+   "nh": 931,
+   "cw": 309,
+   "ch": 418
+  },
+  {
+   "src": "products/exotech-gel.webp",
+   "alt": "EXOTECH GEL",
+   "nw": 696,
+   "nh": 931,
+   "cw": 309,
+   "ch": 418
+  },
+  {
+   "src": "products/exotech-gel.webp",
+   "alt": "EXOTECH GEL",
+   "nw": 696,
+   "nh": 931,
+   "cw": 309,
+   "ch": 418
+  },
+  {
+   "src": "products/exotech-gel.webp",
+   "alt": "EXOTECH GEL",
+   "nw": 696,
+   "nh": 931,
+   "cw": 309,
+   "ch": 418
+  },
+  {
+   "src": "products/exotech-gel.webp",
+   "alt": "EXOTECH GEL",
+   "nw": 696,
+   "nh": 931,
+   "cw": 309,
+   "ch": 418
+  },
+  {
+   "src": "products/exotech-gel.webp",
+   "alt": "EXOTECH GEL",
+   "nw": 696,
+   "nh": 931,
+   "cw": 309,
+   "ch": 418
+  },
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 136,
+   "ch": 40
+  }
+ ],
+ "videos": [],
+ "jsonld": 0
+}

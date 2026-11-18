@@ -1,0 +1,336 @@
+{
+ "meta": {
+  "route": "/products/v-tech-system",
+  "status": 200,
+  "pageHeight": 13737,
+  "loadMs": 18224,
+  "transferMB": 36.4,
+  "requests": 34,
+  "consoleErrors": [],
+  "failed": []
+ },
+ "title": "V-TECH SYSTEM | MITODERM",
+ "lang": "he",
+ "dir": "rtl",
+ "metaDescription": "מערכת מקצועית לפנים, לצוואר ולמחשוף, בשילוב מיקרונידלינג ובהתאם להתאמה מקצועית.",
+ "headings": [
+  "H1: V-TECH SYSTEM",
+  "H2: מראה הקמטוטים ומרקם העור",
+  "H2: מתמקדים באזור שנבחר",
+  "H2: אותו אזור. הסרום של המערכת.",
+  "H2: משלימים עם מסכת הג׳ל",
+  "H2: רוצים לראותאת התמונה המלאה?",
+  "H2: הכניסו את V-TECH לקליניקה שלכם",
+  "H2: מכירים את המערכת. בונים את דרך העבודה.",
+  "H3: משאירים פנייה ממוקדת",
+  "H3: מבררים התאמה מקצועית",
+  "H3: מסכמים את הפרטים",
+  "H3: מה חשוב לכם לדעת לפני שמתחילים?",
+  "H3: שאלות לפני בחירה",
+  "H2: עוד מהעולם של MITODERM",
+  "H3: מכשור וטיפוח לצד תוכנית העבודה",
+  "H4: MITOPEN",
+  "H4: EXOCELL MASK",
+  "H4: DERMA RECOVERY CREAM",
+  "H4: EXOTECH GEL",
+  "H3: להיכרות עם פרוטוקול מקצועי נוסף",
+  "H4: MICRO BOOST 10%"
+ ],
+ "buttons": [
+  {
+   "t": "דלגו לתוכן",
+   "href": "#main-content",
+   "aria": ""
+  },
+  {
+   "t": "",
+   "href": "/",
+   "aria": "MITODERM"
+  },
+  {
+   "t": "מוצרים",
+   "href": "/#products",
+   "aria": ""
+  },
+  {
+   "t": "V-TECH",
+   "href": "/products/v-tech-system",
+   "aria": ""
+  },
+  {
+   "t": "הדרכה וליווי",
+   "href": "/#support",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה ↗",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "☰",
+   "href": "",
+   "aria": "קטלוג"
+  },
+  {
+   "t": "V-TECH",
+   "href": "/",
+   "aria": "חזרה לכל המוצרים"
+  },
+  {
+   "t": "הטיפול",
+   "href": "#vtech-intro",
+   "aria": ""
+  },
+  {
+   "t": "תוצאות",
+   "href": "#vtech-results",
+   "aria": ""
+  },
+  {
+   "t": "הערכה",
+   "href": "#vtech-kit",
+   "aria": ""
+  },
+  {
+   "t": "הדרכה",
+   "href": "#vtech-training",
+   "aria": ""
+  },
+  {
+   "t": "לקבלת מחיר ←",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "01המערכת",
+   "href": "",
+   "aria": "1. המערכת"
+  },
+  {
+   "t": "02הבקשה",
+   "href": "",
+   "aria": "2. הבקשה"
+  },
+  {
+   "t": "03MITOPEN",
+   "href": "",
+   "aria": "3. MITOPEN"
+  },
+  {
+   "t": "04סרום",
+   "href": "",
+   "aria": "4. סרום"
+  },
+  {
+   "t": "05מסכת ג׳ל",
+   "href": "",
+   "aria": "5. מסכת ג׳ל"
+  },
+  {
+   "t": "לקבלת מחיר ←",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "אל הקליניקה ↓",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "לשיחה על התאמה ←",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "לתיעוד וציפיות מהטיפול ↓",
+   "href": "#vtech-results",
+   "aria": ""
+  },
+  {
+   "t": "לבירור תיעוד והתאמה ←",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "",
+   "href": "",
+   "aria": "פתיחת ערכת V-TECH והצגת התכולה"
+  },
+  {
+   "t": "גללו לפתיחת הערכה ↓או לחצו להצצה פנימה",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "לקבלת מחיר ←",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "לתיאום הדרכה ↗",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "לשיחה עם הצוות ←",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "לשיחה על הדרכה ←",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "MITOPEN מכשור המיקרונידלינג שמופיע בהמחשה. לעבודה לפי הכשרה ופרוטוקול. לפרטי המו",
+   "href": "/products/mitopen",
+   "aria": ""
+  },
+  {
+   "t": "EXOCELL MASK מסכת ביוצלולוזה כאפשרות לסיום הטיפול, בהתאם לפרוטוקול. נבחרת בנפרד ",
+   "href": "/products/exocell-mask",
+   "aria": ""
+  },
+  {
+   "t": "DERMA RECOVERY CREAM קרם כאפשרות לטיפוח משלים לאחר הטיפול, לפי התאמה מקצועית. לפ",
+   "href": "/products/derma-recovery-cream",
+   "aria": ""
+  },
+  {
+   "t": "EXOTECH GEL טיפוח ביתי משלים. ההתאמה נעשית בנפרד מתוכנית העבודה עם V-TECH. לפרטי",
+   "href": "/products/exotech-gel",
+   "aria": ""
+  },
+  {
+   "t": "MICRO BOOST 10% מערכת BIOSPICULE מקצועית לפרוטוקול נוסף. אינה חלק מהערכה או מרצף",
+   "href": "/products/micro-boost-10",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "פרטיות",
+   "href": "/privacy",
+   "aria": ""
+  },
+  {
+   "t": "V-TECHלקבלת מחיר ←",
+   "href": "#contact",
+   "aria": ""
+  }
+ ],
+ "forms": [],
+ "images": [
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 164,
+   "ch": 48
+  },
+  {
+   "src": "_2wup4xNeevN3QH5Pxv4g6PWRmPW/99be3b2a-02b2-44a9-a511-3129f419f341.webp",
+   "alt": "אריזת V-TECH SYSTEM נפתחת ומציגה את הסרום ומסכת הג׳ל",
+   "nw": 1912,
+   "nh": 1080,
+   "cw": 1440,
+   "ch": 900
+  },
+  {
+   "src": "_2wup4xNeevN3QH5Pxv4g6PWRmPW/99be3b2a-02b2-44a9-a511-3129f419f341.webp",
+   "alt": "",
+   "nw": 1912,
+   "nh": 1080,
+   "cw": 1570,
+   "ch": 981
+  },
+  {
+   "src": "_2wup4xNeevN3QH5Pxv4g6PWRmPW/99be3b2a-02b2-44a9-a511-3129f419f341.webp",
+   "alt": "",
+   "nw": 1912,
+   "nh": 1080,
+   "cw": 798,
+   "ch": 451
+  },
+  {
+   "src": "_2wup4xNeevN3QH5Pxv4g6PWRmPW/99be3b2a-02b2-44a9-a511-3129f419f341.webp",
+   "alt": "",
+   "nw": 1912,
+   "nh": 1080,
+   "cw": 828,
+   "ch": 506
+  },
+  {
+   "src": "products/mitopen.webp",
+   "alt": "MITOPEN",
+   "nw": 466,
+   "nh": 1521,
+   "cw": 47,
+   "ch": 155
+  },
+  {
+   "src": "products/exocell-mask.webp",
+   "alt": "EXOCELL MASK",
+   "nw": 428,
+   "nh": 331,
+   "cw": 176,
+   "ch": 136
+  },
+  {
+   "src": "products/derma-recovery-cream.webp",
+   "alt": "DERMA RECOVERY CREAM",
+   "nw": 688,
+   "nh": 946,
+   "cw": 113,
+   "ch": 155
+  },
+  {
+   "src": "products/exotech-gel.webp",
+   "alt": "EXOTECH GEL",
+   "nw": 696,
+   "nh": 931,
+   "cw": 116,
+   "ch": 155
+  },
+  {
+   "src": "products/micro-boost-10.webp",
+   "alt": "MICRO BOOST 10%",
+   "nw": 386,
+   "nh": 1253,
+   "cw": 48,
+   "ch": 155
+  },
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 136,
+   "ch": 40
+  }
+ ],
+ "videos": [
+  {
+   "src": "9b6bc72c-4550-423f-8753-24937ce6068f.mp4",
+   "w": 1912,
+   "h": 1080,
+   "dur": 36.4
+  }
+ ],
+ "jsonld": 0
+}

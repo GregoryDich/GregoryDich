@@ -1,0 +1,302 @@
+{
+ "meta": {
+  "route": "/products/derma-recovery-cream",
+  "status": 200,
+  "pageHeight": 7207,
+  "loadMs": 12354,
+  "transferMB": 0.5,
+  "requests": 21,
+  "consoleErrors": [],
+  "failed": []
+ },
+ "title": "DERMA RECOVERY CREAM | MITODERM",
+ "lang": "he",
+ "dir": "rtl",
+ "metaDescription": "DERMA RECOVERY CREAM – קרם משקם ללא ספיקולות להרגעה ולתמיכה במחסום העור. השלב המשלים, בבית.",
+ "headings": [
+  "H1: כל פרוטוקול מסתיים כאן.",
+  "H2: לחידוש יש גם אחרי.",
+  "H2: ללא ספיקולות. שבעה רכיבים פעילים מרכזיים.",
+  "H2: נוחות בזמן שהעור מתחדש.",
+  "H2: אחרי הסרומים. אחרי הקליניקה. מדי יום.",
+  "H2: 50 מ״ל. בוקר וערב.",
+  "H2: השלימו כל פרוטוקול בשיקום.",
+  "H2: בואו נדבר על הקליניקה שלכם"
+ ],
+ "buttons": [
+  {
+   "t": "דלגו לתוכן",
+   "href": "#main-content",
+   "aria": ""
+  },
+  {
+   "t": "",
+   "href": "/",
+   "aria": "MITODERM"
+  },
+  {
+   "t": "מוצרים",
+   "href": "/#products",
+   "aria": ""
+  },
+  {
+   "t": "V-TECH",
+   "href": "/products/v-tech-system",
+   "aria": ""
+  },
+  {
+   "t": "הדרכה וליווי",
+   "href": "/#support",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה ↗",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "☰",
+   "href": "",
+   "aria": "קטלוג"
+  },
+  {
+   "t": "איפה לקנות",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "מה בפנים ↓",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "גלו מה בפנים ↓",
+   "href": "#derma-recovery-cream-chapter-3",
+   "aria": ""
+  },
+  {
+   "t": "הרגישו את זה ↓",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "גלו מתי למרוח ↓",
+   "href": "#derma-recovery-cream-chapter-5",
+   "aria": ""
+  },
+  {
+   "t": "איפה לקנות ↓",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "איפה לקנות ↓",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "איפה לקנות",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "לקליניקות: בקשת הצעת מחיר",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "WhatsApp ↗",
+   "href": "https://wa.me/972543262182",
+   "aria": ""
+  },
+  {
+   "t": "טלפון +972 54-326-2182",
+   "href": "tel:+972543262182",
+   "aria": ""
+  },
+  {
+   "t": "דוא״ל info@mitoderm.com",
+   "href": "mailto:info@mitoderm.com",
+   "aria": ""
+  },
+  {
+   "t": "מדיניות הפרטיות",
+   "href": "/privacy",
+   "aria": ""
+  },
+  {
+   "t": "שליחת פנייה ←",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "לפנייה ב-WhatsApp ↗",
+   "href": "https://wa.me/972543262182?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%9E%D7%99%D7%93%D7%A2%20%D7%9E%D7%A7%D7%A6%D7%95%D7%A2%D7%99%20%D7%95%D7%94%D7%A6%D7%A2%D7%94%20%D7%9C%D7%A7%D7%9C%D7%99%D7%A0%D7%99%D7%A7%D7%94%20%D7%91%D7%A0%D7%95%D7%A9%D7%90%20DERMA%20RECOVERY%20CREAM.",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "פרטיות",
+   "href": "/privacy",
+   "aria": ""
+  }
+ ],
+ "forms": [
+  [
+   {
+    "tag": "INPUT",
+    "type": "text",
+    "name": "name",
+    "ph": "",
+    "req": true,
+    "label": "שם מלא"
+   },
+   {
+    "tag": "INPUT",
+    "type": "tel",
+    "name": "phone",
+    "ph": "",
+    "req": true,
+    "label": "טלפון לחזרה"
+   },
+   {
+    "tag": "SELECT",
+    "type": "select-one",
+    "name": "profession",
+    "ph": "",
+    "req": true,
+    "label": "תחום העיסוק בחרו תחום קוסמטיקאי/ת רופא/ה אח/ות בעל/ת קליניקה תחום מקצועי אחר"
+   },
+   {
+    "tag": "INPUT",
+    "type": "hidden",
+    "name": "productSlug",
+    "ph": "",
+    "req": false,
+    "label": ""
+   },
+   {
+    "tag": "TEXTAREA",
+    "type": "textarea",
+    "name": "comment",
+    "ph": "",
+    "req": false,
+    "label": "מה תרצו לדעת? (לא חובה)"
+   },
+   {
+    "tag": "INPUT",
+    "type": "text",
+    "name": "website",
+    "ph": "",
+    "req": false,
+    "label": "Website"
+   },
+   {
+    "tag": "INPUT",
+    "type": "checkbox",
+    "name": "privacyConsent",
+    "ph": "",
+    "req": true,
+    "label": "אני מאשר/ת ליצור איתי קשר בנוגע לפנייה זו, בהתאם למדיניות הפרטיות."
+   },
+   {
+    "tag": "BUTTON",
+    "type": "submit",
+    "name": "",
+    "ph": "",
+    "req": false,
+    "label": ""
+   }
+  ]
+ ],
+ "images": [
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 164,
+   "ch": 48
+  },
+  {
+   "src": "products/derma-recovery-cream.webp",
+   "alt": "DERMA RECOVERY CREAM",
+   "nw": 688,
+   "nh": 946,
+   "cw": 305,
+   "ch": 425
+  },
+  {
+   "src": "products/derma-recovery-cream.webp",
+   "alt": "DERMA RECOVERY CREAM",
+   "nw": 688,
+   "nh": 946,
+   "cw": 305,
+   "ch": 425
+  },
+  {
+   "src": "products/derma-recovery-cream.webp",
+   "alt": "DERMA RECOVERY CREAM",
+   "nw": 688,
+   "nh": 946,
+   "cw": 305,
+   "ch": 425
+  },
+  {
+   "src": "products/derma-recovery-cream.webp",
+   "alt": "DERMA RECOVERY CREAM",
+   "nw": 688,
+   "nh": 946,
+   "cw": 305,
+   "ch": 425
+  },
+  {
+   "src": "products/derma-recovery-cream.webp",
+   "alt": "DERMA RECOVERY CREAM",
+   "nw": 688,
+   "nh": 946,
+   "cw": 305,
+   "ch": 425
+  },
+  {
+   "src": "products/derma-recovery-cream.webp",
+   "alt": "DERMA RECOVERY CREAM",
+   "nw": 688,
+   "nh": 946,
+   "cw": 305,
+   "ch": 425
+  },
+  {
+   "src": "products/derma-recovery-cream.webp",
+   "alt": "DERMA RECOVERY CREAM",
+   "nw": 688,
+   "nh": 946,
+   "cw": 305,
+   "ch": 425
+  },
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 136,
+   "ch": 40
+  }
+ ],
+ "videos": [],
+ "jsonld": 0
+}

@@ -1,0 +1,302 @@
+{
+ "meta": {
+  "route": "/products/cell-renew-1-5",
+  "status": 200,
+  "pageHeight": 7207,
+  "loadMs": 12373,
+  "transferMB": 0.5,
+  "requests": 21,
+  "consoleErrors": [],
+  "failed": []
+ },
+ "title": "CELL RENEW 1.5% | MITODERM",
+ "lang": "he",
+ "dir": "rtl",
+ "metaDescription": "CELL RENEW 1.5% – סרום BIOSPICULE™ ביתי לחידוש והבהרת העור. זה אינו פילינג ביתי רגיל.",
+ "headings": [
+  "H1: חידוש, בכל יום.",
+  "H2: רואים את זה קודם במראה.",
+  "H2: הספיקולות פותחות. הרכיבים הפעילים בעקבותיהן.",
+  "H2: זה אינו פילינג ביתי רגיל.",
+  "H2: מריחה. שיקום. הגנה.",
+  "H2: 30 מ״ל. בכל יום.",
+  "H2: התחילו את שגרת הטיפוח בבית.",
+  "H2: בואו נדבר על הקליניקה שלכם"
+ ],
+ "buttons": [
+  {
+   "t": "דלגו לתוכן",
+   "href": "#main-content",
+   "aria": ""
+  },
+  {
+   "t": "",
+   "href": "/",
+   "aria": "MITODERM"
+  },
+  {
+   "t": "מוצרים",
+   "href": "/#products",
+   "aria": ""
+  },
+  {
+   "t": "V-TECH",
+   "href": "/products/v-tech-system",
+   "aria": ""
+  },
+  {
+   "t": "הדרכה וליווי",
+   "href": "/#support",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה ↗",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "☰",
+   "href": "",
+   "aria": "קטלוג"
+  },
+  {
+   "t": "איפה לקנות",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "מה בפנים ↓",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "גלו מה בפנים ↓",
+   "href": "#cell-renew-1-5-chapter-3",
+   "aria": ""
+  },
+  {
+   "t": "הרגישו את זה ↓",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "לשגרת הטיפוח ↓",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "איפה לקנות ↓",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "איפה לקנות ↓",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "איפה לקנות",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "לקליניקות: בקשת הצעת מחיר",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "WhatsApp ↗",
+   "href": "https://wa.me/972543262182",
+   "aria": ""
+  },
+  {
+   "t": "טלפון +972 54-326-2182",
+   "href": "tel:+972543262182",
+   "aria": ""
+  },
+  {
+   "t": "דוא״ל info@mitoderm.com",
+   "href": "mailto:info@mitoderm.com",
+   "aria": ""
+  },
+  {
+   "t": "מדיניות הפרטיות",
+   "href": "/privacy",
+   "aria": ""
+  },
+  {
+   "t": "שליחת פנייה ←",
+   "href": "",
+   "aria": ""
+  },
+  {
+   "t": "לפנייה ב-WhatsApp ↗",
+   "href": "https://wa.me/972543262182?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%9E%D7%99%D7%93%D7%A2%20%D7%9E%D7%A7%D7%A6%D7%95%D7%A2%D7%99%20%D7%95%D7%94%D7%A6%D7%A2%D7%94%20%D7%9C%D7%A7%D7%9C%D7%99%D7%A0%D7%99%D7%A7%D7%94%20%D7%91%D7%A0%D7%95%D7%A9%D7%90%20CELL%20RENEW%201.5%25.",
+   "aria": ""
+  },
+  {
+   "t": "קטלוג",
+   "href": "/catalog",
+   "aria": ""
+  },
+  {
+   "t": "ייעוץ והצעה",
+   "href": "#contact",
+   "aria": ""
+  },
+  {
+   "t": "פרטיות",
+   "href": "/privacy",
+   "aria": ""
+  }
+ ],
+ "forms": [
+  [
+   {
+    "tag": "INPUT",
+    "type": "text",
+    "name": "name",
+    "ph": "",
+    "req": true,
+    "label": "שם מלא"
+   },
+   {
+    "tag": "INPUT",
+    "type": "tel",
+    "name": "phone",
+    "ph": "",
+    "req": true,
+    "label": "טלפון לחזרה"
+   },
+   {
+    "tag": "SELECT",
+    "type": "select-one",
+    "name": "profession",
+    "ph": "",
+    "req": true,
+    "label": "תחום העיסוק בחרו תחום קוסמטיקאי/ת רופא/ה אח/ות בעל/ת קליניקה תחום מקצועי אחר"
+   },
+   {
+    "tag": "INPUT",
+    "type": "hidden",
+    "name": "productSlug",
+    "ph": "",
+    "req": false,
+    "label": ""
+   },
+   {
+    "tag": "TEXTAREA",
+    "type": "textarea",
+    "name": "comment",
+    "ph": "",
+    "req": false,
+    "label": "מה תרצו לדעת? (לא חובה)"
+   },
+   {
+    "tag": "INPUT",
+    "type": "text",
+    "name": "website",
+    "ph": "",
+    "req": false,
+    "label": "Website"
+   },
+   {
+    "tag": "INPUT",
+    "type": "checkbox",
+    "name": "privacyConsent",
+    "ph": "",
+    "req": true,
+    "label": "אני מאשר/ת ליצור איתי קשר בנוגע לפנייה זו, בהתאם למדיניות הפרטיות."
+   },
+   {
+    "tag": "BUTTON",
+    "type": "submit",
+    "name": "",
+    "ph": "",
+    "req": false,
+    "label": ""
+   }
+  ]
+ ],
+ "images": [
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 164,
+   "ch": 48
+  },
+  {
+   "src": "products/cell-renew-1-5.webp",
+   "alt": "CELL RENEW 1.5%",
+   "nw": 311,
+   "nh": 1012,
+   "cw": 138,
+   "ch": 452
+  },
+  {
+   "src": "products/cell-renew-1-5.webp",
+   "alt": "CELL RENEW 1.5%",
+   "nw": 311,
+   "nh": 1012,
+   "cw": 138,
+   "ch": 452
+  },
+  {
+   "src": "products/cell-renew-1-5.webp",
+   "alt": "CELL RENEW 1.5%",
+   "nw": 311,
+   "nh": 1012,
+   "cw": 138,
+   "ch": 452
+  },
+  {
+   "src": "products/cell-renew-1-5.webp",
+   "alt": "CELL RENEW 1.5%",
+   "nw": 311,
+   "nh": 1012,
+   "cw": 138,
+   "ch": 452
+  },
+  {
+   "src": "products/cell-renew-1-5.webp",
+   "alt": "CELL RENEW 1.5%",
+   "nw": 311,
+   "nh": 1012,
+   "cw": 138,
+   "ch": 452
+  },
+  {
+   "src": "products/cell-renew-1-5.webp",
+   "alt": "CELL RENEW 1.5%",
+   "nw": 311,
+   "nh": 1012,
+   "cw": 138,
+   "ch": 452
+  },
+  {
+   "src": "products/cell-renew-1-5.webp",
+   "alt": "CELL RENEW 1.5%",
+   "nw": 311,
+   "nh": 1012,
+   "cw": 138,
+   "ch": 452
+  },
+  {
+   "src": "brand/logo-white.webp",
+   "alt": "MITODERM",
+   "nw": 933,
+   "nh": 300,
+   "cw": 136,
+   "ch": 40
+  }
+ ],
+ "videos": [],
+ "jsonld": 0
+}
