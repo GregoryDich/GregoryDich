@@ -1,0 +1,140 @@
+<title>Предпросмотр сайта MITODERM</title>
+<style>
+  :root {
+    --bg: #f6f3ee; --panel: #ffffff; --ink: #1c1a17; --muted: #6b655c; --line: #e2dcd2;
+    --accent: #8a6a1f; --accent-ink: #ffffff; --chip: #efe9de; --good: #2f6b3f; --warn: #9a4a12;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f0e0c; --panel: #191714; --ink: #f1ece2; --muted: #a59d8f; --line: #2c2924;
+      --accent: #d6b25e; --accent-ink: #14120e; --chip: #24211c; --good: #8fcf9f; --warn: #f0a868;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f0e0c; --panel: #191714; --ink: #f1ece2; --muted: #a59d8f; --line: #2c2924;
+    --accent: #d6b25e; --accent-ink: #14120e; --chip: #24211c; --good: #8fcf9f; --warn: #f0a868;
+    color-scheme: dark;
+  }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  .wrap { max-width: 1180px; margin-inline: auto; padding-inline: 16px; padding-block: 28px 64px; }
+  h1 { font-size: clamp(26px, 4vw, 38px); line-height: 1.15; margin: 0 0 8px; text-wrap: balance; letter-spacing: -0.01em; }
+  h2 { font-size: clamp(20px, 2.6vw, 26px); line-height: 1.2; margin: 0 0 6px; text-wrap: balance; }
+  h3 { font-size: 17px; line-height: 1.3; margin: 0; }
+  p { margin: 0; }
+  .lead { color: var(--muted); max-width: 68ch; }
+  .how { margin-top: 18px; padding: 14px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; max-width: 76ch; }
+  .how b { color: var(--accent); }
+  nav.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+  nav.tabs a { text-decoration: none; color: var(--ink); background: var(--chip); border: 1px solid var(--line); padding: 8px 14px; border-radius: 999px; font-size: 14px; }
+  nav.tabs a:hover { border-color: var(--accent); }
+  section { margin-top: 44px; }
+  .sec-head { display: flex; flex-direction: column; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+  .sec-head p { color: var(--muted); max-width: 76ch; }
+  .grid { display: grid; align-items: start; gap: 18px; margin-top: 18px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 500px), 1fr)); }
+  .grid.phone { grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+  .card video { display: block; width: 100%; max-width: 100%; height: auto; background: #000; aspect-ratio: 16 / 10; }
+  .grid.phone .card video { aspect-ratio: 390 / 844; }
+  .body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; justify-content: space-between; }
+  .score { font-variant-numeric: tabular-nums; font-size: 13px; padding: 2px 8px; border-radius: 999px; background: var(--chip); border: 1px solid var(--line); white-space: nowrap; }
+  .facts { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .note { font-size: 14px; }
+  .note .g { color: var(--good); } .note .w { color: var(--warn); }
+  .strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+  .strip button { flex: 0 0 auto; padding: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--chip); cursor: zoom-in; line-height: 0; }
+  .strip img { height: 64px; width: auto; display: block; }
+  .list { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
+  .list li { padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; font-size: 14px; }
+  .list li b { display: block; }
+  .list a { color: var(--accent); }
+  .empty { margin-top: 18px; color: var(--muted); }
+  dialog { border: 0; padding: 0; background: transparent; max-width: 96vw; max-height: 92vh; }
+  dialog::backdrop { background: rgba(0, 0, 0, 0.82); }
+  dialog img { display: block; max-width: 96vw; max-height: 88vh; border-radius: 8px; }
+  dialog form { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+  dialog button { font: inherit; padding: 6px 14px; border-radius: 999px; border: 1px solid #555; background: #1c1a17; color: #f1ece2; cursor: pointer; }
+  footer { margin-top: 56px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Предпросмотр сайта MITODERM</h1>
+    <p class="lead" id="lead">Записи прокрутки страниц: новая версия из GitHub, живой сайт и наши 3D-страницы. Загружается…</p>
+    <p class="how">Как смотреть: нажмите на запись — она идёт как прокрутка страницы сверху вниз. Под записью — кадры крупно и короткая оценка. <b>Что понравилось, что исправить и что взять из наших 3D-страниц — напишите мне в чате: название страницы и что именно.</b></p>
+    <nav class="tabs" id="tabs" aria-label="Разделы"></nav>
+  </header>
+  <main id="main"></main>
+  <footer id="foot"></footer>
+</div>
+
+<dialog id="zoom" aria-label="Кадр крупно">
+  <form method="dialog"><button>Закрыть</button></form>
+  <img id="zoomimg" alt="">
+</dialog>
+
+<script>
+(function () {
+  var main = document.getElementById('main'), tabs = document.getElementById('tabs');
+  var zoom = document.getElementById('zoom'), zoomimg = document.getElementById('zoomimg');
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function card(it) {
+    var c = el('article', 'card');
+    var v = document.createElement('video');
+    v.controls = true; v.preload = 'none'; v.playsInline = true; v.muted = true; v.loop = true;
+    if (it.poster) v.poster = it.poster;
+    v.src = it.video; c.appendChild(v);
+    var b = el('div', 'body');
+    var r = el('div', 'row'); r.appendChild(el('h3', null, it.title));
+    if (it.score != null) r.appendChild(el('span', 'score', it.score + ' из 10'));
+    b.appendChild(r);
+    if (it.facts) b.appendChild(el('p', 'facts', it.facts));
+    if (it.good || it.weak || it.note) {
+      var n = el('p', 'note');
+      if (it.note) n.appendChild(document.createTextNode(it.note + ' '));
+      if (it.good) { var g = el('span', 'g', 'Хорошо: '); n.appendChild(g); n.appendChild(document.createTextNode(it.good + ' ')); }
+      if (it.weak) { var w = el('span', 'w', 'Слабо: '); n.appendChild(w); n.appendChild(document.createTextNode(it.weak)); }
+      b.appendChild(n);
+    }
+    if (it.stills && it.stills.length) {
+      var s = el('div', 'strip');
+      it.stills.forEach(function (src, i) {
+        var bt = el('button'); bt.type = 'button'; bt.setAttribute('aria-label', it.title + ': кадр ' + (i + 1));
+        var im = document.createElement('img'); im.loading = 'lazy'; im.alt = ''; im.src = src; bt.appendChild(im);
+        bt.addEventListener('click', function () { zoomimg.src = src; zoomimg.alt = it.title + ', кадр ' + (i + 1); zoom.showModal(); });
+        s.appendChild(bt);
+      });
+      b.appendChild(s);
+    }
+    c.appendChild(b); return c;
+  }
+  function render(d) {
+    document.getElementById('lead').textContent = d.lead || '';
+    document.getElementById('foot').textContent = d.footer || '';
+    (d.sections || []).forEach(function (sec) {
+      var a = el('a', null, sec.title); a.href = '#' + sec.id; tabs.appendChild(a);
+      var s = el('section'); s.id = sec.id;
+      var h = el('div', 'sec-head'); h.appendChild(el('h2', null, sec.title)); if (sec.intro) h.appendChild(el('p', null, sec.intro)); s.appendChild(h);
+      (sec.groups || []).forEach(function (g) {
+        if (g.title) { var t = el('h3', null, g.title); t.style.marginTop = '22px'; s.appendChild(t); }
+        var grid = el('div', 'grid' + (g.phone ? ' phone' : ''));
+        (g.items || []).forEach(function (it) { grid.appendChild(card(it)); });
+        s.appendChild(grid);
+      });
+      if (sec.list && sec.list.length) {
+        var ul = el('ul', 'list');
+        sec.list.forEach(function (li) { var x = el('li'); var b = el('b'); if (li.href) { var a = el('a', null, li.title); a.href = li.href; a.target = '_blank'; a.rel = 'noopener'; b.appendChild(a); } else { b.textContent = li.title; } x.appendChild(b); x.appendChild(document.createTextNode(li.text || '')); ul.appendChild(x); });
+        s.appendChild(ul);
+      }
+      main.appendChild(s);
+    });
+  }
+  fetch('gallery.json').then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(render)
+    .catch(function () { main.appendChild(el('p', 'empty', 'Не удалось загрузить список записей. Обновите страницу.')); });
+  zoom.addEventListener('click', function (e) { if (e.target === zoom) zoom.close(); });
+})();
+</script>

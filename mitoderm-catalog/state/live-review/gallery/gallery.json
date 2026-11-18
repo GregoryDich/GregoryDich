@@ -1,0 +1,509 @@
+{
+ "lead": "Записи прокрутки от 18/11/2026. Сайт строится на новых страницах из Codex; живой сайт и наши 3D-страницы здесь — только для сравнения.",
+ "footer": "Записи сделаны в браузере без видеокарты, поэтому движение может идти рывками; на вашем устройстве страницы плавнее. Оценки — независимого проверяющего, по десятибалльной шкале относительно V-TECH.",
+ "sections": [
+  {
+   "id": "new",
+   "title": "Новая версия из GitHub",
+   "intro": "База сайта — новые страницы из Codex, собранные из ветки GitHub. V-TECH здесь новее живого сайта. Остальные 12 страниц — каркас под будущие фильмы: шаги процедуры названы, но на каждом шаге один и тот же снимок упаковки.",
+   "groups": [
+    {
+     "title": "Компьютер, 1440×900",
+     "items": [
+      {
+       "title": "Главная",
+       "video": "new/videos/git-home-desk.mp4",
+       "poster": "new/stills/git-home-desk-1.jpg",
+       "stills": [
+        "new/stills/git-home-desk-1.jpg",
+        "new/stills/git-home-desk-2.jpg",
+        "new/stills/git-home-desk-3.jpg",
+        "new/stills/git-home-desk-4.jpg",
+        "new/stills/git-home-desk-5.jpg",
+        "new/stills/git-home-desk-6.jpg",
+        "new/stills/git-home-desk-7.jpg",
+        "new/stills/git-home-desk-8.jpg"
+       ],
+       "facts": "Страница 3 018 px · запись 16 с",
+       "score": 7,
+       "good": "полки со всеми 13 средствами, ниже карточки и форма заявки.",
+       "weak": "на компьютере V-TECH стоит отдельно в центре — раскладку выровняю; шапка накладывается на картинку при прокрутке."
+      },
+      {
+       "title": "V-TECH SYSTEM",
+       "video": "new/videos/git-v-tech-system-desk.mp4",
+       "poster": "new/stills/git-v-tech-system-desk-1.jpg",
+       "stills": [
+        "new/stills/git-v-tech-system-desk-1.jpg",
+        "new/stills/git-v-tech-system-desk-2.jpg",
+        "new/stills/git-v-tech-system-desk-3.jpg",
+        "new/stills/git-v-tech-system-desk-4.jpg",
+        "new/stills/git-v-tech-system-desk-5.jpg",
+        "new/stills/git-v-tech-system-desk-6.jpg",
+        "new/stills/git-v-tech-system-desk-7.jpg",
+        "new/stills/git-v-tech-system-desk-8.jpg"
+       ],
+       "facts": "Страница 15 109 px · запись 56 с",
+       "score": 8,
+       "good": "настоящий фильм в кабинете, упаковка точная, текст в правой колонке; ряд кнопок-глав поверх кадра убран.",
+       "weak": "сверху всё ещё две полосы меню, верх коробки уходит под них; в конце фильма просвечивает заголовок следующего блока; низ страницы — 3D-рендер набора; ролик 34,6 МБ."
+      },
+      {
+       "title": "EXO-NAD",
+       "video": "new/videos/git-exo-nad-desk.mp4",
+       "poster": "new/stills/git-exo-nad-desk-1.jpg",
+       "stills": [
+        "new/stills/git-exo-nad-desk-1.jpg",
+        "new/stills/git-exo-nad-desk-2.jpg",
+        "new/stills/git-exo-nad-desk-3.jpg",
+        "new/stills/git-exo-nad-desk-4.jpg",
+        "new/stills/git-exo-nad-desk-5.jpg",
+        "new/stills/git-exo-nad-desk-6.jpg",
+        "new/stills/git-exo-nad-desk-7.jpg",
+        "new/stills/git-exo-nad-desk-8.jpg"
+       ],
+       "facts": "Страница 14 630 px · запись 55 с",
+       "score": 4,
+       "good": "коробка и флаконы узнаются; янтарный и бирюзовый — как на вашем общем снимке линейки.",
+       "weak": "фильма и людей нет; флаконы мягкие и выглядят как 3D, второй флакон срезан краем; одни и те же кадры повторяются."
+      },
+      {
+       "title": "MITOTECH CELL BOOSTER",
+       "video": "new/videos/git-mitotech-cell-booster-desk.mp4",
+       "poster": "new/stills/git-mitotech-cell-booster-desk-1.jpg",
+       "stills": [
+        "new/stills/git-mitotech-cell-booster-desk-1.jpg",
+        "new/stills/git-mitotech-cell-booster-desk-2.jpg",
+        "new/stills/git-mitotech-cell-booster-desk-3.jpg",
+        "new/stills/git-mitotech-cell-booster-desk-4.jpg",
+        "new/stills/git-mitotech-cell-booster-desk-5.jpg",
+        "new/stills/git-mitotech-cell-booster-desk-6.jpg",
+        "new/stills/git-mitotech-cell-booster-desk-7.jpg",
+        "new/stills/git-mitotech-cell-booster-desk-8.jpg"
+       ],
+       "facts": "Страница 14 688 px · запись 55 с",
+       "score": 3,
+       "good": "коробка точная и резкая.",
+       "weak": "один и тот же 3D-кадр на всех шагах, флаконов и сцены нет."
+      },
+      {
+       "title": "DERMA RECOVERY CREAM",
+       "video": "new/videos/git-derma-recovery-cream-desk.mp4",
+       "poster": "new/stills/git-derma-recovery-cream-desk-1.jpg",
+       "stills": [
+        "new/stills/git-derma-recovery-cream-desk-1.jpg",
+        "new/stills/git-derma-recovery-cream-desk-2.jpg",
+        "new/stills/git-derma-recovery-cream-desk-3.jpg",
+        "new/stills/git-derma-recovery-cream-desk-4.jpg",
+        "new/stills/git-derma-recovery-cream-desk-5.jpg",
+        "new/stills/git-derma-recovery-cream-desk-6.jpg",
+        "new/stills/git-derma-recovery-cream-desk-7.jpg",
+        "new/stills/git-derma-recovery-cream-desk-8.jpg"
+       ],
+       "facts": "Страница 13 097 px · запись 50 с",
+       "score": 3,
+       "good": "снимок резкий, надписи на коробке верные.",
+       "weak": "один кадр на все шаги, баночки нет, коробка срезана снизу, текст местами обрезан слева."
+      },
+      {
+       "title": "EXOSIGNAL HAIR",
+       "video": "new/videos/git-exosignal-hair-desk.mp4",
+       "poster": "new/stills/git-exosignal-hair-desk-1.jpg",
+       "stills": [
+        "new/stills/git-exosignal-hair-desk-1.jpg",
+        "new/stills/git-exosignal-hair-desk-2.jpg",
+        "new/stills/git-exosignal-hair-desk-3.jpg",
+        "new/stills/git-exosignal-hair-desk-4.jpg",
+        "new/stills/git-exosignal-hair-desk-5.jpg",
+        "new/stills/git-exosignal-hair-desk-6.jpg",
+        "new/stills/git-exosignal-hair-desk-7.jpg",
+        "new/stills/git-exosignal-hair-desk-8.jpg"
+       ],
+       "facts": "Страница 13 878 px · запись 52 с",
+       "score": 3,
+       "good": "упаковка точная, тёмно-золотой тон подходит бренду.",
+       "weak": "статично, сцены с кожей головы нет; на пятом шаге заголовок наезжает на ампулы."
+      },
+      {
+       "title": "EXOTECH GEL",
+       "video": "new/videos/git-exotech-gel-desk.mp4",
+       "poster": "new/stills/git-exotech-gel-desk-1.jpg",
+       "stills": [
+        "new/stills/git-exotech-gel-desk-1.jpg",
+        "new/stills/git-exotech-gel-desk-2.jpg",
+        "new/stills/git-exotech-gel-desk-3.jpg",
+        "new/stills/git-exotech-gel-desk-4.jpg",
+        "new/stills/git-exotech-gel-desk-5.jpg",
+        "new/stills/git-exotech-gel-desk-6.jpg",
+        "new/stills/git-exotech-gel-desk-7.jpg",
+        "new/stills/git-exotech-gel-desk-8.jpg"
+       ],
+       "facts": "Страница 13 142 px · запись 50 с",
+       "score": 2,
+       "good": "золото и чёрный в стиле бренда.",
+       "weak": "один кадр на все шаги; шар плоский и слишком жёлтый, срезан снизу; выглядит как 3D."
+      },
+      {
+       "title": "EXOCELL MASK",
+       "video": "new/videos/git-exocell-mask-desk.mp4",
+       "poster": "new/stills/git-exocell-mask-desk-1.jpg",
+       "stills": [
+        "new/stills/git-exocell-mask-desk-1.jpg",
+        "new/stills/git-exocell-mask-desk-2.jpg",
+        "new/stills/git-exocell-mask-desk-3.jpg",
+        "new/stills/git-exocell-mask-desk-4.jpg",
+        "new/stills/git-exocell-mask-desk-5.jpg",
+        "new/stills/git-exocell-mask-desk-6.jpg",
+        "new/stills/git-exocell-mask-desk-7.jpg",
+        "new/stills/git-exocell-mask-desk-8.jpg"
+       ],
+       "facts": "Страница 14 058 px · запись 53 с",
+       "score": 2,
+       "good": "средство узнаётся.",
+       "weak": "мягкое фото с прямоугольным краем; шаги названы, но в кадре их нет; текст наезжает на картинку."
+      },
+      {
+       "title": "MICRO BOOST 10%",
+       "video": "new/videos/git-micro-boost-10-desk.mp4",
+       "poster": "new/stills/git-micro-boost-10-desk-1.jpg",
+       "stills": [
+        "new/stills/git-micro-boost-10-desk-1.jpg",
+        "new/stills/git-micro-boost-10-desk-2.jpg",
+        "new/stills/git-micro-boost-10-desk-3.jpg",
+        "new/stills/git-micro-boost-10-desk-4.jpg",
+        "new/stills/git-micro-boost-10-desk-5.jpg",
+        "new/stills/git-micro-boost-10-desk-6.jpg",
+        "new/stills/git-micro-boost-10-desk-7.jpg",
+        "new/stills/git-micro-boost-10-desk-8.jpg"
+       ],
+       "facts": "Страница 13 637 px · запись 52 с",
+       "score": 2,
+       "good": "чистая палитра.",
+       "weak": "очень крупная вырезка верха коробки, название срезано снизу, картинка мягкая; один кадр на все шаги."
+      },
+      {
+       "title": "CELLULAR AGE DEFENSE 2.5%",
+       "video": "new/videos/git-cellular-age-defense-2-5-desk.mp4",
+       "poster": "new/stills/git-cellular-age-defense-2-5-desk-1.jpg",
+       "stills": [
+        "new/stills/git-cellular-age-defense-2-5-desk-1.jpg",
+        "new/stills/git-cellular-age-defense-2-5-desk-2.jpg",
+        "new/stills/git-cellular-age-defense-2-5-desk-3.jpg",
+        "new/stills/git-cellular-age-defense-2-5-desk-4.jpg",
+        "new/stills/git-cellular-age-defense-2-5-desk-5.jpg",
+        "new/stills/git-cellular-age-defense-2-5-desk-6.jpg",
+        "new/stills/git-cellular-age-defense-2-5-desk-7.jpg",
+        "new/stills/git-cellular-age-defense-2-5-desk-8.jpg"
+       ],
+       "facts": "Страница 13 187 px · запись 50 с",
+       "score": 2,
+       "good": "палитра выдержана.",
+       "weak": "та же вырезка верха коробки; названия средства не видно, страницу не отличить от соседних."
+      },
+      {
+       "title": "CELL RENEW 1.5%",
+       "video": "new/videos/git-cell-renew-1-5-desk.mp4",
+       "poster": "new/stills/git-cell-renew-1-5-desk-1.jpg",
+       "stills": [
+        "new/stills/git-cell-renew-1-5-desk-1.jpg",
+        "new/stills/git-cell-renew-1-5-desk-2.jpg",
+        "new/stills/git-cell-renew-1-5-desk-3.jpg",
+        "new/stills/git-cell-renew-1-5-desk-4.jpg",
+        "new/stills/git-cell-renew-1-5-desk-5.jpg",
+        "new/stills/git-cell-renew-1-5-desk-6.jpg",
+        "new/stills/git-cell-renew-1-5-desk-7.jpg",
+        "new/stills/git-cell-renew-1-5-desk-8.jpg"
+       ],
+       "facts": "Страница 13 187 px · запись 50 с",
+       "score": 2,
+       "good": "палитра выдержана.",
+       "weak": "та же вырезка верха коробки; названия средства не видно; ни сыворотки, ни процедуры."
+      },
+      {
+       "title": "MITOSCAN",
+       "video": "new/videos/git-mitoscan-desk.mp4",
+       "poster": "new/stills/git-mitoscan-desk-1.jpg",
+       "stills": [
+        "new/stills/git-mitoscan-desk-1.jpg",
+        "new/stills/git-mitoscan-desk-2.jpg",
+        "new/stills/git-mitoscan-desk-3.jpg",
+        "new/stills/git-mitoscan-desk-4.jpg",
+        "new/stills/git-mitoscan-desk-5.jpg",
+        "new/stills/git-mitoscan-desk-6.jpg",
+        "new/stills/git-mitoscan-desk-7.jpg",
+        "new/stills/git-mitoscan-desk-8.jpg"
+       ],
+       "facts": "Страница 13 637 px · запись 51 с",
+       "score": 2,
+       "good": "прибор настоящий.",
+       "weak": "мягкое фото с прямоугольными краями; сцены сканирования нет; один кадр."
+      },
+      {
+       "title": "EXOSIGNAL SPRAY",
+       "video": "new/videos/git-exosignal-spray-desk.mp4",
+       "poster": "new/stills/git-exosignal-spray-desk-1.jpg",
+       "stills": [
+        "new/stills/git-exosignal-spray-desk-1.jpg",
+        "new/stills/git-exosignal-spray-desk-2.jpg",
+        "new/stills/git-exosignal-spray-desk-3.jpg",
+        "new/stills/git-exosignal-spray-desk-4.jpg",
+        "new/stills/git-exosignal-spray-desk-5.jpg",
+        "new/stills/git-exosignal-spray-desk-6.jpg",
+        "new/stills/git-exosignal-spray-desk-7.jpg",
+        "new/stills/git-exosignal-spray-desk-8.jpg"
+       ],
+       "facts": "Страница 13 187 px · запись 50 с",
+       "score": 1,
+       "good": "дизайн коробки верный.",
+       "weak": "самая мягкая картинка на сайте, надпись срезана, флакона не видно."
+      },
+      {
+       "title": "MITOPEN",
+       "video": "new/videos/git-mitopen-desk.mp4",
+       "poster": "new/stills/git-mitopen-desk-1.jpg",
+       "stills": [
+        "new/stills/git-mitopen-desk-1.jpg",
+        "new/stills/git-mitopen-desk-2.jpg",
+        "new/stills/git-mitopen-desk-3.jpg",
+        "new/stills/git-mitopen-desk-4.jpg",
+        "new/stills/git-mitopen-desk-5.jpg",
+        "new/stills/git-mitopen-desk-6.jpg",
+        "new/stills/git-mitopen-desk-7.jpg",
+        "new/stills/git-mitopen-desk-8.jpg"
+       ],
+       "facts": "Страница 13 592 px · запись 52 с",
+       "score": 1,
+       "good": "цвет ручки верный, кадр резкий.",
+       "weak": "крупный план наконечника стоймя выглядит двусмысленно — кадр нужно заменить; насадки с иглами нет; сцены процедуры нет."
+      }
+     ]
+    },
+    {
+     "title": "Телефон, 390×844",
+     "phone": true,
+     "items": [
+      {
+       "title": "Главная",
+       "video": "new/videos/git-home-phone.mp4",
+       "poster": "new/stills/git-home-phone-1.jpg",
+       "stills": [
+        "new/stills/git-home-phone-1.jpg",
+        "new/stills/git-home-phone-2.jpg",
+        "new/stills/git-home-phone-3.jpg",
+        "new/stills/git-home-phone-4.jpg",
+        "new/stills/git-home-phone-5.jpg",
+        "new/stills/git-home-phone-6.jpg",
+        "new/stills/git-home-phone-7.jpg",
+        "new/stills/git-home-phone-8.jpg"
+       ],
+       "facts": "Страница 4 383 px · запись 22 с",
+       "note": "Вертикальная картинка с ровными полками."
+      },
+      {
+       "title": "V-TECH SYSTEM",
+       "video": "new/videos/git-v-tech-system-phone.mp4",
+       "poster": "new/stills/git-v-tech-system-phone-1.jpg",
+       "stills": [
+        "new/stills/git-v-tech-system-phone-1.jpg",
+        "new/stills/git-v-tech-system-phone-2.jpg",
+        "new/stills/git-v-tech-system-phone-3.jpg",
+        "new/stills/git-v-tech-system-phone-4.jpg",
+        "new/stills/git-v-tech-system-phone-5.jpg",
+        "new/stills/git-v-tech-system-phone-6.jpg",
+        "new/stills/git-v-tech-system-phone-7.jpg",
+        "new/stills/git-v-tech-system-phone-8.jpg"
+       ],
+       "facts": "Страница 14 505 px · запись 58 с",
+       "note": "Слабо: в первом кадре заголовок лежит на коробке; ближе к концу части набора поверх лица."
+      },
+      {
+       "title": "EXO-NAD",
+       "video": "new/videos/git-exo-nad-phone.mp4",
+       "poster": "new/stills/git-exo-nad-phone-1.jpg",
+       "stills": [
+        "new/stills/git-exo-nad-phone-1.jpg",
+        "new/stills/git-exo-nad-phone-2.jpg",
+        "new/stills/git-exo-nad-phone-3.jpg",
+        "new/stills/git-exo-nad-phone-4.jpg",
+        "new/stills/git-exo-nad-phone-5.jpg",
+        "new/stills/git-exo-nad-phone-6.jpg",
+        "new/stills/git-exo-nad-phone-7.jpg",
+        "new/stills/git-exo-nad-phone-8.jpg"
+       ],
+       "facts": "Страница 15 077 px · запись 60 с",
+       "note": "Слабо: заголовок и текст лежат на наборе."
+      },
+      {
+       "title": "MITOTECH CELL BOOSTER",
+       "video": "new/videos/git-mitotech-cell-booster-phone.mp4",
+       "poster": "new/stills/git-mitotech-cell-booster-phone-1.jpg",
+       "stills": [
+        "new/stills/git-mitotech-cell-booster-phone-1.jpg",
+        "new/stills/git-mitotech-cell-booster-phone-2.jpg",
+        "new/stills/git-mitotech-cell-booster-phone-3.jpg",
+        "new/stills/git-mitotech-cell-booster-phone-4.jpg",
+        "new/stills/git-mitotech-cell-booster-phone-5.jpg",
+        "new/stills/git-mitotech-cell-booster-phone-6.jpg",
+        "new/stills/git-mitotech-cell-booster-phone-7.jpg",
+        "new/stills/git-mitotech-cell-booster-phone-8.jpg"
+       ],
+       "facts": "Страница 14 855 px · запись 59 с",
+       "note": "Тот же один 3D-кадр."
+      },
+      {
+       "title": "EXOSIGNAL HAIR",
+       "video": "new/videos/git-exosignal-hair-phone.mp4",
+       "poster": "new/stills/git-exosignal-hair-phone-1.jpg",
+       "stills": [
+        "new/stills/git-exosignal-hair-phone-1.jpg",
+        "new/stills/git-exosignal-hair-phone-2.jpg",
+        "new/stills/git-exosignal-hair-phone-3.jpg",
+        "new/stills/git-exosignal-hair-phone-4.jpg",
+        "new/stills/git-exosignal-hair-phone-5.jpg",
+        "new/stills/git-exosignal-hair-phone-6.jpg",
+        "new/stills/git-exosignal-hair-phone-7.jpg",
+        "new/stills/git-exosignal-hair-phone-8.jpg"
+       ],
+       "facts": "Страница 14 095 px · запись 56 с",
+       "note": "Слабо: упаковка очень мелкая."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "live",
+   "title": "Живой сайт сейчас",
+   "intro": "Для сравнения: то, что сейчас открыто по адресу chatgpt.site.",
+   "groups": [
+    {
+     "items": [
+      {
+       "title": "Главная",
+       "video": "new/videos/live-home-desk.mp4",
+       "poster": "new/stills/live-home-desk-1.jpg",
+       "stills": [
+        "new/stills/live-home-desk-1.jpg",
+        "new/stills/live-home-desk-2.jpg",
+        "new/stills/live-home-desk-3.jpg",
+        "new/stills/live-home-desk-4.jpg",
+        "new/stills/live-home-desk-5.jpg",
+        "new/stills/live-home-desk-6.jpg",
+        "new/stills/live-home-desk-7.jpg",
+        "new/stills/live-home-desk-8.jpg"
+       ],
+       "facts": "Страница 3 018 px · запись 18 с",
+       "note": "То же, что в версии из GitHub."
+      },
+      {
+       "title": "V-TECH SYSTEM",
+       "video": "new/videos/live-v-tech-system-desk.mp4",
+       "poster": "new/stills/live-v-tech-system-desk-1.jpg",
+       "stills": [
+        "new/stills/live-v-tech-system-desk-1.jpg",
+        "new/stills/live-v-tech-system-desk-2.jpg",
+        "new/stills/live-v-tech-system-desk-3.jpg",
+        "new/stills/live-v-tech-system-desk-4.jpg",
+        "new/stills/live-v-tech-system-desk-5.jpg",
+        "new/stills/live-v-tech-system-desk-6.jpg",
+        "new/stills/live-v-tech-system-desk-7.jpg",
+        "new/stills/live-v-tech-system-desk-8.jpg"
+       ],
+       "facts": "Страница 13 737 px · запись 52 с",
+       "note": "Старее версии из GitHub: поверх кадра ещё ряд кнопок-глав."
+      },
+      {
+       "title": "EXO-NAD",
+       "video": "new/videos/live-exo-nad-desk.mp4",
+       "poster": "new/stills/live-exo-nad-desk-1.jpg",
+       "stills": [
+        "new/stills/live-exo-nad-desk-1.jpg",
+        "new/stills/live-exo-nad-desk-2.jpg",
+        "new/stills/live-exo-nad-desk-3.jpg",
+        "new/stills/live-exo-nad-desk-4.jpg",
+        "new/stills/live-exo-nad-desk-5.jpg",
+        "new/stills/live-exo-nad-desk-6.jpg",
+        "new/stills/live-exo-nad-desk-7.jpg",
+        "new/stills/live-exo-nad-desk-8.jpg"
+       ],
+       "facts": "Страница 13 872 px · запись 58 с",
+       "note": "3D-флаконы и вставка видео; фото и видео с этой страницы в GitHub нет — сохраню их перед обновлением."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "old3d",
+   "title": "Наши 3D-страницы",
+   "intro": "Эти страницы с живой 3D-упаковкой — только для вас: посмотреть и сказать, какие детали из них взять в новый сайт. Открываются по ссылкам в новой вкладке. Я их не трогаю и беру из них точные модели упаковок.",
+   "list": [
+    {
+     "title": "V-TECH SYSTEM",
+     "href": "https://claude.ai/artifact/NdQezU5bikrsuaWVVW5TBK",
+     "text": ""
+    },
+    {
+     "title": "EXO-NAD",
+     "href": "https://claude.ai/artifact/NcP4v3p7KAdvqZGTnoGK8S",
+     "text": ""
+    },
+    {
+     "title": "EXOTECH GEL",
+     "href": "https://claude.ai/artifact/LsJVky9GDssBuW1eQkLaTe",
+     "text": ""
+    },
+    {
+     "title": "EXOCELL MASK",
+     "href": "https://claude.ai/artifact/FA5ySxGihnDAmjQPvDftzn",
+     "text": ""
+    },
+    {
+     "title": "EXOSIGNAL HAIR",
+     "href": "https://claude.ai/artifact/2ws7qr1xL7Y7wp5xdbE1jh",
+     "text": ""
+    },
+    {
+     "title": "EXOSIGNAL SPRAY",
+     "href": "https://claude.ai/artifact/GAUwhjxzqdk7jEg7JgSBJz",
+     "text": ""
+    },
+    {
+     "title": "MICRO BOOST 10%",
+     "href": "https://claude.ai/artifact/3hwRLR8RxjcQV2oGTynari",
+     "text": ""
+    },
+    {
+     "title": "CELLULAR AGE DEFENSE 2.5%",
+     "href": "https://claude.ai/artifact/RhFJsLyLDinq2HcizL1hvq",
+     "text": ""
+    },
+    {
+     "title": "CELL RENEW 1.5%",
+     "href": "https://claude.ai/artifact/2rVvsAFJ9NRUjymZDmANup",
+     "text": ""
+    },
+    {
+     "title": "DERMA RECOVERY CREAM",
+     "href": "https://claude.ai/artifact/7a3EpTpcTbYMWjTypNk2pV",
+     "text": ""
+    },
+    {
+     "title": "MITOPEN",
+     "href": "https://claude.ai/artifact/KAn13gS9E2on2ZikQSz4eW",
+     "text": ""
+    },
+    {
+     "title": "MITOSCAN",
+     "href": "https://claude.ai/artifact/KD3L1gfgVA8twY7HBvYofp",
+     "text": ""
+    },
+    {
+     "title": "MITOTECH CELL BOOSTER",
+     "href": "https://claude.ai/artifact/G3tdcwusRsVdw4E5HeGM5s",
+     "text": ""
+    }
+   ]
+  }
+ ]
+}
