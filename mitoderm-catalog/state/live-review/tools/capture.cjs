@@ -5,7 +5,7 @@ const fs = require('fs'); const { open } = require('./px.cjs');
   const [route, v, stepS, out, sY, eY] = process.argv.slice(2);
   const m = /^(\d+)x(\d+)(?:@(\d(?:\.\d)?))?([tmr]*)$/.exec(v); if (!m) throw new Error('bad view ' + v);
   const view = { width: +m[1], height: +m[2], dsf: +(m[3] || 1), touch: m[4].includes('t'), mobile: m[4].includes('m'), reduced: m[4].includes('r') };
-  const base = 'https://mitoderm-cinematic.evenradish1.chatgpt.site'; fs.mkdirSync(out, { recursive: true });
+  const base = process.env.BASE || 'https://mitoderm-cinematic.evenradish1.chatgpt.site'; fs.mkdirSync(out, { recursive: true });
   const { browser, page, log } = await open(view);
   const t0 = Date.now();
   await page.goto(base + route, { waitUntil: 'domcontentloaded', timeout: 90000 });

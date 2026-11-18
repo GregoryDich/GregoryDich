@@ -2,7 +2,7 @@
 const fs = require('fs'); const { open } = require('./px.cjs');
 const routes = ['/', '/catalog', '/privacy', ...['v-tech-system','exo-nad','exotech-gel','exocell-mask','exosignal-hair','exosignal-spray','micro-boost-10','cellular-age-defense-2-5','cell-renew-1-5','derma-recovery-cream','mitopen','mitoscan','mitotech-cell-booster'].map(s => '/products/' + s)];
 (async () => {
-  const out = process.argv[2]; const base = 'https://mitoderm-cinematic.evenradish1.chatgpt.site';
+  const out = process.argv[2]; const base = process.env.BASE || 'https://mitoderm-cinematic.evenradish1.chatgpt.site';
   for (const route of routes) {
     const { browser, page, log } = await open({ width: 1440, height: 900 });
     try {

@@ -2,7 +2,7 @@
 const { chromium, devices } = require('playwright');
 function proxyOpts() {
   const raw = process.env.HTTPS_PROXY || process.env.https_proxy; if (!raw) return undefined;
-  const u = new URL(raw); const o = { server: `${u.protocol}//${u.host}` };
+  const u = new URL(raw); const o = { server: `${u.protocol}//${u.host}`, bypass: '127.0.0.1,localhost' };
   if (u.username) { o.username = decodeURIComponent(u.username); o.password = decodeURIComponent(u.password); }
   return o;
 }
