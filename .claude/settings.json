@@ -47,6 +47,15 @@
             "command": "f=\"${CLAUDE_PROJECT_DIR:-.}/mitoderm-catalog/PROGRESS.md\"; [ -f \"$f\" ] && sed -n '1,/^## Деньги/p' \"$f\" || true"
           }
         ]
+      },
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"$CLAUDE_CODE_REMOTE\" = \"true\" ] && d=\"${CLAUDE_PROJECT_DIR:-.}/mitoderm-catalog/codex-site\" && [ -d \"$d/dist\" ] && ! pgrep -f '[w]orkerd' >/dev/null 2>&1 && (cd \"$d\" && setsid nohup corepack pnpm start >/tmp/mitoderm-preview.log 2>&1 </dev/null &); true"
+          }
+        ]
       }
     ]
   }
