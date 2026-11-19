@@ -1,0 +1,350 @@
+[
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/3d/v1-meet.png",
+  "kind": "3d-render",
+  "description": "EXO-NAD three.js model render, 3840x2400 transparent PNG: key S1, closed brushed-gold box seen square on (yaw 4 deg), print VM / EXO-NAD / SKIN LONGEVITY PEELING + small multilingual block",
+  "use": "box front reference (print layout, foil colour)"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/3d/v2-why.png",
+  "kind": "3d-render",
+  "description": "EXO-NAD three.js model render, 3840x2400 transparent PNG: key S2, closed box slightly smaller/deeper",
+  "use": "box front reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/3d/v3-inside.png",
+  "kind": "3d-render",
+  "description": "EXO-NAD three.js model render, 3840x2400 transparent PNG: key S3, row right-to-left: peel bottle (gold cap, cream label EXO-NAD PEELING), pH NORMALIZER vial (amber-brown liquid), LONGEVITY SERUM vial (blue liquid); clear glass, white flip-off caps",
+  "use": "the three products side by side"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/3d/v4-feel.png",
+  "kind": "3d-render",
+  "description": "EXO-NAD three.js model render, 3840x2400 transparent PNG: key S4, the three small, low, with a soft champagne backlight",
+  "use": "small product row"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/3d/v5-protocol.png",
+  "kind": "3d-render",
+  "description": "EXO-NAD three.js model render, 3840x2400 transparent PNG: key S5, the three larger in a row, peel backlit",
+  "use": "product row with glow"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/3d/v6-kit.png",
+  "kind": "3d-render",
+  "description": "EXO-NAD three.js model render, 3840x2400 transparent PNG: key kit, box with sleeve lifted straight up (model's assumption), black tray with peel + 5 pH + 5 serum vials, gold tray print",
+  "use": "open kit (note: the real box has a hinged lid, see live/kit-photo.png)"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/3d/x-box-34.png",
+  "kind": "3d-render",
+  "description": "EXO-NAD three.js model render, 3840x2400 transparent PNG: extra, closed box turned ~32 deg and tilted 14 deg (render hook on the box group, module untouched): front + right side + top in gold foil; depth 0.28 W is a model assumption",
+  "use": "closed box three-quarter view"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/3d/x-tray-open.png",
+  "kind": "3d-render",
+  "description": "EXO-NAD three.js model render, 3840x2400 transparent PNG: extra, kit pose with the sleeve hidden: the whole black tray with gold walls and band, VM corporation, circled 1/2/3 captions, peel bottle, 5 amber + 5 blue vials, EXO-NAD SKIN LONGEVITY PEELING MADE IN ITALY",
+  "use": "open tray with all bottles"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/3d/x-kit-crop.png",
+  "kind": "3d-render",
+  "description": "EXO-NAD three.js model render, 3840x2400 transparent PNG: extra, close crop of the tray in the standard kit pose (sleeve foot visible at top)",
+  "use": "tray contents close"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/3d/x-label-peel.png",
+  "kind": "3d-render",
+  "description": "EXO-NAD three.js model render, 3840x2400 transparent PNG: extra, close view of the peel bottle: cream label, VM, EXO-NAD PEELING, 4 language lines, gold flakes, polished gold cap",
+  "use": "peel bottle label"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/3d/x-label-ph.png",
+  "kind": "3d-render",
+  "description": "EXO-NAD three.js model render, 3840x2400 transparent PNG: extra, close view of the pH vial: clear glass, amber-brown liquid ~70%, small black print VM / PH NORMALIZER, white flip-off cap",
+  "use": "pH NORMALIZER vial label"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/3d/x-label-ls.png",
+  "kind": "3d-render",
+  "description": "EXO-NAD three.js model render, 3840x2400 transparent PNG: extra, close view of the serum vial: clear glass, blue liquid ~70%, small print VM / LONGEVITY SERUM, white flip-off cap",
+  "use": "LONGEVITY SERUM vial label"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/3d/x-row-3.png",
+  "kind": "3d-render",
+  "description": "EXO-NAD three.js model render, 3840x2400 transparent PNG: extra, the three products large: serum, pH, peel",
+  "use": "all three products close"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/real-NAD.png",
+  "kind": "packshot",
+  "description": "795x489 RGBA packshot (composite): gold box with lemon-to-bronze gradient, vials with opaque orange-amber and teal liquid filled to the shoulder, silver aluminium crimp caps, large black VM + PH NORMALIZER / LONGEVITY SERUM print; square clear peel bottle, gold cap, gold flakes, EXO-NAD / SKIN LONGEVITY PEELING printed on the glass",
+  "use": "box front colour/print; NOT reliable for vial/peel details (contradicted by live/kit-photo.png)"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f000.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 0, 1912x1080: hero: V-TECH box sharp in foreground on marble table, cosmetologist and client blurred behind",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f040.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 40, 1912x1080: hero: dolly-out, box smaller on marble table, both women still soft",
+  "use": "cast/location reference (BEST: marble table with pack)"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f080.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 80, 1912x1080: hero end: medium-wide two-shot, cosmetologist (left, dark long wavy hair, white tunic with pink trim, amethyst pendant) and client (right, bob, beige headband and blouse) at marble table, box between them",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f121.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 121, 1912x1080: consultation start: same two-shot, cosmetologist 3/4 face sharp, looking at client; box centre on table",
+  "use": "cast/location reference (BEST: cosmetologist identity)"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f140.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 140, 1912x1080: consultation: slightly closer two-shot, box lower centre",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f160.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 160, 1912x1080: consultation: closer, client turned left, box at lower left in front of cosmetologist, pen entering frame",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f180.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 180, 1912x1080: pen: client profile/3/4 close-up, gloved hand holding gold microneedling pen at cheek, cosmetologist shoulder foreground left",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f200.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 200, 1912x1080: pen: tighter on client face, gloved hand with pen",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f229.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 229, 1912x1080: pen: close-up, pen on cheek, white latex glove clear",
+  "use": "cast/location reference (BEST: gloved hands)"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f260.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 260, 1912x1080: pen: same close-up, pen at cheek",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f320.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 320, 1912x1080: pen end: client eyes closed, pen on lower cheek, gloved hand",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f388.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 388, 1912x1080: serum: macro of client eye area, glass dropper with drop, gloved hand holding amber V-TECH SERUM vial",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f430.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 430, 1912x1080: serum: drop on skin, amber vial in glove, dropper above",
+  "use": "cast/location reference (BEST: gloved hands)"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f500.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 500, 1912x1080: serum: same macro, vial lower centre",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f546.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 546, 1912x1080: mask: client reclined in white chair, cosmetologist (left, face 3/4 down) applying gel with spatula, gold V-TECH pouch on tray top right",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f600.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 600, 1912x1080: mask: similar, gloved hand with spatula on cheek, gold pouch top right",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f649.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 649, 1912x1080: results start: client reclined, cosmetologist leaning over, gold pouch top right",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f700.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 700, 1912x1080: results: wider, client reclined eyes closed, cosmetologist standing left, box top in lower left, pouch right",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f751.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 751, 1912x1080: kit chapter (intro reversed): two-shot at marble table with box centre",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f800.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 800, 1912x1080: kit: box larger in front, two women behind",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f872.png",
+  "kind": "film-frame",
+  "description": "V-TECH full-story film frame 872, 1912x1080: last frame = frame 0: box sharp foreground, women blurred",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech-contact.jpg",
+  "kind": "contact-sheet",
+  "description": "contact sheet of the 21 V-TECH frames (labelled), 2460x1580",
+  "use": "overview"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/live/kit-photo.png",
+  "kind": "real-photo",
+  "description": "960x1637 RGBA cut-out REAL photo of the open EXO-NAD kit (live site only): lid standing open behind (hinged, not a sleeve), its inner face printed VM / EXO-NAD SKIN LONGEVITY PEELING; black tray with gold print as in the model; peel: square clear glass, gold cap, black print EXO-NAD PEELING directly on the glass, pale gold liquid with gold flakes; vials: clear glass, liquids pale golden-amber (top row) and pale blue (bottom row) ~85-90% full, VM monogram print wrapping the glass, silver-grey aluminium crimp seals with flip-off tops; front band printed EXO-NAD small",
+  "use": "primary truth for kit contents, cap type and liquid colours"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/live/IMG_9803.JPG",
+  "kind": "real-photo",
+  "description": "3808x5712 Sony A7III photo (Lightroom): woman lying back, eyes closed, glowing wet skin on face (post-peel look), dark background, hand at hairline; no product visible",
+  "use": "mood/skin-finish reference only; photo of a person - not for the repo"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/live/123.mp4",
+  "kind": "real-video",
+  "description": "476x844 vertical, 21.0 s, 25 fps, with audio: real phone video of the kit; black nitrile gloves; open kit with lid standing, a blue vial taken out and its flip-off cap removed; ends on gold-particle MITODERM logo",
+  "use": "real handling reference: caps, gloves, glass"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/live/123-t02.png",
+  "kind": "video-frame",
+  "description": "123.mp4 at 2s, 476x844: open kit, lid upright with EXO-NAD print, peel + serum row, silver crimp caps, black glove at tray",
+  "use": "real handling reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/live/123-t10.png",
+  "kind": "video-frame",
+  "description": "123.mp4 at 10s, 476x844: black-gloved hands flipping the cap off a clear vial with blue liquid, open kit behind",
+  "use": "real handling reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/live/123-t18.png",
+  "kind": "video-frame",
+  "description": "123.mp4 at 18s, 476x844: end card: MITODERM in gold sparkles on dark",
+  "use": "real handling reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/vtech-bridge.mp4",
+  "kind": "leftover-video",
+  "description": "1920x1080, 6.04 s, 24 fps: push-in from the widest two-shot of the clinic (window left, plant, marble table, V-TECH box) to client close-up with gloved pen",
+  "use": "clinic/cast continuity; vtech-bridge first frame is the widest room view"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/vtech-bridge-f0.png",
+  "kind": "video-frame",
+  "description": "vtech-bridge.mp4 at 5% of its length",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/vtech-bridge-f1.png",
+  "kind": "video-frame",
+  "description": "vtech-bridge.mp4 at 50% of its length",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/vtech-bridge-f2.png",
+  "kind": "video-frame",
+  "description": "vtech-bridge.mp4 at 95% of its length",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/vtech-camera.mp4",
+  "kind": "leftover-video",
+  "description": "1912x1080, 9.33 s, 24 fps: from box sharp in foreground with women blurred, to the two-shot, to the pen close-up",
+  "use": "clinic/cast continuity; vtech-bridge first frame is the widest room view"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/vtech-camera-f0.png",
+  "kind": "video-frame",
+  "description": "vtech-camera.mp4 at 5% of its length",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/vtech-camera-f1.png",
+  "kind": "video-frame",
+  "description": "vtech-camera.mp4 at 50% of its length",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/vtech-camera-f2.png",
+  "kind": "video-frame",
+  "description": "vtech-camera.mp4 at 95% of its length",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/vtech-intro.mp4",
+  "kind": "leftover-video",
+  "description": "1912x1080, 5.04 s, 24 fps: rack/dolly from foreground V-TECH box to the two-shot at the marble table",
+  "use": "clinic/cast continuity; vtech-bridge first frame is the widest room view"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/vtech-intro-f0.png",
+  "kind": "video-frame",
+  "description": "vtech-intro.mp4 at 5% of its length",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/vtech-intro-f1.png",
+  "kind": "video-frame",
+  "description": "vtech-intro.mp4 at 50% of its length",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/vtech-intro-f2.png",
+  "kind": "video-frame",
+  "description": "vtech-intro.mp4 at 95% of its length",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/vtech-kit.webp",
+  "kind": "leftover-image",
+  "description": "2048x1360 generated still on black: tall V-TECH box (black top/bottom bands, black V, VM), 5 gold V-TECH GEL MASK pouches with white spouts, 5 amber V-TECH SERUM vials with champagne-silver caps",
+  "use": "V-TECH only; not EXO-NAD; lighting/style of a product line-up"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/vtech-consultation.webp",
+  "kind": "leftover-image",
+  "description": "1912x1080 still: consultation two-shot at the marble table, V-TECH box centre (same as film frame ~121)",
+  "use": "cast/location reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/open-000.webp",
+  "kind": "blender-render",
+  "description": "1277x1266 Blender render on dark: V-TECH box standing, gold GEL MASK pouch, amber V-TECH SERUM vial (multilingual text, silver cap)",
+  "use": "V-TECH pack reference"
+ },
+ {
+  "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/leftover/open-039.webp",
+  "kind": "blender-render",
+  "description": "1277x1266 Blender render: V-TECH pack fully open - gold sleeve with white V, black tray with one gold pouch and 5 vial caps from above, black card with outline V and small print",
+  "use": "V-TECH open-kit reference"
+ }
+]
