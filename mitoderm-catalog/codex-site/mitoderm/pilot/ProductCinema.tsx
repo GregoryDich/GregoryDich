@@ -132,6 +132,7 @@ export default function ProductCinema({product}:{product:Product}){
  const film=productFilms[product.slug];
  const {video,state:filmState,setTarget,handlers}=useScrollFilm();
  const [filmOn,setFilmOn]=useState(false),[mobile,setMobile]=useState(false);
+ const filmSrc=film?mediaUrl(mobile?film.mobile:film.desktop):'';
  const nad=product.slug==='exo-nad';
  const pack=nad?'/assets/product-cinema/exo-nad/NAD.png':(assets[product.slug]?.src??'/assets/brand/cover.webp');
  // Approved real-pack photo must not morph into older invented vial colors.
@@ -200,7 +201,7 @@ export default function ProductCinema({product}:{product:Product}){
        <figure className="pc-nad-kit" data-visible={mediaPhase==='kit'}><img src="/assets/product-cinema/exo-nad/kit.webp" alt="" width="800" height="1361"/></figure>
       </>}
      </div>
-     {film&&filmOn&&filmState.phase!=='error'&&<video ref={video} className={'pc-film'+(filmState.painted?' is-painted':'')} src={mediaUrl(mobile?film.mobile:film.desktop)} muted playsInline preload="auto" aria-hidden="true" tabIndex={-1} {...handlers}/>}
+     {filmSrc&&filmOn&&filmState.phase!=='error'&&<video ref={video} className={'pc-film'+(filmState.painted?' is-painted':'')} src={filmSrc} muted playsInline preload="auto" aria-hidden="true" tabIndex={-1} {...handlers}/>}
      <div className="pc-scenes">
       {chapters.map((chapter,i)=>{const copy=chapterName(i),Heading=i===0?'h1':'h2';return <article key={i} id={'pc-shot-'+(i+1)} className="pc-scene" data-visible={active===i} data-kind={chapter.type} aria-hidden={!linear&&active!==i} inert={!linear&&active!==i}>
        {linear&&<div className="pc-linear-product"><img src={nad&&i===7?'/assets/product-cinema/exo-nad/kit.webp':pack} alt={'מוצר '+product.name} loading={i===0?'eager':'lazy'}/></div>}
