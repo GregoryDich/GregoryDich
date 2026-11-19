@@ -23,6 +23,16 @@ const procedureCount=5;
 const starts=scenes.map((_,index)=>scenes.slice(0,index).reduce((sum,scene)=>sum+scene.weight,0));
 const total=scenes.reduce((sum,scene)=>sum+scene.weight,0);
 const clamp=(value:number,min=0,max=1)=>Math.min(max,Math.max(min,value));
+// Links to the kit land on the opened kit (same moment as the slot button):
+// at the scene start the film still plays and the offer panel is hidden.
+const landing=(index:number)=>scenes[index].kind==='offer'?.94:0;
+// A scene that has just become active is still visibility:hidden for the
+// first frame of its fade-in, and focus() on it fails silently; retry briefly.
+const focusTitle=(id:string,tries=4)=>{
+ const title=document.getElementById(id+'-title');if(!title)return;
+ title.focus({preventScroll:true});
+ if(document.activeElement!==title&&tries>0)window.requestAnimationFrame(()=>focusTitle(id,tries-1));
+};
 const chapterIndex=(id:string)=>id==='vtech-intro'?0:scenes.findIndex(scene=>scene.id===id);
 const sectionId=(index:number)=>index<procedureCount?'vtech-intro':scenes[index].id;
 type MediaState={phase:'loading'|'ready'|'error';painted:boolean};
@@ -212,7 +222,7 @@ export function VTechStory(){
   cameraVideo.current?.pause();
   if(!settings.reduced&&restoreChapter.current===null){updatePosition.current();seekScrollVideo(true);}
   if(focusAfterJump.current===active){
-   document.getElementById(scenes[active].id+'-title')?.focus({preventScroll:true});
+   focusTitle(scenes[active].id);
    focusAfterJump.current=null;
   }
  },[active,settings,seekScrollVideo]);
@@ -226,24 +236,28 @@ export function VTechStory(){
    if(moveFocus)document.getElementById(scenes[index].id+'-title')?.focus({preventScroll:true});
    return;
   }
-  if(moveFocus){if(activeRef.current===index)document.getElementById(scenes[index].id+'-title')?.focus({preventScroll:true});else focusAfterJump.current=index;}
+  // Focus the title only once the scroll position (and so the panel's
+  // visibility) is updated; the kit panel is hidden while the film plays.
+  const sameScene=activeRef.current===index;
+  if(moveFocus&&!sameScene)focusAfterJump.current=index;
   snapSeek.current=true;
   const top=element.getBoundingClientRect().top+window.scrollY+(starts[index]+clamp(local)*scenes[index].weight+(arrivalUnits.current??0))*screen.clientHeight+(index===0?0:1);
   // Chapter links jump to the corresponding pinned interval. Wheel and touch
   // keep native scrolling, and never wait for a long animation to catch up.
   window.scrollTo({top:Math.max(0,top),behavior:'instant'});
   updatePosition.current();announceSection(index);seekScrollVideo(true);
+  if(moveFocus&&sameScene)focusTitle(scenes[index].id);
  },[announceSection,seekScrollVideo]);
 
  useEffect(()=>{
   if(restoreChapter.current===null)return;
   const index=restoreChapter.current;restoreChapter.current=null;
-  jumpTo(index);
+  jumpTo(index,false,scenes[index].id,landing(index));
  },[settings.reduced,jumpTo]);
 
  useEffect(()=>{
   if(!settings.ready)return;
-  const navigate=(id:string,focus=false)=>{const index=chapterIndex(id);if(index<0)return false;jumpTo(index,focus,id);return true;};
+  const navigate=(id:string,focus=false)=>{const index=chapterIndex(id);if(index<0)return false;jumpTo(index,focus,id,landing(index));return true;};
   const fromHash=()=>navigate(window.location.hash.slice(1));
   const fromNavigation=(event:Event)=>navigate((event as CustomEvent<string>).detail.replace(/^#/,''),true);
   const fromLink=(event:MouseEvent)=>{
