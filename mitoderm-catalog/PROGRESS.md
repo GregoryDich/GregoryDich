@@ -18,6 +18,10 @@
   растянута из мелкого файла. Чинится на каждой странице вместе с фильмом: подписи берутся из раскадровки.
 - **Порядок страниц:** EXOCELL MASK → EXOTECH GEL → EXOSIGNAL HAIR → EXOSIGNAL SPRAY → MICRO BOOST 10% →
   CELL RENEW 1.5% → CELLULAR AGE DEFENSE 2.5% → DERMA RECOVERY CREAM → MITOPEN → MITOSCAN → MITOTECH CELL BOOSTER.
+- **Шкала для заказчика:** https://claude.ai/artifact/KrV99TX44jW4gh6DPGgQVB — собирается из
+  `state/progress/*.json` скриптом `state/progress/build-page.py`; обновление: поправить JSON, запустить скрипт,
+  опубликовать `state/progress/progress.html` заново (в новой сессии — с этим адресом в `url`). Пустой черновик
+  https://claude.ai/artifact/DFj63ec4pfgGBFvr56bY79 не используется.
 - **Пробники — ссылками заказчику** на каждом шаге (правило в `CLAUDE.md`); V-TECH и EXO-NAD не переснимать.
 - Ответы заказчика 19/11 вечером: в наборе V-TECH виден один золотой пакет с носиком, под ним ещё четыре; маска
   без смывания; на EXO-NAD из публичных вопросов убраны служебные пометки раскадровки.
