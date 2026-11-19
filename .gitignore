@@ -2,3 +2,6 @@
 mitoderm-catalog/site/proto/transitions/**/clip.mp4
 # Python bytecode caches (build-vtech.py imports story_content.py)
 __pycache__/
+
+# temporary working copies of background agents
+.claude/worktrees/

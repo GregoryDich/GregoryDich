@@ -10,7 +10,7 @@
 # frame is held; A reversed closes the film after a 6-frame blend and a 12-frame hold.
 set -euo pipefail
 C=${1:?clips dir}; O=${2:?output}; W=${3:-1912}; H=${4:-1080}
-N="fps=24,scale=-2:${H},crop=${W}:${H},setsar=1,format=yuv420p,settb=AVTB"
+N="fps=24,scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1,format=yuv420p,settb=AVTB"
 T="setpts=N/24/TB,fps=24,settb=AVTB"
 ffmpeg -v error -y -i "$C/A-final.mp4" -i "$C/B.mp4" -i "$C/C-sample.mp4" -i "$C/D.mp4" -i "$C/E.mp4" -i "$C/F.mp4" -filter_complex "
 [0:v]${N},split=2[a1][a2];

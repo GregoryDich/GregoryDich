@@ -23,9 +23,14 @@ const procedureCount=5;
 const starts=scenes.map((_,index)=>scenes.slice(0,index).reduce((sum,scene)=>sum+scene.weight,0));
 const total=scenes.reduce((sum,scene)=>sum+scene.weight,0);
 const clamp=(value:number,min=0,max=1)=>Math.min(max,Math.max(min,value));
-// Links to the kit land on the opened kit (same moment as the slot button):
+// Links to the kit land on the opened kit:
 // at the scene start the film still plays and the offer panel is hidden.
-const landing=(index:number)=>scenes[index].kind==='offer'?.94:0;
+// On a phone the pack sits where the caption is in two stretches of the film:
+// the consultation opens on the hero box until the camera pans away (.38), and
+// the results shot cuts to the box rising into place (.44). vtech-cinema.css
+// hides the caption there; jumps to the consultation land after the pan.
+const packInFrame=(id:string,local:number)=>(id==='vtech-consultation'&&local<.38)||(id==='vtech-results'&&local>=.44);
+const landing=(index:number)=>scenes[index].kind==='offer'?.94:scenes[index].id==='vtech-consultation'?.4:0;
 // A scene that has just become active is still visibility:hidden for the
 // first frame of its fade-in, and focus() on it fails silently; retry briefly.
 const focusTitle=(id:string,tries=4)=>{
@@ -156,6 +161,7 @@ export function VTechStory(){
    screen.dataset.kitOpening=String(kit&&kitMotion.openingRaw>.005);
    screen.dataset.kitFlight=String(kit&&kitMotion.pack>0);
    screen.dataset.introMoved=String(units>.001);
+   screen.dataset.packInFrame=String(packInFrame(scenes[next].id,local));
    document.documentElement.dataset.vtechImmersed=String(inside.current&&units>.12);
    if(next!==activeRef.current){
     const previous=activeRef.current;activeRef.current=next;
@@ -227,7 +233,7 @@ export function VTechStory(){
   }
  },[active,settings,seekScrollVideo]);
 
- const jumpTo=useCallback((index:number,moveFocus=false,hashId=scenes[index].id,local=0)=>{
+ const jumpTo=useCallback((index:number,moveFocus=false,hashId=scenes[index].id,local=landing(index))=>{
   const element=root.current,screen=stage.current;if(!element||!screen)return;
   window.history.replaceState(window.history.state,'','#'+hashId);
   if(environment.current.reduced){
@@ -328,7 +334,7 @@ export function VTechStory(){
        {scene.kind!=='offer'&&<picture><source media="(max-width: 860px)" srcSet={scene.mobilePoster}/><img data-vtech-entry-poster={index===0?'true':undefined} className="vts-poster" src={scene.poster} alt={scene.alt} width={index===0?entryMedia.width:1920} height="1080" loading={index===0?'eager':'lazy'} decoding="async"/></picture>}
       </div></div>}
       {index===0&&<span className="vts-entry-target" data-flight-target="v-tech-system" aria-hidden="true" style={entryRect}/>}
-      {scene.kind==='evidence'?<VTechEvidencePanel/>:scene.kind==='offer'?<VTechOfferPanel staticProduct={settings.reduced} onReveal={()=>jumpTo(index,true,scene.id,.94)}/>:<div className="vts-caption" data-vtech-hud="true">
+      {scene.kind==='evidence'?<VTechEvidencePanel/>:scene.kind==='offer'?<VTechOfferPanel staticProduct={settings.reduced}/>:<div className="vts-caption" data-vtech-hud="true">
        {index>0&&<p className="vts-kicker" dir={index===1?'rtl':'ltr'}>{scene.name}</p>}
        <Heading id={scene.id+'-title'} tabIndex={-1} dir={index===0?'ltr':undefined}>{scene.title}</Heading>
        <p className="vts-body">{scene.body}</p>
