@@ -6,6 +6,9 @@ import {products,assets} from '../data';
 import {SiteHeader,SiteFooter,ContactBlock} from '../shared';
 import registry from '../../production/page-bible/REGISTRY.json';
 import nadStoryboard from '../../production/page-bible/pages/exo-nad/STORYBOARD.json';
+import {mediaUrl} from '../media';
+import {productFilms} from './product-films';
+import {useScrollFilm} from './useScrollFilm';
 import './product-cinema.css';
 
 type Chapter={title:string;seconds:number;vh:number;type:string;index:number};
@@ -77,7 +80,7 @@ function Offer({product,pack,openKit,usp}:{product:Product;pack:string;openKit:s
    <div className="pc-offer-product"><img src={nad?openKit:pack} alt={'הערכה המקורית של '+product.name} loading="lazy" decoding="async"/><span>המוצר המקורי</span></div>
    <div className="pc-offer-copy">
     <p className="pc-eyebrow">MITODERM · הצעה מקצועית</p>
-    <h2 id="pc-offer-title">הכירו את <bdi dir="ltr">{product.name}</bdi><br/>{home?'כהמשך לטיפוח בבית.':'בקליניקה שלכם.'}</h2>
+    <h2 id="pc-offer-title">הכירו את <bdi dir="ltr">{product.name}</bdi>{' '}<br/>{home?'כהמשך לטיפוח בבית.':'בקליניקה שלכם.'}</h2>
     <p>{usp}</p>
     {nad?<dl className="pc-components">
      <div><dt>EXO BIPHASIC PEEL</dt><dd><bdi dir="ltr">1 × 15 ml</bdi></dd></div>
@@ -99,7 +102,7 @@ function Professional({product}:{product:Product}){
  const home=['exotech-gel','derma-recovery-cream','exosignal-spray','cell-renew-1-5','cellular-age-defense-2-5'].includes(product.slug);
  return <section id="pc-training" className="pc-training" aria-labelledby="pc-training-title"><div className="pc-width">
   <div className="pc-training-title"><p className="pc-eyebrow">לשימוש מקצועי · MITODERM</p>
-   <h2 id="pc-training-title">מכירים את {home?'המוצר.':'המערכת.'}<br/><em>{home?'מחברים בין קליניקה לבית.':'בונים את דרך העבודה.'}</em></h2>
+   <h2 id="pc-training-title">מכירים את {home?'המוצר.':'המערכת.'}{' '}<br/><em>{home?'מחברים בין קליניקה לבית.':'בונים את דרך העבודה.'}</em></h2>
    <p>לומדים את התפקיד של <bdi dir="ltr">{product.name}</bdi> במסגרת תוכנית עבודה ומבררים על הדרכה מקצועית.</p>
    <a className="pc-primary" href="#contact" data-product={product.slug} data-source="pc-training" data-topic="training">מידע על הדרכה <span aria-hidden="true">←</span></a>
   </div>
@@ -125,6 +128,10 @@ export default function ProductCinema({product}:{product:Product}){
  const total=chapters.reduce((n,c)=>n+c.vh,0);
  const [active,setActive]=useState(0),[linear,setLinear]=useState(false);
  const root=useRef<HTMLElement>(null),stage=useRef<HTMLDivElement>(null);
+ // Optional scroll film behind the stages; the images stay underneath as posters.
+ const film=productFilms[product.slug];
+ const {video,state:filmState,setTarget,handlers}=useScrollFilm();
+ const [filmOn,setFilmOn]=useState(false),[mobile,setMobile]=useState(false);
  const nad=product.slug==='exo-nad';
  const pack=nad?'/assets/product-cinema/exo-nad/NAD.png':(assets[product.slug]?.src??'/assets/brand/cover.webp');
  // Approved real-pack photo must not morph into older invented vial colors.
@@ -153,15 +160,22 @@ export default function ProductCinema({product}:{product:Product}){
    s.style.setProperty('--pc-progress',(u/total).toFixed(5));
    s.style.setProperty('--pc-local',local.toFixed(4));
    if(i!==last){last=i;setActive(i);}
+   const c=film?.chapters[i];
+   if(film&&c){
+    const box=r.getBoundingClientRect();
+    setTarget(Math.min((c.start+(c.end-c.start)*local)/film.fps,Math.max(0,film.frames-1)/film.fps),box.top<=v&&box.bottom>=0);
+   }
   };
   const schedule=()=>{if(!raf)raf=requestAnimationFrame(read);};
-  const motion=()=>{setLinear(mm.matches);if(!mm.matches)read();};
-  mm.addEventListener('change',motion);
+  const narrow=window.matchMedia('(max-width: 860px)');
+  const size=()=>setMobile(narrow.matches);
+  const motion=()=>{setLinear(mm.matches);setFilmOn(Boolean(film)&&!mm.matches);if(!mm.matches)read();};
+  mm.addEventListener('change',motion);narrow.addEventListener('change',size);size();
   window.addEventListener('scroll',schedule,{passive:true});
   window.addEventListener('resize',schedule);
   motion();read();
-  return()=>{cancelAnimationFrame(raf);mm.removeEventListener('change',motion);window.removeEventListener('scroll',schedule);window.removeEventListener('resize',schedule);};
- },[chapters,starts,total]);
+  return()=>{cancelAnimationFrame(raf);mm.removeEventListener('change',motion);narrow.removeEventListener('change',size);window.removeEventListener('scroll',schedule);window.removeEventListener('resize',schedule);};
+ },[chapters,starts,total,film,setTarget]);
  if(!config||!chapters.length)return null;
  const current=chapters[active];
  const style={'--pc-bg':theme.bg,'--pc-surface':theme.surface,'--pc-accent':theme.accent,'--pc-ink':theme.text,'--pc-scroll':total+1} as CSSProperties;
@@ -183,9 +197,10 @@ export default function ProductCinema({product}:{product:Product}){
          <div className="pc-nad-focus-photo" style={{backgroundImage:'url('+pack+')'}}/>
          <span className="pc-nad-focus-legend" dir="ltr">{bottle==='peel'?'EXO BIPHASIC PEEL':bottle==='normalizer'?'pH NORMALIZER':'LONGEVITY SERUM'}</span>
         </figure>)}
-       <figure className="pc-nad-kit" data-visible={mediaPhase==='kit'}><img src="/assets/product-cinema/exo-nad/kit.webp" alt="" width="500" height="720"/></figure>
+       <figure className="pc-nad-kit" data-visible={mediaPhase==='kit'}><img src="/assets/product-cinema/exo-nad/kit.webp" alt="" width="800" height="1361"/></figure>
       </>}
      </div>
+     {film&&filmOn&&filmState.phase!=='error'&&<video ref={video} className={'pc-film'+(filmState.painted?' is-painted':'')} src={mediaUrl(mobile?film.mobile:film.desktop)} muted playsInline preload="auto" aria-hidden="true" tabIndex={-1} {...handlers}/>}
      <div className="pc-scenes">
       {chapters.map((chapter,i)=>{const copy=chapterName(i),Heading=i===0?'h1':'h2';return <article key={i} id={'pc-shot-'+(i+1)} className="pc-scene" data-visible={active===i} data-kind={chapter.type} aria-hidden={!linear&&active!==i} inert={!linear&&active!==i}>
        {linear&&<div className="pc-linear-product"><img src={nad&&i===7?'/assets/product-cinema/exo-nad/kit.webp':pack} alt={'מוצר '+product.name} loading={i===0?'eager':'lazy'}/></div>}

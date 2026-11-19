@@ -141,3 +141,8 @@
  .pc-page .pc-linear-product img{width:100%;height:100%;object-fit:contain}
  .pc-page .pc-hud,.pc-page .pc-line{display:none}
 }
+/* Scroll film (product-films.ts): covers the stage above the poster images and
+   appears only after its first decoded frame is painted. */
+.pc-film{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;opacity:0;transition:opacity .45s ease;pointer-events:none}
+.pc-film.is-painted{opacity:1}
+@media(prefers-reduced-motion:reduce){.pc-page .pc-film{display:none}}
