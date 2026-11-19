@@ -30,6 +30,11 @@ const clamp=(value:number,min=0,max=1)=>Math.min(max,Math.max(min,value));
 // the results shot cuts to the box rising into place (.44). vtech-cinema.css
 // hides the caption there; jumps to the consultation land after the pan.
 const packInFrame=(id:string,local:number)=>(id==='vtech-consultation'&&local<.38)||(id==='vtech-results'&&local>=.44);
+// Two more phone stretches bring something under a caption (the stage is
+// 100svh, about 390x664): the hero pulls focus to both faces where its body
+// line sits (.3), and the pen chapter ends on the serum vial where its caption
+// sits (.86). vtech-cinema.css hides the hero body and the pen caption there.
+const captionCrowded=(id:string,local:number)=>(id==='vtech-hero'&&local>=.3)||(id==='vtech-pen'&&local>=.86);
 const landing=(index:number)=>scenes[index].kind==='offer'?.94:scenes[index].id==='vtech-consultation'?.4:0;
 // A scene that has just become active is still visibility:hidden for the
 // first frame of its fade-in, and focus() on it fails silently; retry briefly.
@@ -164,6 +169,7 @@ export function VTechStory(){
    screen.dataset.kitFlight=String(kit&&kitMotion.pack>0);
    screen.dataset.introMoved=String(units>.001);
    screen.dataset.packInFrame=String(packInFrame(scenes[next].id,local));
+   screen.dataset.captionCrowded=String(captionCrowded(scenes[next].id,local));
    document.documentElement.dataset.vtechImmersed=String(inside.current&&units>.12);
    if(next!==activeRef.current){
     const previous=activeRef.current;activeRef.current=next;

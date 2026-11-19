@@ -283,4 +283,9 @@ html:not([data-vtech-immersed=true]) .vc-section-nav{transform:translateY(-100%)
  .vts-story[data-mode=cinema] #vtech-serum .vts-caption{inset-inline-end:34%}
  .vts-story[data-mode=cinema] :is(#vtech-consultation .vts-caption,.vc-story-evidence-panel:not(.vc-story-evidence-approved)){transition:opacity .3s,visibility .3s}
  .vts-story[data-mode=cinema] .vts-stage[data-pack-in-frame=true] :is(#vtech-consultation .vts-caption,.vc-story-evidence-panel:not(.vc-story-evidence-approved)){opacity:0;visibility:hidden}
+ /* At real phone heights the hero body line crosses both foreheads once the
+    camera pulls focus to them, and the pen caption meets the serum vial at
+    the end of its chapter (data-caption-crowded, set in VTechStory). */
+ .vts-story[data-mode=cinema] :is(#vtech-hero .vts-body,#vtech-pen .vts-caption){transition:opacity .3s,visibility .3s}
+ .vts-story[data-mode=cinema] .vts-stage[data-caption-crowded=true] :is(#vtech-hero .vts-body,#vtech-pen .vts-caption){opacity:0;visibility:hidden}
 }
