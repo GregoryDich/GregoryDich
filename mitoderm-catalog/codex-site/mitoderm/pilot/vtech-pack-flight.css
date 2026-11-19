@@ -82,3 +82,8 @@
   background:linear-gradient(180deg,rgba(8,8,10,.6),rgba(8,8,10,.46) 40%,rgba(8,8,10,.75));
  }
 }
+
+/* The backdrop is atmosphere only: darkened and blurred so no person can be
+   recognised behind the flying pack or the open kit; scaled to hide blur edges. */
+.vts-pack-backdrop img{filter:brightness(.3) saturate(.55) blur(22px);transform:scale(1.12)}
+@media(max-width:860px){.vts-pack-backdrop img{filter:brightness(.32) saturate(.55) blur(16px)}}

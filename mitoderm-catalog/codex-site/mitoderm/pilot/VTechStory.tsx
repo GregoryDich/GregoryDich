@@ -128,7 +128,7 @@ export function VTechStory(){
    const mapped=chapter?chapter.start+(chapter.end-chapter.start)*videoLocal:0;
    targetTime.current=clamp(mapped,0,Math.max(0,timeline.duration-.04));
    const wasInside=inside.current;
-   inside.current=position>=-1&&position<=(total+(arrivalUnits.current??0)+1.8)*height;
+   inside.current=position>=-1&&position<=(total+(arrivalUnits.current??0)+.25)*height;
    element.dataset.storyProgress=(units/total).toFixed(4);
    element.dataset.chapterProgress=local.toFixed(4);
    screen.dataset.storyProgress=(units/total).toFixed(4);
@@ -144,6 +144,7 @@ export function VTechStory(){
    // visually complete a fraction of a pixel before the mathematical endpoint.
    screen.dataset.kitOpened=String(kit&&kitMotion.opening>=.99999);
    screen.dataset.kitOpening=String(kit&&kitMotion.openingRaw>.005);
+   screen.dataset.kitFlight=String(kit&&kitMotion.pack>0);
    screen.dataset.introMoved=String(units>.001);
    document.documentElement.dataset.vtechImmersed=String(inside.current&&units>.12);
    if(next!==activeRef.current){
@@ -283,7 +284,7 @@ export function VTechStory(){
  const cameraClip=mediaUrl(settings.mobile?'/assets/world/vtech-full-story-mobile.mp4':'/assets/world/vtech-full-story.mp4');
  const posterScene=scenes[active];
 
- return <section id="vtech-intro" className="vts-story" ref={root} data-vtech-story="true" data-mode={settings.reduced?'linear':'cinema'} data-active-chapter={scenes[active].id} data-active-index={active} style={{'--vts-length':total+2+arrivalLength} as CSSProperties} aria-label="הכירו את מערכת V-TECH">
+ return <section id="vtech-intro" className="vts-story" ref={root} data-vtech-story="true" data-mode={settings.reduced?'linear':'cinema'} data-active-chapter={scenes[active].id} data-active-index={active} style={{'--vts-length':total+1.2+arrivalLength} as CSSProperties} aria-label="הכירו את מערכת V-TECH">
   <div className="vts-stage" ref={stage} data-vtech-stage="true" data-active-chapter={scenes[active].id} data-active-index={active} data-intro-moved="false">
    <div className="vts-toolbar" data-vtech-hud="true" data-hidden={!settings.reduced&&active>=procedureCount} aria-hidden={!settings.reduced&&active>=procedureCount} inert={!settings.reduced&&active>=procedureCount}>
     <nav className="vts-chapter-nav" aria-label="שלבי ההמחשה של V-TECH">{scenes.slice(0,procedureCount).map((scene,index)=><button type="button" key={scene.id} onClick={()=>jumpTo(index,true)} aria-current={active===index?'step':undefined} aria-label={(index+1)+'. '+scene.label}><span className="vts-nav-number" aria-hidden="true">{String(index+1).padStart(2,'0')}</span><span className="vts-nav-label">{scene.label}</span></button>)}</nav>

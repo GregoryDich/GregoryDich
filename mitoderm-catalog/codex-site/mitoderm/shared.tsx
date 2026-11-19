@@ -42,8 +42,15 @@ export function ProductImage({slug,className='',decoding='async'}:{slug:string;c
 export function Smoke(){return <div className="soft-smoke" aria-hidden="true"><i/><i/><i/></div>;}
 
 export function SiteHeader(){
- const [open,setOpen]=useState(false);
- return <header className="site-header"><div className="nav-inner">
+ const [open,setOpen]=useState(false),[scrolled,setScrolled]=useState(false);
+ useEffect(()=>{
+  let frame=0;
+  const read=()=>{frame=0;setScrolled(window.scrollY>8);};
+  const schedule=()=>{if(!frame)frame=requestAnimationFrame(read);};
+  read();window.addEventListener('scroll',schedule,{passive:true});
+  return()=>{cancelAnimationFrame(frame);window.removeEventListener('scroll',schedule);};
+ },[]);
+ return <header className="site-header" data-scrolled={scrolled}><div className="nav-inner">
    <a className="brand-home" href="/" aria-label="MITODERM"><img src="/assets/brand/logo-white.webp" alt="MITODERM" width="480" height="144"/></a>
    <nav className={`header-links ${open?'is-open':''}`} aria-label={ui.catalog}>
      <a href="/#products">מוצרים</a><a href="/products/v-tech-system"><bdi>V-TECH</bdi></a><a href="/#support">הדרכה וליווי</a><a href="/catalog">{ui.catalog}</a>

@@ -1,12 +1,13 @@
-// The closed pack starts moving at .33 and the kit is open at .565. This
-// halves the previous .33–.80 handoff without shortening the final open hold.
+// The film ends at .33; the closed pack then flies until .47 and opens from
+// .47 to .88, so the kit keeps moving until it is fully open. Only the last
+// .12 of the scene (plus a short story tail) holds the open kit still.
 export const vtechKitTiming={
  returnEnd:.33,
- flightEnd:.415,
- revealStart:.405,
- revealEnd:.44,
- openStart:.415,
- openEnd:.565,
+ flightEnd:.47,
+ revealStart:.455,
+ revealEnd:.50,
+ openStart:.47,
+ openEnd:.88,
 } as const;
 
 const phase=(value:number,start:number,end:number)=>Math.min(1,Math.max(0,(value-start)/(end-start)));

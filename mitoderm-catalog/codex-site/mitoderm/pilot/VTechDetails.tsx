@@ -23,7 +23,7 @@ export function VTechEvidencePanel(){
  }
  if(!approvedCases.length)return <div className="vc-story-evidence-panel" data-vtech-hud="true">
   <p className="vc-story-panel-kicker"><bdi dir="ltr">V-TECH</bdi> · המבט המקצועי</p>
-  <h2 id="vtech-results-title" tabIndex={-1}>רוצים לראות<br/>את התמונה המלאה?</h2>
+  <h2 id="vtech-results-title" tabIndex={-1}>רוצים לראות{' '}<br/>את התמונה המלאה?</h2>
   <p className="vc-story-panel-body">שאלו על תיעוד מקרים ועל תוכנית העבודה עם <bdi dir="ltr">V-TECH</bdi>, כדי לבחון התאמה לקליניקה שלכם.</p>
   <ul className="vc-story-evidence-facts" aria-label="מה בוחנים בתיעוד"><li>נקודת ההתחלה</li><li>תוכנית העבודה</li><li>מועד ההערכה</li></ul>
   <a className="vc-story-panel-cta" href="#contact" data-product="v-tech-system" data-source="vtech-case-request" data-topic="cases">לבירור תיעוד והתאמה <span aria-hidden="true">←</span></a>
@@ -52,7 +52,7 @@ export function VTechOfferPanel({staticProduct=false,onReveal}:{staticProduct?:b
  </div>
  <div className="vc-story-offer-copy">
   <p className="vc-story-panel-kicker"><bdi dir="ltr">V-TECH SYSTEM</bdi> · הערכה המקצועית</p>
-  <h2 id="vtech-kit-title" tabIndex={-1}>הכניסו את <bdi dir="ltr">V-TECH</bdi><br/>לקליניקה שלכם</h2>
+  <h2 id="vtech-kit-title" tabIndex={-1}>הכניסו את <bdi dir="ltr">V-TECH</bdi>{' '}<br/>לקליניקה שלכם</h2>
   <dl className="vc-story-kit-contents"><div><dt><bdi dir="ltr">5 × 5 ml</bdi></dt><dd><bdi dir="ltr">V-TECH SERUM</bdi><span>אמפולות סרום</span></dd></div><div><dt><bdi dir="ltr">5 × 5 ml</bdi></dt><dd><bdi dir="ltr">V-TECH GEL MASK</bdi><span>שקיקי מסכת ג׳ל</span></dd></div></dl>
   <p className="vc-story-kit-separate">המכשור והמוצרים המשלימים אינם כלולים בערכה.</p>
   <div className="vc-story-offer-actions"><a className="vc-story-panel-cta" href="#contact" data-product="v-tech-system" data-source="vtech-kit">לקבלת מחיר <span aria-hidden="true">←</span></a><a className="vc-story-panel-secondary" href="#contact" data-product="v-tech-system" data-source="vtech-kit-training" data-topic="training">לתיאום הדרכה <span aria-hidden="true">↗</span></a></div>
@@ -76,7 +76,7 @@ export function VTechTraining(){return <section id="vtech-training" className="v
   </div>
   <div className="vc-training-film-copy">
    <p className="vc-section-eyebrow"><bdi dir="ltr">V-TECH SYSTEM</bdi> · הדרכה וליווי מקצועי</p>
-   <h2 id="vc-training-title">מכירים את המערכת.<br/><span>בונים את דרך העבודה.</span></h2>
+   <h2 id="vc-training-title">מכירים את המערכת.{' '}<br/><span>בונים את דרך העבודה.</span></h2>
    <p>השלב הבא לא מתחיל בעוד מצגת. הוא מתחיל בשיחה מקצועית על הקליניקה, תחום העיסוק והפרוטוקול המתאים לכם.</p>
    <a href="#contact" data-product="v-tech-system" data-source="vtech-training-intro" data-topic="training">לשיחה עם הצוות <span aria-hidden="true">←</span></a>
   </div>
@@ -85,7 +85,7 @@ export function VTechTraining(){return <section id="vtech-training" className="v
  <div className="vc-training-editorial-body">
   <div className="vc-training-editorial-lead">
    <p className="vc-section-eyebrow">מהקליניקה שלכם · למערכת מתאימה</p>
-   <h3>החלטה מקצועית<br/><em>מתחילה בהתאמה.</em></h3>
+   <h3>החלטה מקצועית{' '}<br/><em>מתחילה בהתאמה.</em></h3>
    <p>לפני הזמנה בודקים עם הצוות מה מתאים לניסיון שלכם, מה כולל המארז ואילו אפשרויות הדרכה קיימות. בלי הבטחות שאין מאחוריהן תיעוד.</p>
   </div>
   <div className="vc-training-editorial-points">

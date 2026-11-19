@@ -78,7 +78,7 @@ export function Catalog(){
  return <><SiteHeader/><main id="main-content" className="catalog-main"><Chapter id="catalog" className="catalog-section" line="neutral">
   <div className="layer-background" aria-hidden="true"/>
   <div className="layer-motion" aria-hidden="true"/>
-  <div className="layer-content catalog-content"><h1>{ui.catalog}</h1><div className="catalog-filters" aria-label={ui.filterTitle}><button onClick={()=>setFilter('all')} aria-pressed={filter==='all'}>{names[0]}</button>{lineGroups.map(g=><button key={g.id} onClick={()=>setFilter(g.name)} aria-pressed={filter===g.name}><bdi dir="ltr">{g.name}</bdi></button>)}</div></div>
+  <div className="layer-content catalog-content"><h1>{ui.catalog}</h1><div className="catalog-filters" aria-label={ui.filterTitle}><button onClick={()=>setFilter('all')} aria-pressed={filter==='all'}>{names[0]}</button>{lineGroups.map(g=><button key={g.id} onClick={()=>setFilter(g.name)} aria-pressed={filter===g.name}>{g.label}</button>)}</div></div>
   <div className="catalog-grid">{products.filter(p=>filter==='all'||p.line===filter).map(p=><article key={p.slug} className="catalog-product">
     <div className="catalog-card-background" aria-hidden="true"/>
     <div className="catalog-product-stage layer-motion"><a href={productHref(p.slug)} aria-label={p.name}><ProductImage slug={p.slug}/></a></div>
