@@ -258,7 +258,10 @@ export function VTechStory(){
  useEffect(()=>{
   if(!settings.ready)return;
   const navigate=(id:string,focus=false)=>{const index=chapterIndex(id);if(index<0)return false;jumpTo(index,focus,id,landing(index));return true;};
-  const fromHash=()=>navigate(window.location.hash.slice(1));
+  const fromHash=()=>navigate(window.location.hash.slice(1),true);
+  // The router answers the same hash change with a smooth scrollIntoView in
+  // the next frame; jump again after it so the visitor stays on the chapter.
+  const onHashChange=()=>window.requestAnimationFrame(fromHash);
   const fromNavigation=(event:Event)=>navigate((event as CustomEvent<string>).detail.replace(/^#/,''),true);
   const fromLink=(event:MouseEvent)=>{
    if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||!(event.target instanceof Element))return;
@@ -270,10 +273,10 @@ export function VTechStory(){
    event.preventDefault();navigate(id,true);
   };
   fromHash();
-  window.addEventListener('hashchange',fromHash);
+  window.addEventListener('hashchange',onHashChange);
   window.addEventListener('mitoderm:vtech-chapter',fromNavigation);
   document.addEventListener('click',fromLink,true);
-  return()=>{window.removeEventListener('hashchange',fromHash);window.removeEventListener('mitoderm:vtech-chapter',fromNavigation);document.removeEventListener('click',fromLink,true);};
+  return()=>{window.removeEventListener('hashchange',onHashChange);window.removeEventListener('mitoderm:vtech-chapter',fromNavigation);document.removeEventListener('click',fromLink,true);};
  },[settings.ready,jumpTo]);
 
  useEffect(()=>{
@@ -325,7 +328,7 @@ export function VTechStory(){
        {scene.kind!=='offer'&&<picture><source media="(max-width: 860px)" srcSet={scene.mobilePoster}/><img data-vtech-entry-poster={index===0?'true':undefined} className="vts-poster" src={scene.poster} alt={scene.alt} width={index===0?entryMedia.width:1920} height="1080" loading={index===0?'eager':'lazy'} decoding="async"/></picture>}
       </div></div>}
       {index===0&&<span className="vts-entry-target" data-flight-target="v-tech-system" aria-hidden="true" style={entryRect}/>}
-      {scene.kind==='evidence'?<VTechEvidencePanel/>:scene.kind==='offer'?<VTechOfferPanel staticProduct={settings.reduced} onReveal={()=>jumpTo(index,false,scene.id,.94)}/>:<div className="vts-caption" data-vtech-hud="true">
+      {scene.kind==='evidence'?<VTechEvidencePanel/>:scene.kind==='offer'?<VTechOfferPanel staticProduct={settings.reduced} onReveal={()=>jumpTo(index,true,scene.id,.94)}/>:<div className="vts-caption" data-vtech-hud="true">
        {index>0&&<p className="vts-kicker" dir={index===1?'rtl':'ltr'}>{scene.name}</p>}
        <Heading id={scene.id+'-title'} tabIndex={-1} dir={index===0?'ltr':undefined}>{scene.title}</Heading>
        <p className="vts-body">{scene.body}</p>

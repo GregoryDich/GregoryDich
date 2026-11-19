@@ -147,7 +147,7 @@ html[data-product-transit] [data-vtech-hud]{opacity:0!important;pointer-events:n
 .vts-story[data-mode=linear] .vts-stage{position:relative;height:auto;overflow:visible}
 .vts-story[data-mode=linear] .vts-toolbar{position:relative;inset:auto;display:flex;justify-content:center;padding:105px 24px 25px;transition:none}
 .vts-story[data-mode=linear] .vts-scenes{position:relative;inset:auto;height:auto}
-.vts-story[data-mode=linear] .vts-scene{position:relative;inset:auto;display:flex;align-items:flex-end;width:100%;height:auto;min-height:100svh;padding-block-start:42svh;opacity:1;visibility:visible;pointer-events:auto;transition:none;scroll-margin-top:105px}
+.vts-story[data-mode=linear] .vts-scene{position:relative;inset:auto;display:flex;align-items:flex-end;width:100%;height:auto;min-height:100svh;padding-block-start:42svh;opacity:1;visibility:visible;pointer-events:auto;transition:none;scroll-margin-top:17px}
 .vts-story[data-mode=linear] .vts-media,.vts-story[data-mode=linear] .vts-footage{position:absolute;inset:0;width:100%;height:100%}
 .vts-story[data-mode=linear] .vts-caption{position:relative;inset:auto;margin-block:0 100px;margin-inline:clamp(28px,6.5vw,110px) 0}
 .vts-story[data-mode=linear] .vts-bottom{position:relative;inset:auto;padding:20px 25px;background:#08080a;color:#d4cabb}
@@ -156,7 +156,7 @@ html[data-product-transit] [data-vtech-hud]{opacity:0!important;pointer-events:n
 
 @media(max-width:860px){
  .vts-story[data-mode=linear] .vts-toolbar{padding:87px 16px 24px}
- .vts-story[data-mode=linear] .vts-scene{padding-block-start:45svh;scroll-margin-top:95px}
+ .vts-story[data-mode=linear] .vts-scene{padding-block-start:45svh;scroll-margin-top:7px}
  .vts-story[data-mode=linear] .vts-caption{width:calc(100% - 48px);max-width:500px;margin-block-end:calc(64px + env(safe-area-inset-bottom));margin-inline:24px}
 }
 @media(max-width:360px){
@@ -211,10 +211,13 @@ html[data-product-transit] [data-vtech-hud]{opacity:0!important;pointer-events:n
 }
 
 /* The offer arrives with the pack flight: while the film's last chapter plays
-   (kit 0-.33) neither its copy nor its scrim floats over unrelated footage. */
+   (kit 0-.33) nothing of it floats over unrelated footage. Its copy and scrim
+   wait for the opening (kit .47), so no headline hangs beside the closed pack. */
 .vts-story[data-mode=cinema] .vc-story-offer-panel{opacity:var(--vts-pack-progress,0)}
 .vts-story[data-mode=cinema] .vts-stage:not([data-kit-flight=true]) .vc-story-offer-panel{visibility:hidden}
-.vts-story[data-mode=cinema] .vts-stage .vts-scene[data-kind=offer]::after{opacity:var(--vts-pack-progress,0)}
+.vts-story[data-mode=cinema] .vc-story-offer-copy{opacity:clamp(0,calc(var(--vts-kit-open,0)*5),1)}
+.vts-story[data-mode=cinema] .vts-stage:not([data-kit-opening=true]) .vc-story-offer-copy{visibility:hidden}
+.vts-story[data-mode=cinema] .vts-stage .vts-scene[data-kind=offer]::after{opacity:clamp(0,calc(var(--vts-kit-open,0)*5),1)}
 
 /* Phone hero: title and body sit between the header and the box, the actions
    in the band under it, so the V and the lettering on the box stay clear. */
