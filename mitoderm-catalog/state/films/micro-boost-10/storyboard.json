@@ -1,0 +1,442 @@
+{
+ "version": 1,
+ "date": "2026-11-19",
+ "slug": "micro-boost-10",
+ "page": "/products/micro-boost-10",
+ "cast": {
+  "cosmetologist": "M (brand main face)",
+  "patient": "P1",
+  "M": "woman about 30, long dark wavy hair, white uniform with pink piping, pendant with a blue stone on a black cord",
+  "P1": "woman 25-30, light-blonde hair under a disposable cap, redness and inflammation marks on the cheeks",
+  "gloves": "white"
+ },
+ "fps": 24,
+ "totalFrames": 666,
+ "seconds": 27.75,
+ "masters": {
+  "desktop": "16:9, normalised to 1912x1080 like exo-nad",
+  "mobile": "9:16, separate stills and clips (not a crop), normalised like the v5 mobile variant (812x1440)"
+ },
+ "productFilmsEntry": {
+  "fps": 24,
+  "frames": 666,
+  "chapters": [
+   {
+    "start": 0,
+    "end": 108
+   },
+   {
+    "start": 108,
+    "end": 204
+   },
+   {
+    "start": 204,
+    "end": 312
+   },
+   {
+    "start": 312,
+    "end": 408
+   },
+   {
+    "start": 408,
+    "end": 468
+   },
+   {
+    "start": 468,
+    "end": 528
+   },
+   {
+    "start": 528,
+    "end": 666
+   }
+  ]
+ },
+ "packagingReference": {
+  "attach": [
+   "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/ref/micro-boost-10-angle.webp",
+   "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/products/micro-boost-10.webp",
+   "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/panels/micro-boost-10/front.png",
+   "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/panels/micro-boost-10/right.png"
+  ],
+  "main": "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/ref/micro-boost-10-angle.webp",
+  "visibleFaces": [
+   "front",
+   "right (narrow side: PROFESSIONAL TREATMENT / MADE IN KOREA)"
+  ],
+  "neverShow": [
+   "left side",
+   "back",
+   "top flap",
+   "bottom",
+   "opened box",
+   "syringe applicator (no photo or model exists)"
+  ],
+  "doNotAttach": [
+   "/home/user/GregoryDich/mitoderm-catalog/site/public/micro-boost-10/img/kit.webp (render with an invented yellow glow around the emblem)",
+   "/home/user/GregoryDich/mitoderm-catalog/site/public/micro-boost-10/img/still.webp (3D scene with a spicule cloud)",
+   "/home/user/GregoryDich/mitoderm-catalog/site/proto/img/micro-boost-10-3d/*.webp (low-resolution textures; bottom is a 256x256 placeholder)"
+  ]
+ },
+ "generationOrder": [
+  "K1 16:9 (sample: first sight of P1 with M)",
+  "owner OK on P1",
+  "K1 9:16",
+  "K0 16:9 + 9:16",
+  "A 16:9 (sample clip)",
+  "owner OK on sample",
+  "A 9:16",
+  "K2, K3 16:9 + 9:16",
+  "B, C, D 16:9 + 9:16",
+  "assembly"
+ ],
+ "captions": [
+  {
+   "chapter": 1,
+   "titleHe": "MICRO BOOST 10%",
+   "lineHe": "הסרום המרוכז ביותר בסדרת BIOSPICULE™.",
+   "source": "content.json products[6].intro.body"
+  },
+  {
+   "chapter": 2,
+   "titleHe": "שלושה שלבים. ההחלטה שלכם.",
+   "lineHe": "כמות החומר, משך העיסוי ועוצמת הטיפול – לפי האבחון שלכם.",
+   "source": "content.json products[6].sections[index 5] title + body (shortened)"
+  },
+  {
+   "chapter": 3,
+   "titleHe": "1 · אבחון וניקוי",
+   "lineHe": "ניקוי ללא שפשוף אגרסיבי, ובסיומו ייבוש מלא של העור.",
+   "source": "content.json products[6].sections[index 5].tags + protocols/src/content.he.mjs biospicule-vtech step 1"
+  },
+  {
+   "chapter": 4,
+   "titleHe": "2 · עיסוי",
+   "lineHe": "פיזור הדרגתי ועיסוי בלחץ אחיד ומבוקר, עד לספיגה.",
+   "source": "content.json sections[index 5].tags + protocols/src/content.he.mjs biospicule-vtech step 2"
+  },
+  {
+   "chapter": 5,
+   "titleHe": "צפו לעקצוץ.",
+   "lineHe": "עובדים בצורה מבוקרת ומתחשבים בתחושת המטופלת.",
+   "source": "content.json sections[index 4].title + protocol step 2 ('יש לעבוד בצורה מבוקרת ולהתחשב גם בתחושת המטופל/ת')"
+  },
+  {
+   "chapter": 6,
+   "titleHe": "3 · החדרה וסיום",
+   "lineHe": "V-TECH או Longevity Serum, EXOCELL MASK, ובבית DERMA RECOVERY.",
+   "source": "content.json sections[index 5].body + tags ('+ DERMA RECOVERY בבית'); protocol step 3 and finish"
+  },
+  {
+   "chapter": 7,
+   "titleHe": "מזרק אחד. טיפול אחד.",
+   "lineHe": "3 מ״ל · לשימוש מקצועי בלבד.",
+   "source": "content.json sections[index 6].title + body/tags"
+  }
+ ],
+ "stills": [
+  {
+   "id": "K1",
+   "order": 1,
+   "purpose": "scene 02 consultation and skin assessment; start of clip B (B frames 0-59 in chapter 02, 60-119 in chapter 06). First sight of P1 in the series: sample for the owner's OK.",
+   "refs": {
+    "cosmetologist_M": [
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)",
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-turnaround.jpg (Higgsfield media 182a0e01-b7ac-48e9-b01f-2815d8862009)"
+    ],
+    "patient_P1": [
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a01.webp",
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a04.webp"
+    ],
+    "room": [
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f080.png",
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f121.png"
+    ],
+    "packaging": [
+     "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/ref/micro-boost-10-angle.webp",
+     "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/products/micro-boost-10.webp",
+     "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/panels/micro-boost-10/front.png",
+     "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/panels/micro-boost-10/right.png"
+    ],
+    "other": []
+   },
+   "packagingVisible": "front + narrow right side (sharp, readable band and emblem)",
+   "prompt_16x9": "Medium two-shot, 50mm, eye level, in a bright, clean treatment room as in the attached V-TECH frames: soft natural daylight from a large window, warm white walls, white treatment chair, light marble side table. Left of centre, at about 15-35% of the frame width, stands the cosmetologist M (the brand's main face: a woman about 30 with long dark wavy hair, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the attached M reference photos); she wears clean white examination gloves; she leans in slightly and looks closely and attentively at the patient's cheek, one gloved fingertip resting lightly beside the cheekbone. At about 38-58% of the width sits the patient P1 (a woman 25-30 with light-blonde hair under a white disposable cap and visible redness and inflammation marks on her cheeks, identical to the attached P1 character sheet; her redness and marks stay exactly as they are), upright in the white treatment chair, calm, eyes open, face in soft three-quarter view toward M. On the marble side table in the lower left, at about 20-32% of the width and above the bottom 15%, stands the closed MITODERM MICRO BOOST 10% box exactly as in the attached pack reference (micro-boost-10-angle.webp, with the real photo and the print panels for checking small text): a tall slim cream carton, about 33 x 22.5 x 150 mm, standing upright and closed; FRONT face visible with the gold M monogram, MITODERM / BIOSPICULE PROFESSIONAL, the dark green band with gold MICRO BOOST 10%, SPICULE SERUM, the round gold-rimmed spicule emblem, the gold frame Concentrated Spicule System, PROFESSIONAL TREATMENT and 3 ml ℮ 0.10 fl.oz.; the narrow RIGHT side visible at an angle with the vertical dark text PROFESSIONAL TREATMENT / MADE IN KOREA. The box is turned about 25 degrees so only the front and the right side show; never show its left side, back, top flap or bottom, never open it. Right 35% of the frame: only the softly lit window and wall. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging, only calm softly lit wall and window background, because the Hebrew caption sits there; the bottom 15% contains nothing important. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks beyond the box's own print; no invented packaging; no syringe, needle, applicator or device in frame; no injection; no skin smoothing or glow; no before/after look; no extra fingers; no duplicate people.",
+   "prompt_9x16": "Vertical medium two-shot, 50mm, eye level, in a bright, clean treatment room as in the attached V-TECH frames: soft natural daylight from a large window, warm white walls, white treatment chair, light marble side table. The cosmetologist M (the brand's main face: a woman about 30 with long dark wavy hair, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the attached M reference photos) stands on the left in clean white examination gloves, leaning in and looking closely at the patient's cheek, one gloved fingertip resting lightly beside the cheekbone. The patient P1 (a woman 25-30 with light-blonde hair under a white disposable cap and visible redness and inflammation marks on her cheeks, identical to the attached P1 character sheet; her redness and marks stay exactly as they are) sits upright in the white treatment chair on the right, calm, eyes open. Both faces sit at about 18-38% of the frame height. On the marble side table between them, its top at about 42% and its base at about 60% of the frame height, stands the closed MITODERM MICRO BOOST 10% box exactly as in the attached pack reference (micro-boost-10-angle.webp, with the real photo and the print panels for checking small text): a tall slim cream carton, about 33 x 22.5 x 150 mm, standing upright and closed; FRONT face visible with the gold M monogram, MITODERM / BIOSPICULE PROFESSIONAL, the dark green band with gold MICRO BOOST 10%, SPICULE SERUM, the round gold-rimmed spicule emblem, the gold frame Concentrated Spicule System, PROFESSIONAL TREATMENT and 3 ml ℮ 0.10 fl.oz.; the narrow RIGHT side visible at an angle with the vertical dark text PROFESSIONAL TREATMENT / MADE IN KOREA. The box is turned about 25 degrees so only the front and the right side show; never show its left side, back, top flap or bottom, never open it. Below 62%: the table top, M's uniform and P1's knees only. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face and the box sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face, only wall or the top of the cap; the bottom 38% shows only table surface, clothing or neutral background with nothing important, because a dark caption band sits there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks beyond the box's own print; no invented packaging; no syringe, needle, applicator or device in frame; no injection; no skin smoothing or glow; no before/after look; no extra fingers; no duplicate people."
+  },
+  {
+   "id": "K0",
+   "order": 2,
+   "purpose": "scene 01 pack close-up; frame 0 of clip A; first and last frame of the film (hold at start and at end)",
+   "refs": {
+    "cosmetologist_M": [
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)",
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-turnaround.jpg (Higgsfield media 182a0e01-b7ac-48e9-b01f-2815d8862009)"
+    ],
+    "patient_P1": [
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a01.webp",
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a04.webp"
+    ],
+    "room": [
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f080.png",
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f121.png"
+    ],
+    "packaging": [
+     "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/ref/micro-boost-10-angle.webp",
+     "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/products/micro-boost-10.webp",
+     "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/panels/micro-boost-10/front.png",
+     "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/panels/micro-boost-10/right.png"
+    ],
+    "other": [
+     "K1 (approved, for faces, room and table)"
+    ]
+   },
+   "packagingVisible": "front + narrow right side, large and sharp; small print must match the panels",
+   "prompt_16x9": "Same bright, clean daylight treatment room, table and light as the attached K1, camera low and close at table height, 85mm, f/2.8. On the table stands the closed MITODERM MICRO BOOST 10% box exactly as in the attached pack reference (micro-boost-10-angle.webp, with the real photo and the print panels for checking small text): a tall slim cream carton, about 33 x 22.5 x 150 mm, standing upright and closed; FRONT face visible with the gold M monogram, MITODERM / BIOSPICULE PROFESSIONAL, the dark green band with gold MICRO BOOST 10%, SPICULE SERUM, the round gold-rimmed spicule emblem, the gold frame Concentrated Spicule System, PROFESSIONAL TREATMENT and 3 ml ℮ 0.10 fl.oz.; the narrow RIGHT side visible at an angle with the vertical dark text PROFESSIONAL TREATMENT / MADE IN KOREA. The box is turned about 25 degrees so only the front and the right side show; never show its left side, back, top flap or bottom, never open it; it stands sharp at about 30-45% of the frame width and fills about 65% of the frame height, its base on the marble table at about 82% from the top. Behind it, softly out of focus, the same two people as in K1: the cosmetologist M (the brand's main face: a woman about 30 with long dark wavy hair, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the attached M reference photos), in white gloves, on the left and the patient P1 (a woman 25-30 with light-blonde hair under a white disposable cap and visible redness and inflammation marks on her cheeks, identical to the attached P1 character sheet; her redness and marks stay exactly as they are) to the right of the box, both within the left 65% of the frame and only recognisable as soft shapes. Right 35%: soft window light and wall. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging, only calm softly lit wall and window background, because the Hebrew caption sits there; the bottom 15% contains nothing important. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks beyond the box's own print; no invented packaging; no syringe, needle, applicator or device in frame; no injection; no skin smoothing or glow; no before/after look; no extra fingers; no duplicate people.",
+   "prompt_9x16": "Same bright, clean daylight treatment room, table and light as the attached K1, camera low at table height, 85mm, f/2.8. On the table stands the closed MITODERM MICRO BOOST 10% box exactly as in the attached pack reference (micro-boost-10-angle.webp, with the real photo and the print panels for checking small text): a tall slim cream carton, about 33 x 22.5 x 150 mm, standing upright and closed; FRONT face visible with the gold M monogram, MITODERM / BIOSPICULE PROFESSIONAL, the dark green band with gold MICRO BOOST 10%, SPICULE SERUM, the round gold-rimmed spicule emblem, the gold frame Concentrated Spicule System, PROFESSIONAL TREATMENT and 3 ml ℮ 0.10 fl.oz.; the narrow RIGHT side visible at an angle with the vertical dark text PROFESSIONAL TREATMENT / MADE IN KOREA. The box is turned about 25 degrees so only the front and the right side show; never show its left side, back, top flap or bottom, never open it; it stands sharp in the centre, its top at about 15% and its base at about 60% of the frame height. Behind it, softly out of focus, the cosmetologist M (the brand's main face: a woman about 30 with long dark wavy hair, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the attached M reference photos), in white gloves, on the left and the patient P1 (a woman 25-30 with light-blonde hair under a white disposable cap and visible redness and inflammation marks on her cheeks, identical to the attached P1 character sheet; her redness and marks stay exactly as they are) on the right, their soft faces at about 18-35% of the frame height, left and right of the box top. Below 62%: only the marble table surface running toward the lens. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face and the box sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face, only wall or the top of the cap; the bottom 38% shows only table surface, clothing or neutral background with nothing important, because a dark caption band sits there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks beyond the box's own print; no invented packaging; no syringe, needle, applicator or device in frame; no injection; no skin smoothing or glow; no before/after look; no extra fingers; no duplicate people."
+  },
+  {
+   "id": "K2",
+   "order": 3,
+   "purpose": "scene 03 step 1, cleansing done: gentle pat-dry with a soft towel, no rubbing; start of clip C",
+   "refs": {
+    "cosmetologist_M": [
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)",
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-turnaround.jpg (Higgsfield media 182a0e01-b7ac-48e9-b01f-2815d8862009)"
+    ],
+    "patient_P1": [
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a01.webp",
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a04.webp"
+    ],
+    "room": [
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f080.png",
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f121.png"
+    ],
+    "packaging": [
+     "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/ref/micro-boost-10-angle.webp",
+     "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/products/micro-boost-10.webp",
+     "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/panels/micro-boost-10/front.png",
+     "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/panels/micro-boost-10/right.png"
+    ],
+    "other": [
+     "K1 (approved)"
+    ]
+   },
+   "packagingVisible": "front + narrow right side, small and soft in the background (band readable as a shape only)",
+   "prompt_16x9": "Medium close-up, 50mm, in a bright, clean treatment room as in the attached V-TECH frames: soft natural daylight from a large window, warm white walls, white treatment chair, light marble side table. The patient P1 (a woman 25-30 with light-blonde hair under a white disposable cap and visible redness and inflammation marks on her cheeks, identical to the attached P1 character sheet; her redness and marks stay exactly as they are) now reclines in the slightly tilted white treatment chair, face in three-quarter view toward the camera at about 35-55% of the frame width, eyes closed, relaxed. The cosmetologist M (the brand's main face: a woman about 30 with long dark wavy hair, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the attached M reference photos) stands at her head on the left, at about 8-32% of the width, face in soft three-quarter view looking down; she wears clean white examination gloves and gently presses a folded soft white towel against P1's cheek to dry it, without rubbing. No cleanser bottle in frame. On a white trolley behind M, at about 10-20% of the width and 35-60% of the height, stands the closed MITODERM MICRO BOOST 10% box as in the attached pack reference, standing upright, small and softly out of focus, front face with the dark green MICRO BOOST 10% band toward camera and only the narrow right side visible; it never moves and is never opened; never show its left side, back, top or bottom. Right 35%: calm wall and window light. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging, only calm softly lit wall and window background, because the Hebrew caption sits there; the bottom 15% contains nothing important. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks beyond the box's own print; no invented packaging; no syringe, needle, applicator or device in frame; no injection; no skin smoothing or glow; no before/after look; no extra fingers; no duplicate people.",
+   "prompt_9x16": "Vertical medium close-up, 50mm, in a bright, clean treatment room as in the attached V-TECH frames: soft natural daylight from a large window, warm white walls, white treatment chair, light marble side table. The patient P1 (a woman 25-30 with light-blonde hair under a white disposable cap and visible redness and inflammation marks on her cheeks, identical to the attached P1 character sheet; her redness and marks stay exactly as they are) reclines in the slightly tilted white treatment chair, face in three-quarter view at about 25-45% of the frame height, eyes closed, relaxed. The cosmetologist M (the brand's main face: a woman about 30 with long dark wavy hair, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the attached M reference photos) stands behind her head on the left, her face at about 15-30% of the height looking down; she wears clean white examination gloves and gently presses a folded soft white towel against P1's cheek to dry it, without rubbing. No cleanser bottle in frame. On a shelf behind them on the right, at about 35-55% of the height, stands the closed MITODERM MICRO BOOST 10% box as in the attached pack reference, standing upright, small and softly out of focus, front face with the dark green MICRO BOOST 10% band toward camera and only the narrow right side visible; it never moves and is never opened; never show its left side, back, top or bottom. Below 62%: P1's shoulders, the white chair and a white towel over her chest only. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face and the box sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face, only wall or the top of the cap; the bottom 38% shows only table surface, clothing or neutral background with nothing important, because a dark caption band sits there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks beyond the box's own print; no invented packaging; no syringe, needle, applicator or device in frame; no injection; no skin smoothing or glow; no before/after look; no extra fingers; no duplicate people."
+  },
+  {
+   "id": "K3",
+   "order": 4,
+   "purpose": "scene 04-05 step 2: MICRO BOOST 10% massage with even, controlled pressure on clean dry skin; start of clip D",
+   "refs": {
+    "cosmetologist_M": [
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)",
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-turnaround.jpg (Higgsfield media 182a0e01-b7ac-48e9-b01f-2815d8862009)"
+    ],
+    "patient_P1": [
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a01.webp",
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a04.webp"
+    ],
+    "room": [
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f080.png",
+     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f121.png"
+    ],
+    "packaging": [
+     "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/ref/micro-boost-10-angle.webp",
+     "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/products/micro-boost-10.webp",
+     "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/panels/micro-boost-10/front.png",
+     "/home/user/GregoryDich/mitoderm-catalog/site/design/biospicule/panels/micro-boost-10/right.png"
+    ],
+    "other": [
+     "K2 (approved)"
+    ]
+   },
+   "packagingVisible": "front + narrow right side, small and soft in the background, same place as in K2",
+   "prompt_16x9": "Exactly the same framing, people, light and box position as the attached K2, in the same bright, clean daylight treatment room. The towel is gone; the cheek is clean and dry. The cosmetologist M (the brand's main face: a woman about 30 with long dark wavy hair, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the attached M reference photos), wearing clean white examination gloves, rests the fingertips of both hands flat on P1's cheek and cheekbone, pressing evenly and gently; on the skin under her fingertips only a barely visible thin translucent sheen. No syringe, no applicator, no product container in her hands. The patient P1 (a woman 25-30 with light-blonde hair under a white disposable cap and visible redness and inflammation marks on her cheeks, identical to the attached P1 character sheet; her redness and marks stay exactly as they are) rests with eyes closed, calm. On the trolley behind M stands the closed MITODERM MICRO BOOST 10% box as in the attached pack reference, standing upright, small and softly out of focus, front face with the dark green MICRO BOOST 10% band toward camera and only the narrow right side visible; it never moves and is never opened; never show its left side, back, top or bottom. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging, only calm softly lit wall and window background, because the Hebrew caption sits there; the bottom 15% contains nothing important. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks beyond the box's own print; no invented packaging; no syringe, needle, applicator or device in frame; no injection; no skin smoothing or glow; no before/after look; no extra fingers; no duplicate people.",
+   "prompt_9x16": "Exactly the same vertical framing, people, light and box position as the attached vertical K2, in the same bright, clean daylight treatment room. The towel is gone; the cheek is clean and dry. The cosmetologist M (the brand's main face: a woman about 30 with long dark wavy hair, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the attached M reference photos), wearing clean white examination gloves, rests the fingertips of both hands flat on P1's cheek and cheekbone, pressing evenly and gently; only a barely visible thin translucent sheen on the skin. No syringe, no applicator, no product container in her hands. The patient P1 (a woman 25-30 with light-blonde hair under a white disposable cap and visible redness and inflammation marks on her cheeks, identical to the attached P1 character sheet; her redness and marks stay exactly as they are) rests with eyes closed, calm. Faces stay at about 15-45% of the frame height; on the shelf behind them stands the closed MITODERM MICRO BOOST 10% box as in the attached pack reference, standing upright, small and softly out of focus, front face with the dark green MICRO BOOST 10% band toward camera and only the narrow right side visible; it never moves and is never opened; never show its left side, back, top or bottom. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face and the box sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face, only wall or the top of the cap; the bottom 38% shows only table surface, clothing or neutral background with nothing important, because a dark caption band sits there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks beyond the box's own print; no invented packaging; no syringe, needle, applicator or device in frame; no injection; no skin smoothing or glow; no before/after look; no extra fingers; no duplicate people."
+  }
+ ],
+ "clips": [
+  {
+   "id": "A",
+   "start_16x9": "K0",
+   "start_9x16": "K0v (vertical still)",
+   "end": null,
+   "seconds": 5,
+   "model": "kling4_0 image-to-video 1080p, one take per format (16:9 and 9:16)",
+   "needsEndFrame": false,
+   "use": "frame 0 -> hold at film start (0-24) and end (654-666); frames 1-120 forward (24-144, chapters 01-02); frames 120->1 reversed (534-654, chapter 07)",
+   "prompt_16x9": "The camera slowly pulls back about 15% and rises a little at table height, keeping the MICRO BOOST 10% box sharp and still at the same place in frame; the two people behind stay softly out of focus the whole time (no focus pull), they only breathe and shift very slightly. Keep the right 35% of the frame free of people and packaging, as in the start image. The box print stays crisp and identical while visible. Photorealistic, one continuous take, no cuts. Faces, hair, cap, uniform, pendant, white gloves and room stay exactly as in the start image. The MICRO BOOST 10% box never moves, opens, turns or changes; its shape, colours and printed words stay exactly as in the start image. P1's skin, redness and marks stay unchanged throughout. No text or graphics in frame, no new objects, no syringe, needle or device, no skin smoothing, no extra fingers, no morphing. No audio.",
+   "prompt_9x16": "The camera slowly pulls back about 15% and rises a little at table height, keeping the MICRO BOOST 10% box sharp and still in the centre, its top never above 13% and its base never below 62% of the frame height; the two people behind stay softly out of focus the whole time (no focus pull), they only breathe and shift very slightly. The box print stays crisp and identical while visible. Photorealistic, one continuous take, no cuts. Faces, hair, cap, uniform, pendant, white gloves and room stay exactly as in the start image. The MICRO BOOST 10% box never moves, opens, turns or changes; its shape, colours and printed words stay exactly as in the start image. P1's skin, redness and marks stay unchanged throughout. No text or graphics in frame, no new objects, no syringe, needle or device, no skin smoothing, no extra fingers, no morphing. No audio.",
+   "review": [
+    "frame 0 = K0",
+    "box print (MICRO BOOST 10%, SPICULE SERUM, 3 ml) crisp and unchanged in every frame",
+    "faces stay soft: no invented sharp faces",
+    "reverse playback reads as a slow push-in onto the box",
+    "9:16: box inside 13-62%"
+   ]
+  },
+  {
+   "id": "B",
+   "start_16x9": "K1",
+   "start_9x16": "K1v (vertical still)",
+   "end": null,
+   "seconds": 5,
+   "model": "kling4_0 image-to-video 1080p, one take per format (16:9 and 9:16)",
+   "needsEndFrame": false,
+   "use": "frames 0-59 (144-204, chapter 02, cut in after A); frames 60-119 (468-528, chapter 06, cut in after D); 6-frame dissolve from B frame 119 into reversed A",
+   "prompt_16x9": "Camera almost locked, drifting a few centimetres from right to left. For the first half M, in white gloves, keeps looking closely at P1's cheek, her gloved fingertip moving lightly beside the cheekbone; P1 sits calmly. For the second half M lowers her hand, straightens and speaks softly to P1 with a small calm explanatory gesture of one hand; P1 listens and nods once. Lips mostly closed, no talking-head mouth motion. Faces and hands stay in the left 65% of the frame; the box on the table stays still. Photorealistic, one continuous take, no cuts. Faces, hair, cap, uniform, pendant, white gloves and room stay exactly as in the start image. The MICRO BOOST 10% box never moves, opens, turns or changes; its shape, colours and printed words stay exactly as in the start image. P1's skin, redness and marks stay unchanged throughout. No text or graphics in frame, no new objects, no syringe, needle or device, no skin smoothing, no extra fingers, no morphing. No audio.",
+   "prompt_9x16": "Camera almost locked. For the first half M, in white gloves, keeps looking closely at P1's cheek, her gloved fingertip moving lightly beside the cheekbone; P1 sits calmly. For the second half M lowers her hand, straightens and speaks softly with a small calm gesture; P1 listens and nods once. Lips mostly closed. Faces stay between 13% and 40% of the frame height; the box on the table stays still. Photorealistic, one continuous take, no cuts. Faces, hair, cap, uniform, pendant, white gloves and room stay exactly as in the start image. The MICRO BOOST 10% box never moves, opens, turns or changes; its shape, colours and printed words stay exactly as in the start image. P1's skin, redness and marks stay unchanged throughout. No text or graphics in frame, no new objects, no syringe, needle or device, no skin smoothing, no extra fingers, no morphing. No audio.",
+   "review": [
+    "faces = K1 through frame 119",
+    "fingers",
+    "box static and readable",
+    "hand lowered and talking gesture clearly in frames 60-119",
+    "P1 redness unchanged"
+   ]
+  },
+  {
+   "id": "C",
+   "start_16x9": "K2",
+   "start_9x16": "K2v (vertical still)",
+   "end": null,
+   "seconds": 5,
+   "model": "kling4_0 image-to-video 1080p, one take per format (16:9 and 9:16)",
+   "needsEndFrame": false,
+   "use": "frames 0-107 (204-312, chapter 03), cut in",
+   "prompt_16x9": "Camera nearly still, 50mm. M, in white gloves, gently pats P1's cheek dry with the folded soft white towel: she presses, lifts and presses again three or four times along the cheek without any rubbing or wiping, then lifts the towel away out of frame to the left. P1 rests with eyes closed, breathing slowly. No bottle, no cotton pad, no foam. The small box on the trolley stays still and soft. Photorealistic, one continuous take, no cuts. Faces, hair, cap, uniform, pendant, white gloves and room stay exactly as in the start image. The MICRO BOOST 10% box never moves, opens, turns or changes; its shape, colours and printed words stay exactly as in the start image. P1's skin, redness and marks stay unchanged throughout. No text or graphics in frame, no new objects, no syringe, needle or device, no skin smoothing, no extra fingers, no morphing. No audio.",
+   "prompt_9x16": "Camera nearly still. M, in white gloves, gently pats P1's cheek dry with the folded soft white towel: she presses, lifts and presses again three or four times without any rubbing, then lifts the towel away out of frame. P1 rests with eyes closed. Faces stay between 13% and 45% of the frame height. No bottle, no cotton pad, no foam. The small box on the shelf stays still and soft. Photorealistic, one continuous take, no cuts. Faces, hair, cap, uniform, pendant, white gloves and room stay exactly as in the start image. The MICRO BOOST 10% box never moves, opens, turns or changes; its shape, colours and printed words stay exactly as in the start image. P1's skin, redness and marks stay unchanged throughout. No text or graphics in frame, no new objects, no syringe, needle or device, no skin smoothing, no extra fingers, no morphing. No audio.",
+   "review": [
+    "pat, not rub",
+    "towel stays a towel",
+    "five fingers",
+    "skin and redness identical first/last frame",
+    "identities = K1"
+   ]
+  },
+  {
+   "id": "D",
+   "start_16x9": "K3",
+   "start_9x16": "K3v (vertical still)",
+   "end": null,
+   "seconds": 5,
+   "model": "kling4_0 image-to-video 1080p, one take per format (16:9 and 9:16)",
+   "needsEndFrame": false,
+   "use": "slowed x1.15: source frames 0-83 -> 312-408 (chapter 04); source 84-120 -> 408-450 and hold of the last frame 450-468 (chapter 05); cut in",
+   "prompt_16x9": "Camera nearly still, may push in no more than three percent. For the first three and a half seconds M, in white gloves, massages P1's cheek and cheekbone with the fingertips of both hands in slow, small, even circles with steady, controlled pressure, moving gradually across the area; the thin translucent sheen slowly disappears as if absorbed. In the last second and a half her fingertips pause and lift slightly, and M looks at P1's face as if checking how she feels; P1 opens her eyes briefly and gives a small calm nod. No syringe or container appears. No foam, no rubbing hard, no colour change. Photorealistic, one continuous take, no cuts. Faces, hair, cap, uniform, pendant, white gloves and room stay exactly as in the start image. The MICRO BOOST 10% box never moves, opens, turns or changes; its shape, colours and printed words stay exactly as in the start image. P1's skin, redness and marks stay unchanged throughout. No text or graphics in frame, no new objects, no syringe, needle or device, no skin smoothing, no extra fingers, no morphing. No audio.",
+   "prompt_9x16": "Camera nearly still. For the first three and a half seconds M, in white gloves, massages P1's cheek and cheekbone with the fingertips of both hands in slow, small, even circles with steady, controlled pressure; the thin translucent sheen slowly disappears as if absorbed. In the last second and a half her fingertips pause and lift slightly, and M looks at P1's face as if checking how she feels; P1 opens her eyes briefly and gives a small calm nod. Faces stay between 13% and 45% of the frame height. No syringe or container appears. No colour change. Photorealistic, one continuous take, no cuts. Faces, hair, cap, uniform, pendant, white gloves and room stay exactly as in the start image. The MICRO BOOST 10% box never moves, opens, turns or changes; its shape, colours and printed words stay exactly as in the start image. P1's skin, redness and marks stay unchanged throughout. No text or graphics in frame, no new objects, no syringe, needle or device, no skin smoothing, no extra fingers, no morphing. No audio.",
+   "review": [
+    "even circles, not stabbing or pressing points",
+    "no syringe, needle or container",
+    "pause + glance + nod in the last 1.5 s",
+    "skin and redness unchanged (no glow, no extra redness)",
+    "identities = K1"
+   ]
+  }
+ ],
+ "timeline": [
+  {
+   "scene": "01",
+   "chapter": 1,
+   "clip": "hold_k0 (A frame 0)",
+   "startFrame": 0,
+   "endFrame": 24
+  },
+  {
+   "scene": "01",
+   "chapter": 1,
+   "clip": "A frames 1-84",
+   "startFrame": 24,
+   "endFrame": 108
+  },
+  {
+   "scene": "02",
+   "chapter": 2,
+   "clip": "A frames 85-120",
+   "startFrame": 108,
+   "endFrame": 144
+  },
+  {
+   "scene": "02",
+   "chapter": 2,
+   "clip": "B frames 0-59 (cut in)",
+   "startFrame": 144,
+   "endFrame": 204
+  },
+  {
+   "scene": "03",
+   "chapter": 3,
+   "clip": "C frames 0-107 (cut in)",
+   "startFrame": 204,
+   "endFrame": 312
+  },
+  {
+   "scene": "04",
+   "chapter": 4,
+   "clip": "D x1.15, source frames 0-83 (cut in)",
+   "startFrame": 312,
+   "endFrame": 408
+  },
+  {
+   "scene": "05",
+   "chapter": 5,
+   "clip": "D x1.15, source frames 84-120",
+   "startFrame": 408,
+   "endFrame": 450
+  },
+  {
+   "scene": "05",
+   "chapter": 5,
+   "clip": "hold_d_end (last frame of D)",
+   "startFrame": 450,
+   "endFrame": 468
+  },
+  {
+   "scene": "06",
+   "chapter": 6,
+   "clip": "B frames 60-119 (cut in)",
+   "startFrame": 468,
+   "endFrame": 528
+  },
+  {
+   "scene": "07",
+   "chapter": 7,
+   "clip": "join B frame 119 -> A frame 120 (6-frame DIS dissolve)",
+   "startFrame": 528,
+   "endFrame": 534
+  },
+  {
+   "scene": "07",
+   "chapter": 7,
+   "clip": "A reversed frames 120->1",
+   "startFrame": 534,
+   "endFrame": 654
+  },
+  {
+   "scene": "07",
+   "chapter": 7,
+   "clip": "hold_k0_end (A frame 0)",
+   "startFrame": 654,
+   "endFrame": 666
+  }
+ ],
+ "cost": {
+  "prices": {
+   "still_gpt_image_2_6_2k_high": 2.75,
+   "kling4_0_1080p_5s": 16.25
+  },
+  "stills": 22,
+  "stills_note": "4 stills x 2 formats x 2.75 = 22",
+  "clips": 130,
+  "clips_note": "4 clips x 2 formats x 16.25 = 130",
+  "total": 152,
+  "cap": 152,
+  "retakes": "not included; each still retake 2.75, each clip retake 16.25 (outside the cap)",
+  "three_clip_fallback": "drop C (cleansing): 3 stills x 2 x 2.75 + 3 clips x 2 x 16.25 = 16.5 + 97.5 = 114"
+ },
+ "assembly": {
+  "base": "state/nad-film/tools/assemble-nad.sh and codex-site/production/assemble-vtech-continuity-v5.py",
+  "plan": "same segment list for desktop (16:9 sources) and mobile (9:16 sources); holds by ffmpeg -loop; cuts without join except the 6-frame DIS dissolve at 528-534; D slowed x1.15 by setpts; keyframe every 12"
+ }
+}
