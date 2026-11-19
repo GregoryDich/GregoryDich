@@ -118,6 +118,9 @@
  .pc-caption h2{font-size:clamp(26px,6.6vw,40px);max-width:19ch}
  .pc-caption>p:not(.pc-kicker){font-size:14px;line-height:1.55;margin-top:8px;max-width:38ch}
  .pc-kicker{font-size:10px;margin-bottom:6px}
+ /* The first screen names the product in its title; without the kicker the
+    title starts lower and leaves the second row of vials in view. */
+ .pc-caption:has(h1) .pc-kicker{display:none}
  .pc-actions{margin-top:12px}
  .pc-actions>button{min-height:42px}
  .pc-primary{min-height:42px;padding:10px 20px}
