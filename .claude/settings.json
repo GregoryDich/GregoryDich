@@ -28,12 +28,13 @@
       "mcp__Higgsfield__get_preset_instructions",
       "mcp__Higgsfield__generate_image",
       "mcp__Higgsfield__generate_image_batch",
-      "mcp__Claude_Code_Remote__report_preview_port"
+      "mcp__Claude_Code_Remote__report_preview_port",
+      "mcp__Higgsfield__generate_video",
+      "mcp__Higgsfield__generate_video_batch",
+      "mcp__Higgsfield__show_generations"
     ],
     "ask": [
-      "mcp__atlascloud",
-      "mcp__Higgsfield__generate_video",
-      "mcp__Higgsfield__generate_video_batch"
+      "mcp__atlascloud"
     ]
   },
   "hooks": {
