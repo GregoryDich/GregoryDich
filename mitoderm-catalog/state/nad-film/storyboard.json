@@ -1,0 +1,349 @@
+{
+ "version": 1,
+ "date": "2026-11-19",
+ "fps": 24,
+ "totalFrames": 876,
+ "master": "16:9 1912x1080; phone = centre crop ~607x1080 scaled to 812x1440",
+ "generationOrder": [
+  "K1",
+  "owner OK on patient",
+  "K0",
+  "A draft 480p",
+  "owner OK on sample",
+  "K2",
+  "K3",
+  "K4",
+  "K5",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "A final 1080p",
+  "VK",
+  "VK-clip"
+ ],
+ "stills": [
+  {
+   "id": "K1",
+   "order": 1,
+   "aspect": "16:9",
+   "purpose": "consultation; end of A, start of B; first sight of the new patient; base for K5",
+   "refs": [
+    "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f121.png",
+    "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f080.png",
+    "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/product-cinema/exo-nad/kit-photo.png",
+    "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/live/123-t02.png",
+    "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/3d/x-tray-open.png"
+   ],
+   "prompt": "Same clinic, camera height and daylight as the attached V-TECH frame: medium two-shot at the beige marble table, 50mm, eye level. Left of centre, the same cosmetologist as in the reference (long dark wavy hair, white tunic with pink piping, amethyst pendant), looking warmly at the patient. Right of centre, a NEW patient seated in the white treatment chair: a woman in her early forties, honey-brown hair pulled back under a white towelling headband, simple ivory knit top, natural skin with pores and fine lines, no make-up; she listens calmly, hands resting on the table. She is a different person from the woman in the reference frame. On the table between them, lower centre, stands the open EXO-NAD kit exactly as in the attached real photo: gold box with the hinged lid standing open behind, black tray with gold print, square clear EXO-NAD PEELING bottle with gold cap on the left, five pale golden-amber vials on top, five pale blue vials below, silver crimp caps; print sharp. Both faces sit close together inside the central third of the frame. 16:9 film still, photorealistic, warm natural daylight, real skin texture with pores and fine lines, true colours, fine grain. Keep all action and faces inside the central vertical third of the frame; the outer left and right thirds stay calm and uncluttered. No added text, captions or logos beyond the packaging's own print, no invented packaging, no needles, syringes or devices, no face masks, no skin smoothing or glow, no before/after look, no extra fingers, no duplicate people."
+  },
+  {
+   "id": "K0",
+   "order": 2,
+   "aspect": "16:9",
+   "purpose": "scene 01 and the final frame of scene 08; start of A",
+   "refs": [
+    "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f040.png",
+    "K1 (approved)",
+    "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/product-cinema/exo-nad/kit-photo.png",
+    "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/live/123-t02.png",
+    "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/3d/x-tray-open.png"
+   ],
+   "prompt": "Same scene, light and camera axis as the attached K1, but the camera is low and close to the marble table, as in the attached V-TECH frame 40: the open EXO-NAD kit stands sharp in the centre foreground, about three quarters of the frame height, lid upright, the whole tray and the front band with small EXO-NAD print visible, exactly as in the attached real photo (clear glass, pale golden-amber and pale blue liquids, silver crimp caps, EXO-NAD PEELING printed on the square bottle). Behind it the same cosmetologist (left) and the same patient (right) are softly out of focus at the table. 50mm, f/2, lens at tray height. The kit stays entirely inside the central third. 16:9 film still, photorealistic, warm natural daylight, real skin texture with pores and fine lines, true colours, fine grain. Keep all action and faces inside the central vertical third of the frame; the outer left and right thirds stay calm and uncluttered. No added text, captions or logos beyond the packaging's own print, no invented packaging, no needles, syringes or devices, no face masks, no skin smoothing or glow, no before/after look, no extra fingers, no duplicate people."
+  },
+  {
+   "id": "K2",
+   "order": 3,
+   "aspect": "16:9",
+   "purpose": "step 1 peel; start of C",
+   "refs": [
+    "K1 (approved)",
+    "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f121.png",
+    "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f546.png",
+    "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/product-cinema/exo-nad/kit-photo.png",
+    "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/live/123-t10.png"
+   ],
+   "prompt": "Same clinic and daylight. Medium close-up, 50mm: the patient from the attached K1 (same face, hair, white towelling headband, ivory top) leans back in the slightly reclined white treatment chair, head turned a little toward the window, eyes open and calm; her cheek is in the centre of the frame. The same cosmetologist stands at the left edge, face in soft three-quarter view looking down, wearing black nitrile gloves as in the attached video frame. In the lower centre she holds the square clear EXO-NAD PEELING bottle with its gold cap at chest height, print facing the camera, exactly as in the attached real photo: black print directly on the glass, pale gold liquid with gold flakes. 16:9 film still, photorealistic, warm natural daylight, real skin texture with pores and fine lines, true colours, fine grain. Keep all action and faces inside the central vertical third of the frame; the outer left and right thirds stay calm and uncluttered. No added text, captions or logos beyond the packaging's own print, no invented packaging, no needles, syringes or devices, no face masks, no skin smoothing or glow, no before/after look, no extra fingers, no duplicate people."
+  },
+  {
+   "id": "K3",
+   "order": 4,
+   "aspect": "16:9",
+   "purpose": "step 2 pH NORMALIZER; start of D",
+   "refs": [
+    "K2 (approved)",
+    "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/product-cinema/exo-nad/kit-photo.png",
+    "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/live/123-t10.png",
+    "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/live/123-t02.png"
+   ],
+   "prompt": "Exactly the same framing, people and light as the attached K2. The cosmetologist now wears a fresh pair of black nitrile gloves. Her left hand holds, in the lower centre, an opened PH NORMALIZER vial exactly as in the attached real photo and video frame: small clear glass vial, pale golden-amber liquid near the shoulder, VM monogram print on the glass, silver aluminium crimp ring with the flip-off top removed. The fingertips of her right hand rest on the same cheek, where a thin clear layer of liquid barely glistens. The patient's skin, tone and expression are identical to K2. 16:9 film still, photorealistic, warm natural daylight, real skin texture with pores and fine lines, true colours, fine grain. Keep all action and faces inside the central vertical third of the frame; the outer left and right thirds stay calm and uncluttered. No added text, captions or logos beyond the packaging's own print, no invented packaging, no needles, syringes or devices, no face masks, no skin smoothing or glow, no before/after look, no extra fingers, no duplicate people."
+  },
+  {
+   "id": "K4",
+   "order": 5,
+   "aspect": "16:9",
+   "purpose": "step 3 LONGEVITY SERUM; start of E",
+   "refs": [
+    "K3 (approved)",
+    "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/product-cinema/exo-nad/kit-photo.png",
+    "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/live/123-t10.png"
+   ],
+   "prompt": "Exactly the same framing, people and light as the attached K3. Fresh black nitrile gloves again. The cheek is clean and dry, matte, with the same natural texture and tone as in K2. In the lower centre her left hand holds an opened LONGEVITY SERUM vial exactly as in the attached real photo and video frame: small clear glass vial, pale blue liquid near the shoulder, VM monogram print, silver crimp ring with the flip-off top removed. The fingertips of her right hand press gently on the same cheek. Nothing in the skin looks changed or improved. 16:9 film still, photorealistic, warm natural daylight, real skin texture with pores and fine lines, true colours, fine grain. Keep all action and faces inside the central vertical third of the frame; the outer left and right thirds stay calm and uncluttered. No added text, captions or logos beyond the packaging's own print, no invented packaging, no needles, syringes or devices, no face masks, no skin smoothing or glow, no before/after look, no extra fingers, no duplicate people."
+  },
+  {
+   "id": "K5",
+   "order": 6,
+   "aspect": "16:9",
+   "purpose": "calm close; end of F (reversed), hold of scene 07, joins into reversed A (must be nearly identical to K1)",
+   "refs": [
+    "K1 (approved, main reference)",
+    "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f121.png"
+   ],
+   "prompt": "Exactly the same camera, framing, light, furniture and kit position as the attached K1 — this is the same shot a few minutes later. Only small changes: the cosmetologist speaks calmly with a soft natural smile, the patient listens with a relaxed, quiet smile; both keep their hands resting on the table. The patient's skin, hair, headband and top are identical to K1: no glow, no smoothing, nothing that reads as a treatment result. 16:9 film still, photorealistic, warm natural daylight, real skin texture with pores and fine lines, true colours, fine grain. Keep all action and faces inside the central vertical third of the frame; the outer left and right thirds stay calm and uncluttered. No added text, captions or logos beyond the packaging's own print, no invented packaging, no needles, syringes or devices, no face masks, no skin smoothing or glow, no before/after look, no extra fingers, no duplicate people."
+  }
+ ],
+ "clips": [
+  {
+   "id": "A",
+   "start": "K0",
+   "end": "K1",
+   "seconds": 5,
+   "model": "seedance_2_5 omni_reference 16:9 (draft 480p, final 1080p)",
+   "needsEndFrame": true,
+   "use": "frame 0 -> hold_k0; frames 1-120 forward (24-144); frames 120->1 reversed in scene 08 (744-864)",
+   "prompt": "Create a single continuous photorealistic camera shot in the same warm daylight aesthetic clinic. Frame zero must match the supplied START IMAGE exactly: framing, positions, scale, skin texture, clothing, jewelry, light, objects. Finish on the exact supplied END IMAGE, with no cut or new composition. Preserve the same dark wavy-haired female professional in the white tunic with pink piping and amethyst pendant, and the same patient with honey-brown hair under a white towelling headband and an ivory knit top. For the first three and a half seconds the camera stays on the open EXO-NAD kit on the marble table and pushes in very slowly, the print sharp, the two women soft behind it. In the last second and a half the camera eases back and rises slightly while focus shifts from the kit to the two women, settling exactly on the end two-shot with the kit on the table between them. The women only breathe and blink with small natural head movement. The kit never moves, opens or changes; every vial, cap and printed word stays attached and unchanged. Keep all action inside the central vertical third. Preserve natural fine lines and skin texture throughout; no beautification, skin smoothing, before/after effect, morphing faces, double exposure, dissolve, wipe, hard cuts, extra fingers, duplicate people, text overlays or added graphics. No audio.",
+   "review": [
+    "frame 0 = K0, last = K1",
+    "EXO-NAD print, caps, liquid colours stable",
+    "cosmetologist = f121, patient = K1",
+    "no double image during focus shift",
+    "both faces inside the 9:16 crop"
+   ]
+  },
+  {
+   "id": "B",
+   "start": "last frame of approved A (~K1)",
+   "end": null,
+   "seconds": 5,
+   "model": "kling4_0 1080p 16:9",
+   "needsEndFrame": false,
+   "use": "frames 0-59 (144-204); hard cut to C on the hand movement",
+   "prompt": "The cosmetologist and the patient talk quietly at the marble table. The cosmetologist looks attentively at the patient's cheek, then turns and reaches her right hand toward the open EXO-NAD kit on the table; the patient listens and nods slightly. The camera drifts a few centimetres from right to left. The kit stays exactly as in the start image; nothing is taken out. Lips mostly closed, no talking-head mouth motion. Photorealistic, one continuous take, no cuts. Faces, hair, clothes, gloves and room stay exactly as in the start image. Product shapes, caps and printed words stay exactly as in the start image while visible. Skin texture and tone unchanged throughout. No text, no new objects, no needles or devices, no skin smoothing, no extra fingers, no morphing. No audio.",
+   "review": [
+    "faces unchanged up to 2.5 s",
+    "fingers",
+    "kit static",
+    "hand clearly moving toward the kit at 2.5 s"
+   ]
+  },
+  {
+   "id": "C",
+   "start": "K2",
+   "end": null,
+   "seconds": 5,
+   "model": "kling4_0 1080p 16:9",
+   "needsEndFrame": false,
+   "use": "frames 0-107 (204-312); hard time cut to D",
+   "prompt": "Camera nearly still, 50mm. The cosmetologist in black nitrile gloves gives the EXO-NAD PEELING bottle two gentle shakes, then lowers it out of frame. Her gloved fingertips spread a thin, clear layer evenly over the patient's cheek with slow, gentle circular movements. The patient rests calmly, breathing slowly. While visible, the bottle keeps its square shape, gold cap and black print on the glass. No redness, no flaking, no foam, no brush or cotton pad. Photorealistic, one continuous take, no cuts. Faces, hair, clothes, gloves and room stay exactly as in the start image. Product shapes, caps and printed words stay exactly as in the start image while visible. Skin texture and tone unchanged throughout. No text, no new objects, no needles or devices, no skin smoothing, no extra fingers, no morphing. No audio.",
+   "review": [
+    "shake before application",
+    "bottle print legible",
+    "five fingers",
+    "skin identical first/last frame",
+    "identities = K1/f121"
+   ]
+  },
+  {
+   "id": "D",
+   "start": "K3",
+   "end": null,
+   "seconds": 5,
+   "model": "kling4_0 1080p 16:9",
+   "needsEndFrame": false,
+   "use": "frames 0-107 (312-420); hard cut to E",
+   "prompt": "Same framing. In fresh black gloves the cosmetologist lowers the opened PH NORMALIZER vial out of frame and smooths the thin clear liquid over the same cheek with her fingertips. Then she gently wipes the area with a damp white cotton compress and pats the skin dry with a soft white towel, and her hands leave the frame. The patient stays calm. The area simply looks clean and dry; no glow, no colour change. Photorealistic, one continuous take, no cuts. Faces, hair, clothes, gloves and room stay exactly as in the start image. Product shapes, caps and printed words stay exactly as in the start image while visible. Skin texture and tone unchanged throughout. No text, no new objects, no needles or devices, no skin smoothing, no extra fingers, no morphing. No audio.",
+   "review": [
+    "rinse and dry visible (hard gate before serum)",
+    "no second vial",
+    "skin not improved"
+   ],
+   "fallback": "extra still K3b (towel at cheek) + second Kling from it, ~19 credits"
+  },
+  {
+   "id": "E",
+   "start": "K4",
+   "end": null,
+   "seconds": 5,
+   "model": "kling4_0 1080p 16:9",
+   "needsEndFrame": false,
+   "use": "120 frames slowed x1.1 -> 132 (420-552); cut slightly wider to F",
+   "prompt": "Same framing, camera pushes in no more than three percent. In fresh black gloves the cosmetologist lowers the opened pale blue LONGEVITY SERUM vial out of frame and presses the clear serum gently into the same cheek with her fingertips in slow presses until it is absorbed. No rinsing, no towel. Then her hands relax and leave the frame to the left. The patient rests calmly. Photorealistic, one continuous take, no cuts. Faces, hair, clothes, gloves and room stay exactly as in the start image. Product shapes, caps and printed words stay exactly as in the start image while visible. Skin texture and tone unchanged throughout. No text, no new objects, no needles or devices, no skin smoothing, no extra fingers, no morphing. No audio.",
+   "review": [
+    "blue vial recognisable while visible",
+    "no particles or glow",
+    "skin identical start/end"
+   ]
+  },
+  {
+   "id": "F",
+   "start": "K5",
+   "end": null,
+   "seconds": 5,
+   "model": "kling4_0 1080p 16:9, played reversed",
+   "needsEndFrame": false,
+   "use": "reversed: frames 0-119 (552-672), ends exactly on K5",
+   "prompt": "Camera locked, very low motion. The cosmetologist raises one hand in a small, calm explanatory gesture while speaking softly; the patient listens and nods once. Both breathe and blink naturally, lips mostly closed. The kit on the table stays exactly as in the start image. No one stands up or leaves. Photorealistic, one continuous take, no cuts. Faces, hair, clothes, gloves and room stay exactly as in the start image. Product shapes, caps and printed words stay exactly as in the start image while visible. Skin texture and tone unchanged throughout. No text, no new objects, no needles or devices, no skin smoothing, no extra fingers, no morphing. No audio.",
+   "review": [
+    "reversed playback does not read as reversed",
+    "last frame after reversal = K5",
+    "kit unchanged"
+   ],
+   "fallback": "seedance_2_5 from last frame of E to K5, 95-110 credits"
+  }
+ ],
+ "vtechKit": {
+  "still": {
+   "id": "VK",
+   "order": 7,
+   "aspect": "16:9",
+   "purpose": "end frame of the V-TECH kit clip: the exact open V-TECH kit on the same marble table",
+   "refs": [
+    "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/nad/refs/vtech/f872.png (better: the real desktop terminal poster, media d3242869-63a4-4c3d-927a-2da885ec2005)",
+    "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/vtech/kit-open.webp",
+    "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/vtech/unboxing/open-039.webp",
+    "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/vtech/unboxing/open-000.webp",
+    "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/vtech/unboxing/open-020.webp"
+   ],
+   "doNotUse": [
+    "vtech-kit.webp (does not match the real kit)",
+    "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/vtech/system-kit.webp (generated, garbled small print)"
+   ],
+   "prompt": "Photorealistic film still matching the attached last frame of the V-TECH film: the same beige marble table, the same bright clinic and daylight, the same two women softly out of focus behind the table, camera at table height, pulled back slightly. On the table, centred, the opened V-TECH kit exactly as in the attached renders: on the left the empty gold sleeve standing upright, its front and V-shaped cut-out exactly as in the render; in the centre the black inner box standing open, its tray holding one gold V-TECH GEL MASK pouch with a white spout above five vials whose silver-white caps face the camera; on the right the opened black lid standing, with VM and V-TECH SYSTEM print in light grey. Exact shapes, proportions, colours and print of the references; no extra items, no extra pouches or vials. The tray sits exactly in the centre of the frame. 16:9 film still, photorealistic, warm natural daylight, true colours, fine grain. The outer left and right thirds stay calm. No added text, captions or logos beyond the packaging's own print, no invented packaging, no extra fingers, no duplicate people."
+  },
+  "clip": {
+   "id": "VK-clip",
+   "start": "last frame of the V-TECH desktop film (= frame 0, f872)",
+   "end": "VK",
+   "seconds": 5,
+   "model": "seedance_2_5 omni_reference 16:9 (draft 480p, final 1080p)",
+   "needsEndFrame": true,
+   "prompt": "Create a single continuous photorealistic camera shot in the same warm daylight aesthetic clinic. Frame zero must match the supplied START IMAGE exactly: framing, positions, scale, light, objects, the two women softly out of focus behind the table. Finish on the exact supplied END IMAGE, with no cut or new composition. The professional's bare hands reach in from behind the box, slide the gold V-TECH sleeve straight up off the black inner box and stand it on the table to the left; then they swing the black front lid open to the right, revealing the tray with one gold GEL MASK pouch and five vial caps, and withdraw out of frame. The camera pulls back slightly at table height. The two women stay soft in the background. Objects move only by the hands, physically; nothing transforms into another object, no extra pouches or vials appear. Existing product markings stay attached to their objects. No double exposure, dissolve, wipe, hard cuts, extra fingers, duplicate people, text overlays or added graphics. No audio.",
+   "review": [
+    "frame 0 = film end",
+    "sleeve slides up as in open-020",
+    "VM / V-TECH / GEL MASK print not garbled",
+    "five caps",
+    "fingers"
+   ]
+  }
+ },
+ "timeline": [
+  {
+   "scene": "01",
+   "clip": "hold_k0 (A frame 0)",
+   "startFrame": 0,
+   "endFrame": 24
+  },
+  {
+   "scene": "01",
+   "clip": "A frames 1-84",
+   "startFrame": 24,
+   "endFrame": 108
+  },
+  {
+   "scene": "02",
+   "clip": "A frames 85-120",
+   "startFrame": 108,
+   "endFrame": 144
+  },
+  {
+   "scene": "02",
+   "clip": "B frames 0-59",
+   "startFrame": 144,
+   "endFrame": 204
+  },
+  {
+   "scene": "03",
+   "clip": "C frames 0-107 (cut in)",
+   "startFrame": 204,
+   "endFrame": 312
+  },
+  {
+   "scene": "04",
+   "clip": "D frames 0-107 (time cut in)",
+   "startFrame": 312,
+   "endFrame": 420
+  },
+  {
+   "scene": "05",
+   "clip": "E x1.1 (cut in)",
+   "startFrame": 420,
+   "endFrame": 552
+  },
+  {
+   "scene": "06",
+   "clip": "F reversed frames 0-95 (cut in)",
+   "startFrame": 552,
+   "endFrame": 648
+  },
+  {
+   "scene": "07",
+   "clip": "F reversed frames 96-119",
+   "startFrame": 648,
+   "endFrame": 672
+  },
+  {
+   "scene": "07",
+   "clip": "hold_k5",
+   "startFrame": 672,
+   "endFrame": 738
+  },
+  {
+   "scene": "07",
+   "clip": "join K5->A frame 120 (6-frame DIS)",
+   "startFrame": 738,
+   "endFrame": 744
+  },
+  {
+   "scene": "08",
+   "clip": "A reversed frames 120->1",
+   "startFrame": 744,
+   "endFrame": 864
+  },
+  {
+   "scene": "08",
+   "clip": "hold_k0_end (A frame 0)",
+   "startFrame": 864,
+   "endFrame": 876
+  }
+ ],
+ "cost": {
+  "prices": {
+   "seedance_480p": 15,
+   "seedance_720p": 35,
+   "seedance_1080p": 80,
+   "kling4_1080p": 16.25,
+   "still": 2.75
+  },
+  "stills": 57.75,
+  "stills_note": "7 stills x 3 attempts x 2.75",
+  "tests": 238.75,
+  "tests_note": "Seedance 480p drafts A and VK x2 = 60; Kling takes B,C,E,F x2 + D x3 = 11 x 16.25 = 178.75 (Kling has no cheaper draft tier; each take is final quality)",
+  "finals": 160,
+  "finals_note": "A and VK finalised at 1080p, 2 x 80",
+  "total": 456.5,
+  "minimum_first_try": 290.5,
+  "reserve_with_fallbacks": 585,
+  "all_seedance_plan_for_comparison": 717.75,
+  "ceiling": 1000,
+  "per_clip_one_take": {
+   "seedance_draft_plus_final": 95,
+   "kling": 16.25
+  }
+ },
+ "assembly": {
+  "base": "mitoderm-catalog/codex-site/production/assemble-vtech-continuity-v5.py",
+  "plan": "copy to assemble-exo-nad-film.py; add still holds, cut_before flag (skip join), frame trims, mobile = same sources with centre crop"
+ }
+}
