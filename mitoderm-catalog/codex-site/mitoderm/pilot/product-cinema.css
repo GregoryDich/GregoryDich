@@ -145,4 +145,7 @@
    appears only after its first decoded frame is painted. */
 .pc-film{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;opacity:0;transition:opacity .45s ease;pointer-events:none}
 .pc-film.is-painted{opacity:1}
+/* EXO-NAD procedure shots (03-05) put the caption and steps over the patient's
+   light sweater; a low scrim keeps them readable without reaching her face. */
+@media(min-width:861px){.pc-film.is-painted~.pc-scenes .pc-scene[data-kind=procedure]{background:linear-gradient(0deg,rgba(0,0,0,.5),transparent 40%),linear-gradient(270deg,rgba(0,0,0,.43),transparent 52%)}}
 @media(prefers-reduced-motion:reduce){.pc-page .pc-film{display:none}}
