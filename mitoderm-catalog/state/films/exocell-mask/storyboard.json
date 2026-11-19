@@ -1,18 +1,29 @@
 {
- "version": 1,
+ "version": 2,
  "date": "2026-11-19",
  "slug": "exocell-mask",
  "page": "/products/exocell-mask",
+ "changes_v2": [
+  "Пришли фото заказчика (саше спереди, саше в руках, вскрытое саше, слои, маска на лице): фильм теперь показывает саше, его вскрытый верх и слои.",
+  "Пять роликов вместо четырёх: A, B (сняты/снимаются, не меняются), новый S (вскрытое саше, маска выходит краем), C и D переписаны по кадру маски на лице.",
+  "Новые кадры KS и KL; K2 и K3 переписаны по фото; KL держится наездом без затрат.",
+  "Главы: 01 упаковка, 02 консультация, 03 саше, 04 слои, 05 разглаживание, 06 впитывание, 07 завершение, 08 упаковка. 822 кадра вместо 666.",
+  "Подписи только из content.json; «מסירים את המסכה;» из другого файла убрано.",
+  "Бюджет 205, расчёт 201.",
+  "Промпты новых кадров называют опоры по порядку («the first reference image ...»); у каждого кадра два списка опор с номерами медиа.",
+  "Правки после двух проверок (19/11): KL без опоры KS, KS 9:16 / K2 9:16 / K3 — после «ок» на образец; в KS/KL снято всё лишнее из кадров заказчика и уточнён срез кадра по шее; o2 описан верно (снято из-за макушки, плёнка на шее/груди); в K2 пальцы у края маски; K3 — открытое лицо; C — один жест; в D глаза закрыты; нижние 15 % в роликах 16:9; углы и швы саше; сегмент наплыва расписан покадрово; шаг 0a; вопросы 2 и 14 сняты."
+ ],
  "cast": {
   "cosmetologist": "M (brand main face)",
   "patient": "P7",
   "M": "woman about 30, long dark wavy hair, white uniform with pink piping, pendant with a blue stone on a black cord",
   "P7": "woman 25-30, long chestnut hair, black headband",
-  "gloves": "white"
+  "gloves": "white",
+  "hair_rule": "the cosmetologist's hair falls behind her shoulders and never touches the patient or the product (new shots)"
  },
  "fps": 24,
- "totalFrames": 666,
- "seconds": 27.75,
+ "totalFrames": 822,
+ "seconds": 34.25,
  "masters": {
   "desktop": "16:9, normalised to 1912x1080 like exo-nad",
   "mobile": "9:16, separate stills and clips (not a crop), normalised like the v5 mobile variant (812x1440)"
@@ -21,7 +32,7 @@
   "desktop": "/assets/world/exocell-mask-film.mp4",
   "mobile": "/assets/world/exocell-mask-film-mobile.mp4",
   "fps": 24,
-  "frames": 666,
+  "frames": 822,
   "chapters": [
    {
     "start": 0,
@@ -29,14 +40,10 @@
    },
    {
     "start": 108,
-    "end": 204
+    "end": 228
    },
    {
-    "start": 204,
-    "end": 264
-   },
-   {
-    "start": 264,
+    "start": 228,
     "end": 348
    },
    {
@@ -45,180 +52,235 @@
    },
    {
     "start": 420,
-    "end": 528
+    "end": 504
    },
    {
-    "start": 528,
-    "end": 594
+    "start": 504,
+    "end": 576
    },
    {
-    "start": 594,
-    "end": 666
+    "start": 576,
+    "end": 684
+   },
+   {
+    "start": 684,
+    "end": 822
    }
   ]
  },
- "packagingReference": {
-  "attach": [
-   "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exocell-mask.webp",
-   "/home/user/GregoryDich/mitoderm-catalog/site/img/exocell-box-front.jpg",
-   "/home/user/GregoryDich/mitoderm-catalog/site/img/exocell-box-side.jpg"
-  ],
-  "main": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exocell-mask.webp",
-  "why": "protocols/print/img/exocell-mask.webp (1196x956) — настоящий пакшот: лицевая сторона и левая боковая сторона коробки под углом и маска рядом (форма маски: вырезы глаз, носа с клапаном, рта, прорезь у нижнего края). exocell-box-front.jpg (740x1000) и exocell-box-side.jpg (150x1000) — те же стороны, вырезанные из пакшота и выпрямленные, для сверки мелкого текста. Текст на коробке сверен с site/packaging-text.md.",
-  "visibleFaces": [
-   "box: front",
-   "box: narrow LEFT side (vertical grey EXOCELL / MASK)"
-  ],
-  "neverShow": [
-   "box: right side (no photo; the 3D template mirrors the left side)",
-   "box: back",
-   "box: top flap",
-   "box: bottom",
-   "box opened, inner tray, how the 5 sachets lie (no photo, no model)",
-   "sachet at all (only a flat print of its front exists: site/img/exocell-sachet-front.jpg; no back, no torn sachet)",
-   "mask being taken out of a sachet or unfolded in the hands (no photo)",
-   "blue layer, second layer, backing sheets of the mask (construction not settled, see open questions)"
-  ],
-  "doNotAttach": [
-   "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/products/exocell-mask.webp (428x331, blurry, edge of a gold jar of another product in frame)",
-   "/home/user/GregoryDich/mitoderm-catalog/site/design/exocell-3d/kit-hd.png (render: the right side is the mirrored left side; sachets would invite showing the kit content)",
-   "/home/user/GregoryDich/mitoderm-catalog/site/design/exocell-3d/mask-layers.png (render with a blue layer; construction not settled)",
-   "/home/user/GregoryDich/mitoderm-catalog/site/design/exocell-3d/d2-open.jpg, d3-maskout.jpg, d5-burst.jpg (renders of an opened box and sachets: geometry invented)",
-   "/home/user/GregoryDich/mitoderm-catalog/sources/exocell-box-v2-front.png (lighter box version; which version is on sale is an open question)",
-   "/home/user/GregoryDich/mitoderm-catalog/sources/exocell-wow-effect-he.webp (leaflet; shows a third box design «The Ultimate Beauty Ritual»)"
-  ]
- },
- "maskDefault": "variant (a): one milky-white translucent layer on the face, as in the packshot; no blue layer, no backing sheets. If the owner answers (b), K2, C and the chapter 05 hold are rewritten (second, blue layer on top: content.json 'שמניחים בזו אחר זו').",
- "generationOrder": [
-  "K0 16:9 + K0 9:16 (кадр упаковки)",
-  "K1 16:9 (первый кадр с людьми: M и P7 вместе)",
-  "K1 9:16",
-  "ролик A 16:9, затем A 9:16 (только после того, как кадр упаковки K0 уже выложен заказчику)",
-  "ролик B 16:9 + 9:16",
-  "K2 16:9 (маска на лице — новый приём в серии) — только после ответа заказчика, как устроена маска",
-  "K2 9:16, K3 16:9, K3 9:16",
-  "ролики C и D, по два формата",
-  "сборка двух фильмов (24 к/с, ключевой кадр каждые 12) и запись в PROGRESS.md"
- ],
- "shootingOrder": [
+ "chaptersPlan": [
   {
-   "step": 1,
-   "what": "K0 16:9 + K0 9:16 (кадр упаковки)",
-   "credits": 5.5,
-   "toOwner": "2 ссылки: K0 16:9 и K0 9:16. Что проверить: коробка закрыта, видны только лицевая и левая сторона, мелкий текст не выдуман."
+   "chapter": 1,
+   "name": "pack",
+   "start": 0,
+   "end": 108,
+   "frames": 108,
+   "seconds": 4.5,
+   "vh": 1.3,
+   "type": "pack",
+   "onScreen": "закрытая коробка крупно на мраморном столике, люди размыты позади; камера медленно отъезжает (K0, ролик A)"
   },
   {
-   "step": 2,
-   "what": "K1 16:9 (первый кадр с людьми: M и P7 вместе)",
-   "credits": 2.75,
-   "toOwner": "1 ссылка, ждать «ок» на P7 рядом с M (образец). После «ок» — K1 9:16 (2.75) и ещё 1 ссылка."
+   "chapter": 2,
+   "name": "consultation",
+   "start": 108,
+   "end": 228,
+   "frames": 120,
+   "seconds": 5.0,
+   "vh": 1.45,
+   "type": "patient",
+   "onScreen": "консультация: косметолог смотрит на щёку пациентки, лёгкое касание у скулы; коробка на столике (конец A, затем B)"
   },
   {
-   "step": 3,
-   "what": "K1 9:16",
-   "credits": 2.75,
-   "toOwner": "1 ссылка (серия в утверждённом образе, без ожидания)."
+   "chapter": 3,
+   "name": "pouch opened, mask comes out",
+   "start": 228,
+   "end": 348,
+   "frames": 120,
+   "seconds": 5.0,
+   "vh": 1.45,
+   "type": "pack",
+   "onScreen": "крупно руки в белых перчатках держат вскрытое саше лицом к камере; пальцы чуть вытягивают сложенную маску (S)"
   },
   {
-   "step": 4,
-   "what": "ролик A 16:9, затем A 9:16 (только после того, как кадр упаковки K0 уже выложен заказчику)",
-   "credits": 32.5,
-   "toOwner": "2 ссылки: A 16:9 и A 9:16 (A 16:9 — образец ролика страницы: показать и ждать «ок» до A 9:16)."
+   "chapter": 4,
+   "name": "layers",
+   "start": 348,
+   "end": 420,
+   "frames": 72,
+   "seconds": 3.0,
+   "vh": 0.9,
+   "type": "pack",
+   "onScreen": "крупно руки разводят слои: бледно-голубая плёнка и белый лист с рядами точек (стоп-кадр KL с медленным наездом)"
   },
   {
-   "step": 5,
-   "what": "ролик B 16:9 + 9:16",
-   "credits": 32.5,
-   "toOwner": "2 ссылки."
+   "chapter": 5,
+   "name": "mask on the face, smoothing",
+   "start": 420,
+   "end": 504,
+   "frames": 84,
+   "seconds": 3.5,
+   "vh": 1.0,
+   "type": "procedure",
+   "onScreen": "маска уже на лице пациентки; косметолог одним мягким движением кончиков пальцев разглаживает верх лба к вискам (C, первая часть)"
   },
   {
-   "step": 6,
-   "what": "K2 16:9 (маска на лице — новый приём в серии) — только после ответа заказчика, как устроена маска",
-   "credits": 2.75,
-   "toOwner": "1 ссылка, ждать «ок» (образец маски на лице). Затем K2 9:16 и K3 16:9 + 9:16 (3 × 2.75) — 3 ссылки."
+   "chapter": 6,
+   "name": "absorption",
+   "start": 504,
+   "end": 576,
+   "frames": 72,
+   "seconds": 3.0,
+   "vh": 0.9,
+   "type": "procedure",
+   "onScreen": "руки уходят, пациентка спокойно лежит с маской; стоп-кадр (конец C и стоп-кадр)"
   },
   {
-   "step": 7,
-   "what": "K2 9:16, K3 16:9, K3 9:16",
-   "credits": 8.25,
-   "toOwner": "3 ссылки."
+   "chapter": 7,
+   "name": "finish",
+   "start": 576,
+   "end": 684,
+   "frames": 108,
+   "seconds": 4.5,
+   "vh": 1.3,
+   "type": "patient",
+   "onScreen": "маска снята (за склейкой); лёгкие похлопывания остатков сыворотки, глаза пациентки закрыты (D)"
   },
   {
-   "step": 8,
-   "what": "ролики C и D, по два формата",
-   "credits": 65.0,
-   "toOwner": "4 ссылки."
-  },
-  {
-   "step": 9,
-   "what": "сборка двух фильмов (24 к/с, ключевой кадр каждые 12) и запись в PROGRESS.md",
-   "credits": 0,
-   "toOwner": "2 ссылки: фильм 16:9 и фильм 9:16 (или тестовая страница)."
+   "chapter": 8,
+   "name": "pack",
+   "start": 684,
+   "end": 822,
+   "frames": 138,
+   "seconds": 5.75,
+   "vh": 1.65,
+   "type": "pack",
+   "onScreen": "короткий наплыв в общий план, камера возвращается к коробке (A задом наперёд), последний кадр = первый"
   }
  ],
+ "scrollNote": "vh in proportion to frames (about 82.6 frames per vh); chapters 04 and 06 (72 frames each) rounded up to 0.9, chapter 08 rounded down to 1.65; sum 9.95 = the current REGISTRY timeline.scrollVh",
+ "ownerPhotos": {
+  "where": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/mask/owner/ (session scratch only; never copied into the repository)",
+  "o5-sachet-front.png": "flat front of the sealed pouch, cut out: glossy aqua-turquoise foil, a little taller than wide, slightly rounded corners, narrow flat side seals and a wider flat bottom seal, a tiny notch high on the left edge; navy print: VM monogram + VM corporation, EXOCELL (EXO bold, CELL thin) + M A S K, bold line Professional facial moisturizing mask imbued in serum + 3 lines, 1 face mask ... / 25 ml ℮ 0.84 fl.oz",
+  "o1-sachet-in-hands.png": "the same sealed pouch in two bare hands, front to camera: a little larger than an open palm, slightly puffy, glossy with soft highlights, a finely crimped seal band across the top",
+  "o4-mask-out-of-sachet.png": "pink-gloved hands; the top of the pouch is open: straight edge just above the VM monogram, a small step at the top left corner; one hand holds the pouch from below, the index finger of the other is inside the opening; no mask visible yet; burnt-in caption cropped in the uploaded reference",
+  "o3-layers.png": "pink-gloved hands hold the unit just taken out: a large thin translucent pale sky-blue film, folded, and a matte white paper-thin sheet with rows of tiny dark dots along its curved edge; the lower hand pinches a corner of the white sheet away from the blue film",
+  "o2-mask-on-face.png": "shot from behind the crown, face roughly upside down (chin at the top, crown at the bottom): from top to bottom the mouth cut-out (lips visible), the nose cut-out, the eye cut-out (closed lid and lashes visible), the ear on the right, hair and a purple disposable cap at the bottom edge; one thin milky translucent sheet on the face, wet and glossy, soft creases, skin tone showing through; the sheet folds over the nose bridge; its edge stops in front of the ear; the pale-blue film lies at the top edge beyond the chin, on the neck or chest, apart from the mask: not \"above the forehead\" as the owner wrote, and probably the decollete use (N1); a pink glove at the edge"
+ },
+ "packagingReference": {
+  "box": {
+   "attach": [
+    "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exocell-mask.webp",
+    "/home/user/GregoryDich/mitoderm-catalog/site/img/exocell-box-front.jpg",
+    "/home/user/GregoryDich/mitoderm-catalog/site/img/exocell-box-side.jpg"
+   ],
+   "main": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exocell-mask.webp",
+   "why": "protocols/print/img/exocell-mask.webp (1196x956) — настоящий пакшот: лицевая сторона и левая боковая сторона коробки под углом и маска рядом (форма маски: вырезы глаз, носа с клапаном, рта, прорезь у нижнего края). exocell-box-front.jpg (740x1000) и exocell-box-side.jpg (150x1000) — те же стороны, вырезанные из пакшота и выпрямленные, для сверки мелкого текста. Текст на коробке сверен с site/packaging-text.md.",
+   "visibleFaces": [
+    "box: front",
+    "box: narrow LEFT side (vertical grey EXOCELL / MASK)"
+   ],
+   "neverShow": [
+    "box: right side (no photo; the 3D template mirrors the left side)",
+    "box: back",
+    "box: top flap",
+    "box: bottom",
+    "box opened, inner tray, how the 5 sachets lie (no photo, no model)",
+    "sachet at all (only a flat print of its front exists: site/img/exocell-sachet-front.jpg; no back, no torn sachet)",
+    "mask being taken out of a sachet or unfolded in the hands (no photo)",
+    "blue layer, second layer, backing sheets of the mask (construction not settled, see open questions)"
+   ],
+   "doNotAttach": [
+    "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/products/exocell-mask.webp (428x331, blurry, edge of a gold jar of another product in frame)",
+    "/home/user/GregoryDich/mitoderm-catalog/site/design/exocell-3d/kit-hd.png (render: the right side is the mirrored left side; sachets would invite showing the kit content)",
+    "/home/user/GregoryDich/mitoderm-catalog/site/design/exocell-3d/mask-layers.png (render with a blue layer; construction not settled)",
+    "/home/user/GregoryDich/mitoderm-catalog/site/design/exocell-3d/d2-open.jpg, d3-maskout.jpg, d5-burst.jpg (renders of an opened box and sachets: geometry invented)",
+    "/home/user/GregoryDich/mitoderm-catalog/sources/exocell-box-v2-front.png (lighter box version; which version is on sale is an open question)",
+    "/home/user/GregoryDich/mitoderm-catalog/sources/exocell-wow-effect-he.webp (leaflet; shows a third box design «The Ultimate Beauty Ritual»)"
+   ]
+  },
+  "pouch_refs": [
+   "db6f86ba-090f-492f-9685-a7868e20d3c1",
+   "1297521a-bbb5-467a-acc0-b4981853994c"
+  ],
+  "visibleFaces": [
+   "box: front",
+   "box: narrow LEFT side",
+   "pouch: front only, top already open"
+  ],
+  "neverShow": [
+   "pouch: back",
+   "pouch: being torn (the tear itself), the torn-off strip, scissors",
+   "box: opened, top, right side, back, bottom",
+   "a layer used on the decollete",
+   "pale-blue film on the face or in frame in K2, C, K3, D",
+   "what each layer is for or the order of layers on the skin (beyond the page copy)"
+  ]
+ },
+ "maskDefault": "KL: the layers as photographed (pale-blue film + white dotted sheet) held apart in white-gloved hands; K2/C: one milky-translucent wet sheet on the face as in o2, no pale-blue film in frame; K3/D: no mask.",
  "captions": [
   {
    "chapter": 1,
    "titleHe": "EXOCELL MASK",
    "lineHe": "השלב המסכם והמרגיע לאחר טיפולים מקצועיים.",
    "tagHe": "EXOCELL MASK",
-   "source": "content.json products[2].intro.body (дословный отрезок после тире)"
+   "source": "content.json products[2] (slug exocell-mask): title: products[2].name; line: products[2].intro.body, verbatim part after the dash; tag: products[2].name"
   },
   {
    "chapter": 2,
    "titleHe": "רוגע לאחר הפרוצדורה",
    "lineHe": "העור זקוק ללחות ולתמיכה במחסום האפידרמלי.",
-   "tagHe": "ייעוץ",
-   "source": "content.json products[2].sections index 2: title + дословный отрезок body"
+   "tagHe": "למה?",
+   "source": "content.json products[2] (slug exocell-mask): title: sections index 2 .title; line: sections index 2 .body, verbatim part after the comma; tag: .eyebrow"
   },
   {
    "chapter": 3,
-   "titleHe": "מה מכילה היריעה",
-   "lineHe": "מבנים אקסוזומליים סינתטיים, פולינוקלאוטידים, חומצה היאלורונית ו-Q10.",
-   "tagHe": "היריעה",
-   "source": "content.json products[2].sections index 3: title + body до тире (сокращено, без новых слов)"
+   "titleHe": "5 מסכות, אריזה אחת",
+   "lineHe": "מסכות ביו־צלולוז חד־פעמיות עם סרום פעיל.",
+   "tagHe": "ערכה ועובדות",
+   "source": "content.json products[2] (slug exocell-mask): title: sections index 5 .title; line: sections index 7 .tags, item «מסכות ביו־צלולוז חד־פעמיות עם סרום פעיל.»; tag: sections index 5 .eyebrow"
   },
   {
    "chapter": 4,
-   "titleHe": "1 · הנחת המסכה",
-   "lineHe": "על עור נקי לאחר הפרוצדורה – כמעט ללא כיסי אוויר.",
-   "tagHe": "הנחת המסכה",
-   "source": "content.json sections index 6: tag «1 · הנחת המסכה», начало body «על עור נקי לאחר הפרוצדורה», tag «כמעט ללא כיסי אוויר»"
+   "titleHe": "מסכה כפולה",
+   "lineHe": "שכבה לבנה ושכבה כחולה",
+   "tagHe": "מסכה כפולה",
+   "source": "content.json products[2] (slug exocell-mask): sections index 5 .tags, item «מסכה כפולה: שכבה לבנה ושכבה כחולה, שמניחים בזו אחר זו.» split at the colon; the tail «, שמניחים בזו אחר זו.» is left out (open question N3)"
   },
   {
    "chapter": 5,
-   "titleHe": "2 · ספיגה",
-   "lineHe": "מגע לח ורציף עם הסרום.",
-   "tagHe": "ספיגה",
-   "source": "content.json sections index 6: tag «2 · ספיגה» + фрагмент body «מגע לח ורציף עם הסרום»"
+   "titleHe": "1 · הנחת המסכה",
+   "lineHe": "כמעט ללא כיסי אוויר",
+   "tagHe": "הנחת המסכה",
+   "source": "content.json products[2] (slug exocell-mask): sections index 6 .tags, items «1 · הנחת המסכה» and «כמעט ללא כיסי אוויר»"
   },
   {
    "chapter": 6,
-   "titleHe": "3 · סיום",
-   "lineHe": "מסירים את המסכה; בסיום: DERMA RECOVERY CREAM והגנה מהשמש.",
-   "tagHe": "סיום",
-   "source": "content.json sections index 6: tag «3 · סיום» + конец body «בסיום: DERMA RECOVERY CREAM והגנה מהשמש.»; «מסירים את המסכה;» — site/product-pages.he.json (шаг «סיום»), то же в протоколе protocols/src/content.he.mjs «יש להסיר את המסכה»"
+   "titleHe": "2 · ספיגה",
+   "lineHe": "מגע לח ורציף עם הסרום",
+   "tagHe": "ספיגה",
+   "source": "content.json products[2] (slug exocell-mask): title: sections index 6 .tags item «2 · ספיגה»; line: sections index 6 .body, verbatim part between the dash and the semicolon"
   },
   {
    "chapter": 7,
-   "titleHe": "5 מסכות, אריזה אחת",
-   "lineHe": "מסכות ביו־צלולוז חד־פעמיות עם סרום פעיל · תכולה נטו 5 × 25 מ״ל.",
-   "tagHe": "ערכה",
-   "source": "content.json sections index 5 title; sections index 7 tags «מסכות ביו־צלולוז חד־פעמיות עם סרום פעיל.» и «תכולה נטו 5 × 25 מ״ל»"
+   "titleHe": "3 · סיום",
+   "lineHe": "בסיום: DERMA RECOVERY CREAM והגנה מהשמש.",
+   "tagHe": "סיום",
+   "source": "content.json products[2] (slug exocell-mask): title: sections index 6 .tags item «3 · סיום»; line: sections index 6 .body, verbatim part after the semicolon"
   },
   {
    "chapter": 8,
    "titleHe": "הכניסו את EXOCELL MASK לקליניקה שלכם",
    "lineHe": "לשימוש מקצועי בלבד.",
    "tagHe": "הצעה",
-   "source": "content.json sections index 7: title + body (дословно)"
+   "source": "content.json products[2] (slug exocell-mask): sections index 7: .title + .body (verbatim); tag: .eyebrow"
   }
  ],
  "stills": [
   {
    "id": "K0",
    "order": 1,
-   "purpose": "Кадр упаковки (первым, ссылка заказчику). Сцена 01 и последний кадр фильма; старт ролика A.",
+   "purpose": "Кадр упаковки. Глава 01 и последний кадр фильма; старт ролика A. Снят и принят, не меняется.",
    "refs": {
     "cosmetologist_M": [
      "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)",
@@ -245,12 +307,17 @@
     "/home/user/GregoryDich/mitoderm-catalog/site/img/exocell-box-front.jpg",
     "/home/user/GregoryDich/mitoderm-catalog/site/img/exocell-box-side.jpg"
    ],
-   "refsNote": "K0: refs left as written (8); K0 is already being generated per PROGRESS.md (first variant rejected, retakes launched 19/11 23:02); box-side scan is not uploaded to Higgsfield yet - upload only if a K0 retake needs it."
+   "refsNote": "K0: refs left as written (8); K0 is already being generated per PROGRESS.md (first variant rejected, retakes launched 19/11 23:02); box-side scan is not uploaded to Higgsfield yet - upload only if a K0 retake needs it.",
+   "status": "shot and accepted",
+   "job_16x9": "fc1666c4-d86a-4036-b15a-51e3de45b112",
+   "job_9x16": "21d1822a-8a09-42ea-a7f0-242f32792f30",
+   "file_16x9": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/mask/K0b.png",
+   "file_9x16": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/mask/K0vb.png"
   },
   {
    "id": "K1",
    "order": 2,
-   "purpose": "Первый кадр с людьми (образец: M и P7 впервые вместе, ждать «ок»). Сцены 02-03, старт ролика B.",
+   "purpose": "Первый кадр с людьми. Глава 02, старт ролика B. Снят и принят, не меняется.",
    "refs": {
     "cosmetologist_M": [
      "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)"
@@ -287,68 +354,239 @@
     "3 /tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)",
     "4 /tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/p7-turnaround.jpg (Higgsfield media 387b9773-c5a5-4fe3-bb19-7399c9998925)",
     "5 /home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exocell-mask.webp (Higgsfield media 61ca8e69-440a-4969-9d56-4d038fe78af8)"
-   ]
+   ],
+   "status": "shot and accepted",
+   "job_16x9": "64d750bc-cd75-4808-8f82-e0b6c4ae2c53",
+   "job_9x16": "c7e47194-91bb-481b-8a30-3aa5b2083c18",
+   "file_16x9": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/mask/K1.png",
+   "file_9x16": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/mask/K1v.png"
+  },
+  {
+   "id": "KS",
+   "order": 3,
+   "status": "to shoot",
+   "purpose": "Пакет уже вскрыт: руки косметолога в белых перчатках держат саше, пальцы входят в открытый верх. Глава 03, старт ролика S. Новый приём (вскрытая упаковка): образец, ссылка заказчику до любого ролика с саше. KS 9:16 снимается после «ок» на KS 16:9 (KS 16:9 — его опора).",
+   "composition": "16:9: руки и саше на 18-58 % ширины, 15-80 % высоты; позади мягко торс в белой форме с розовым кантом и кулон, верхний край кадра идёт по шее ниже подбородка, лица нет; пациентки нет; правые 35 % — размытые стена и окно. 9:16: руки и саше на 18-58 % высоты, выше — только шея и воротник, ниже 62 % — гладкая белая форма.",
+   "packagingVisible": "саше: только лицевая сторона, верх уже вскрыт по прямой (тиснёная полоса шва оторвана, край сразу над монограммой VM, маленькая ступенька в левом верхнем углу); оборот саше, коробка и сам надрыв не видны",
+   "refs_16x9": [
+    {
+     "order": 1,
+     "media": "db6f86ba-090f-492f-9685-a7868e20d3c1",
+     "what": "саше: слева плоская лицевая сторона (печать), справа запечатанное саше в руках (размер, объём, блеск фольги); голые руки и ногти не брать"
+    },
+    {
+     "order": 2,
+     "media": "1297521a-bbb5-467a-acc0-b4981853994c",
+     "what": "кадр заказчика: вскрытый верх и поза рук (пальцы входят в пакет); розовые перчатки, чёрный рукав и человека справа не брать"
+    },
+    {
+     "order": 3,
+     "media": "64d750bc-cd75-4808-8f82-e0b6c4ae2c53",
+     "what": "принятый K1: кабинет, свет, белые перчатки, форма косметолога"
+    },
+    {
+     "order": 4,
+     "media": "90121c86-7093-44bb-a03d-ebc0648e392c",
+     "what": "косметолог: форма с розовым кантом, кулон, волосы"
+    }
+   ],
+   "refs_9x16": [
+    {
+     "order": 1,
+     "media": "job id of the accepted KS 16:9 (filled in once it is shot)",
+     "what": "принятый KS 16:9 того же мгновения"
+    },
+    {
+     "order": 2,
+     "media": "db6f86ba-090f-492f-9685-a7868e20d3c1",
+     "what": "саше: печать, размер, блеск; голые руки и ногти не брать"
+    },
+    {
+     "order": 3,
+     "media": "1297521a-bbb5-467a-acc0-b4981853994c",
+     "what": "вскрытый верх и поза рук; розовые перчатки, чёрный рукав и человека справа не брать"
+    },
+    {
+     "order": 4,
+     "media": "c7e47194-91bb-481b-8a30-3aa5b2083c18",
+     "what": "принятый K1v: кабинет и свет в вертикали"
+    },
+    {
+     "order": 5,
+     "media": "90121c86-7093-44bb-a03d-ebc0648e392c",
+     "what": "косметолог: форма, кулон"
+    }
+   ],
+   "prompt_16x9": "Close shot of hands and product, 85mm, f/2.8, camera at the height of the hands, in the same bright, clean treatment room and soft natural window daylight as the third reference image (the accepted still K1): warm white walls, a softly blurred window with greenery, a white treatment chair. In the left-centre of the frame, at about 18-58% of the width and 15-80% of the height, the cosmetologist's two hands in clean white examination gloves (white, never pink) hold the single-mask EXOCELL MASK pouch exactly as in the first reference image (left half: the flat front for the print; right half: the sealed pouch in bare hands for its real size, puffiness and the gloss of the foil; take only the pouch from it, never its bare hands or nails): a flat, slightly puffy rectangular foil sachet, a little taller than wide and a little larger than an open palm, in glossy aqua-turquoise foil with soft white highlights, slightly rounded corners, narrow flat side seals and a wider flat bottom seal, as in the first reference image; dark navy print on its front: the VM monogram with small 'VM corporation' near the top centre, 'EXOCELL' in wide-spaced capitals ('EXO' bold, 'CELL' thin) with letter-spaced 'M A S K' below, aligned under 'CELL', and near the bottom a small centred block whose first line is bold ('Professional facial moisturizing mask imbued in serum') followed by three smaller lines, then '1 face mask – maschera viso - máscara facial - masque facial' and '25 ml ℮ 0.84 fl.oz' (lines too small to read render as fine grey lines, never as invented words), upright, its printed front squarely to the camera. Its top is already open, exactly as in the second reference image: the crimped seal strip that ran across the top has been torn off straight across, leaving a straight, very slightly ragged open edge just above the VM monogram, with a small step at the top left corner where the tear began; the two foil walls part slightly at the opening. Only the printed front of the pouch faces the camera; its back is never visible. One hand holds the pouch from below at its lower corner; the other comes from above, and its thumb and index finger have just slipped into the opening, as in the second reference image (copy only the pose and the open top from it; the gloves here are white, not pink; take nothing else from that image: not its black sleeves or dark clothing, not the person beside her; the sleeves at her wrists are the cream ribbed long sleeves of the third and fourth reference images). Nothing has come out of the pouch yet. Behind the hands, softly out of focus, the cosmetologist's torso: a white tunic with pink piping over a cream ribbed long-sleeve top and the pendant with a blue stone in a gold setting on a black cord, identical to the third and fourth reference images; the top edge of the frame crosses her neck below the chin; her chin, mouth and face are above the frame and never visible; her long dark wavy hair falls behind her shoulders and never touches the product or her hands. No patient in frame. Right 35% of the frame: only the softly blurred wall and window. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging, only calm softly lit background, because the Hebrew caption sits there; the bottom 15% contains nothing important, because the step markers sit there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks beyond the pouch's own print; no box in frame; no back of the pouch; no tearing in progress, no torn-off strip, no scissors; no pink gloves; no bare hands, no visible nails; no black sleeves, no other person; no face, no chin, no lips in frame; no needle, syringe or device; no extra fingers; no duplicate people.",
+   "prompt_9x16": "Vertical close shot of hands and product, 85mm, f/2.8, camera at the height of the hands, the same moment, setting, gloves, pouch and pose as the first reference image (the accepted 16:9 KS), in the same bright, clean treatment room and soft natural window daylight as the fourth reference image (the accepted vertical K1): warm white walls, a softly blurred window with greenery, a white treatment chair. Centred, between about 18% and 58% of the frame height, the cosmetologist's two hands in clean white examination gloves (white, never pink) hold the single-mask EXOCELL MASK pouch exactly as in the second reference image (left half: the flat front; right half: the sealed pouch in bare hands for real size and gloss; take only the pouch from it, never its bare hands or nails): a flat, slightly puffy rectangular foil sachet, a little taller than wide and a little larger than an open palm, in glossy aqua-turquoise foil with soft white highlights, slightly rounded corners, narrow flat side seals and a wider flat bottom seal, as in the second reference image; dark navy print on its front: the VM monogram with small 'VM corporation' near the top centre, 'EXOCELL' in wide-spaced capitals ('EXO' bold, 'CELL' thin) with letter-spaced 'M A S K' below, aligned under 'CELL', and near the bottom a small centred block whose first line is bold ('Professional facial moisturizing mask imbued in serum') followed by three smaller lines, then '1 face mask – maschera viso - máscara facial - masque facial' and '25 ml ℮ 0.84 fl.oz' (lines too small to read render as fine grey lines, never as invented words), upright, its printed front squarely to the camera. Its top is already open, exactly as in the third reference image: the crimped seal strip that ran across the top has been torn off straight across, leaving a straight, very slightly ragged open edge just above the VM monogram, with a small step at the top left corner where the tear began; the two foil walls part slightly at the opening. Only the printed front of the pouch faces the camera; its back is never visible. One hand holds the pouch from below; the thumb and index finger of the other have just slipped into the opening (copy only the pose and the open top from the third reference image; the gloves are white, not pink; take nothing else from that image: not its black sleeves or dark clothing, not the person beside her; the sleeves at her wrists are the cream ribbed long sleeves of the fourth and fifth reference images). Nothing has come out of the pouch yet. Behind the hands, softly out of focus, the cosmetologist's torso: a white tunic with pink piping over a cream ribbed long-sleeve top and the pendant with a blue stone in a gold setting on a black cord, identical to the fourth and fifth reference images; the top edge of the frame crosses her neck below the chin; her chin, mouth and face are above the frame and never visible; her long dark wavy hair falls behind her shoulders and never touches the product or her hands. Above the hands, from the top edge down to about 18%, only her neck and collar below the chin, no face anywhere in frame. Below 62%: only the plain white tunic, softly out of focus. No patient in frame. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face, hand and the packaging sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face; the bottom 38% shows only plain clothing, towel, chair or neutral background with nothing important, because a dark caption band sits there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks beyond the pouch's own print; no box in frame; no back of the pouch; no tearing in progress, no torn-off strip, no scissors; no pink gloves; no bare hands, no visible nails; no black sleeves, no other person; no face, no chin, no lips in frame; no needle, syringe or device; no extra fingers; no duplicate people."
+  },
+  {
+   "id": "KL",
+   "order": 4,
+   "status": "to shoot",
+   "purpose": "Слои маски разведены в руках, как на кадре заказчика. Глава 04; не ролик: при сборке держится с медленным наездом из самого кадра (без затрат).",
+   "composition": "16:9: руки и слои на 18-58 % ширины, 12-80 % высоты; позади мягко торс косметолога, верхний край кадра идёт по шее ниже подбородка, лица нет; пациентки и саше нет; правые 35 % — стена и окно. 9:16: руки и слои на 16-60 % высоты, ниже 62 % — гладкая белая форма.",
+   "packagingVisible": "упаковки нет; в руках — бледно-голубая прозрачная плёнка и белый матовый лист с рядами мелких точек по краю, уголок белого листа отведён от плёнки",
+   "refs_16x9": [
+    {
+     "order": 1,
+     "media": "84ca543d-d56c-4915-bd4c-bcc5ce6d017b",
+     "what": "кадр заказчика: слои, их цвет, складки и поза рук; розовые перчатки, чёрные рукава и одежду, человека позади и голову клиентки в фиолетовой шапочке не брать"
+    },
+    {
+     "order": 2,
+     "media": "64d750bc-cd75-4808-8f82-e0b6c4ae2c53",
+     "what": "принятый K1: кабинет, свет, форма, кремовые рукава в рубчик, белые перчатки"
+    },
+    {
+     "order": 3,
+     "media": "90121c86-7093-44bb-a03d-ebc0648e392c",
+     "what": "косметолог: форма, кулон"
+    }
+   ],
+   "refs_9x16": [
+    {
+     "order": 1,
+     "media": "job id of the accepted KL 16:9 (filled in once it is shot)",
+     "what": "принятый KL 16:9 того же мгновения"
+    },
+    {
+     "order": 2,
+     "media": "84ca543d-d56c-4915-bd4c-bcc5ce6d017b",
+     "what": "слои и поза рук; розовые перчатки, чёрные рукава, человека позади и фиолетовую шапочку не брать"
+    },
+    {
+     "order": 3,
+     "media": "c7e47194-91bb-481b-8a30-3aa5b2083c18",
+     "what": "принятый K1v: кабинет в вертикали"
+    },
+    {
+     "order": 4,
+     "media": "90121c86-7093-44bb-a03d-ebc0648e392c",
+     "what": "косметолог: форма, кулон"
+    }
+   ],
+   "prompt_16x9": "Close shot of hands and product, 85mm, f/2.8, camera at the height of the hands, in the same bright, clean treatment room and soft natural window daylight as the second reference image (the accepted still K1): warm white walls, a softly blurred window with greenery, a white treatment chair. In the left-centre of the frame, at about 18-58% of the width and 12-80% of the height, the cosmetologist's two hands in clean white examination gloves (white, never pink) hold the mask unit just taken out of the pouch, its layers parted exactly as in the first reference image: a large, thin, translucent pale sky-blue film, softly glossy and folded, and a matte white sheet, thin as paper, with rows of tiny dark dots along its curved edge; the upper hand holds the folded blue film by its top edge, the lower hand pinches one corner of the white dotted sheet and peels it a few centimetres away from the blue film, so a wedge of white shows against the blue (copy the layers, their colours, their folds and the pose from that image; the gloves here are white, not pink; take nothing else from that image: not its black sleeves or dark clothing, not the person in the background, not the client's head or purple cap at its lower edge; the sleeves at her wrists are the cream ribbed long sleeves of the second and third reference images). Behind the hands, softly out of focus, the cosmetologist's torso: a white tunic with pink piping over a cream ribbed long-sleeve top and the pendant with a blue stone in a gold setting on a black cord, identical to the second and third reference images; the top edge of the frame crosses her neck below the chin; her chin, mouth and face are above the frame and never visible; her long dark wavy hair falls behind her shoulders and never touches the product or her hands. No patient in frame. Right 35% of the frame: only the softly blurred wall and window. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging, only calm softly lit background, because the Hebrew caption sits there; the bottom 15% contains nothing important, because the step markers sit there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks; no pouch and no box in frame; nothing on any face; no layer laid on skin; no third layer; no pink gloves; no black sleeves, no purple cap, no other person; no face, no chin, no lips in frame; no needle, syringe or device; no extra fingers; no duplicate people.",
+   "prompt_9x16": "Vertical close shot of hands and product, 85mm, f/2.8, the same moment, layers, gloves and pose as the first reference image (the accepted 16:9 KL), in the same bright, clean treatment room and soft natural window daylight as the third reference image (the accepted vertical K1): warm white walls, a softly blurred window with greenery, a white treatment chair. Centred, between about 16% and 60% of the frame height, the cosmetologist's two hands in clean white examination gloves (white, never pink) hold the mask unit just taken out of the pouch, its layers parted exactly as in the second reference image: a large, thin, translucent pale sky-blue film, softly glossy and folded, and a matte white sheet, thin as paper, with rows of tiny dark dots along its curved edge; the upper hand holds the folded blue film by its top edge, the lower hand pinches one corner of the white dotted sheet and peels it a few centimetres away from the blue film, so a wedge of white shows against the blue (copy the layers, their colours, their folds and the pose from that image; the gloves here are white, not pink; take nothing else from that image: not its black sleeves or dark clothing, not the person in the background, not the client's head or purple cap at its lower edge; the sleeves at her wrists are the cream ribbed long sleeves of the third and fourth reference images). Behind the hands, softly out of focus, the cosmetologist's torso: a white tunic with pink piping over a cream ribbed long-sleeve top and the pendant with a blue stone in a gold setting on a black cord, identical to the third and fourth reference images; the top edge of the frame crosses her neck below the chin; her chin, mouth and face are above the frame and never visible; her long dark wavy hair falls behind her shoulders and never touches the product or her hands. Above the hands only her neck and collar below the chin, no face anywhere in frame. Below 62%: only the plain white tunic, softly out of focus. No patient in frame. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face, hand and the packaging sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face; the bottom 38% shows only plain clothing, towel, chair or neutral background with nothing important, because a dark caption band sits there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks; no pouch and no box in frame; nothing on any face; no layer laid on skin; no third layer; no pink gloves; no black sleeves, no purple cap, no other person; no face, no chin, no lips in frame; no needle, syringe or device; no extra fingers; no duplicate people.",
+   "refsNote": "v2 после проверки: KL не берёт опорой KS (KS — образец и ждёт «ок»), чтобы отказ по KS не тянул пересъёмку KL."
   },
   {
    "id": "K2",
-   "order": 3,
-   "purpose": "Нанесение: маска уже лежит на лице, M разглаживает её (новый приём в серии: образец, ждать «ок»). Сцены 04-05, старт ролика C. Снимается только после ответа заказчика об устройстве маски.",
-   "refs": {
-    "cosmetologist_M": [
-     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)"
-    ],
-    "patient_P7": [
-     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/p7-turnaround.jpg (Higgsfield media 387b9773-c5a5-4fe3-bb19-7399c9998925)"
-    ],
-    "room": [],
-    "packaging": [
-     "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exocell-mask.webp (Higgsfield media 61ca8e69-440a-4969-9d56-4d038fe78af8)"
-    ],
-    "other": [
-     "K1 (approved: faces, clothes, room)"
-    ]
-   },
-   "packagingVisible": "box not in frame; the packshot is attached only as the shape reference of the sheet mask; the prompt says to ignore the box in it",
-   "prompt_16x9": "Slightly high three-quarter view, 50mm, in the same bright, clean treatment room as the attached K1: soft natural daylight from a large window, warm white walls, white treatment chair, light marble side table; same people and light as the attached K1. The patient P7 (a woman 25-30 with long chestnut hair held back by a black headband, identical to the attached P7 character sheet; natural calm young skin with real texture) lies back in the reclined white treatment chair, eyes closed, relaxed; her head is at about 30-50% of the frame width and her body runs to the right under a white towel. On her face lies the EXOCELL sheet mask exactly as in the attached packshot (exocell-mask.webp; use the attached packshot only for the mask's shape and ignore the box in it): one translucent milky-white bio-cellulose sheet with a faint aqua tint, moist and glistening with serum, with eye cut-outs, a nose cut-out with its flap, a mouth cut-out and the small slit at the lower jaw edge; it lies smooth and close on her face from the hairline to the chin, following its contours, the cut-outs aligned with her eyes, nose and mouth; the black headband stays visible at the hairline above the mask. The cosmetologist M (the brand's main face: a woman about 30 with long dark wavy hair, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the attached M reference photo) stands behind her head on the left, at about 8-28% of the width, face in soft three-quarter view looking down; in clean white examination gloves she rests both palms flat on the centre of the mask, on the forehead and beside the nose, about to smooth it outwards. Right 35% of the frame: only the chair, the white towel and the softly lit wall; no face, no hands there. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging (only the towel-covered body, chair and wall), because the Hebrew caption sits there; the bottom 15% contains nothing important, because the step markers sit there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks; no box, no sachet in frame; the mask is one single milky-white layer: no blue layer, no second layer, no paper or backing sheet; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
-   "prompt_9x16": "Vertical, slightly high view, 50mm, in the same bright, clean treatment room as the attached K1: soft natural daylight from a large window, warm white walls, white treatment chair, light marble side table; same people and light as the attached K1. The patient P7 (a woman 25-30 with long chestnut hair held back by a black headband, identical to the attached P7 character sheet; natural calm young skin with real texture) lies back in the reclined white treatment chair, eyes closed, relaxed; her face, turned up toward the camera, sits at about 36-58% of the frame height. On her face lies the EXOCELL sheet mask exactly as in the attached packshot (exocell-mask.webp; use the attached packshot only for the mask's shape and ignore the box in it): one translucent milky-white bio-cellulose sheet with a faint aqua tint, moist and glistening with serum, with eye cut-outs, a nose cut-out with its flap, a mouth cut-out and the small slit at the lower jaw edge; it lies smooth and close on her face from the hairline to the chin, following its contours, the cut-outs aligned with her eyes, nose and mouth; the black headband stays visible at the hairline above the mask. The cosmetologist M (the brand's main face: a woman about 30 with long dark wavy hair, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the attached M reference photo) stands behind her head, her face in soft three-quarter view looking down at about 18-32% of the frame height; in clean white examination gloves she rests both palms flat on the centre of the mask. Below 62%: only P7's shoulders, the white towel and the chair. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face and the packaging sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face; the bottom 38% shows only table surface, clothing or neutral background with nothing important, because a dark caption band sits there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks; no box, no sachet in frame; the mask is one single milky-white layer: no blue layer, no second layer, no paper or backing sheet; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
-   "attachPackaging": [
-    "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exocell-mask.webp (Higgsfield media 61ca8e69-440a-4969-9d56-4d038fe78af8)"
+   "order": 5,
+   "status": "to shoot",
+   "purpose": "Маска уже лежит на лице, косметолог готовится разгладить её. Главы 05-06, старт ролика C. Новый приём в серии (маска на лице): образец, ждать «ок» до ролика C. K2 9:16 снимается после «ок» на K2 16:9.",
+   "composition": "Как в версии 1: немного сверху, три четверти; пациентка полулёжа, голова на 30-50 % ширины, тело вправо под белым полотенцем; косметолог за её головой на 8-28 %, волосы за плечами. 9:16: лицо косметолога на 18-32 %, лицо пациентки на 36-58 %. Кончики пальцев косметолога — у края маски (верх лба под повязкой, виски); вырезы и центр листа открыты.",
+   "packagingVisible": "упаковки нет; на лице один молочно-прозрачный влажный лист с вырезами глаз, носа и рта по кадру заказчика; голубой плёнки в кадре нет",
+   "refs_16x9": [
+    {
+     "order": 1,
+     "media": "05429adf-6d5d-46ea-ab8e-ebbef6d7d763",
+     "what": "кадр заказчика: только сама маска на лице (молочная прозрачность, влажный блеск, вырезы, край у уха); человека, шапочку, перчатку и голубую плёнку не брать"
+    },
+    {
+     "order": 2,
+     "media": "64d750bc-cd75-4808-8f82-e0b6c4ae2c53",
+     "what": "принятый K1: лица, повязка, серьги, форма, кабинет"
+    },
+    {
+     "order": 3,
+     "media": "387b9773-c5a5-4fe3-bb19-7399c9998925",
+     "what": "пациентка: лист персонажа"
+    },
+    {
+     "order": 4,
+     "media": "90121c86-7093-44bb-a03d-ebc0648e392c",
+     "what": "косметолог: фото"
+    }
    ],
-   "refsOrder": [
-    "1 K1 (approved; vertical K1 for 9:16)",
-    "2 /tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/p7-turnaround.jpg (Higgsfield media 387b9773-c5a5-4fe3-bb19-7399c9998925)",
-    "3 /tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)",
-    "4 /home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exocell-mask.webp (Higgsfield media 61ca8e69-440a-4969-9d56-4d038fe78af8) - mask shape only, ignore the box"
-   ]
+   "refs_9x16": [
+    {
+     "order": 1,
+     "media": "job id of the accepted K2 16:9 (filled in once it is shot)",
+     "what": "принятый K2 16:9 того же мгновения"
+    },
+    {
+     "order": 2,
+     "media": "05429adf-6d5d-46ea-ab8e-ebbef6d7d763",
+     "what": "маска на лице; остальное в кадре не брать"
+    },
+    {
+     "order": 3,
+     "media": "c7e47194-91bb-481b-8a30-3aa5b2083c18",
+     "what": "принятый K1v: лица и кабинет в вертикали"
+    },
+    {
+     "order": 4,
+     "media": "387b9773-c5a5-4fe3-bb19-7399c9998925",
+     "what": "пациентка: лист персонажа"
+    },
+    {
+     "order": 5,
+     "media": "90121c86-7093-44bb-a03d-ebc0648e392c",
+     "what": "косметолог: фото"
+    }
+   ],
+   "prompt_16x9": "Slightly high three-quarter view, 50mm, in the same bright, clean treatment room and soft natural window daylight as the second reference image (the accepted still K1): warm white walls, a softly blurred window with greenery, a white treatment chair; same people and light as K1. the patient (a woman 25-30 with long chestnut hair held back by a wide black headband, beaded hoop earrings with a small pearl drop, identical to the third reference image (her character sheet); natural calm young skin with real texture, the same as in the accepted K1) lies back in the reclined white treatment chair, eyes closed, relaxed; her head is at about 30-50% of the frame width and her body runs to the right under a white towel. On her face lies one thin milky-white translucent sheet mask, wet and glossy with serum, with soft highlights and a few fine soft creases, through which the warm tone of her skin shows faintly; it clings to her face like a second skin from just under the black headband down to the chin, its edge ending in front of the ears and along the jaw; clean cut-outs for the eyes (closed eyelids and lashes visible through them), for the nose and for the mouth (her lips visible through it), the sheet folding softly over the bridge of the nose, as in the first reference image (use that image only for the mask itself; ignore the person, the purple cap, the pink glove and the pale-blue film in it). The black headband stays visible at the hairline above the mask. the cosmetologist (a woman about 30 with long dark wavy hair that falls behind her shoulders, a white tunic with pink piping over a cream ribbed long-sleeve top and a pendant with a blue stone in a gold setting on a black cord, identical to the fourth reference image) stands behind her head on the left, at about 8-28% of the width, face in soft three-quarter view looking down; in clean white examination gloves (white, never pink) she rests her fingertips lightly at the edges of the mask, on the upper forehead just under the black headband and at the temples, about to smooth it outwards, leaving the eye, nose and mouth cut-outs and the centre of the sheet fully visible. Right 35% of the frame: only the chair, the white towel over the patient's body and the softly lit wall; no face, no hands there. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging, only calm softly lit background, because the Hebrew caption sits there; the bottom 15% contains nothing important, because the step markers sit there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks; no box, no pouch in frame; no pale-blue film anywhere in frame, nothing on her neck or chest, no second layer on the face, no white dotted sheet; the cosmetologist's hair never touches the patient; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
+   "prompt_9x16": "Vertical, slightly high view, 50mm, the same moment, people, mask and light as the first reference image (the accepted 16:9 K2), in the same bright, clean treatment room and soft natural window daylight as the third reference image (the accepted vertical K1): warm white walls, a softly blurred window with greenery, a white treatment chair. the patient (a woman 25-30 with long chestnut hair held back by a wide black headband, beaded hoop earrings with a small pearl drop, identical to the fourth reference image (her character sheet); natural calm young skin with real texture, the same as in the accepted K1) lies back in the reclined white treatment chair, eyes closed, relaxed; her face, turned up toward the camera, sits at about 36-58% of the frame height. On her face lies one thin milky-white translucent sheet mask, wet and glossy with serum, with soft highlights and a few fine soft creases, through which the warm tone of her skin shows faintly; it clings to her face like a second skin from just under the black headband down to the chin, its edge ending in front of the ears and along the jaw; clean cut-outs for the eyes (closed eyelids and lashes visible through them), for the nose and for the mouth (her lips visible through it), the sheet folding softly over the bridge of the nose, as in the second reference image (use that image only for the mask itself; ignore the person, the purple cap, the pink glove and the pale-blue film in it). The black headband stays visible at the hairline above the mask. the cosmetologist (a woman about 30 with long dark wavy hair that falls behind her shoulders, a white tunic with pink piping over a cream ribbed long-sleeve top and a pendant with a blue stone in a gold setting on a black cord, identical to the fifth reference image) stands behind her head, her face in soft three-quarter view looking down at about 18-32% of the frame height; in clean white examination gloves (white, never pink) she rests her fingertips lightly at the edges of the mask, on the upper forehead just under the black headband and at the temples, leaving the eye, nose and mouth cut-outs and the centre of the sheet fully visible. Below 62%: only the patient's shoulders, the white towel and the chair. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face, hand and the packaging sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face; the bottom 38% shows only plain clothing, towel, chair or neutral background with nothing important, because a dark caption band sits there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks; no box, no pouch in frame; no pale-blue film anywhere in frame, nothing on her neck or chest, no second layer on the face, no white dotted sheet; the cosmetologist's hair never touches the patient; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people."
   },
   {
    "id": "K3",
-   "order": 4,
-   "purpose": "Завершение: маска уже снята, M мягко похлопывает остатки сыворотки. Сцена 06, старт ролика D. Снимается после K2.",
-   "refs": {
-    "cosmetologist_M": [
-     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)"
-    ],
-    "patient_P7": [
-     "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/p7-turnaround.jpg (Higgsfield media 387b9773-c5a5-4fe3-bb19-7399c9998925)"
-    ],
-    "room": [],
-    "packaging": [],
-    "other": [
-     "K2 (approved: exact framing)",
-     "K1 (approved: P7 face)"
-    ]
-   },
-   "packagingVisible": "box and mask not in frame; the packshot is NOT attached (it shows the mask)",
-   "prompt_16x9": "Exactly the same framing, people and light as the attached K2, a few minutes later, in the same bright, clean treatment room as the attached K2: soft natural daylight from a large window, warm white walls, white treatment chair, light marble side table. The sheet mask has been removed and is nowhere in frame. The patient P7 (a woman 25-30 with long chestnut hair held back by a black headband, identical to the attached P7 character sheet; natural calm young skin with real texture) lies back in the reclined white treatment chair, eyes closed, relaxed; her face, identical to the attached K1, shows the same natural skin texture and tone with only a faint moist sheen of serum residue. In clean white examination gloves, the cosmetologist M (the brand's main face: a woman about 30 with long dark wavy hair, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the attached M reference photo) lightly touches P7's cheek and forehead with her fingertips, about to pat the remaining serum in. Right 35% of the frame: only the chair, the white towel and the softly lit wall; no face, no hands there. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging (only the towel-covered body, chair and wall), because the Hebrew caption sits there; the bottom 15% contains nothing important, because the step markers sit there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks; no sheet mask anywhere in frame, no mask in hands, no box, no sachet; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
-   "prompt_9x16": "Exactly the same framing, people and light as the attached vertical K2, a few minutes later, in the same bright, clean treatment room as the attached K2: soft natural daylight from a large window, warm white walls, white treatment chair, light marble side table. The sheet mask has been removed and is nowhere in frame. The patient P7 (a woman 25-30 with long chestnut hair held back by a black headband, identical to the attached P7 character sheet; natural calm young skin with real texture), eyes closed, relaxed, her face (identical to the attached K1) at about 36-58% of the frame height, the same natural skin texture and tone with only a faint moist sheen of serum residue. In clean white examination gloves, the cosmetologist M (the brand's main face: a woman about 30 with long dark wavy hair, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the attached M reference photo), face at about 18-32% of the frame height looking down, lightly touches P7's cheek and forehead with her fingertips. Below 62%: only P7's shoulders, the white towel and the chair. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face and the packaging sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face; the bottom 38% shows only table surface, clothing or neutral background with nothing important, because a dark caption band sits there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks; no sheet mask anywhere in frame, no mask in hands, no box, no sachet; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
-   "attachPackaging": [],
-   "refsOrder": [
-    "1 K2 (approved; vertical K2 for 9:16)",
-    "2 K1 (approved; P7 face)",
-    "3 /tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/p7-turnaround.jpg (Higgsfield media 387b9773-c5a5-4fe3-bb19-7399c9998925)",
-    "4 /tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)"
-   ]
+   "order": 6,
+   "status": "to shoot",
+   "purpose": "Маска уже снята (за склейкой), косметолог мягко похлопывает остатки сыворотки. Глава 07, старт ролика D. Снимается после «ок» на K2 16:9 (K2 — его опора).",
+   "composition": "Точно та же постановка, что K2, через несколько минут: маски и плёнки нет, кожа та же, только лёгкий влажный блеск; кончики пальцев у щеки и лба.",
+   "packagingVisible": "ни упаковки, ни маски, ни плёнки; кадры заказчика с маской не прикладываются",
+   "refs_16x9": [
+    {
+     "order": 1,
+     "media": "job id of the accepted K2 16:9 (filled in once it is shot)",
+     "what": "принятый K2: точная постановка"
+    },
+    {
+     "order": 2,
+     "media": "64d750bc-cd75-4808-8f82-e0b6c4ae2c53",
+     "what": "принятый K1: лицо пациентки без маски"
+    },
+    {
+     "order": 3,
+     "media": "387b9773-c5a5-4fe3-bb19-7399c9998925",
+     "what": "пациентка: лист персонажа"
+    },
+    {
+     "order": 4,
+     "media": "90121c86-7093-44bb-a03d-ebc0648e392c",
+     "what": "косметолог: фото"
+    }
+   ],
+   "refs_9x16": [
+    {
+     "order": 1,
+     "media": "job id of the accepted K3 16:9 (filled in once it is shot)",
+     "what": "принятый K3 16:9 того же мгновения"
+    },
+    {
+     "order": 2,
+     "media": "job id of the accepted K2 9:16 (filled in once it is shot)",
+     "what": "принятый K2 9:16: вертикальная постановка"
+    },
+    {
+     "order": 3,
+     "media": "c7e47194-91bb-481b-8a30-3aa5b2083c18",
+     "what": "принятый K1v: лица в вертикали"
+    },
+    {
+     "order": 4,
+     "media": "387b9773-c5a5-4fe3-bb19-7399c9998925",
+     "what": "пациентка: лист персонажа"
+    },
+    {
+     "order": 5,
+     "media": "90121c86-7093-44bb-a03d-ebc0648e392c",
+     "what": "косметолог: фото"
+    }
+   ],
+   "prompt_16x9": "Exactly the same framing, people and light as the first reference image (the accepted still K2), a few minutes later, in the same bright, clean treatment room and soft natural window daylight as the first reference image: warm white walls, a softly blurred window with greenery, a white treatment chair. The sheet mask has been removed and is nowhere in frame. The patient's bare face is fully uncovered from the black headband to the chin: forehead, closed eyelids, nose, lips and cheeks are plain skin, exactly as the patient's face in the second reference image; no sheet, no film, no cut-out edges, no translucent layer anywhere on her skin. the patient (a woman 25-30 with long chestnut hair held back by a wide black headband, beaded hoop earrings with a small pearl drop, identical to the third reference image (her character sheet); natural calm young skin with real texture, the same as in the accepted K1) lies back in the reclined white treatment chair, eyes closed, relaxed; her face, identical to the second reference image (the accepted K1), shows the same natural skin texture and tone with only a faint moist sheen of serum residue. In clean white examination gloves (white, never pink), the cosmetologist (a woman about 30 with long dark wavy hair that falls behind her shoulders, a white tunic with pink piping over a cream ribbed long-sleeve top and a pendant with a blue stone in a gold setting on a black cord, identical to the fourth reference image) lightly touches the patient's cheek and forehead with her fingertips, about to pat the remaining serum in. Right 35% of the frame: only the chair, the white towel and the softly lit wall; no face, no hands there. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging, only calm softly lit background, because the Hebrew caption sits there; the bottom 15% contains nothing important, because the step markers sit there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks; no sheet mask anywhere in frame, no mask or film in her hands, no pale-blue film, no box, no pouch; no tissue or cotton pad; the cosmetologist's hair never touches the patient; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
+   "prompt_9x16": "Exactly the same moment, people and light as the first reference image (the accepted 16:9 K3) and the same vertical framing as the second reference image (the accepted vertical K2), a few minutes later, in the same bright, clean treatment room and soft natural window daylight as the third reference image (the accepted vertical K1): warm white walls, a softly blurred window with greenery, a white treatment chair. The sheet mask has been removed and is nowhere in frame. The patient's bare face is fully uncovered from the black headband to the chin: forehead, closed eyelids, nose, lips and cheeks are plain skin, exactly as the patient's face in the third reference image; no sheet, no film, no cut-out edges, no translucent layer anywhere on her skin. the patient (a woman 25-30 with long chestnut hair held back by a wide black headband, beaded hoop earrings with a small pearl drop, identical to the fourth reference image (her character sheet); natural calm young skin with real texture, the same as in the accepted K1), eyes closed, relaxed, her face at about 36-58% of the frame height, the same natural skin texture and tone as in K1 with only a faint moist sheen of serum residue. In clean white examination gloves (white, never pink), the cosmetologist (a woman about 30 with long dark wavy hair that falls behind her shoulders, a white tunic with pink piping over a cream ribbed long-sleeve top and a pendant with a blue stone in a gold setting on a black cord, identical to the fifth reference image), face at about 18-32% of the frame height looking down, lightly touches the patient's cheek and forehead with her fingertips. Below 62%: only the patient's shoulders, the white towel and the chair. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face, hand and the packaging sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face; the bottom 38% shows only plain clothing, towel, chair or neutral background with nothing important, because a dark caption band sits there. Photorealistic, true colours, real skin texture with pores, fine grain. No added text, captions, logos or watermarks; no sheet mask anywhere in frame, no mask or film in her hands, no pale-blue film, no box, no pouch; no tissue or cotton pad; the cosmetologist's hair never touches the patient; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people."
   }
  ],
  "clips": [
@@ -360,7 +598,7 @@
    "seconds": 5,
    "model": "kling4_0 image-to-video 1080p 5 s, one take per format",
    "needsEndFrame": false,
-   "use": "frame 0 -> hold at the start (0-24) and the end (654-666); frames 1-120 forward (24-144, chapters 01-02); frames 120->1 reversed (534-654, chapters 07-08)",
+   "use": "frame 0 -> hold at the start (0-24) and the end (810-822); frames 1-120 forward (24-144, chapters 01-02); frames 120->1 reversed (690-810, chapter 08)",
    "prompt_16x9": "The camera slowly pulls straight back about 15%, staying exactly at the height of the box's top edge; it never rises, so the top of the box is never visible; keeping the closed EXOCELL MASK box sharp and still at the same place in frame; M and P7 behind stay softly out of focus the whole time (no focus pull), they only breathe and shift very slightly. Keep the right 35% of the frame free of faces, hands and packaging, as in the start image. Photorealistic, one continuous take, no cuts. Faces, hair, black headband, uniform, pendant, white gloves and room stay exactly as in the start image. While visible, the EXOCELL MASK box never moves, opens, turns or changes; its shape, colour and printed words stay exactly as in the start image. P7's skin texture and tone stay unchanged throughout. No text, captions or graphics in frame, no new objects, no sachet, no needle or device, no skin smoothing or glow, no extra fingers, no morphing. No audio.",
    "prompt_9x16": "The camera slowly pulls straight back about 15%, staying exactly at the height of the box's top edge; it never rises, so the top of the box is never visible; keeping the closed EXOCELL MASK box sharp and still in the centre, its top never above 13% and its base never below 62% of the frame height; M and P7 behind stay softly out of focus the whole time (no focus pull), they only breathe and shift very slightly; the bottom 38% of the frame stays plain (table, clothing), no hands or objects of interest enter it. Photorealistic, one continuous take, no cuts. Faces, hair, black headband, uniform, pendant, white gloves and room stay exactly as in the start image. While visible, the EXOCELL MASK box never moves, opens, turns or changes; its shape, colour and printed words stay exactly as in the start image. P7's skin texture and tone stay unchanged throughout. No text, captions or graphics in frame, no new objects, no sachet, no needle or device, no skin smoothing or glow, no extra fingers, no morphing. No audio.",
    "review": [
@@ -372,7 +610,8 @@
     "16:9: right 35% clean; 9:16: box inside 13-62%",
     "top face of the box never visible"
    ],
-   "decision": "Unlike EXO-NAD (A ends on K1), A here is only a pull-back from the box with no focus pull and no end frame; hard cut to B (which starts on K1). Reason: an end frame K1 would make Kling pull focus and invent faces between K0 and K1. Open question 14."
+   "decision": "Unlike EXO-NAD (A ends on K1), A here is only a pull-back from the box with no focus pull and no end frame; hard cut to B (which starts on K1). Reason: an end frame K1 would make Kling pull focus and invent faces between K0 and K1. Question 14 dropped: A is already being shot this way.",
+   "status": "being shot (v1 motion prompt, unchanged)"
   },
   {
    "id": "B",
@@ -382,7 +621,7 @@
    "seconds": 5,
    "model": "kling4_0 image-to-video 1080p 5 s, one take per format",
    "needsEndFrame": false,
-   "use": "frames 0-59 (144-204, chapter 02, cut in after A); frames 60-119 (204-264, chapter 03)",
+   "use": "frames 0-83 by default (144-228, chapter 02, cut in after A); after B arrives, set the cut point after the straightening (any frame 75-100); if it moves, shift chapters 02-08 by the difference and update productFilmsEntry.frames",
    "prompt_16x9": "Camera almost still. M and P7 talk quietly. M leans in a little and looks attentively at P7's cheek, one gloved fingertip resting lightly beside the cheekbone for a moment without pressing; then she straightens up and nods calmly. P7 listens and nods once. Lips mostly closed, no talking-head mouth motion. The closed box on the side table stays exactly as in the start image; nobody touches it. Keep the right 35% of the frame free of faces, hands and packaging, as in the start image. Photorealistic, one continuous take, no cuts. Faces, hair, black headband, uniform, pendant, white gloves and room stay exactly as in the start image. While visible, the EXOCELL MASK box never moves, opens, turns or changes; its shape, colour and printed words stay exactly as in the start image. P7's skin texture and tone stay unchanged throughout. No text, captions or graphics in frame, no new objects, no sachet, no needle or device, no skin smoothing or glow, no extra fingers, no morphing. No audio.",
    "prompt_9x16": "Camera almost still. M and P7 talk quietly. M leans in a little and looks attentively at P7's cheek, one gloved fingertip resting lightly beside the cheekbone for a moment without pressing; then she straightens up and nods calmly. P7 listens and nods once. Lips mostly closed, no talking-head mouth motion. The closed box on the side table stays exactly as in the start image; nobody touches it. Keep every face and the box between 13% and 62% of the frame height, as in the start image; the bottom 38% of the frame stays plain (table, clothing), no hands or objects of interest enter it. Photorealistic, one continuous take, no cuts. Faces, hair, black headband, uniform, pendant, white gloves and room stay exactly as in the start image. While visible, the EXOCELL MASK box never moves, opens, turns or changes; its shape, colour and printed words stay exactly as in the start image. P7's skin texture and tone stay unchanged throughout. No text, captions or graphics in frame, no new objects, no sachet, no needle or device, no skin smoothing or glow, no extra fingers, no morphing. No audio.",
    "review": [
@@ -392,48 +631,77 @@
     "five fingers",
     "P7 skin unchanged",
     "9:16: bottom 38% plain, no hands enter it"
+   ],
+   "status": "being shot (v1 motion prompt, unchanged)"
+  },
+  {
+   "id": "S",
+   "status": "to shoot",
+   "start_16x9": "KS",
+   "start_9x16": "KS vertical",
+   "end": null,
+   "seconds": 5,
+   "model": "kling4_0 image-to-video 1080p 5 s, one take per format",
+   "needsEndFrame": false,
+   "use": "frames 0-119 (228-348, chapter 03, cut in after B)",
+   "prompt_16x9": "Camera still. The cosmetologist's white-gloved hands hold the opened EXOCELL MASK pouch upright, its printed front to the camera. Her thumb and index finger, already inside the open top, slowly draw the folded mask a little way out: over the five seconds a folded edge of the mask unit, thin pale-blue film with a white sheet inside, rises about two or three centimetres above the open top edge and stays there, held between her fingers. The lower hand holds the pouch steady. The pouch does not turn, flip, fold, crumple or tear further; its front print stays sharp and exactly as in the start image; its back is never seen. The mask does not come fully out and does not unfold; nothing drips. The cosmetologist's face stays out of frame, her hair stays behind her shoulders, her torso only breathes. Keep the right 35% of the frame free of faces, hands and packaging, as in the start image. The bottom 15% of the frame stays free of hands, the pouch and anything important, as in the start image. White gloves, uniform, pendant and room stay exactly as in the start image. Photorealistic, one continuous take, no cuts. No text, captions or graphics in frame. No audio. No pink gloves, no box, no scissors, no extra fingers, no morphing.",
+   "prompt_9x16": "Camera still. The cosmetologist's white-gloved hands hold the opened EXOCELL MASK pouch upright, its printed front to the camera. Her thumb and index finger, already inside the open top, slowly draw the folded mask a little way out: over the five seconds a folded edge of the mask unit, thin pale-blue film with a white sheet inside, rises about two or three centimetres above the open top edge and stays there, held between her fingers. The lower hand holds the pouch steady. The pouch does not turn, flip, fold, crumple or tear further; its front print stays sharp and exactly as in the start image; its back is never seen. The mask does not come fully out and does not unfold; nothing drips. The cosmetologist's face stays out of frame, her hair stays behind her shoulders, her torso only breathes. Keep the hands and the pouch between 13% and 62% of the frame height, as in the start image; no face enters the frame; the bottom 38% stays plain (white tunic only). White gloves, uniform, pendant and room stay exactly as in the start image. Photorealistic, one continuous take, no cuts. No text, captions or graphics in frame. No audio. No pink gloves, no box, no scissors, no extra fingers, no morphing.",
+   "review": [
+    "frame 0 = KS",
+    "pouch front print sharp and unchanged in every frame",
+    "the pouch never turns: its back is never seen",
+    "the open top stays as in KS: straight edge, no further tearing",
+    "only a folded edge of the mask comes out, 2-3 cm; it does not unfold",
+    "white gloves, five fingers",
+    "no face enters the frame",
+    "16:9: right 35% and bottom 15% clean; 9:16: hands and pouch inside 13-62%, bottom 38% plain"
    ]
   },
   {
    "id": "C",
+   "status": "to shoot",
    "start_16x9": "K2",
    "start_9x16": "K2 vertical",
    "end": null,
    "seconds": 5,
    "model": "kling4_0 image-to-video 1080p 5 s, one take per format",
    "needsEndFrame": false,
-   "use": "frames 0-83 (264-348, chapter 04, cut in after B); frames 84-120 (348-385, chapter 05) and a hold of frame 120 (385-420)",
-   "prompt_16x9": "Camera nearly still, a very slight push-in of no more than 3%. With slow, gentle movements M smooths the sheet mask on P7's face with her gloved palms and fingertips from the centre outwards: across the forehead, along the cheeks toward the temples and down to the jaw, gently smoothing so the sheet lies evenly. The mask keeps its shape and its cut-outs stay aligned with the eyes, nose and mouth; nothing peels, folds, tears, slides or changes colour, and nothing is laid on top of it. After about three seconds M lifts her hands away and steps back slightly; P7 rests with her eyes closed, breathing slowly. Keep the right 35% of the frame free of faces, hands and packaging, as in the start image. Photorealistic, one continuous take, no cuts. Faces, hair, black headband, uniform, pendant, white gloves and room stay exactly as in the start image. The sheet mask stays one single milky-white translucent layer with the same shape and cut-outs; no blue or second layer, no backing sheet. P7's skin texture and tone stay unchanged throughout. No text, captions or graphics in frame, no new objects, no box, no sachet, no needle or device, no skin smoothing or glow, no extra fingers, no morphing. No audio.",
-   "prompt_9x16": "Camera nearly still, a very slight push-in of no more than 3%. With slow, gentle movements M smooths the sheet mask on P7's face with her gloved palms and fingertips from the centre outwards: across the forehead, along the cheeks toward the temples and down to the jaw, gently smoothing so the sheet lies evenly. The mask keeps its shape and its cut-outs stay aligned with the eyes, nose and mouth; nothing peels, folds, tears, slides or changes colour, and nothing is laid on top of it. After about three seconds M lifts her hands away and steps back slightly; P7 rests with her eyes closed, breathing slowly. Keep every face between 13% and 62% of the frame height; the bottom 38% of the frame stays plain (only shoulders, towel and chair), no hands or objects of interest enter it. Photorealistic, one continuous take, no cuts. Faces, hair, black headband, uniform, pendant, white gloves and room stay exactly as in the start image. The sheet mask stays one single milky-white translucent layer with the same shape and cut-outs; no blue or second layer, no backing sheet. P7's skin texture and tone stay unchanged throughout. No text, captions or graphics in frame, no new objects, no box, no sachet, no needle or device, no skin smoothing or glow, no extra fingers, no morphing. No audio.",
+   "use": "frames 0-83 (420-504, chapter 05, cut in after the KL hold); frames 84-120 (504-541, chapter 06) and a hold of frame 120 (541-576)",
+   "prompt_16x9": "Camera nearly still, a very slight push-in of no more than 3%. With one slow, gentle movement the cosmetologist glides her white-gloved fingertips along the upper forehead, from its centre just under the black headband outward toward the temples, once, so the sheet lies evenly. The mask keeps its shape, its milky translucency and its wet gloss; its cut-outs stay aligned with the eyes, nose and mouth; nothing peels, folds, tears, slides or changes colour, and nothing is laid on top of it. Then, by about the third second, she lifts her hands away and straightens up; the patient rests with her eyes closed, breathing slowly. The cosmetologist's hair stays behind her shoulders and never touches the patient. Keep the right 35% of the frame free of faces, hands and packaging, as in the start image. The bottom 15% of the frame stays free of hands and anything important, as in the start image. Faces, black headband, earrings, uniform, pendant, white gloves, towel and room stay exactly as in the start image. The sheet mask stays one single milky-white translucent sheet with the same cut-outs; no pale-blue film, no second layer, no white dotted sheet. The patient's skin texture and tone stay unchanged throughout. Photorealistic, one continuous take, no cuts. No text, captions or graphics in frame. No audio. No box, no pouch, no needle or device, no skin smoothing or glow, no extra fingers, no morphing.",
+   "prompt_9x16": "Camera nearly still, a very slight push-in of no more than 3%. With one slow, gentle movement the cosmetologist glides her white-gloved fingertips along the upper forehead, from its centre just under the black headband outward toward the temples, once, so the sheet lies evenly. The mask keeps its shape, its milky translucency and its wet gloss; its cut-outs stay aligned with the eyes, nose and mouth; nothing peels, folds, tears, slides or changes colour, and nothing is laid on top of it. Then, by about the third second, she lifts her hands away and straightens up; the patient rests with her eyes closed, breathing slowly. The cosmetologist's hair stays behind her shoulders and never touches the patient. Keep every face between 13% and 62% of the frame height; the bottom 38% of the frame stays plain (only shoulders, towel and chair), no hands enter it. Faces, black headband, earrings, uniform, pendant, white gloves, towel and room stay exactly as in the start image. The sheet mask stays one single milky-white translucent sheet with the same cut-outs; no pale-blue film, no second layer, no white dotted sheet. The patient's skin texture and tone stay unchanged throughout. Photorealistic, one continuous take, no cuts. No text, captions or graphics in frame. No audio. No box, no pouch, no needle or device, no skin smoothing or glow, no extra fingers, no morphing.",
    "review": [
-    "mask shape and cut-outs = packshot in every frame",
-    "one milky-white layer only, no blue appears",
-    "hands leave the face by frame ~84 (absorption part is calm)",
+    "mask = owner frame o2 in every frame: milky translucent, wet, cut-outs aligned",
+    "one sheet only: no pale-blue film appears",
+    "one fingertip glide across the upper forehead only; hands leave the face by frame ~84 (the absorption part is calm)",
     "no sliding or melting of the sheet into the skin",
-    "fingers",
+    "hair behind the shoulders, never on the patient",
     "faces = K1/K2",
-    "9:16: bottom 38% plain, no hands enter it"
+    "9:16: bottom 38% plain, no hands enter it",
+    "16:9: right 35% and bottom 15% clean"
    ]
   },
   {
    "id": "D",
+   "status": "to shoot",
    "start_16x9": "K3",
    "start_9x16": "K3 vertical",
    "end": null,
    "seconds": 5,
    "model": "kling4_0 image-to-video 1080p 5 s, one take per format",
    "needsEndFrame": false,
-   "use": "frames 0-107 (420-528, chapter 06, cut in); frames 108-113 blend over 6 frames (DIS dissolve) into frame 120 of A, which then plays reversed (528-534)",
-   "prompt_16x9": "Camera nearly still. With light, gentle taps of her gloved fingertips M pats the remaining serum into P7's cheeks and forehead: no rubbing, no wiping. Then her hands lift away. P7 slowly opens her eyes and stays calm and relaxed. The skin keeps the same faint moist sheen and the same natural texture and tone; nothing changes or improves. The white towel over P7's body stays exactly as in the start image. Keep the right 35% of the frame free of faces, hands and packaging, as in the start image. Photorealistic, one continuous take, no cuts. Faces, hair, black headband, uniform, pendant, white gloves and room stay exactly as in the start image. P7's skin texture and tone stay unchanged throughout. No text, captions or graphics in frame, no new objects, no mask, no box, no sachet, no tissue, no wipe, no cotton pad in her hands, no needle or device, no skin smoothing or glow, no extra fingers, no morphing. No audio.",
-   "prompt_9x16": "Camera nearly still. With light, gentle taps of her gloved fingertips M pats the remaining serum into P7's cheeks and forehead: no rubbing, no wiping. Then her hands lift away. P7 slowly opens her eyes and stays calm and relaxed. The skin keeps the same faint moist sheen and the same natural texture and tone; nothing changes or improves. The white towel over P7's body stays exactly as in the start image. Keep every face between 13% and 62% of the frame height; the bottom 38% of the frame stays plain (only shoulders, towel and chair), no hands or objects of interest enter it. Photorealistic, one continuous take, no cuts. Faces, hair, black headband, uniform, pendant, white gloves and room stay exactly as in the start image. P7's skin texture and tone stay unchanged throughout. No text, captions or graphics in frame, no new objects, no mask, no box, no sachet, no tissue, no wipe, no cotton pad in her hands, no needle or device, no skin smoothing or glow, no extra fingers, no morphing. No audio.",
+   "use": "frames 0-113: 0-107 cut in (576-684, chapter 07); 108-113 xfade over 6 frames (684-690) with A frame 120 frozen (cloned x6), after which A plays reversed 120->1 (690-810) and A0 is held x12 (810-822)",
+   "prompt_16x9": "Camera nearly still. With light, gentle taps of her white-gloved fingertips the cosmetologist pats the remaining serum into the patient's cheeks and forehead: no rubbing, no wiping. Then her hands lift away. The patient stays calm and relaxed with her eyes closed, breathing slowly. The skin keeps the same faint moist sheen and the same natural texture and tone; nothing changes or improves. The cosmetologist's hair stays behind her shoulders and never touches the patient. The white towel over the patient's body stays exactly as in the start image. Keep the right 35% of the frame free of faces, hands and packaging, as in the start image. The bottom 15% of the frame stays free of hands and anything important, as in the start image. Faces, black headband, earrings, uniform, pendant, white gloves and room stay exactly as in the start image. Photorealistic, one continuous take, no cuts. No text, captions or graphics in frame. No audio. No mask, no film, no box, no pouch, no tissue, no wipe, no cotton pad in her hands, no jar, no tube, no cream, no needle or device, no skin smoothing or glow, no extra fingers, no morphing.",
+   "prompt_9x16": "Camera nearly still. With light, gentle taps of her white-gloved fingertips the cosmetologist pats the remaining serum into the patient's cheeks and forehead: no rubbing, no wiping. Then her hands lift away. The patient stays calm and relaxed with her eyes closed, breathing slowly. The skin keeps the same faint moist sheen and the same natural texture and tone; nothing changes or improves. The cosmetologist's hair stays behind her shoulders and never touches the patient. The white towel over the patient's body stays exactly as in the start image. Keep every face between 13% and 62% of the frame height; the bottom 38% of the frame stays plain (only shoulders, towel and chair), no hands enter it. Faces, black headband, earrings, uniform, pendant, white gloves and room stay exactly as in the start image. Photorealistic, one continuous take, no cuts. No text, captions or graphics in frame. No audio. No mask, no film, no box, no pouch, no tissue, no wipe, no cotton pad in her hands, no jar, no tube, no cream, no needle or device, no skin smoothing or glow, no extra fingers, no morphing.",
    "review": [
     "taps, not rubbing",
     "skin identical first/last frame (no glow, no redness change)",
-    "no mask reappears",
-    "P7 face = K1 when eyes open",
-    "fingers",
-    "white towel over P7 stays as in K3",
-    "9:16: bottom 38% plain, no hands enter it"
+    "no mask or film reappears",
+    "eyes stay closed; patient's face = K1/K3",
+    "hair behind the shoulders",
+    "white towel stays as in K3",
+    "9:16: bottom 38% plain, no hands enter it",
+    "no jar, tube or cream visible; the residue reads as the same moist sheen as in K3",
+    "16:9: right 35% and bottom 15% clean"
    ]
   }
  ],
@@ -462,72 +730,72 @@
   {
    "scene": "02",
    "chapter": 2,
-   "clip": "B frames 0-59 (cut in)",
+   "clip": "B frames 0-83 (cut in)",
    "startFrame": 144,
-   "endFrame": 204
+   "endFrame": 228
   },
   {
    "scene": "03",
    "chapter": 3,
-   "clip": "B frames 60-119",
-   "startFrame": 204,
-   "endFrame": 264
+   "clip": "S frames 0-119 (cut in)",
+   "startFrame": 228,
+   "endFrame": 348
   },
   {
    "scene": "04",
    "chapter": 4,
-   "clip": "C frames 0-83 (cut in)",
-   "startFrame": 264,
-   "endFrame": 348
-  },
-  {
-   "scene": "05",
-   "chapter": 5,
-   "clip": "C frames 84-120",
+   "clip": "KL still, slow push-in made at assembly (100% -> 106%), cut in",
    "startFrame": 348,
-   "endFrame": 385
+   "endFrame": 420
   },
   {
    "scene": "05",
    "chapter": 5,
-   "clip": "hold_c_end (C frame 120)",
-   "startFrame": 385,
-   "endFrame": 420
+   "clip": "C frames 0-83 (cut in)",
+   "startFrame": 420,
+   "endFrame": 504
   },
   {
    "scene": "06",
    "chapter": 6,
+   "clip": "C frames 84-120",
+   "startFrame": 504,
+   "endFrame": 541
+  },
+  {
+   "scene": "06",
+   "chapter": 6,
+   "clip": "hold_c_end (C frame 120)",
+   "startFrame": 541,
+   "endFrame": 576
+  },
+  {
+   "scene": "07",
+   "chapter": 7,
    "clip": "D frames 0-107 (cut in)",
-   "startFrame": 420,
-   "endFrame": 528
-  },
-  {
-   "scene": "07",
-   "chapter": 7,
-   "clip": "join: D frames 108-113 dissolve into A frame 120 (6-frame DIS)",
-   "startFrame": 528,
-   "endFrame": 534
-  },
-  {
-   "scene": "07",
-   "chapter": 7,
-   "clip": "A reversed frames 120->61",
-   "startFrame": 534,
-   "endFrame": 594
+   "startFrame": 576,
+   "endFrame": 684
   },
   {
    "scene": "08",
    "chapter": 8,
-   "clip": "A reversed frames 60->1",
-   "startFrame": 594,
-   "endFrame": 654
+   "clip": "join: D frames 108-113 xfade (6 frames) over A frame 120 frozen (A120 cloned x6 at the head of the reversed A)",
+   "startFrame": 684,
+   "endFrame": 690
   },
   {
    "scene": "08",
    "chapter": 8,
-   "clip": "hold_k0_end (A frame 0)",
-   "startFrame": 654,
-   "endFrame": 666
+   "clip": "A reversed frames 120->1",
+   "startFrame": 690,
+   "endFrame": 810
+  },
+  {
+   "scene": "08",
+   "chapter": 8,
+   "clip": "hold_k0_end (A frame 0 x12: the reversed A ends on A0, then 11 clones)",
+   "startFrame": 810,
+   "endFrame": 822
   }
  ],
  "cost": {
@@ -535,104 +803,260 @@
    "still_gpt_image_2_6_2k_high": 2.75,
    "kling4_0_1080p_5s": 16.25
   },
-  "stills": 22.0,
-  "stills_note": "4 stills x 2 formats x 2.75 = 22",
-  "clips": 130.0,
-  "clips_note": "4 clips x 2 formats x 16.25 = 130",
-  "total": 152.0,
-  "cap": 152,
-  "retakes": "not included; each still retake 2.75, each clip retake 16.25 (outside the cap)",
-  "three_clip_fallback": "drop B, keep K1 as a hold: 8 stills x 2.75 + 6 clips x 16.25 = 22 + 97.5 = 119.5 (5.5 above the brief's 114: all 4 stills are needed - K0, K2, K3 start clips A, C, D and K1 is the only consultation image). Chapters 02-03 without B: 108-144 A frames 85-120; 144-264 K1 hold (120 frames) with an assembly push-in of at most 4%."
+  "spent": 16.5,
+  "spent_note": "K0 + K0v twice (4 x 2.75 = 11) + K1 + K1v (2 x 2.75 = 5.5) = 16.5",
+  "in_progress": 65.0,
+  "in_progress_note": "clips A and B, 2 formats each: 4 x 16.25 = 65",
+  "new_stills": 22.0,
+  "new_stills_note": "KS, KL, K2, K3 x 2 formats x 2.75 = 8 x 2.75 = 22",
+  "new_clips": 97.5,
+  "new_clips_note": "S, C, D x 2 formats x 16.25 = 6 x 16.25 = 97.5",
+  "total": 201.0,
+  "total_note": "16.5 + 65 + 22 + 97.5 = 201",
+  "cap": 205,
+  "reserve": 4.0,
+  "reserve_note": "205 - 201 = 4: one still retake (2.75) fits, a clip retake (16.25) does not",
+  "retakes": "not included; each still retake 2.75, each clip retake 16.25",
+  "free": "KL push-in, holds, reverse and dissolve are made at assembly and cost nothing"
  },
+ "shootingOrder": [
+  {
+   "step": "0a",
+   "what": "раскадровка v2 (этот файл) — ссылка заказчику",
+   "credits": 0,
+   "runningTotal": 81.5,
+   "toOwner": "1 ссылка; работа идёт, не дожидаясь"
+  },
+  {
+   "step": 0,
+   "what": "ролики A и B (уже снимаются по промптам версии 1)",
+   "credits": 0,
+   "runningTotal": 81.5,
+   "toOwner": "по ссылке на каждый ролик, когда готов (4 ссылки); расход 65 уже учтён в начальном итоге 81.5. Когда B готов — выбрать точку склейки B (после выпрямления, кадр 75-100) и при сдвиге пересчитать главы 02-08"
+  },
+  {
+   "step": 1,
+   "what": "KS 16:9 — вскрытое саше в руках (новый приём: образец)",
+   "credits": 2.75,
+   "runningTotal": 84.25,
+   "toOwner": "1 ссылка — первое, что видит заказчик из новой части. Проверить: саше как на фото, верх вскрыт по прямой, видна только лицевая сторона, обе руки в белых перчатках, лица нет. KS 9:16 и ролик S ждут «ок»."
+  },
+  {
+   "step": 2,
+   "what": "KL 16:9 — слои в руках (опоры без KS)",
+   "credits": 2.75,
+   "runningTotal": 87.0,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 3,
+   "what": "KL 9:16",
+   "credits": 2.75,
+   "runningTotal": 89.75,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 4,
+   "what": "K2 16:9 — маска на лице (новый приём: образец)",
+   "credits": 2.75,
+   "runningTotal": 92.5,
+   "toOwner": "1 ссылка; K2 9:16, K3 и ролик C ждут «ок». Оба образца (KS и K2) у заказчика одновременно — работа не стоит"
+  },
+  {
+   "step": 5,
+   "what": "KS 9:16 (после «ок» на KS 16:9)",
+   "credits": 2.75,
+   "runningTotal": 95.25,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 6,
+   "what": "ролик S 16:9 (после «ок» на KS)",
+   "credits": 16.25,
+   "runningTotal": 111.5,
+   "toOwner": "1 ссылка: проверить, что саше не поворачивается и маска выходит лишь краем"
+  },
+  {
+   "step": 7,
+   "what": "ролик S 9:16",
+   "credits": 16.25,
+   "runningTotal": 127.75,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 8,
+   "what": "K2 9:16 (после «ок» на K2 16:9)",
+   "credits": 2.75,
+   "runningTotal": 130.5,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 9,
+   "what": "K3 16:9 (после «ок» на K2 16:9)",
+   "credits": 2.75,
+   "runningTotal": 133.25,
+   "toOwner": "1 ссылка; проверить, что маски на лице нет совсем"
+  },
+  {
+   "step": 10,
+   "what": "K3 9:16",
+   "credits": 2.75,
+   "runningTotal": 136.0,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 11,
+   "what": "ролик C 16:9 (после «ок» на K2)",
+   "credits": 16.25,
+   "runningTotal": 152.25,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 12,
+   "what": "ролик C 9:16",
+   "credits": 16.25,
+   "runningTotal": 168.5,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 13,
+   "what": "ролик D 16:9",
+   "credits": 16.25,
+   "runningTotal": 184.75,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 14,
+   "what": "ролик D 9:16",
+   "credits": 16.25,
+   "runningTotal": 201.0,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 15,
+   "what": "сборка двух фильмов (822 кадра, 24 к/с, ключевой кадр каждые 12) и запись в PROGRESS.md",
+   "credits": 0,
+   "runningTotal": 201.0,
+   "toOwner": "2 ссылки: фильм 16:9 и фильм 9:16"
+  }
+ ],
  "assembly": {
   "base": "state/nad-film/tools/assemble-nad.sh (121-frame clips, holds by tpad clone, xfade 0.25 s, reverse) and codex-site/production/assemble-vtech-continuity-v5.py",
-  "plan": "same segment list for desktop (16:9 sources) and mobile (9:16 sources): hold A0 24 -> A 1-120 -> cut B 0-119 -> cut C 0-120 + hold 35 -> cut D 0-107 -> 6-frame dissolve -> A reversed 120->1 -> hold 12; 666 frames; keyframe every 12; no audio"
+  "plan": "same segment list for desktop (16:9) and mobile (9:16): hold A0 x24 -> A 1-120 -> cut B 0-83 -> cut S 0-119 -> cut KL still x72 with a 6% push-in -> cut C 0-120 + hold C120 x35 -> cut D 0-107 -> 6-frame dissolve D108-113 into A120 -> A reversed 120->1 -> hold A0 x12; 822 frames; keyframe every 12; no audio; last frame = first frame. Chapter 08 segment exactly: D 0-113 (114 frames); second input = A reversed 120->0 with tpad start_mode=clone:start=6 (A120 x6 at the head) and tpad stop_mode=clone:stop=11 (A0 x12 in total at the tail) = 6+121+11 = 138 frames; xfade fade, 6 frames (0.25 s), offset at D108 (684-690 = D108-113 blended over the frozen A120); 690-810 = A reversed 120->1; 810-822 = A0 x12; check 576+114+138-6 = 822. Do not copy the assemble-nad.sh dissolve (it fades straight into the head of the reversed clip): that gives 817 frames."
  },
  "openQuestions": [
   {
-   "q": "Как устроена маска: (а) снять два вспомогательных слоя и положить только белую (PAGE.md, REGISTRY, заголовки глав сейчас) или (б) двойная маска, белый и синий слои кладутся один за другим (content.json разд. 5 и 7, site/packaging-text.md, решение 11/10 и 14/10)? Если (б) — какой слой касается кожи и что видно на лице в конце.",
-   "default": "Показан вариант (а): на лице один молочно-белый полупрозрачный слой, без синего слоя, без отделения подложек и без самого момента наложения из саше. При (б) K2, C и стоп-кадр главы 05 переписываются (второй, синий слой поверх белого: content.json «שמניחים בזו אחר זו»). K2, K3, ролики C и D не снимать до ответа."
+   "id": "N1",
+   "q": "Слой маски на зоне декольте (в видео заказчика сказано, что слой можно использовать и там): показывать ли? На o2 бледно-голубая плёнка лежит за подбородком, на шее или груди: вероятно, это и есть слой на декольте.",
+   "default": "Не показываем (решение архитектора); в подписях и промптах об этом ни слова."
   },
   {
-   "q": "Открытая коробка, разорванное саше, маска, вынутая из саше: настоящих фото и точной модели нет (audits-19-11.json, packAssets.missingFaces).",
-   "default": "Коробка всё время закрыта, саше в фильме нет; маска появляется сразу на лице через склейку (B -> C). Раскрытие — только когда будут фото открытой коробки и саше."
+   "id": "N2",
+   "q": "Что первым показывается из вскрытого саше в ролике S: в видео заказчика сам момент не виден (o4 — пальцы входят, маски ещё не видно).",
+   "default": "Край сложенной маски: бледно-голубая плёнка с белым листом внутри — так сложен блок, только что вынутый из саше, на o3."
   },
   {
-   "q": "Какая коробка сейчас в продаже: тёмно-бирюзовая «Your Second Skin» (пакшот и сайт), светлая «imbued in serum» (sources/exocell-box-v2-front.png) или ярко-бирюзовая «The Ultimate Beauty Ritual» (листовка sources/exocell-wow-effect-he.webp)?",
-   "default": "Тёмно-бирюзовая «Your Second Skin» по пакшоту protocols/print/img/exocell-mask.webp."
+   "id": "N3",
+   "q": "Подпись главы 04: в content.json строка целиком — «מסכה כפולה: שכבה לבנה ושכבה כחולה, שמניחים בזו אחר זו.» Порядок наложения слоёв фильм не показывает (на лице один молочный лист, голубой плёнки нет).",
+   "default": "Берём только «מסכה כפולה» / «שכבה לבנה ושכבה כחולה»; хвост «שמניחים בזו אחר זו» не выводим. Если заказчик хочет полную строку — вставить дословно, кадры не меняются."
   },
   {
-   "q": "Размеры коробки не записаны нигде.",
-   "default": "Пропорции по пакшоту и по 3D-шаблону site/proto/exocell-3d-template.html (1.48 × 2.0 × 0.27): плоская вертикальная коробка; в промптах — «flat portrait-format carton, shallow in depth», без цифр."
+   "id": "1",
+   "q": "Устройство маски (было в. 1, п. 1): фото ответили, как выглядят слои (голубая плёнка и белый лист с точками) и как маска лежит на лице (один молочно-прозрачный влажный лист). Не ответили: какой из слоёв на o3 становится листом на лице и кладётся ли голубой слой на кожу (content.json: «שמניחים בזו אחר זו»; REGISTRY: «מסכה לבנה אחת»). На o2 голубая плёнка лежит не на лице, а за подбородком (шея/грудь) — см. N1.",
+   "default": "По решению архитектора: в KL слои как на фото, в K2/C/K3/D на лице один молочно-прозрачный лист, голубой плёнки нет в кадре; ни промпт, ни подпись не говорят, для чего слой и в каком порядке."
   },
   {
-   "q": "Показывать ли покраснение после процедуры (сценарий v3: «сразу после микронидлинга»)?",
-   "default": "Нет: у P7 спокойная кожа без покраснения, одинаковая во всех кадрах (бриф: «спокойная молодая кожа»; без вида «до/после» и мгновенного эффекта). Процедура до маски не показывается."
+   "id": "3",
+   "q": "Какая коробка сейчас в продаже (было в. 1, п. 3).",
+   "default": "Тёмно-бирюзовая «Your Second Skin», как в принятых K0 и K1."
   },
   {
-   "q": "Положение пациентки при наложении маски источники не указывают.",
-   "default": "Полулёжа в откинутом белом кресле, глаза закрыты (как в EXO-NAD и сценарии v3)."
+   "id": "4",
+   "q": "Размеры коробки (было в. 1, п. 4).",
+   "default": "Пропорции по пакшоту и принятым кадрам, без цифр."
   },
   {
-   "q": "«להספיג בעדינות את שאריות הסרום» (протокол): похлопать пальцами или промокнуть салфеткой?",
-   "default": "Лёгкие похлопывания кончиками пальцев в белых перчатках, без салфетки и растирания (r4-facts: «аккуратно промокнуть»; content.json сам способ не описывает)."
+   "id": "5",
+   "q": "Покраснение после процедуры (было в. 1, п. 5).",
+   "default": "Нет: кожа спокойная и одинаковая во всех кадрах."
   },
   {
-   "q": "Перчатки в фазе маски (вопрос из сценария v3).",
-   "default": "Белые перчатки во всех кадрах (бриф серии)."
+   "id": "7",
+   "q": "«להספיג בעדינות את שאריות הסרום» (протокол): похлопать или промокнуть салфеткой (было в. 1, п. 7)? Подпись главы 07 называет DERMA RECOVERY CREAM, а в кадре только похлопывания сыворотки, крема нет.",
+   "default": "Лёгкие похлопывания кончиками пальцев в белых перчатках, без салфетки."
   },
   {
-   "q": "Время на коже «до 30 минут» есть в протоколе.",
-   "default": "На экран не идёт (бриф: без времени выдержки); ожидание показано только покоем в конце ролика C и стоп-кадром."
+   "id": "9",
+   "q": "Время на коже «до 30 минут» (было в. 1, п. 9).",
+   "default": "На экран не идёт; покой показан концом ролика C и стоп-кадром."
   },
   {
-   "q": "Число глав: в REGISTRY.json 8 сцен, из них 3–6 написаны под вариант (а) («снятие вспомогательного слоя 1/2», «только белая маска»), а uspHE «מסכה לבנה אחת» противоречит content.json.",
-   "default": "Оставлены 8 глав (не трогаем число сцен в REGISTRY), тексты глав заменены на тексты из content.json; правка REGISTRY.json (названия сцен, uspHE, heroHE) и ProductCinema.tsx — отдельной задачей после ответа о маске."
+   "id": "10",
+   "q": "Сцены REGISTRY.json (было в. 1, п. 10): названия сцен 3-6 написаны под «снятие вспомогательных слоёв» и «только белую маску», uspHE/heroHE «מסכה לבנה אחת».",
+   "default": "Число сцен 8 не меняем; предложены новые vh и type (раздел 3); правка REGISTRY.json и ProductCinema.tsx — отдельной задачей."
   },
   {
-   "q": "Серьги P7 (в листе — кольца с ракушками) рядом с маской.",
-   "default": "Как в листе персонажа P7; если мешают маске — снять в K2/K3, решить на образце K2."
+   "id": "11",
+   "q": "Серьги пациентки рядом с маской (было в. 1, п. 11; в принятом K1 это кольца с бусинами и жемчужной подвеской, а не кольца с ракушками).",
+   "default": "Как в K1 во всех кадрах; если мешают на образце K2 — снять в K2/K3."
   },
   {
-   "q": "Если бюджета не хватит на 4 ролика.",
-   "default": "Запасной план на 3 ролика: убрать B, K1 остаётся стоп-кадром (медленный наезд при сборке): 8 кадров × 2.75 + 6 роликов × 16.25 = 22 + 97.5 = 119.5 кредита (на 5.5 больше 114 из брифа: все 4 кадра нужны — K0, K2, K3 стартуют ролики, K1 единственная картинка консультации). Главы 02–03 без B: 108–144 A frames 85–120; 144–264 стоп-кадр K1 с наездом не больше 4 %."
+   "id": "12",
+   "q": "Резерв 4 кредита (205 - 201) покрывает один повтор кадра, но не повтор ролика (было в. 1, п. 12).",
+   "default": "Если ролик не удался: глава держится на стартовом кадре с медленным наездом при сборке (без затрат), вопрос о доплате — в QUESTIONS.md; заказчик 19/11 разрешил тратить без ограничений, но решение о потолке страницы за архитектором."
   },
   {
-   "q": "Разглаживает ли косметолог маску руками после наложения? В источниках только «להניח באופן אחיד» (протокол) и «נצמד לעור בצורה אחידה, כמעט ללא כיסי אוויר» (site/product-pages.he.json) — о самой маске.",
-   "default": "Лёгкое разглаживание ладонями («gently smooths so the sheet lies evenly»), без выдавливания пузырьков."
+   "id": "13",
+   "q": "Разглаживает ли косметолог маску руками (было в. 1, п. 13): кадры заказчика этого не показывают.",
+   "default": "Одно лёгкое движение кончиками пальцев по верху лба от центра к вискам; в K2 пальцы у края маски, вырезы открыты."
   },
   {
-   "q": "Первый ролик: в EXO-NAD A идёт от упаковки к людям и кончается на K1; здесь A — отъезд от коробки без перевода фокуса, к K1 склейка.",
-   "default": "Как здесь (без конечного кадра K1, чтобы Kling не дорисовывал лица). Если заказчик хочет переход к людям — дать A конечный кадр K1."
+   "id": "N4",
+   "q": "Ролик B в фильме укорочен до кадров 0-83, иначе фильм длиннее 830 кадров; попадёт ли выпрямление в 0-83, станет видно, когда B готов.",
+   "default": "Кадры 0-83; когда B готов — точка склейки после выпрямления (кадр 75-100), главы 02-08 сдвигаются на разницу, productFilmsEntry.frames обновить; при полном B фильм — 858 кадров."
+  },
+  {
+   "id": "N5",
+   "q": "Лицо косметолога в KS и KL: срезать выше подбородка или оставить далеко вне резкости.",
+   "default": "Верхний край кадра идёт по шее ниже подбородка; лица, подбородка и губ в кадре нет (проще удержать, лицо не дорисовывается)."
   }
  ],
+ "droppedQuestions": [
+  "в. 1, п. 6 (положение пациентки): на o2 клиентка лежит на спине — оставлено полулёжа в откинутом кресле, как было; вопрос снят.",
+  "в. 1, п. 8 (перчатки): решение архитектора — белые во всех кадрах (в видео заказчика розовые); вопрос снят.",
+  "в. 1, п. 2 в части саше: саше и выемка маски теперь есть на фото заказчика (o1, o4, o5).",
+  "в. 1, п. 2 (открытая коробка): решено решением архитектора 4 — коробка всё время закрыта, видны только лицевая и левая стороны.",
+  "в. 1, п. 14 (ролик A без конечного кадра K1): A уже снимается по промпту в. 1 — отъезд от коробки, к K1 склейка."
+ ],
  "risks": [
-  "Устройство маски не согласовано: от ответа зависят K2, K3, ролики C и D (половина фильма).",
-  "Kling от одного кадра может нарисовать заднюю/правую сторону коробки при отъезде камеры (ролик A): проверять каждый кадр, при ошибке — повтор 16.25.",
-  "Маска на лице генерируется: форма вырезов и «один слой» сверять с пакшотом; маска может «сползать» или вплавляться в кожу в ролике C.",
-  "Мелкий текст коробки 5 face masks / Net 5 x 25 ml может превратиться в кашу: на 2K он должен идти тонкими серыми строками, не выдуманными словами.",
-  "Наплыв D -> A reversed (крупный план без маски -> общий план) может читаться как скачок; запас — жёсткая склейка на границе глав 06/07.",
-  "Кастинг-листы M и P7 лежат во временной папке сессии; если её очистят — достать из журнала сессии (PROGRESS.md)."
+  "Саше в ролике S может повернуться или смяться и показать оборот, которого нет на фото: проверять каждый кадр; повтор ролика в резерв не влезает (п. 12).",
+  "Модель может «дорвать» верх или нарисовать отрывную полоску в руке: в KS и S это прямо запрещено; сверять с o4.",
+  "Мелкий текст саше («Professional facial moisturizing mask imbued in serum», «25 ml ℮ 0.84 fl.oz») может стать кашей: на 2K — тонкие серые строки, не выдуманные слова.",
+  "Розовые перчатки с кадров заказчика могут протечь в KS/KL: в промпте трижды сказано white, never pink; при ошибке — повтор кадра 2.75 из резерва.",
+  "Голубая плёнка с o2 может появиться на лице в K2/C: промпт велит брать из o2 только маску; проверять.",
+  "Маска может «сползать» или вплавляться в кожу в ролике C.",
+  "Волосы косметолога в принятом K1 лежат и спереди плеча; в новых кадрах — за плечами: на склейке B→S это не видно (S без лица), на склейке KL→C допустимо.",
+  "Наплыв D → A задом наперёд (крупный план → коробка) может читаться как скачок; запас — жёсткая склейка на границе глав 07/08.",
+  "Кадры заказчика и листы персонажей лежат только во временной папке сессии; при её очистке — достать заново (PROGRESS.md).",
+  "Каскадная пересъёмка: KS 9:16 и ролик S берут опорой KS 16:9, K2 9:16, K3 и ролик C — K2 16:9. Поэтому они снимаются только после «ок» на образец; иначе отказ по KS или K2 стоил бы 11 кредитов (4 кадра) при резерве 4. KL опорой KS не берёт.",
+  "K3 может унаследовать маску от опоры K2 («маска осталась»): в промпте прямо сказано, что лицо открыто от повязки до подбородка, как у пациентки в K1; проверять до ролика D.",
+  "Голые руки и длинные светлые ногти с правой половины листа саше (db6f86ba) могут попасть в KS: проверять, что обе руки целиком в белых перчатках.",
+  "Чёрные рукава, человек позади и фиолетовая шапочка с кадров заказчика (o3, o4) могут попасть в KL/KS: промпт велит брать из них только позу и слои/вскрытый верх."
  ],
  "mediaIds": {
   "M_photo": "90121c86-7093-44bb-a03d-ebc0648e392c",
   "M_turnaround": "182a0e01-b7ac-48e9-b01f-2815d8862009",
-  "P7_turnaround": "387b9773-c5a5-4fe3-bb19-7399c9998925",
-  "packshot_exocell-mask.webp": "61ca8e69-440a-4969-9d56-4d038fe78af8",
+  "P7_sheet": "387b9773-c5a5-4fe3-bb19-7399c9998925",
   "box_front": "a5346a0d-1e4a-43bd-abb3-5a3365f47bee",
-  "box_side": "not uploaded (needed only for K0)",
-  "source": "PROGRESS.md, media table"
+  "packshot": "61ca8e69-440a-4969-9d56-4d038fe78af8",
+  "pouch_sheet": "db6f86ba-090f-492f-9685-a7868e20d3c1",
+  "owner_open_pouch": "1297521a-bbb5-467a-acc0-b4981853994c",
+  "owner_layers": "84ca543d-d56c-4915-bd4c-bcc5ce6d017b",
+  "owner_mask_on_face": "05429adf-6d5d-46ea-ab8e-ebbef6d7d763",
+  "K0": "fc1666c4-d86a-4036-b15a-51e3de45b112",
+  "K0v": "21d1822a-8a09-42ea-a7f0-242f32792f30",
+  "K1": "64d750bc-cd75-4808-8f82-e0b6c4ae2c53",
+  "K1v": "c7e47194-91bb-481b-8a30-3aa5b2083c18"
  },
- "refsRule": "At most 5 references per still (as in EXO-NAD: 2-5). References are named in the prompt by what they are (\"the attached K1\", \"the attached packshot\"), as EXO-NAD does; the order of attachment is refsOrder.",
- "reviewFixes": "19/11: review corrections applied (camera height vs box top, K3 tail, D towel, 9:16 clip rules, refs <= 5, media ids, mask variant wording, smoothing question, fallback cost, captions 01-02).",
- "decision_19_11": {
-  "maskOnFace": "one milky-translucent sheet mask on the face, as in the owner's real application photos of 10/10 (PLAN.md): gloved hands remove a blue protective film, the mask on the face is milky-translucent",
-  "notShown": [
-   "blue layer",
-   "backing sheets",
-   "taking the mask out of the sachet"
-  ],
-  "blocking": false,
-  "note": "K2, K3, C and D are shot on this default without waiting for an answer; the question is logged in QUESTIONS.md"
- }
+ "refsRule": "New stills: at most 5 references, named in the prompt by their order; refs_16x9 / refs_9x16 give the order. A 9:16 still takes the accepted 16:9 still of the same moment as reference 1. K0/K1 keep their v1 reference lists."
 }

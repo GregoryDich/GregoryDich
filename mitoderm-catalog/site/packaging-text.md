@@ -18,7 +18,7 @@ Text printed on each product's packaging, transcribed 10/10/2026 from the high-r
   - centre: 'EXOCELL' / letter-spaced 'M A S K'
   - small block: 'Professional facial moisturizing mask imbued in serum' / 'Maschera viso idratante ad uso professionale imbevuta con siero' / 'Mascarilla hidratante facial profesional empapada en suero' / 'Masque hydratant visage professionnel imbibés de sérum'
   - '5 face masks – maschere viso - máscaras facial - masques facial' / 'Net 5 x 25 ml ℮ 5 x 0.84 fl.oz' / 'Total 125 ml ℮ Total 4,23 fl.oz.'
-- **single-mask sachet** — turquoise foil sachet with rounded corners and a tear notch at the top left, dark navy print (owner's photos in Figma, page 'About — MITODERM', frame HeroArt 88:2, 11/10)
+- **single-mask sachet** — turquoise foil sachet with rounded corners and a tear notch at the top left, dark navy print (owner's photos in Figma, page 'About — MITODERM', frame HeroArt 88:2, 11/10; the owner's cut-out photo of the real sachet front, 19/11: `sources/exocell-sachet-photo-front.png`)
   - VM monogram top centre, below it small 'VM corporation'
   - centre: 'EXOCELL' ('EXO' bold, 'CELL' thin), below it letter-spaced 'M A S K'
   - small block, first line bold: 'Professional facial moisturizing mask imbued in serum', then the same three lines in Italian, Spanish and French as on the lighter carton
