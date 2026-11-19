@@ -16,6 +16,11 @@
 - Общая находка по 11 страницам: подписи глав — общая заготовка (`sceneryCopy` и `scriptTitles` в
   `codex-site/mitoderm/pilot/ProductCinema.tsx`), а не тексты средства из `content.json`; картинка упаковки
   растянута из мелкого файла. Чинится на каждой странице вместе с фильмом: подписи берутся из раскадровки.
+- **Сейчас в работе: EXOCELL MASK** — раскадровка с перепроверкой, запуск `wf_c73fc9d3-a63` (22:55). Сценарий
+  на одну страницу (аргумент `{slug, path, patient}`):
+  `/root/.claude/projects/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/workflows/scripts/mitoderm-page-storyboard-wf_c73fc9d3-a63.js`.
+  Итог — `state/films/exocell-mask/STORYBOARD.md` и `storyboard.json`. Дальше: кадр упаковки (ссылка заказчику) →
+  кадр с людьми → ролики → сборка → подключение и подписи → проверка на трёх размерах.
 - **Порядок страниц:** EXOCELL MASK → EXOTECH GEL → EXOSIGNAL HAIR → EXOSIGNAL SPRAY → MICRO BOOST 10% →
   CELL RENEW 1.5% → CELLULAR AGE DEFENSE 2.5% → DERMA RECOVERY CREAM → MITOPEN → MITOSCAN → MITOTECH CELL BOOSTER.
 - **Шкала для заказчика:** https://claude.ai/artifact/KrV99TX44jW4gh6DPGgQVB — собирается из
