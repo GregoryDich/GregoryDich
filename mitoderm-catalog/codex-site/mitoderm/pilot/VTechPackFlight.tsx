@@ -4,6 +4,7 @@ import {useCallback,useEffect,useRef,useState,type CSSProperties,type RefObject}
 import {getEntryBoxRect,getEntryMedia} from './vtech-entry';
 import {mediaUrl} from '../media';
 import {VTechKitSequence,kitSequence} from './VTechKitSequence';
+import {mapVTechKitClipTime} from './vtech-kit-timing';
 import './vtech-pack-flight.css';
 
 type Geometry={style:CSSProperties;sequence:CSSProperties;poster:string;backdrop:string;image:CSSProperties;silhouette:string;window:string;triangle:string;clip:CSSProperties;clipSrc:string};
@@ -99,7 +100,7 @@ export function VTechPackFlight({stage,reduced}:{stage:RefObject<HTMLDivElement|
  useEffect(()=>{
   const screen=stage.current,video=clipVideo.current;if(!screen||!video)return;
   // Scroll owns the footage: data-kit-clip is its progress, set by VTechStory.
-  const target=()=>(+(screen.dataset.kitClip??0))*Math.max(0,video.duration-.04);
+  const target=()=>mapVTechKitClipTime(+(screen.dataset.kitClip??0))*Math.max(0,video.duration-.04);
   const seekable=()=>video.seekable.length>0&&video.seekable.end(0)>=video.duration-.1;
   const sync=()=>{
    if(video.readyState<2||!Number.isFinite(video.duration)||!seekable())return;

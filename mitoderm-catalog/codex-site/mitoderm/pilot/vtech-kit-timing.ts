@@ -13,6 +13,19 @@ export const vtechKitTiming={
 const phase=(value:number,start:number,end:number)=>Math.min(1,Math.max(0,(value-start)/(end-start)));
 const smooth=(value:number)=>value*value*(3-2*value);
 
+// The opening footage dissolves between two takes around frames 66–76 of 121
+// (a double exposure). Scroll crosses that stretch in a sliver of the opening
+// so nobody rests on a ghosted frame; the rest of the clip keeps its pace and
+// still starts on the film's last frame and ends on the opened kit.
+const clipDissolve={start:66/121,end:76/121,span:.02} as const;
+
+export function mapVTechKitClipTime(progress:number){
+ const {start,end,span}=clipDissolve,centre=(start+end)/2,from=centre-span/2,to=centre+span/2;
+ if(progress<=from)return progress*start/from;
+ if(progress>=to)return end+(progress-to)*(1-end)/(1-to);
+ return start+(progress-from)*(end-start)/span;
+}
+
 export function mapVTechKitProgress(local:number){
  const openingRaw=phase(local,vtechKitTiming.openStart,vtechKitTiming.openEnd);
  return {
