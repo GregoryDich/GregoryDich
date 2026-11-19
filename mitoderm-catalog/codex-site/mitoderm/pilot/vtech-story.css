@@ -186,9 +186,6 @@ html[data-product-transit] [data-vtech-hud]{opacity:0!important;pointer-events:n
  .vts-story[data-mode="cinema"] .vts-stage[data-kit-opened="true"] .vc-story-offer-copy{
   opacity:1;transform:none;pointer-events:auto;
  }
- .vts-story[data-mode="cinema"] .vts-stage[data-active-chapter="vtech-kit"] .vc-story-kit-reveal{
-  bottom:0;z-index:6;text-shadow:0 1px 7px #000c;
- }
 }
 
 

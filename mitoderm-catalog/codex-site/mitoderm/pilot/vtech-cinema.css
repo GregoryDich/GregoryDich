@@ -139,9 +139,6 @@ html:not([data-vtech-immersed=true]) .vc-section-nav{transform:translateY(-100%)
 .vc-story-offer-panel{inset:154px clamp(28px,6.5vw,110px) 90px;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);align-items:center;gap:clamp(30px,5vw,85px);direction:ltr}
 .vc-story-kit-display{position:relative;width:100%;height:100%;max-height:580px;min-height:0;display:grid;grid-template-rows:minmax(0,1fr);align-self:center}
 .vc-story-kit-target{width:100%;height:100%;max-width:660px;min-height:0;justify-self:center;align-self:center;pointer-events:none}
-.vc-story-kit-reveal{position:absolute;bottom:-6px;inset-inline:0;min-height:44px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;padding:4px 10px;color:#e8c78b;font-size:12px;line-height:1.4;direction:rtl;pointer-events:auto;transition:opacity .25s,visibility .25s}
-.vc-story-kit-reveal-direct{color:#bbb0a0;font-size:10px;border-bottom:1px solid #dfba7440}
-.vts-stage[data-kit-opening=true] .vc-story-kit-reveal{opacity:0;visibility:hidden;pointer-events:none}
 .vts-story[data-mode=linear] .vc-story-kit-display{grid-template-rows:1fr;min-height:260px;aspect-ratio:1188/882}
 .vc-story-kit-target>.vc-story-kit-fallback{display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:contain}
 .vc-story-offer-copy{direction:rtl;min-width:0;width:100%;max-width:510px;justify-self:end}
@@ -193,7 +190,6 @@ html:not([data-vtech-immersed=true]) .vc-section-nav{transform:translateY(-100%)
  .vc-story-offer-panel{inset:136px 24px calc(64px + env(safe-area-inset-bottom));grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(85px,1fr) auto;align-items:end;gap:12px}
  .vc-story-kit-display{width:min(100%,440px);height:100%;max-height:340px;justify-self:center;grid-template-rows:minmax(0,1fr)}
  .vc-story-kit-target{width:100%;height:100%;align-self:center}
- .vc-story-kit-reveal{font-size:11px;padding-block:0;min-height:44px;gap:7px}.vc-story-kit-reveal-direct{font-size:10px}
  .vc-story-offer-copy{max-width:500px;justify-self:center}
  .vc-story-kit-contents{gap:16px;margin-top:18px}.vc-story-kit-contents>div{padding-top:11px}
  .vc-story-kit-contents dt{font-size:25px}.vc-story-kit-contents dd{font-size:11px;margin-top:8px}.vc-story-kit-contents dd>span{font-size:12px;margin-top:3px}
@@ -257,3 +253,34 @@ html:not([data-vtech-immersed=true]) .vc-section-nav{transform:translateY(-100%)
 }
 @media(max-width:360px){.vts-story[data-mode=linear] :is(.vc-story-evidence-panel,.vc-story-evidence-approved,.vc-story-offer-panel){width:calc(100% - 36px);margin-inline:18px}}
 @media(prefers-reduced-motion:reduce){.vc-story-panel-cta,.vc-story-panel-secondary{transition:none}}
+
+/* Caption placement per chapter and viewport, checked frame by frame against
+   the film. Desktop: in the gel-mask close-up and the first half of the results
+   shot the patient's face fills the right half down to her chin, so the copy
+   becomes one low, wide block under the chin (neck and chair behind it).
+   Phone: the serum caption keeps clear of the vial on the left; the
+   consultation caption waits until the camera pans off the hero box, and the
+   results panel leaves at the cut to the wide shot where the box rises
+   (data-pack-in-frame, set in VTechStory). */
+@media(min-width:861px){
+ .vts-story[data-mode=cinema] #vtech-mask .vts-caption{bottom:64px;width:min(600px,44vw)}
+ .vts-story[data-mode=cinema] #vtech-mask .vts-caption h2{max-width:none;font-size:clamp(28px,2.8vw,42px)}
+ .vts-story[data-mode=cinema] #vtech-mask .vts-kicker{margin-bottom:6px;text-align:right}
+ .vts-story[data-mode=cinema] #vtech-mask .vts-body{max-width:none;margin-top:8px}
+ .vts-story[data-mode=cinema] #vtech-mask .vts-clinical-actions{margin-top:12px}
+ .vts-story[data-mode=cinema] .vc-story-evidence-panel:not(.vc-story-evidence-approved){bottom:64px;width:min(620px,44vw);display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:24px}
+ .vts-story[data-mode=cinema] .vc-story-evidence-panel:not(.vc-story-evidence-approved)>*{grid-column:1/-1}
+ .vts-story[data-mode=cinema] .vc-story-evidence-panel:not(.vc-story-evidence-approved)>.vc-story-evidence-facts{grid-column:1;margin:0}
+ .vts-story[data-mode=cinema] .vc-story-evidence-panel:not(.vc-story-evidence-approved)>.vc-story-panel-cta{grid-column:2;justify-self:end;margin-top:14px}
+ .vts-story[data-mode=cinema] .vc-story-evidence-panel:not(.vc-story-evidence-approved)>.vc-story-evidence-facts{margin-top:14px}
+ .vts-story[data-mode=cinema] .vc-story-evidence-panel:not(.vc-story-evidence-approved) .vc-story-panel-kicker{margin-bottom:6px}
+ .vts-story[data-mode=cinema] .vc-story-evidence-panel:not(.vc-story-evidence-approved) h2{font-size:clamp(28px,2.8vw,40px)}
+ .vts-story[data-mode=cinema] .vc-story-evidence-panel:not(.vc-story-evidence-approved) h2 br{display:none}
+ .vts-story[data-mode=cinema] .vc-story-evidence-panel:not(.vc-story-evidence-approved) .vc-story-panel-body{max-width:none;margin-top:8px;font-size:16px;line-height:1.55}
+ .vts-story[data-mode=cinema] .vc-story-evidence-panel:not(.vc-story-evidence-approved) .vc-story-panel-note{margin-top:10px}
+}
+@media(max-width:860px) and (orientation:portrait){
+ .vts-story[data-mode=cinema] #vtech-serum .vts-caption{inset-inline-end:34%}
+ .vts-story[data-mode=cinema] :is(#vtech-consultation .vts-caption,.vc-story-evidence-panel:not(.vc-story-evidence-approved)){transition:opacity .3s,visibility .3s}
+ .vts-story[data-mode=cinema] .vts-stage[data-pack-in-frame=true] :is(#vtech-consultation .vts-caption,.vc-story-evidence-panel:not(.vc-story-evidence-approved)){opacity:0;visibility:hidden}
+}
