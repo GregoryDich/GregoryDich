@@ -12,11 +12,41 @@
       "mcp__Figma__get_screenshot",
       "mcp__Figma__get_metadata",
       "mcp__Figma__download_assets",
-      "mcp__Figma__upload_assets"
+      "mcp__Figma__upload_assets",
+      "mcp__Higgsfield__balance",
+      "mcp__Higgsfield__transactions",
+      "mcp__Higgsfield__models_explore",
+      "mcp__Higgsfield__estimate_image_cost",
+      "mcp__Higgsfield__estimate_video_cost",
+      "mcp__Higgsfield__jobs_wait",
+      "mcp__Higgsfield__show_generation_by_ids",
+      "mcp__Higgsfield__media_import_url",
+      "mcp__Higgsfield__media_upload",
+      "mcp__Higgsfield__media_confirm",
+      "mcp__Higgsfield__get_workflow_instructions",
+      "mcp__Higgsfield__get_workflow_bundle_file",
+      "mcp__Higgsfield__get_preset_instructions",
+      "mcp__Higgsfield__generate_image",
+      "mcp__Higgsfield__generate_image_batch",
+      "mcp__Claude_Code_Remote__report_preview_port"
     ],
     "ask": [
       "mcp__atlascloud",
-      "mcp__Higgsfield"
+      "mcp__Higgsfield__generate_video",
+      "mcp__Higgsfield__generate_video_batch"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"${CLAUDE_PROJECT_DIR:-.}/mitoderm-catalog/PROGRESS.md\"; [ -f \"$f\" ] && sed -n '1,/^## Деньги/p' \"$f\" || true"
+          }
+        ]
+      }
     ]
   }
 }
