@@ -153,6 +153,8 @@ export function VTechStory(){
    screen.style.setProperty('--vts-pack-progress',String(kitMotion.pack));
    screen.style.setProperty('--vts-kit-reveal',String(kitMotion.reveal));
    screen.style.setProperty('--vts-kit-open',String(kitMotion.opening));
+   screen.style.setProperty('--vts-kit-clip',String(kitMotion.clip));
+   screen.dataset.kitClip=kitMotion.clip.toFixed(4);
    screen.dataset.kitLoad=String(units>=starts[5]-.25);
    screen.dataset.kitFrame=String(Math.round(kitMotion.opening*39));
    // Browser scroll positions round to a pixel; the fully eased pose can be

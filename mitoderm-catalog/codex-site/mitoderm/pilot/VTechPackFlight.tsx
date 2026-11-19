@@ -1,12 +1,19 @@
 'use client';
 
-import {useCallback,useEffect,useState,type CSSProperties,type RefObject} from 'react';
+import {useCallback,useEffect,useRef,useState,type CSSProperties,type RefObject} from 'react';
 import {getEntryBoxRect,getEntryMedia} from './vtech-entry';
 import {mediaUrl} from '../media';
 import {VTechKitSequence,kitSequence} from './VTechKitSequence';
 import './vtech-pack-flight.css';
 
-type Geometry={style:CSSProperties;sequence:CSSProperties;poster:string;backdrop:string;image:CSSProperties;silhouette:string;window:string;triangle:string};
+type Geometry={style:CSSProperties;sequence:CSSProperties;poster:string;backdrop:string;image:CSSProperties;silhouette:string;window:string;triangle:string;clip:CSSProperties;clipSrc:string};
+
+// Generated opening footage (16:9, both files), in 1920x1080 frame units: the
+// closed box on its first frame (= the film's last frame) and the opened kit
+// on its last frame. The frame starts over the film's box and pulls back onto
+// the offer slot; the layer sequence stays for loading, errors and old data.
+const clipFrame={width:1920,height:1080},clipBox={left:716,top:40,height:974},clipKit={left:428,top:182,width:1054,height:730};
+type ClipState='off'|'loading'|'ready'|'error';
 
 /** The last camera frame returns to the original pack. Its exact photographic
  * silhouette then takes over, so the offer never introduces a second product. */
@@ -14,6 +21,9 @@ export function VTechPackFlight({stage,reduced}:{stage:RefObject<HTMLDivElement|
  const [geometry,setGeometry]=useState<Geometry|null>(null);
  const [sequenceMode,setSequenceMode]=useState<'loading'|'layers'|'fallback'>('loading');
  const ready=useCallback((mode:'layers'|'fallback')=>setSequenceMode(mode),[]);
+ const clipVideo=useRef<HTMLVideoElement>(null);
+ const [clipState,setClipState]=useState<ClipState>('off');
+ const [clipBlob,setClipBlob]=useState<string|null>(null);
  useEffect(()=>{
   const screen=stage.current;if(reduced){setSequenceMode('loading');return;}if(!screen)return;
   const target=screen.querySelector<HTMLElement>('[data-kit-product-target]');
@@ -36,6 +46,10 @@ export function VTechPackFlight({stage,reduced}:{stage:RefObject<HTMLDivElement|
    const endTop=sequenceTop+kitSequence.box.top*sequenceScale;
    const sourceScale=box.width/media.box.width;
    const mobile=window.innerWidth<=860;
+   const clipStart=box.height/clipBox.height,clipEnd=Math.min(slot.width/clipKit.width,slot.height/clipKit.height)*.98;
+   const clipLeft=box.left-clipBox.left*clipStart,clipTop=box.top-clipBox.top*clipStart;
+   const clipEndLeft=slot.left-frame.left+(slot.width-clipKit.width*clipEnd)/2-clipKit.left*clipEnd;
+   const clipEndTop=slot.top-frame.top+(slot.height-clipKit.height*clipEnd)/2-clipKit.top*clipEnd;
    const polygon=(points:number[][])=>'polygon('+points.map(([x,y])=>`${(x-media.box.left)/media.box.width*100}% ${(y-media.box.top)/media.box.height*100}%`).join(',')+')';
    const next:Geometry={
     poster:media.poster,backdrop:mediaUrl(mobile?'/assets/world/vtech-mask-mobile-poster.webp':'/assets/world/vtech-mask-poster.webp'),silhouette:media.silhouette,
@@ -55,6 +69,9 @@ export function VTechPackFlight({stage,reduced}:{stage:RefObject<HTMLDivElement|
     } as CSSProperties,
     sequence:{left:sequenceLeft,top:sequenceTop,width:kitSequence.width*sequenceScale,height:kitSequence.height*sequenceScale},
     image:{width:media.width*sourceScale,height:media.height*sourceScale,left:-media.box.left*sourceScale,top:-media.box.top*sourceScale},
+    clip:{left:clipLeft,top:clipTop,width:clipFrame.width*clipStart,height:clipFrame.height*clipStart,
+     '--clip-dx':(clipEndLeft-clipLeft)+'px','--clip-dy':(clipEndTop-clipTop)+'px','--clip-scale-delta':clipEnd/clipStart-1} as CSSProperties,
+    clipSrc:mediaUrl(mobile?'/assets/world/vtech-kit-open-mobile.mp4':'/assets/world/vtech-kit-open.mp4'),
    };
    setGeometry(previous=>JSON.stringify(previous)===JSON.stringify(next)?previous:next);
   };
@@ -70,9 +87,43 @@ export function VTechPackFlight({stage,reduced}:{stage:RefObject<HTMLDivElement|
   void document.fonts.ready.then(()=>{if(!disposed)afterLayout();});measure();
   return()=>{disposed=true;observer.disconnect();if(pending)window.cancelAnimationFrame(pending);window.removeEventListener('resize',afterLayout);window.removeEventListener('mitoderm:vtech-section',afterLayout);};
  },[stage,reduced]);
+ const hasGeometry=geometry!==null,clipSrc=geometry?.clipSrc;
+ useEffect(()=>{
+  // Load the footage only near the kit, as the layer sequence does.
+  const screen=stage.current;if(reduced||!screen)return;
+  const sync=()=>{if(screen.dataset.kitLoad==='true')setClipState(current=>current==='off'?'loading':current);};
+  const observer=new MutationObserver(sync);
+  observer.observe(screen,{attributes:true,attributeFilter:['data-kit-load']});sync();
+  return()=>observer.disconnect();
+ },[stage,reduced]);
+ useEffect(()=>{
+  const screen=stage.current,video=clipVideo.current;if(!screen||!video)return;
+  // Scroll owns the footage: data-kit-clip is its progress, set by VTechStory.
+  const target=()=>(+(screen.dataset.kitClip??0))*Math.max(0,video.duration-.04);
+  const seekable=()=>video.seekable.length>0&&video.seekable.end(0)>=video.duration-.1;
+  const sync=()=>{
+   if(video.readyState<2||!Number.isFinite(video.duration)||!seekable())return;
+   const time=target();
+   if(Math.abs(video.currentTime-time)<.03){setClipState(current=>current==='loading'?'ready':current);return;}
+   if(!video.seeking)video.currentTime=time;
+  };
+  const failed=()=>setClipState('error');
+  // A server without byte ranges (the local worker) leaves the video
+  // unseekable; the short clip is then read whole and played from memory.
+  const loaded=()=>{
+   if(seekable()||video.currentSrc.startsWith('blob:')){sync();return;}
+   void fetch(video.currentSrc).then(response=>response.ok?response.blob():Promise.reject(new Error(String(response.status)))).then(blob=>setClipBlob(URL.createObjectURL(blob))).catch(failed);
+  };
+  const observer=new MutationObserver(sync);
+  observer.observe(screen,{attributes:true,attributeFilter:['data-kit-clip']});
+  video.addEventListener('loadeddata',loaded);video.addEventListener('seeked',sync);video.addEventListener('error',failed);if(video.readyState>=2)loaded();
+  return()=>{observer.disconnect();video.removeEventListener('loadeddata',loaded);video.removeEventListener('seeked',sync);video.removeEventListener('error',failed);};
+ },[stage,hasGeometry,clipSrc,clipState]);
+ useEffect(()=>()=>{if(clipBlob)URL.revokeObjectURL(clipBlob);},[clipBlob]);
  if(reduced||!geometry)return null;
- return <div className="vts-pack-flight" style={geometry.style} data-sequence-ready={sequenceMode!=='loading'} data-kit-renderer={sequenceMode} aria-hidden="true">
+ return <div className="vts-pack-flight" style={geometry.style} data-sequence-ready={sequenceMode!=='loading'} data-kit-renderer={sequenceMode} data-clip={clipState} aria-hidden="true">
   <div className="vts-pack-backdrop"><img src={geometry.backdrop} alt=""/></div>
+  {clipState!=='off'&&clipState!=='error'&&<video ref={clipVideo} className="vts-kit-clip" style={geometry.clip} src={clipBlob??geometry.clipSrc} muted playsInline preload="auto" tabIndex={-1} onLoadStart={()=>setClipState(current=>current==="ready"?"loading":current)}/>}
   <div className="vts-pack-ground"/>
   <div className="vts-pack-object"><div className="vts-pack-sleeve"><div className="vts-pack-cutout" style={{clipPath:geometry.silhouette}}>
    <img src={geometry.poster} style={geometry.image} alt="" draggable={false}/>

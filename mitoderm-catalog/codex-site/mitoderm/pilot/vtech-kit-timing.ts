@@ -17,6 +17,9 @@ export function mapVTechKitProgress(local:number){
  const openingRaw=phase(local,vtechKitTiming.openStart,vtechKitTiming.openEnd);
  return {
   video:phase(local,0,vtechKitTiming.returnEnd),
+  // The opening footage continues the film from its last frame and ends on
+  // the opened kit together with the layer animation it replaces.
+  clip:phase(local,vtechKitTiming.returnEnd,vtechKitTiming.openEnd),
   pack:smooth(phase(local,vtechKitTiming.returnEnd,vtechKitTiming.flightEnd)),
   reveal:phase(local,vtechKitTiming.revealStart,vtechKitTiming.revealEnd),
   opening:smooth(openingRaw),

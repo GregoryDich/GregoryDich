@@ -87,3 +87,28 @@
    recognised behind the flying pack or the open kit; scaled to hide blur edges. */
 .vts-pack-backdrop img{filter:brightness(.3) saturate(.55) blur(22px);transform:scale(1.12)}
 @media(max-width:860px){.vts-pack-backdrop img{filter:brightness(.32) saturate(.55) blur(16px)}}
+
+/* Generated opening footage. Its first frame lies exactly over the film's box;
+   it fades in over the held last film frame, then pulls back onto the offer
+   slot while the lid opens. Feathered edges fade the frame into the darkened,
+   blurred clinic, and the frame dims outside the kit, which keeps the faces
+   behind it unreadable. */
+.vts-kit-clip{
+ position:absolute;z-index:2;display:block;max-width:none;object-fit:fill;pointer-events:none;
+ transform-origin:0 0;will-change:transform,opacity;
+ transform:translate3d(calc(var(--vts-kit-open,0)*var(--clip-dx)),calc(var(--vts-kit-open,0)*var(--clip-dy)),0) scale(calc(1 + var(--vts-kit-open,0)*var(--clip-scale-delta)));
+ opacity:0;
+ --clip-feather:calc(3% + var(--vts-kit-open,0)*19%);
+ --clip-dim:rgb(0 0 0/calc(1 - var(--vts-kit-open,0)*.7));
+ mask-image:linear-gradient(90deg,transparent,#000 var(--clip-feather),#000 calc(100% - var(--clip-feather)),transparent),linear-gradient(180deg,transparent,#000 9%,#000 91%,transparent),radial-gradient(ellipse 41% 49% at 49% 51%,#000 88%,var(--clip-dim) 112%);
+ mask-composite:intersect;
+}
+.vts-pack-flight[data-clip=ready] .vts-kit-clip{opacity:clamp(0,calc(var(--vts-kit-clip,0)*10),1)}
+.vts-pack-flight[data-clip=ready] :is(.vts-pack-object,.vts-pack-ground,.vts-kit-sequence){display:none}
+.vts-pack-flight[data-clip=ready] .vts-pack-backdrop{opacity:clamp(0,calc(var(--vts-kit-clip,0)*8),1)}
+/* With the footage the copy waits until the frame has pulled back beside it,
+   so the headline never lies over the close-up and the faces behind the box. */
+@media(min-width:861px){
+ .vts-story[data-mode=cinema] .vts-pack-flight[data-clip=ready]~.vts-scenes .vc-story-offer-copy,
+ .vts-story[data-mode=cinema] .vts-pack-flight[data-clip=ready]~.vts-scenes .vts-scene[data-kind=offer]::after{opacity:clamp(0,calc((var(--vts-kit-open,0) - .45)*4),1)}
+}
