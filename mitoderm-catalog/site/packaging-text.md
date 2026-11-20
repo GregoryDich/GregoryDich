@@ -76,18 +76,22 @@ Text printed on each product's packaging, transcribed 10/10/2026 from the high-r
 
 ## exosignal-spray
 
-Пакшот: фото заказчика № 2, 3, 21 в Figma (`93:8081`, `93:8083`, `104:8121` — коробка и флакон на белом). ⚠ Студийного пакшота нет. Кроп флакона в руке у лица — фото с человеком, хранится закрыто, в репозиторий не кладётся
+Пакшот: единственный снимок — `sources/exosignal-spray-box-and-bottle.png` (1095×1536, коробка и флакон на прозрачном фоне; оригинал заливки узлов Figma `93:8081`, `93:8083`, `104:8121` в файле `KcOGIzO76mDODxjwIrkGyo` — все три узла используют одну и ту же картинку; снят 20/11). ⚠ Студийного пакшота нет, и этот снимок прошёл через увеличение нейросетью: крупная печать верна, **мелкие строки искажены** («Deep nourtahing scalo serum», «MADE IN UISA») — в кадрах их не воспроизводить. Нет фото: коробка сзади и сбоку, флакон без колпачка (распылитель), флакон сзади. Кроп флакона в руке у лица — фото с человеком, хранится закрыто, в репозиторий не кладётся
 
-- **tall box** — matte black box, gold and white print
-  - top: VM monogram
-  - centre, gold: 'EXOSIGNAL' ('EXO' bold), below it letter-spaced 'S P R A Y · H O M E'
-  - lower: 'EXOSIGNAL SPRAY HOME' and [unreadable] four tiny white lines, a small boxed label
-- **spray bottle** — frosted translucent glass cylinder, ribbed gold metallic cap
-  - VM monogram, below it [unreadable] one tiny line
-  - 'EXOSIGNAL' running vertically ('EXO' bold black, 'SIGNAL' thin), beside it letter-spaced 'S P R A Y · H O M E'
-  - 'EXOSIGNAL SPRAY HOME'
-  - 'Deep nourishing scalp serum' and [unreadable] three tiny lines (the same line in Italian, Spanish and French)
+- **tall box** — matte black box (a lid over a base: the seam runs across at about 0.78 of the height), gold and light-grey print
+  - top: gold VM monogram, below it small gold 'VM corporation'
+  - centre, gold, running vertically (read from the top down): 'EXOSIGNAL' ('EXO' bold), beside it letter-spaced 'S P R A Y · H O M E'
+  - on the base, light grey, bold: 'EXOSIGNAL SPRAY HOME'
+  - [unreadable] four tiny light-grey lines under it (meant: 'Deep nourishing scalp serum' and the same line in Italian, Spanish and French; the photo's words are garbled)
+  - a small light boxed label with dark bold text: 'HOME USE'
+  - bottom line: 'Net 0.51 Fl.Oz ℮ 15 ml'
+- **spray bottle** — frosted translucent glass cylinder, smooth polished gold metallic cap (about 0.28 of the total height), no visible nozzle (the cap covers it)
+  - black VM monogram, below it [unreadable] one tiny line
+  - 'EXOSIGNAL' running vertically, read from the top down ('EXO' bold black, 'SIGNAL' thin), beside it letter-spaced 'S P R A Y · H O M E'
+  - bold: 'EXOSIGNAL SPRAY HOME'
+  - [unreadable] about seven tiny centred lines (meant: 'Deep nourishing scalp serum' and its translations; garbled on the photo)
   - bold: 'HOME USE'
+  - [unreadable] one small line under it ('MADE IN …': the country is garbled on the photo — never write a country)
 
 ## exotech-gel
 
