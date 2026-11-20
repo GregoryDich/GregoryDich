@@ -298,53 +298,81 @@
         },
         {
           "title": "MITOSCAN на проборе",
-          "seconds": 4.21,
-          "vh": 1.22,
+          "seconds": 3.38,
+          "vh": 0.98,
           "type": "device",
           "index": 3
         },
         {
-          "title": "Ампула в руке косметолога",
-          "seconds": 5.42,
-          "vh": 1.57,
-          "type": "pack",
+          "title": "Экран MITOSCAN: кожа головы крупно, пометки на проблемных местах",
+          "seconds": 8.33,
+          "vh": 2.2,
+          "type": "procedure",
           "index": 4
         },
         {
-          "title": "MITOPEN и сыворотка по пробору",
-          "seconds": 7.29,
-          "vh": 2.11,
-          "type": "procedure",
+          "title": "Ампула в руке косметолога",
+          "seconds": 6.96,
+          "vh": 2.0,
+          "type": "pack",
           "index": 5
+        },
+        {
+          "title": "MITOPEN и сыворотка по пробору",
+          "seconds": 3.54,
+          "vh": 1.05,
+          "type": "procedure",
+          "index": 6
+        },
+        {
+          "title": "Внутри кожи: средство идёт по волосу в фолликул к луковице",
+          "seconds": 11.58,
+          "vh": 3.0,
+          "type": "procedure",
+          "index": 7
         },
         {
           "title": "Массаж в перчатках до впитывания",
           "seconds": 5.0,
           "vh": 1.45,
           "type": "procedure",
-          "index": 6
+          "index": 8
+        },
+        {
+          "title": "Курс: окно, проходят недели",
+          "seconds": 3.75,
+          "vh": 1.1,
+          "type": "procedure",
+          "index": 9
+        },
+        {
+          "title": "Повторный осмотр MITOSCAN после курса: те же места на экране",
+          "seconds": 6.46,
+          "vh": 1.87,
+          "type": "procedure",
+          "index": 10
         },
         {
           "title": "Конец визита: разговор о следующих встречах",
-          "seconds": 6.08,
-          "vh": 1.76,
+          "seconds": 6.46,
+          "vh": 1.8,
           "type": "patient",
-          "index": 7
+          "index": 11
         },
         {
           "title": "Упаковка снова: камера возвращается к коробке",
           "seconds": 4.88,
           "vh": 1.41,
           "type": "pack",
-          "index": 8
+          "index": 12
         }
       ],
       "isFrozen": false,
-      "status": "film_v2_wired",
+      "status": "film_v3_wired",
       "packImage": "/assets/products/exosignal-hair.webp",
       "timeline": {
-        "seconds": 42.0,
-        "scrollVh": 12.16
+        "seconds": 69.46,
+        "scrollVh": 19.5
       },
       "line": "VM — профессиональная трихологическая процедура"
     },

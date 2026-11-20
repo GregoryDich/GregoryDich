@@ -125,8 +125,8 @@
  .pc-actions>button{min-height:42px}
  .pc-primary{min-height:42px;padding:10px 20px}
  .pc-hud{bottom:7px;inset-inline:22px}
- .pc-step{min-width:28px;width:28px;height:28px;padding:4px}
- .pc-steps{gap:4px}
+ .pc-step{min-width:0;width:28px;flex:0 1 28px;height:28px;padding:4px}
+ .pc-steps{gap:4px;min-width:0}
  .pc-hud-note{font-size:10px}
  .pc-evidence-grid,.pc-offer-grid,.pc-questions{grid-template-columns:1fr;gap:32px}
  .pc-offer-product{min-height:320px}

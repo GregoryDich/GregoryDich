@@ -39,21 +39,26 @@ export const productFilms:Record<string,ProductFilm>={
   {start:576,end:684}, // 07 the next visit
   {start:684,end:822}  // 08 pack
  ]},
- // A connected film: one unbroken visit, no hard cuts. 1912x1080 and 1080x1920, 1008 frames, a keyframe every 12
+ // A connected film: one unbroken visit, no hard cuts. 1912x1080 and 1080x1920, 1667 frames, a keyframe every 12
  // (state/films/exosignal-hair/film-assemble.sh with film-16x9.spec). The phone film is a moving window cut out of
  // the desktop one (vertical-from-horizontal.py with vertical-keys.json). A chapter starts inside a clip, where the
- // next scene is already recognisable, not at the joint of two clips.
- 'exosignal-hair':{desktop:'/assets/world/exosignal-hair-film.mp4',mobile:'/assets/world/exosignal-hair-film-mobile.mp4',fps:24,frames:1008,chapters:[
-  {start:0,end:91},    // 01 pack
-  {start:91,end:219},  // 02 consultation
-  {start:219,end:320}, // 03 MITOSCAN on the parting
-  {start:320,end:450}, // 04 the ampoule
-  {start:450,end:625}, // 05 MITOPEN and the serum
-  {start:625,end:745}, // 06 massage until absorbed
-  {start:745,end:891}, // 07 the end of the visit
-  {start:891,end:1008} // 08 pack
- ]}
-};
+ // next scene is already recognisable, not at the joint of two clips. Chapters 04, 07, 09 and 10 were added on
+ // 20/11 at the owner's word: the scan on the tablet, the serum inside the skin, the weeks of the course and the
+ // follow-up scan; their captions are quoted from mitoderm.com (the old site) and the treatment protocol.
+ 'exosignal-hair':{desktop:'/assets/world/exosignal-hair-film.mp4',mobile:'/assets/world/exosignal-hair-film-mobile.mp4',fps:24,frames:1667,chapters:[
+  {start:0,end:91},      // 01 pack
+  {start:91,end:219},    // 02 consultation
+  {start:219,end:300},   // 03 MITOSCAN on the parting
+  {start:300,end:500},   // 04 the tablet screen: what the scan shows
+  {start:500,end:667},   // 05 the ampoule
+  {start:667,end:752},   // 06 MITOPEN and the serum
+  {start:752,end:1030},  // 07 inside the skin: the serum runs down the hair to the bulb
+  {start:1030,end:1150}, // 08 massage until absorbed
+  {start:1150,end:1240}, // 09 the weeks of the course (the window)
+  {start:1240,end:1395}, // 10 the follow-up scan
+  {start:1395,end:1550}, // 11 the end of the visit
+  {start:1550,end:1667}  // 12 pack
+ ]}};
 // Chapter captions of the series films, in page order, word for word from the approved page copy
 // (state/films/<slug>/storyboard.json, "captions"). A slug without an entry keeps the generic copy.
 export const productCaptions:Record<string,Array<{title:string;body:string;tag:string}>>={
@@ -83,9 +88,13 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'EXOSIGNAL HAIR',body:'האות שזקיקי השיער מחכים לו',tag:'אקסוזומים סינתטיים · טיפולי קרקפת'},
   {title:'לנשירת שיער יש נקודת פתיחה',body:'המטופלים שלכם רואים את זה במראה. תנו להם תוכנית שמתחילה במדידה.',tag:'למה?'},
   {title:'אבחון · MITOSCAN',body:'ניתן להשתמש במצלמת MITOSCAN לסקירת הקרקפת, מצב הזקיקים, דלילות ודלקות',tag:'אבחון'},
+  {title:'הנתונים על המסך',body:'נשירת שיער מסטרס · אלופציה אנדרוגנטית · איזון הקרקפת (עודף סבום, גרד, אדמומיות) · שיער דק/שביר/יבש',tag:'מה רואים על המסך'},
   {title:'אמפולה אחת, שמונה פפטידים',body:'מבנים אקסוזומליים סינתטיים נושאים PDRN\u00a02%, חומצה היאלורונית, שמונה פפטידים ביומימטיים, תאי גזע מתפוח וויטמיני\u00a0B.',tag:'מה בפנים'},
   {title:'מודדים, פותחים, מחדירים',body:'MITOPEN פותח את מסלול החדירה ו-\u2060EXOSIGNAL\u00a0HAIR מיושם על הקרקפת המטופלת',tag:'פרוטוקול'},
+  {title:'3 = 1 + 1',body:'לאחר פציעה מבוקרת מטפטפים את החומר על העור ולמעשה נותנים לעור מחסן של פקטורי גדילה, פפטידים, חלבונים ותאי גזע מצמחים כך שהעור משתמש במאגרים חדשים ובונה את עצמו מחדש.',tag:'בתוך העור'},
   {title:'ספיגת הסרום',body:'לאחר העבודה יש לעסות עם הכפפות את הקרקפת בעדינות עד לספיגה מלאה של החומר.',tag:'ספיגת הסרום'},
+  {title:'תדירות וסדרת טיפולים',body:'טיפול אחד בכל 14 יום. מומלץ לבצע לפחות 4 טיפולים רצופים.',tag:'סדרת טיפולים'},
+  {title:'מעקב לפני / אחרי',body:'הפחתת נשירה ודלקת מקומית · שיפור מצב הקרקפת והמיקרו-סירקולציה · שיפור בנפח, מרקם וברק · תמיכה בהארכת שלב האנגן (צמיחה)',tag:'מעקב'},
   {title:'מומחי Mitoderm מוסמכים',body:'Exosignal\u00a0Hair הוא טיפול אמפולות מדויק המיושם במפגשים במרפאה.',tag:'ערכה ועובדות'},
   {title:'הכניסו את EXOSIGNAL\u00a0HAIR לקליניקה שלכם',body:'לשימוש מקצועי בלבד, מיועד לשילוב עם MITOPEN ו-\u2060MITOSCAN.',tag:'הצעה'}
  ]
