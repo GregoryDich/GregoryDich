@@ -76,22 +76,28 @@ Text printed on each product's packaging, transcribed 10/10/2026 from the high-r
 
 ## exosignal-spray
 
-Пакшот: единственный снимок — `sources/exosignal-spray-box-and-bottle.png` (1095×1536, коробка и флакон на прозрачном фоне; оригинал заливки узлов Figma `93:8081`, `93:8083`, `104:8121` в файле `KcOGIzO76mDODxjwIrkGyo` — все три узла используют одну и ту же картинку; снят 20/11). ⚠ Студийного пакшота нет, и этот снимок прошёл через увеличение нейросетью: крупная печать верна, **мелкие строки искажены** («Deep nourtahing scalo serum», «MADE IN UISA») — в кадрах их не воспроизводить. Нет фото: коробка сзади и сбоку, флакон без колпачка (распылитель), флакон сзади. Кроп флакона в руке у лица — фото с человеком, хранится закрыто, в репозиторий не кладётся
+Пакшот: студийного нет. Настоящие фото заказчика (Figma `KcOGIzO76mDODxjwIrkGyo`, коллаж `88:2`; сняты 20/11, людей на них нет):
+`sources/exosignal-spray-photo-box.png` (№ 41, коробка стоит, 478×873 — **печать читается вся**),
+`sources/exosignal-spray-photo-box-and-bottle.png` (№ 34, коробка и флакон лежат на бетоне, 557×768),
+`sources/exosignal-spray-photo-bottle.png` (№ 33, флакон, 274×1068 — мелкие строки читаются),
+`sources/exosignal-spray-photo-bottle-studio.jpg` (№ 59, флакон стоит, 2464×1728 — форма и материал; мелкие строки на нём искажены увеличением).
+`sources/exosignal-spray-cutout-upscaled.png` (узлы `93:8081`, `93:8083`, `104:8121`, 1095×1536) — вырезка из № 34, увеличенная нейросетью: форма, цвета и крупная печать верны, **мелкие строки искажены, а строки «MADE IN USA» на настоящем флаконе нет** — годится только как опора формы. № 65 (`113:8185`) — рендер с выдуманным текстом («HOME · SPRAY», «Lorem ipsum»), не опора. № 43 — коробка в руке (видна гладкая чёрная боковая сторона); фото с рукой, в репозиторий не кладётся.
+Нет фото: флакон без колпачка (распылитель), распыление, коробка сзади и открытая.
 
-- **tall box** — matte black box (a lid over a base: the seam runs across at about 0.78 of the height), gold and light-grey print
-  - top: gold VM monogram, below it small gold 'VM corporation'
-  - centre, gold, running vertically (read from the top down): 'EXOSIGNAL' ('EXO' bold), beside it letter-spaced 'S P R A Y · H O M E'
+- **tall box** — matte black box, a lid over a base: the seam runs across at about 0.78 of the height; the right side panel is plain black. Front about 0.32 as wide as it is tall. Gold and light-grey print
+  - top: gold VM monogram, below it tiny 'VM corporation'
+  - centre, gold foil, running vertically (read from the top down): 'EXOSIGNAL' ('EXO' bold, 'SIGNAL' thin), beside it, on its left, letter-spaced 'S P R A Y · H O M E'
   - on the base, light grey, bold: 'EXOSIGNAL SPRAY HOME'
-  - [unreadable] four tiny light-grey lines under it (meant: 'Deep nourishing scalp serum' and the same line in Italian, Spanish and French; the photo's words are garbled)
-  - a small light boxed label with dark bold text: 'HOME USE'
+  - four small light-grey lines: 'Deep nourishing scalp serum' / 'Siero a nutrizione profonda per il cuoio capelluto' / 'Sérum de nutrición profunda para el cuero cabelludo' / 'Sérum nourrissant en profondeur pour le cuir chevelu'
+  - a small light-grey boxed label with dark bold text: 'HOME USE'
   - bottom line: 'Net 0.51 Fl.Oz ℮ 15 ml'
-- **spray bottle** — frosted translucent glass cylinder, smooth polished gold metallic cap (about 0.28 of the total height), no visible nozzle (the cap covers it)
-  - black VM monogram, below it [unreadable] one tiny line
-  - 'EXOSIGNAL' running vertically, read from the top down ('EXO' bold black, 'SIGNAL' thin), beside it letter-spaced 'S P R A Y · H O M E'
+- **spray bottle** — frosted translucent glass cylinder about 0.19 as wide as it is tall, a smooth polished gold cylindrical cap of the same diameter (about 0.27 of the total height; it covers the spray head — no photo of the bottle without it), black print
+  - VM monogram, below it tiny 'VM corporation'
+  - 'EXOSIGNAL' running vertically, read from the top down ('EXO' bold, 'SIGNAL' thin), beside it, on its left, letter-spaced 'S P R A Y · H O M E'
   - bold: 'EXOSIGNAL SPRAY HOME'
-  - [unreadable] about seven tiny centred lines (meant: 'Deep nourishing scalp serum' and its translations; garbled on the photo)
-  - bold: 'HOME USE'
-  - [unreadable] one small line under it ('MADE IN …': the country is garbled on the photo — never write a country)
+  - seven small centred lines: 'Deep nourishing scalp serum' / 'Siero a nutrizione profonda' / 'per il cuoio capelluto' / 'Sérum de nutrición profunda' / 'para el cuero cabelludo' / 'Sérum nourrissant en profondeur' / 'pour le cuir chevelu'
+  - bold, larger: 'HOME USE'
+  - nothing below it
 
 ## exotech-gel
 
