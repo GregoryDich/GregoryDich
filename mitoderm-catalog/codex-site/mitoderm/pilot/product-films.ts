@@ -38,6 +38,20 @@ export const productFilms:Record<string,ProductFilm>={
   {start:492,end:576}, // 06 every day
   {start:576,end:684}, // 07 the next visit
   {start:684,end:822}  // 08 pack
+ ]},
+ // A connected film: one unbroken visit, no hard cuts. 1912x1080 and 1080x1920, 1008 frames, a keyframe every 12
+ // (state/films/exosignal-hair/film-assemble.sh with film-16x9.spec). The phone film is a moving window cut out of
+ // the desktop one (vertical-from-horizontal.py with vertical-keys.json). A chapter starts inside a clip, where the
+ // next scene is already recognisable, not at the joint of two clips.
+ 'exosignal-hair':{desktop:'/assets/world/exosignal-hair-film.mp4',mobile:'/assets/world/exosignal-hair-film-mobile.mp4',fps:24,frames:1008,chapters:[
+  {start:0,end:91},    // 01 pack
+  {start:91,end:219},  // 02 consultation
+  {start:219,end:320}, // 03 MITOSCAN on the parting
+  {start:320,end:450}, // 04 the ampoule
+  {start:450,end:625}, // 05 MITOPEN and the serum
+  {start:625,end:745}, // 06 massage until absorbed
+  {start:745,end:891}, // 07 the end of the visit
+  {start:891,end:1008} // 08 pack
  ]}
 };
 // Chapter captions of the series films, in page order, word for word from the approved page copy
@@ -63,5 +77,16 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'שימוש יומיומי',body:'ג׳ל טיפוח מתקדם לשימוש ביתי, שפותח כדי להמשיך ולתמוך בתהליכים שהחלו בטיפול המקצועי בקליניקה.',tag:'טיפוח ביתי'},
   {title:'ההתחדשות מתחילה בקליניקה.',body:'עור יבש, מיובש, עייף או מזדקן זקוק להמשך התהליך בין הביקורים.',tag:'למי מתאים'},
   {title:'המשך טיפול מקצועי גם בבית',body:'משתלב עם V-TECH,\u200f EXO-NAD וסדרת BIOSPICULE™\u200e.',tag:'הצעה'}
+ ],
+ // \u00a0 keeps a product name and "PDRN 2%" on one line; \u2060 keeps the line from breaking after the hyphen of "ו-".
+ 'exosignal-hair':[
+  {title:'EXOSIGNAL HAIR',body:'האות שזקיקי השיער מחכים לו',tag:'אקסוזומים סינתטיים · טיפולי קרקפת'},
+  {title:'לנשירת שיער יש נקודת פתיחה',body:'המטופלים שלכם רואים את זה במראה. תנו להם תוכנית שמתחילה במדידה.',tag:'למה?'},
+  {title:'אבחון · MITOSCAN',body:'ניתן להשתמש במצלמת MITOSCAN לסקירת הקרקפת, מצב הזקיקים, דלילות ודלקות',tag:'אבחון'},
+  {title:'אמפולה אחת, שמונה פפטידים',body:'מבנים אקסוזומליים סינתטיים נושאים PDRN\u00a02%, חומצה היאלורונית, שמונה פפטידים ביומימטיים, תאי גזע מתפוח וויטמיני\u00a0B.',tag:'מה בפנים'},
+  {title:'מודדים, פותחים, מחדירים',body:'MITOPEN פותח את מסלול החדירה ו-\u2060EXOSIGNAL\u00a0HAIR מיושם על הקרקפת המטופלת',tag:'פרוטוקול'},
+  {title:'ספיגת הסרום',body:'לאחר העבודה יש לעסות עם הכפפות את הקרקפת בעדינות עד לספיגה מלאה של החומר.',tag:'ספיגת הסרום'},
+  {title:'מומחי Mitoderm מוסמכים',body:'Exosignal\u00a0Hair הוא טיפול אמפולות מדויק המיושם במפגשים במרפאה.',tag:'ערכה ועובדות'},
+  {title:'הכניסו את EXOSIGNAL\u00a0HAIR לקליניקה שלכם',body:'לשימוש מקצועי בלבד, מיועד לשילוב עם MITOPEN ו-\u2060MITOSCAN.',tag:'הצעה'}
  ]
 };

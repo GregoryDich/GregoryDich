@@ -283,61 +283,68 @@
       "ctaHE": "להיכרות עם הפרוטוקול",
       "shots": [
         {
-          "title": "Чёрный комплект EXOSIGNAL HAIR",
-          "seconds": 4.5,
-          "vh": 1.5,
+          "title": "Закрытая коробка крупно, камера уходит к людям",
+          "seconds": 3.79,
+          "vh": 1.1,
           "type": "pack",
           "index": 1
         },
         {
-          "title": "Запрос по коже головы",
-          "seconds": 5,
-          "vh": 1.3,
+          "title": "Консультация: запрос по коже головы",
+          "seconds": 5.33,
+          "vh": 1.54,
           "type": "patient",
           "index": 2
         },
         {
-          "title": "Осмотр той же зоны пробора",
-          "seconds": 5,
-          "vh": 1.3,
+          "title": "MITOSCAN на проборе",
+          "seconds": 4.21,
+          "vh": 1.22,
           "type": "device",
           "index": 3
         },
         {
-          "title": "Ампула и подготовка",
-          "seconds": 5,
-          "vh": 1.3,
+          "title": "Ампула в руке косметолога",
+          "seconds": 5.42,
+          "vh": 1.57,
           "type": "pack",
           "index": 4
         },
         {
-          "title": "Сыворотка + MITOPEN по протоколу",
-          "seconds": 6,
-          "vh": 1.6,
+          "title": "MITOPEN и сыворотка по пробору",
+          "seconds": 7.29,
+          "vh": 2.11,
           "type": "procedure",
           "index": 5
         },
         {
-          "title": "Наблюдение и фактическая документация",
-          "seconds": 4,
-          "vh": 1.1,
-          "type": "evidence",
+          "title": "Массаж в перчатках до впитывания",
+          "seconds": 5.0,
+          "vh": 1.45,
+          "type": "procedure",
           "index": 6
         },
         {
-          "title": "Комплект + предложение клинике",
-          "seconds": 5.5,
-          "vh": 1.65,
-          "type": "pack",
+          "title": "Конец визита: разговор о следующих встречах",
+          "seconds": 6.08,
+          "vh": 1.76,
+          "type": "patient",
           "index": 7
+        },
+        {
+          "title": "Упаковка снова: камера возвращается к коробке",
+          "seconds": 4.88,
+          "vh": 1.41,
+          "type": "pack",
+          "index": 8
         }
       ],
       "isFrozen": false,
-      "status": "storyboard_only",
+      "status": "film_v2_wired",
       "packImage": "/assets/products/exosignal-hair.webp",
       "timeline": {
-        "seconds": 35,
-        "scrollVh": 9.75
+        "seconds": 42.0,
+        "scrollVh": 12.16
       },
       "line": "VM — профессиональная трихологическая процедура"
     },
