@@ -8,6 +8,7 @@ import registry from '../../production/page-bible/REGISTRY.json';
 import nadStoryboard from '../../production/page-bible/pages/exo-nad/STORYBOARD.json';
 import {mediaUrl} from '../media';
 import {productFilms,productCaptions} from './product-films';
+import {productProof} from './product-proof';
 import {useScrollFilm} from './useScrollFilm';
 import './product-cinema.css';
 
@@ -60,6 +61,7 @@ function sceneryCopy(slug:string,chapter:Chapter,i:number){
 }
 
 function Evidence({product}:{product:Product}){
+ const proof=productProof[product.slug];
  return <section id="pc-evidence" className="pc-evidence" aria-labelledby="pc-evidence-title">
   <div className="pc-width pc-evidence-grid"><div>
    <p className="pc-eyebrow"><bdi dir="ltr">{product.name}</bdi> · תיעוד</p>
@@ -71,6 +73,17 @@ function Evidence({product}:{product:Product}){
    <div><span>02</span><strong>תוכנית העבודה</strong><small>פרוטוקול מותאם</small></div>
    <div><span>03</span><strong>מועד הערכה</strong><small>מידע מתועד בלבד</small></div>
   </div></div>
+  {proof&&<div id="pc-proof" className="pc-width pc-proof">
+   <h3>מעקב לפני / אחרי</h3>
+   <div className="pc-proof-list">
+    {proof.map((pair,i)=><figure key={pair.before} className="pc-proof-pair">
+     <img src={mediaUrl(pair.before)} alt={product.name+' · לפני'} width={800} height={1000} loading="lazy" decoding="async"/>
+     <img src={mediaUrl(pair.after)} alt={product.name+' · אחרי'} width={800} height={1000} loading="lazy" decoding="async"/>
+     <figcaption><span>לפני</span><span>אחרי</span><small>{String(i+1).padStart(2,'0')}</small></figcaption>
+    </figure>)}
+    <p className="pc-proof-note">התדירות ומספר הטיפולים עשויים להשתנות בהתאם לדרגת הנשירה, מצב הקרקפת, האבחון המקצועי ותגובת המטופל/ת.</p>
+   </div>
+  </div>}
  </section>;
 }
 

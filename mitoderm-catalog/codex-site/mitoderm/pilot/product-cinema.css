@@ -66,6 +66,17 @@
 .pc-evidence-steps span{color:var(--pc-accent);font-size:22px;min-width:55px}
 .pc-evidence-steps strong{font-weight:450;font-size:19px}
 .pc-evidence-steps small{margin-inline-start:auto;color:color-mix(in srgb,var(--pc-ink) 65%,transparent);font-size:12px}
+/* Real before/after pairs, only for products with photographs supplied by the
+   owner (product-proof.ts). The photos stay clean: the labels sit under them. */
+.pc-proof{margin-top:clamp(48px,7vw,110px);scroll-margin-top:120px}
+.pc-proof h3{font-size:clamp(22px,2.2vw,32px);font-weight:420;letter-spacing:-.02em;padding-bottom:20px;border-bottom:1px solid color-mix(in srgb,var(--pc-accent) 25%,transparent)}
+.pc-proof-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(24px,3vw,44px);margin-top:clamp(24px,3vw,44px)}
+.pc-proof-pair{margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 2px}
+.pc-proof-pair img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;background:var(--pc-surface)}
+.pc-proof-pair figcaption{grid-column:1/-1;position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 2px;padding-top:13px;font-size:15px;line-height:1.4;color:color-mix(in srgb,var(--pc-ink) 82%,transparent)}
+.pc-proof-pair figcaption span+span{color:var(--pc-accent);font-weight:500}
+.pc-proof-pair figcaption small{position:absolute;inset-inline-end:0;top:15px;font-size:12px;letter-spacing:.06em;color:color-mix(in srgb,var(--pc-accent) 75%,transparent)}
+.pc-evidence p.pc-proof-note{align-self:center;margin:0;max-width:30ch;font-size:clamp(17px,1.5vw,22px);line-height:1.7;padding-inline-start:clamp(18px,2vw,30px);border-inline-start:1px solid var(--pc-accent)}
 .pc-offer{padding:clamp(75px,12vw,170px) 0;background:radial-gradient(ellipse at 25% 50%,var(--pc-surface),var(--pc-bg) 75%)}
 .pc-offer-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(30px,7vw,110px);align-items:center;direction:ltr}
 .pc-offer-product{position:relative;min-height:480px;display:grid;place-items:center}
@@ -129,6 +140,8 @@
  .pc-steps{gap:4px;min-width:0}
  .pc-hud-note{font-size:10px}
  .pc-evidence-grid,.pc-offer-grid,.pc-questions{grid-template-columns:1fr;gap:32px}
+ .pc-proof-list{grid-template-columns:1fr}
+ .pc-evidence p.pc-proof-note{max-width:none}
  .pc-offer-product{min-height:320px}
  .pc-related-list{grid-template-columns:1fr}
  .pc-related-list a{min-height:165px}
