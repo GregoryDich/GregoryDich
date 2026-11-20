@@ -947,61 +947,68 @@
       "ctaHE": "לקבלת פרטים מקצועיים",
       "shots": [
         {
-          "title": "Чёрная коробка, светлый флакон",
-          "seconds": 4,
+          "title": "Коробка и флакон в клинике, фокус уходит к людям",
+          "seconds": 4.38,
           "vh": 1.25,
           "type": "pack",
           "index": 1
         },
         {
-          "title": "Консультация по пробору",
-          "seconds": 4.5,
-          "vh": 1.25,
+          "title": "Консультация: он показывает на макушку, она подаёт флакон",
+          "seconds": 6.54,
+          "vh": 1.85,
           "type": "patient",
           "index": 2
         },
         {
-          "title": "Та же пациентка дома",
-          "seconds": 4,
-          "vh": 1.2,
-          "type": "home",
+          "title": "Флакон в его руке; за ним клиника сменяется домом",
+          "seconds": 4.5,
+          "vh": 1.3,
+          "type": "pack",
           "index": 3
         },
         {
-          "title": "Дозатор спрея в макро",
-          "seconds": 4.5,
-          "vh": 1.25,
-          "type": "device",
+          "title": "Дома вечером: встряхивает флакон, раздвигает волосы",
+          "seconds": 7.42,
+          "vh": 2.1,
+          "type": "patient",
           "index": 4
         },
         {
-          "title": "Применение на ту же область",
-          "seconds": 6,
-          "vh": 1.65,
+          "title": "Нанесение на пробор и массаж",
+          "seconds": 10.5,
+          "vh": 2.8,
           "type": "procedure",
           "index": 5
         },
         {
-          "title": "Без генерации роста волос",
-          "seconds": 3,
-          "vh": 0.9,
-          "type": "patient",
+          "title": "Коробка и флакон на столешнице ванной; за ними дом сменяется клиникой",
+          "seconds": 5.75,
+          "vh": 1.6,
+          "type": "pack",
           "index": 6
         },
         {
-          "title": "SPRAY + CTA",
+          "title": "Следующий визит в клинике",
+          "seconds": 6.75,
+          "vh": 1.9,
+          "type": "patient",
+          "index": 7
+        },
+        {
+          "title": "Упаковка в клинике",
           "seconds": 4.5,
           "vh": 1.4,
           "type": "pack",
-          "index": 7
+          "index": 8
         }
       ],
       "isFrozen": false,
-      "status": "storyboard_only",
+      "status": "film_v2_wired",
       "packImage": "/assets/products/exosignal-spray.webp",
       "timeline": {
-        "seconds": 30.5,
-        "scrollVh": 8.9
+        "seconds": 50.33,
+        "scrollVh": 14.2
       },
       "line": "VM — домашний уход за скальпом"
     },

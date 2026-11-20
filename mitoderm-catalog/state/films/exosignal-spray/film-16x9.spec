@@ -1,4 +1,4 @@
-# EXOSIGNAL SPRAY, the desktop film (1912x1080): one unbroken movement, 24 fps, 1148 frames = 47.8 s.
+# EXOSIGNAL SPRAY, the desktop film (1912x1080): one unbroken movement, 24 fps, 1208 frames = 50.3 s.
 # Build:  ../tools/film-assemble.sh film-16x9.spec <clips dir> exosignal-spray-film.mp4 1912 1080
 # Phone:  ../tools/vertical-from-horizontal.py exosignal-spray-film.mp4 exosignal-spray-film-mobile.mp4 vertical-keys.json
 #
@@ -15,10 +15,11 @@
 #   T9.mp4   5b62bf39-7bfd-4887-8048-8285ef23b86e   follow-up visit: focus from the pack to the people (K0b -> K0g); then backwards
 #
 # The two background changes are the idea of this page: the product is what links the clinic and the home.
-# T7, T8 and the last return to the pack play at double speed (every 2nd frame).
+# T8 and the last return to the pack play at double speed (every 2nd frame).
 #
 # Film frames:  hold 0-59 | T1b 60-179 | T2b 180-300 | T3 301-421 | T4 422-542 | T5 543-663 | T6 664-784 |
-#               T7 785-845 | T8 846-906 | T9 907-1027 | T9 backwards 1028-1087 | hold 1088-1147
+#               T7 785-905 | T8 906-966 | T9 967-1087 | T9 backwards 1088-1147 | hold 1148-1207
+# Chapters (pilot/product-films.ts): 0-105 | 105-262 | 262-370 | 370-548 | 548-800 | 800-938 | 938-1100 | 1100-1208
 hold T1b.mp4 0 60
 clip T1b.mp4 1 120
 clip T2b.mp4 0 120
@@ -26,7 +27,7 @@ clip T3.mp4 0 120
 clip T4.mp4 0 120
 clip T5.mp4 0 120
 clip T6.mp4 0 120
-clip T7.mp4 0 120 2
+clip T7.mp4 0 120
 clip T8.mp4 0 120 2
 clip T9.mp4 0 120
 clip T9.mp4 0 118 2 rev

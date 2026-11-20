@@ -58,7 +58,22 @@ export const productFilms:Record<string,ProductFilm>={
   {start:1240,end:1395}, // 10 the follow-up scan
   {start:1395,end:1550}, // 11 the end of the visit
   {start:1550,end:1667}  // 12 pack
- ]}};
+ ]},
+ // A connected film: clinic, home and clinic again in one movement. 1912x1080 and 1080x1920, 1208 frames, a keyframe
+ // every 12 (state/films/exosignal-spray/film-16x9.spec). Twice the product stays in the frame while the place behind
+ // it changes (clinic to home, home to clinic): the spray is what links the two. The phone film is a moving window
+ // cut out of the desktop one (vertical-keys.json).
+ 'exosignal-spray':{desktop:'/assets/world/exosignal-spray-film.mp4',mobile:'/assets/world/exosignal-spray-film-mobile.mp4',fps:24,frames:1208,chapters:[
+  {start:0,end:105},     // 01 pack in the clinic
+  {start:105,end:262},   // 02 consultation
+  {start:262,end:370},   // 03 the bottle in his hand
+  {start:370,end:548},   // 04 at home in the evening
+  {start:548,end:800},   // 05 part, spray, massage
+  {start:800,end:938},   // 06 the pack on the bathroom counter
+  {start:938,end:1100},  // 07 the follow-up visit
+  {start:1100,end:1208}  // 08 pack
+ ]}
+};
 // Chapter captions of the series films, in page order, word for word from the approved page copy
 // (state/films/<slug>/storyboard.json, "captions"). A slug without an entry keeps the generic copy.
 export const productCaptions:Record<string,Array<{title:string;body:string;tag:string}>>={
@@ -97,5 +112,15 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'מעקב לפני / אחרי',body:'הפחתת נשירה ודלקת מקומית · שיפור מצב הקרקפת והמיקרו-סירקולציה · שיפור בנפח, מרקם וברק · תמיכה בהארכת שלב האנגן (צמיחה)',tag:'מעקב'},
   {title:'מומחי Mitoderm מוסמכים',body:'Exosignal\u00a0Hair הוא טיפול אמפולות מדויק המיושם במפגשים במרפאה.',tag:'ערכה ועובדות'},
   {title:'הכניסו את EXOSIGNAL\u00a0HAIR לקליניקה שלכם',body:'לשימוש מקצועי בלבד, מיועד לשילוב עם MITOPEN ו-\u2060MITOSCAN.',tag:'הצעה'}
+ ],
+ 'exosignal-spray':[
+  {title:'EXOSIGNAL SPRAY',body:'תמיכה בקרקפת בין הביקורים.',tag:'טיפוח ביתי'},
+  {title:'הימים שבין הטיפולים חשובים.',body:'EXOSIGNAL\u00a0HAIR הוא הטיפול בקליניקה. דלילות שיער, שיער שביר וחוסר איזון בקרקפת דורשים תמיכה בימים שבין הטיפולים.',tag:'למי מומלץ'},
+  {title:'התזה אחת. שלוש משימות.',body:'שומר על סביבה מאוזנת בקרקפת, מזין את השיער ותומך במחזור צמיחת השיער הטבעי — נספג במהירות, ללא שטיפה.',tag:'מה הספריי עושה'},
+  {title:'קליל על הקרקפת. ללא שטיפה.',body:'מסייע להקל על יובש ותחושת אי־נוחות; תומך במראה שיער מלא, חזק וחיוני יותר, במריחה נוחה ואחידה באזורים שבהם ניכרת דלילות.',tag:'תמיכה רציפה בקרקפת'},
+  {title:'חלוקה. התזה. עיסוי.',body:'לחלק את השיער כדי לחשוף את הקרקפת, להתיז ישירות עליה ולעסות בעדינות – ללא צורך בשטיפה. מדי יום, בין טיפולי EXOSIGNAL\u00a0HAIR ולאחריהם.',tag:'שגרה יומיומית'},
+  {title:'15\u00a0מ״ל. יומיומי. ללא שטיפה.',body:'1× EXOSIGNAL\u00a0SPRAY, 15\u00a0מ״ל – ספריי להזנה עמוקה של הקרקפת, לשימוש ביתי. סדרת האקסוזומים הסינתטיים.',tag:'פורמט'},
+  {title:'מומחי Mitoderm מוסמכים',body:'כל מומחה כאן מוכשר ומוסמך להעניק פרוטוקולים מקוריים של Mitoderm.',tag:'מצאו מומחה'},
+  {title:'תמיכה רציפה בזקיקים בין הביקורים',body:'זמין דרך הקליניקות השותפות של מיטודרם. התייעצו עם המומחה שלכם כיצד EXOSIGNAL\u00a0SPRAY משתלב בתוכנית הטיפול שלכם.',tag:'הצעה'}
  ]
 };
