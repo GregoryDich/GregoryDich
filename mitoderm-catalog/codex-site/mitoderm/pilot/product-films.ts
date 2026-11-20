@@ -28,8 +28,7 @@ export const productFilms:Record<string,ProductFilm>={
   {start:576,end:684}, // 07 finish
   {start:684,end:822}  // 08 pack
  ]},
- // 1912x1080, 822 frames, a keyframe every 12 (state/films/exotech-gel/assemble.sh). The 9:16 film is set in
- // media-urls.json once it is cut; until then phones keep the image-only stage.
+ // 1912x1080 and 1080x1912, 822 frames, a keyframe every 12 (state/films/exotech-gel/assemble.sh).
  'exotech-gel':{desktop:'/assets/world/exotech-gel-film.mp4',mobile:'/assets/world/exotech-gel-film-mobile.mp4',fps:24,frames:822,chapters:[
   {start:0,end:108}, // 01 pack
   {start:108,end:228}, // 02 recommendation in the clinic
