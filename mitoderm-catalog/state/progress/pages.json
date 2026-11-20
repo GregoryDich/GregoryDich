@@ -125,13 +125,13 @@
    "page": "MICRO BOOST 10%",
    "slug": "micro-boost-10",
    "line": "BIOSPICULE",
-   "percent": 10,
-   "stage": "в очереди",
+   "percent": 20,
+   "stage": "раскадровка соединённого фильма готова; съёмка — после правок EXOSIGNAL HAIR и пополнения кредитов",
    "patient": "в шапочке, покраснения (P1)",
-   "steps_done": 1,
+   "steps_done": 2,
    "steps_total": 9,
    "s1": 1,
-   "s2": 0,
+   "s2": 1,
    "s3": 0,
    "s4": 0,
    "s5": 0,
@@ -264,7 +264,7 @@
  "meta": [
   {
    "label": "Обновлено",
-   "value": "20/11/2026 20:40"
+   "value": "20/11/2026 20:50"
   },
   {
    "label": "Шаги и веса",
