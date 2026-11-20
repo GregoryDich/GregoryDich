@@ -1,0 +1,1288 @@
+{
+ "version": 1,
+ "date": "2026-11-20",
+ "slug": "exotech-gel",
+ "page": "/products/exotech-gel",
+ "track": "home (REGISTRY)",
+ "cast": {
+  "cosmetologist": "M (brand main face)",
+  "patient": "P4",
+  "M": "woman about 30, long dark wavy hair, white uniform with pink piping, pendant with a blue stone on a black cord",
+  "P4": "woman 35-40, short black hair combed back",
+  "gloves": "white, only when she touches the patient's skin (K7); bare hands in K1/B (no skin contact); the cosmetologist is not at home",
+  "clothes": "patient: plain smooth cream tank top in the clinic (ch. 02, as on her sheet a06); at home a plain light oatmeal long-sleeve cotton home top with the sleeves pushed up to the forearms; on the next visit a plain pale grey-beige fine-knit short-sleeve top (ch. 07, open question G11)",
+  "hair_rule": "the cosmetologist's hair falls behind her shoulders and never touches the patient or the product",
+  "sheets": [
+   "cast/a06.webp (Higgsfield 859a154f-abf6-4380-a674-bbf0189dcc7d)",
+   "cast/a15.webp (black dress: face, hair and earrings only; not uploaded yet)",
+   "cast/main-photo.jpg (90121c86-…)",
+   "cast/main-turnaround.jpg (182a0e01-…)"
+  ],
+  "nails": "patient: short nails with the same red polish as on both her sheets (a06, a15) in every frame where her hands show (open question G18)"
+ },
+ "fps": 24,
+ "totalFrames": 822,
+ "seconds": 34.25,
+ "masters": {
+  "desktop": "1912x1080",
+  "mobile": "1080x1912"
+ },
+ "productFilmsEntry": {
+  "desktop": "/assets/world/exotech-gel-film.mp4",
+  "mobile": "/assets/world/exotech-gel-film-mobile.mp4",
+  "fps": 24,
+  "frames": 822,
+  "chapters": [
+   {
+    "start": 0,
+    "end": 108
+   },
+   {
+    "start": 108,
+    "end": 228
+   },
+   {
+    "start": 228,
+    "end": 336
+   },
+   {
+    "start": 336,
+    "end": 420
+   },
+   {
+    "start": 420,
+    "end": 492
+   },
+   {
+    "start": 492,
+    "end": 576
+   },
+   {
+    "start": 576,
+    "end": 684
+   },
+   {
+    "start": 684,
+    "end": 822
+   }
+  ]
+ },
+ "chaptersPlan": [
+  {
+   "chapter": 1,
+   "name": "pack",
+   "title": "Закрытая коробка и банка крупно, камера отъезжает",
+   "start": 0,
+   "end": 108,
+   "frames": 108,
+   "seconds": 4.5,
+   "vh": 1.3,
+   "type": "pack",
+   "onScreen": "закрытая коробка и банка рядом крупно на мраморном столике в кабинете, люди размыты позади; камера медленно отъезжает (K0, ролик A)"
+  },
+  {
+   "chapter": 2,
+   "name": "recommendation",
+   "title": "Рекомендация в конце визита: банка на ладони косметолога",
+   "start": 108,
+   "end": 228,
+   "frames": 120,
+   "seconds": 5.0,
+   "vh": 1.45,
+   "type": "patient",
+   "onScreen": "конец визита: косметолог показывает пациентке закрытую банку на ладони, пациентка кивает; коробка на столике (конец A, затем B)"
+  },
+  {
+   "chapter": 3,
+   "name": "what is in the box",
+   "title": "Открытая коробка: банка в ложементе",
+   "start": 228,
+   "end": 336,
+   "frames": 108,
+   "seconds": 4.5,
+   "vh": 1.3,
+   "type": "pack",
+   "onScreen": "открытая коробка точно как на фото: банка в ложементе, печать на крышке (кадр K3 с медленным наездом)"
+  },
+  {
+   "chapter": 4,
+   "name": "at home: applying",
+   "title": "Дома: тонкий слой на чистую кожу",
+   "start": 336,
+   "end": 420,
+   "frames": 84,
+   "seconds": 3.5,
+   "vh": 1.0,
+   "type": "home",
+   "onScreen": "дома у раковины: чистая кожа, кончики пальцев распределяют тонкий слой по щеке, закрытая банка рядом (C, первая часть)"
+  },
+  {
+   "chapter": 5,
+   "name": "massaged in",
+   "title": "Массаж до впитывания",
+   "start": 420,
+   "end": 492,
+   "frames": 72,
+   "seconds": 3.0,
+   "vh": 0.9,
+   "type": "home",
+   "onScreen": "те же мягкие круговые движения до впитывания, на щеке лишь лёгкий влажный блеск; стоп-кадр (конец C и стоп-кадр)"
+  },
+  {
+   "chapter": 6,
+   "name": "every day",
+   "title": "Каждый день: банка на своём месте",
+   "start": 492,
+   "end": 576,
+   "frames": 84,
+   "seconds": 3.5,
+   "vh": 1.0,
+   "type": "home",
+   "onScreen": "закрытая банка на своём месте у полотенца (кадр K6 с медленным наездом)"
+  },
+  {
+   "chapter": 7,
+   "name": "next visit",
+   "title": "Следующий визит: косметолог смотрит кожу",
+   "start": 576,
+   "end": 684,
+   "frames": 108,
+   "seconds": 4.5,
+   "vh": 1.3,
+   "type": "patient",
+   "onScreen": "следующий визит: косметолог в белых перчатках спокойно смотрит на кожу пациентки, лёгкое касание у скулы (кадр K7 с медленным наездом)"
+  },
+  {
+   "chapter": 8,
+   "name": "pack",
+   "title": "Упаковка снова: камера возвращается к коробке и банке",
+   "start": 684,
+   "end": 822,
+   "frames": 138,
+   "seconds": 5.75,
+   "vh": 1.65,
+   "type": "pack",
+   "onScreen": "короткий наплыв в общий план, камера возвращается к коробке и банке (A задом наперёд), последний кадр = первый"
+  }
+ ],
+ "scrollNote": "vh in proportion to frames (about 82.6 frames per vh, as EXOCELL MASK); chapter 05 (72 frames) rounded up to 0.9, chapter 08 rounded down to 1.65; sum 9.9 -> REGISTRY timeline.scrollVh 9.9 (now 8.85 for 7 shots). Types only from the engine: pack, patient, home.",
+ "packagingReference": {
+  "closed": {
+   "main": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exotech-gel.webp",
+   "size": "1065x567",
+   "what": "real packshot on white, camera looking down about 12-15 degrees: closed cube box (gold foil front with EXOTECH / G E L; left side at an angle, about half as wide as the front in the image, split diagonally black/gold; black top visible as a band about 1/6 of the box's height) and, separately cut in, the gold sphere jar with both print lines (EXOTECH and, directly below it, G E L) on the lid above the seam; the seam curves down at the front just below G E L",
+   "sameImage": [
+    "/home/user/GregoryDich/mitoderm-catalog/protocols/assets/img/exotech-gel.webp (1000x544, the same packshot on a transparent background)",
+    "/home/user/GregoryDich/mitoderm-catalog/site/proto/img/exotech-gel.webp (1000x544, the same packshot)"
+   ],
+   "boxReading": "PROGRESS.md 20/11: the box is a casket. The gold printed face is the lid; on the packshot the box stands on its front edge, so the lid faces the camera and the black back wall of the base shows as the black top; on the open-box photo the same lid is tipped back. A reading of two photos, not a photo of the motion (G7)"
+  },
+  "open": {
+   "main": "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/products/exotech-gel.webp",
+   "size": "696x931",
+   "what": "real photo (from the owner's PSD): box open, lid tipped back, black inside with gold EXOTECH GEL print and an embossed ring, gold lid edges, gold outer lid and wedge-shaped gold side panel, black base with a thin gold band along the inner rim of its right wall, sphere in a round black cradle (EXOTECH ≈42% of the sphere width), 2 lines of unreadable gold print on the inner back wall; silhouette about 3 wide : 4 tall (696x931)"
+  },
+  "visibleFaces": [
+   "box closed: front, LEFT side at an angle (about half as wide as the front in the image), black top as a band about 1/6 of the box's height (packshot angle, camera 12-15° above)",
+   "box open: exactly the photographed view (front left, from above)",
+   "jar: printed front half (both print lines on the lid, above the seam), closed"
+  ],
+  "neverShow": [
+   "box: right side, back, bottom, top beyond the packshot band",
+   "the box being opened or closed; closed and open box in one shot",
+   "jar: back, bottom, opened, lid off, collar, cup",
+   "the gel itself (only a faint moist sheen on the skin)",
+   "spatula, leaflet, second jar, any kit contents",
+   "the V-TECH GEL MASK sachet (another product)"
+  ],
+  "doNotAttach": [
+   "/home/user/GregoryDich/mitoderm-catalog/site/public/exotech-gel/img/still.webp (3840x2400, 3D render: typeset print, mirrored right side; the sphere is about as wide as the box's front face and about 65% of the box's silhouette with its left side, and it stands farther back: an invented layout, not a scale source)",
+   "/home/user/GregoryDich/mitoderm-catalog/site/public/exotech-gel/img/kit.webp, m1.webp, m2.webp, m4.webp, m5.webp (3D renders of the box and the jar: typeset print)",
+   "/home/user/GregoryDich/mitoderm-catalog/site/public/exotech-gel/img/m3.webp (3D render of an OPEN jar with pale gel: invented from a description, never a reference)",
+   "/home/user/GregoryDich/mitoderm-catalog/site/public/exotech-gel/img/bg.webp (3456x2160, dark gold smoke background), plate.webp (2592x1620, dark background with violet bokeh): not packaging",
+   "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/hero/glow-desktop-exotech-gel.webp (128x108: tiny photo-like crop of a satin-gold sphere, source unknown), glow-mobile-exotech-gel.webp (142x190: tiny copy of the open-box photo): too small"
+  ],
+  "prepCrops": "optional, free, at shooting time: ffmpeg crops of the packshot for close checking: box front x 180-560 / y 100-565, jar x 670-1065 / y 95-500 (pixels of the 1065x567 file)"
+ },
+ "gelDefault": "never shown: on the skin only a faint thin moist sheen; no white cream, no gel mass, no fingertip with gel",
+ "captions": [
+  {
+   "chapter": 1,
+   "titleHe": "EXOTECH GEL",
+   "lineHe": "שומרים על תוצאות הקליניקה גם בבית.",
+   "tagHe": "EXOTECH GEL",
+   "verbatim": true,
+   "source": "content.json products[5] (slug exotech-gel): title: .name; line: .intro.title (verbatim); tag: .name"
+  },
+  {
+   "chapter": 2,
+   "titleHe": "לאחר טיפול בקליניקה",
+   "lineHe": "ההמשך הביתי של הטיפול המקצועי.",
+   "tagHe": "לאחר טיפול בקליניקה",
+   "verbatim": true,
+   "source": "content.json products[5] (slug exotech-gel): title and tag: sections index 2 .tags, item «לאחר טיפול בקליניקה»; line: .intro.body, verbatim part after the dash"
+  },
+  {
+   "chapter": 3,
+   "titleHe": "צנצנת כדורית אחת. 30 מ״ל. יומיומי.",
+   "lineHe": "חמישה רכיבים פעילים: אקסוזומים סינתטיים, PDRN, פפטידים ביומימטיים עם זהב ונחושת, חומצה היאלורונית ופוליסכרידים ממקור חלזון.",
+   "tagHe": "רכיבים פעילים",
+   "verbatim": true,
+   "source": "content.json products[5] (slug exotech-gel): title: sections index 6 .title; line: sections index 3 .body (verbatim); tag: sections index 3 .eyebrow. Fallback if the line takes more than 3 lines at 390x664: sections index 3 .tags «אקסוזומים סינתטיים · פולינוקלאוטידים PDRN · פפטידים + זהב ונחושת · חומצה היאלורונית» (open question G15). U+00A0 (no-break space) between «30» and «מ״ל» so the phone line never breaks between the number and the unit; the text stays verbatim"
+  },
+  {
+   "chapter": 4,
+   "titleHe": "מריחת שכבה דקה",
+   "lineHe": "למרוח שכבה דקה על עור נקי ולעסות עד לספיגה",
+   "tagHe": "אופן השימוש",
+   "verbatim": true,
+   "source": "content.json products[5] (slug exotech-gel): title: sections index 5 .tags, item «2 · מריחת שכבה דקה» without its step number «2 ·» (verbatim fragment; steps 1 and 3 are not in the film, a lone «2» refers to nothing); line: sections index 5 .body, verbatim part before « – בוקר וערב.» (that tail is left out: open question G1); tag: sections index 5 .eyebrow. The line describes the method for the specialist (infinitive, from the block addressed to the patient); alternative turned to the professional: catalog «להמשך שגרת הטיפוח לאחר טיפול מקצועי בקליניקה» (open question G19)"
+  },
+  {
+   "chapter": 5,
+   "titleHe": "קליל. מעניק לחות. אף פעם לא מכביד.",
+   "lineHe": "מרקם הג׳ל הקליל מעניק תחושת רעננות ולחות מבלי להכביד על העור.",
+   "tagHe": "יתרונות",
+   "verbatim": true,
+   "source": "content.json products[5] (slug exotech-gel): title: sections index 4 .title; tag: sections index 4 .eyebrow. Line: source-texts.md, page 17 (catalog, EXOTECH GEL), verbatim sentence"
+  },
+  {
+   "chapter": 6,
+   "titleHe": "שימוש יומיומי",
+   "lineHe": "ג׳ל טיפוח מתקדם לשימוש ביתי, שפותח כדי להמשיך ולתמוך בתהליכים שהחלו בטיפול המקצועי בקליניקה.",
+   "tagHe": "טיפוח ביתי",
+   "verbatim": true,
+   "source": "content.json products[5] (slug exotech-gel): title: .intro.tags, item «שימוש יומיומי»; tag: .intro.tags, item «טיפוח ביתי». Line: source-texts.md, page 17 (catalog, EXOTECH GEL), verbatim part of the first paragraph after «EXOTECH GEL». Fallback if the line takes more than 3 lines at 390x664: source-texts.md, page 17 (catalog), verbatim part before the dash «להמשך שגרת הטיפוח לאחר טיפול מקצועי בקליניקה» (45 characters; open question G20)"
+  },
+  {
+   "chapter": 7,
+   "titleHe": "ההתחדשות מתחילה בקליניקה.",
+   "lineHe": "עור יבש, מיובש, עייף או מזדקן זקוק להמשך התהליך בין הביקורים.",
+   "tagHe": "למי מתאים",
+   "verbatim": true,
+   "source": "content.json products[5] (slug exotech-gel): title: sections index 2 .title; line: sections index 2 .body, second sentence verbatim; tag: sections index 2 .eyebrow"
+  },
+  {
+   "chapter": 8,
+   "titleHe": "המשך טיפול מקצועי גם בבית",
+   "lineHe": "משתלב עם V-TECH,‏ EXO-NAD וסדרת BIOSPICULE™‎.",
+   "tagHe": "הצעה",
+   "verbatim": false,
+   "source": "title: source-texts.md, page 17 (catalog, EXOTECH GEL), verbatim part before the em dash of «המשך טיפול מקצועי גם בבית — …»; line: content.json products[5] (slug exotech-gel): sections index 5 .body, last sentence verbatim. Tag «הצעה» is NOT from content.json or the catalog: it is the word of the page's own offer block (ProductCinema.tsx, «MITODERM · הצעה מקצועית»), as on EXOCELL MASK; it is only the aria label of the step button (open question G9). Direction marks inside the string (productCaptions are plain strings, rendered as text by ProductCinema.tsx): U+200E (LRM) right after «™», so «™.» stays to the right of BIOSPICULE in the RTL line; U+200F (RLM) after the comma of «V-TECH,», as the catalog does (source-texts.md, page 17)"
+  }
+ ],
+ "productCaptionsEntry": [
+  {
+   "title": "EXOTECH GEL",
+   "body": "שומרים על תוצאות הקליניקה גם בבית.",
+   "tag": "EXOTECH GEL"
+  },
+  {
+   "title": "לאחר טיפול בקליניקה",
+   "body": "ההמשך הביתי של הטיפול המקצועי.",
+   "tag": "לאחר טיפול בקליניקה"
+  },
+  {
+   "title": "צנצנת כדורית אחת. 30 מ״ל. יומיומי.",
+   "body": "חמישה רכיבים פעילים: אקסוזומים סינתטיים, PDRN, פפטידים ביומימטיים עם זהב ונחושת, חומצה היאלורונית ופוליסכרידים ממקור חלזון.",
+   "tag": "רכיבים פעילים"
+  },
+  {
+   "title": "מריחת שכבה דקה",
+   "body": "למרוח שכבה דקה על עור נקי ולעסות עד לספיגה",
+   "tag": "אופן השימוש"
+  },
+  {
+   "title": "קליל. מעניק לחות. אף פעם לא מכביד.",
+   "body": "מרקם הג׳ל הקליל מעניק תחושת רעננות ולחות מבלי להכביד על העור.",
+   "tag": "יתרונות"
+  },
+  {
+   "title": "שימוש יומיומי",
+   "body": "ג׳ל טיפוח מתקדם לשימוש ביתי, שפותח כדי להמשיך ולתמוך בתהליכים שהחלו בטיפול המקצועי בקליניקה.",
+   "tag": "טיפוח ביתי"
+  },
+  {
+   "title": "ההתחדשות מתחילה בקליניקה.",
+   "body": "עור יבש, מיובש, עייף או מזדקן זקוק להמשך התהליך בין הביקורים.",
+   "tag": "למי מתאים"
+  },
+  {
+   "title": "המשך טיפול מקצועי גם בבית",
+   "body": "משתלב עם V-TECH,‏ EXO-NAD וסדרת BIOSPICULE™‎.",
+   "tag": "הצעה"
+  }
+ ],
+ "stills": [
+  {
+   "id": "K0",
+   "order": 1,
+   "chapters": [
+    1,
+    8
+   ],
+   "status": "being shot: three 16:9 takes, none accepted yet (see takes_16x9)",
+   "purpose": "Кадр упаковки (первым, ссылка заказчику). Глава 01 и последний кадр фильма; старт ролика A.",
+   "composition": "16:9: камера чуть выше столешницы, смотрит вниз на 12-15°, как на пакшоте; левый бок коробки на 14-23 %, лицо на 23-42 % ширины, банка на 45-57 %; низ коробки и банки на 80 % высоты, верх коробки на 36 % (лицо с 42 %), верх банки на 58 %; печать на 52-68 % высоты; позади размыто косметолог слева (5-18 %) и пациентка в кресле (44-60 %, тело и кресло кончаются до 63 %); правые 35 % — окно и стена. 9:16: левый бок на 14-28 %, лицо на 28-56 % ширины, банка на 60-78 %; низ обоих на 56 % высоты, верх коробки на 35 % (лицо с 38 %), верх банки на 46 %; размытые лица на 14-28 %, ниже 62 % — мрамор. Мера масштаба одна: диаметр шара ≈0.65 ширины лицевой грани коробки (≈58 % её высоты).",
+   "packagingVisible": "closed box: front + LEFT side (about half as wide as the front in the image) + black top as a band about 1/6 of the front's height, as on the packshot; jar: printed front half, closed",
+   "packagingProof": {
+    "file": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exotech-gel.webp",
+    "faces": [
+     "box: front (gold, print)",
+     "box: LEFT side at an angle, about half as wide as the front in the image (diagonal: black upper back triangle, gold lower front triangle)",
+     "box: top as a matte black band about one sixth of the front's height (the packshot angle: camera looking down about 12-15 degrees)",
+     "jar: front half with the print, closed"
+    ],
+    "printedLines": [
+     {
+      "where": "box front",
+      "text": "EXOTECH",
+      "style": "black, widely spaced capitals, EXO bold, TECH thin",
+      "widthShare": "≈47% of the front width"
+     },
+     {
+      "where": "box front",
+      "text": "G E L",
+      "style": "black, italic, letter-spaced, centred under OTE",
+      "widthShare": "≈19% of the front width"
+     },
+     {
+      "where": "jar, upper half (the lid), above the seam",
+      "text": "EXOTECH",
+      "style": "black, EXO bold, TECH thin, widely spaced",
+      "widthShare": "≈56% of the sphere width"
+     },
+     {
+      "where": "jar, upper half (the lid), directly below EXOTECH and still above the seam; the seam curves down at the front just below it",
+      "text": "G E L",
+      "style": "black, italic, letter-spaced",
+      "widthShare": "≈19% of the sphere width"
+     }
+    ],
+    "scale": "sphere diameter ≈ 0.65 of the width of the box's FRONT face (≈58% of the box's height). Source: the open-box photo, where the box stands turned about 35° and its two visible base walls project ≈320 and ≈225 px, so its true width is ≈390 px against a ≈232 px sphere (≈0.6; ≈0.65-0.68 if the base is the 1.13 side). The 3D render still.webp shows the sphere about as wide as the front face, but its layout is invented, and the packshot is a composite; neither is used for scale (G6)"
+   },
+   "refs_16x9": [
+    {
+     "order": 1,
+     "file": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exotech-gel.webp",
+     "what": "настоящий пакшот: геометрия коробки и банки, печать, поворот коробки"
+    },
+    {
+     "order": 2,
+     "file": "EXOCELL MASK accepted K0 16:9 (job fc1666c4-d86a-4036-b15a-51e3de45b112, /tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/mask/K0b.png)",
+     "what": "кабинет и свет (люди там размыты); людей и бирюзовую коробку не брать"
+    },
+    {
+     "order": 3,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)",
+     "what": "косметолог (размыта)"
+    },
+    {
+     "order": 4,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a06.webp (patient sheet: smooth cream tank top, beige trousers; Higgsfield media 859a154f-abf6-4380-a674-bbf0189dcc7d)",
+     "what": "пациентка (размыта), кремовая майка"
+    }
+   ],
+   "refs_9x16": [
+    {
+     "order": 1,
+     "file": "accepted K0 16:9 (job id once shot)",
+     "what": "то же мгновение"
+    },
+    {
+     "order": 2,
+     "file": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exotech-gel.webp",
+     "what": "пакшот: печать и геометрия"
+    },
+    {
+     "order": 3,
+     "file": "EXOCELL MASK accepted K0 9:16 (job 21d1822a-8a09-42ea-a7f0-242f32792f30, /tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/mask/K0vb.png)",
+     "what": "кабинет в вертикали (люди размыты); людей и бирюзовую коробку не брать"
+    },
+    {
+     "order": 4,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)",
+     "what": "косметолог"
+    },
+    {
+     "order": 5,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a06.webp (patient sheet: smooth cream tank top, beige trousers; Higgsfield media 859a154f-abf6-4380-a674-bbf0189dcc7d)",
+     "what": "пациентка"
+    }
+   ],
+   "retakeRule": "If the print or the seam is wrong (print shortened, enlarged or misspelled; 'G E L' under the seam): retake with the rejected result as reference 1 and the packshot as reference 2: \"Reproduce the first reference image exactly; change only the print on the box and the jar to match the second reference image: on the box front EXOTECH (EXO bold, TECH thin) ≈47% of the front width with italic G E L ≈19% directly below; on the jar EXOTECH ≈56% of the sphere width with italic G E L ≈19% directly below it, both lines on the upper half above the seam, the seam curving down at the front just below G E L.\" Check at 100% against the packshot. If the framing or the scale is wrong (box or jar base below 80% of the height, the patient reaching into the right 35%, the sphere wider than about 0.65 of the box front, the black top a thin sliver): retake from the full prompt, not by editing the take.",
+   "prompt_16x9": "Camera slightly above the table top, looking down about 12-15 degrees exactly as in the packshot, 50mm, f/2, in the same bright, clean treatment room and soft natural window daylight as the second reference image: warm white walls, a large window with softly blurred greenery outside, a white leather treatment chair, a light marble side table, a green plant behind (take only the room and the light from that image, not its people or its teal box). In the sharp foreground stand, side by side on the table, the closed EXOTECH GEL box exactly as in the first reference image (the real packshot, left object): a cube a little taller than wide (about 1 : 1.13 : 1) in mirror-polished gold foil with the fine crinkle of real foil; the FRONT face is entirely gold and carries only two lines of black print, centred slightly above the middle of the face: 'EXOTECH' in widely spaced capitals, 'EXO' bold and 'TECH' thin, spanning about 47% of the front's width, and directly below it the italic letter-spaced word 'G E L', about 19% of the front's width, centred under 'OTE'; the LEFT side, seen at an angle and about half as wide as the front in the image, is split by one straight diagonal from its top front corner down to its bottom back corner: the upper back triangle matte black, the lower front triangle gold; the TOP is matte black and, at the slight downward camera angle of the packshot, is visible as a band about one sixth of the front's height; no other print anywhere on the box, and, to its right, the jar exactly as in the first reference image (the real packshot, right object): a perfectly round, polished mirror-gold sphere with one thin dark seam around its middle; black print only on its upper half (the lid), on the side facing the camera: 'EXOTECH' in widely spaced capitals, 'EXO' bold and 'TECH' thin, spanning about 56% of the sphere's width, and directly below it the italic letter-spaced 'G E L', about 19% of the sphere's width; BOTH lines sit above the seam; seen from slightly above, the thin dark seam curves gently down at the front and passes just below 'G E L'; no other marks; the gold softly reflects the room, with two soft window highlights on its upper half. Scale: the sphere's diameter is about 0.65 of the width of the box's FRONT face, that is about 58% of the box's height (the packshot is a composite of two separate photos and shows the jar too large; keep this proportion, not the packshot's). The box stays closed and turned exactly as in the packshot, so that only its front, its left side and the band of its black top show; never its right side, back or bottom. The jar stays closed and shows only its printed front half; never its back or bottom. The box's left side spans about 14-23% and its front about 23-42% of the frame width, the jar about 45-57%, both resting on the table top with their bases at about 80% of the frame height; the box's top edge at about 36% of the height (its front face from about 42% down) and the jar's top at about 58%; the print on both objects sits between 52% and 68% of the height. Behind them, softly out of focus and unrecognisable in detail: the cosmetologist (a woman about 30 with long dark wavy hair that falls behind her shoulders and never touches the patient or the product, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the third reference image), her hands bare, no gloves (she does not touch the patient's skin in this moment), standing on the left at about 5-18% of the width, and the patient (a woman 35-40 with short black hair combed back, identical to the fourth reference image (her character sheet); natural skin with real texture, pores and fine lines, no make-up look, small stud earrings as on her sheet), in a plain smooth cream tank top as on her character sheet, sitting upright in the white treatment chair at about 44-60% of the width, her body and the chair ending before 63% of the width; their faces are soft blurred shapes at about 14-34% of the height; no face is sharp. Right 35% of the frame: only the softly lit window and wall. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging, only calm softly lit background, because the Hebrew caption sits there; the bottom 15% contains nothing important, because the step markers and a small counter line sit there; any print on the packaging sits above 85% of the frame height. Photorealistic, true colours, real skin texture with pores, fine grain. No opened box, no opened jar, no lid in the hand, no gel, no cream, no spatula. No added text, captions, logos or watermarks beyond the packaging's own print; no invented packaging, no other products, bottles, tubes or labels; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
+   "prompt_9x16": "Camera slightly above the table top, looking down about 12-15 degrees exactly as in the packshot, 50mm, f/2, the same moment, objects, people and light as the first reference image (the accepted horizontal packshot frame of this film), in the same bright, clean treatment room and soft natural window daylight as the third reference image: warm white walls, a large window with softly blurred greenery outside, a white leather treatment chair, a light marble side table, a green plant behind (take only the room and the light from that image, not its people or its teal box). In the sharp foreground, side by side on the table, the closed EXOTECH GEL box exactly as in the second reference image (the real packshot, left object): a cube a little taller than wide (about 1 : 1.13 : 1) in mirror-polished gold foil with the fine crinkle of real foil; the FRONT face is entirely gold and carries only two lines of black print, centred slightly above the middle of the face: 'EXOTECH' in widely spaced capitals, 'EXO' bold and 'TECH' thin, spanning about 47% of the front's width, and directly below it the italic letter-spaced word 'G E L', about 19% of the front's width, centred under 'OTE'; the LEFT side, seen at an angle and about half as wide as the front in the image, is split by one straight diagonal from its top front corner down to its bottom back corner: the upper back triangle matte black, the lower front triangle gold; the TOP is matte black and, at the slight downward camera angle of the packshot, is visible as a band about one sixth of the front's height; no other print anywhere on the box, and, to its right, the jar exactly as in the second reference image (the real packshot, right object): a perfectly round, polished mirror-gold sphere with one thin dark seam around its middle; black print only on its upper half (the lid), on the side facing the camera: 'EXOTECH' in widely spaced capitals, 'EXO' bold and 'TECH' thin, spanning about 56% of the sphere's width, and directly below it the italic letter-spaced 'G E L', about 19% of the sphere's width; BOTH lines sit above the seam; seen from slightly above, the thin dark seam curves gently down at the front and passes just below 'G E L'; no other marks; the gold softly reflects the room, with two soft window highlights on its upper half. Scale: the sphere's diameter is about 0.65 of the width of the box's FRONT face, that is about 58% of the box's height (the packshot is a composite of two separate photos and shows the jar too large; keep this proportion, not the packshot's). The box stays closed and turned exactly as in the packshot, so that only its front, its left side and the band of its black top show; never its right side, back or bottom. The jar stays closed and shows only its printed front half; never its back or bottom. The box's left side spans about 14-28% and its front about 28-56% of the frame width, the jar about 60-78%; both bases at about 56% of the frame height; the box's top edge at about 35% (its front face from about 38% down) and the jar's top at about 46% of the height. Behind them, softly out of focus: the cosmetologist (a woman about 30 with long dark wavy hair that falls behind her shoulders and never touches the patient or the product, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the fourth reference image), her hands bare, no gloves (she does not touch the patient's skin in this moment), on the left, and the patient (a woman 35-40 with short black hair combed back, identical to the fifth reference image (her character sheet); natural skin with real texture, pores and fine lines, no make-up look, small stud earrings as on her sheet), in a plain smooth cream tank top as on her character sheet, in the white treatment chair on the right; their blurred faces at about 14-28% of the frame height, no face sharp. Below 62%: only the marble table top. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face, hand and the packaging sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face; the bottom 38% shows only plain clothing, counter or table surface or neutral background with nothing important, because a dark caption band sits there (from about 68-71% down in the first and last chapters; in the others the caption may rise to about 70%). Photorealistic, true colours, real skin texture with pores, fine grain. No opened box, no opened jar, no lid in the hand, no gel, no cream, no spatula. No added text, captions, logos or watermarks beyond the packaging's own print; no invented packaging, no other products, bottles, tubes or labels; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
+   "job_16x9": null,
+   "job_9x16": null,
+   "file_16x9": null,
+   "file_9x16": null,
+   "takes_16x9": [
+    {
+     "take": "a",
+     "job": "91481866-d03d-4021-a21f-c88405c76c24",
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/gel/stills/K0a.png",
+     "credits": 2.75,
+     "verdict": "sent to the owner; box EXOTECH 57% of the front instead of ≈45-47% (PROGRESS.md); seen here: the box base and the jar sit at ≈92% of the height (inside the bottom 15%), the patient's body reaches ≈70% of the width (inside the right 35%), the sphere about as wide as the box front"
+    },
+    {
+     "take": "b",
+     "job": "19cb8ab6-3342-4776-98eb-23035c9a52e5",
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/gel/stills/K0b.png",
+     "credits": 2.75,
+     "verdict": "box EXOTECH 46% of the front (PROGRESS.md); seen here: both jar lines above the seam, black top a clear band — correct; but the sphere ≈ the box front width (85% per PROGRESS), bases at ≈92% of the height, the patient reaching ≈70% of the width"
+    },
+    {
+     "take": "c",
+     "job": "d78fdfb9-0185-44ad-9a13-33a254d06c5b",
+     "file": null,
+     "credits": 2.75,
+     "verdict": "launched with the jar at 58% of the box height (PROGRESS.md); result not checked here: check against these corrected rules before anything else"
+    }
+   ]
+  },
+  {
+   "id": "K1",
+   "order": 2,
+   "chapters": [
+    2
+   ],
+   "status": "to shoot",
+   "purpose": "Первый кадр с людьми (образец: косметолог и пациентка этой страницы впервые вместе, ждать «ок»). Глава 02, старт ролика B: конец визита, косметолог показывает пациентке закрытую банку на ладони.",
+   "composition": "16:9: пациентка в кресле на 38-62 % ширины, лицо на 22-40 % высоты; косметолог на табурете слева (5-34 %), лицо на 20-38 %; банка на ладони на 30-40 % ширины и 46-58 % высоты; закрытая коробка маленькая на столике слева спереди (10-20 % ширины, 62-82 % высоты); правые 35 % — окно и стена. 9:16: лица на 16-34 % высоты, банка на ладони на 44-54 %, коробки нет; ниже 62 % — одежда и кресло.",
+   "packagingVisible": "jar in the cosmetologist's palm: printed front half, closed; 16:9 only: the closed box on the side table (front + left side)",
+   "packagingProof": {
+    "file": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exotech-gel.webp",
+    "faces": [
+     "jar: front half with the print",
+     "box (16:9 only): front + left side + black top band"
+    ],
+    "printedLines": "as K0 (box: EXOTECH ≈47%, G E L ≈19% of the front width; jar: EXOTECH ≈56%, G E L ≈19% of the sphere width)"
+   },
+   "refs_16x9": [
+    {
+     "order": 1,
+     "file": "accepted K0 16:9 (job id once shot)",
+     "what": "кабинет, свет, коробка и банка как приняты"
+    },
+    {
+     "order": 2,
+     "file": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exotech-gel.webp",
+     "what": "печать банки и коробки"
+    },
+    {
+     "order": 3,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)",
+     "what": "косметолог: лицо, форма, кулон"
+    },
+    {
+     "order": 4,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a06.webp (patient sheet: smooth cream tank top, beige trousers; Higgsfield media 859a154f-abf6-4380-a674-bbf0189dcc7d)",
+     "what": "пациентка: лицо, причёска, майка"
+    },
+    {
+     "order": 5,
+     "file": "M turnaround (Higgsfield media 182a0e01-b7ac-48e9-b01f-2815d8862009)",
+     "what": "косметолог: лицо с разных сторон"
+    }
+   ],
+   "refs_9x16": [
+    {
+     "order": 1,
+     "file": "accepted K1 16:9 (job id once shot)",
+     "what": "то же мгновение"
+    },
+    {
+     "order": 2,
+     "file": "accepted K0 9:16 (job id once shot)",
+     "what": "кабинет в вертикали"
+    },
+    {
+     "order": 3,
+     "file": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exotech-gel.webp",
+     "what": "печать банки"
+    },
+    {
+     "order": 4,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)",
+     "what": "косметолог"
+    },
+    {
+     "order": 5,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a06.webp (patient sheet: smooth cream tank top, beige trousers; Higgsfield media 859a154f-abf6-4380-a674-bbf0189dcc7d)",
+     "what": "пациентка"
+    }
+   ],
+   "refsNote": "16:9: комнату и свет даёт только принятый кадр упаковки этой страницы (опора 1); кадр EXOCELL с другой пациенткой не прикладывается. Второй лист пациентки a15 (чёрное платье) — только при повторе, если уходит лицо, вместо опоры 5 и с оговоркой «only her face, hair and earrings».",
+   "prompt_16x9": "Medium shot at seated eye level, 50mm, f/2.8, in the same bright, clean treatment room and soft natural window daylight as the first reference image (the accepted packshot frame of this film): warm white walls, a large window with softly blurred greenery outside, a white leather treatment chair, a light marble side table, a green plant behind (the second reference image gives only the products). It is the end of the visit. The closed box and the jar are the same objects, in the same room and light, as in the first reference image. The patient (a woman 35-40 with short black hair combed back, identical to the fourth reference image (her character sheet); natural skin with real texture, pores and fine lines, no make-up look, small stud earrings as on her sheet), in a plain smooth cream tank top as on her character sheet, sits upright in the white treatment chair at about 38-62% of the width, her face at about 22-40% of the height, turned three-quarters towards the cosmetologist, looking at the jar. The cosmetologist (a woman about 30 with long dark wavy hair that falls behind her shoulders and never touches the patient or the product, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the third reference image and to her turnaround in the fifth reference image), her hands bare, no gloves (she does not touch the patient's skin in this moment), sits on a low white stool facing her on the left, at about 5-34% of the width, her face at about 20-38% of the height, looking at the jar too. In her right hand, open and cupped at chest height between them, at about 30-40% of the width and 46-58% of the height, rests the closed jar, a little smaller than her palm, its print facing the camera: the jar exactly as in the second reference image (the real packshot, right object): a perfectly round, polished mirror-gold sphere with one thin dark seam around its middle; black print only on its upper half (the lid), on the side facing the camera: 'EXOTECH' in widely spaced capitals, 'EXO' bold and 'TECH' thin, spanning about 56% of the sphere's width, and directly below it the italic letter-spaced 'G E L', about 19% of the sphere's width; BOTH lines sit above the seam; seen from slightly above, the thin dark seam curves gently down at the front and passes just below 'G E L'; no other marks; the gold softly reflects the room, with two soft window highlights on its upper half. The jar stays closed and shows only its printed front half to the camera; never its back or bottom; it is never opened. On the light marble side table in the left foreground, small in frame (about 10% of the frame width), at about 10-20% of the width and 62-82% of the height, stands the closed EXOTECH GEL box exactly as in the second reference image (the real packshot, left object): a cube a little taller than wide (about 1 : 1.13 : 1) in mirror-polished gold foil with the fine crinkle of real foil; the FRONT face is entirely gold and carries only two lines of black print, centred slightly above the middle of the face: 'EXOTECH' in widely spaced capitals, 'EXO' bold and 'TECH' thin, spanning about 47% of the front's width, and directly below it the italic letter-spaced word 'G E L', about 19% of the front's width, centred under 'OTE'; the LEFT side, seen at an angle and about half as wide as the front in the image, is split by one straight diagonal from its top front corner down to its bottom back corner: the upper back triangle matte black, the lower front triangle gold; the TOP is matte black and, at the slight downward camera angle of the packshot, is visible as a band about one sixth of the front's height; no other print anywhere on the box; it stays closed, turned as in the packshot. The patient's shoulder ends before 63% of the width. Right 35% of the frame: only window and wall. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging, only calm softly lit background, because the Hebrew caption sits there; the bottom 15% contains nothing important, because the step markers and a small counter line sit there; any print on the packaging sits above 85% of the frame height. Photorealistic, true colours, real skin texture with pores, fine grain. No gloves in this frame. No opened box, no opened jar, no lid in the hand, no gel, no cream, no spatula. No added text, captions, logos or watermarks beyond the packaging's own print; no invented packaging, no other products, bottles, tubes or labels; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
+   "prompt_9x16": "Vertical medium shot at seated eye level, 50mm, f/2.8, the same moment, people, clothes and light as the first reference image (the accepted horizontal frame of this moment), in the same treatment room as the second reference image (the accepted vertical packshot frame of this film). The cosmetologist (a woman about 30 with long dark wavy hair that falls behind her shoulders and never touches the patient or the product, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the fourth reference image), her hands bare, no gloves (she does not touch the patient's skin in this moment), sits on a low white stool on the left and the patient (a woman 35-40 with short black hair combed back, identical to the fifth reference image (her character sheet); natural skin with real texture, pores and fine lines, no make-up look, small stud earrings as on her sheet), in a plain smooth cream tank top as on her character sheet, sits upright in the white treatment chair on the right; their faces at about 16-34% of the frame height, both looking at the jar. Centred at about 44-54% of the height, in the cosmetologist's open, cupped right hand, rests the closed jar, a little smaller than her palm, its print facing the camera: the jar exactly as in the third reference image (the real packshot, right object): a perfectly round, polished mirror-gold sphere with one thin dark seam around its middle; black print only on its upper half (the lid), on the side facing the camera: 'EXOTECH' in widely spaced capitals, 'EXO' bold and 'TECH' thin, spanning about 56% of the sphere's width, and directly below it the italic letter-spaced 'G E L', about 19% of the sphere's width; BOTH lines sit above the seam; seen from slightly above, the thin dark seam curves gently down at the front and passes just below 'G E L'; no other marks; the gold softly reflects the room, with two soft window highlights on its upper half. The jar stays closed and shows only its printed front half to the camera; never its back or bottom; it is never opened. The box is not in this vertical frame. Below 62%: only the patient's top, the cosmetologist's white uniform and the chair. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face, hand and the packaging sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face; the bottom 38% shows only plain clothing, counter or table surface or neutral background with nothing important, because a dark caption band sits there (from about 68-71% down in the first and last chapters; in the others the caption may rise to about 70%). Photorealistic, true colours, real skin texture with pores, fine grain. No gloves in this frame. No opened box, no opened jar, no lid in the hand, no gel, no cream, no spatula. No added text, captions, logos or watermarks beyond the packaging's own print; no invented packaging, no other products, bottles, tubes or labels; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
+   "job_16x9": null,
+   "job_9x16": null,
+   "file_16x9": null,
+   "file_9x16": null
+  },
+  {
+   "id": "K3",
+   "order": 3,
+   "chapters": [
+    3
+   ],
+   "status": "to shoot",
+   "purpose": "Открытая коробка с банкой в ложементе — точно как на фото открытой коробки. Глава 03; не ролик: держится с медленным наездом при сборке (без затрат). Новое состояние упаковки (открыта) — образец, ссылка заказчику до любого ролика.",
+   "composition": "16:9: открытая коробка на 24-54 % ширины, верх крышки на 10 %, нижний передний угол на 80 % высоты — силуэт ≈3 : 4, как на фото; мелкая печать задней стенки на 45-55 %; людей нет; правые 35 % — окно и стена. 9:16: коробка по центру на 19-81 % ширины и 14-60 % высоты; ниже 62 % — мрамор.",
+   "packagingVisible": "open box exactly as photographed: lid inner face, lid gold edges, outer side and right side panel, black base outside and inside with a thin gold band along the inner rim of its right wall, tray, cradle, closed sphere with its print",
+   "packagingProof": {
+    "file": "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/products/exotech-gel.webp",
+    "faces": [
+     "lid inner face (black, ring recess, gold print)",
+     "lid outer side and right side panel (gold, at the right edge)",
+     "base: outer front-left and right walls (black); a thin gold band along the inner rim of the right wall",
+     "base interior: black tray, round black cradle, inner back wall with 2 lines of fine print",
+     "sphere: upper front with the print toward the camera, closed"
+    ],
+    "printedLines": [
+     {
+      "where": "lid inner face",
+      "text": "EXOTECH",
+      "style": "gold, EXO bold, TECH thin, widely spaced",
+      "widthShare": "≈46% of the lid inner width"
+     },
+     {
+      "where": "lid inner face",
+      "text": "GEL",
+      "style": "gold, letter-spaced, below EXOTECH",
+      "widthShare": "≈19% of the lid inner width"
+     },
+     {
+      "where": "lid inner face, above the print",
+      "text": "(no text) embossed ring",
+      "style": "thin circle",
+      "widthShare": "≈35% of the lid inner width"
+     },
+     {
+      "where": "sphere, low on its front",
+      "text": "EXOTECH",
+      "style": "black, EXO bold",
+      "widthShare": "≈42% of the sphere width"
+     },
+     {
+      "where": "sphere, below EXOTECH at the cradle rim",
+      "text": "GEL",
+      "style": "black, letter-spaced",
+      "widthShare": "≈18% of the sphere width"
+     },
+     {
+      "where": "inner back wall of the base",
+      "text": "(2 lines, unreadable at 696x931)",
+      "style": "small gold print",
+      "widthShare": "≈30% of the box width; rendered as faint fine lines, no invented words"
+     }
+    ],
+    "resolution": "696x931: soft; small print unreadable (HD photo requested)"
+   },
+   "refs_16x9": [
+    {
+     "order": 1,
+     "file": "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/products/exotech-gel.webp",
+     "what": "настоящее фото открытой коробки: геометрия, ракурс, печать"
+    },
+    {
+     "order": 2,
+     "file": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exotech-gel.webp",
+     "what": "резкость золота и печати банки (саму закрытую коробку не брать)"
+    },
+    {
+     "order": 3,
+     "file": "accepted K0 16:9 (job id once shot)",
+     "what": "столик, кабинет, свет"
+    }
+   ],
+   "refs_9x16": [
+    {
+     "order": 1,
+     "file": "accepted K3 16:9 (job id once shot)",
+     "what": "то же мгновение"
+    },
+    {
+     "order": 2,
+     "file": "/home/user/GregoryDich/mitoderm-catalog/codex-site/public/assets/products/exotech-gel.webp",
+     "what": "фото открытой коробки"
+    },
+    {
+     "order": 3,
+     "file": "accepted K0 9:16 (job id once shot)",
+     "what": "столик и кабинет в вертикали"
+    }
+   ],
+   "prompt_16x9": "Product close shot, 85mm, f/4, in the same bright, clean treatment room and soft natural window daylight as the third reference image: warm white walls, a large window with softly blurred greenery outside, a white leather treatment chair, a light marble side table, a green plant behind (take only the room and the light from that image, not its people or its teal box), on the same light marble side table as the third reference image (the accepted packshot frame of this film). On the table stands the opened EXOTECH GEL box exactly as in the first reference image (the real photo of the open box), from the same viewpoint: from the front left and from above at about 35 degrees. The lid is hinged at the back and stands open, tipped back past upright; its inner face is matte black and carries, in its upper part, a thin embossed circle (a round recess) about 35% of the lid's inner width across, and, centred below it, two lines of gold print: 'EXOTECH' ('EXO' bold, 'TECH' thin, widely spaced), about 46% of the lid's inner width, and 'GEL' letter-spaced below it, about 19%; the lid's outer side and its right side panel, seen at the right edge, are mirror gold foil, the side panel tapering towards the hinge. The base is matte black outside and inside, with a thin gold band along the inner rim of its right wall; the lid's edges are gold; inside it a black tray holds the gold sphere jar in a round black cradle; the sphere sits with its printed front towards the camera: 'EXOTECH' ('EXO' bold), about 42% of the sphere's width, with 'GEL' below it, low on the sphere near the cradle rim, exactly as in the photo; on the inner back wall of the base two short lines of very small gold print, rendered only as faint fine gold lines (they are unreadable in the photo: never invent words); a soft curved reflection of the lid edge lies across the upper right of the sphere, as in the photo, and no plastic film. The gold of the sphere and of the print is as polished and as sharp as in the second reference image (the packshot). The jar stays closed in its cradle. The open box stands at about 24-54% of the frame width, the top of the open lid at about 10% and the front bottom corner of the base at about 80% of the frame height, keeping the exact silhouette proportions of the first reference image (about 3 wide : 4 tall); the small print on the inner back wall sits at about 45-55% of the height. No people and no hands in frame. Right 35% of the frame: only the softly blurred window and wall. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging, only calm softly lit background, because the Hebrew caption sits there; the bottom 15% contains nothing important, because the step markers and a small counter line sit there; any print on the packaging sits above 85% of the frame height. Photorealistic, true colours, real skin texture with pores, fine grain. No opened jar, no lid of the jar, no gel, no cream, no spatula, no leaflet, no second jar; nothing else in the box. No added text, captions, logos or watermarks beyond the packaging's own print; no invented packaging, no other products, bottles, tubes or labels; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
+   "prompt_9x16": "Vertical product close shot, 85mm, f/4, the same open box, viewpoint and light as the first reference image (the accepted horizontal frame of this moment), on the same light marble side table and in the same room as the third reference image (the accepted vertical packshot frame of this film). On the table stands the opened EXOTECH GEL box exactly as in the second reference image (the real photo of the open box), from the same viewpoint: from the front left and from above at about 35 degrees. The lid is hinged at the back and stands open, tipped back past upright; its inner face is matte black and carries, in its upper part, a thin embossed circle (a round recess) about 35% of the lid's inner width across, and, centred below it, two lines of gold print: 'EXOTECH' ('EXO' bold, 'TECH' thin, widely spaced), about 46% of the lid's inner width, and 'GEL' letter-spaced below it, about 19%; the lid's outer side and its right side panel, seen at the right edge, are mirror gold foil, the side panel tapering towards the hinge. The base is matte black outside and inside, with a thin gold band along the inner rim of its right wall; the lid's edges are gold; inside it a black tray holds the gold sphere jar in a round black cradle; the sphere sits with its printed front towards the camera: 'EXOTECH' ('EXO' bold), about 42% of the sphere's width, with 'GEL' below it, low on the sphere near the cradle rim, exactly as in the photo; on the inner back wall of the base two short lines of very small gold print, rendered only as faint fine gold lines (they are unreadable in the photo: never invent words); a soft curved reflection of the lid edge lies across the upper right of the sphere, as in the photo, and no plastic film. The gold of the sphere and of the print is as polished and as sharp as in the first reference image. The jar stays closed in its cradle. The open box is centred at about 19-81% of the frame width, the top of the lid at about 14% and the front bottom corner of the base at about 60% of the frame height, keeping the exact silhouette proportions of the second reference image (about 3 wide : 4 tall). No people and no hands. Below 62%: only the marble table top. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face, hand and the packaging sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face; the bottom 38% shows only plain clothing, counter or table surface or neutral background with nothing important, because a dark caption band sits there (from about 68-71% down in the first and last chapters; in the others the caption may rise to about 70%). Photorealistic, true colours, real skin texture with pores, fine grain. No opened jar, no lid of the jar, no gel, no cream, no spatula, no leaflet, no second jar; nothing else in the box. No added text, captions, logos or watermarks beyond the packaging's own print; no invented packaging, no other products, bottles, tubes or labels; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
+   "job_16x9": null,
+   "job_9x16": null,
+   "file_16x9": null,
+   "file_9x16": null
+  },
+  {
+   "id": "K4",
+   "order": 4,
+   "chapters": [
+    4,
+    5
+   ],
+   "status": "to shoot",
+   "purpose": "Дом: пациентка у раковины в ванной, кожа чистая, руки без перчаток, кончики пальцев уже на щеке, закрытая банка стоит рядом. Главы 04-05, старт ролика C. Новый образ (дом) — образец, ждать «ок» до K4 9:16, K6 и ролика C.",
+   "composition": "16:9: пациентка по пояс на 18-55 % ширины, лицо на 20-42 % высоты, смотрит влево на зеркало за кадром; банка на столешнице на 23-31 % ширины и 66-80 % высоты (≈154 px, круг); правые 35 % — стена и окно. 9:16: лицо на 16-34 % высоты, банка на 50-60 %; ниже 62 % — столешница, полотенце, одежда.",
+   "packagingVisible": "jar on the counter: printed front half, closed; no box",
+   "packagingProof": {
+    "file": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exotech-gel.webp",
+    "faces": [
+     "jar: front half with the print"
+    ],
+    "printedLines": "jar: EXOTECH ≈56%, G E L ≈19% of the sphere width"
+   },
+   "refs_16x9": [
+    {
+     "order": 1,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a06.webp (patient sheet: smooth cream tank top, beige trousers; Higgsfield media 859a154f-abf6-4380-a674-bbf0189dcc7d)",
+     "what": "лист пациентки: лицо, волосы, серьги, кожа (майку и брюки не брать)"
+    },
+    {
+     "order": 2,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a15.webp (patient sheet: face angles in a black off-shoulder dress: take only her face, hair and earrings; upload on first use, record the media id in PROGRESS.md)",
+     "what": "лист пациентки: ракурсы лица (только лицо, волосы, серьги; не чёрное платье)"
+    },
+    {
+     "order": 3,
+     "file": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exotech-gel.webp",
+     "what": "банка (коробку не брать)"
+    }
+   ],
+   "refs_9x16": [
+    {
+     "order": 1,
+     "file": "accepted K4 16:9 (job id once shot)",
+     "what": "то же мгновение и комната"
+    },
+    {
+     "order": 2,
+     "file": "accepted K1 9:16 (job id once shot)",
+     "what": "пациентка в вертикали"
+    },
+    {
+     "order": 3,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a06.webp (patient sheet: smooth cream tank top, beige trousers; Higgsfield media 859a154f-abf6-4380-a674-bbf0189dcc7d)",
+     "what": "лист пациентки"
+    },
+    {
+     "order": 4,
+     "file": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exotech-gel.webp",
+     "what": "банка"
+    }
+   ],
+   "prompt_16x9": "Medium close shot at eye level, 50mm, f/2.8, in a bright bathroom at home in the same light palette as the clinic: warm white walls, soft natural daylight from a window on the right, a pale marble vanity counter, a folded white towel; tidy, no other products, bottles or labels. The patient (a woman 35-40 with short black hair combed back, identical to the first reference image (her character sheet: take her face, hair, earrings and skin, not the tank top or trousers) and to her face angles in the second reference image (take only her face, hair and earrings from it, not the black dress); natural skin with real texture, pores and fine lines, no make-up look, small stud earrings as on her sheet), in a plain light oatmeal long-sleeve cotton home top with the sleeves pushed up to the forearms, bare hands, no gloves, no rings, short nails with the same red polish as on her character sheets, stands at the counter at about 18-55% of the width, seen waist-up, her face at about 20-42% of the height, turned a little to the left towards a mirror that is outside the frame (no mirror and no reflection in frame). Her skin is clean and bare. The fingertips of one hand rest lightly on the cheek nearer the camera, just starting to spread a thin layer: on that cheek only a faint, thin moist sheen, no white cream, no visible gel; her other hand rests on the edge of the counter. On the counter in front of her, at about 23-31% of the width and 66-80% of the height, stands the closed jar, its print facing the camera: the jar exactly as in the third reference image (the real packshot, right object): a perfectly round, polished mirror-gold sphere with one thin dark seam around its middle; black print only on its upper half (the lid), on the side facing the camera: 'EXOTECH' in widely spaced capitals, 'EXO' bold and 'TECH' thin, spanning about 56% of the sphere's width, and directly below it the italic letter-spaced 'G E L', about 19% of the sphere's width; BOTH lines sit above the seam; seen from slightly above, the thin dark seam curves gently down at the front and passes just below 'G E L'; no other marks; the gold softly reflects the room, with two soft window highlights on its upper half. The jar stays closed and shows only its printed front half to the camera; never its back or bottom; it is never opened. The box is not in frame. Nobody else in frame. Right 35% of the frame: only the softly lit wall and window. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging, only calm softly lit background, because the Hebrew caption sits there; the bottom 15% contains nothing important, because the step markers and a small counter line sit there; any print on the packaging sits above 85% of the frame height. Photorealistic, true colours, real skin texture with pores, fine grain. No opened box, no opened jar, no lid in the hand, no gel, no cream, no spatula. No added text, captions, logos or watermarks beyond the packaging's own print; no invented packaging, no other products, bottles, tubes or labels; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
+   "prompt_9x16": "Vertical medium close shot at eye level, 50mm, f/2.8, the same moment, room, clothes, pose and light as the first reference image (the accepted horizontal frame of this moment), in a bright bathroom at home in the same light palette as the clinic: warm white walls, soft natural daylight from a window on the right, a pale marble vanity counter, a folded white towel; tidy, no other products, bottles or labels. The patient (a woman 35-40 with short black hair combed back, identical to the third reference image (her character sheet); natural skin with real texture, pores and fine lines, no make-up look, small stud earrings as on her sheet), in a plain light oatmeal long-sleeve cotton home top with the sleeves pushed up to the forearms (her face and skin exactly as in the second reference image, the accepted vertical recommendation frame of this film; nothing else from that image), bare hands, short nails with the same red polish as on her character sheets, stands at the counter, centred, her face at about 16-34% of the frame height, turned a little to the left towards a mirror outside the frame (no mirror, no reflection in frame); the fingertips of one hand rest lightly on her cheek with only a faint thin moist sheen on it, no white cream, no visible gel; her other hand on the counter edge. On the counter, left of centre at about 50-60% of the height, stands the closed jar, print facing the camera: the jar exactly as in the fourth reference image (the real packshot, right object): a perfectly round, polished mirror-gold sphere with one thin dark seam around its middle; black print only on its upper half (the lid), on the side facing the camera: 'EXOTECH' in widely spaced capitals, 'EXO' bold and 'TECH' thin, spanning about 56% of the sphere's width, and directly below it the italic letter-spaced 'G E L', about 19% of the sphere's width; BOTH lines sit above the seam; seen from slightly above, the thin dark seam curves gently down at the front and passes just below 'G E L'; no other marks; the gold softly reflects the room, with two soft window highlights on its upper half. The jar stays closed and shows only its printed front half to the camera; never its back or bottom; it is never opened. The box is not in frame. Below 62%: only the plain counter front, the towel and her top. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face, hand and the packaging sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face; the bottom 38% shows only plain clothing, counter or table surface or neutral background with nothing important, because a dark caption band sits there (from about 68-71% down in the first and last chapters; in the others the caption may rise to about 70%). Photorealistic, true colours, real skin texture with pores, fine grain. No opened box, no opened jar, no lid in the hand, no gel, no cream, no spatula. No added text, captions, logos or watermarks beyond the packaging's own print; no invented packaging, no other products, bottles, tubes or labels; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
+   "refsNote": "Образец K4 снимается по листам, без опоры на K1: так отказ по K1 не тянет за собой K4, K6 и ролик C. Если лицо уходит от K1 — повтор K4 после «ок» на K1 с принятым K1 16:9 четвёртой опорой («her face, hair and skin as in the fourth reference image; nothing else from it»).",
+   "job_16x9": null,
+   "job_9x16": null,
+   "file_16x9": null,
+   "file_9x16": null
+  },
+  {
+   "id": "K6",
+   "order": 5,
+   "chapters": [
+    6
+   ],
+   "status": "to shoot",
+   "purpose": "Каждый день: закрытая банка на своём месте дома, у полотенца. Глава 06; не ролик: медленный наезд при сборке.",
+   "composition": "16:9: банка на 26-44 % ширины и 34-66 % высоты (≈346 px, круг); людей и коробки нет; правые 35 % — стена и окно. 9:16: банка по центру на 32-54 % высоты (диаметр ≈38 % ширины); ниже 62 % — столешница.",
+   "packagingVisible": "jar alone: printed front half, closed; no box",
+   "packagingProof": {
+    "file": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exotech-gel.webp",
+    "faces": [
+     "jar: front half with the print"
+    ],
+    "printedLines": "jar: EXOTECH ≈56%, G E L ≈19% of the sphere width"
+   },
+   "refs_16x9": [
+    {
+     "order": 1,
+     "file": "accepted K4 16:9 (job id once shot)",
+     "what": "ванная, столешница, свет"
+    },
+    {
+     "order": 2,
+     "file": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exotech-gel.webp",
+     "what": "банка (коробку не брать)"
+    }
+   ],
+   "refs_9x16": [
+    {
+     "order": 1,
+     "file": "accepted K6 16:9 (job id once shot)",
+     "what": "то же мгновение"
+    },
+    {
+     "order": 2,
+     "file": "accepted K4 9:16 (job id once shot)",
+     "what": "ванная в вертикали"
+    },
+    {
+     "order": 3,
+     "file": "/home/user/GregoryDich/mitoderm-catalog/protocols/print/img/exotech-gel.webp",
+     "what": "банка"
+    }
+   ],
+   "prompt_16x9": "Close shot at counter height, 85mm, f/2.8, in the same bright bathroom and soft daylight as the first reference image (the accepted home frame of this film): the closed jar stands alone on the pale marble vanity counter beside a folded white towel, its print facing the camera: the jar exactly as in the second reference image (the real packshot, right object): a perfectly round, polished mirror-gold sphere with one thin dark seam around its middle; black print only on its upper half (the lid), on the side facing the camera: 'EXOTECH' in widely spaced capitals, 'EXO' bold and 'TECH' thin, spanning about 56% of the sphere's width, and directly below it the italic letter-spaced 'G E L', about 19% of the sphere's width; BOTH lines sit above the seam; seen from slightly above, the thin dark seam curves gently down at the front and passes just below 'G E L'; no other marks; the gold softly reflects the room, with two soft window highlights on its upper half. The jar stays closed and shows only its printed front half to the camera; never its back or bottom; it is never opened. The jar stands at about 26-44% of the width and 34-66% of the height. No person in frame and the box is not in frame. Behind, softly blurred, the warm white wall and the window light; neutral soft daylight, no sunrise and no evening mood. Right 35% of the frame: only the softly blurred wall and window. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging, only calm softly lit background, because the Hebrew caption sits there; the bottom 15% contains nothing important, because the step markers and a small counter line sit there; any print on the packaging sits above 85% of the frame height. Photorealistic, true colours, real skin texture with pores, fine grain. No opened box, no opened jar, no lid in the hand, no gel, no cream, no spatula. No added text, captions, logos or watermarks beyond the packaging's own print; no invented packaging, no other products, bottles, tubes or labels; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
+   "prompt_9x16": "Vertical close shot at counter height, 85mm, f/2.8, the same jar, counter, towel and light as the first reference image (the accepted horizontal frame of this moment), in the same bathroom as the second reference image (the accepted vertical home frame of this film): the closed jar stands alone on the pale marble counter beside a folded white towel, print facing the camera: the jar exactly as in the third reference image (the real packshot, right object): a perfectly round, polished mirror-gold sphere with one thin dark seam around its middle; black print only on its upper half (the lid), on the side facing the camera: 'EXOTECH' in widely spaced capitals, 'EXO' bold and 'TECH' thin, spanning about 56% of the sphere's width, and directly below it the italic letter-spaced 'G E L', about 19% of the sphere's width; BOTH lines sit above the seam; seen from slightly above, the thin dark seam curves gently down at the front and passes just below 'G E L'; no other marks; the gold softly reflects the room, with two soft window highlights on its upper half. The jar stays closed and shows only its printed front half to the camera; never its back or bottom; it is never opened. The jar is centred at about 32-54% of the frame height, its diameter about 38% of the frame width. No person, no box. Neutral soft daylight. Below 62%: only the plain counter. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face, hand and the packaging sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face; the bottom 38% shows only plain clothing, counter or table surface or neutral background with nothing important, because a dark caption band sits there (from about 68-71% down in the first and last chapters; in the others the caption may rise to about 70%). Photorealistic, true colours, real skin texture with pores, fine grain. No opened box, no opened jar, no lid in the hand, no gel, no cream, no spatula. No added text, captions, logos or watermarks beyond the packaging's own print; no invented packaging, no other products, bottles, tubes or labels; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
+   "job_16x9": null,
+   "job_9x16": null,
+   "file_16x9": null,
+   "file_9x16": null
+  },
+  {
+   "id": "K7",
+   "order": 6,
+   "chapters": [
+    7
+   ],
+   "status": "to shoot",
+   "purpose": "Следующий визит: косметолог в белых перчатках спокойно смотрит на кожу пациентки, лёгкое касание у скулы; без «до/после». Глава 07; не ролик: медленный наезд при сборке, последние 6 кадров наплывом в конец ролика A.",
+   "composition": "16:9: пациентка на 38-62 % ширины, лицо на 22-40 % высоты; косметолог на табурете слева (8-34 %), лицо на 20-38 %; упаковки нет; правые 35 % — окно и стена. 9:16: лица на 16-34 % высоты; ниже 62 % — одежда и кресло.",
+   "packagingVisible": "none",
+   "refs_16x9": [
+    {
+     "order": 1,
+     "file": "accepted K1 16:9 (job id once shot)",
+     "what": "кабинет, свет, оба лица и кожа пациентки как приняты"
+    },
+    {
+     "order": 2,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)",
+     "what": "косметолог"
+    },
+    {
+     "order": 3,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a06.webp (patient sheet: smooth cream tank top, beige trousers; Higgsfield media 859a154f-abf6-4380-a674-bbf0189dcc7d)",
+     "what": "пациентка (майку не брать: здесь серо-бежевый трикотаж)"
+    },
+    {
+     "order": 4,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a15.webp (patient sheet: face angles in a black off-shoulder dress: take only her face, hair and earrings; upload on first use, record the media id in PROGRESS.md)",
+     "what": "пациентка: ракурсы лица"
+    }
+   ],
+   "refs_9x16": [
+    {
+     "order": 1,
+     "file": "accepted K7 16:9 (job id once shot)",
+     "what": "то же мгновение"
+    },
+    {
+     "order": 2,
+     "file": "accepted K1 9:16 (job id once shot)",
+     "what": "кабинет и лица в вертикали"
+    },
+    {
+     "order": 3,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/main-photo.jpg (Higgsfield media 90121c86-7093-44bb-a03d-ebc0648e392c)",
+     "what": "косметолог"
+    },
+    {
+     "order": 4,
+     "file": "/tmp/claude-0/-home-user-GregoryDich/0aa82102-fd8e-5074-bffe-35af07ddfed7/scratchpad/cast/a06.webp (patient sheet: smooth cream tank top, beige trousers; Higgsfield media 859a154f-abf6-4380-a674-bbf0189dcc7d)",
+     "what": "пациентка"
+    }
+   ],
+   "prompt_16x9": "Medium shot at seated eye level, 50mm, f/2.8, in the same treatment room and light as the first reference image (the accepted recommendation frame of this film), on a later visit. The patient (a woman 35-40 with short black hair combed back, identical to the third reference image (her character sheet) and to her face angles in the fourth reference image (only her face, hair and earrings, not the black dress); natural skin with real texture, pores and fine lines, no make-up look, small stud earrings as on her sheet), in a plain pale grey-beige fine-knit short-sleeve top, sits in the white treatment chair at about 38-62% of the width, her face at about 22-40% of the height, calm, eyes open, looking straight ahead; her face, hair and skin exactly as in the first reference image: the same natural texture, tone and fine lines, not smoother, not brighter, no glow. The cosmetologist (a woman about 30 with long dark wavy hair that falls behind her shoulders and never touches the patient or the product, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the second reference image), wearing clean white examination gloves (white, never coloured), sits on the low white stool on the left at about 8-34% of the width, her face at about 20-38% of the height, leaning in a little and looking attentively at the patient's cheek, one gloved fingertip resting lightly beside the cheekbone without pressing. No product in frame. Right 35% of the frame: only window and wall. 16:9 horizontal film still, framed for 1920x1080. COMPOSITION RULE FOR 16:9 (desktop, right-to-left page): the right 35% of the frame contains no faces, no hands and no packaging, only calm softly lit background, because the Hebrew caption sits there; the bottom 15% contains nothing important, because the step markers and a small counter line sit there; any print on the packaging sits above 85% of the frame height. Photorealistic, true colours, real skin texture with pores, fine grain. No box, no jar, no gel, no cream. No added text, captions, logos or watermarks beyond the packaging's own print; no invented packaging, no other products, bottles, tubes or labels; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
+   "prompt_9x16": "Vertical medium shot at seated eye level, 50mm, f/2.8, the same moment, people and light as the first reference image (the accepted horizontal frame of this moment), in the same room as the second reference image (the accepted vertical recommendation frame of this film). The cosmetologist (a woman about 30 with long dark wavy hair that falls behind her shoulders and never touches the patient or the product, a white uniform with pink piping and a pendant with a blue stone on a black cord, identical to the third reference image), wearing clean white examination gloves (white, never coloured), sits on the low white stool on the left, leaning in a little, one gloved fingertip resting lightly beside the patient's cheekbone without pressing; the patient (a woman 35-40 with short black hair combed back, identical to the fourth reference image (her character sheet); natural skin with real texture, pores and fine lines, no make-up look, small stud earrings as on her sheet), in a plain pale grey-beige fine-knit short-sleeve top, sits calmly in the white treatment chair on the right, eyes open; their faces at about 16-34% of the frame height; her skin exactly as in the second reference image, not smoother, not brighter, no glow. No product in frame. Below 62%: only her top, the white uniform and the chair. 9:16 vertical film still, framed natively for 1080x1920 (composed for a phone, not a crop of a horizontal frame). COMPOSITION RULE FOR 9:16 (phone): every face, hand and the packaging sit between 13% and 62% of the frame height measured from the top; the top 13% (under the site header) shows no face; the bottom 38% shows only plain clothing, counter or table surface or neutral background with nothing important, because a dark caption band sits there (from about 68-71% down in the first and last chapters; in the others the caption may rise to about 70%). Photorealistic, true colours, real skin texture with pores, fine grain. No box, no jar, no gel, no cream. No added text, captions, logos or watermarks beyond the packaging's own print; no invented packaging, no other products, bottles, tubes or labels; no needle, syringe or device; no skin smoothing or glow; no redness; no before/after look; no extra fingers; no duplicate people.",
+   "job_16x9": null,
+   "job_9x16": null,
+   "file_16x9": null,
+   "file_9x16": null
+  }
+ ],
+ "clips": [
+  {
+   "id": "A",
+   "start_16x9": "K0",
+   "start_9x16": "K0 vertical",
+   "end": null,
+   "seconds": 5,
+   "model": "kling4_0 image-to-video 1080p 5 s (121 frames), one take per format",
+   "needsEndFrame": false,
+   "use": "frame 0 -> hold at the start (0-24) and at the end (810-822); frames 1-120 forward (24-144, chapters 01-02); frames 120->1 reversed (690-810, chapter 08)",
+   "prompt_16x9": "Camera only: the camera slowly pulls straight back about 15%, at exactly the same height; it never rises or tilts, so the black top of the box keeps exactly the same visible band as in the start image. The closed gold box and the gold sphere jar stay sharp and perfectly still at the same place in frame. The cosmetologist and the patient behind stay softly out of focus the whole time (no focus pull); they only breathe and shift very slightly; nobody stands up, walks or leaves the frame. Keep the right 35% of the frame free of faces, hands and packaging, and nothing enters the bottom 15%. Photorealistic, one continuous take, no cuts. Faces, hair, clothing, the pendant and the room stay exactly as in the start image. The gold jar and the box never move by themselves, open, turn or change; their shape, colour and printed words stay exactly as in the start image. The patient's skin texture and tone stay unchanged throughout. No text, captions or graphics in frame, no new objects entering at the edges, no gel, no cream, no needle or device, no skin smoothing or glow, no extra fingers, no morphing. No audio.",
+   "prompt_9x16": "Camera only: the camera slowly pulls straight back about 15%, at exactly the same height; it never rises or tilts, so the black top of the box keeps exactly the same visible band as in the start image. The closed gold box and the gold sphere jar stay sharp and perfectly still, centred between 13% and 62% of the frame height. The cosmetologist and the patient behind stay softly out of focus the whole time (no focus pull); they only breathe and shift very slightly; nobody stands up, walks or leaves the frame. The bottom 38% of the frame stays plain marble table top; no hands or objects enter it. Photorealistic, one continuous take, no cuts. Faces, hair, clothing, the pendant and the room stay exactly as in the start image. The gold jar and the box never move by themselves, open, turn or change; their shape, colour and printed words stay exactly as in the start image. The patient's skin texture and tone stay unchanged throughout. No text, captions or graphics in frame, no new objects entering at the edges, no gel, no cream, no needle or device, no skin smoothing or glow, no extra fingers, no morphing. No audio.",
+   "review": [
+    "frame 0 = K0",
+    "box and jar print crisp and unchanged in every frame (EXOTECH / G E L on both)",
+    "box: only front, left side and the black top band (as in K0) ever visible; jar: only its printed front, both print lines above the seam",
+    "faces stay soft: no invented sharp faces",
+    "reversed playback reads as a slow push-in onto the box and jar",
+    "16:9: right 35% clean, nothing in the bottom 15%; 9:16: products inside 13-62%",
+    "no object appears at an edge late in the take (EXOCELL lesson: crop 4% if it does)"
+   ],
+   "planB": "Second half unusable (an object appears, the camera rises or tilts, a face sharpens, the jar turns). (1) Defect only at an edge, from any frame: crop up to 4% of the edge (as EXOCELL A). (2) Defect starts at frame N between 85 and 120 and cannot be cropped: chapter 01 unchanged; chapter 02 = A 85..N-1, then B 0..(204-N) (B starts earlier, so chapter 02 stays 120 frames); chapter 08 = the 6-frame dissolve from K7 into A(N-1) frozen, A reversed (N-1)->1, then a hold of A0 for 133-N frames (138 frames in all; the film stays 822). (3) Defect starts at frame N < 85: chapter 01 = K0 held with a slow pull-out made at assembly (zoompan 106% -> 100%, 108 frames, free), chapter 02 = B frames 0-119 (B starts on K1 anyway), chapter 08 = the same zoompan reversed (push-in onto the box), 6-frame dissolve from K7 into it. No retake needed in any case.",
+   "status": "to shoot after the owner's \"ok\" on K0 16:9 (meanwhile K1, K3 and K4 16:9 are shot)"
+  },
+  {
+   "id": "B",
+   "start_16x9": "K1",
+   "start_9x16": "K1 vertical",
+   "end": null,
+   "seconds": 5,
+   "model": "kling4_0 image-to-video 1080p 5 s (121 frames), one take per format",
+   "needsEndFrame": false,
+   "use": "frames 0-83 (144-228, chapter 02, cut in after A); frames 84-120 unused (reserve)",
+   "prompt_16x9": "Camera locked. One simple action: the cosmetologist, holding the closed gold sphere jar resting in her open, cupped right hand at chest height with its print facing the camera, slowly moves it a few centimetres towards the patient and holds it there. The patient looks at the jar and nods once, slightly, with a calm small smile. The jar stays in the cosmetologist's palm until the last frame; it never leaves her hand, never rolls, turns, opens or changes; nobody hands anything over. Her hand stays in front of her chest until the last frame. Both stay seated in place; nobody stands up, straightens up out of frame or leaves the frame. Lips mostly closed, no talking-head mouth motion. The closed box on the side table stays exactly as in the start image; nobody touches it. Keep the right 35% of the frame free of faces, hands and packaging, and nothing enters the bottom 15%. Photorealistic, one continuous take, no cuts. Faces, hair, clothing, the pendant and the room stay exactly as in the start image. The gold jar and the box never move by themselves, open, turn or change; their shape, colour and printed words stay exactly as in the start image. The patient's skin texture and tone stay unchanged throughout. No text, captions or graphics in frame, no new objects entering at the edges, no gel, no cream, no needle or device, no skin smoothing or glow, no extra fingers, no morphing. No audio.",
+   "prompt_9x16": "Camera locked. One simple action: the cosmetologist, holding the closed gold sphere jar resting in her open, cupped right hand at chest height with its print facing the camera, slowly moves it a few centimetres towards the patient and holds it there. The patient looks at the jar and nods once, slightly, with a calm small smile. The jar stays in the cosmetologist's palm until the last frame; it never leaves her hand, never rolls, turns, opens or changes; nobody hands anything over. Her hand stays in front of her chest until the last frame. Both stay seated in place; nobody stands up, straightens up out of frame or leaves the frame. Lips mostly closed, no talking-head mouth motion. Keep both faces and the jar between 13% and 62% of the frame height; the bottom 38% stays plain (clothing, chair), no hands or objects of interest enter it. Photorealistic, one continuous take, no cuts. Faces, hair, clothing, the pendant and the room stay exactly as in the start image. The gold jar never moves by itself, opens, turns or changes; its shape, colour and printed words stay exactly as in the start image. The patient's skin texture and tone stay unchanged throughout. No text, captions or graphics in frame, no new objects entering at the edges, no gel, no cream, no needle or device, no skin smoothing or glow, no extra fingers, no morphing. No audio.",
+   "review": [
+    "frame 0 = K1",
+    "faces = K1 in all used frames (0-83)",
+    "jar stays on the palm, print readable and unchanged, never turns or opens",
+    "no handover, no hand raised into the air",
+    "five fingers, bare hands (no gloves appear)",
+    "patient skin unchanged",
+    "choose the cut point: any frame 70-83 after the jar has settled (B is used 0-83; if the good part ends at N < 83, chapter 02 = a hold of B0 for 83-N frames, then B 0..N)"
+   ],
+   "planB": "Second half unusable (the hand lifts into the air, someone straightens up): chapter 02 needs only frames 0-83. If the defect starts at frame N < 84: B 0..N forward + N..0 backward (presenting the jar reads the same both ways), padded with a hold of B0 to 84 frames.",
+   "status": "to shoot after the owner's \"ok\" on K1"
+  },
+  {
+   "id": "C",
+   "start_16x9": "K4",
+   "start_9x16": "K4 vertical",
+   "end": null,
+   "seconds": 5,
+   "model": "kling4_0 image-to-video 1080p 5 s (121 frames), one take per format",
+   "needsEndFrame": false,
+   "use": "frames 0-83 (336-420, chapter 04); frames 84-120 (420-457, chapter 05) + hold of frame 120 x35 (457-492)",
+   "prompt_16x9": "Camera locked. One simple action: the patient slowly spreads a thin layer on her cheek with the fingertips of the hand already resting there, in small slow circles, as if massaging it in until it is absorbed. Her fingertips stay on her cheek until the last frame; her other hand stays resting on the counter edge; she does not lift her hand into the air, does not turn away, does not stand up or leave the frame. The faint moist sheen on that cheek stays faint and fades very slightly; no white cream, no gel mass and no foam ever appear. The closed gold sphere jar on the counter stays exactly where it is, its print facing the camera; nobody touches it. The mirror stays outside the frame; no reflection of her appears. Keep the right 35% of the frame free of faces, hands and packaging, and nothing enters the bottom 15%. Photorealistic, one continuous take, no cuts. Her face, hair, clothing and the room stay exactly as in the start image. The gold jar never moves by itself, opens, turns or changes; its shape, colour and printed words stay exactly as in the start image. The patient's skin texture and tone stay unchanged throughout. No text, captions or graphics in frame, no new objects entering at the edges, no gel, no cream, no needle or device, no skin smoothing or glow, no extra fingers, no morphing. No audio.",
+   "prompt_9x16": "Camera locked. One simple action: the patient slowly spreads a thin layer on her cheek with the fingertips of the hand already resting there, in small slow circles, as if massaging it in until it is absorbed. Her fingertips stay on her cheek until the last frame; her other hand stays resting on the counter edge; she does not lift her hand into the air, does not turn away, does not stand up or leave the frame. The faint moist sheen on that cheek stays faint and fades very slightly; no white cream, no gel mass and no foam ever appear. The closed gold sphere jar on the counter stays exactly where it is, its print facing the camera; nobody touches it. The mirror stays outside the frame; no reflection of her appears. Keep her face, hand and the jar between 13% and 62% of the frame height; the bottom 38% stays plain (counter front, towel, her top). Photorealistic, one continuous take, no cuts. Her face, hair, clothing and the room stay exactly as in the start image. The gold jar never moves by itself, opens, turns or changes; its shape, colour and printed words stay exactly as in the start image. The patient's skin texture and tone stay unchanged throughout. No text, captions or graphics in frame, no new objects entering at the edges, no gel, no cream, no needle or device, no skin smoothing or glow, no extra fingers, no morphing. No audio.",
+   "review": [
+    "frame 0 = K4",
+    "fingertips stay on the cheek; small circles only",
+    "no white cream or gel blob appears; the sheen stays faint",
+    "jar never moves, print intact",
+    "no mirror or reflection appears; nobody else enters",
+    "skin unchanged (no glow, no smoothing)",
+    "note the last good frame if the hand leaves the face"
+   ],
+   "planB": "Second half unusable (the hand leaves the face, she turns away): chapters 04-05 = C 0..N forward + N..0 backward (the circles read the same both ways), padded with a hold to 156 frames (N >= 54 keeps it natural). If N < 40: chapter 04 = K4 held with a slow push-in (84 frames, free) and chapter 05 = a 1.5x cut-in on her cheek and hand from K4 with a slow push-in (72 frames, free).",
+   "status": "to shoot after the owner's \"ok\" on K4"
+  }
+ ],
+ "timeline": [
+  {
+   "scene": "01",
+   "chapter": 1,
+   "clip": "hold_k0 (A frame 0)",
+   "startFrame": 0,
+   "endFrame": 24
+  },
+  {
+   "scene": "01",
+   "chapter": 1,
+   "clip": "A frames 1-84",
+   "startFrame": 24,
+   "endFrame": 108
+  },
+  {
+   "scene": "02",
+   "chapter": 2,
+   "clip": "A frames 85-120",
+   "startFrame": 108,
+   "endFrame": 144
+  },
+  {
+   "scene": "02",
+   "chapter": 2,
+   "clip": "B frames 0-83 (cut in)",
+   "startFrame": 144,
+   "endFrame": 228
+  },
+  {
+   "scene": "03",
+   "chapter": 3,
+   "clip": "K3 still, slow push-in made at assembly (100% -> 106%), cut in",
+   "startFrame": 228,
+   "endFrame": 336
+  },
+  {
+   "scene": "04",
+   "chapter": 4,
+   "clip": "C frames 0-83 (cut in)",
+   "startFrame": 336,
+   "endFrame": 420
+  },
+  {
+   "scene": "05",
+   "chapter": 5,
+   "clip": "C frames 84-120",
+   "startFrame": 420,
+   "endFrame": 457
+  },
+  {
+   "scene": "05",
+   "chapter": 5,
+   "clip": "hold_c_end (C frame 120)",
+   "startFrame": 457,
+   "endFrame": 492
+  },
+  {
+   "scene": "06",
+   "chapter": 6,
+   "clip": "K6 still, slow push-in made at assembly (100% -> 106%), cut in",
+   "startFrame": 492,
+   "endFrame": 576
+  },
+  {
+   "scene": "07",
+   "chapter": 7,
+   "clip": "K7 still, slow push-in made at assembly (100% -> 106%), frames 0-107 of the 114-frame push-in, cut in",
+   "startFrame": 576,
+   "endFrame": 684
+  },
+  {
+   "scene": "08",
+   "chapter": 8,
+   "clip": "join: K7 push-in frames 108-113 xfade (6 frames) over A frame 120 frozen (A120 cloned x6 at the head of the reversed A)",
+   "startFrame": 684,
+   "endFrame": 690
+  },
+  {
+   "scene": "08",
+   "chapter": 8,
+   "clip": "A reversed frames 120->1",
+   "startFrame": 690,
+   "endFrame": 810
+  },
+  {
+   "scene": "08",
+   "chapter": 8,
+   "clip": "hold_k0_end (A frame 0 x12: the reversed A ends on A0, then 11 clones)",
+   "startFrame": 810,
+   "endFrame": 822
+  }
+ ],
+ "cost": {
+  "prices": {
+   "still_gpt_image_2_6_2k_high": 2.75,
+   "kling4_0_1080p_5s": 16.25
+  },
+  "spent": 8.25,
+  "spent_note": "K0 16:9 three takes (91481866, 19cb8ab6, d78fdfb9) x 2.75 = 8.25: 2.75 is the planned K0 16:9 still, 5.5 came out of the retakes line (PROGRESS.md 20/11)",
+  "stills": 33.0,
+  "stills_note": "K0, K1, K3, K4, K6, K7 x 2 formats = 12 x 2.75 = 33",
+  "clips": 97.5,
+  "clips_note": "A, B, C x 2 formats = 6 x 16.25 = 97.5",
+  "base": 130.5,
+  "base_note": "33 + 97.5 = 130.5",
+  "retakes": 32.5,
+  "retakes_note": "two retakes, priced as clips (the costliest case): 2 x 16.25 = 32.5; 5.5 already used on two K0 16:9 retakes, 27 left",
+  "total": 163.0,
+  "total_note": "130.5 + 32.5 = 163",
+  "cap": 200,
+  "reserve": 37.0,
+  "reserve_note": "200 - 163 = 37: room for up to 13 more still retakes (2.75) or 2 more clip takes (16.25) without leaving the 150-200 target; untouched so far",
+  "free": "push-ins on K3, K6, K7, holds, reverse, dissolve and cut-ins are made at assembly and cost nothing",
+  "savings": "K3, K6, K7 as stills with a push-in instead of clips: 3 x 2 x 16.25 = 97.5 saved"
+ },
+ "shootingOrder": [
+  {
+   "step": "0a",
+   "what": "раскадровка (этот файл) — ссылка заказчику",
+   "credits": 0,
+   "runningTotal": 0.0,
+   "toOwner": "1 ссылка; работа идёт, не дожидаясь"
+  },
+  {
+   "step": 1,
+   "what": "K0 16:9 — кадр упаковки (закрытая коробка и банка): три варианта уже сняты (a 91481866, b 19cb8ab6, c d78fdfb9 — 8.25 потрачено)",
+   "credits": 8.25,
+   "runningTotal": 8.25,
+   "toOwner": "1 ссылка на лучший вариант — первое, что видит заказчик (вариант a уже ушёл). Сначала проверить c по исправленным правилам: обе строки печати банки над швом, шов выгнут вниз под G E L; чёрный верх коробки — полоса ≈1/6 высоты лица; шар ≈0.65 ширины лица коробки; низ коробки и банки на 80 %, тело пациентки до 63 % ширины. Если c не проходит — повтор от лучшего варианта по retakeRule (2.75 из строки повторов; здесь не учтено, идёт из оставшихся 27)"
+  },
+  {
+   "step": 2,
+   "what": "K0 9:16 (опора — K0 16:9)",
+   "credits": 2.75,
+   "runningTotal": 11.0,
+   "toOwner": "1 ссылка; ролик A — только после «ок» на K0 16:9"
+  },
+  {
+   "step": 3,
+   "what": "K1 16:9 — первый кадр с людьми (образец: косметолог и пациентка вместе)",
+   "credits": 2.75,
+   "runningTotal": 13.75,
+   "toOwner": "1 ссылка; K1 9:16, K7 и ролик B ждут «ок»"
+  },
+  {
+   "step": 4,
+   "what": "K3 16:9 — открытая коробка (образец: новое состояние упаковки)",
+   "credits": 2.75,
+   "runningTotal": 16.5,
+   "toOwner": "1 ссылка до любого ролика; сверить с фото открытой коробки; K3 9:16 ждёт «ок»"
+  },
+  {
+   "step": 5,
+   "what": "K4 16:9 — дом (образец: новый образ; опоры — листы пациентки, без K1)",
+   "credits": 2.75,
+   "runningTotal": 19.25,
+   "toOwner": "1 ссылка; K4 9:16, K6 и ролик C ждут «ок». Три образца (K1, K3, K4) у заказчика одновременно — работа не стоит"
+  },
+  {
+   "step": 6,
+   "what": "ролик A 16:9 (от K0; только после «ок» заказчика на K0 16:9 — правило образца из CLAUDE.md; пока ждём, идут шаги 3-5)",
+   "credits": 16.25,
+   "runningTotal": 35.5,
+   "toOwner": "1 ссылка: печать цела все 121 кадр, лица размыты, камера не поднимается"
+  },
+  {
+   "step": 7,
+   "what": "ролик A 9:16",
+   "credits": 16.25,
+   "runningTotal": 51.75,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 8,
+   "what": "K1 9:16 (после «ок» на K1)",
+   "credits": 2.75,
+   "runningTotal": 54.5,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 9,
+   "what": "K7 16:9 — следующий визит (после «ок» на K1)",
+   "credits": 2.75,
+   "runningTotal": 57.25,
+   "toOwner": "1 ссылка; проверить, что кожа та же, без «улучшения»"
+  },
+  {
+   "step": 10,
+   "what": "K7 9:16",
+   "credits": 2.75,
+   "runningTotal": 60.0,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 11,
+   "what": "ролик B 16:9 (после «ок» на K1)",
+   "credits": 16.25,
+   "runningTotal": 76.25,
+   "toOwner": "1 ссылка; выбрать точку склейки (кадр 70-83)"
+  },
+  {
+   "step": 12,
+   "what": "ролик B 9:16",
+   "credits": 16.25,
+   "runningTotal": 92.5,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 13,
+   "what": "K3 9:16 (после «ок» на K3)",
+   "credits": 2.75,
+   "runningTotal": 95.25,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 14,
+   "what": "K4 9:16 (после «ок» на K4)",
+   "credits": 2.75,
+   "runningTotal": 98.0,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 15,
+   "what": "K6 16:9 — банка дома (после «ок» на K4)",
+   "credits": 2.75,
+   "runningTotal": 100.75,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 16,
+   "what": "K6 9:16",
+   "credits": 2.75,
+   "runningTotal": 103.5,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 17,
+   "what": "ролик C 16:9 (после «ок» на K4)",
+   "credits": 16.25,
+   "runningTotal": 119.75,
+   "toOwner": "1 ссылка: пальцы на щеке до конца, белой массы нет"
+  },
+  {
+   "step": 18,
+   "what": "ролик C 9:16",
+   "credits": 16.25,
+   "runningTotal": 136.0,
+   "toOwner": "1 ссылка"
+  },
+  {
+   "step": 19,
+   "what": "сборка двух фильмов (822 кадра, 24 к/с, ключевой кадр каждые 12) и запись в PROGRESS.md",
+   "credits": 0,
+   "runningTotal": 136.0,
+   "toOwner": "2 ссылки: фильм 16:9 и фильм 9:16"
+  }
+ ],
+ "assembly": {
+  "base": "state/films/exocell-mask/assemble.sh (121-frame clips, holds by tpad clone, zoompan push-in on a still, xfade 0.25 s, reverse)",
+  "plan": "same segment list for desktop (16:9) and mobile (9:16): hold A0 x24 -> A 1-120 -> cut B 0-83 -> cut K3 still x108 with a 6% push-in (zoompan from the still, centre on the sphere) -> cut C 0-120 + hold C120 x35 -> cut K6 still x84 with a 6% push-in (centre on the jar) -> cut K7 still x114 with a 6% push-in (centre between the two faces) -> 6-frame dissolve K7 108-113 into A120 frozen -> A reversed 120->1 -> hold A0 x12; 822 frames; keyframe every 12; no audio; last frame = first frame. Chapter 08 exactly as EXOCELL: second input = A reversed 120->0 with tpad start_mode=clone:start=6 and stop_mode=clone:stop=11 = 138 frames; xfade offset 4.5 s into the K7 segment (K7 segment 114 frames = 4.75 s); check 576 + 114 + 138 - 6 = 822. Push-in centres: desktop left of centre (x 0.38), mobile centre (x 0.5, y 0.38)."
+ },
+ "openQuestions": [
+  {
+   "id": "G1",
+   "q": "«בוקר וערב» (утром и вечером): так написано в content.json (раздел 5: заголовок «בוקר. ערב. כל יום.», строка и метка «3 · בוקר וערב»), а в каталоге, стр. 17, только «לשימוש יומיומי». Согласовано ли «утром и вечером»?",
+   "default": "Фильм говорит только «каждый день»: в подписях нет «בוקר וערב», хвост «– בוקר וערב.» у строки главы 04 отрезан; свет в домашних кадрах нейтральный дневной, без утра и вечера. Если заказчик подтвердит — вернуть хвост строки главы 04 дословно, кадры не меняются."
+  },
+  {
+   "id": "G2",
+   "q": "Цвет и текстура геля: «белый, как крем» (ответ 18/10) или светло-жёлтый прозрачный (фото 19/10)? Фото геля на пальце нет.",
+   "default": "Гель не показывается нигде; на коже — только лёгкий влажный блеск."
+  },
+  {
+   "id": "G3",
+   "q": "Фото открытой банки от 19/10 (крышка, серебристый воротник, белая чаша) в репозитории не найдены.",
+   "default": "Банка всегда закрыта; открывание банки не показывается (рендер m3.webp с открытой банкой — догадка по описанию, не прикладывается)."
+  },
+  {
+   "id": "G4",
+   "q": "Как набирают гель: пальцем или лопаткой? Только лицо или и шея?",
+   "default": "Момент набора не показан: в K4 пальцы уже на щеке, банка закрыта рядом. Наносится на щёку (лицо); шея не показывается."
+  },
+  {
+   "id": "G5",
+   "q": "Можно ли наносить гель сразу после процедуры в клинике (V-TECH, EXO-NAD) или только с вечера / на следующий день? (Протокол на иврите: «לשימור התוצאה של האקסוזומים מיד לאחר סדרת ביומיקרונידלינג» — «сразу после серии», а не после одного визита.)",
+   "default": "В клинике гель на кожу не наносится: глава 02 — только рекомендация (банка на ладони), нанесение — только дома (главы 04-05)."
+  },
+  {
+   "id": "G6",
+   "q": "Соотношение размеров банки и коробки. Пакшот — склейка двух снимков (банка там шириной с коробку). 3D-рендер still.webp: шар ≈ ширине лицевой грани (≈65 % силуэта вместе с левым боком) и стоит дальше коробки — раскладка придумана. Фото открытой коробки: коробка повёрнута ≈35°, видимые стенки основания ≈320 и ≈225 px, настоящая ширина ≈390 px при шаре ≈232 px — около 0.6 (0.65-0.68, если основание — сторона 1.13). Каковы настоящие размеры?",
+   "default": "Одна мера во всех кадрах, где они рядом: диаметр шара ≈0.65 ширины ЛИЦЕВОЙ грани коробки (≈58 % её высоты) — по фото открытой коробки; так же снят вариант c (d78fdfb9). Прежнее «60 % ширины коробки» отменено: было неясно, что мерить (лицо или весь силуэт), и рамки в промптах ему не соответствовали."
+  },
+  {
+   "id": "G7",
+   "q": "Как открывается коробка? Чтение двух фото (PROGRESS.md 20/11): это шкатулка; золотая грань с печатью — крышка; на пакшоте коробка стоит на переднем ребре, поэтому чёрный «верх» — задняя стенка основания; на фото открытой коробки та же крышка откинута, основание чёрное. Одна ли это коробка на двух фото — подтверждения нет, фото процесса открывания нет.",
+   "default": "Открывание не показывается. Закрытая коробка — только как на пакшоте, открытая — только как на фото открытой коробки; в одном кадре и одном ролике они не встречаются, между главами 02 и 03 жёсткая склейка."
+  },
+  {
+   "id": "G8",
+   "q": "Что напечатано на задней, верхней (кроме чёрной полосы, видной на пакшоте), нижней и правой гранях коробки, на задней половине и дне банки; есть ли вкладыш? Какой текст в двух строках мелкой печати на задней стенке основания (на фото 696×931 не читается)?",
+   "default": "Эти стороны не показываются; две строки задней стенки — тонкие золотые линии без слов."
+  },
+  {
+   "id": "G9",
+   "q": "Подпись главы 08 («предложение клинике»): в content.json этой страницы нет фразы-предложения для клиник (у EXOCELL MASK была «הכניסו את EXOCELL MASK לקליניקה שלכם»), раздел 7 обращается к пациентке («התייעצו עם המומחה שלכם»). Нужна ли явная строка-предложение?",
+   "default": "Дословно: заголовок «המשך טיפול מקצועי גם בבית» (каталог), строка «משתלב עם V-TECH, EXO-NAD וסדרת BIOSPICULE™.» (content.json); метка шага «הצעה» — из блока предложения страницы (не из утверждённого текста, только aria-метка). Новую фразу не придумываем."
+  },
+  {
+   "id": "G10",
+   "q": "Название линии BIOSPICULE: в content.json «סדרת BIOSPICULE™», в каталоге — «BIOSPICULE BOOST 10%».",
+   "default": "Подпись главы 08 берёт написание content.json дословно."
+  },
+  {
+   "id": "G11",
+   "q": "Одежда пациентки: на следующем визите (глава 07) — та же майка или другая вещь?",
+   "default": "Глава 02 — гладкая кремовая майка, как на листе a06 (без «рубчика»: он был взят с кадра другой пациентки); дома — светлая овсяная хлопковая кофта с длинным рукавом, рукава подтянуты до предплечий; глава 07 — серо-бежевый тонкий трикотаж с коротким рукавом (знак другого дня). Лицо, волосы и кожа везде одинаковые."
+  },
+  {
+   "id": "G12",
+   "q": "Хранит ли пациентка банку в коробке дома?",
+   "default": "Дома банка стоит одна у полотенца, коробки дома нет."
+  },
+  {
+   "id": "G13",
+   "q": "Передаёт ли косметолог банку пациентке из рук в руки?",
+   "default": "Нет: косметолог показывает банку на раскрытой ладони, пациентка смотрит и кивает. Передача из рук в руки у Kling ломает пальцы и сам предмет."
+  },
+  {
+   "id": "G14",
+   "q": "Что косметолог оценивает на следующем визите и через какое время он бывает?",
+   "default": "Спокойный взгляд и лёгкое касание у скулы в белых перчатках; без слов о результате, без «до/после», срок не называется."
+  },
+  {
+   "id": "G15",
+   "q": "Строка главы 03 — полный состав (5 компонентов) — на телефоне 390×664 может занять больше трёх строк.",
+   "default": "Полная строка; если при подключении выходит больше трёх строк — метки раздела 3 дословно («אקסוזומים סינתטיים · פולינוקלאוטידים PDRN · פפטידים + זהב ונחושת · חומצה היאלורונית»)."
+  },
+  {
+   "id": "G16",
+   "q": "На шаре на фото открытой коробки справа сверху лежит прозрачная дуга: отражение края крышки или защитная плёнка?",
+   "default": "Мягкое отражение, плёнки нет."
+  },
+  {
+   "id": "G17",
+   "q": "REGISTRY.json у этой страницы — 7 глав (shots), а фильм — 8; заголовки сцен «Открытие сферической банки» и «Нанесение геля дома» расходятся с фильмом (банка не открывается).",
+   "default": "Предложены 8 глав (vh и type, раздел 3); правка REGISTRY.json, product-films.ts и подписей — отдельной задачей после сборки."
+  },
+  {
+   "id": "G18",
+   "q": "Ногти пациентки: на обоих листах (a06, a15) красный лак; в кадрах нанесения (K4, ролик C) руки крупно. Оставить красный лак или короткие естественные ногти?",
+   "default": "Красный лак, как на листах, во всех кадрах с её руками (K4 и ролик C прописаны): так опоры не спорят с промптом. Если заказчик захочет естественные — переснять K4 до ролика C."
+  },
+  {
+   "id": "G19",
+   "q": "Подпись главы 04 «למרוח שכבה דקה על עור נקי ולעסות עד לספיגה» взята из блока, обращённого к пациентке; страница говорит с косметологом. Оставить или заменить строкой каталога «להמשך שגרת הטיפוח לאחר טיפול מקצועי בקליניקה»?",
+   "default": "Оставить: инфинитив читается как сведения о способе применения для специалиста; заголовок — «מריחת שכבה דקה» без номера «2 ·» (шагов 1 и 3 в фильме нет)."
+  },
+  {
+   "id": "G20",
+   "q": "Строка главы 06 (92 знака) на телефоне 390×664 может занять больше трёх строк и поднять подпись.",
+   "default": "Полная строка; если при подключении выходит больше трёх строк — дословно из каталога «להמשך שגרת הטיפוח לאחר טיפול מקצועי בקליניקה» (45 знаков)."
+  }
+ ],
+ "photosWanted": [
+  "Коробка и банка рядом на одном столе, в настоящем масштабе, спереди (одно фото) → K0, K1, ролик A, K3: точное соотношение размеров (G6); до него — шар ≈0.65 ширины лица коробки.",
+  "HD-фото открытой коробки (от 2000 px) спереди-слева и вплотную задняя стенка основания с мелким текстом → K3: резкая печать и настоящий текст вместо линий (G8).",
+  "Открывание коробки по шагам (закрыта → крышка поднимается → открыта) → можно заменить склейку 02/03 роликом открывания (G7).",
+  "Та же коробка закрытой и открытой с одной точки (два снимка) → подтвердить, что на пакшоте и на фото открытой коробки одна коробка (G7).",
+  "Открытая банка (крышка снята, воротник, чаша) и гель на кончике пальца, цвет геля → главы 04-05: показать, как набирают гель; крупный план текстуры вместо K6 (G2, G3, G4).",
+  "Задняя сторона, правый бок, верх и дно коробки; задняя половина и дно банки → банка может поворачиваться в руке в ролике B, коробку можно показывать под другим углом (G8).",
+  "Банка в руке (масштаб к ладони) → K1 и ролик B: настоящий размер банки на ладони.",
+  "Векторный макет печати EXOTECH GEL (коробка, крышка изнутри, банка) → точная печать во всех кадрах с упаковкой.",
+  "Вкладыш или инструкция, если есть (состав INCI, способ применения) → проверка подписей глав 03-04."
+ ],
+ "risks": [
+  "Печать на коробке и банке может укоротиться, укрупниться или исказиться (урок EXOCELL): сверять K0 вплотную с пакшотом; повтор по правилу retakeRule.",
+  "Модель может повторить масштаб пакшота (банка шириной с коробку; так вышло в вариантах a и b): в промптах одна мера — шар ≈0.65 ширины лицевой грани коробки, и рамки под неё пересчитаны; проверять на K0 до ролика A.",
+  "Зеркальное золото отражает всё вокруг: в отражениях могут появиться лишние люди или предметы; проверять K0, K3, K6 вплотную.",
+  "В K3 модель может «улучшить» открытую коробку (золотое основание, лишняя печать, открытая банка, лопатка, вкладыш) или дописать слова в двух строках задней стенки: промпт запрещает; сверять с фото открытой коробки.",
+  "Открытая и закрытая коробка выглядят по-разному (на пакшоте золотое лицо и чёрный верх, на фото открытой — золотая крышка и чёрное основание); по чтению PROGRESS это одна шкатулка в двух положениях, но движения открывания нет: они никогда не стоят в одном кадре, между главами 02 и 03 жёсткая склейка (G7).",
+  "Ролик B: Kling может поднять руку с банкой в воздух, повернуть или «открыть» банку, выпрямить косметолога: используем только кадры 0-83, запасной вариант назван.",
+  "Ролик C: рука может уйти с лица во второй половине, может появиться белая масса крема или отражение в зеркале: запасной вариант вперёд-назад назван.",
+  "K7 может «улучшить» кожу пациентки (читается как «после»): промпт требует ту же текстуру; сверять с K1 рядом.",
+  "Лицо пациентки дома (другая одежда, другой свет) может уйти от листа: образец K4 снимается по листам a06 и a15 (только лицо); если лицо расходится с принятым K1 — повтор с K1 четвёртой опорой.",
+  "Наплыв K7 → A задом наперёд (два человека → коробка) может читаться как скачок; запас — жёсткая склейка на границе глав 07/08.",
+  "Каскад: K1 9:16, K7 и ролик B берут опорой K1 16:9; K4 9:16, K6 и ролик C — K4 16:9; ролик A — K0. Поэтому они снимаются только после «ок» на образец; отказ по K1 стоил бы пересъёмки 3 кадров (K1 9:16, K7 ×2) и 2 роликов, по K4 — тоже 3 кадров и 2 роликов (K4 9:16, K6 ×2, C ×2). K4 16:9 от K1 не зависит.",
+  "Листы персонажей и принятые кадры лежат только во временной папке сессии; при её очистке — достать заново (PROGRESS.md).",
+  "Печать банки: в прежней версии промптов G E L было «под швом» — на пакшоте обе строки над швом. Исправлено во всех промптах и в retakeRule; сверять каждый кадр с банкой вплотную."
+ ],
+ "pageFixes": [
+  "REGISTRY.json, exotech-gel: shots заменить 8 главами из chaptersPlan (title по-русски, seconds, vh, type), timeline.seconds 34.25, timeline.scrollVh 9.9.",
+  "product-films.ts: добавить productFilmsEntry и productCaptions (productCaptionsEntry) после сборки и загрузки фильмов; адреса — mitoderm/media-urls.json.",
+  "Аудит: глава 01 повторяет имя в надзаголовке и в H1; H1 главы 01 всегда идёт с dir=\"ltr\", поэтому ивритский заголовок туда ставить нельзя — подпись главы 01 оставляет латинское имя.",
+  "Условие подключения главы 08 (не отдельная задача): для домашних средств ссылка последней главы «לערכה המקצועית ↓» (ProductCinema.tsx, строка 214) и alt «הערכה המקורית של …» (строка 82) называют одну банку набором — заменить, например, на «לפרטי המוצר ↓» и «המוצר המקורי של …» до того, как фильм подключён. Остальное из аудита («לשימוש מקצועי · MITODERM», «במערכת זו», блок «תיעוד») — отдельной задачей.",
+  "Аудит: строка «N / 8 · גללו להמשך» внизу слева — мелкая печать упаковки в кадрах стоит выше 85 % высоты."
+ ],
+ "mediaIds": {
+  "M_photo": "90121c86-7093-44bb-a03d-ebc0648e392c",
+  "M_turnaround": "182a0e01-b7ac-48e9-b01f-2815d8862009",
+  "room_exocell_K0": "fc1666c4-d86a-4036-b15a-51e3de45b112",
+  "room_exocell_K0v": "21d1822a-8a09-42ea-a7f0-242f32792f30",
+  "P4_sheet_a06": "859a154f-abf6-4380-a674-bbf0189dcc7d (PROGRESS.md: «лист P4»; the uploaded file scratchpad/gel/refs/p4-sheet.jpg is the a06 sheet: smooth cream tank top, beige trousers)",
+  "P4_sheet_a15": "not uploaded yet",
+  "packshot": "610375c4-1e59-4ff8-8d6a-e296551fbf32",
+  "open_box": "64f4ba8f-f15b-4475-a8ba-373dfc58a75f",
+  "K0_takes_16x9": [
+   "91481866-d03d-4021-a21f-c88405c76c24",
+   "19cb8ab6-3342-4776-98eb-23035c9a52e5",
+   "d78fdfb9-0185-44ad-9a13-33a254d06c5b"
+  ]
+ },
+ "refsRule": "At most 5 references per still, named in the prompt by their order (\"the first reference image ...\"); refs_16x9 / refs_9x16 give the order. A 9:16 still takes the accepted 16:9 still of the same moment as reference 1. Clip prompts name the people as \"the cosmetologist\" and \"the patient\", never by code."
+}
