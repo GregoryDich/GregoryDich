@@ -31,7 +31,16 @@
       "mcp__Claude_Code_Remote__report_preview_port",
       "mcp__Higgsfield__generate_video",
       "mcp__Higgsfield__generate_video_batch",
-      "mcp__Higgsfield__show_generations"
+      "mcp__Higgsfield__show_generations",
+      "mcp__Vercel__list_teams",
+      "mcp__Vercel__git_namespaces",
+      "mcp__Vercel__search_repo",
+      "mcp__Vercel__list_projects",
+      "mcp__Vercel__get_project",
+      "mcp__Vercel__get_deployment",
+      "mcp__Vercel__list_deployments",
+      "mcp__Vercel__list_deployment_events",
+      "mcp__Vercel__get_auth_user"
     ],
     "ask": [
       "mcp__atlascloud"
