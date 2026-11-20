@@ -45,19 +45,19 @@
    "page": "EXOCELL MASK",
    "slug": "exocell-mask",
    "line": "V-TECH FACE",
-   "percent": 65,
-   "stage": "оба фильма собраны (ссылки ниже); подключаю к странице",
+   "percent": 95,
+   "stage": "ждёт просмотра заказчиком",
    "patient": "чёрная повязка (P7)",
-   "steps_done": 5,
+   "steps_done": 8,
    "steps_total": 9,
    "s1": 1,
    "s2": 1,
    "s3": 1,
    "s4": 1,
-   "s5": 0,
+   "s5": 1,
    "s6": 1,
-   "s7": 0,
-   "s8": 0,
+   "s7": 1,
+   "s8": 1,
    "s9": 0
   },
   {
@@ -66,7 +66,7 @@
    "slug": "exotech-gel",
    "line": "V-TECH FACE",
    "percent": 10,
-   "stage": "в очереди",
+   "stage": "следующая: раскадровка",
    "patient": "короткие чёрные волосы (P4)",
    "steps_done": 1,
    "steps_total": 9,
@@ -264,7 +264,7 @@
  "meta": [
   {
    "label": "Обновлено",
-   "value": "20/11/2026 09:40"
+   "value": "20/11/2026 10:15"
   },
   {
    "label": "Шаги и веса",
