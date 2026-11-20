@@ -1,5 +1,5 @@
 {
- "version": 3,
+ "version": 4,
  "date": "2026-11-20 (as shot, 14:10)",
  "slug": "exosignal-hair",
  "page": "/products/exosignal-hair",
@@ -22,8 +22,8 @@
   ]
  },
  "fps": 24,
- "totalFrames": 1008,
- "seconds": 42.0,
+ "totalFrames": 1667,
+ "seconds": 69.46,
  "asShot": {
   "date": "2026-11-20",
   "note": "Фильм как он собран на самом деле. Этот блок главнее плана ниже там, где они расходятся: totalFrames, timeline, assembly, joints, cost, ролики T5-T7, кадр K7, все кадры и ролики 9:16. Поля productFilmsEntry и chaptersPlan приведены к собранному фильму; план до съёмки сохранён в planBeforeShooting.",
@@ -428,7 +428,8 @@
    "lineHe": "האות שזקיקי השיער מחכים לו",
    "tagHe": "אקסוזומים סינתטיים · טיפולי קרקפת",
    "verbatim": true,
-   "source": "content.json products[3] (slug exosignal-hair): title: .name; line: .intro.title, verbatim part after « · »; tag: .intro.eyebrow (verbatim). The H1 of chapter 01 is rendered dir=\"ltr\" (ProductCinema.tsx line 214), so its title stays the Latin name."
+   "source": "content.json products[3] (slug exosignal-hair): title: .name; line: .intro.title, verbatim part after « · »; tag: .intro.eyebrow (verbatim). The H1 of chapter 01 is rendered dir=\"ltr\" (ProductCinema.tsx line 214), so its title stays the Latin name.",
+   "chapterInVersion1": 1
   },
   {
    "chapter": 2,
@@ -436,7 +437,8 @@
    "lineHe": "המטופלים שלכם רואים את זה במראה. תנו להם תוכנית שמתחילה במדידה.",
    "tagHe": "למה?",
    "verbatim": true,
-   "source": "content.json products[3] (slug exosignal-hair): sections (index 2): title .title; line: .body, verbatim part after the dash, so that «להם» keeps its antecedent «המטופלים שלכם» (addressed to the professionals, plural); tag: .eyebrow"
+   "source": "content.json products[3] (slug exosignal-hair): sections (index 2): title .title; line: .body, verbatim part after the dash, so that «להם» keeps its antecedent «המטופלים שלכם» (addressed to the professionals, plural); tag: .eyebrow",
+   "chapterInVersion1": 2
   },
   {
    "chapter": 3,
@@ -444,47 +446,89 @@
    "lineHe": "ניתן להשתמש במצלמת MITOSCAN לסקירת הקרקפת, מצב הזקיקים, דלילות ודלקות",
    "tagHe": "אבחון",
    "verbatim": false,
-   "source": "NOT word for word. Title: content.json products[3] (slug exosignal-hair) sections (index 5) .tags, item «1 · אבחון · MITOSCAN» without its step number «1 ·» (step 2 is not captioned as a step in this film, a lone «1» would refer to nothing). Line: state/protocols/he-final.md §3, step 1 (line 154), word for word (the same sentence in protocols/src/content.he.mjs step 1 differs only in spacing); chosen over content.json «MITOSCAN קובע את נקודת הבסיס» because the protocol says MITOSCAN is optional («ניתן»). Tag: fragment «אבחון» of the same item."
+   "source": "NOT word for word. Title: content.json products[3] (slug exosignal-hair) sections (index 5) .tags, item «1 · אבחון · MITOSCAN» without its step number «1 ·» (step 2 is not captioned as a step in this film, a lone «1» would refer to nothing). Line: state/protocols/he-final.md §3, step 1 (line 154), word for word (the same sentence in protocols/src/content.he.mjs step 1 differs only in spacing); chosen over content.json «MITOSCAN קובע את נקודת הבסיס» because the protocol says MITOSCAN is optional («ניתן»). Tag: fragment «אבחון» of the same item.",
+   "chapterInVersion1": 3
   },
   {
    "chapter": 4,
+   "titleHe": "הנתונים על המסך",
+   "lineHe": "נשירת שיער מסטרס · אלופציה אנדרוגנטית · איזון הקרקפת (עודף סבום, גרד, אדמומיות) · שיער דק/שביר/יבש",
+   "tagHe": "מה רואים על המסך",
+   "verbatim": true,
+   "source": "title: state/live-review/dump-1811/mitoscan.txt line 41 (new site, MITOSCAN). line: site/sources/mitoderm-com/products-he.json howToUse.hair.item2, item3, item4, item1 (mitoderm.com, saved 11/10), joined with « · ». tag: mine (aria-label only).",
+   "addedInVersion2": true
+  },
+  {
+   "chapter": 5,
    "titleHe": "אמפולה אחת, שמונה פפטידים",
    "lineHe": "מבנים אקסוזומליים סינתטיים נושאים PDRN 2%, חומצה היאלורונית, שמונה פפטידים ביומימטיים, תאי גזע מתפוח וויטמיני B.",
    "tagHe": "מה בפנים",
    "verbatim": true,
-   "source": "content.json products[3] (slug exosignal-hair): sections (index 3): title .title; line .body (verbatim); tag .eyebrow. Fallback if the line takes more than 3 lines at 390x664: the verbatim end of .intro.body «PDRN 2% ושמונה פפטידים ביומימטיים» (no mg/ml on screen; open question H14)"
+   "source": "content.json products[3] (slug exosignal-hair): sections (index 3): title .title; line .body (verbatim); tag .eyebrow. Fallback if the line takes more than 3 lines at 390x664: the verbatim end of .intro.body «PDRN 2% ושמונה פפטידים ביומימטיים» (no mg/ml on screen; open question H14)",
+   "chapterInVersion1": 4
   },
   {
-   "chapter": 5,
+   "chapter": 6,
    "titleHe": "מודדים, פותחים, מחדירים",
    "lineHe": "MITOPEN פותח את מסלול החדירה ו-EXOSIGNAL HAIR מיושם על הקרקפת המטופלת",
    "tagHe": "פרוטוקול",
    "verbatim": true,
-   "source": "content.json products[3] (slug exosignal-hair): sections (index 5): title .title; line: .body, verbatim part between the first comma and the semicolon (no full stop in the source); tag .eyebrow"
+   "source": "content.json products[3] (slug exosignal-hair): sections (index 5): title .title; line: .body, verbatim part between the first comma and the semicolon (no full stop in the source); tag .eyebrow",
+   "chapterInVersion1": 5
   },
   {
-   "chapter": 6,
+   "chapter": 7,
+   "titleHe": "3 = 1 + 1",
+   "lineHe": "לאחר פציעה מבוקרת מטפטפים את החומר על העור ולמעשה נותנים לעור מחסן של פקטורי גדילה, פפטידים, חלבונים ותאי גזע מצמחים כך שהעור משתמש במאגרים חדשים ובונה את עצמו מחדש.",
+   "tagHe": "בתוך העור",
+   "verbatim": true,
+   "source": "site/sources/mitoderm-com/products-he.json solution.signal.discountTitle and the last sentence of solution.signal.discountLabelText2 (same sentence, with the full stop, in solution.main.discountLabelText2). In an RTL line the title reads 1 + 1 = 3. tag: mine (aria-label only).",
+   "addedInVersion2": true
+  },
+  {
+   "chapter": 8,
    "titleHe": "ספיגת הסרום",
    "lineHe": "לאחר העבודה יש לעסות עם הכפפות את הקרקפת בעדינות עד לספיגה מלאה של החומר.",
    "tagHe": "ספיגת הסרום",
    "verbatim": true,
-   "source": "protocols/src/content.he.mjs (id exosignal-hair): step 4: title «ספיגת הסרום» and its body (verbatim); tag = the step title"
+   "source": "protocols/src/content.he.mjs (id exosignal-hair): step 4: title «ספיגת הסרום» and its body (verbatim); tag = the step title",
+   "chapterInVersion1": 6
   },
   {
-   "chapter": 7,
+   "chapter": 9,
+   "titleHe": "תדירות וסדרת טיפולים",
+   "lineHe": "טיפול אחד בכל 14 יום. מומלץ לבצע לפחות 4 טיפולים רצופים.",
+   "tagHe": "סדרת טיפולים",
+   "verbatim": true,
+   "source": "state/protocols/he-final.md lines 169-171 (EXOSIGNAL HAIR protocol: the heading and the first two bullets). tag: mine (aria-label only).",
+   "addedInVersion2": true
+  },
+  {
+   "chapter": 10,
+   "titleHe": "מעקב לפני / אחרי",
+   "lineHe": "הפחתת נשירה ודלקת מקומית · שיפור מצב הקרקפת והמיקרו-סירקולציה · שיפור בנפח, מרקם וברק · תמיכה בהארכת שלב האנגן (צמיחה)",
+   "tagHe": "מעקב",
+   "verbatim": true,
+   "source": "title: state/live-review/dump-1811/mitoscan.txt line 17 (new site, MITOSCAN). line: site/sources/mitoderm-com/products-he.json solution.signal.bundleText1-4 (mitoderm.com), joined with « · ». tag: mine (aria-label only).",
+   "addedInVersion2": true
+  },
+  {
+   "chapter": 11,
    "titleHe": "מומחי Mitoderm מוסמכים",
    "lineHe": "Exosignal Hair הוא טיפול אמפולות מדויק המיושם במפגשים במרפאה.",
    "tagHe": "ערכה ועובדות",
    "verbatim": true,
-   "source": "content.json products[3] (slug exosignal-hair): title: sections (index 8) .title (verbatim; the kit title «חמישה טיפולים באריזה אחת» stays off screen until the owner settles open question H20); tag: sections (index 6) .eyebrow; line: sections (index 8) .body (verbatim, with its mixed-case «Exosignal Hair»; open question H15). No interval, count of sessions or result on screen."
+   "source": "content.json products[3] (slug exosignal-hair): title: sections (index 8) .title (verbatim; the kit title «חמישה טיפולים באריזה אחת» stays off screen until the owner settles open question H20); tag: sections (index 6) .eyebrow; line: sections (index 8) .body (verbatim, with its mixed-case «Exosignal Hair»; open question H15). No interval, count of sessions or result on screen.",
+   "chapterInVersion1": 7
   },
   {
-   "chapter": 8,
+   "chapter": 12,
    "titleHe": "הכניסו את EXOSIGNAL HAIR לקליניקה שלכם",
    "lineHe": "לשימוש מקצועי בלבד, מיועד לשילוב עם MITOPEN ו-MITOSCAN.",
    "tagHe": "הצעה",
    "verbatim": true,
-   "source": "content.json products[3] (slug exosignal-hair): sections (index 7): title .title; line: .body, verbatim first sentence; tag .eyebrow"
+   "source": "content.json products[3] (slug exosignal-hair): sections (index 7): title .title; line: .body, verbatim first sentence; tag .eyebrow",
+   "chapterInVersion1": 8
   }
  ],
  "productCaptionsEntry": [
@@ -2391,5 +2435,235 @@
     "onScreen": "камера опускается и отходит назад, коробка поднимается из-за нижнего края, фокус на ней; последний кадр = первый (T7 generated 60-0, played reversed; удержание K0 24)"
    }
   ]
+ },
+ "asShotV2": {
+  "date": "2026-11-20",
+  "note": "Вторая версия собранного фильма: по слову заказчика 20/11 14:32 добавлены экран MITOSCAN (глава 04), взгляд внутрь кожи (07), недели курса (09) и повторный осмотр (10). Этот блок главнее asShot и всего плана.",
+  "frames": 1667,
+  "seconds": 69.46,
+  "fps": 24,
+  "desktop": {
+   "size": "1912x1080",
+   "media": "9fcb1616-6c56-490b-94d1-2a178f435e7d",
+   "bytes": 38973154,
+   "spec": "state/films/exosignal-hair/film-16x9.spec",
+   "tool": "state/films/tools/film-assemble.sh"
+  },
+  "mobile": {
+   "size": "1080x1920",
+   "media": "4df1ffa8-48d1-40dd-bcc9-10fc7bbbd36c",
+   "bytes": 31925463,
+   "derivedFromDesktop": true,
+   "keys": "state/films/exosignal-hair/vertical-keys.json",
+   "tool": "state/films/tools/vertical-from-horizontal.py"
+  },
+  "chapters": [
+   {
+    "chapter": 1,
+    "start": 0,
+    "end": 91,
+    "frames": 91,
+    "seconds": 3.79,
+    "vh": 1.1,
+    "type": "pack",
+    "title": "Закрытая коробка крупно, камера уходит к людям"
+   },
+   {
+    "chapter": 2,
+    "start": 91,
+    "end": 219,
+    "frames": 128,
+    "seconds": 5.33,
+    "vh": 1.54,
+    "type": "patient",
+    "title": "Консультация: запрос по коже головы"
+   },
+   {
+    "chapter": 3,
+    "start": 219,
+    "end": 300,
+    "frames": 81,
+    "seconds": 3.38,
+    "vh": 0.98,
+    "type": "device",
+    "title": "MITOSCAN на проборе"
+   },
+   {
+    "chapter": 4,
+    "start": 300,
+    "end": 500,
+    "frames": 200,
+    "seconds": 8.33,
+    "vh": 2.2,
+    "type": "procedure",
+    "title": "Экран MITOSCAN: кожа головы крупно, пометки на проблемных местах"
+   },
+   {
+    "chapter": 5,
+    "start": 500,
+    "end": 667,
+    "frames": 167,
+    "seconds": 6.96,
+    "vh": 2.0,
+    "type": "pack",
+    "title": "Ампула в руке косметолога"
+   },
+   {
+    "chapter": 6,
+    "start": 667,
+    "end": 752,
+    "frames": 85,
+    "seconds": 3.54,
+    "vh": 1.05,
+    "type": "procedure",
+    "title": "MITOPEN и сыворотка по пробору"
+   },
+   {
+    "chapter": 7,
+    "start": 752,
+    "end": 1030,
+    "frames": 278,
+    "seconds": 11.58,
+    "vh": 3.0,
+    "type": "procedure",
+    "title": "Внутри кожи: средство идёт по волосу в фолликул к луковице"
+   },
+   {
+    "chapter": 8,
+    "start": 1030,
+    "end": 1150,
+    "frames": 120,
+    "seconds": 5.0,
+    "vh": 1.45,
+    "type": "procedure",
+    "title": "Массаж в перчатках до впитывания"
+   },
+   {
+    "chapter": 9,
+    "start": 1150,
+    "end": 1240,
+    "frames": 90,
+    "seconds": 3.75,
+    "vh": 1.1,
+    "type": "procedure",
+    "title": "Курс: окно, проходят недели"
+   },
+   {
+    "chapter": 10,
+    "start": 1240,
+    "end": 1395,
+    "frames": 155,
+    "seconds": 6.46,
+    "vh": 1.87,
+    "type": "procedure",
+    "title": "Повторный осмотр MITOSCAN после курса: те же места на экране"
+   },
+   {
+    "chapter": 11,
+    "start": 1395,
+    "end": 1550,
+    "frames": 155,
+    "seconds": 6.46,
+    "vh": 1.8,
+    "type": "patient",
+    "title": "Конец визита: разговор о следующих встречах"
+   },
+   {
+    "chapter": 12,
+    "start": 1550,
+    "end": 1667,
+    "frames": 117,
+    "seconds": 4.88,
+    "vh": 1.41,
+    "type": "pack",
+    "title": "Упаковка снова: камера возвращается к коробке"
+   }
+  ],
+  "scrollVh": 19.5,
+  "filmFrames": "hold 0-60 | T1 61-155 | T2 156-275 | S1 276-336 x2 | M1 337-432 | S1 backwards 433-492 x2 | T3 493-612 | T4 613-732 | D1b 733-793 x2 | BL2 794-914 | D2b backwards 915-975 x2 | T5 976-1018 x2 | B5 1019-1054 | T5 1055-1088 | E1 1089-1209 | E2 1210-1270 x2 | M2 1271-1366 | E3 1367-1486 | T7c backwards 1487-1606 | hold 1607-1666",
+  "newStills": {
+   "K3S3": "job c80f8ebf-0c09-4276-a63a-7754a24e7dbe: планшет на переднем плане, зонд на линии пробора",
+   "K9": "job dfd36dde-5160-4d42-be0b-3323e99aa5e8: экран после курса, умеренное улучшение",
+   "W": "job 6c9e72fb-0455-4d1d-8a28-93cecb7c512c: окно не в фокусе",
+   "Y1": "job 545ebec3-813f-42da-86c3-606cd0937fce: срез кожи, капля на волосе",
+   "Y2": "job b67849b4-c58c-4e6f-8b89-a8b16c770126: струя по волосу в фолликул, луковица светится"
+  },
+  "newClips": {
+   "S1": {
+    "job": "385c88b1-a1eb-4a34-b9b0-457855d46f1f",
+    "from": "K3",
+    "to": "K3S3",
+    "used": "0-120 каждый второй кадр; назад 118-0 каждый второй"
+   },
+   "D1b": {
+    "job": "d1aa8cd1-5cda-45f5-9566-ff13c0486c65",
+    "from": "K5",
+    "to": "Y1",
+    "used": "0-120 каждый второй кадр"
+   },
+   "BL2": {
+    "job": "48c7b903-6aca-404e-a830-82a7a26cb719",
+    "from": "Y1",
+    "to": "Y2",
+    "used": "0-120"
+   },
+   "D2b": {
+    "job": "a13ffb4a-98ec-455f-a551-7d2d0182a77a",
+    "from": "K5",
+    "to": "Y2",
+    "used": "120-0 задом наперёд, каждый второй кадр"
+   },
+   "E1": {
+    "job": "b3ac80cc-c401-4ca1-bd55-cd595ac824d5",
+    "from": "K6",
+    "to": "W",
+    "used": "0-120"
+   },
+   "E2": {
+    "job": "d7092cc2-4951-4c1b-a2d9-ecb70d456727",
+    "from": "W",
+    "to": "K9",
+    "used": "0-120 каждый второй кадр"
+   },
+   "E3": {
+    "job": "0248dd08-84d2-4874-ba6a-f053ae89b7c2",
+    "from": "K9",
+    "to": "K7",
+    "used": "1-120"
+   },
+   "M1": {
+    "tool": "state/films/exosignal-hair/marker-hold.py",
+    "base": "S1 кадр 120",
+    "frames": 96,
+    "what": "строка осмотра и три пунктирных круга на покраснениях, в перспективе экрана"
+   },
+   "M2": {
+    "tool": "state/films/exosignal-hair/marker-hold.py",
+    "base": "E2 кадр 120 -> E3 кадр 0 (плавный переход)",
+    "frames": 96,
+    "what": "те же три круга на тех же местах после курса"
+   }
+  },
+  "outOfFilm": [
+   "T6 805a35ef-b505-44cd-8d8a-941fada1eee8",
+   "B6 6176724c-f053-4374-9072-621dedc7fa4d"
+  ],
+  "rejected": {
+   "X1/X2/D1/D2/BL": "вид «прямые светящиеся каналы» отклонён заказчиком 20/11 около 18:05: «очень прямое проникновение»",
+   "K3S, K3S2": "зонд рядом с пробором / зонд вверх ногами",
+   "K9a": "слишком густые волосы после курса — читается как обещание"
+  },
+  "softSpots": [
+   "кадры 751-769 и 943-967: быстрый нырок и возврат, оценка до 0.086 — движение, не склейка",
+   "кадр 582 (внутри T3): шаг размытия фона, 0.078 — был и в первой версии (кадр 365)"
+  ],
+  "cost": {
+   "stills": "10 x 2.75 = 27.5",
+   "clips5s": "10 x 18.75 = 187.5 (цена ролика сверена с остатком: 18.75, не 16.25)",
+   "total": 215.0,
+   "pageTotal": 596.25,
+   "balanceAfter": 491,
+   "balanceCheckedBy": "Higgsfield balance tool, 20/11 18:52"
+  }
  }
 }
