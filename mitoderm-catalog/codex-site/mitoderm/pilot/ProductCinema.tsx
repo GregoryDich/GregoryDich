@@ -7,7 +7,7 @@ import {SiteHeader,SiteFooter,ContactBlock} from '../shared';
 import registry from '../../production/page-bible/REGISTRY.json';
 import nadStoryboard from '../../production/page-bible/pages/exo-nad/STORYBOARD.json';
 import {mediaUrl} from '../media';
-import {productFilms} from './product-films';
+import {productFilms,productCaptions} from './product-films';
 import {useScrollFilm} from './useScrollFilm';
 import './product-cinema.css';
 
@@ -47,6 +47,8 @@ function sceneryCopy(slug:string,chapter:Chapter,i:number){
   const shot=nadStoryboard.shots[i];
   if(shot)return {title:shot.headlineHE,body:shot.copyHE,tag:shot.titleHE};
  }
+ const caption=productCaptions[slug]?.[i];
+ if(caption)return caption;
  const title=scriptTitles[slug]?.[i]??chapter.title;
  const body=chapter.type==='patient'?'ההתאמה מתחילה בהקשבה ובבחינת הצורך של אותה מטופלת.':
   chapter.type==='procedure'?'שלב העבודה נקבע לפי פרוטוקול מקצועי ובהתאם לאזור שנבחר.':
