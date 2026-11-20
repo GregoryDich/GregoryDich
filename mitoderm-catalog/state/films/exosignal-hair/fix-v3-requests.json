@@ -1,0 +1,263 @@
+{
+ "note": "EXOSIGNAL HAIR, film version 3: requests prepared 20/11 for the fixes asked by the owner. NOT launched: paid clips wait for the owner's explicit ok on the sample stills K5n, K3Sn and the choice Y2n / Y2m. Each entry is ready for generate_video_batch / generate_image_batch (params + prompt). Ids marked <...> are filled in once the still they name exists.",
+ "prices": {
+  "still": 2.75,
+  "clip": 18.75
+ },
+ "order": [
+  "T4b",
+  "S1b",
+  "T5b",
+  "K9n",
+  "E2b",
+  "E3b",
+  "Y1n",
+  "D1c",
+  "BL3",
+  "D2c"
+ ],
+ "stills": {
+  "K9n": {
+   "params": {
+    "model": "gpt_image_2_6",
+    "aspect_ratio": "16:9",
+    "resolution": "2k",
+    "quality": "high",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "image_references",
+     "value": "227830d2-76f5-4921-85f5-afb077233737"
+    }
+   ],
+   "why": "the same tablet after the course, in the real screen look, no circles",
+   "prompt": "Reproduce the first reference image exactly - the same tablet on its stand with the silver base on the white table in the left foreground, the same two women in the same poses, clothes and room, the same white handset resting on the hair parting, the same gloved hand pointing at the screen, the same window, light, focus and framing. Change only one thing: the picture on the tablet's screen.\nThe screen now shows the same kind of magnified camera view of the scalp some weeks later, after a course of treatments - a realistic, moderate improvement, not a dramatic one: the same pinkish skin tone but calmer and more even, without the white flakes; the same dark hair shafts in the same directions, and between them a number of new short, fine hairs, so the hair looks somewhat fuller. The scalp is still clearly visible between the hairs; do not make the hair thick or very dense. The same lighting of the screen picture.\nNo interface, no text, no numbers, no icons, no circles, no marks and no logo on the screen - only the picture. Nothing else changes. No text overlays, no captions, no watermark."
+  },
+  "Y1n": {
+   "params": {
+    "model": "gpt_image_2_6",
+    "aspect_ratio": "16:9",
+    "resolution": "2k",
+    "quality": "high",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "image_references",
+     "value": "<Y2m or Y2n, the variant the owner chose; default Y2m 7b8cfdd3-9d05-4f69-b7ad-14344fad7798>"
+    }
+   ],
+   "why": "start of the inside-skin block: channels open, drops on the surface, nothing inside",
+   "prompt": "Scientific hair-care illustration. Reproduce the first reference image exactly: the same composition and camera, the same large hair fibre on the left with its follicle and bulb, the same rounded cells of the upper layer and pink wavy fibres of the deeper layer, the same four short tapered micro-channels in the same places, the same blurred hairs in the background, the same soft warm light and the same empty softly blurred right side.\nChange only one thing: this is the same illustration a few seconds earlier, when the golden serum has only just been dripped onto the scalp. The small golden droplets sit on the scalp surface above the four micro-channels; the micro-channels are open, clean and empty - no gold inside them. Below the scalp surface there is no gold at all: no golden mist, no particles, no golden film inside the tissue; the deeper layer is calm and pink; the hair bulb does not glow and has the same soft peach colour as the tissue around it; there is no golden trace along the hair.\nNothing else changes. No text, no letters, no numbers, no labels, no arrows, no icons, no borders, no watermark, no instruments, no people."
+  }
+ },
+ "clips": {
+  "T4b": {
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "9bb35f0e-9d8d-4c13-9729-3ec7e067a9b1"
+    },
+    {
+     "role": "end_image",
+     "value": "b6e5075c-1a21-413a-8304-53c23e95f42d"
+    }
+   ],
+   "replaces": "T4 (the ampoule -> MITOPEN)",
+   "prompt": "The clip starts exactly on the first image and ends exactly on the last image: one continuous shot inside the same bright treatment room, filmed in a single take, no cut, no fade. For the first second the scene is as in the first image: a white-gloved hand holds one closed glass ampoule upright, sharp in the near foreground, perfectly still; the two women behind it are far out of focus. Then one calm action: the hand lowers the ampoule and carries it down and out of the frame at the lower left corner. As it leaves, the focus moves back to the two women, who become sharp, and the camera moves slowly forward to a closer shot of the cosmetologist leaning over the top of the patient's head. Then both of her gloved hands come up from below the frame, each already holding its tool: one hand holds a slim champagne-gold pen with a rose-gold ring, held at a slant like a pencil, and sets its lower end on the pale line of the parting in the patient's hair, between the two black hair clips; the other hand holds a small slim plastic syringe without a needle, pointing down a few centimetres above the parting beside the pen, with one clear drop at its tip. The patient sits still, head bowed, eyes closed, calm. In the last half second the picture settles exactly into the last image and holds still. While the ampoule is in the frame it stays closed, intact and unchanged; it leaves only in her hand, across the lower left frame edge. From the moment the pen and the syringe enter the frame they have exactly the shape, colours and print they have in the last image and never change shape; the pen has no cable; the syringe has no needle. The two women are the same two people in every frame: their faces, their hair, the straight parting, the two black hair clips, the brown headband, the white gloves and their clothes never change. Every frame is one solid photographic image: never a cross-fade, a dissolve, a double exposure, a ghost image or a transparent overlay. Nothing appears out of thin air and nothing turns into something else; no other objects; no blood, no red dots; no text or captions. Smooth, steady, slow; photorealistic; soft natural daylight."
+  },
+  "T5b": {
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "b6e5075c-1a21-413a-8304-53c23e95f42d"
+    },
+    {
+     "role": "end_image",
+     "value": "aae386ea-8562-4182-8671-219c6ab03d1a"
+    }
+   ],
+   "replaces": "T5 and its bridge B5 (MITOPEN -> massage)",
+   "prompt": "The clip starts exactly on the first image and ends exactly on the last image: one continuous shot inside the same bright treatment room, filmed in a single take, no cut, no fade. For the first second and a half the scene is as in the first image and the pen is at work: the cosmetologist moves the champagne-gold pen slowly a few centimetres along the parting towards the crown, in small gentle steps, held at a slant like a pencil, its lower end staying on the scalp; with her other hand she lets one clear drop fall from the small syringe onto the parting just ahead of the pen. Then one calm action: she lifts both tools off and carries them down and out of the frame at the lower edge; a moment later both gloved hands come back up empty, and the fingertips of both hands settle on the patient's scalp on either side of the parting and begin small, slow circular massage movements, while the camera eases back to a slightly wider shot. The patient sits still the whole time, head bowed, eyes closed, relaxed. In the last half second the picture settles exactly into the last image and holds still. The pen and the syringe keep exactly their shape, colours and print until they leave the frame; the pen has no cable, the syringe has no needle; they leave only in her hands, across the lower frame edge. The scalp along the parting shows only a thin moist sheen: no blood, no red dots, no foam. The two women are the same two people in every frame: their faces, their hair, the straight parting, the two black hair clips, the brown headband, the white gloves and their clothes never change. No hair falls or moves out of place. Every frame is one solid photographic image: never a cross-fade, a dissolve, a double exposure, a ghost image or a transparent overlay. Nothing appears out of thin air and nothing turns into something else; no other objects; no text or captions. Smooth, steady, slow; photorealistic; soft natural daylight."
+  },
+  "S1b": {
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "3bcd644e-325c-41f6-826b-425594ba768a"
+    },
+    {
+     "role": "end_image",
+     "value": "227830d2-76f5-4921-85f5-afb077233737"
+    }
+   ],
+   "replaces": "S1 and the drawn hold M1 (MITOSCAN -> the tablet screen)",
+   "prompt": "One continuous shot with no cuts, no dissolves and no fades. It begins exactly as the first frame: a cosmetologist in white gloves holds a white handset against the hair of a seated patient near her hair parting; the patient sits with her head bowed and her eyes lowered.\nThe patient does not move for the whole shot. The cosmetologist keeps the handset resting on the pale line of the hair parting with one hand and holds it still there.\nThe camera moves from the very first frame: it glides slowly and smoothly to the left and downward and pulls back a little. A tablet standing on a small round white table slides into the left foreground and comes into sharp focus; its screen shows a magnified camera view of the scalp: pinkish skin with a few dark hair shafts crossing it.\nDuring the second half of the move the cosmetologist turns her eyes to the screen and calmly reaches her free gloved hand to the tablet, pointing with her index finger at one spot of the picture; she holds the pointing gesture. Nobody stands up, turns away or looks at the camera.\nThe move ends exactly on the last frame and the last half second is still. The picture on the tablet screen is a plain photographic camera view the whole time: no circles, no marks, no drawn lines, no interface, no text, no numbers.\nEvery frame is one solid photographic image: never a cross-fade, a dissolve, a double exposure or a ghost image. Soft daylight, the same room throughout. No text overlays, no captions, no logos."
+  },
+  "E2b": {
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "6c9e72fb-0455-4d1d-8a28-93cecb7c512c"
+    },
+    {
+     "role": "end_image",
+     "value": "<K9n job>"
+    }
+   ],
+   "replaces": "E2 and the drawn hold M2 (the window -> the follow-up scan)",
+   "prompt": "One continuous shot with no cuts, no dissolves and no fades. It begins exactly as the first frame: a large white-framed window with green foliage outside, strongly out of focus.\nOnly the camera moves: from the very first frame it pans slowly and smoothly to the left and tilts downward, away from the window. Into the frame come a seated patient with her head lowered and a cosmetologist in white gloves who holds a white handset on the patient's hair parting with one hand and points with the index finger of her other hand at a tablet screen. The two women are already in exactly these poses when they enter the frame and they hold them for the rest of the shot, with only tiny natural movements; nobody turns, stands up or looks at the camera.\nThe tablet, standing on a small round white table, slides into the left foreground and comes into sharp focus; its screen shows a magnified camera view of the scalp: pinkish skin with dark hair shafts. The move ends exactly on the last frame and the last half second is still.\nThe picture on the tablet screen is a plain photographic camera view the whole time: no circles, no marks, no drawn lines, no interface, no text.\nEvery frame is one solid photographic image: never a cross-fade, a dissolve, a double exposure or a ghost image. Soft daylight, the same room throughout. No text overlays, no captions, no logos."
+  },
+  "E3b": {
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "<K9n job>"
+    },
+    {
+     "role": "end_image",
+     "value": "07343cd6-4805-44cc-8ad4-5f56c7f88b40"
+    }
+   ],
+   "replaces": "E3 (the follow-up scan -> the end of the visit)",
+   "prompt": "One continuous shot with no cuts, no dissolves and no fades. It begins exactly as the first frame: in the left foreground a tablet on a small white table; behind it a cosmetologist in white gloves holds a white handset on the hair parting of a seated patient and points with her other hand at the tablet screen.\nFrom the first frame the camera rises and glides forward and to the right, past the tablet, which slides out of the lower left corner of the frame and is not seen again; the two women stay in sharp focus.\nDuring the first second the cosmetologist draws her pointing hand back and lifts the handset off the patient's head, lowering it out of the frame to the lower left. Then she takes one calm step to stand beside the chair, on the patient's right-hand side as we see it at the left of the frame, and brings her gloved hands together in front of her. At the same time the patient slowly raises her head, turns it a little toward the cosmetologist and looks up at her with a light, relaxed smile. The movements are slow and continuous; nobody leaves the frame.\nThe shot ends exactly on the last frame and the last half second is still. Every frame is one solid photographic image: never a cross-fade, a dissolve, a double exposure or a ghost image. Soft daylight, the same room throughout. No text overlays, no captions, no logos."
+  },
+  "D1c": {
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "b6e5075c-1a21-413a-8304-53c23e95f42d"
+    },
+    {
+     "role": "end_image",
+     "value": "<Y1n job>"
+    }
+   ],
+   "replaces": "D1b (the dive from the procedure into the skin)",
+   "prompt": "One continuous shot, no cuts. The camera pushes in smoothly and quickly from the treatment scene toward the pale parting line on the top of the head, right beside the lower end of the pen, glides down between the hairs to the scalp surface, and the view opens into a clean scientific hair-care illustration: a cut-away of the scalp with one hair fibre in its follicle and, beside it, four short narrow micro-channels in the upper layer, with small golden serum droplets resting on the scalp surface above them. The inside of the cut-away is calm and pink, with no gold inside yet. Continuous camera move with natural motion blur in the middle, slowing down smoothly; the last second is nearly still and equals the last frame. Soft warm daylight, no text, no captions, no arrows."
+  },
+  "BL3": {
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "<Y1n job>"
+    },
+    {
+     "role": "end_image",
+     "value": "<chosen Y2: default Y2m 7b8cfdd3-9d05-4f69-b7ad-14344fad7798>"
+    }
+   ],
+   "replaces": "BL2 (the serum goes in)",
+   "prompt": "Scientific hair-care illustration, one continuous shot, locked framing with an almost imperceptible slow push-in. The golden serum droplets on the scalp surface sink slowly into the four short micro-channels beneath them and fill each one with a soft golden glow, from the top down. When the gold reaches the pointed tips of the micro-channels it does not go on as lines: it seeps out and spreads as a soft golden mist of fine sparkling particles through the deeper layer, widening slowly and drifting toward the hair bulb. The mist reaches the bulb and the bulb begins to glow warm gold. A thin golden film stays on the surface and soaks only very slightly into the topmost cells. Organic, liquid, unhurried motion; the tissue, the hair and the micro-channels stay still. No straight beams, no cuts, no text, no captions."
+  },
+  "D2c": {
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "b6e5075c-1a21-413a-8304-53c23e95f42d"
+    },
+    {
+     "role": "end_image",
+     "value": "<chosen Y2: default Y2m 7b8cfdd3-9d05-4f69-b7ad-14344fad7798>"
+    }
+   ],
+   "replaces": "D2b (runs backwards in the film: back from the skin to the procedure)",
+   "prompt": "One continuous shot with no cuts, no dissolves and no fades. It begins exactly as the first frame: a cosmetologist in white gloves holds a microneedling pen at a slant on the hair parting of a seated patient and a small syringe beside it. The two women do not change their poses; hands and heads stay where they are.\nOnly the camera moves: it pushes in fast and smoothly toward the hair parting right beside the lower end of the pen - a macro dive. The dark hair strands grow large and sweep past the lens, the pale skin of the scalp fills the frame, and the camera comes down to the level of the skin surface among the hairs. The view settles on the last frame: one hair growing out of its follicle with the skin in front of it cut away, beside it four short narrow micro-channels filled with softly glowing golden serum, and a soft golden mist of fine particles spreading from their tips through the deeper layer to the gently glowing hair bulb.\nThe move accelerates gently, has natural motion blur in the middle and slows down smoothly; the last second is nearly still and equals the last frame. The light stays bright, warm and beige throughout. No text, no captions, no logos, no arrows, no needles shown in the close-up."
+  }
+ },
+ "variantA_note": "If the owner picks variant A (Y2n, straight channels): Y1n from Y2n; in Y1n, BL3 and D2c replace 'four short tapered micro-channels ... mist' by 'four thin straight micro-channels; golden threads run down them and gather at the bulb'.",
+ "assembly_v3": [
+  "hold T1 25 x61 | T1 26-120 | T2 1-120                       (as in version 2)",
+  "S1b 0-120 at normal speed (121) | hold S1b 120 x36 | S1b 118-0 every 2nd, reversed (60)   = 217, as S1+M1+S1 back",
+  "T3 1-120 | T4b 1-120",
+  "D1c 0-120 every 2nd (61) | BL3 0-120 (121) | D2c 0-120 every 2nd, reversed (61)",
+  "T5b: 113 frames to keep the chapter marks (trim the start or play part at double speed after viewing the clip)",
+  "E1 0-120 | E2b 0-120 at normal speed (121) | hold E2b 120 x36 | E3b 1-120       = 277, as E2+M2+E3",
+  "T7c 0-119 reversed | hold T7c 0 x60",
+  "M1.mp4 and M2.mp4 (drawn scan line and dashed circles) leave the film; marker-hold.py is no longer used"
+ ],
+ "after_shooting": [
+  "check each clip: check-clip.sh + view the contact sheet",
+  "film-assemble.sh",
+  "re-tune vertical-keys.json around the procedure (K5n is a closer frame)",
+  "upload both films, media-urls.json, product-films.ts chapters if lengths change",
+  "verify 1440x900, 390x664, 360x640, 412x780",
+  "record the page, links to the owner"
+ ],
+ "estimate": "2 stills x 2.75 + 8 clips x 18.75 = 155.5; balance 235.25, about 80 left for retakes"
+}
