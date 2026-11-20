@@ -65,19 +65,19 @@
    "page": "EXOTECH GEL",
    "slug": "exotech-gel",
    "line": "V-TECH FACE",
-   "percent": 10,
-   "stage": "следующая: раскадровка",
+   "percent": 95,
+   "stage": "ждёт просмотра заказчиком",
    "patient": "короткие чёрные волосы (P4)",
-   "steps_done": 1,
+   "steps_done": 8,
    "steps_total": 9,
    "s1": 1,
-   "s2": 0,
-   "s3": 0,
-   "s4": 0,
-   "s5": 0,
-   "s6": 0,
-   "s7": 0,
-   "s8": 0,
+   "s2": 1,
+   "s3": 1,
+   "s4": 1,
+   "s5": 1,
+   "s6": 1,
+   "s7": 1,
+   "s8": 1,
    "s9": 0
   },
   {
@@ -86,7 +86,7 @@
    "slug": "exosignal-hair",
    "line": "HAIR",
    "percent": 10,
-   "stage": "в очереди",
+   "stage": "следующая: раскадровка пишется",
    "patient": "длинные чёрные волосы (P3)",
    "steps_done": 1,
    "steps_total": 9,
@@ -264,7 +264,7 @@
  "meta": [
   {
    "label": "Обновлено",
-   "value": "20/11/2026 10:15"
+   "value": "20/11/2026 13:25"
   },
   {
    "label": "Шаги и веса",
