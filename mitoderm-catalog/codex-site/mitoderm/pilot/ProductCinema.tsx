@@ -74,12 +74,14 @@ function Evidence({product}:{product:Product}){
  </section>;
 }
 
+// Home-care products are one item, not a kit: their copy says "product", never "kit".
+const homeCare=['exotech-gel','derma-recovery-cream','exosignal-spray','cell-renew-1-5','cellular-age-defense-2-5'];
 function Offer({product,pack,openKit,usp}:{product:Product;pack:string;openKit:string;usp:string}){
  const nad=product.slug==='exo-nad';
- const home=['exotech-gel','derma-recovery-cream','exosignal-spray','cell-renew-1-5','cellular-age-defense-2-5'].includes(product.slug);
+ const home=homeCare.includes(product.slug);
  return <section className="pc-offer" id="pc-offer" aria-labelledby="pc-offer-title">
   <div className="pc-width pc-offer-grid">
-   <div className="pc-offer-product"><img src={nad?openKit:pack} alt={'הערכה המקורית של '+product.name} loading="lazy" decoding="async"/><span>המוצר המקורי</span></div>
+   <div className="pc-offer-product"><img src={nad?openKit:pack} alt={(home?'המוצר המקורי ':'הערכה המקורית של ')+product.name} loading="lazy" decoding="async"/><span>המוצר המקורי</span></div>
    <div className="pc-offer-copy">
     <p className="pc-eyebrow">MITODERM · הצעה מקצועית</p>
     <h2 id="pc-offer-title">הכירו את <bdi dir="ltr">{product.name}</bdi>{' '}<br/>{home?'כהמשך לטיפוח בבית.':'בקליניקה שלכם.'}</h2>
@@ -211,7 +213,7 @@ export default function ProductCinema({product}:{product:Product}){
         <p className="pc-kicker"><span>{String(i+1).padStart(2,'0')} / {String(chapters.length).padStart(2,'0')}</span><bdi dir="ltr">{product.name}</bdi></p>
         <Heading dir={i===0?'ltr':undefined}>{copy.title}</Heading>
         <p>{copy.body}</p>
-        {i===0?<div className="pc-actions"><a className="pc-primary" href="#contact" data-product={product.slug} data-source="pc-hero">לקבלת פרטים <span aria-hidden="true">←</span></a><button type="button" onClick={()=>jump(1)}>אל התהליך ↓</button></div>:i===chapters.length-1?<a className="pc-link" href="#pc-offer">לערכה המקצועית ↓</a>:null}
+        {i===0?<div className="pc-actions"><a className="pc-primary" href="#contact" data-product={product.slug} data-source="pc-hero">לקבלת פרטים <span aria-hidden="true">←</span></a><button type="button" onClick={()=>jump(1)}>אל התהליך ↓</button></div>:i===chapters.length-1?<a className="pc-link" href="#pc-offer">{homeCare.includes(product.slug)?'לפרטי המוצר ↓':'לערכה המקצועית ↓'}</a>:null}
        </div>
       </article>;})}
      </div>

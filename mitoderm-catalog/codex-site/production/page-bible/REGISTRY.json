@@ -753,61 +753,68 @@
       "ctaHE": "לפרטים על המשך הטיפוח",
       "shots": [
         {
-          "title": "Золотой шар и отдельная коробка",
-          "seconds": 4,
+          "title": "Закрытая коробка и банка крупно, камера отъезжает",
+          "seconds": 4.5,
           "vh": 1.3,
           "type": "pack",
           "index": 1
         },
         {
-          "title": "Рекомендация косметолога",
-          "seconds": 4.5,
-          "vh": 1.25,
+          "title": "Рекомендация в конце визита: банка на ладони косметолога",
+          "seconds": 5.0,
+          "vh": 1.45,
           "type": "patient",
           "index": 2
         },
         {
-          "title": "Та же пациентка дома",
+          "title": "Открытая коробка: банка в ложементе",
           "seconds": 4.5,
-          "vh": 1.2,
-          "type": "home",
+          "vh": 1.3,
+          "type": "pack",
           "index": 3
         },
         {
-          "title": "Открытие сферической банки",
-          "seconds": 4.5,
-          "vh": 1.2,
-          "type": "pack",
+          "title": "Дома: тонкий слой на чистую кожу",
+          "seconds": 3.5,
+          "vh": 1.0,
+          "type": "home",
           "index": 4
         },
         {
-          "title": "Нанесение геля дома",
-          "seconds": 5,
-          "vh": 1.45,
-          "type": "procedure",
+          "title": "Массаж до впитывания",
+          "seconds": 3.0,
+          "vh": 0.9,
+          "type": "home",
           "index": 5
         },
         {
-          "title": "Обычное продолжение, не до/после",
+          "title": "Каждый день: банка на своём месте",
           "seconds": 3.5,
-          "vh": 0.95,
-          "type": "patient",
+          "vh": 1.0,
+          "type": "home",
           "index": 6
         },
         {
-          "title": "Отдельный EXOTECH GEL + CTA",
-          "seconds": 5,
-          "vh": 1.5,
-          "type": "pack",
+          "title": "Следующий визит: косметолог смотрит кожу",
+          "seconds": 4.5,
+          "vh": 1.3,
+          "type": "patient",
           "index": 7
+        },
+        {
+          "title": "Упаковка снова: камера возвращается к коробке и банке",
+          "seconds": 5.75,
+          "vh": 1.65,
+          "type": "pack",
+          "index": 8
         }
       ],
       "isFrozen": false,
-      "status": "storyboard_only",
+      "status": "film_v2_wired",
       "packImage": "/assets/products/exotech-gel.webp",
       "timeline": {
-        "seconds": 31,
-        "scrollVh": 8.85
+        "seconds": 34.25,
+        "scrollVh": 9.9
       },
       "line": "VM — отдельный домашний уход"
     },
