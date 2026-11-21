@@ -1,0 +1,23 @@
+{
+  "slug": "mitotech-cell-booster",
+  "frames": 468,
+  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/0ab11250-77eb-4730-adec-e6dbae23660b.mp4",
+  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/a8b3dd9d-e414-4899-a7ee-7bb4a4b743d6.mp4",
+  "anchor": "left",
+  "comment": [
+    "A short film for a coming-soon page: the real box in the clinic, one focus pull (Kling 4.0, 1080p), then the same",
+    "box at the client's home - the protocol gives the rest of the solution for home use and an 8-week home programme.",
+    "1912x1080 and 1080x1920, 468 frames, one chapter: the page copy has an intro only (state/films/mitotech-cell-booster/)."
+  ],
+  "chapters": [
+    {
+      "start": 0,
+      "end": 468,
+      "note": "01 the box in the clinic, the treatment, the same box at her home",
+      "shot": "Настоящая коробка в клинике; процедура; та же коробка у клиентки дома",
+      "type": "pack",
+      "section": 1,
+      "body": "בוסטר תאי בשני בקבוקונים לפרוטוקולים בקליניקה בשילוב עם MITOPEN או MICRO BOOST 10%."
+    }
+  ]
+}

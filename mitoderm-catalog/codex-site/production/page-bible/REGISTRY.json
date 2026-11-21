@@ -553,60 +553,11 @@
       "ctaHE": "לקבלת פרטי הערכה",
       "shots": [
         {
-          "title": "Подлинный комплект MITOTECH",
-          "seconds": 4.5,
-          "vh": 1.35,
+          "title": "Настоящая коробка в клинике; процедура; та же коробка у клиентки дома",
+          "seconds": 19.5,
+          "vh": 5.55,
           "type": "pack",
           "index": 1
-        },
-        {
-          "title": "Другая пациентка, не V-TECH",
-          "seconds": 4.5,
-          "vh": 1.2,
-          "type": "patient",
-          "index": 2
-        },
-        {
-          "title": "Лиофилизат и бустер",
-          "seconds": 5.5,
-          "vh": 1.35,
-          "type": "pack",
-          "index": 3
-        },
-        {
-          "title": "Подготовка по протоколу",
-          "seconds": 4.5,
-          "vh": 1.25,
-          "type": "procedure",
-          "index": 4
-        },
-        {
-          "title": "MITOPEN по разрешённой технике",
-          "seconds": 6,
-          "vh": 1.65,
-          "type": "device",
-          "index": 5
-        },
-        {
-          "title": "CELL BOOSTER, без GEL MASK",
-          "seconds": 4.5,
-          "vh": 1.25,
-          "type": "procedure",
-          "index": 6
-        },
-        {
-          "title": "Документация / завершение",
-          "seconds": 3.5,
-          "vh": 1,
-          "type": "evidence",
-          "index": 7
-        },
-        {
-          "title": "Комплектация и CTA",
-          "seconds": 5,
-          "vh": 1.6,
-          "type": "pack",
-          "index": 8
         }
       ],
       "isFrozen": false,
