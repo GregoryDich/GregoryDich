@@ -1,384 +1,446 @@
 {
- "note": "MICRO BOOST 10%: requests for the rest of the page, prepared 21/11 08:48 from STORYBOARD.md. NOT launched: the credits are at 0. The stills are a chain (each is an edit of the one before), so they are shot one after another, not in one batch.",
- "done": {
-  "K0": "8231f212-8f68-4043-b77e-9125749fbc6a (the pack in the room; checked against the real pack photo)",
-  "K1": "74d32227-8a32-4d30-9b77-2b4863f0ccfd (the same frame, focus on the skin examination)"
- },
- "references": {
-  "cosmetologist photo": "90121c86-7093-44bb-a03d-ebc0648e392c",
-  "patient P1 sheet (a04)": "72011441-6194-4f28-a2bf-120cf44c03b8",
-  "pack at an angle": "4c0300c9-1b1e-437f-a1f7-3dc6877754da",
-  "pack front panel": "feb6514f-4e87-400f-82d6-2d0e9fe44148",
-  "mask on a face (look only)": "05429adf-6d5d-46ea-ab8e-ebbef6d7d763",
-  "inside-skin look accepted on EXOSIGNAL HAIR (Y2m)": "7b8cfdd3-9d05-4f69-b7ad-14344fad7798"
- },
- "prices": {
-  "still": 2,
-  "clip_720p_5s": 12.5,
-  "clip_720p_3s": 7.5,
-  "clip_1080p_5s": 18.75,
-  "note": "checked with estimate_video_cost and the transaction history on 21/11"
- },
- "order": [
-  "1. K2 -> check -> K3 -> K4 -> K6 -> K7 (a chain of edits; view each before the next); Y2 -> Y1",
-  "2. one sheet of all nine stills to the owner; wait for his ok (meanwhile make the stills of the next page)",
-  "3. after the ok: all eight clips in one batch at 720p",
-  "4. check each clip (frame count, scene scores, contact sheet); a single-frame spike >= 0.15 is a hidden jump; two failures of one clip - change the staging",
-  "5. assemble, cut the phone film as a window, upload, wire, verify, record the page",
-  "6. 1080p only after the owner accepts the page and agrees to the price"
- ],
- "stills": {
-  "K2": {
-   "what": "clean dry skin: the patient lies on the reclined couch, the cosmetologist at her head pats the cheek dry with a disposable tissue",
-   "params": {
-    "model": "gpt_image_2_6",
-    "aspect_ratio": "16:9",
-    "resolution": "2k",
-    "quality": "high",
-    "use_unlim": false,
-    "count": 1
-   },
-   "medias": [
-    {
-     "role": "image_references",
-     "value": "74d32227-8a32-4d30-9b77-2b4863f0ccfd"
+  "note": "MICRO BOOST 10%: all nine stills are ready (21/11): K0 and K1 at Higgsfield, the rest through Atlas Cloud. The sheet of nine stills went to the owner on 21/11 19:34; the eight clips are launched only after his ok. Tool: ../tools/atlas.py. The Atlas key is outside the repository (see PROGRESS.md).",
+  "done": {
+    "K0": "8231f212-8f68-4043-b77e-9125749fbc6a (the pack in the room; checked against the real pack photo)",
+    "K1": "74d32227-8a32-4d30-9b77-2b4863f0ccfd (the same frame, focus on the skin examination)"
+  },
+  "references": {
+    "cosmetologist photo": "90121c86-7093-44bb-a03d-ebc0648e392c",
+    "patient P1 sheet (a04)": "72011441-6194-4f28-a2bf-120cf44c03b8",
+    "pack at an angle": "4c0300c9-1b1e-437f-a1f7-3dc6877754da",
+    "pack front panel": "feb6514f-4e87-400f-82d6-2d0e9fe44148",
+    "mask on a face (look only)": "05429adf-6d5d-46ea-ab8e-ebbef6d7d763",
+    "inside-skin look accepted on EXOSIGNAL HAIR (Y2m)": "7b8cfdd3-9d05-4f69-b7ad-14344fad7798"
+  },
+  "prices": {
+    "still": 2,
+    "clip_720p_5s": 12.5,
+    "clip_720p_3s": 7.5,
+    "clip_1080p_5s": 18.75,
+    "note": "checked with estimate_video_cost and the transaction history on 21/11"
+  },
+  "order": [
+    "1. K2 -> check -> K3 -> K4 -> K6 -> K7 (a chain of edits; view each before the next); Y2 -> Y1",
+    "2. one sheet of all nine stills to the owner; wait for his ok (meanwhile make the stills of the next page)",
+    "3. after the ok: all eight clips in one batch at 720p",
+    "4. check each clip (frame count, scene scores, contact sheet); a single-frame spike >= 0.15 is a hidden jump; two failures of one clip - change the staging",
+    "5. assemble, cut the phone film as a window, upload, wire, verify, record the page",
+    "6. 1080p only after the owner accepts the page and agrees to the price"
+  ],
+  "stills": {
+    "K2": {
+      "what": "clean dry skin: the patient lies on the reclined couch, the cosmetologist at her head pats the cheek dry with a disposable tissue",
+      "params": {
+        "model": "gpt_image_2_6",
+        "aspect_ratio": "16:9",
+        "resolution": "2k",
+        "quality": "high",
+        "use_unlim": false,
+        "count": 1
+      },
+      "medias": [
+        {
+          "role": "image_references",
+          "value": "74d32227-8a32-4d30-9b77-2b4863f0ccfd"
+        },
+        {
+          "role": "image_references",
+          "value": "90121c86-7093-44bb-a03d-ebc0648e392c"
+        },
+        {
+          "role": "image_references",
+          "value": "72011441-6194-4f28-a2bf-120cf44c03b8"
+        }
+      ],
+      "prompt": "Photorealistic cinematic still, 16:9, soft natural daylight, the same bright treatment room as in the first reference image (pale warm-beige walls, the large white-framed window with green foliage, the white leather treatment couch, the potted ficus), the same two women a few minutes later. The back of the white treatment couch is now reclined and the patient (the woman from the third reference image: late twenties, fair skin with light redness and post-acne marks on her cheeks but no inflamed spots, light-blond hair tucked under a white disposable cap, a plain white T-shirt) lies on it on her back with her eyes closed, her head toward the left of the frame, her face turned up and slightly toward the camera. The cosmetologist (the woman from the second reference image: about 30, long dark wavy hair, white uniform with thin pink piping, a pendant with a blue stone on a black cord, white disposable gloves on both hands) sits at the head of the couch, behind the patient's head, leaning over her; with one gloved hand she gently pats the patient's cheek dry with a folded white disposable tissue - pressing lightly, not rubbing - and her other gloved hand rests beside the patient's temple. The patient's skin is clean, matte and dry. The camera is a little closer and slightly higher than in the first reference image: a medium shot in which both faces are clearly visible, between about one fifth and one half of the frame width; the right 45 percent of the frame shows only the calm room and the window, softly out of focus. In the lower left of the frame, in the near foreground on the pale stone tabletop, softly out of focus, stands the same cream MICRO BOOST 10% box with its dark green band; the whole box is inside the frame. No syringe, no tube, no jar, no brush and no tools anywhere in the frame. Shallow depth of field, natural skin texture, warm neutral palette, premium and quiet. No added text, no captions.",
+      "check": "real life: gloves on, tissue pressed not rubbed, skin dry; the box fully inside the frame; faces at 20-50 % of the width"
     },
-    {
-     "role": "image_references",
-     "value": "90121c86-7093-44bb-a03d-ebc0648e392c"
+    "K3": {
+      "what": "massage: finger pads of both hands on the cheek and cheekbone, a barely visible sheen",
+      "params": {
+        "model": "gpt_image_2_6",
+        "aspect_ratio": "16:9",
+        "resolution": "2k",
+        "quality": "high",
+        "use_unlim": false,
+        "count": 1
+      },
+      "medias": [
+        {
+          "role": "image_references",
+          "value": "<K2 job>"
+        }
+      ],
+      "prompt": "Reproduce the first reference image exactly: the same camera position and framing, the same room, window and light, the same two women in the same positions, the same white disposable cap, gloves and clothes, the same softly blurred cream box in the lower left of the frame. The patient lies with her eyes closed. Change only the cosmetologist's hands and the skin: the tissue is gone; the pads of the fingers of both her gloved hands rest on the patient's cheek and cheekbone, in the middle of a slow, even circular massage with light controlled pressure; the patient's cheek has a barely visible, colourless sheen where the fingers have passed. No syringe, no tube, no jar, no brush and no tools anywhere in the frame. Nothing else changes. Photorealistic, natural skin texture, soft daylight. No text, no captions, no watermark.",
+      "check": "no syringe (no real photo yet, question 19); the sheen is colourless"
     },
-    {
-     "role": "image_references",
-     "value": "72011441-6194-4f28-a2bf-120cf44c03b8"
-    }
-   ],
-   "prompt": "Photorealistic cinematic still, 16:9, soft natural daylight, the same bright treatment room as in the first reference image (pale warm-beige walls, the large white-framed window with green foliage, the white leather treatment couch, the potted ficus), the same two women a few minutes later. The back of the white treatment couch is now reclined and the patient (the woman from the third reference image: late twenties, fair skin with light redness and post-acne marks on her cheeks but no inflamed spots, light-blond hair tucked under a white disposable cap, a plain white T-shirt) lies on it on her back with her eyes closed, her head toward the left of the frame, her face turned up and slightly toward the camera. The cosmetologist (the woman from the second reference image: about 30, long dark wavy hair, white uniform with thin pink piping, a pendant with a blue stone on a black cord, white disposable gloves on both hands) sits at the head of the couch, behind the patient's head, leaning over her; with one gloved hand she gently pats the patient's cheek dry with a folded white disposable tissue - pressing lightly, not rubbing - and her other gloved hand rests beside the patient's temple. The patient's skin is clean, matte and dry. The camera is a little closer and slightly higher than in the first reference image: a medium shot in which both faces are clearly visible, between about one fifth and one half of the frame width; the right 45 percent of the frame shows only the calm room and the window, softly out of focus. In the lower left of the frame, in the near foreground on the pale stone tabletop, softly out of focus, stands the same cream MICRO BOOST 10% box with its dark green band; the whole box is inside the frame. No syringe, no tube, no jar, no brush and no tools anywhere in the frame. Shallow depth of field, natural skin texture, warm neutral palette, premium and quiet. No added text, no captions.",
-   "check": "real life: gloves on, tissue pressed not rubbed, skin dry; the box fully inside the frame; faces at 20-50 % of the width"
-  },
-  "K3": {
-   "what": "massage: finger pads of both hands on the cheek and cheekbone, a barely visible sheen",
-   "params": {
-    "model": "gpt_image_2_6",
-    "aspect_ratio": "16:9",
-    "resolution": "2k",
-    "quality": "high",
-    "use_unlim": false,
-    "count": 1
-   },
-   "medias": [
-    {
-     "role": "image_references",
-     "value": "<K2 job>"
-    }
-   ],
-   "prompt": "Reproduce the first reference image exactly: the same camera position and framing, the same room, window and light, the same two women in the same positions, the same white disposable cap, gloves and clothes, the same softly blurred cream box in the lower left of the frame. The patient lies with her eyes closed. Change only the cosmetologist's hands and the skin: the tissue is gone; the pads of the fingers of both her gloved hands rest on the patient's cheek and cheekbone, in the middle of a slow, even circular massage with light controlled pressure; the patient's cheek has a barely visible, colourless sheen where the fingers have passed. No syringe, no tube, no jar, no brush and no tools anywhere in the frame. Nothing else changes. Photorealistic, natural skin texture, soft daylight. No text, no captions, no watermark.",
-   "check": "no syringe (no real photo yet, question 19); the sheen is colourless"
-  },
-  "K4": {
-   "what": "she asks how it feels: hands lifted, the patient opens her eyes, the skin is slightly pinker",
-   "params": {
-    "model": "gpt_image_2_6",
-    "aspect_ratio": "16:9",
-    "resolution": "2k",
-    "quality": "high",
-    "use_unlim": false,
-    "count": 1
-   },
-   "medias": [
-    {
-     "role": "image_references",
-     "value": "<K3 job>"
-    }
-   ],
-   "prompt": "Reproduce the first reference image exactly: the same camera position and framing, the same room, window and light, the same two women in the same positions, the same white disposable cap, gloves and clothes, the same softly blurred cream box in the lower left of the frame. Change only three things. 1. The cosmetologist has lifted both gloved hands a few centimetres off the patient's face and holds them still just above the cheek; she looks at the patient's eyes attentively, as if asking how it feels. 2. The patient has opened her eyes and looks up at the cosmetologist calmly, with a faint smile. 3. The skin of her cheeks and cheekbones is slightly pinker than before - a light, even, temporary flush, not strong redness; the faint colourless sheen stays. No syringe, no tube, no jar, no brush and no tools anywhere in the frame. Nothing else changes. Photorealistic, natural skin texture, soft daylight. No text, no captions, no watermark.",
-   "check": "the flush is light (protocol: temporary redness), no strong redness"
-  },
-  "Y2": {
-   "what": "inside the skin: spicules of two lengths in the epidermis, the golden serum goes down the open paths",
-   "params": {
-    "model": "gpt_image_2_6",
-    "aspect_ratio": "16:9",
-    "resolution": "2k",
-    "quality": "high",
-    "use_unlim": false,
-    "count": 1
-   },
-   "medias": [
-    {
-     "role": "image_references",
-     "value": "7b8cfdd3-9d05-4f69-b7ad-14344fad7798"
-    }
-   ],
-   "prompt": "Scientific skin-care illustration in exactly the visual style of the first reference image: the same kind of clean cut-away of the skin, the same rounded cells of the upper layer and pink wavy fibres of the deeper layer, the same colours and soft warm light, the same empty softly blurred area on the right 40 percent of the frame. This is facial skin, so there is no hair, no follicle and no hair bulb anywhere. Standing in the upper cell layer are many very thin, straight, glass-like translucent needles with fine points at both ends - natural micro-spicules - of two clearly different lengths: the short ones, a little under half of them, sit only in the outermost part of the upper layer; the long ones, a little over half, pass through the whole upper layer and reach the very top of the deeper layer. They stand at slightly different small angles, spaced apart, not crossing. Beside each spicule there is a fine open microscopic path. A thin film of golden serum lies on the skin surface; the serum runs down the open paths along the spicules with a soft golden glow, and below the tips of the long spicules it spreads as a soft diffuse golden mist of fine sparkling particles through the deeper layer. No straight beams, no arrows, no text, no labels, no numbers, no instruments, no hands, no people.",
-   "check": "NEW LOOK: send to the owner as a sample before the three inside-skin clips are shot; nothing drawn (no labels, arrows, numbers)"
-  },
-  "Y1": {
-   "what": "the same view a moment earlier: the spicules stand in the epidermis, no serum yet",
-   "params": {
-    "model": "gpt_image_2_6",
-    "aspect_ratio": "16:9",
-    "resolution": "2k",
-    "quality": "high",
-    "use_unlim": false,
-    "count": 1
-   },
-   "medias": [
-    {
-     "role": "image_references",
-     "value": "<Y2 job>"
-    }
-   ],
-   "prompt": "Scientific skin-care illustration. Reproduce the first reference image exactly: the same composition and camera, the same rounded cells of the upper layer and pink wavy fibres of the deeper layer, the same thin glass-like spicules of two lengths in the same places, the same soft warm light and the same empty softly blurred right side. Change only one thing: this is the same illustration a few seconds earlier, before the next product is applied. There is no gold anywhere: no golden film on the surface, no gold in the paths beside the spicules, no golden mist and no particles in the deeper layer, which is calm and pink. Nothing else changes. No text, no letters, no numbers, no labels, no arrows, no icons, no borders, no watermark, no instruments, no people."
-  },
-  "K6": {
-   "what": "the finishing mask on the face, the cosmetologist smooths it",
-   "params": {
-    "model": "gpt_image_2_6",
-    "aspect_ratio": "16:9",
-    "resolution": "2k",
-    "quality": "high",
-    "use_unlim": false,
-    "count": 1
-   },
-   "medias": [
-    {
-     "role": "image_references",
-     "value": "<K4 job>"
+    "K4": {
+      "what": "she asks how it feels: hands lifted, the patient opens her eyes, the skin is slightly pinker",
+      "params": {
+        "model": "gpt_image_2_6",
+        "aspect_ratio": "16:9",
+        "resolution": "2k",
+        "quality": "high",
+        "use_unlim": false,
+        "count": 1
+      },
+      "medias": [
+        {
+          "role": "image_references",
+          "value": "<K3 job>"
+        }
+      ],
+      "prompt": "Reproduce the first reference image exactly: the same camera position and framing, the same room, window and light, the same two women in the same positions, the same white disposable cap, gloves and clothes, the same softly blurred cream box in the lower left of the frame. Change only three things. 1. The cosmetologist has lifted both gloved hands a few centimetres off the patient's face and holds them still just above the cheek; she looks at the patient's eyes attentively, as if asking how it feels. 2. The patient has opened her eyes and looks up at the cosmetologist calmly, with a faint smile. 3. The skin of her cheeks and cheekbones is slightly pinker than before - a light, even, temporary flush, not strong redness; the faint colourless sheen stays. No syringe, no tube, no jar, no brush and no tools anywhere in the frame. Nothing else changes. Photorealistic, natural skin texture, soft daylight. No text, no captions, no watermark.",
+      "check": "the flush is light (protocol: temporary redness), no strong redness"
     },
-    {
-     "role": "image_references",
-     "value": "05429adf-6d5d-46ea-ab8e-ebbef6d7d763"
-    }
-   ],
-   "prompt": "Reproduce the first reference image exactly: the same camera position and framing, the same room, window and light, the same two women in the same positions, the same white disposable cap, gloves and clothes, the same softly blurred cream box in the lower left of the frame. Change only this: the patient's eyes are closed again and her whole face - forehead, cheeks, nose and chin, leaving the eyes, the nostrils and the lips free - is covered with a thin, even, milky-translucent mask of exactly the kind shown in the second reference image (take only the look of the mask from it, nothing else): a soft milky-white translucent layer through which the skin shows faintly, smooth and slightly glossy; not a sheet mask, not thick cream, not foam. The cosmetologist smooths the mask along the patient's cheek with the pads of the fingers of one gloved hand; her other gloved hand rests beside the patient's temple. No syringe, no tube, no jar, no brush and no tools anywhere in the frame. Nothing else changes. Photorealistic, natural skin texture, soft daylight. No text, no captions, no watermark.",
-   "check": "the mask looks like the one in the accepted EXOCELL MASK film; send to the owner as a sample"
-  },
-  "K7": {
-   "what": "the same frame with the focus on the box (chapters 07 and 08)",
-   "params": {
-    "model": "gpt_image_2_6",
-    "aspect_ratio": "16:9",
-    "resolution": "2k",
-    "quality": "high",
-    "use_unlim": false,
-    "count": 1
-   },
-   "medias": [
-    {
-     "role": "image_references",
-     "value": "<K6 job>"
+    "Y2": {
+      "what": "inside the skin: spicules of two lengths in the epidermis, the golden serum goes down the open paths",
+      "params": {
+        "model": "gpt_image_2_6",
+        "aspect_ratio": "16:9",
+        "resolution": "2k",
+        "quality": "high",
+        "use_unlim": false,
+        "count": 1
+      },
+      "medias": [
+        {
+          "role": "image_references",
+          "value": "7b8cfdd3-9d05-4f69-b7ad-14344fad7798"
+        }
+      ],
+      "prompt": "Scientific skin-care illustration in exactly the visual style of the first reference image: the same kind of clean cut-away of the skin, the same rounded cells of the upper layer and pink wavy fibres of the deeper layer, the same colours and soft warm light, the same empty softly blurred area on the right 40 percent of the frame. This is facial skin, so there is no hair, no follicle and no hair bulb anywhere. Standing in the upper cell layer are many very thin, straight, glass-like translucent needles with fine points at both ends - natural micro-spicules - of two clearly different lengths: the short ones, a little under half of them, sit only in the outermost part of the upper layer; the long ones, a little over half, pass through the whole upper layer and reach the very top of the deeper layer. They stand at slightly different small angles, spaced apart, not crossing. Beside each spicule there is a fine open microscopic path. A thin film of golden serum lies on the skin surface; the serum runs down the open paths along the spicules with a soft golden glow, and below the tips of the long spicules it spreads as a soft diffuse golden mist of fine sparkling particles through the deeper layer. No straight beams, no arrows, no text, no labels, no numbers, no instruments, no hands, no people.",
+      "check": "NEW LOOK: send to the owner as a sample before the three inside-skin clips are shot; nothing drawn (no labels, arrows, numbers)"
     },
-    {
-     "role": "image_references",
-     "value": "8231f212-8f68-4043-b77e-9125749fbc6a"
+    "Y1": {
+      "what": "the same view a moment earlier: the spicules stand in the epidermis, no serum yet",
+      "params": {
+        "model": "gpt_image_2_6",
+        "aspect_ratio": "16:9",
+        "resolution": "2k",
+        "quality": "high",
+        "use_unlim": false,
+        "count": 1
+      },
+      "medias": [
+        {
+          "role": "image_references",
+          "value": "<Y2 job>"
+        }
+      ],
+      "prompt": "Scientific skin-care illustration. Reproduce the first reference image exactly: the same composition and camera, the same rounded cells of the upper layer and pink wavy fibres of the deeper layer, the same thin glass-like spicules of two lengths in the same places, the same soft warm light and the same empty softly blurred right side. Change only one thing: this is the same illustration a few seconds earlier, before the next product is applied. There is no gold anywhere: no golden film on the surface, no gold in the paths beside the spicules, no golden mist and no particles in the deeper layer, which is calm and pink. Nothing else changes. No text, no letters, no numbers, no labels, no arrows, no icons, no borders, no watermark, no instruments, no people."
+    },
+    "K6": {
+      "what": "the finishing mask on the face, the cosmetologist smooths it",
+      "params": {
+        "model": "gpt_image_2_6",
+        "aspect_ratio": "16:9",
+        "resolution": "2k",
+        "quality": "high",
+        "use_unlim": false,
+        "count": 1
+      },
+      "medias": [
+        {
+          "role": "image_references",
+          "value": "<K4 job>"
+        },
+        {
+          "role": "image_references",
+          "value": "05429adf-6d5d-46ea-ab8e-ebbef6d7d763"
+        }
+      ],
+      "prompt": "Reproduce the first reference image exactly: the same camera position and framing, the same room, window and light, the same two women in the same positions, the same white disposable cap, gloves and clothes, the same softly blurred cream box in the lower left of the frame. Change only this: the patient's eyes are closed again and her whole face - forehead, cheeks, nose and chin, leaving the eyes, the nostrils and the lips free - is covered with a thin, even, milky-translucent mask of exactly the kind shown in the second reference image (take only the look of the mask from it, nothing else): a soft milky-white translucent layer through which the skin shows faintly, smooth and slightly glossy; not a sheet mask, not thick cream, not foam. The cosmetologist smooths the mask along the patient's cheek with the pads of the fingers of one gloved hand; her other gloved hand rests beside the patient's temple. No syringe, no tube, no jar, no brush and no tools anywhere in the frame. Nothing else changes. Photorealistic, natural skin texture, soft daylight. No text, no captions, no watermark.",
+      "check": "the mask looks like the one in the accepted EXOCELL MASK film; send to the owner as a sample"
+    },
+    "K7": {
+      "what": "the same frame with the focus on the box (chapters 07 and 08)",
+      "params": {
+        "model": "gpt_image_2_6",
+        "aspect_ratio": "16:9",
+        "resolution": "2k",
+        "quality": "high",
+        "use_unlim": false,
+        "count": 1
+      },
+      "medias": [
+        {
+          "role": "image_references",
+          "value": "<K6 job>"
+        },
+        {
+          "role": "image_references",
+          "value": "8231f212-8f68-4043-b77e-9125749fbc6a"
+        }
+      ],
+      "prompt": "Reproduce the first reference image exactly: the same camera position and framing, the same room, window and light, the same two women in the same positions - the patient lying with the milky mask on her face, the cosmetologist smoothing it. Change only the focus: the cream MICRO BOOST 10% box in the lower left of the frame is now tack sharp, with exactly the print it has in the second reference image (the gold M monogram, MITODERM, BIOSPICULE PROFESSIONAL, the dark green band with gold MICRO BOOST 10%, SPICULE SERUM, the round emblem in a gold ring, the gold frame with Concentrated Spicule System, PROFESSIONAL TREATMENT, 3 ml e 0.10 fl.oz., and on the narrow right side PROFESSIONAL TREATMENT and MADE IN KOREA running vertically), and the two women behind it are softly out of focus, still clearly recognisable. The box is closed and stands alone; no syringe, no second box. Nothing else changes. Photorealistic, natural skin texture, soft daylight. No text, no captions, no watermark.",
+      "check": "compare the print with K0 and the real pack photo letter by letter; if it differs, paste the box from K0 with a feathered mask"
     }
-   ],
-   "prompt": "Reproduce the first reference image exactly: the same camera position and framing, the same room, window and light, the same two women in the same positions - the patient lying with the milky mask on her face, the cosmetologist smoothing it. Change only the focus: the cream MICRO BOOST 10% box in the lower left of the frame is now tack sharp, with exactly the print it has in the second reference image (the gold M monogram, MITODERM, BIOSPICULE PROFESSIONAL, the dark green band with gold MICRO BOOST 10%, SPICULE SERUM, the round emblem in a gold ring, the gold frame with Concentrated Spicule System, PROFESSIONAL TREATMENT, 3 ml e 0.10 fl.oz., and on the narrow right side PROFESSIONAL TREATMENT and MADE IN KOREA running vertically), and the two women behind it are softly out of focus, still clearly recognisable. The box is closed and stands alone; no syringe, no second box. Nothing else changes. Photorealistic, natural skin texture, soft daylight. No text, no captions, no watermark.",
-   "check": "compare the print with K0 and the real pack photo letter by letter; if it differs, paste the box from K0 with a feathered mask"
+  },
+  "clips": {
+    "T1": {
+      "what": "K0 -> K1: the focus moves from the box to the two women; she leans in to the cheek",
+      "params": {
+        "model": "kling4_0",
+        "mode": "image-to-video",
+        "resolution": "720p",
+        "duration": 5,
+        "aspect_ratio": "16:9",
+        "use_unlim": false,
+        "count": 1
+      },
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "8231f212-8f68-4043-b77e-9125749fbc6a"
+        },
+        {
+          "role": "end_image",
+          "value": "74d32227-8a32-4d30-9b77-2b4863f0ccfd"
+        }
+      ],
+      "prompt": "One continuous shot, no cuts, the camera stays in place with only a barely noticeable drift. The focus moves smoothly from the cream box in the left foreground to the two women behind it: the box goes softly out of focus and the women become sharp. While the focus moves, the cosmetologist leans a little closer to the patient and studies her cheek; the gloved index finger of one hand comes to rest lightly on the patient's cheekbone while her other gloved hand supports the patient's chin. The patient sits still and looks straight ahead. Natural, small, unhurried movements; the room and the daylight stay the same. No text, no captions."
+    },
+    "T2": {
+      "what": "K1 -> K2: the couch reclines, the patient lies back and closes her eyes; the cosmetologist takes a tissue",
+      "params": {
+        "model": "kling4_0",
+        "mode": "image-to-video",
+        "resolution": "720p",
+        "duration": 5,
+        "aspect_ratio": "16:9",
+        "use_unlim": false,
+        "count": 1
+      },
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "74d32227-8a32-4d30-9b77-2b4863f0ccfd"
+        },
+        {
+          "role": "end_image",
+          "value": "<K2 job>"
+        }
+      ],
+      "risk": "the biggest change of the film (sitting -> lying, the cosmetologist moves); if it morphs, split it in two with a middle still",
+      "prompt": "The clip starts exactly on the first image and ends exactly on the last image. One continuous shot with no cuts, no dissolves and no fades. In the same bright treatment room the cosmetologist takes her hands from the patient's face. The back of the white treatment couch reclines smoothly and the patient leans back with it until she lies on her back, then closes her eyes. The cosmetologist moves to the head of the couch, sits down behind the patient's head and begins to pat the patient's cheek dry with a folded white disposable tissue, pressing lightly, not rubbing. Meanwhile the camera glides slowly forward and a little upward and settles in the framing of the last image. Their faces, hair, the white disposable cap, the white gloves and their clothes never change; the room and the daylight stay the same. Calm, natural, unhurried movement. No text, no captions."
+    },
+    "T3": {
+      "what": "K2 -> K3: the tissue leaves, the finger pads settle on the cheek and the massage begins",
+      "params": {
+        "model": "kling4_0",
+        "mode": "image-to-video",
+        "resolution": "720p",
+        "duration": 5,
+        "aspect_ratio": "16:9",
+        "use_unlim": false,
+        "count": 1
+      },
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "<K2 job>"
+        },
+        {
+          "role": "end_image",
+          "value": "<K3 job>"
+        }
+      ],
+      "risk": "a hand leaves the frame and comes back empty - on EXOSIGNAL HAIR such a clip hid a jump; check frame by frame, and if it jumps use the forward-and-back trick on K3 or shoot K3 -> K3 massage separately",
+      "prompt": "The clip starts exactly on the first image and ends exactly on the last image. One continuous shot with no cuts, no dissolves and no fades. The camera is locked, with only a barely noticeable drift. The cosmetologist finishes patting the patient's cheek, lifts the tissue away and lowers it out of the frame at the bottom edge; her empty gloved hand comes back, and the pads of the fingers of both hands settle on the patient's cheek and cheekbone and begin slow, even circular massage movements with light controlled pressure. The patient lies still with her eyes closed. A barely visible colourless sheen appears on the cheek where the fingers pass. No syringe, no tube, no jar, no brush and no tools anywhere in the frame. Their faces, hair, the white disposable cap, the white gloves and their clothes never change; the room and the daylight stay the same. Calm, natural, unhurried movement. No text, no captions."
+    },
+    "T4": {
+      "what": "K3 -> K4: the circles slow down, the hands lift; the patient opens her eyes and nods",
+      "params": {
+        "model": "kling4_0",
+        "mode": "image-to-video",
+        "resolution": "720p",
+        "duration": 5,
+        "aspect_ratio": "16:9",
+        "use_unlim": false,
+        "count": 1
+      },
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "<K3 job>"
+        },
+        {
+          "role": "end_image",
+          "value": "<K4 job>"
+        }
+      ],
+      "prompt": "The clip starts exactly on the first image and ends exactly on the last image. One continuous shot with no cuts, no dissolves and no fades. The camera is locked, with only a barely noticeable drift. The cosmetologist's slow circular massage on the patient's cheek comes to a stop; she lifts both gloved hands a few centimetres off the face, holds them still, looks at the patient and asks how it feels. The patient opens her eyes, looks up at her and gives a small nod with a faint smile. The skin of her cheeks becomes slightly pinker - a light, even flush. No syringe, no tube, no jar, no brush and no tools anywhere in the frame. Their faces, hair, the white disposable cap, the white gloves and their clothes never change; the room and the daylight stay the same. Calm, natural, unhurried movement. No text, no captions."
+    },
+    "D1": {
+      "what": "K4 -> Y1: the camera dives into the skin of the cheek (played at double speed)",
+      "params": {
+        "model": "kling4_0",
+        "mode": "image-to-video",
+        "resolution": "720p",
+        "duration": 5,
+        "aspect_ratio": "16:9",
+        "use_unlim": false,
+        "count": 1
+      },
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "<K4 job>"
+        },
+        {
+          "role": "end_image",
+          "value": "<Y1 job>"
+        }
+      ],
+      "prompt": "One continuous shot, no cuts. The camera pushes in smoothly and quickly from the treatment scene toward the patient's cheek, just below the cosmetologist's raised fingers; the skin grows large and fills the frame, the camera comes down to the level of the skin surface, and the view opens into a clean scientific skin-care illustration: a cut-away of the skin with many very thin glass-like spicules of two lengths standing in the upper cell layer. The inside of the cut-away is calm and pink, with no gold anywhere. Continuous camera move with natural motion blur in the middle, slowing down smoothly; the last second is nearly still and equals the last frame. Soft warm daylight, no text, no captions, no arrows."
+    },
+    "BL": {
+      "what": "Y1 -> Y2: the next product arrives and goes down the open paths",
+      "params": {
+        "model": "kling4_0",
+        "mode": "image-to-video",
+        "resolution": "720p",
+        "duration": 5,
+        "aspect_ratio": "16:9",
+        "use_unlim": false,
+        "count": 1
+      },
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "<Y1 job>"
+        },
+        {
+          "role": "end_image",
+          "value": "<Y2 job>"
+        }
+      ],
+      "prompt": "Scientific skin-care illustration, one continuous shot, locked framing with an almost imperceptible slow push-in. From above, a thin film of golden serum spreads over the skin surface and runs down along the standing spicules through the open microscopic paths beside them, filling each path with a soft golden glow from the top down. Below the tips of the long spicules the gold seeps out and spreads as a soft golden mist of fine sparkling particles through the deeper layer, widening slowly. Organic, liquid, unhurried motion; the tissue and the spicules stay still. No straight beams, no cuts, no text, no captions."
+    },
+    "D2": {
+      "what": "K6 -> Y2, runs backwards in the film: the camera comes out of the skin and the mask is already on the face",
+      "params": {
+        "model": "kling4_0",
+        "mode": "image-to-video",
+        "resolution": "720p",
+        "duration": 5,
+        "aspect_ratio": "16:9",
+        "use_unlim": false,
+        "count": 1
+      },
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "<K6 job>"
+        },
+        {
+          "role": "end_image",
+          "value": "<Y2 job>"
+        }
+      ],
+      "prompt": "One continuous shot with no cuts, no dissolves and no fades. It begins exactly as the first frame: a patient lies with a thin milky-translucent mask on her face while a cosmetologist in white gloves smooths it on her cheek with her fingertips. The two women do not change their poses; hands and heads stay where they are. Only the camera moves: it pushes in fast and smoothly toward the patient's cheek beside the fingertips - a macro dive. The milky layer and the skin fill the frame, and the camera comes down to the level of the skin surface. The view settles on the last frame: a cut-away of the skin with many very thin glass-like spicules of two lengths standing in the upper cell layer, golden serum glowing in the fine paths beside them and a soft golden mist of fine particles spreading through the deeper layer. The move accelerates gently, has natural motion blur in the middle and slows down smoothly; the last second is nearly still and equals the last frame. The light stays bright, warm and beige throughout. No text, no captions, no logos, no arrows, no instruments."
+    },
+    "T7": {
+      "what": "K6 -> K7: the focus moves from the two women back to the box; then a hold (chapter 08)",
+      "params": {
+        "model": "kling4_0",
+        "mode": "image-to-video",
+        "resolution": "720p",
+        "duration": 5,
+        "aspect_ratio": "16:9",
+        "use_unlim": false,
+        "count": 1
+      },
+      "medias": [
+        {
+          "role": "start_image",
+          "value": "<K6 job>"
+        },
+        {
+          "role": "end_image",
+          "value": "<K7 job>"
+        }
+      ],
+      "prompt": "One continuous shot, no cuts, the camera stays in place with only a barely noticeable drift. The focus moves smoothly from the two women to the cream box in the lower left foreground: the women go softly out of focus and the box becomes tack sharp. The cosmetologist keeps smoothing the mask on the patient's cheek with slow, small movements; the patient lies still with her eyes closed. Natural, unhurried; the room and the daylight stay the same. No text, no captions."
+    }
+  },
+  "assembly": [
+    "hold T1 0 x60 | T1 1-120 | T2 1-120 | T3 1-120 | T4 1-120",
+    "D1 0-120 every 2nd (61) | BL 0-120 (121) | D2 0-120 every 2nd, reversed (61)",
+    "T7 1-120 | hold T7 120 x120          about 1000 frames, 42 s; chapters as in STORYBOARD.md (8 chapters)",
+    "phone film: tools/vertical-from-horizontal.py with a window; check positions with tools/window-view.py (by the ruler, not from memory)"
+  ],
+  "estimate": "Atlas Cloud, first version at 720p: stills 0.48 USD (spent); 8 clips x 0.55 = 4.40; total about 4.9 USD; with two retakes about 6.0 USD. In Higgsfield credits the same page was 114 (140 with the reserve) under the ceiling of 150. Full HD only after the owner accepts the page, the price named to him beforehand.",
+  "rules": [
+    "the money rule of 21/11 (.claude/skills/frugal-generation): estimate first, ceiling 150, stop at 120",
+    "ALL stills of the page go to the owner as one sheet; the clips are launched only after his ok",
+    "one look per page: the cosmetologist and patient P1 as in K0/K1 in every frame",
+    "nothing drawn in the frames: no labels, arrows, numbers",
+    "no syringe in the frame until the owner sends its real photo (question 19)",
+    "every scene is checked with 'what would a real specialist do' before the link goes to the owner",
+    "the box print is checked against the real pack photo every time the box is in focus"
+  ],
+  "atlas": {
+    "model_still": "openai/gpt-image-2.6-sunburst/edit, 2688x1520, quality high",
+    "model_clip": "kwaivgi/kling-v4.0/image-to-video, 720p, 5 s",
+    "price_note": "eight generated stills cost 0.483 USD together (balance 17.631 -> 17.148), about 0.06 each; the per-job cost lines in the log overlap because jobs ran side by side. A clip is 0.11 USD per second by the price list: 5 s = 0.55; the 1080p price is not listed separately - it shows on the first clip.",
+    "stills": {
+      "K2": {
+        "prediction": "3175e260db654b14a012095c02cf84b9",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-4b807f5a6bb1d13e2c26d4a4514f380322ae21448a0642a185e9c8bfc92217ae/3175e260db654b14a012095c02cf84b9-90a845b577b6b53a.png",
+        "verdict": "good"
+      },
+      "K3": {
+        "prediction": "14c98b38889f4889b07b3938239bf2d6",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-2befb91eb227b996161bec396e55732f8f8d3d5dfbe8453b575b61affbbd9a77/14c98b38889f4889b07b3938239bf2d6-1efa0d67246b13f5.png",
+        "verdict": "good"
+      },
+      "K4": {
+        "prediction": "0ebc6996836743128bb666e069585e30",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-50661733a3538458dbcda5f8feab5e19889d24dfc1821d78b56512e25b69fe88/0ebc6996836743128bb666e069585e30-f1efe87b08736bd8.png",
+        "verdict": "good"
+      },
+      "Y1": {
+        "prediction": "4a2db7ee92644596b9be6fb3596d7404",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-c04642abeaed1232eec439db23ea2cbe50c04d695cd9dac5eb7fe6aba8c16d14/4a2db7ee92644596b9be6fb3596d7404-a9e9739a60c00042.png",
+        "verdict": "good"
+      },
+      "Y2": {
+        "prediction": "7be8845559da4527a745b207af02f865",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-07a2c19a61414f1de9d814f457648e830eea5bf81a60d4426151f14f48c12afc/7be8845559da4527a745b207af02f865-317056795c87ef39.png",
+        "verdict": "good"
+      },
+      "K6": {
+        "prediction": "26d5184863834cf4994ad2613c4c33ba",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-aed77925e9ea542a321559e85661d11306f3b4fe5ed791d4ca77ad317ec07180/26d5184863834cf4994ad2613c4c33ba-fdd5a6346fc6b194.png",
+        "verdict": "good"
+      },
+      "K0": {
+        "job_higgsfield": "8231f212-8f68-4043-b77e-9125749fbc6a",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261121_064115_8231f212-8f68-4043-b77e-9125749fbc6a.png",
+        "verdict": "good"
+      },
+      "K1": {
+        "job_higgsfield": "74d32227-8a32-4d30-9b77-2b4863f0ccfd",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261121_064251_74d32227-8a32-4d30-9b77-2b4863f0ccfd.png",
+        "verdict": "good"
+      },
+      "K7": {
+        "built_by": "build-k7.py from K0 and K6, no generation",
+        "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/d4959cc4-0320-46ce-b84c-60ea188d0a88.png",
+        "verdict": "good",
+        "rejected_generations": [
+          {
+            "prediction": "8b23ed0c7bbb4b14ae444d87c5503a1d",
+            "why": "the box 17 % bigger than in K6, the side print garbled"
+          },
+          {
+            "prediction": "7e8e72abb85146a28af7202a2e928f9e",
+            "why": "the box 31 % bigger than in K6"
+          }
+        ]
+      }
+    }
   }
- },
- "clips": {
-  "T1": {
-   "what": "K0 -> K1: the focus moves from the box to the two women; she leans in to the cheek",
-   "params": {
-    "model": "kling4_0",
-    "mode": "image-to-video",
-    "resolution": "720p",
-    "duration": 5,
-    "aspect_ratio": "16:9",
-    "use_unlim": false,
-    "count": 1
-   },
-   "medias": [
-    {
-     "role": "start_image",
-     "value": "8231f212-8f68-4043-b77e-9125749fbc6a"
-    },
-    {
-     "role": "end_image",
-     "value": "74d32227-8a32-4d30-9b77-2b4863f0ccfd"
-    }
-   ],
-   "prompt": "One continuous shot, no cuts, the camera stays in place with only a barely noticeable drift. The focus moves smoothly from the cream box in the left foreground to the two women behind it: the box goes softly out of focus and the women become sharp. While the focus moves, the cosmetologist leans a little closer to the patient and studies her cheek; the gloved index finger of one hand comes to rest lightly on the patient's cheekbone while her other gloved hand supports the patient's chin. The patient sits still and looks straight ahead. Natural, small, unhurried movements; the room and the daylight stay the same. No text, no captions."
-  },
-  "T2": {
-   "what": "K1 -> K2: the couch reclines, the patient lies back and closes her eyes; the cosmetologist takes a tissue",
-   "params": {
-    "model": "kling4_0",
-    "mode": "image-to-video",
-    "resolution": "720p",
-    "duration": 5,
-    "aspect_ratio": "16:9",
-    "use_unlim": false,
-    "count": 1
-   },
-   "medias": [
-    {
-     "role": "start_image",
-     "value": "74d32227-8a32-4d30-9b77-2b4863f0ccfd"
-    },
-    {
-     "role": "end_image",
-     "value": "<K2 job>"
-    }
-   ],
-   "risk": "the biggest change of the film (sitting -> lying, the cosmetologist moves); if it morphs, split it in two with a middle still",
-   "prompt": "The clip starts exactly on the first image and ends exactly on the last image. One continuous shot with no cuts, no dissolves and no fades. In the same bright treatment room the cosmetologist takes her hands from the patient's face. The back of the white treatment couch reclines smoothly and the patient leans back with it until she lies on her back, then closes her eyes. The cosmetologist moves to the head of the couch, sits down behind the patient's head and begins to pat the patient's cheek dry with a folded white disposable tissue, pressing lightly, not rubbing. Meanwhile the camera glides slowly forward and a little upward and settles in the framing of the last image. Their faces, hair, the white disposable cap, the white gloves and their clothes never change; the room and the daylight stay the same. Calm, natural, unhurried movement. No text, no captions."
-  },
-  "T3": {
-   "what": "K2 -> K3: the tissue leaves, the finger pads settle on the cheek and the massage begins",
-   "params": {
-    "model": "kling4_0",
-    "mode": "image-to-video",
-    "resolution": "720p",
-    "duration": 5,
-    "aspect_ratio": "16:9",
-    "use_unlim": false,
-    "count": 1
-   },
-   "medias": [
-    {
-     "role": "start_image",
-     "value": "<K2 job>"
-    },
-    {
-     "role": "end_image",
-     "value": "<K3 job>"
-    }
-   ],
-   "risk": "a hand leaves the frame and comes back empty - on EXOSIGNAL HAIR such a clip hid a jump; check frame by frame, and if it jumps use the forward-and-back trick on K3 or shoot K3 -> K3 massage separately",
-   "prompt": "The clip starts exactly on the first image and ends exactly on the last image. One continuous shot with no cuts, no dissolves and no fades. The camera is locked, with only a barely noticeable drift. The cosmetologist finishes patting the patient's cheek, lifts the tissue away and lowers it out of the frame at the bottom edge; her empty gloved hand comes back, and the pads of the fingers of both hands settle on the patient's cheek and cheekbone and begin slow, even circular massage movements with light controlled pressure. The patient lies still with her eyes closed. A barely visible colourless sheen appears on the cheek where the fingers pass. No syringe, no tube, no jar, no brush and no tools anywhere in the frame. Their faces, hair, the white disposable cap, the white gloves and their clothes never change; the room and the daylight stay the same. Calm, natural, unhurried movement. No text, no captions."
-  },
-  "T4": {
-   "what": "K3 -> K4: the circles slow down, the hands lift; the patient opens her eyes and nods",
-   "params": {
-    "model": "kling4_0",
-    "mode": "image-to-video",
-    "resolution": "720p",
-    "duration": 5,
-    "aspect_ratio": "16:9",
-    "use_unlim": false,
-    "count": 1
-   },
-   "medias": [
-    {
-     "role": "start_image",
-     "value": "<K3 job>"
-    },
-    {
-     "role": "end_image",
-     "value": "<K4 job>"
-    }
-   ],
-   "prompt": "The clip starts exactly on the first image and ends exactly on the last image. One continuous shot with no cuts, no dissolves and no fades. The camera is locked, with only a barely noticeable drift. The cosmetologist's slow circular massage on the patient's cheek comes to a stop; she lifts both gloved hands a few centimetres off the face, holds them still, looks at the patient and asks how it feels. The patient opens her eyes, looks up at her and gives a small nod with a faint smile. The skin of her cheeks becomes slightly pinker - a light, even flush. No syringe, no tube, no jar, no brush and no tools anywhere in the frame. Their faces, hair, the white disposable cap, the white gloves and their clothes never change; the room and the daylight stay the same. Calm, natural, unhurried movement. No text, no captions."
-  },
-  "D1": {
-   "what": "K4 -> Y1: the camera dives into the skin of the cheek (played at double speed)",
-   "params": {
-    "model": "kling4_0",
-    "mode": "image-to-video",
-    "resolution": "720p",
-    "duration": 5,
-    "aspect_ratio": "16:9",
-    "use_unlim": false,
-    "count": 1
-   },
-   "medias": [
-    {
-     "role": "start_image",
-     "value": "<K4 job>"
-    },
-    {
-     "role": "end_image",
-     "value": "<Y1 job>"
-    }
-   ],
-   "prompt": "One continuous shot, no cuts. The camera pushes in smoothly and quickly from the treatment scene toward the patient's cheek, just below the cosmetologist's raised fingers; the skin grows large and fills the frame, the camera comes down to the level of the skin surface, and the view opens into a clean scientific skin-care illustration: a cut-away of the skin with many very thin glass-like spicules of two lengths standing in the upper cell layer. The inside of the cut-away is calm and pink, with no gold anywhere. Continuous camera move with natural motion blur in the middle, slowing down smoothly; the last second is nearly still and equals the last frame. Soft warm daylight, no text, no captions, no arrows."
-  },
-  "BL": {
-   "what": "Y1 -> Y2: the next product arrives and goes down the open paths",
-   "params": {
-    "model": "kling4_0",
-    "mode": "image-to-video",
-    "resolution": "720p",
-    "duration": 5,
-    "aspect_ratio": "16:9",
-    "use_unlim": false,
-    "count": 1
-   },
-   "medias": [
-    {
-     "role": "start_image",
-     "value": "<Y1 job>"
-    },
-    {
-     "role": "end_image",
-     "value": "<Y2 job>"
-    }
-   ],
-   "prompt": "Scientific skin-care illustration, one continuous shot, locked framing with an almost imperceptible slow push-in. From above, a thin film of golden serum spreads over the skin surface and runs down along the standing spicules through the open microscopic paths beside them, filling each path with a soft golden glow from the top down. Below the tips of the long spicules the gold seeps out and spreads as a soft golden mist of fine sparkling particles through the deeper layer, widening slowly. Organic, liquid, unhurried motion; the tissue and the spicules stay still. No straight beams, no cuts, no text, no captions."
-  },
-  "D2": {
-   "what": "K6 -> Y2, runs backwards in the film: the camera comes out of the skin and the mask is already on the face",
-   "params": {
-    "model": "kling4_0",
-    "mode": "image-to-video",
-    "resolution": "720p",
-    "duration": 5,
-    "aspect_ratio": "16:9",
-    "use_unlim": false,
-    "count": 1
-   },
-   "medias": [
-    {
-     "role": "start_image",
-     "value": "<K6 job>"
-    },
-    {
-     "role": "end_image",
-     "value": "<Y2 job>"
-    }
-   ],
-   "prompt": "One continuous shot with no cuts, no dissolves and no fades. It begins exactly as the first frame: a patient lies with a thin milky-translucent mask on her face while a cosmetologist in white gloves smooths it on her cheek with her fingertips. The two women do not change their poses; hands and heads stay where they are. Only the camera moves: it pushes in fast and smoothly toward the patient's cheek beside the fingertips - a macro dive. The milky layer and the skin fill the frame, and the camera comes down to the level of the skin surface. The view settles on the last frame: a cut-away of the skin with many very thin glass-like spicules of two lengths standing in the upper cell layer, golden serum glowing in the fine paths beside them and a soft golden mist of fine particles spreading through the deeper layer. The move accelerates gently, has natural motion blur in the middle and slows down smoothly; the last second is nearly still and equals the last frame. The light stays bright, warm and beige throughout. No text, no captions, no logos, no arrows, no instruments."
-  },
-  "T7": {
-   "what": "K6 -> K7: the focus moves from the two women back to the box; then a hold (chapter 08)",
-   "params": {
-    "model": "kling4_0",
-    "mode": "image-to-video",
-    "resolution": "720p",
-    "duration": 5,
-    "aspect_ratio": "16:9",
-    "use_unlim": false,
-    "count": 1
-   },
-   "medias": [
-    {
-     "role": "start_image",
-     "value": "<K6 job>"
-    },
-    {
-     "role": "end_image",
-     "value": "<K7 job>"
-    }
-   ],
-   "prompt": "One continuous shot, no cuts, the camera stays in place with only a barely noticeable drift. The focus moves smoothly from the two women to the cream box in the lower left foreground: the women go softly out of focus and the box becomes tack sharp. The cosmetologist keeps smoothing the mask on the patient's cheek with slow, small movements; the patient lies still with her eyes closed. Natural, unhurried; the room and the daylight stay the same. No text, no captions."
-  }
- },
- "assembly": [
-  "hold T1 0 x60 | T1 1-120 | T2 1-120 | T3 1-120 | T4 1-120",
-  "D1 0-120 every 2nd (61) | BL 0-120 (121) | D2 0-120 every 2nd, reversed (61)",
-  "T7 1-120 | hold T7 120 x120          about 1000 frames, 42 s; chapters as in STORYBOARD.md (8 chapters)",
-  "phone film: tools/vertical-from-horizontal.py with a window; check positions with tools/window-view.py (by the ruler, not from memory)"
- ],
- "estimate": "first version at 720p: 7 stills x 2 = 14; 8 clips x 12.5 = 100; total 114; with a reserve for two retakes about 140 - under the ceiling of 150. Full HD only after the owner accepts the page: 8 x 18.75 = 150, named to him beforehand.",
- "rules": [
-  "the money rule of 21/11 (.claude/skills/frugal-generation): estimate first, ceiling 150, stop at 120",
-  "ALL stills of the page go to the owner as one sheet; the clips are launched only after his ok",
-  "one look per page: the cosmetologist and patient P1 as in K0/K1 in every frame",
-  "nothing drawn in the frames: no labels, arrows, numbers",
-  "no syringe in the frame until the owner sends its real photo (question 19)",
-  "every scene is checked with 'what would a real specialist do' before the link goes to the owner",
-  "the box print is checked against the real pack photo every time the box is in focus"
- ]
 }
