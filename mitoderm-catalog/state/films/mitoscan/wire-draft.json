@@ -1,0 +1,23 @@
+{
+  "slug": "mitoscan",
+  "frames": 801,
+  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/c0361ff8-d6e3-44c1-9705-c15a56e1d602.mp4",
+  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/c6f1696e-ccc3-40b5-994e-c7121dad4e88.mp4",
+  "comment": [
+    "A DRAFT film of a device page, built without a single new paid clip: the diagnosis scenes of the accepted",
+    "EXOSIGNAL HAIR film (T2, S1c, S1b, E2b, E3b and a few frames of BE3) in a new order - the screen with the scan,",
+    "the look with the naked eye, the probe on the parting and the screen, the patient sees it, the follow-up scan,",
+    "the end of the visit (state/films/mitoscan/film-draft-16x9.spec). It stands on the page until the owner sends a",
+    "large photo of the system and real screen captures for the page's own film. 1912x1080 and 1080x1920, 801 frames."
+  ],
+  "chapters": [
+    {"start": 0, "end": 76, "note": "01 the screen with the scan", "shot": "Экран системы со снимком кожи головы", "type": "device", "section": 1},
+    {"start": 76, "end": 145, "note": "02 the look with the naked eye", "shot": "Осмотр глазами: пробор, без прибора", "type": "patient", "section": 2},
+    {"start": 145, "end": 313, "note": "03 the probe on the parting, the screen comes forward", "shot": "Зонд на проборе, экран выходит вперёд", "type": "procedure", "section": 3},
+    {"start": 313, "end": 414, "note": "04 the patient sees the screen", "shot": "Пациентка видит снимок на экране", "type": "patient", "section": 4},
+    {"start": 414, "end": 545, "note": "05 the follow-up scan", "shot": "Повторный осмотр тех же зон", "type": "procedure", "section": 5},
+    {"start": 545, "end": 603, "note": "06 the system: one screen", "shot": "Система: зонд и экран", "type": "device", "section": 6},
+    {"start": 603, "end": 700, "note": "07 the end of the visit", "shot": "Конец визита", "type": "patient", "section": 7},
+    {"start": 700, "end": 801, "note": "08 the cosmetologist and the patient", "shot": "Косметолог и пациентка", "type": "patient", "section": 8}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "comment": [
+    "MITOSCAN, the phone film of the DRAFT (film-draft-16x9.spec): a moving window over the desktop film.",
+    "Each key: frame, left edge of the window (% of the frame width), window width (%), top of the window on the phone canvas (%).",
+    "0-60 the screen and the faces; 100-190 the cosmetologist, the probe and the patient; 250-640 the screen with the",
+    "scan and both faces; 700-800 the end of the visit."
+  ],
+  "keys": [
+    [0, 2, 62, 10],
+    [60, 2, 62, 10],
+    [100, 8, 56, 11],
+    [190, 8, 56, 11],
+    [250, 2, 62, 10],
+    [640, 2, 62, 10],
+    [700, 4, 62, 10],
+    [800, 4, 62, 10]
+  ]
+}

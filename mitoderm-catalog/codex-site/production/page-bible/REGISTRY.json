@@ -608,29 +608,29 @@
           "index": 2
         },
         {
-          "title": "Перо крупно: кольцо и кнопка",
-          "seconds": 4.33,
-          "vh": 1.25,
+          "title": "Перо крупно: кольцо глубины и кнопка скорости",
+          "seconds": 5.0,
+          "vh": 1.4,
           "type": "device",
           "index": 3
         },
         {
-          "title": "Перо, медленный отход камеры",
-          "seconds": 3.62,
+          "title": "Микронидлинг: перо работает по пробору",
+          "seconds": 3.12,
           "vh": 1.1,
-          "type": "device",
+          "type": "procedure",
           "index": 4
         },
         {
-          "title": "Внутри кожи: микроканалы, средство уходит вглубь",
-          "seconds": 5.25,
-          "vh": 1.5,
+          "title": "Внутрь кожи: микроканалы, средство уходит вглубь",
+          "seconds": 7.38,
+          "vh": 2.1,
           "type": "procedure",
           "index": 5
         },
         {
           "title": "Перо на полотенце",
-          "seconds": 2.12,
+          "seconds": 2.67,
           "vh": 1.1,
           "type": "device",
           "index": 6
@@ -677,53 +677,60 @@
       "ctaHE": "לתיאום הדגמה",
       "shots": [
         {
-          "title": "Оригинальный прибор и экран",
-          "seconds": 4,
-          "vh": 1.3,
+          "title": "Экран системы со снимком кожи головы",
+          "seconds": 3.17,
+          "vh": 1.1,
           "type": "device",
           "index": 1
         },
         {
-          "title": "Запрос пациента",
-          "seconds": 4.5,
+          "title": "Осмотр глазами: пробор, без прибора",
+          "seconds": 2.88,
           "vh": 1.1,
           "type": "patient",
           "index": 2
         },
         {
-          "title": "Съёмка кожи головы",
-          "seconds": 4.5,
-          "vh": 1.3,
-          "type": "device",
+          "title": "Зонд на проборе, экран выходит вперёд",
+          "seconds": 7.0,
+          "vh": 2.0,
+          "type": "procedure",
           "index": 3
         },
         {
-          "title": "Только реальный интерфейс",
-          "seconds": 5,
-          "vh": 1.5,
-          "type": "record",
+          "title": "Пациентка видит снимок на экране",
+          "seconds": 4.21,
+          "vh": 1.2,
+          "type": "patient",
           "index": 4
         },
         {
-          "title": "Совместная оценка",
-          "seconds": 5,
-          "vh": 1.5,
-          "type": "patient",
+          "title": "Повторный осмотр тех же зон",
+          "seconds": 5.46,
+          "vh": 1.55,
+          "type": "procedure",
           "index": 5
         },
         {
-          "title": "Документирование",
-          "seconds": 4,
+          "title": "Система: зонд и экран",
+          "seconds": 2.42,
           "vh": 1.1,
-          "type": "record",
+          "type": "device",
           "index": 6
         },
         {
-          "title": "Устройство + CTA",
-          "seconds": 5,
-          "vh": 1.7,
-          "type": "pack",
+          "title": "Конец визита",
+          "seconds": 4.04,
+          "vh": 1.15,
+          "type": "patient",
           "index": 7
+        },
+        {
+          "title": "Косметолог и пациентка",
+          "seconds": 4.21,
+          "vh": 1.2,
+          "type": "patient",
+          "index": 8
         }
       ],
       "isFrozen": false,

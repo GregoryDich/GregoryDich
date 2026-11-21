@@ -1,23 +1,23 @@
 {
   "slug": "mitopen",
-  "frames": 819,
-  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/9f559771-d068-4fb9-b703-654381949a08.mp4",
-  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/701ac49d-59c3-46ae-9be7-5b7798ae6f2d.mp4",
+  "frames": 887,
+  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/30055f5e-ea32-4569-992a-f44e8e3a2a6f.mp4",
+  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/84837e4b-0a94-4a52-b960-0c4253e7cb48.mp4",
   "comment": [
-    "A draft film of a device page, built without paid clips. The device is never drawn by a model: the customer's",
-    "cut-out photo of the pen is placed on a plate generated without any device, and the camera moves are rendered",
-    "frame by frame from the full-size photo (state/films/mitopen/build-pen-frames.py, film-16x9.spec). The",
-    "inside-the-skin chapter reuses the micro-channel clip of the EXOSIGNAL HAIR film. 1912x1080 and 1080x1920,",
-    "819 frames. The look waits for the owner's ok; a live clip of the examination replaces the held still later."
+    "A draft film of a device page, version 2 (22/11): it shows microneedling, as the owner asked on 21/11. The pen on",
+    "the towel is the customer's cut-out photo placed on a plate generated without any device; the camera moves are",
+    "rendered frame by frame (state/films/mitopen/build-pen-frames.py, film-16x9.spec). The work of the pen, the dive",
+    "into the skin and the micro-channels are three accepted clips of the EXOSIGNAL HAIR film (T5b, D1c, BL3), so the",
+    "patient of that scene is the hair page's until the page's own scene is shot. 1912x1080 and 1080x1920, 887 frames."
   ],
   "chapters": [
     {"start": 0, "end": 134, "note": "01 the pen close, the camera pulls back", "shot": "Перо крупно на полотенце, камера отходит", "type": "device", "section": 1},
     {"start": 134, "end": 235, "note": "02 the examination", "shot": "Осмотр зон лица", "type": "patient", "section": 2},
-    {"start": 235, "end": 339, "note": "03 the ring and the button", "shot": "Перо крупно: кольцо и кнопка", "type": "device", "section": 3},
-    {"start": 339, "end": 426, "note": "04 the pen, a slow drift", "shot": "Перо, медленный отход камеры", "type": "device", "section": 4},
-    {"start": 426, "end": 552, "note": "05 inside the skin: micro-channels", "shot": "Внутри кожи: микроканалы, средство уходит вглубь", "type": "procedure", "section": 5},
-    {"start": 552, "end": 603, "note": "06 the pen", "shot": "Перо на полотенце", "type": "device", "section": 6},
-    {"start": 603, "end": 705, "note": "07 the pen, the consultation behind it", "shot": "Перо резко, консультация за ним", "type": "device", "section": 7},
-    {"start": 705, "end": 819, "note": "08 the cosmetologist and the patient", "shot": "Косметолог и пациент", "type": "patient", "section": 8}
+    {"start": 235, "end": 355, "note": "03 the ring and the button", "shot": "Перо крупно: кольцо глубины и кнопка скорости", "type": "device", "section": 3},
+    {"start": 355, "end": 430, "note": "04 microneedling: the pen works along the parting", "shot": "Микронидлинг: перо работает по пробору", "type": "procedure", "section": 4},
+    {"start": 430, "end": 607, "note": "05 into the skin: micro-channels", "shot": "Внутрь кожи: микроканалы, средство уходит вглубь", "type": "procedure", "section": 5},
+    {"start": 607, "end": 671, "note": "06 the pen", "shot": "Перо на полотенце", "type": "device", "section": 6},
+    {"start": 671, "end": 773, "note": "07 the pen, the consultation behind it", "shot": "Перо резко, консультация за ним", "type": "device", "section": 7},
+    {"start": 773, "end": 887, "note": "08 the cosmetologist and the patient", "shot": "Косметолог и пациент", "type": "patient", "section": 8}
   ]
 }
