@@ -1,0 +1,463 @@
+{
+ "note": "EXOSIGNAL HAIR, film version 4: requests prepared 21/11 03:11 for the owner's remarks of 21/11 (the MITOSCAN handset must sit on the parting with its front end; no hair clips on the patient). NOT launched: it is a new look of the scenes with people, so it waits for the owner's explicit ok on the two sample stills (K3p, K5p) and for a credits top-up (about 4.5 left). Do not launch any paid job before both.",
+ "prices": {
+  "still": 2.75,
+  "clip_5s": 18.75,
+  "bridge_3s": 10.75
+ },
+ "approved_samples": {
+  "K3p": "ac962b09-1b11-4008-94c0-e80dd0eaf3ed",
+  "K5p": "29ddfcc5-c524-4a70-92f4-eaac608f8de2",
+  "state": "sent to the owner 21/11 02:50, waiting for his ok"
+ },
+ "unchanged": {
+  "K0": "21ebbd54-9029-469e-9c88-350599336c67",
+  "K0E": "71d066df-6cf0-46b9-a851-abb2f5ffde1f",
+  "W": "6c9e72fb-0455-4d1d-8a28-93cecb7c512c",
+  "Y1n": "96f1cffe-e51b-481c-9ff7-795e9176b41f",
+  "Y2m": "7b8cfdd3-9d05-4f69-b7ad-14344fad7798",
+  "BL3 clip": "fca2ec74-2d23-470a-b024-52928a110613 (inside the skin, no people)"
+ },
+ "owner_references": {
+  "real scan at the hairline": "2a4d0b3b-c72f-4918-ab64-fb4a33dc5387",
+  "MITOSCAN handset photo": "2c80c777-f658-4d1b-8769-cc58384c622a"
+ },
+ "order": [
+  "1. the six stills in one batch",
+  "2. check every still (see check), fix labels by pasting from the approved frame if needed",
+  "3. the twelve clips in one batch",
+  "4. check each clip: tools/check-clip.sh and the contact sheet",
+  "5. assemble, cut the phone film, upload, wire, verify, record the page, links to the owner"
+ ],
+ "stills": {
+  "K1p": {
+   "replaces": "K1 (consultation)",
+   "params": {
+    "model": "gpt_image_2_6",
+    "aspect_ratio": "16:9",
+    "resolution": "2k",
+    "quality": "high",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "image_references",
+     "value": "df6ed723-6e14-4cb9-823c-3991aac82cf4"
+    }
+   ],
+   "prompt": "Reproduce the first reference image exactly - the same two women, the same faces, hair, clothes, brown headband, white gloves, the same poses and hands, the same room, window, plant, light and framing. Change only one thing: remove the black hair clips from the patient's hair completely. Her hair is simply parted in the middle; the pale parting line is clean and continuous from the headband to the crown. No clips, pins or any other accessories in her hair. Nothing else changes. Photorealistic. No text overlays, no captions, no watermark."
+  },
+  "K3Sp": {
+   "replaces": "K3Sn (she points at the screen)",
+   "params": {
+    "model": "gpt_image_2_6",
+    "aspect_ratio": "16:9",
+    "resolution": "2k",
+    "quality": "high",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "image_references",
+     "value": "227830d2-76f5-4921-85f5-afb077233737"
+    },
+    {
+     "role": "image_references",
+     "value": "ac962b09-1b11-4008-94c0-e80dd0eaf3ed"
+    },
+    {
+     "role": "image_references",
+     "value": "2c80c777-f658-4d1b-8769-cc58384c622a"
+    }
+   ],
+   "prompt": "Reproduce the first reference image exactly - the same tablet on its stand with the silver base on the white table in the left foreground with exactly the same magnified scalp image on its screen, the same cosmetologist pointing at the screen with the index finger of her gloved hand, the same seated patient with her head lowered, the same faces, hair, clothes, brown headband, white gloves, the same room, window, light and framing. Change only two things.\n1. Remove the black hair clips from the patient's hair completely: her hair is simply parted in the middle; no clips, pins or any other accessories in her hair.\n2. Change how the white handset in the cosmetologist's other hand is applied, exactly as in the second reference image: its front end - the small camera head at the tip - is pressed flat against the scalp exactly on the pale parting line on the top of the patient's head, with no gap between the device and the scalp; the body of the handset angles up and away from the head toward the cosmetologist's hand; the black oval label panel with the white word Mitoscan is on the upper side of the body; the thin white cable leaves the rear end of the handset, the end far from the head, and hangs down. The handset has exactly the shape, proportions, colours and markings of the device in the second and third reference images.\nThe screen image stays exactly as it is, with no circles, lines, numbers or text drawn on it. Nothing else changes. Photorealistic. No text overlays, no captions, no watermark.",
+   "check": "the word Mitoscan on the handset must be readable; the screen picture must be unchanged"
+  },
+  "K4p": {
+   "replaces": "K4c (the ampoule, people out of focus behind)",
+   "params": {
+    "model": "gpt_image_2_6",
+    "aspect_ratio": "16:9",
+    "resolution": "2k",
+    "quality": "high",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "image_references",
+     "value": "9bb35f0e-9d8d-4c13-9729-3ec7e067a9b1"
+    }
+   ],
+   "prompt": "Reproduce the first reference image exactly - the same glass ampoule in sharp focus held between gloved fingers in the foreground with exactly the same label, every letter unchanged, the same soft out-of-focus background with the same two women, the same room, window, light and framing. Change only one thing: in the out-of-focus background the patient's hair has no hair clips - remove the dark clip shapes from her hair completely; her hair is simply parted in the middle. The background stays exactly as soft and out of focus as it is. Nothing else changes. Photorealistic. No text overlays, no captions, no watermark.",
+   "check": "compare the ampoule label with K4c letter by letter; if it differs, paste the ampoule area from K4c with a feathered mask"
+  },
+  "K6p": {
+   "replaces": "K6 (massage)",
+   "params": {
+    "model": "gpt_image_2_6",
+    "aspect_ratio": "16:9",
+    "resolution": "2k",
+    "quality": "high",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "image_references",
+     "value": "aae386ea-8562-4182-8671-219c6ab03d1a"
+    }
+   ],
+   "prompt": "Reproduce the first reference image exactly - the same two women, the same faces, hair, clothes, brown headband, white gloves, the same hands with the fingertips resting on the patient's scalp in the same positions, the same room, window, plant, light and framing. Change only one thing: remove the black hair clips from the patient's hair completely. Her hair is simply parted in the middle; the pale parting line is clean and continuous from the headband to the crown. No clips, pins or any other accessories in her hair. Nothing else changes. Photorealistic. No text overlays, no captions, no watermark."
+  },
+  "K9p": {
+   "replaces": "K9n (the follow-up scan, the screen after the course)",
+   "params": {
+    "model": "gpt_image_2_6",
+    "aspect_ratio": "16:9",
+    "resolution": "2k",
+    "quality": "high",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "image_references",
+     "value": "615498a4-3405-46ed-9bf1-34535459b11b"
+    },
+    {
+     "role": "image_references",
+     "value": "ac962b09-1b11-4008-94c0-e80dd0eaf3ed"
+    },
+    {
+     "role": "image_references",
+     "value": "2c80c777-f658-4d1b-8769-cc58384c622a"
+    }
+   ],
+   "prompt": "Reproduce the first reference image exactly - the same tablet on its stand with the silver base on the white table in the left foreground with exactly the same magnified scalp image on its screen (the denser hair after the course), the same cosmetologist pointing at the screen with the index finger of her gloved hand, the same seated patient with her head lowered, the same faces, hair, clothes, brown headband, white gloves, the same room, window, light and framing. Change only two things.\n1. Remove the black hair clips from the patient's hair completely: her hair is simply parted in the middle; no clips, pins or any other accessories in her hair.\n2. Change how the white handset in the cosmetologist's other hand is applied, exactly as in the second reference image: its front end - the small camera head at the tip - is pressed flat against the scalp exactly on the pale parting line on the top of the patient's head, with no gap between the device and the scalp; the body of the handset angles up and away from the head toward the cosmetologist's hand; the black oval label panel with the white word Mitoscan is on the upper side of the body; the thin white cable leaves the rear end of the handset, the end far from the head, and hangs down. The handset has exactly the shape, proportions, colours and markings of the device in the second and third reference images.\nThe screen image stays exactly as it is, with no circles, lines, numbers or text drawn on it. Nothing else changes. Photorealistic. No text overlays, no captions, no watermark.",
+   "check": "the word Mitoscan on the handset must be readable (it vanished once before); the screen picture must be unchanged"
+  },
+  "K7p": {
+   "replaces": "K7 (the end of the visit)",
+   "params": {
+    "model": "gpt_image_2_6",
+    "aspect_ratio": "16:9",
+    "resolution": "2k",
+    "quality": "high",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "image_references",
+     "value": "07343cd6-4805-44cc-8ad4-5f56c7f88b40"
+    }
+   ],
+   "prompt": "Reproduce the first reference image exactly - the same two women, the same faces and smiles, hair, clothes, brown headband, white gloves, the same poses, the same room, window, plant, light and framing. Change only one thing: remove the black hair clips from the patient's hair completely. Her hair is simply parted in the middle; the pale parting line is clean and continuous from the headband to the crown. No clips, pins or any other accessories in her hair. Nothing else changes. Photorealistic. No text overlays, no captions, no watermark."
+  }
+ },
+ "clips": {
+  "T1p": {
+   "what": "pack (K0) -> consultation (K1p)",
+   "prompt_from": "T1",
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "21ebbd54-9029-469e-9c88-350599336c67"
+    },
+    {
+     "role": "end_image",
+     "value": "<K1p job>"
+    }
+   ],
+   "prompt": "The clip starts exactly on the first image and ends exactly on the last image: one continuous camera move inside the same bright treatment room, no cut, no fade. For the first half second everything is still: the closed matte black box and the five closed glass ampoules stand sharp on the marble table, the two women softly out of focus behind them. Then the camera rises smoothly from table height to chest height and glides forward over the table towards the two women, tilting gently downwards. The black box and the ampoules stay perfectly still, rigid and unchanged while the camera moves - their shape and their print never change - and they slide out of the frame at its bottom edge. At the same time the focus moves from the box to the two women, who become sharp. While the camera travels, the cosmetologist (the woman with long dark wavy hair in the white uniform, wearing thin white gloves) takes one calm step to stand just behind the white treatment chair, rests both gloved hands on the top of the chair back and leans in a little, looking down at the top of the patient's head; the seated patient (the woman with long straight black hair, a dark brown headband and a grey zip-up cardigan) slowly lowers her head a little and lowers her eyes. In the last half second the picture settles exactly into the last image and holds still. The two women are the same two people in every frame: their faces, their hair, the headband and their clothes never change. Nothing appears out of thin air and nothing turns into something else; no new objects; no text or captions; the camera never passes through a person or an object; nobody walks out of the room. Smooth, steady, slow cinematic camera; photorealistic; soft natural daylight. There are no clips, pins or other accessories in the patient's hair at any moment."
+  },
+  "T2p": {
+   "what": "consultation (K1p) -> MITOSCAN on the parting (K3p)",
+   "prompt_from": "T2",
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "<K1p job>"
+    },
+    {
+     "role": "end_image",
+     "value": "ac962b09-1b11-4008-94c0-e80dd0eaf3ed"
+    }
+   ],
+   "prompt": "The clip starts exactly on the first image and ends exactly on the last image: one continuous shot inside the same bright treatment room, no cut, no fade. For the first second the scene is as in the first image: the cosmetologist stands behind the white chair with both gloved hands resting on the top of the chair back, looking down along the parting in the patient's hair; the patient sits still, head bowed, eyes lowered. Then one calm action: the cosmetologist's gloved hand that is nearer the camera leaves the chair back, goes down and out of the frame at the lower left edge, and comes back up from the lower left edge holding a white handheld probe with a glossy black oval panel; a thin white cable trails from the probe's rear end, the end far from the head, out of the lower left edge of the frame. She brings the probe to the top of the patient's head and presses its front end - the small camera head at the tip - onto the scalp exactly on the pale parting line, with no gap between the probe and the scalp, and holds it there; the body of the probe angles up and away from the head toward her hand, the black panel on its upper side. At the same time her other gloved hand leaves the chair back and comes to rest flat and still on the top of the patient's hair on the far side of the parting. While this happens the camera eases very slightly lower and closer. The patient does not move: head bowed, eyes lowered, breathing calmly. In the last half second the picture settles exactly into the last image and holds still. From the moment the probe enters the frame it has exactly the shape, colour and white print it has in the last image; it never changes shape and never turns into anything else; it enters the frame only in her hand, across the lower left frame edge. The two women are the same two people in every frame: their faces, their hair, the straight parting, the brown headband, the white gloves and their clothes never change. No hair falls or moves out of place. Nothing appears out of thin air; no other objects; no screen, no tablet; no text or captions. Smooth, steady, slow; photorealistic; soft natural daylight. There are no clips, pins or other accessories in the patient's hair at any moment."
+  },
+  "S1p": {
+   "what": "MITOSCAN (K3p) -> she points at the screen (K3Sp); one clip instead of S1c + S1b",
+   "prompt_from": "S1b",
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "ac962b09-1b11-4008-94c0-e80dd0eaf3ed"
+    },
+    {
+     "role": "end_image",
+     "value": "<K3Sp job>"
+    }
+   ],
+   "prompt": "One continuous shot with no cuts, no dissolves and no fades. It begins exactly as the first frame: a cosmetologist in white gloves holds a slim white handset with its front end pressed onto the scalp exactly on the pale parting line of a seated patient, the body of the handset angled up and away from the head; the patient sits with her head bowed and her eyes lowered.\nThe patient does not move for the whole shot. The cosmetologist keeps the front end of the handset pressed on the pale parting line with one hand and holds it still there.\nThe camera moves from the very first frame: it glides slowly and smoothly to the left and downward and pulls back a little. A tablet standing on a small round white table slides into the left foreground and comes into sharp focus; its screen shows a magnified camera view of the scalp: pinkish skin with a few dark hair shafts crossing it.\nDuring the second half of the move the cosmetologist turns her eyes to the screen and calmly reaches her free gloved hand to the tablet, pointing with her index finger at one spot of the picture; she holds the pointing gesture. Nobody stands up, turns away or looks at the camera.\nThe move ends exactly on the last frame and the last half second is still. The picture on the tablet screen is a plain photographic camera view the whole time: no circles, no marks, no drawn lines, no interface, no text, no numbers.\nEvery frame is one solid photographic image: never a cross-fade, a dissolve, a double exposure or a ghost image. Soft daylight, the same room throughout. No text overlays, no captions, no logos. There are no clips, pins or other accessories in the patient's hair at any moment."
+  },
+  "T3p": {
+   "what": "MITOSCAN (K3p) -> the ampoule (K4p)",
+   "prompt_from": "T3",
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "ac962b09-1b11-4008-94c0-e80dd0eaf3ed"
+    },
+    {
+     "role": "end_image",
+     "value": "<K4p job>"
+    }
+   ],
+   "prompt": "The clip starts exactly on the first image and ends exactly on the last image: one continuous shot inside the same bright treatment room, filmed in a single take, no cut, no fade. For the first second the scene is as in the first image: the cosmetologist holds the white handheld probe with its front end pressed onto the scalp on the patient's pale parting line, her other gloved hand holding the hair aside next to the parting; the patient sits still, head bowed, eyes lowered. Then one calm action: the hand with the probe takes the probe away from the head and carries it down and out of the frame at the lower left edge, the white cable following it out. A moment later the same gloved hand comes back up from the lower left corner into the near foreground, close to the camera, holding one small closed glass ampoule upright by its foot between the tips of thumb and index finger. As the hand comes close, the focus moves from the two women to the ampoule and the camera eases a little closer to it: the ampoule becomes perfectly sharp, and the two women, the chair, the plant and the window behind it become soft and far out of focus. The cosmetologist's other hand stays resting on the patient's hair the whole time; the patient does not move. In the last half second the picture settles exactly into the last image and holds still. From the moment the ampoule enters the frame it has exactly the shape, size and black print it has in the last image: a clear glass ampoule with a white ring at its neck and clear liquid inside; it is closed and intact, it never changes shape, it never opens, nothing drips. It enters the frame only in her hand, across the lower left frame edge. The two women are the same two people in every frame: their faces, their hair, the brown headband, the white gloves and their clothes never change. Every frame is one solid photographic image: never a cross-fade, a dissolve, a double exposure, a ghost image or a transparent overlay. Nothing appears out of thin air and nothing turns into something else; no other objects; no text or captions. Smooth, steady, slow; photorealistic; soft natural daylight. There are no clips, pins or other accessories in the patient's hair at any moment."
+  },
+  "T4p": {
+   "what": "the ampoule (K4p) -> the treatment: pen and syringe (K5p)",
+   "prompt_from": "T4b",
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "<K4p job>"
+    },
+    {
+     "role": "end_image",
+     "value": "29ddfcc5-c524-4a70-92f4-eaac608f8de2"
+    }
+   ],
+   "prompt": "The clip starts exactly on the first image and ends exactly on the last image: one continuous shot inside the same bright treatment room, filmed in a single take, no cut, no fade. For the first second the scene is as in the first image: a white-gloved hand holds one closed glass ampoule upright, sharp in the near foreground, perfectly still; the two women behind it are far out of focus. Then one calm action: the hand lowers the ampoule and carries it down and out of the frame at the lower left corner. As it leaves, the focus moves back to the two women, who become sharp, and the camera moves slowly forward to a closer shot of the cosmetologist leaning over the top of the patient's head. Then both of her gloved hands come up from below the frame, each already holding its tool: one hand holds a slim champagne-gold pen with a rose-gold ring, held at a slant like a pencil, and sets its lower end on the pale line of the parting in the patient's hair; the other hand holds a small slim plastic syringe without a needle, pointing down a few centimetres above the parting beside the pen, with one clear drop at its tip. The patient sits still, head bowed, eyes closed, calm. In the last half second the picture settles exactly into the last image and holds still. While the ampoule is in the frame it stays closed, intact and unchanged; it leaves only in her hand, across the lower left frame edge. From the moment the pen and the syringe enter the frame they have exactly the shape, colours and print they have in the last image and never change shape; the pen has no cable; the syringe has no needle. The two women are the same two people in every frame: their faces, their hair, the straight parting, the brown headband, the white gloves and their clothes never change. Every frame is one solid photographic image: never a cross-fade, a dissolve, a double exposure, a ghost image or a transparent overlay. Nothing appears out of thin air and nothing turns into something else; no other objects; no blood, no red dots; no text or captions. Smooth, steady, slow; photorealistic; soft natural daylight. There are no clips, pins or other accessories in the patient's hair at any moment."
+  },
+  "T5p": {
+   "what": "the pen works along the parting (K5p -> K6p); in version 3 only frames 1-40 were usable",
+   "prompt_from": "T5b",
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "29ddfcc5-c524-4a70-92f4-eaac608f8de2"
+    },
+    {
+     "role": "end_image",
+     "value": "<K6p job>"
+    }
+   ],
+   "prompt": "The clip starts exactly on the first image and ends exactly on the last image: one continuous shot inside the same bright treatment room, filmed in a single take, no cut, no fade. For the first second and a half the scene is as in the first image and the pen is at work: the cosmetologist moves the champagne-gold pen slowly a few centimetres along the parting towards the crown, in small gentle steps, held at a slant like a pencil, its lower end staying on the scalp; with her other hand she lets one clear drop fall from the small syringe onto the parting just ahead of the pen. Then one calm action: she lifts both tools off and carries them down and out of the frame at the lower edge; a moment later both gloved hands come back up empty, and the fingertips of both hands settle on the patient's scalp on either side of the parting and begin small, slow circular massage movements, while the camera eases back to a slightly wider shot. The patient sits still the whole time, head bowed, eyes closed, relaxed. In the last half second the picture settles exactly into the last image and holds still. The pen and the syringe keep exactly their shape, colours and print until they leave the frame; the pen has no cable, the syringe has no needle; they leave only in her hands, across the lower frame edge. The scalp along the parting shows only a thin moist sheen: no blood, no red dots, no foam. The two women are the same two people in every frame: their faces, their hair, the straight parting, the brown headband, the white gloves and their clothes never change. No hair falls or moves out of place. Every frame is one solid photographic image: never a cross-fade, a dissolve, a double exposure, a ghost image or a transparent overlay. Nothing appears out of thin air and nothing turns into something else; no other objects; no text or captions. Smooth, steady, slow; photorealistic; soft natural daylight. There are no clips, pins or other accessories in the patient's hair at any moment."
+  },
+  "D1p": {
+   "what": "the treatment (K5p) -> dive into the parting -> the cut-away (Y1n)",
+   "prompt_from": "D1c",
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "29ddfcc5-c524-4a70-92f4-eaac608f8de2"
+    },
+    {
+     "role": "end_image",
+     "value": "96f1cffe-e51b-481c-9ff7-795e9176b41f"
+    }
+   ],
+   "prompt": "One continuous shot, no cuts. The camera pushes in smoothly and quickly from the treatment scene toward the pale parting line on the top of the head, right beside the lower end of the pen, glides down between the hairs to the scalp surface, and the view opens into a clean scientific hair-care illustration: a cut-away of the scalp with one hair fibre in its follicle and, beside it, four short narrow micro-channels in the upper layer, with small golden serum droplets resting on the scalp surface above them. The inside of the cut-away is calm and pink, with no gold inside yet. Continuous camera move with natural motion blur in the middle, slowing down smoothly; the last second is nearly still and equals the last frame. Soft warm daylight, no text, no captions, no arrows. There are no clips, pins or other accessories in the patient's hair at any moment."
+  },
+  "D2p": {
+   "what": "massage (K6p) -> the cut-away with the serum (Y2m); runs backwards in the film",
+   "prompt_from": "D2x",
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "<K6p job>"
+    },
+    {
+     "role": "end_image",
+     "value": "7b8cfdd3-9d05-4f69-b7ad-14344fad7798"
+    }
+   ],
+   "prompt": "One continuous shot with no cuts, no dissolves and no fades. It begins exactly as the first frame: a cosmetologist in white gloves massages the scalp of a seated patient with the fingertips of both hands on either side of the hair parting. The two women do not change their poses; hands and heads stay where they are.\nOnly the camera moves: it pushes in fast and smoothly toward the hair parting between her fingertips - a macro dive. The dark hair strands grow large and sweep past the lens, the pale skin of the scalp fills the frame, and the camera comes down to the level of the skin surface among the hairs. The view settles on the last frame: one hair growing out of its follicle with the skin in front of it cut away, beside it four short narrow micro-channels filled with softly glowing golden serum, and a soft golden mist of fine particles spreading from their tips through the deeper layer to the gently glowing hair bulb.\nThe move accelerates gently, has natural motion blur in the middle and slows down smoothly; the last second is nearly still and equals the last frame. The light stays bright, warm and beige throughout. No text, no captions, no logos, no arrows, no needles, no instruments. There are no clips, pins or other accessories in the patient's hair at any moment."
+  },
+  "E1p": {
+   "what": "massage (K6p) -> the window, out of focus (W)",
+   "prompt_from": "E1",
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "<K6p job>"
+    },
+    {
+     "role": "end_image",
+     "value": "6c9e72fb-0455-4d1d-8a28-93cecb7c512c"
+    }
+   ],
+   "prompt": "One continuous shot with no cuts, no dissolves and no fades. It begins exactly as the first frame: a cosmetologist massages a seated patient's scalp with both hands in white gloves. The two women keep doing exactly this for as long as they are in the frame: the hands stay on the head with small gentle movements; nobody turns, stands up or looks at the camera.\nOnly the camera moves: from the very first frame it pans slowly and smoothly to the right, away from the women and toward the window. The women slide out of the left edge of the frame. As the camera turns, the focus falls off, until the large white-framed window with green foliage outside fills the frame, strongly out of focus, exactly as in the last frame. The last half second is still.\nSoft daylight, the same room throughout. No text, no captions, no logos. There are no clips, pins or other accessories in the patient's hair at any moment."
+  },
+  "E2p": {
+   "what": "the window (W) -> the follow-up scan (K9p)",
+   "prompt_from": "E2b",
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "6c9e72fb-0455-4d1d-8a28-93cecb7c512c"
+    },
+    {
+     "role": "end_image",
+     "value": "<K9p job>"
+    }
+   ],
+   "prompt": "One continuous shot with no cuts, no dissolves and no fades. It begins exactly as the first frame: a large white-framed window with green foliage outside, strongly out of focus.\nOnly the camera moves: from the very first frame it pans slowly and smoothly to the left and tilts downward, away from the window. Into the frame come a seated patient with her head lowered and a cosmetologist in white gloves who holds a slim white handset with its front end pressed onto the scalp on the patient's pale parting line, the body of the handset angled up and away from the head, with one hand and points with the index finger of her other hand at a tablet screen. The two women are already in exactly these poses when they enter the frame and they hold them for the rest of the shot, with only tiny natural movements; nobody turns, stands up or looks at the camera.\nThe tablet, standing on a small round white table, slides into the left foreground and comes into sharp focus; its screen shows a magnified camera view of the scalp: pinkish skin with dark hair shafts. The move ends exactly on the last frame and the last half second is still.\nThe picture on the tablet screen is a plain photographic camera view the whole time: no circles, no marks, no drawn lines, no interface, no text.\nEvery frame is one solid photographic image: never a cross-fade, a dissolve, a double exposure or a ghost image. Soft daylight, the same room throughout. No text overlays, no captions, no logos. There are no clips, pins or other accessories in the patient's hair at any moment."
+  },
+  "E3p": {
+   "what": "the follow-up scan (K9p) -> the end of the visit (K7p)",
+   "prompt_from": "E3b",
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "<K9p job>"
+    },
+    {
+     "role": "end_image",
+     "value": "<K7p job>"
+    }
+   ],
+   "prompt": "One continuous shot with no cuts, no dissolves and no fades. It begins exactly as the first frame: in the left foreground a tablet on a small white table; behind it a cosmetologist in white gloves holds a slim white handset with its front end pressed onto the scalp on the pale parting line of a seated patient, the body of the handset angled up and away from the head, and points with her other hand at the tablet screen.\nFrom the first frame the camera rises and glides forward and to the right, past the tablet, which slides out of the lower left corner of the frame and is not seen again; the two women stay in sharp focus.\nDuring the first second the cosmetologist draws her pointing hand back and lifts the handset off the patient's head, lowering it out of the frame to the lower left. Then she takes one calm step to stand beside the chair, on the patient's right-hand side as we see it at the left of the frame, and brings her gloved hands together in front of her. At the same time the patient slowly raises her head, turns it a little toward the cosmetologist and looks up at her with a light, relaxed smile. The movements are slow and continuous; nobody leaves the frame.\nThe shot ends exactly on the last frame and the last half second is still. Every frame is one solid photographic image: never a cross-fade, a dissolve, a double exposure or a ghost image. Soft daylight, the same room throughout. No text overlays, no captions, no logos. There are no clips, pins or other accessories in the patient's hair at any moment."
+  },
+  "T7p": {
+   "what": "the end pack (K0E) -> the end of the visit (K7p); runs backwards in the film",
+   "prompt_from": "T7c",
+   "params": {
+    "model": "kling4_0",
+    "mode": "image-to-video",
+    "resolution": "1080p",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "use_unlim": false,
+    "count": 1
+   },
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "71d066df-6cf0-46b9-a851-abb2f5ffde1f"
+    },
+    {
+     "role": "end_image",
+     "value": "<K7p job>"
+    }
+   ],
+   "prompt": "The clip starts exactly on the first image and ends exactly on the last image: one real, physical camera move inside the same bright treatment room, filmed in a single unbroken take. From the very first frame the camera rises slowly and steadily from table height to the seated patient's eye level and travels forward over the table towards the two women, moving continuously and evenly until the last frame. The closed matte black box and the five closed glass ampoules stay perfectly still, rigid and unchanged while the camera moves - their shape and their print never change - and they slide out of the frame at its bottom edge. The focus moves gradually from the box to the two women, who become sharp as the camera approaches. The two women keep the poses they have in the first image for the whole clip: the seated patient (long straight black hair, dark brown headband, grey zip-up cardigan) sits upright with her head turned a little towards the cosmetologist, looking up at her with a slight smile; the cosmetologist (long dark wavy hair, white uniform, thin white gloves) stands beside the white treatment chair with her gloved hands held loosely together in front of her, looking at the patient. As the camera approaches, the cosmetologist shifts her weight and moves half a small step closer to the chair; apart from that only tiny natural movements: breathing, one slow blink. Nobody speaks, nobody raises a hand, nobody turns away. The picture arrives exactly at the last image at the end. There is no cut, no jump and no scene change anywhere in the clip; there is never a cross-fade, a dissolve, a double exposure, a ghost image or a second transparent copy of a person: every frame is one solid photographic image of the room as the moving camera sees it at that moment. The two women are the same two people in every frame: their faces, their hair, the headband and their clothes never change. Nothing appears out of thin air and nothing turns into something else; no new objects; no text or captions; the camera never passes through a person or an object. Smooth, steady, slow cinematic camera; photorealistic; soft natural daylight. There are no clips, pins or other accessories in the patient's hair at any moment."
+  }
+ },
+ "assembly_v4": [
+  "hold T1p 25 x61 | T1p 26-120 | T2p 1-120",
+  "S1p 0-120 (121) | hold S1p 120 x36 | S1p 118-0 every 2nd, reversed (60)     = 217 frames, as in version 3",
+  "T3p 1-120 | T4p 1-120",
+  "T5p 1-40 | T5p 39-1 reversed      (as in version 3; if the whole clip is clean, decide after viewing)",
+  "D1p 0-120 every 2nd (61) | BL3 0-120 (121, the old clip) | D2p 0-120 every 2nd, reversed (61)",
+  "E1p 1-120 | E2p 0-120 (121) | hold E2p 120 x36 | E3p 1-120     (version 3 has 126 frames here with the bridge BE3: keep the chapter marks or move them)",
+  "T7p 0-119 reversed | hold T7p 0 x60",
+  "vertical-keys.json: the framing of the stills is unchanged, so start from the version 3 keys and check them with window-view.py"
+ ],
+ "estimate": "6 stills x 2.75 = 16.5; 12 clips x 18.75 = 225; total 241.5; with a third in reserve for retakes about 320",
+ "smaller_option": "only the MITOSCAN scenes (the hair clips stay): stills K3, K3Sn, K9n with the handset on the parting and the clips kept, clips T2, S1, T3, E2, E3 - about 120, with reserve about 160. Not recommended: the second remark stays."
+}
