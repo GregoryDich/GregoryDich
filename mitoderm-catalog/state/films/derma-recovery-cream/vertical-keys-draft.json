@@ -1,0 +1,20 @@
+{
+  "comment": [
+    "DERMA RECOVERY CREAM, the phone film of the DRAFT (film-draft-16x9.spec): a moving window over the desktop film.",
+    "Each key: frame, left edge of the window (% of the frame width), window width (%), top of the window on the phone canvas (%).",
+    "0-300 the box and the faces, the window does not move while the clinic becomes her home; 340-404 she applies the",
+    "cream; 440-494 the skin cut-away; 530-612 she after the cream; 648-880 the window is back on the box."
+  ],
+  "keys": [
+    [0, 5, 58, 10],
+    [300, 5, 58, 10],
+    [340, 21, 52, 12],
+    [404, 21, 52, 12],
+    [440, 3, 58, 9],
+    [494, 3, 58, 9],
+    [530, 21, 52, 12],
+    [612, 21, 52, 12],
+    [648, 5, 58, 10],
+    [880, 5, 58, 10]
+  ]
+}

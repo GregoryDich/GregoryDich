@@ -1,0 +1,23 @@
+{
+  "slug": "derma-recovery-cream",
+  "frames": 881,
+  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/ce60ba8d-dc84-4023-9c50-cb21ede04b1e.mp4",
+  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/ec7ee343-f634-4fc2-ab7f-b01a510f9ecf.mp4",
+  "comment": [
+    "A DRAFT film, built without paid clips, that stands on the page until the three clips are shot: the cream as the",
+    "last step in the clinic, the same box in the morning at her home, the cream, into the skin and out, the box,",
+    "the clinic again. Every frame is an approved still with the real box placed into it; the camera moves are",
+    "enlargements of the stills and the scenes are joined by soft focus, so the people do not move yet",
+    "(state/films/derma-recovery-cream/film-draft-16x9.spec). 1912x1080 and 1080x1920, 881 frames."
+  ],
+  "chapters": [
+    {"start": 0, "end": 80, "note": "01 the pack in the clinic", "shot": "Упаковка в клинике", "type": "pack", "section": 1},
+    {"start": 80, "end": 190, "note": "02 the cream after the treatment", "shot": "Крем — последний шаг процедуры", "type": "procedure", "section": 2},
+    {"start": 190, "end": 422, "note": "03 at home in the morning: the cream", "shot": "Дома утром: у зеркала, наносит крем", "type": "home", "section": 5},
+    {"start": 422, "end": 510, "note": "04 inside the skin", "shot": "Внутри кожи: без спикул, защитный слой", "type": "procedure", "section": 3},
+    {"start": 510, "end": 630, "note": "05 after: the skin is comfortable", "shot": "После: коже комфортно", "type": "home", "section": 4},
+    {"start": 630, "end": 700, "note": "06 the pack at home", "shot": "Упаковка дома", "type": "pack", "section": 6},
+    {"start": 700, "end": 767, "note": "07 the same pack in the clinic", "shot": "Та же упаковка в клинике", "type": "pack", "section": 7},
+    {"start": 767, "end": 881, "note": "08 the cosmetologist and the patient", "shot": "Косметолог и пациентка", "type": "patient", "section": 8}
+  ]
+}
