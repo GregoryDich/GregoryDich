@@ -35,8 +35,16 @@
       ]
     },
     {
-      "page": "CELLULAR AGE DEFENSE 2.5% — лист всех кадров («ок» получен 21/11, ролики впереди)",
+      "page": "CELLULAR AGE DEFENSE 2.5% — страница с фильмом (ждёт просмотра)",
       "links": [
+        {
+          "label": "ФИЛЬМ ЦЕЛИКОМ, компьютер (16:9)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/fa56fa9b-6a1d-4f20-8557-842e8c6779ff.mp4"
+        },
+        {
+          "label": "ФИЛЬМ ЦЕЛИКОМ, телефон (9:16)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/a8d9d2a6-d06f-4d34-beea-8293664a676e.mp4"
+        },
         {
           "label": "Семь кадров страницы: клиника — дом — клиника; коробка — настоящий рендер",
           "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/646641db-c6f3-4873-877b-0708f43a6e8e.jpg"
