@@ -45,6 +45,8 @@
   | CELL RENEW 1.5% | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/16de4ecb-fb9d-46cc-bc23-348d6b79eb08.mp4 | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/d5a839d1-02f2-4e66-8d95-69fbc8bf2c89.mp4 |
   | CELLULAR AGE DEFENSE 2.5% | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/8f856bb5-912d-474e-a014-e2aee0e232a8.mp4 | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/2ad81426-07ea-4ce4-9690-b0bfae3669dd.mp4 |
   | MITOTECH CELL BOOSTER | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/291d5f98-bed5-46f0-ad8a-0cc0c563b508.mp4 | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/450956b2-8bda-4bfb-95e9-57a633aec832.mp4 |
+  | MITOPEN (черновой фильм) | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/07237c66-0ad2-4100-b22d-a60842b1f111.mp4 | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/60d636b4-051c-463c-849a-3e0a01aad48e.mp4 |
+  | DERMA RECOVERY CREAM (черновой фильм) | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/b1363912-aa51-497d-bf21-73bfe0c03c09.mp4 | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/13bcb43a-2d01-4419-ac4d-c6a5a87ef276.mp4 |
 
 ## CELLULAR AGE DEFENSE 2.5% — страница с фильмом, проверена (21/11, 22:27)
 - **Три ролика 1080p (3,21 $), все годятся с первого раза:** T3 `348457f9042a4d6e928e2ad21eabcdf9` (камера подходит,
@@ -1431,6 +1433,7 @@ _Время в записях 20/11 — по часам контейнера (И
 Все вопросы и варианты по умолчанию — в `QUESTIONS.md` (открыты 4–7 и 9–12). Работу они не останавливают.
 
 ## Журнал (новое сверху)
+- 21/11 23:47 — записи прокрутки MITOPEN и DERMA RECOVERY CREAM загружены; статическая копия сайта для тестовой ссылки пересобрана со всеми новыми страницами (временная папка `site-test/mitoderm-test-site.zip`, 9,7 МБ).
 - 21/11 23:36 — **DERMA RECOVERY CREAM: черновой фильм из утверждённых кадров подключён и проверен** (движение камеры `still-zoom.sh`, без платных роликов). Шкала 85 %.
 - 21/11 23:21 — **MITOPEN: черновой фильм собран без платных роликов, подключён и проверен** (настоящее перо, покадровые наезды камеры, микроканалы из фильма EXOSIGNAL HAIR). Шкала 83 %.
 - 21/11 23:03 — записи прокрутки MICRO BOOST 10%, CELL RENEW 1.5%, CELLULAR AGE DEFENSE 2.5% и MITOTECH CELL BOOSTER (компьютер и телефон) загружены, ссылки — на странице готовности.
