@@ -1,0 +1,32 @@
+{
+  "note": "MITOPEN: records of the paid jobs and of the frames built without generation. The device is never drawn by a model.",
+  "tool": "../tools/atlas.py (stills: openai/gpt-image-2.6-sunburst/edit 2688x1520 high)",
+  "references": {
+    "clinic room": "MICRO BOOST 10% still K0 (requests.json of micro-boost-10, frames.K0)",
+    "cosmetologist photo": "90121c86-7093-44bb-a03d-ebc0648e392c (Higgsfield media)",
+    "patient P2 sheet": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/96ccd4c1-40f8-4075-8022-930194fa079e.jpg",
+    "the real pen": "codex-site/public/assets/products/mitopen.webp (466x1521, cut out)"
+  },
+  "stills": {
+    "A": {
+      "what": "clinic plate WITHOUT any device: the cosmetologist in gloves studies the skin of the patient, a folded white towel lies on the table",
+      "images": [
+        "clinic room",
+        "cosmetologist photo",
+        "patient P2 sheet"
+      ],
+      "prediction": "4441009c03ba4f3a9a93c61a08076250",
+      "cost_usd": 0.078,
+      "verdict": "good at the first try",
+      "prompt": "Photorealistic cinematic still, 16:9, soft natural daylight. The bright treatment room of a skin-care clinic from the first reference image - pale warm-beige walls, the large white-framed window with green foliage outside, the white leather treatment couch, the potted ficus - seen from a low camera at the height of a light marble table whose polished top runs along the bottom 15 percent of the frame. The carton box of the reference image is not there. On the table top, in the lower left of the frame between 4 and 40 percent of the frame width, lies one small clean white cotton towel folded flat into a neat low rectangle; nothing lies on the towel and nothing else is on the table. Behind the table, in sharp focus, a woman and a man sit facing each other. The cosmetologist is the woman from the second reference image (about 30, long dark wavy hair, white uniform with thin pink piping, a pendant with a blue stone on a black cord, white disposable gloves on both hands); she leans slightly toward the patient and studies the skin of his face: the gloved fingertips of one hand rest lightly on his cheek near the jaw line. The patient is the man from the third reference image (30-35, short black hair, light stubble, a black turtleneck sweater, a thin silver chain); he sits upright and calm, looking at the cosmetologist; on his cheeks a few faint reddish marks left by old inflammation - natural, not exaggerated. The cosmetologist's face is at about 40 percent of the frame width and the patient's face at about 56 percent; between the left edge and 30 percent of the frame width there is only the table with the towel and the softly lit room behind it. The right third of the frame is calm empty background. Her hands are empty: no device, no pen, no tool, no bottle, no box, no products anywhere, no captions, no text."
+    }
+  },
+  "built_without_generation": {
+    "K0": "build-pen-frames.py <A plate> <pen cut-out> <out dir> - the pen sharp on the towel, the room soft",
+    "K1": "the same call - the people sharp, the pen and the near table soft",
+    "K2": "build-pen-frames.py <A plate> <pen cut-out> <out dir> zoom=2 - the camera at the pen; the pen is taken from the full-size cut-out",
+    "camera move": "any zoom between 1 and 2 gives a frame of a free push-in"
+  },
+  "sample_sheet": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/99fc0d32-15a4-400e-ad90-3efc40290419.jpg",
+  "spent": "0.078 USD (balance 0.136 -> 0.057, 21/11)"
+}
