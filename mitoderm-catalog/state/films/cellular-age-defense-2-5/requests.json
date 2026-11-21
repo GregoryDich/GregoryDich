@@ -1,0 +1,155 @@
+{
+  "note": "CELLULAR AGE DEFENSE 2.5%: a lean connected film (clinic -> home -> clinic; 7 frames, 6 paid clips, two free dissolves). All frames are ready; the sheet went to the owner on 21/11, 20:07. Stills first, one sheet to the owner, the clips only after his ok (the money rule of 21/11).",
+  "tool": "../tools/atlas.py (stills: openai/gpt-image-2.6-sunburst/edit 2688x1520 high; clips: kwaivgi/kling-v4.0/image-to-video 720p 5 s)",
+  "references": {
+    "patient P5 sheet": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/6dbf5621-c5ca-4c4e-92d4-a2ba10bb1bd3.jpg",
+    "cosmetologist photo": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/90121c86-7093-44bb-a03d-ebc0648e392c.jpg",
+    "clinic room (MICRO BOOST K0)": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261121_064115_8231f212-8f68-4043-b77e-9125749fbc6a.png",
+    "inside-skin look (MICRO BOOST Y2)": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-07a2c19a61414f1de9d814f457648e830eea5bf81a60d4426151f14f48c12afc/7be8845559da4527a745b207af02f865-317056795c87ef39.png"
+  },
+  "box_rule": "the model never draws the box: scenes are generated without it and the real render (site/design/biospicule/ref/cellular-age-defense-2-5-angle.webp) is placed by ../tools/place-pack.py. Only the closed box; no bottle (there is no real photo of it).",
+  "stills": {
+    "C": {
+      "what": "clinic plate WITHOUT the box: the cosmetologist studies the patient's skin, both in sharp focus",
+      "images": [
+        "clinic room (MICRO BOOST K0)",
+        "cosmetologist photo",
+        "patient P5 sheet"
+      ],
+      "prompt": "Photorealistic cinematic still, 16:9, soft natural daylight. The bright treatment room of a skin-care clinic from the first reference image - pale warm-beige walls, the large white-framed window with green foliage outside, the white leather treatment couch, the potted ficus - seen from a low camera at the height of a light marble table whose polished top runs along the bottom 15 percent of the frame. The table top is empty and clean: the carton box of the reference image is not there, nothing stands on the table. Behind the table, in sharp focus, two women sit facing each other. The cosmetologist is the woman from the second reference image (about 30, long dark wavy hair, white uniform with thin pink piping, a pendant with a blue stone on a black cord, white disposable gloves on both hands); she leans slightly toward the patient and studies the skin of her face: the gloved fingertips of one hand rest lightly at the patient's cheekbone near the outer corner of the eye. The patient is the woman from the third reference image (late fifties, very short cropped platinum-blond hair, small earrings, a soft pink satin blazer over a cream top, a fine silver necklace); she sits upright and calm, looking at the cosmetologist; mature skin with fine lines around the eyes and mouth, a slight loss of firmness and a slightly dull tone - natural, not exaggerated. The cosmetologist's face is at about 38 percent of the frame width and the patient's face at about 53 percent; between the left edge and 28 percent of the frame width there is only the empty table top and the softly lit room behind it. The right third of the frame is calm empty background. No box, no bottle, no products anywhere, no captions, no text."
+    },
+    "H": {
+      "what": "home plate WITHOUT the box: evening, the patient at her dressing table studies her skin (the camera stands where the mirror is)",
+      "images": [
+        "patient P5 sheet"
+      ],
+      "prompt": "Photorealistic cinematic still, 16:9, warm soft evening light. A calm bedroom dressing table seen from the place of its mirror - the camera looks out of the mirror into the room: warm off-white walls, a softly glowing lamp in the blurred background on the right, a linen curtain, and the pale polished stone top of the dressing table running along the bottom 15 percent of the frame, empty and clean - nothing stands on it. In sharp focus sits the woman from the reference image (late fifties, very short cropped platinum-blond hair, small earrings), wearing a cream satin robe, bare clean skin without make-up. She faces the camera as if facing her mirror, leaning slightly toward it, and studies her skin: the fingertips of her right hand touch the skin near the outer corner of her eye; her eyes look at her own reflection, slightly off the lens. Her skin: mature skin with fine lines around the eyes and mouth, a slight loss of firmness and a slightly dull tone - natural, not exaggerated. Her face is at about 45 percent of the frame width; between the left edge and 28 percent of the frame width there is only the empty table top and the softly lit room behind it. The right third of the frame is calm empty background. No box, no bottle, no jar, no products anywhere, no captions, no text."
+    },
+    "H2": {
+      "what": "closer: she gently massages the serum into her cheeks with the fingertips of both hands",
+      "images": [
+        "<H>",
+        "patient P5 sheet"
+      ],
+      "prompt": "Photorealistic cinematic still, 16:9. The same woman at the same dressing table and in the same warm evening light as in the first reference image, a moment later; the camera, still at the place of her mirror, has come closer: a medium close-up of her head and shoulders, her face at about 40 percent of the frame width. She is the woman from the second reference image (late fifties, very short cropped platinum-blond hair, small earrings), in the same cream satin robe. She gently massages a serum into her face with the pads of the fingers of both hands resting flat on her cheeks - light upward strokes and small circles, no pressure, no rubbing, no stretching of the skin; her eyes are softly closed, her face calm. Where the serum is, her skin has a thin, even, moist sheen; the skin is the same as before: fine lines around the eyes and mouth, natural. The right third of the frame stays calm softly blurred background. No bottle, no dropper, no cotton pad, no tools, no products, no text."
+    },
+    "H3": {
+      "what": "the same close framing: she smooths a white cream over her face (the recovery cream)",
+      "images": [
+        "<H2>",
+        "patient P5 sheet"
+      ],
+      "prompt": "The same framing, the same woman, dressing table and warm evening light as in the first reference image, a few minutes later - change only what she is doing. Now she is applying a white cream: a few small dabs of white cream on her cheek, forehead and chin, and with the fingertips of her right hand she smooths the cream across her cheek in a light upward stroke; her left hand is lowered out of the frame. Her eyes are open and look at her own reflection, slightly off the lens, with a relaxed, content expression. Her skin looks calmer, smoother and fresher, with a soft healthy glow; the fine lines are still there, natural. Same cream satin robe and earrings; her face at about 40 percent of the frame width; the right third calm softly blurred background. No jar, no tube, no bottle, no products in the frame, no text."
+    },
+    "Yd": {
+      "what": "inside the skin: more short spicules than at 1.5 %, in the upper layer; the formula follows along the opened paths",
+      "images": [
+        "inside-skin look (MICRO BOOST Y2)"
+      ],
+      "prompt": "Scientific skin-care illustration in exactly the visual style of the first reference image: the same clean cut-away of the skin, the same rounded cells of the upper layer and pink wavy fibres of the deeper layer, the same colours and soft warm light, the same empty softly blurred area on the right 40 percent of the frame. Facial skin: no hair, no follicles. Differences from the reference: there are about fifteen very thin, short, straight, glass-like translucent micro-spicules, all of the same short length, standing only in the upper cell layer; none of them reaches the deeper layer; they are spaced apart and do not cross. Beside each spicule there is a fine open microscopic path. A thin film of clear serum with a soft golden tint lies on the skin surface, and fine golden droplets of the formula follow the open paths down along the spicules and spread gently among the cells of the upper layer down to its lower edge - a soft restrained glow, no flood, no beams; the deeper pink layer stays calm. No arrows, no text, no labels, no numbers, no instruments, no hands, no people."
+    }
+  },
+  "clips": {
+    "T1": {
+      "from_to": "C1 -> C2 (also played backwards and once more at the end)",
+      "prompt": "One continuous shot, no cuts; the camera stays in place with only a barely noticeable drift. The focus moves smoothly from the cream carton box in the left foreground to the two women behind it: the box goes softly out of focus and the women become sharp. The cosmetologist in the white uniform and white gloves leans slightly closer and studies the skin of the patient's face, her gloved fingertips resting lightly at the cheekbone; the patient sits calm and looks at her. Natural small movements, soft daylight. The box does not move. No text, no captions."
+    },
+    "T2": {
+      "from_to": "H0 -> H1",
+      "prompt": "One continuous shot, no cuts; the camera stays in place with only a barely noticeable drift. The focus moves smoothly from the cream carton box in the left foreground to the woman behind it: the box goes softly out of focus and the woman becomes sharp. She leans a little toward her mirror - toward the camera - and touches the skin near the outer corner of her eye with her fingertips, studying her skin. Natural small movements, warm evening light. The box does not move and its print does not change. No text, no captions."
+    },
+    "T3": {
+      "from_to": "H1 -> H2",
+      "prompt": "One continuous shot, no cuts. The camera moves slowly and smoothly forward, past the carton box, which slides out of the frame at the lower left, toward the woman until she is in a medium close-up. As the camera comes closer she softly closes her eyes and begins to massage a serum into her cheeks with the pads of the fingers of both hands - light upward strokes and small even circles, no pressure, no rubbing. A thin moist sheen appears on her skin where her fingers pass. Calm, gentle, natural movement. No bottle, no products appear. No text."
+    },
+    "D1": {
+      "from_to": "H2 -> Yd",
+      "prompt": "One continuous shot, no cuts. For the first moment the woman keeps massaging her cheeks with light upward strokes of her fingertips; then the camera pushes in smoothly toward her cheek beside her fingers: the skin grows large and fills the frame, the camera comes down to the level of the skin surface, and the view opens into a clean scientific skin-care illustration: a cut-away of the skin with thin short glass-like spicules standing in the upper cell layer and fine golden droplets following the open paths beside them. One continuous camera move with no jump; soft warm light. No text, no labels, no arrows."
+    },
+    "D2": {
+      "from_to": "H3 -> Yd (played backwards in the film: out of the skin to the cream)",
+      "prompt": "One continuous shot, no cuts. The woman smooths white cream over her cheek with her fingertips; the camera pushes in smoothly toward her cheek: the skin grows large and fills the frame, the camera comes down to the level of the skin surface, and the view opens into a clean scientific skin-care illustration: a cut-away of the skin with thin short glass-like spicules standing in the upper cell layer and fine golden droplets following the open paths beside them. One continuous camera move with no jump; soft warm light. No text, no labels, no arrows."
+    },
+    "T5": {
+      "from_to": "H3 -> H0",
+      "prompt": "One continuous shot, no cuts. The woman finishes smoothing the cream into her cheek and lowers her hand, looking at her skin in the mirror with a small content smile. The camera moves slowly and smoothly backward; the cream carton box comes into the frame at the left foreground and the focus settles on the box: the box becomes sharp with clear straight print, the woman and the room go softly out of focus behind it. The move ends still. The box print does not change or flicker. No other products, no text, no captions."
+    }
+  },
+  "free_transitions": "T1 played backwards at double speed (focus back to the pack); dissolve C1 -> H0 (the pack stays, the clinic behind it becomes her home); dissolve H0 -> C1 at the end; T1 forward once more as the last move",
+  "estimate": "Atlas Cloud: 5 generated stills x 0.07 = 0.35 USD; 6 clips x 0.55 = 3.30 USD; total about 3.7 USD, with two retakes about 4.8 USD (under the ceiling: 150 Higgsfield credits are about 8 USD).",
+  "atlas": {
+    "stills": {
+      "C": {
+        "prediction": "0e46d3ef3cce43bc83b6affc65b16e9d",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-5ffa0455adbeca19ecbe915927641f3e4bae4b0f7f3320453a256aabe73cca84/0e46d3ef3cce43bc83b6affc65b16e9d-873f19464321e372.png",
+        "verdict": "clinic plate without the box: good"
+      },
+      "H": {
+        "prediction": "27234bf0db4842c4912041945cd5adbc",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-9b6115958ab68c290b398ca7d5024839fe2d02ae333fba5b40f88916f6d09844/27234bf0db4842c4912041945cd5adbc-c0b304668f9c00c5.png",
+        "verdict": "home plate without the box: good"
+      },
+      "Yd": {
+        "prediction": "dd4171567dd74ff9852ee55d5e1ed57f",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-973c6108c8c83af38a0cdb6affe7600f816c80ac2b3606fbb31453063899680d/dd4171567dd74ff9852ee55d5e1ed57f-7845a8025b3bec95.png",
+        "verdict": "inside the skin: good"
+      },
+      "H2": {
+        "prediction": "40551ff028b94334bfc9edd3c5d5fbd2",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-db214937e311bddd530b5f07d0212581ce1170c9a08bda014eb25fb85278c236/40551ff028b94334bfc9edd3c5d5fbd2-09b631650e054efb.png",
+        "verdict": "massage, close: good"
+      },
+      "H3": {
+        "prediction": "f99be926c5604e0fa803f0ba9f2f40ea",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-263815256be2affe6adf41bb0fbbbcb4d5c85184a85eb97672b4898d35b9a748/f99be926c5604e0fa803f0ba9f2f40ea-d8366912174f7f6a.png",
+        "verdict": "cream, close: good"
+      }
+    },
+    "spent": "five generations: 0.327 USD (balance 16.739 -> 16.412)",
+    "pack_frames": {
+      "cut-out": "mitoderm-catalog/site/design/biospicule/ref/cellular-age-defense-2-5-angle.webp",
+      "C1": "place-pack.py <C plate> <cut-out> C1.png at=250,301 height=1151 plate_blur=9 gain=1.0,1.0,0.965",
+      "C2": "place-pack.py <C plate> <cut-out> C2.png at=250,301 height=1151 pack_blur=7 gain=1.0,1.0,0.965",
+      "H0": "place-pack.py <H plate> <cut-out> H0.png at=250,301 height=1151 plate_blur=9 gain=1.03,0.99,0.90",
+      "H1": "place-pack.py <H plate> <cut-out> H1.png at=250,301 height=1151 pack_blur=7 gain=1.03,0.99,0.90"
+    }
+  },
+  "frames": {
+    "C1": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/c5852d50-d74c-4e9b-8ce0-d0ce4251dcbe.png",
+    "C2": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/b938e5ad-9d5b-44b5-9a1f-4c29e9c16ad9.png",
+    "H0": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/a2037353-5381-49c3-b12f-72be005fcbe7.png",
+    "H1": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/3193fbc5-443d-4804-8477-3ddbbeba4c8b.png",
+    "H2": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-db214937e311bddd530b5f07d0212581ce1170c9a08bda014eb25fb85278c236/40551ff028b94334bfc9edd3c5d5fbd2-09b631650e054efb.png",
+    "Yd": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-973c6108c8c83af38a0cdb6affe7600f816c80ac2b3606fbb31453063899680d/dd4171567dd74ff9852ee55d5e1ed57f-7845a8025b3bec95.png",
+    "H3": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-263815256be2affe6adf41bb0fbbbcb4d5c85184a85eb97672b4898d35b9a748/f99be926c5604e0fa803f0ba9f2f40ea-d8366912174f7f6a.png"
+  },
+  "launch": {
+    "T1": [
+      "C1",
+      "C2"
+    ],
+    "T2": [
+      "H0",
+      "H1"
+    ],
+    "T3": [
+      "H1",
+      "H2"
+    ],
+    "D1": [
+      "H2",
+      "Yd"
+    ],
+    "D2": [
+      "H3",
+      "Yd"
+    ],
+    "T5": [
+      "H3",
+      "H0"
+    ]
+  },
+  "clip_resolution": "720p",
+  "clip_seconds": 5,
+  "how_to_launch": "after the owner's ok: python3 ../tools/atlas-clips.py requests.json <clips dir>   (6 clips x 0.55 = 3.30 USD); then ../tools/film-assemble.sh film-16x9.spec <clips dir> film.mp4 1280 720"
+}

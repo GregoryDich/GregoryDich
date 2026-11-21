@@ -165,14 +165,14 @@
       "page": "CELLULAR AGE DEFENSE 2.5%",
       "slug": "cellular-age-defense-2-5",
       "line": "BIOSPICULE",
-      "percent": 10,
-      "stage": "в очереди",
+      "percent": 35,
+      "stage": "раскадровка и все семь кадров готовы, лист у заказчика: жду «ок» — после него 6 роликов 720p (3,30 $ на Atlas)",
       "patient": "платиновая стрижка (P5)",
-      "steps_done": 1,
+      "steps_done": 3,
       "steps_total": 9,
       "s1": 1,
-      "s2": 0,
-      "s3": 0,
+      "s2": 1,
+      "s3": 1,
       "s4": 0,
       "s5": 0,
       "s6": 0,
@@ -264,7 +264,7 @@
   "meta": [
     {
       "label": "Обновлено",
-      "value": "21/11/2026 19:54"
+      "value": "21/11/2026 20:07"
     },
     {
       "label": "Шаги и веса",
