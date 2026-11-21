@@ -50,7 +50,8 @@
       "C2"
     ]
   },
-  "clip_resolution": "720p",
+  "clip_resolution": "1080p",
   "clip_seconds": 5,
-  "how_to_launch": "after the owner's ok: python3 ../tools/atlas-clips.py requests.json <clips dir>   (1 clip, 0.55 USD); then ../tools/film-assemble.sh film-16x9.spec <clips dir> film.mp4 1280 720"
+  "how_to_launch": "after the owner's ok: python3 ../tools/atlas-clips.py requests.json <clips dir>   (1 clip, 0.55 USD); then ../tools/film-assemble.sh film-16x9.spec <clips dir> film.mp4 1280 720",
+  "clip_price_note": "native 1080p, 5 s: 1.07 USD a clip (measured 21/11); focus pulls between two frames built on one plate are free dissolves at assembly"
 }

@@ -141,7 +141,50 @@
       "C1": "place-pack.py <C plate> <cut-out> C1.png at=250,301 height=1151 plate_blur=9 gain=1.0,1.0,0.965",
       "C2": "place-pack.py <C plate> <cut-out> C2.png at=250,301 height=1151 pack_blur=7 gain=1.0,1.0,0.965",
       "note": "these four are built on this machine and uploaded to Atlas (atlas.py upload) right before the clips are launched"
-    }
+    },
+    "clips": {
+      "T2": {
+        "prediction": "c5d7effe166d4dfeaa0764b8136ef096",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-7d2e1eea63c186bf94101ddb8c4d333a055a55acece200eb057eca660adb4e31/c5d7effe166d4dfeaa0764b8136ef096-89570379de293439.mp4",
+        "resolution": "1080p",
+        "from_to": [
+          "H1",
+          "H2"
+        ],
+        "verdict": "to be checked"
+      },
+      "D1": {
+        "prediction": "9d25fc33a23243b5931c8ceb9c98da38",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-f65c2fd197b754f9dd84e7378d0393c89b3fb7b02642fa224de33994f35d81d5/9d25fc33a23243b5931c8ceb9c98da38-49beaafea6cde0b7.mp4",
+        "resolution": "1080p",
+        "from_to": [
+          "H2",
+          "Yc"
+        ],
+        "verdict": "to be checked"
+      },
+      "D2": {
+        "prediction": "b8ca7724a82544509bd640ab485e7a8f",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-a49583bacce441c6397e195e564d244e35d5fd185ee8635c00ab5726f0a44bd1/b8ca7724a82544509bd640ab485e7a8f-aa59e2168cee8e1c.mp4",
+        "resolution": "1080p",
+        "from_to": [
+          "H3",
+          "Yc"
+        ],
+        "verdict": "to be checked"
+      },
+      "T5": {
+        "prediction": "2ee0509162e14085af9e16a75851da47",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-4cbfa85b4e9e624fe966fc552c600e2d5af707c04c9c9489494a86ae3b135413/2ee0509162e14085af9e16a75851da47-b690c138b31e78ae.mp4",
+        "resolution": "1080p",
+        "from_to": [
+          "H3",
+          "H0"
+        ],
+        "verdict": "to be checked"
+      }
+    },
+    "clips_spent": "1.069 USD a clip, native 1080p (21/11)"
   },
   "frames": {
     "H0": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/bfde0e9a-3c21-413f-a4e6-4ff69fca80ab.png",
@@ -178,7 +221,8 @@
       "C2"
     ]
   },
-  "clip_resolution": "720p",
+  "clip_resolution": "1080p",
   "clip_seconds": 5,
-  "how_to_launch": "after the owner's ok: python3 ../tools/atlas-clips.py requests.json <clips dir>   (6 clips x 0.55 = 3.30 USD); then ../tools/film-assemble.sh film-16x9.spec <clips dir> film.mp4 1280 720"
+  "how_to_launch": "after the owner's ok: python3 ../tools/atlas-clips.py requests.json <clips dir>   (6 clips x 0.55 = 3.30 USD); then ../tools/film-assemble.sh film-16x9.spec <clips dir> film.mp4 1280 720",
+  "clip_price_note": "native 1080p, 5 s: 1.07 USD a clip (measured 21/11); focus pulls between two frames built on one plate are free dissolves at assembly"
 }

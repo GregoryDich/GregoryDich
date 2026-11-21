@@ -441,7 +441,70 @@
           }
         ]
       }
-    }
+    },
+    "clips": {
+      "T2": {
+        "prediction": "40ecfab91b5542ab995d7b56c2dafd1d",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-d26bb682ec2f5b9c9027bca45a43ca3522348e5e772f9b413ab9d874410fd31b/40ecfab91b5542ab995d7b56c2dafd1d-a8ce5e2b0763f77c.mp4",
+        "resolution": "1080p",
+        "from_to": [
+          "K1",
+          "K2"
+        ],
+        "verdict": "to be checked"
+      },
+      "T3": {
+        "prediction": "fee4a10d66ac4f6ebbb2fa751da2a5eb",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-6bda9ef40fc19a06c9570e83198b953fa90311e0669ebb6ee4e6f5e618f93332/fee4a10d66ac4f6ebbb2fa751da2a5eb-ac82d8e4548bff4e.mp4",
+        "resolution": "1080p",
+        "from_to": [
+          "K2",
+          "K3"
+        ],
+        "verdict": "to be checked"
+      },
+      "T4": {
+        "prediction": "0dab9a0b722a42ec8ebab7bf303a5f02",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-af5b6e97af62b5b310ef4cf15e3d3f358ccea38f8944c652f588fb786febf98a/0dab9a0b722a42ec8ebab7bf303a5f02-7da6b25303ad1d3e.mp4",
+        "resolution": "1080p",
+        "from_to": [
+          "K3",
+          "K4"
+        ],
+        "verdict": "to be checked"
+      },
+      "D1": {
+        "prediction": "f1c24b5a994a4e6cab61c9118020868f",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-4b728f0d9c092af04bef4f1cfd9515cba7ea74c4a908195af33cc1e1e2261b9f/f1c24b5a994a4e6cab61c9118020868f-987e9c09682f4dae.mp4",
+        "resolution": "1080p",
+        "from_to": [
+          "K4",
+          "Y1"
+        ],
+        "verdict": "to be checked"
+      },
+      "BL": {
+        "prediction": "e090db743be34a2f9be1e99c2f8f9f84",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-4f68646186f4255b754349b68771d6f3307155e9014d6e1589c4a92f5b83e029/e090db743be34a2f9be1e99c2f8f9f84-92a60d56cda9b82e.mp4",
+        "resolution": "1080p",
+        "from_to": [
+          "Y1",
+          "Y2"
+        ],
+        "verdict": "to be checked"
+      },
+      "D2": {
+        "prediction": "63a6f438726f40b09958a9183c6187f9",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-dd79c38f4dda3c185f0658f9a7810b0e50cb269c3c3da2fb12a54f9547377597/63a6f438726f40b09958a9183c6187f9-c95ad9ac565a3bc5.mp4",
+        "resolution": "1080p",
+        "from_to": [
+          "K6",
+          "Y2"
+        ],
+        "verdict": "to be checked"
+      }
+    },
+    "clips_spent": "1.069 USD a clip, native 1080p (21/11)"
   },
   "frames": {
     "K0": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261121_064115_8231f212-8f68-4043-b77e-9125749fbc6a.png",
@@ -488,7 +551,8 @@
       "K7"
     ]
   },
-  "clip_resolution": "720p",
+  "clip_resolution": "1080p",
   "clip_seconds": 5,
-  "how_to_launch": "after the owner's ok: python3 ../tools/atlas-clips.py requests.json <clips dir>   (8 clips x 0.55 = 4.40 USD); then ../tools/film-assemble.sh film-16x9.spec <clips dir> film.mp4 1280 720"
+  "how_to_launch": "after the owner's ok: python3 ../tools/atlas-clips.py requests.json <clips dir>   (8 clips x 0.55 = 4.40 USD); then ../tools/film-assemble.sh film-16x9.spec <clips dir> film.mp4 1280 720",
+  "clip_price_note": "native 1080p, 5 s: 1.07 USD a clip (measured 21/11); focus pulls between two frames built on one plate are free dissolves at assembly"
 }
