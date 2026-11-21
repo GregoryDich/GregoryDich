@@ -1,8 +1,16 @@
 {
   "rows": [
     {
-      "page": "MICRO BOOST 10% — лист всех кадров (ждёт «ок»)",
+      "page": "MICRO BOOST 10% — страница с фильмом (ждёт просмотра)",
       "links": [
+        {
+          "label": "ФИЛЬМ ЦЕЛИКОМ, компьютер (16:9)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/2c17ea1d-722a-4e73-8cdf-84b2c459f8ca.mp4"
+        },
+        {
+          "label": "ФИЛЬМ ЦЕЛИКОМ, телефон (9:16)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/3e485759-561f-4bdd-919c-a035bc51c39d.mp4"
+        },
         {
           "label": "Девять кадров страницы: упаковка, осмотр, массаж, внутри кожи, маска",
           "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/797bc7f3-1cb8-40f7-9d9e-c61f5f1f4c96.jpg"
@@ -10,8 +18,16 @@
       ]
     },
     {
-      "page": "CELL RENEW 1.5% — лист всех кадров (ждёт «ок»)",
+      "page": "CELL RENEW 1.5% — страница с фильмом (ждёт просмотра)",
       "links": [
+        {
+          "label": "ФИЛЬМ ЦЕЛИКОМ, компьютер (16:9)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/6caad281-1683-4669-a780-9d3fc2ef27a0.mp4"
+        },
+        {
+          "label": "ФИЛЬМ ЦЕЛИКОМ, телефон (9:16)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/7de16bea-7c78-4e5c-8130-d975252ecda2.mp4"
+        },
         {
           "label": "Семь кадров страницы: дом — внутри кожи — клиника; коробка — настоящий рендер",
           "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/a3c33fa3-298d-4def-81f5-b5e7f7df2b57.jpg"
@@ -19,7 +35,7 @@
       ]
     },
     {
-      "page": "CELLULAR AGE DEFENSE 2.5% — лист всех кадров (ждёт «ок»)",
+      "page": "CELLULAR AGE DEFENSE 2.5% — лист всех кадров («ок» получен 21/11, ролики впереди)",
       "links": [
         {
           "label": "Семь кадров страницы: клиника — дом — клиника; коробка — настоящий рендер",
@@ -28,7 +44,7 @@
       ]
     },
     {
-      "page": "DERMA RECOVERY CREAM — лист всех кадров (ждёт «ок»)",
+      "page": "DERMA RECOVERY CREAM — лист всех кадров («ок» получен 21/11, ролики впереди)",
       "links": [
         {
           "label": "Семь кадров страницы: клиника — дом — клиника; коробка — настоящий рендер",
@@ -37,8 +53,16 @@
       ]
     },
     {
-      "page": "MITOTECH CELL BOOSTER — лист кадров (ждёт «ок»)",
+      "page": "MITOTECH CELL BOOSTER — страница с фильмом (ждёт просмотра)",
       "links": [
+        {
+          "label": "ФИЛЬМ ЦЕЛИКОМ, компьютер (16:9)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/0ab11250-77eb-4730-adec-e6dbae23660b.mp4"
+        },
+        {
+          "label": "ФИЛЬМ ЦЕЛИКОМ, телефон (9:16)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/a8b3dd9d-e414-4899-a7ee-7bb4a4b743d6.mp4"
+        },
         {
           "label": "Два кадра: настоящая коробка в клинике и процедура",
           "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/4f1e292f-9856-4bb9-8622-a10c642de4ae.jpg"
