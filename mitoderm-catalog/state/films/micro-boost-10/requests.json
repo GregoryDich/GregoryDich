@@ -451,7 +451,7 @@
           "K1",
           "K2"
         ],
-        "verdict": "to be checked"
+        "verdict": "hidden cut at frame 52 (wide framing with a large box -> closer framing, smaller box) and the cosmetologist's head leaves the frame around 43-70: frames 1-26 and 82-120 are used, 27-81 are replaced by a soft-focus join"
       },
       "T3": {
         "prediction": "fee4a10d66ac4f6ebbb2fa751da2a5eb",
@@ -461,7 +461,7 @@
           "K2",
           "K3"
         ],
-        "verdict": "to be checked"
+        "verdict": "good: the tissue goes, the fingertips of both hands massage the cheek"
       },
       "T4": {
         "prediction": "0dab9a0b722a42ec8ebab7bf303a5f02",
@@ -471,7 +471,7 @@
           "K3",
           "K4"
         ],
-        "verdict": "to be checked"
+        "verdict": "good: the hands lift, she opens her eyes and smiles"
       },
       "D1": {
         "prediction": "f1c24b5a994a4e6cab61c9118020868f",
@@ -481,7 +481,7 @@
           "K4",
           "Y1"
         ],
-        "verdict": "to be checked"
+        "verdict": "good: the camera goes to the cheek and into the skin; the cross-section with spicules of two lengths"
       },
       "BL": {
         "prediction": "e090db743be34a2f9be1e99c2f8f9f84",
@@ -491,7 +491,7 @@
           "Y1",
           "Y2"
         ],
-        "verdict": "to be checked"
+        "verdict": "good: the golden product flows down along the spicules"
       },
       "D2": {
         "prediction": "63a6f438726f40b09958a9183c6187f9",
@@ -501,7 +501,7 @@
           "K6",
           "Y2"
         ],
-        "verdict": "to be checked"
+        "verdict": "good: out of the skin through the gloved fingertip; the mask is on the face"
       }
     },
     "clips_spent": "1.069 USD a clip, native 1080p (21/11)"
@@ -554,5 +554,19 @@
   "clip_resolution": "1080p",
   "clip_seconds": 5,
   "how_to_launch": "after the owner's ok: python3 ../tools/atlas-clips.py requests.json <clips dir>   (8 clips x 0.55 = 4.40 USD); then ../tools/film-assemble.sh film-16x9.spec <clips dir> film.mp4 1280 720",
-  "clip_price_note": "native 1080p, 5 s: 1.07 USD a clip (measured 21/11); focus pulls between two frames built on one plate are free dissolves at assembly"
+  "clip_price_note": "native 1080p, 5 s: 1.07 USD a clip (measured 21/11); focus pulls between two frames built on one plate are free dissolves at assembly",
+  "built_without_generation": {
+    "K7": "build-k7.py K0.png K6.png K7.png - K6 softened + the sharp box of K0 where the blurred box of K6 stands",
+    "K0p": "build-k7.py K0.png K1.png K0p.png scale=1 at=281,252 region=262,1170,400,350 - the opening frame: K1 softened + the sharp box of K0 (its place in K1 found by matching: 1 px to the left of its place in K0)",
+    "not_shot": "T1 (K0p -> K1) and T7 (K6 -> K7) are dissolves at assembly: the two frames of each pair differ only in focus"
+  },
+  "film": {
+    "frames": 995,
+    "desktop_media": "2c17ea1d-722a-4e73-8cdf-84b2c459f8ca",
+    "mobile_media": "3e485759-561f-4bdd-919c-a035bc51c39d",
+    "spec": "film-16x9.spec",
+    "phone_keys": "vertical-keys.json",
+    "wire": "wire.json",
+    "checked": "1440x900 and 390x664: eight chapters follow the frames, captions clear of the faces and the box, no errors (21/11)"
+  }
 }

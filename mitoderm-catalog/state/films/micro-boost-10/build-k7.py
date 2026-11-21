@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
-"""MICRO BOOST 10%: the last still K7 (the focus is on the box), built without paid generation.
+"""MICRO BOOST 10%: the two frames with the focus on the box, built without paid generation.
 
-Two generated attempts made the box bigger than in K6 (by 17 % and 31 %) and one garbled the print on its
-side, so the frame is assembled from two approved stills: K6 (the mask on the face), softened as if the
-focus had moved to the box, and the sharp box of K0 (checked against the real pack photo), put exactly
+K7 (the last still). Two generated attempts made the box bigger than in K6 (by 17 % and 31 %) and one garbled
+the print on its side, so the frame is assembled from two approved stills: K6 (the mask on the face), softened
+as if the focus had moved to the box, and the sharp box of K0 (checked against the real pack photo), put exactly
 where the blurred box of K6 stands. The polished table mirrors the box, as it does in K0.
 
-usage: build-k7.py <K0.png> <K6.png> <out K7.png>        needs ImageMagick (convert); stills are 2688x1520
+K0p (the opening frame of the film). The same way from K1 (the skin examination): the people go soft and the
+sharp box of K0 stands where the blurred box of K1 stands (found by matching: 1 px to the left of its place in
+K0). K0p and K1 differ only in focus, so the opening focus pull is a dissolve at assembly, not a paid clip.
+
+usage: build-k7.py <K0.png> <people-sharp still> <out.png> [scale=S] [at=X,Y] [region=L,T,W,H]
+  K7:   build-k7.py K0.png K6.png K7.png
+  K0p:  build-k7.py K0.png K1.png K0p.png scale=1 at=281,252 region=262,1170,400,350
+needs ImageMagick (convert); stills are 2688x1520
 """
 import os
 import subprocess
@@ -14,10 +21,10 @@ import sys
 import tempfile
 
 BOX = (362, 1116, 282, 252)          # the box in K0: width, height, left, top
-SCALE, OX, OY = 0.78, 204, 548       # its size and place in K6, found by matching against the blurred box
+SCALE, OX, OY = 0.78, 204, 548       # its size and place in K6, found by matching against the blurred box (scale=, at=)
 OUTLINE = [(5, 8), (272, 0), (352, 16), (352, 1082), (272, 1114), (9, 1110)]   # the box outline inside that crop
 FRAME = (2688, 1520)
-REGION = (190, 1240, 320, 280)       # where the mirror image is drawn: left, top, width, height
+REGION = (190, 1240, 320, 280)       # where the mirror image is drawn: left, top, width, height (region=)
 MIRROR, REACH, FALL = 0.40, 150.0, 1.4   # strength at the base, how far it reaches (px), how fast it fades
 
 
@@ -25,7 +32,7 @@ def run(*args):
     subprocess.run(list(args), check=True)
 
 
-def main(k0, k6, out):
+def main(k0, k6, out, SCALE=SCALE, OX=OX, OY=OY, REGION=REGION):
     work = tempfile.mkdtemp(prefix="k7-")
     path = lambda name: os.path.join(work, name)
     size = "%dx%d" % FRAME
@@ -103,6 +110,14 @@ def main(k0, k6, out):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
+    if len(sys.argv) < 4:
         sys.exit(__doc__)
-    main(*sys.argv[1:])
+    options = dict(item.split("=", 1) for item in sys.argv[4:])
+    place = {}
+    if "scale" in options:
+        place["SCALE"] = float(options["scale"])
+    if "at" in options:
+        place["OX"], place["OY"] = (int(v) for v in options["at"].split(","))
+    if "region" in options:
+        place["REGION"] = tuple(int(v) for v in options["region"].split(","))
+    main(*sys.argv[1:4], **place)
