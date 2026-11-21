@@ -1,0 +1,24 @@
+{
+  "comment": [
+    "MITOPEN, the phone film: a moving window over the desktop film (tools/vertical-from-horizontal.py).",
+    "Each key: frame, left edge of the window (% of the frame width), window width (%), top of the window on the phone canvas (%).",
+    "0-54 the pen close; 102-250 the pen and both faces; 303-339 the ring and the button; 386-410 the pen close;",
+    "442-522 the skin cut-away; 555-603 the pen close; 651-818 the pen and both faces."
+  ],
+  "keys": [
+    [0, 8, 54, 12],
+    [54, 8, 54, 12],
+    [102, 6, 58, 10],
+    [250, 6, 58, 10],
+    [303, 13, 56, 11],
+    [339, 13, 56, 11],
+    [386, 8, 54, 12],
+    [410, 8, 54, 12],
+    [442, 3, 58, 9],
+    [522, 3, 58, 9],
+    [555, 8, 54, 12],
+    [603, 8, 54, 12],
+    [651, 6, 58, 10],
+    [818, 6, 58, 10]
+  ]
+}
