@@ -45,19 +45,19 @@ export const productFilms:Record<string,ProductFilm>={
  // next scene is already recognisable, not at the joint of two clips. Chapters 04, 07, 09 and 10 were added on
  // 20/11 at the owner's word: the scan on the tablet, the serum inside the skin, the weeks of the course and the
  // follow-up scan; their captions are quoted from mitoderm.com (the old site) and the treatment protocol.
- 'exosignal-hair':{desktop:'/assets/world/exosignal-hair-film.mp4',mobile:'/assets/world/exosignal-hair-film-mobile.mp4',fps:24,frames:1667,chapters:[
+ 'exosignal-hair':{desktop:'/assets/world/exosignal-hair-film.mp4',mobile:'/assets/world/exosignal-hair-film-mobile.mp4',fps:24,frames:1638,chapters:[
   {start:0,end:91},      // 01 pack
   {start:91,end:219},    // 02 consultation
   {start:219,end:300},   // 03 MITOSCAN on the parting
-  {start:300,end:500},   // 04 the tablet screen: what the scan shows
+  {start:300,end:500},   // 04 the MITOSCAN screen, she points at it
   {start:500,end:667},   // 05 the ampoule
-  {start:667,end:752},   // 06 MITOPEN and the serum
-  {start:752,end:1030},  // 07 inside the skin: the serum runs down the hair to the bulb
-  {start:1030,end:1150}, // 08 massage until absorbed
-  {start:1150,end:1240}, // 09 the weeks of the course (the window)
-  {start:1240,end:1395}, // 10 the follow-up scan
-  {start:1395,end:1550}, // 11 the end of the visit
-  {start:1550,end:1667}  // 12 pack
+  {start:667,end:812},   // 06 MITOPEN and the syringe along the parting
+  {start:812,end:1036},  // 07 inside the skin: micro-channels
+  {start:1036,end:1115}, // 08 massage
+  {start:1115,end:1205}, // 09 the weeks of the course
+  {start:1205,end:1360}, // 10 the follow-up scan
+  {start:1360,end:1521}, // 11 the end of the visit
+  {start:1521,end:1638}  // 12 pack
  ]},
  // A connected film: clinic, home and clinic again in one movement. 1912x1080 and 1080x1920, 1208 frames, a keyframe
  // every 12 (state/films/exosignal-spray/film-16x9.spec). Twice the product stays in the frame while the place behind

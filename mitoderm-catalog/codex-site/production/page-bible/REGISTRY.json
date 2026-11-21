@@ -304,7 +304,7 @@
           "index": 3
         },
         {
-          "title": "Экран MITOSCAN: кожа головы крупно, пометки на проблемных местах",
+          "title": "Экран MITOSCAN: кожа головы крупно, косметолог показывает пальцем",
           "seconds": 8.33,
           "vh": 2.2,
           "type": "procedure",
@@ -318,23 +318,23 @@
           "index": 5
         },
         {
-          "title": "MITOPEN и сыворотка по пробору",
-          "seconds": 3.54,
-          "vh": 1.05,
+          "title": "MITOPEN под углом и шприц с сывороткой по пробору",
+          "seconds": 6.04,
+          "vh": 1.6,
           "type": "procedure",
           "index": 6
         },
         {
-          "title": "Внутри кожи: средство идёт по волосу в фолликул к луковице",
-          "seconds": 11.58,
-          "vh": 3.0,
+          "title": "Внутри кожи: микроканалы, средство расходится к луковице",
+          "seconds": 9.33,
+          "vh": 2.6,
           "type": "procedure",
           "index": 7
         },
         {
           "title": "Массаж в перчатках до впитывания",
-          "seconds": 5.0,
-          "vh": 1.45,
+          "seconds": 3.29,
+          "vh": 1.0,
           "type": "procedure",
           "index": 8
         },
@@ -346,7 +346,7 @@
           "index": 9
         },
         {
-          "title": "Повторный осмотр MITOSCAN после курса: те же места на экране",
+          "title": "Повторный осмотр MITOSCAN после курса: тот же экран",
           "seconds": 6.46,
           "vh": 1.87,
           "type": "procedure",
@@ -354,7 +354,7 @@
         },
         {
           "title": "Конец визита: разговор о следующих встречах",
-          "seconds": 6.46,
+          "seconds": 6.71,
           "vh": 1.8,
           "type": "patient",
           "index": 11
@@ -368,11 +368,11 @@
         }
       ],
       "isFrozen": false,
-      "status": "film_v3_wired",
+      "status": "film_v4_wired",
       "packImage": "/assets/products/exosignal-hair.webp",
       "timeline": {
-        "seconds": 69.46,
-        "scrollVh": 19.5
+        "seconds": 68.25,
+        "scrollVh": 19.2
       },
       "line": "VM — профессиональная трихологическая процедура"
     },
