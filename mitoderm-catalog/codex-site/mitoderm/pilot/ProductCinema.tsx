@@ -10,6 +10,7 @@ import {mediaUrl} from '../media';
 import {productFilms,productCaptions} from './product-films';
 import {productProof} from './product-proof';
 import {useScrollFilm} from './useScrollFilm';
+import {jumpTo} from './SmoothScroll';
 import './product-cinema.css';
 
 type Chapter={title:string;seconds:number;vh:number;type:string;index:number};
@@ -160,7 +161,7 @@ export default function ProductCinema({product}:{product:Product}){
   if(linear){document.getElementById('pc-shot-'+(i+1))?.scrollIntoView({behavior:'smooth',block:'start'});return;}
   if(!root.current)return;
   const y=root.current.getBoundingClientRect().top+window.scrollY+starts[i]*window.innerHeight;
-  window.scrollTo({top:y,behavior:'instant'});
+  jumpTo(y);
  };
  useEffect(()=>{
   const r=root.current,s=stage.current;if(!r||!s||!chapters.length)return;

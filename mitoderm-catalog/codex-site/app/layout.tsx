@@ -1,6 +1,7 @@
 import type {Metadata,Viewport} from 'next';
 import type {ReactNode} from 'react';
 import {SiteExperience} from '@/mitoderm/pilot/Experience';
+import {SmoothScroll} from '@/mitoderm/pilot/SmoothScroll';
 import './globals.css';
 
 const origin='https://mitoderm-cinematic.evenradish1.chatgpt.site';
@@ -19,5 +20,5 @@ export const metadata:Metadata={
 export const viewport:Viewport={width:'device-width',initialScale:1,themeColor:'#08080a',colorScheme:'dark'};
 
 export default function RootLayout({children}:Readonly<{children:ReactNode}>){
- return <html lang="he" dir="rtl"><head><link rel="preload" as="font" type="font/ttf" href="/fonts/Rubik-400.ttf" crossOrigin="anonymous"/></head><body><SiteExperience>{children}</SiteExperience></body></html>;
+ return <html lang="he" dir="rtl"><head><link rel="preload" as="font" type="font/ttf" href="/fonts/Rubik-400.ttf" crossOrigin="anonymous"/></head><body><SmoothScroll/><SiteExperience>{children}</SiteExperience></body></html>;
 }
