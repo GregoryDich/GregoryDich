@@ -112,7 +112,37 @@
       "C2": "place-pack.py <C plate> <cut-out> C2.png at=250,301 height=1151 pack_blur=7 gain=1.0,1.0,0.965",
       "H0": "place-pack.py <H plate> <cut-out> H0.png at=250,301 height=1151 plate_blur=9 gain=1.03,0.99,0.90",
       "H1": "place-pack.py <H plate> <cut-out> H1.png at=250,301 height=1151 pack_blur=7 gain=1.03,0.99,0.90"
-    }
+    },
+    "clips": {
+      "T3": {
+        "prediction": "348457f9042a4d6e928e2ad21eabcdf9",
+        "resolution": "1080p",
+        "from_to": [
+          "H1",
+          "H2"
+        ],
+        "verdict": "to be checked"
+      },
+      "D1": {
+        "prediction": "cc636e39fc2b4659a2ca2ae5ab81b5be",
+        "resolution": "1080p",
+        "from_to": [
+          "H2",
+          "Yd"
+        ],
+        "verdict": "to be checked"
+      },
+      "D2": {
+        "prediction": "9477f95d06ee4cbab2c073ec0908b06f",
+        "resolution": "1080p",
+        "from_to": [
+          "H3",
+          "Yd"
+        ],
+        "verdict": "to be checked"
+      }
+    },
+    "clips_note": "launched 21/11 22:10, 1.069 USD each. T1 (C1 -> C2), T2 (H0 -> H1) and T5 (H3 -> H0) are not shot: the two focus pulls are dissolves between frames with an identical box, and the pull-back is replaced by a soft-focus join onto the pack frame (film-assemble.sh, piece \"blur\")."
   },
   "frames": {
     "C1": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/c5852d50-d74c-4e9b-8ce0-d0ce4251dcbe.png",
