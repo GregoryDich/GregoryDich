@@ -1,7 +1,7 @@
 import {useId,useRef,useState,type FormEvent} from 'react';
 import {products,contact} from '../data';
+import {professionLabels} from '../lead-labels';
 
-const professionLabels=[['cosmetologist','קוסמטיקאי/ת'],['doctor','רופא/ה'],['nurse','אח/ות'],['clinic_owner','בעל/ת קליניקה'],['other','תחום מקצועי אחר']];
 export type LeadDraft={name:string;phone:string;profession:string;productSlug:string;comment:string;privacyConsent:boolean};
 type Props={productSlug?:string;sourceBlock?:string;initialComment?:string;initialDraft?:LeadDraft;onDraftChange?:(draft:LeadDraft)=>void;onSuccess?:()=>void};
 type Result={ok:boolean;code:string;id?:string;fields?:Record<string,string>};

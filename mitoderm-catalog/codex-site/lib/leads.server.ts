@@ -6,6 +6,9 @@ import type { LeadSubmission } from "./leads-validation.server";
 
 type SavedLead = { id: string; payload_hash: string };
 
+/** An inquiry as it was stored: the validated fields plus its id and time. */
+export type SavedLeadRecord = LeadSubmission & { id: string; createdAt: string };
+
 class IntakeError extends Error {
   status: number;
   code: string;
@@ -164,8 +167,12 @@ async function checkRateLimit(
 /**
  * Anonymous, same-origin contact submission only. No retrieval API, messaging,
  * patient uploads, marketing subscription, or client-controlled verification.
+ * `onSaved` is called once for a newly stored inquiry, never for a repeated request,
+ * so the team is told about each inquiry exactly once.
  */
-export async function handleLeadRequest(request: Request, db?: D1Database): Promise<Response> {
+export async function handleLeadRequest(
+  request: Request, db?: D1Database, onSaved?: (lead: SavedLeadRecord) => void,
+): Promise<Response> {
   if (request.method !== "POST") {
     return jsonResponse(405, { ok: false, code: "method_not_allowed" }, { Allow: "POST" });
   }
@@ -196,6 +203,7 @@ export async function handleLeadRequest(request: Request, db?: D1Database): Prom
 
     const fingerprint = await payloadHash(lead);
     const id = crypto.randomUUID();
+    const createdAt = new Date().toISOString();
     const saved = await db.prepare(
       "INSERT INTO mitoderm_leads " +
       "(id, request_id, payload_hash, name, phone, profession, product_slug, comment, " +
@@ -205,10 +213,15 @@ export async function handleLeadRequest(request: Request, db?: D1Database): Prom
     ).bind(
       id, lead.requestId, fingerprint, lead.name, lead.phone, lead.profession,
       lead.productSlug, lead.comment || null, lead.locale, lead.sourceBlock,
-      LEAD_PRIVACY_VERSION, new Date().toISOString(),
+      LEAD_PRIVACY_VERSION, createdAt,
     ).first<SavedLead>();
 
     if (saved?.id && saved.payload_hash === fingerprint) {
+      try {
+        onSaved?.({ ...lead, id: saved.id, createdAt });
+      } catch {
+        // Telling the team must never turn a stored inquiry into an error for the visitor.
+      }
       return jsonResponse(201, { ok: true, code: "lead_saved", id: saved.id });
     }
     // Unique request_id makes simultaneous retries safe. A changed payload
@@ -228,4 +241,14 @@ export async function handleLeadRequest(request: Request, db?: D1Database): Prom
     // Never log the body, phone, name, IP, SQL exception, or database row.
     return jsonResponse(503, { ok: false, code: "service_unavailable" });
   }
+}
+
+/**
+ * Marks an inquiry the team has been told about. The ones still "new" are the
+ * ones no e-mail or CRM has received, so they can be found and followed up.
+ */
+export async function markLeadDelivered(db: D1Database, id: string): Promise<void> {
+  await db.prepare(
+    "UPDATE mitoderm_leads SET status = 'delivered' WHERE id = ? AND status = 'new'",
+  ).bind(id).run();
 }

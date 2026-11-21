@@ -16,6 +16,7 @@ export const mitodermLeads = sqliteTable("mitoderm_leads", {
   sourceBlock: text("source_block").notNull(),
   privacyConsent: integer("privacy_consent").notNull(),
   privacyVersion: text("privacy_version").notNull(),
+  // "new" until the team has been told (e-mail or CRM webhook), then "delivered".
   status: text("status").notNull().default("new"),
   createdAt: text("created_at").notNull(),
 }, (table) => [
