@@ -124,14 +124,6 @@
     "H3": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-a69b17ef6dab2fc5138b0f898d1f13311c04a05488d17eee34d190e9faba7d9a/c6243bb408cd44dbb57c28cb75f6f9f5-84c6261baed8d087.png"
   },
   "launch": {
-    "T1": [
-      "C1",
-      "C2"
-    ],
-    "T2": [
-      "H0",
-      "H1"
-    ],
     "T3": [
       "H1",
       "H2"
@@ -143,14 +135,11 @@
     "D2": [
       "H3",
       "Ye"
-    ],
-    "T5": [
-      "H3",
-      "H0"
     ]
   },
   "clip_resolution": "1080p",
   "clip_seconds": 5,
   "how_to_launch": "after the owner's ok: python3 ../tools/atlas-clips.py requests.json <clips dir>   (6 clips x 0.55 = 3.30 USD); then ../tools/film-assemble.sh film-16x9.spec <clips dir> film.mp4 1280 720",
-  "clip_price_note": "native 1080p, 5 s: 1.07 USD a clip (measured 21/11); focus pulls between two frames built on one plate are free dissolves at assembly"
+  "clip_price_note": "native 1080p, 5 s: 1.07 USD a clip (measured 21/11); focus pulls between two frames built on one plate are free dissolves at assembly",
+  "launch_note": "Three paid 1080p clips, 1.069 USD each = 3.21 USD; not launched: the Atlas balance is 0.14 USD (21/11). T1, T2 and T5 are not shot: the focus pulls and both changes of place are dissolves between frames with an identical box, and the pull-back is replaced by a soft-focus join onto the pack frame (film-16x9.spec). Launch each clip with tools/atlas.py video <out.mp4> <prompt.txt> 1080p 5 <first frame url> <last frame url> in the background with its own log, so that the job id is on disk at once."
 }
