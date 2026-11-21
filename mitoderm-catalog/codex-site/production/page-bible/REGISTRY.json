@@ -594,53 +594,60 @@
       "ctaHE": "לתיאום הדגמה",
       "shots": [
         {
-          "title": "Реальный серебристый прибор",
-          "seconds": 4.5,
-          "vh": 1.35,
+          "title": "Перо крупно на полотенце, камера отходит",
+          "seconds": 5.58,
+          "vh": 1.6,
           "type": "device",
           "index": 1
         },
         {
-          "title": "Оценка зоны пациентки",
-          "seconds": 4.5,
-          "vh": 1.15,
+          "title": "Осмотр зон лица",
+          "seconds": 4.21,
+          "vh": 1.2,
           "type": "patient",
           "index": 2
         },
         {
-          "title": "Хват и реальные элементы управления",
-          "seconds": 5,
-          "vh": 1.35,
+          "title": "Перо крупно: кольцо и кнопка",
+          "seconds": 4.33,
+          "vh": 1.25,
           "type": "device",
           "index": 3
         },
         {
-          "title": "Микронидлинг под протокол",
-          "seconds": 6,
-          "vh": 1.7,
-          "type": "procedure",
+          "title": "Перо, медленный отход камеры",
+          "seconds": 3.62,
+          "vh": 1.1,
+          "type": "device",
           "index": 4
         },
         {
-          "title": "Макро инструмент/зона",
-          "seconds": 4.5,
-          "vh": 1.25,
-          "type": "device",
+          "title": "Внутри кожи: микроканалы, средство уходит вглубь",
+          "seconds": 5.25,
+          "vh": 1.5,
+          "type": "procedure",
           "index": 5
         },
         {
-          "title": "Завершение",
-          "seconds": 3.5,
-          "vh": 0.95,
-          "type": "patient",
+          "title": "Перо на полотенце",
+          "seconds": 2.12,
+          "vh": 1.1,
+          "type": "device",
           "index": 6
         },
         {
-          "title": "Устройство + демонстрация",
-          "seconds": 5.5,
-          "vh": 1.6,
-          "type": "pack",
+          "title": "Перо резко, консультация за ним",
+          "seconds": 4.25,
+          "vh": 1.2,
+          "type": "device",
           "index": 7
+        },
+        {
+          "title": "Косметолог и пациент",
+          "seconds": 4.75,
+          "vh": 1.35,
+          "type": "patient",
+          "index": 8
         }
       ],
       "isFrozen": false,

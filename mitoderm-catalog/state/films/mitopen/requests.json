@@ -25,8 +25,22 @@
     "K0": "build-pen-frames.py <A plate> <pen cut-out> <out dir> - the pen sharp on the towel, the room soft",
     "K1": "the same call - the people sharp, the pen and the near table soft",
     "K2": "build-pen-frames.py <A plate> <pen cut-out> <out dir> zoom=2 - the camera at the pen; the pen is taken from the full-size cut-out",
-    "camera move": "any zoom between 1 and 2 gives a frame of a free push-in"
+    "camera move": "any zoom between 1 and 2 gives a frame of a free push-in",
+    "camera moves": "build-pen-frames.py <A plate> <pen cut-out> <dir> sequence=1,2,48 size=1912x1080 (Zin), sequence=1,2.4,54 (Zin24), sequence=2.4,2,48 (Zdrift); each encoded to mp4 at 24 fps"
   },
   "sample_sheet": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/99fc0d32-15a4-400e-ad90-3efc40290419.jpg",
-  "spent": "0.078 USD (balance 0.136 -> 0.057, 21/11)"
+  "spent": "0.078 USD (balance 0.136 -> 0.057, 21/11)",
+  "reused": {
+    "BL3": "the micro-channel clip of the EXOSIGNAL HAIR film (job fca2ec74-2d23-470a-b024-52928a110613), chapter 05"
+  },
+  "film": {
+    "frames": 819,
+    "desktop_media": "9f559771-d068-4fb9-b703-654381949a08",
+    "mobile_media": "701ac49d-59c3-46ae-9be7-5b7798ae6f2d",
+    "spec": "film-16x9.spec",
+    "phone_keys": "vertical-keys.json",
+    "wire": "wire.json",
+    "state": "draft: no paid clips; the look waits for the owner (question 27)",
+    "checked": "1440x900 and 390x664: eight chapters follow the frames, no errors (21/11)"
+  }
 }

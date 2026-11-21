@@ -16,7 +16,7 @@
 #               focus back 220-249 | camera to the ring and the button 250-302 | hold 303-338 | drift 339-385 |
 #               hold 386-409 | into the skin 410-441 | micro-channels 442-522 | back to the pen 523-554 |
 #               hold 555-602 | camera back 603-650 | hold 651-686 | focus 687-722 | examination 723-818
-# Chapters: 0-134 | 134-235 | 235-339 | 339-426 | 426-539 | 539-603 | 603-705 | 705-819
+# Chapters: 0-134 | 134-235 | 235-339 | 339-426 | 426-552 | 552-603 | 603-705 | 705-819
 hold K2.png 0 54
 clip Zin.mp4 0 47 1 rev
 hold K0.png 0 12

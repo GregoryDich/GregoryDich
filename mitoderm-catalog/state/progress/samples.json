@@ -1,8 +1,16 @@
 {
   "rows": [
     {
-      "page": "MITOPEN — пробный образ (ждёт «ок»)",
+      "page": "MITOPEN — пробный образ и черновой фильм (ждёт «ок»)",
       "links": [
+        {
+          "label": "ЧЕРНОВОЙ ФИЛЬМ, компьютер (16:9)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/9f559771-d068-4fb9-b703-654381949a08.mp4"
+        },
+        {
+          "label": "ЧЕРНОВОЙ ФИЛЬМ, телефон (9:16)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/701ac49d-59c3-46ae-9be7-5b7798ae6f2d.mp4"
+        },
         {
           "label": "Три кадра: настоящее перо крупно, общий план, фокус на осмотре",
           "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/99fc0d32-15a4-400e-ad90-3efc40290419.jpg"

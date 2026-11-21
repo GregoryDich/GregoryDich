@@ -126,6 +126,21 @@ export const productFilms:Record<string,ProductFilm>={
   {start:690,end:760}, // 06 the pack at home
   {start:760,end:826}, // 07 the same pack in the clinic
   {start:826,end:940}  // 08 the cosmetologist and the patient
+ ]},
+ // A draft film of a device page, built without paid clips. The device is never drawn by a model: the customer's
+ // cut-out photo of the pen is placed on a plate generated without any device, and the camera moves are rendered
+ // frame by frame from the full-size photo (state/films/mitopen/build-pen-frames.py, film-16x9.spec). The
+ // inside-the-skin chapter reuses the micro-channel clip of the EXOSIGNAL HAIR film. 1912x1080 and 1080x1920,
+ // 819 frames. The look waits for the owner's ok; a live clip of the examination replaces the held still later.
+ 'mitopen':{desktop:'/assets/world/mitopen-film.mp4',mobile:'/assets/world/mitopen-film-mobile.mp4',fps:24,frames:819,chapters:[
+  {start:0,end:134},   // 01 the pen close, the camera pulls back
+  {start:134,end:235}, // 02 the examination
+  {start:235,end:339}, // 03 the ring and the button
+  {start:339,end:426}, // 04 the pen, a slow drift
+  {start:426,end:552}, // 05 inside the skin: micro-channels
+  {start:552,end:603}, // 06 the pen
+  {start:603,end:705}, // 07 the pen, the consultation behind it
+  {start:705,end:819}  // 08 the cosmetologist and the patient
  ]}
 };
 // Chapter captions of the series films, in page order, word for word from the approved page copy
@@ -209,5 +224,15 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'30\u00a0מ״ל. התוכנית האינטנסיבית.',body:'CELLULAR\u00a0AGE\u00a0DEFENSE\u00a02.5% – 30\u00a0ml ℮ 1.0\u00a0fl.\u00a0oz. Advanced\u00a0Biospicule\u00a0Technology. מתאים לכל סוגי העור.',tag:'נפח'},
   {title:'משדרגים את השגרה.',body:'זמין דרך הקליניקות השותפות של מיטודרם. לאחריו יש למרוח תמיד DERMA\u00a0RECOVERY\u00a0CREAM. לקליניקות: פנו אלינו בנוגע לתמחור ולשלבי הטיפוח הביתי.',tag:'הצעה'},
   {title:'מומחי Mitoderm מוסמכים',body:'כל מומחה כאן מוכשר ומוסמך להעניק פרוטוקולים מקוריים של Mitoderm. מצאו מרפאה מהימנה בקרבתכם וקבעו ייעוץ.',tag:'מצאו מומחה'}
+ ],
+ 'mitopen':[
+  {title:'MITOPEN',body:'מסלול החדירה לרכיבים הפעילים.',tag:'מכשור מקצועי לקליניקה'},
+  {title:'דיוק שאפשר לשחזר.',body:'האזור, עובי העור והאינדיקציה – כל אחד מהם דורש עומק וצפיפות משלו. פרוטוקול מדויק ואחיד מתחיל בכלי העבודה.',tag:'אינדיקציות'},
+  {title:'מ-0.25 עד 2.5\u00a0מ״מ. חמש מהירויות.',body:'עומק מתכוונן 0.25–2.5\u00a0מ״מ בהתאם לאזור ולאינדיקציה; עד חמש מהירויות לשליטה בצפיפות המיקרו־תעלות ובעוצמת הגירוי.',tag:'מפרט טכני'},
+  {title:'שקט. אלחוטי. בשליטה.',body:'ארגונומי, אלחוטי ושקט – נוח לקוסמטיקאית, מדויק עבור המטופלת, ותוכנן לתמוך בהחדרת החומרים הפעילים.',tag:'יתרונות'},
+  {title:'הגדרה. מיקרונידלינג. החדרה.',body:'בחרו עומק ומהירות בהתאם לאזור, צרו מיקרו־תעלות אחידות ולאחר מכן יישמו את V-TECH\u00a0SYSTEM בפנים או את EXOSIGNAL\u00a0HAIR בקרקפת.',tag:'פרוטוקול'},
+  {title:'עט אחד. פנים וקרקפת.',body:'1× MITOPEN – עט מיקרונידלינג מקצועי ואלחוטי עם עומק מחט ומהירות מתכווננים. לשימוש מקצועי בלבד.',tag:'ערכה ועובדות'},
+  {title:'הכניסו את MITOPEN לקליניקה שלכם',body:'לשימוש מקצועי בלבד. המומחה שלנו ייעץ לכם בנושאי הדרכה, פרוטוקולים ותמחור.',tag:'הצעה'},
+  {title:'מומחי Mitoderm מוסמכים',body:'שני המכשירים מופעלים בידי אנשי מקצוע שעברו הכשרה, כחלק מפרוטוקול קליני.',tag:'מצאו מומחה'}
  ]
 };
