@@ -5,6 +5,17 @@
 После каждого законченного шага обновить «Следующий шаг» и «Журнал», закоммитить и запушить.
 Номера платных заданий записывать сразу после запуска: задания переживают перезапуск сессии.
 
+## Записи прокрутки четырёх новых страниц (21/11, 23:03) — ссылки для заказчика
+- Сняты `state/tasks/page-record.cjs` на 1440×900 и 390×664 (двойная плотность), по 55 с (CELL BOOSTER — 30 с).
+  Загружены бесплатно через `atlas.py upload` (хранилище Atlas, раздел videos): **срок жизни этих ссылок не
+  известен** — это ссылки для просмотра, сайт на них не ссылается; фильмы страниц лежат на постоянном хранилище.
+  | Страница | Компьютер | Телефон |
+  |---|---|---|
+  | MICRO BOOST 10% | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/83bdc5e3-77b8-49fd-b431-610d3379f24d.mp4 | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/99888a5a-4afe-425a-af55-846afd3f008c.mp4 |
+  | CELL RENEW 1.5% | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/16de4ecb-fb9d-46cc-bc23-348d6b79eb08.mp4 | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/d5a839d1-02f2-4e66-8d95-69fbc8bf2c89.mp4 |
+  | CELLULAR AGE DEFENSE 2.5% | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/8f856bb5-912d-474e-a014-e2aee0e232a8.mp4 | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/2ad81426-07ea-4ce4-9690-b0bfae3669dd.mp4 |
+  | MITOTECH CELL BOOSTER | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/291d5f98-bed5-46f0-ad8a-0cc0c563b508.mp4 | https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/450956b2-8bda-4bfb-95e9-57a633aec832.mp4 |
+
 ## CELLULAR AGE DEFENSE 2.5% — страница с фильмом, проверена (21/11, 22:27)
 - **Три ролика 1080p (3,21 $), все годятся с первого раза:** T3 `348457f9042a4d6e928e2ad21eabcdf9` (камера подходит,
   размытая коробка уходит из кадра, начинается массаж), D1 `cc636e39fc2b4659a2ca2ae5ab81b5be` (массаж → в кожу),
@@ -1389,6 +1400,7 @@ _Время в записях 20/11 — по часам контейнера (И
 Все вопросы и варианты по умолчанию — в `QUESTIONS.md` (открыты 4–7 и 9–12). Работу они не останавливают.
 
 ## Журнал (новое сверху)
+- 21/11 23:03 — записи прокрутки MICRO BOOST 10%, CELL RENEW 1.5%, CELLULAR AGE DEFENSE 2.5% и MITOTECH CELL BOOSTER (компьютер и телефон) загружены, ссылки — на странице готовности.
 - 21/11 22:44 — **MITOPEN: пробный образ заказчику** — сцена без прибора (0,08 $) и настоящее перо, поставленное поверх; три кадра на листе. Остаток Atlas 0,06 $.
 - 21/11 22:33 — раскадровки MITOPEN и MITOSCAN написаны (прибор в кадре — только настоящий снимок); план DERMA RECOVERY CREAM сокращён до трёх роликов. Платного нет: остаток Atlas 0,14 $. Шкала 79 %.
 - 21/11 22:27 — **CELLULAR AGE DEFENSE 2.5%: фильм снят, собран, подключён и проверен** (три ролика 1080p,
