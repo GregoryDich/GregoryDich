@@ -1,26 +1,32 @@
-# CELL RENEW 1.5%, the desktop film: one unbroken movement, 24 fps, 1022 frames = 42.6 s.
-# Build:  ../tools/film-assemble.sh film-16x9.spec <clips dir> cell-renew-1-5-film.mp4 1280 720   (first version, 720p)
+# CELL RENEW 1.5%, the desktop film: one unbroken movement, 24 fps, 849 frames = 35.4 s.
+# Build:  ../tools/film-assemble.sh film-16x9.spec <clips dir> cell-renew-1-5-film.mp4 1912 1080
 # Phone:  ../tools/vertical-from-horizontal.py cell-renew-1-5-film.mp4 cell-renew-1-5-film-mobile.mp4 vertical-keys.json
-# The clips dir holds the Kling 4.0 results from Atlas (5 s = 121 frames), launched by ../tools/atlas-clips.py.
-#   T1  the pack at home (H0) -> the same frame, focus on her at the mirror (H1)
+# The clips dir holds the Kling 4.0 results from Atlas (1080p, 5 s = 121 frames) and the still frames:
+#   H0.png, H1.png   the pack at home sharp / she at the mirror sharp - one plate, so the focus pull is a free dissolve
 #   T2  the camera comes closer, the box leaves the frame, the massage begins (H1 -> H2)
 #   D1  the massage, then into the skin of the cheek (H2 -> Yc)
 #   D2  out of the skin: she is smoothing the cream (H3 -> Yc, played backwards)
-#   T5  the camera pulls back, the focus returns to the pack (H3 -> H0)
-#   --  free dissolve: the pack stays, the home behind it becomes the clinic (H0 -> C1)
-#   T7  focus from the pack to the cosmetologist and the patient (C1 -> C2); then the last frame is held
-# Film frames:  hold 0-59 | T1 60-179 | T2 180-299 | D1 300-420 | hold 421-456 | D2 backwards 457-577 |
-#               T5 578-697 | hold 698-733 | dissolve 734-781 | hold 782-805 | T7 806-925 | hold 926-1021
-# Chapters: 0-110 | 110-250 | 250-380 | 380-520 | 520-640 | 640-745 | 745-850 | 850-1022
-hold T1.mp4 0 60
-clip T1.mp4 1 120
+#   T5  the camera pulls back, the box comes in and the focus settles on it. Only frames 1-81 are used: at frame 82
+#       the clip jumps to the pose of its last still (a hidden cut). The last 12 frames are slowed to ease the stop.
+#   E0.png  frame 81 of T5 with the real box render placed exactly over the box (at 137,207, height 856 in 1912x1080)
+#   E1.png, E2.png  the clinic plate with the same box in the same place: box sharp / the two women sharp
+# Film frames:  hold 0-59 | focus 60-99 | hold 100-111 | settle 112-117 | T2 118-237 | D1 238-358 | hold 359-394 |
+#               D2 backwards 395-515 | T5 516-584 | T5 slowed 585-608 | settle 609-614 | hold 615-644 |
+#               home -> clinic 645-692 | hold 693-716 | focus 717-752 | hold 753-848
+# Chapters: 0-75 | 75-190 | 190-290 | 290-455 | 455-575 | 575-655 | 655-725 | 725-849
+hold H0.png 0 60
+fade H0.png 0 H1.png 0 40
+hold H1.png 0 12
+fade H1.png 0 T2.mp4 0 6
 clip T2.mp4 1 120
 clip D1.mp4 0 120
 hold D1.mp4 120 36
 clip D2.mp4 0 120 1 rev
-clip T5.mp4 1 120
-hold T5.mp4 120 36
-fade T5.mp4 120 T7.mp4 0 48
-hold T7.mp4 0 24
-clip T7.mp4 1 120
-hold T7.mp4 120 96
+clip T5.mp4 1 69
+slow T5.mp4 70 81 2
+fade T5.mp4 81 E0.png 0 6
+hold E0.png 0 30
+fade E0.png 0 E1.png 0 48
+hold E1.png 0 24
+fade E1.png 0 E2.png 0 36
+hold E2.png 0 96

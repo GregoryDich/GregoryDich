@@ -151,7 +151,7 @@
           "H1",
           "H2"
         ],
-        "verdict": "to be checked"
+        "verdict": "good: she closes her eyes, both hands to the cheeks, the camera comes closer, the box slides out"
       },
       "D1": {
         "prediction": "9d25fc33a23243b5931c8ceb9c98da38",
@@ -161,7 +161,7 @@
           "H2",
           "Yc"
         ],
-        "verdict": "to be checked"
+        "verdict": "good: the massage, the camera goes to the cheek, the cut-away opens on the skin and grows"
       },
       "D2": {
         "prediction": "b8ca7724a82544509bd640ab485e7a8f",
@@ -171,7 +171,7 @@
           "H3",
           "Yc"
         ],
-        "verdict": "to be checked"
+        "verdict": "good (played backwards): the cut-away closes into the cheek with cream, she smooths the cream"
       },
       "T5": {
         "prediction": "2ee0509162e14085af9e16a75851da47",
@@ -181,7 +181,7 @@
           "H3",
           "H0"
         ],
-        "verdict": "to be checked"
+        "verdict": "used up to frame 81: at frame 82 the clip jumps to the pose of its last still (a hidden cut); the box is larger there, so the home pack frame E0 and the clinic frames E1, E2 are built on frame 81 with the real box at 137,207 height 856 (1912x1080)"
       }
     },
     "clips_spent": "1.069 USD a clip, native 1080p (21/11)"
@@ -224,5 +224,14 @@
   "clip_resolution": "1080p",
   "clip_seconds": 5,
   "how_to_launch": "after the owner's ok: python3 ../tools/atlas-clips.py requests.json <clips dir>   (6 clips x 0.55 = 3.30 USD); then ../tools/film-assemble.sh film-16x9.spec <clips dir> film.mp4 1280 720",
-  "clip_price_note": "native 1080p, 5 s: 1.07 USD a clip (measured 21/11); focus pulls between two frames built on one plate are free dissolves at assembly"
+  "clip_price_note": "native 1080p, 5 s: 1.07 USD a clip (measured 21/11); focus pulls between two frames built on one plate are free dissolves at assembly",
+  "film": {
+    "frames": 849,
+    "desktop_media": "6caad281-1683-4669-a780-9d3fc2ef27a0",
+    "mobile_media": "7de16bea-7c78-4e5c-8130-d975252ecda2",
+    "spec": "film-16x9.spec",
+    "phone_keys": "vertical-keys.json",
+    "wire": "wire.json",
+    "checked": "1440x900 and 390x664: eight chapters follow the frames, no errors (21/11)"
+  }
 }

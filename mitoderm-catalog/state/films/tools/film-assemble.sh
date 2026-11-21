@@ -4,8 +4,11 @@
 #   clip <file> <from> <to> [step] [rev]   frames from..to (inclusive) of <file>; step N keeps every Nth frame
 #                                          (2 = twice as fast); rev plays the piece backwards
 #   hold <file> <frame> <count>            one frame of <file> held for <count> frames
+#   slow <file> <from> <to> <times>       frames from..to, each shown <times> times: a clip that ends while the camera
+#                                          still moves is eased into the hold that follows it
 #   fade <fileA> <frameA> <fileB> <frameB> <count>   a dissolve from one still frame to another over <count> frames
 #                                          (free transition between two places when the pack is identical in both)
+# A <file> may also be a still picture (PNG): it counts as a one-frame clip, frame 0.
 # Lines starting with # and empty lines are ignored. Output: 24 fps, a keyframe every 12 frames.
 set -euo pipefail
 SPEC=${1:?spec}; C=${2:?clips dir}; O=${3:?output}; W=${4:?width}; H=${5:?height}
@@ -19,6 +22,9 @@ while read -r kind f a b c d; do
   if [ "$kind" = hold ]; then
     ffmpeg -nostdin -v error -y -i "$C/$f" -vf "select='eq(n,$a)',${N},loop=loop=$((b-1)):size=1:start=0,setpts=N/24/TB" -frames:v "$b" $ENC "$P"
     n=$b
+  elif [ "$kind" = slow ]; then
+    ffmpeg -nostdin -v error -y -i "$C/$f" -vf "select='between(n,$a,$b)',setpts=N/24/TB,${N},setpts=PTS*$c,fps=24" $ENC "$P"
+    n=$(ffprobe -v error -count_frames -select_streams v:0 -show_entries stream=nb_read_frames -of csv=p=0 "$P" < /dev/null)
   elif [ "$kind" = fade ]; then
     # f=fileA a=frameA b=fileB c=frameB d=count; smooth (eased) blend of the two frames
     ffmpeg -nostdin -v error -y -i "$C/$f" -i "$C/$b" -filter_complex \

@@ -1,0 +1,23 @@
+{
+  "slug": "cell-renew-1-5",
+  "frames": 849,
+  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/6caad281-1683-4669-a780-9d3fc2ef27a0.mp4",
+  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/7de16bea-7c78-4e5c-8130-d975252ecda2.mp4",
+  "comment": [
+    "A connected film of a home-care serum: her morning at the mirror, into the skin and out, the cream, then the same",
+    "box in the clinic. 1912x1080 and 1080x1920, 849 frames, a keyframe every 12 (state/films/cell-renew-1-5/",
+    "film-16x9.spec). The box is the real pack render placed into the frames, so the two focus pulls and the change of",
+    "place are dissolves between frames with an identical box. Chapter 03 (the massage) stands before chapter 04",
+    "(what is inside) because the camera enters the skin from the massage."
+  ],
+  "chapters": [
+    {"start": 0, "end": 75, "note": "01 the pack at home", "shot": "Упаковка дома на столешнице у зеркала", "type": "pack", "section": 1},
+    {"start": 75, "end": 190, "note": "02 at the mirror", "shot": "У зеркала: рассматривает кожу", "type": "patient", "section": 2},
+    {"start": 190, "end": 290, "note": "03 the massage", "shot": "Массаж сыворотки подушечками пальцев", "type": "home", "section": 4},
+    {"start": 290, "end": 455, "note": "04 inside the skin", "shot": "Внутри кожи: спикулы открывают путь формуле", "type": "procedure", "section": 3},
+    {"start": 455, "end": 575, "note": "05 the cream", "shot": "Крем после сыворотки", "type": "home", "section": 5},
+    {"start": 575, "end": 655, "note": "06 the pack at home", "shot": "Упаковка дома после ухода", "type": "pack", "section": 6},
+    {"start": 655, "end": 725, "note": "07 the same pack in the clinic", "shot": "Та же упаковка в клинике", "type": "pack", "section": 7},
+    {"start": 725, "end": 849, "note": "08 the cosmetologist explains the home care", "shot": "Косметолог объясняет домашний уход", "type": "patient", "section": 8}
+  ]
+}

@@ -80,6 +80,21 @@ export const productFilms:Record<string,ProductFilm>={
  // 1912x1080 and 1080x1920, 468 frames, one chapter: the page copy has an intro only (state/films/mitotech-cell-booster/).
  'mitotech-cell-booster':{desktop:'/assets/world/mitotech-cell-booster-film.mp4',mobile:'/assets/world/mitotech-cell-booster-film-mobile.mp4',fps:24,frames:468,anchor:'left',chapters:[
   {start:0,end:468}  // 01 the box in the clinic, the treatment, the same box at her home
+ ]},
+ // A connected film of a home-care serum: her morning at the mirror, into the skin and out, the cream, then the same
+ // box in the clinic. 1912x1080 and 1080x1920, 849 frames, a keyframe every 12 (state/films/cell-renew-1-5/
+ // film-16x9.spec). The box is the real pack render placed into the frames, so the two focus pulls and the change of
+ // place are dissolves between frames with an identical box. Chapter 03 (the massage) stands before chapter 04
+ // (what is inside) because the camera enters the skin from the massage.
+ 'cell-renew-1-5':{desktop:'/assets/world/cell-renew-1-5-film.mp4',mobile:'/assets/world/cell-renew-1-5-film-mobile.mp4',fps:24,frames:849,chapters:[
+  {start:0,end:75},    // 01 the pack at home
+  {start:75,end:190},  // 02 at the mirror
+  {start:190,end:290}, // 03 the massage
+  {start:290,end:455}, // 04 inside the skin
+  {start:455,end:575}, // 05 the cream
+  {start:575,end:655}, // 06 the pack at home
+  {start:655,end:725}, // 07 the same pack in the clinic
+  {start:725,end:849}  // 08 the cosmetologist explains the home care
  ]}
 };
 // Chapter captions of the series films, in page order, word for word from the approved page copy
@@ -133,5 +148,15 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
  ],
  'mitotech-cell-booster':[
   {title:'MITOTECH CELL BOOSTER',body:'בוסטר תאי בשני בקבוקונים לפרוטוקולים בקליניקה בשילוב עם MITOPEN או MICRO\u00a0BOOST\u00a010%.',tag:'מקצועי'}
+ ],
+ 'cell-renew-1-5':[
+  {title:'CELL RENEW 1.5%',body:'חידוש, בכל יום.',tag:'סרום BIOSPICULE™ · טיפוח ביתי'},
+  {title:'רואים את זה קודם במראה.',body:'עור עמום ועייף למראה, נקבוביות פעורות, גוון בלתי אחיד, כתמים פוסט דלקתיים – מה שהמטופלים מבחינים בו בבית, בין הביקורים.',tag:'למה?'},
+  {title:'זה אינו פילינג ביתי רגיל.',body:'תחושת עקצוץ עדינה ואופיינית בזמן העיסוי – הספיקולות בפעולה. ללא לחץ רב וללא שפשוף. עור במראה רענן וזוהר.',tag:'הרגישו'},
+  {title:'הספיקולות פותחות. הרכיבים הפעילים בעקבותיהן.',body:'ה-Hydrolyzed\u00a0Sponge בריכוז 1.5% מכין את שכבת העור החיצונית לקבלת הפורמולה: Niacinamide, Galactomyces\u00a0ferment, Sodium\u00a0DNA, חומצה סליצילית + חומצה ציטרית.',tag:'מה בפנים'},
+  {title:'מריחה. שיקום. הגנה.',body:'על עור נקי ויבש, עסו בעדינות עד לספיגה; לאחר מכן DERMA\u00a0RECOVERY\u00a0CREAM; בשעות היום – מסנן קרינה. כשהעור מסתגל, עברו ל-2.5%.',tag:'פרוטוקול'},
+  {title:'30\u00a0מ״ל. בכל יום.',body:'CELL\u00a0RENEW\u00a01.5% – 30\u00a0ml ℮ 1.0\u00a0fl.\u00a0oz. Advanced\u00a0Biospicule\u00a0Technology. מתאים לכל סוגי העור.',tag:'ערכה ועובדות'},
+  {title:'התחילו את שגרת הטיפוח בבית.',body:'זמין דרך הקליניקות השותפות של מיטודרם. עברו ל-CELLULAR\u00a0AGE\u00a0DEFENSE\u00a02.5% ככל שהעור מסתגל; לאחריו יש למרוח תמיד DERMA\u00a0RECOVERY\u00a0CREAM.',tag:'הצעה'},
+  {title:'מומחי Mitoderm מוסמכים',body:'כל מומחה כאן מוכשר ומוסמך להעניק פרוטוקולים מקוריים של Mitoderm. מצאו מרפאה מהימנה בקרבתכם וקבעו ייעוץ.',tag:'מצאו מומחה'}
  ]
 };
