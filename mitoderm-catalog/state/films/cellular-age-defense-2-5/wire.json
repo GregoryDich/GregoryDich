@@ -1,0 +1,24 @@
+{
+  "slug": "cellular-age-defense-2-5",
+  "frames": 940,
+  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/fa56fa9b-6a1d-4f20-8557-842e8c6779ff.mp4",
+  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/a8d9d2a6-d06f-4d34-beea-8293664a676e.mp4",
+  "comment": [
+    "A connected film of a home-care serum: the cosmetologist looks at her skin in the clinic, the same box in the evening",
+    "at her home, the mirror, the massage, into the skin and out, the cream, the box again, back in the clinic.",
+    "1912x1080 and 1080x1920, 940 frames, a keyframe every 12 (state/films/cellular-age-defense-2-5/film-16x9.spec).",
+    "The box is the real pack render placed into the frames, so the focus pulls and both changes of place are",
+    "dissolves between frames with an identical box. Chapter 03 (the massage) stands before chapter 04 (what is",
+    "inside) because the camera enters the skin from the massage."
+  ],
+  "chapters": [
+    {"start": 0, "end": 80, "note": "01 the pack in the clinic", "shot": "Упаковка в клинике", "type": "pack", "section": 1},
+    {"start": 80, "end": 190, "note": "02 the skin examination", "shot": "Осмотр кожи в клинике", "type": "patient", "section": 2},
+    {"start": 190, "end": 462, "note": "03 at home: the mirror, the massage", "shot": "Дома вечером: у зеркала, массаж сыворотки", "type": "home", "section": 4},
+    {"start": 462, "end": 596, "note": "04 inside the skin", "shot": "Внутри кожи: больше спикул, формула идёт по путям", "type": "procedure", "section": 3},
+    {"start": 596, "end": 690, "note": "05 the cream", "shot": "Крем после сыворотки", "type": "home", "section": 5},
+    {"start": 690, "end": 760, "note": "06 the pack at home", "shot": "Упаковка дома", "type": "pack", "section": 6},
+    {"start": 760, "end": 826, "note": "07 the same pack in the clinic", "shot": "Та же упаковка в клинике", "type": "pack", "section": 7},
+    {"start": 826, "end": 940, "note": "08 the cosmetologist and the patient", "shot": "Косметолог и пациентка", "type": "patient", "section": 8}
+  ]
+}

@@ -121,7 +121,7 @@
           "H1",
           "H2"
         ],
-        "verdict": "to be checked"
+        "verdict": "good: the camera comes closer, the blurred box slides out at the left, she closes her eyes and massages with both hands"
       },
       "D1": {
         "prediction": "cc636e39fc2b4659a2ca2ae5ab81b5be",
@@ -130,7 +130,7 @@
           "H2",
           "Yd"
         ],
-        "verdict": "to be checked"
+        "verdict": "good: the massage, the camera goes to the cheek, a cut-away opens on the skin and grows into the cross-section"
       },
       "D2": {
         "prediction": "9477f95d06ee4cbab2c073ec0908b06f",
@@ -139,10 +139,11 @@
           "H3",
           "Yd"
         ],
-        "verdict": "to be checked"
+        "verdict": "good: she smooths the cream, the camera goes to the cheek, the cross-section appears under the cream"
       }
     },
-    "clips_note": "launched 21/11 22:10, 1.069 USD each. T1 (C1 -> C2), T2 (H0 -> H1) and T5 (H3 -> H0) are not shot: the two focus pulls are dissolves between frames with an identical box, and the pull-back is replaced by a soft-focus join onto the pack frame (film-assemble.sh, piece \"blur\")."
+    "clips_note": "launched 21/11 22:10, 1.069 USD each. T1 (C1 -> C2), T2 (H0 -> H1) and T5 (H3 -> H0) are not shot: the two focus pulls are dissolves between frames with an identical box, and the pull-back is replaced by a soft-focus join onto the pack frame (film-assemble.sh, piece \"blur\").",
+    "clips_spent": "3.208 USD for three 1080p clips (balance 3.344 -> 0.136)"
   },
   "frames": {
     "C1": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/c5852d50-d74c-4e9b-8ce0-d0ce4251dcbe.png",
@@ -154,14 +155,6 @@
     "H3": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-263815256be2affe6adf41bb0fbbbcb4d5c85184a85eb97672b4898d35b9a748/f99be926c5604e0fa803f0ba9f2f40ea-d8366912174f7f6a.png"
   },
   "launch": {
-    "T1": [
-      "C1",
-      "C2"
-    ],
-    "T2": [
-      "H0",
-      "H1"
-    ],
     "T3": [
       "H1",
       "H2"
@@ -173,14 +166,19 @@
     "D2": [
       "H3",
       "Yd"
-    ],
-    "T5": [
-      "H3",
-      "H0"
     ]
   },
   "clip_resolution": "1080p",
   "clip_seconds": 5,
   "how_to_launch": "after the owner's ok: python3 ../tools/atlas-clips.py requests.json <clips dir>   (6 clips x 0.55 = 3.30 USD); then ../tools/film-assemble.sh film-16x9.spec <clips dir> film.mp4 1280 720",
-  "clip_price_note": "native 1080p, 5 s: 1.07 USD a clip (measured 21/11); focus pulls between two frames built on one plate are free dissolves at assembly"
+  "clip_price_note": "native 1080p, 5 s: 1.07 USD a clip (measured 21/11); focus pulls between two frames built on one plate are free dissolves at assembly",
+  "film": {
+    "frames": 940,
+    "desktop_media": "fa56fa9b-6a1d-4f20-8557-842e8c6779ff",
+    "mobile_media": "a8d9d2a6-d06f-4d34-beea-8293664a676e",
+    "spec": "film-16x9.spec",
+    "phone_keys": "vertical-keys.json",
+    "wire": "wire.json",
+    "checked": "1440x900 and 390x664: eight chapters follow the frames, captions clear of the faces and the box, no errors (21/11)"
+  }
 }

@@ -1,0 +1,24 @@
+{
+  "comment": [
+    "CELLULAR AGE DEFENSE 2.5%, the phone film: a moving window over the desktop film (tools/vertical-from-horizontal.py).",
+    "Each key: frame, left edge of the window (% of the frame width), window width (%), top of the window on the phone canvas (%).",
+    "0-295 the box and the faces, the window does not move while the clinic becomes her home; 400-440 she in a medium",
+    "close-up; 462 the face; 490-580 the skin cross-section; 602-616 the cheek with the cream; 640-674 the cream scene;",
+    "706-939 the window is back on the box, at home and in the clinic."
+  ],
+  "keys": [
+    [0, 8, 58, 10],
+    [295, 8, 58, 10],
+    [400, 12, 52, 12],
+    [440, 12, 52, 12],
+    [462, 14, 56, 11],
+    [490, 3, 58, 9],
+    [580, 3, 58, 9],
+    [602, 22, 54, 11],
+    [616, 20, 54, 11],
+    [640, 10, 52, 12],
+    [674, 10, 52, 12],
+    [706, 8, 58, 10],
+    [939, 8, 58, 10]
+  ]
+}

@@ -1,32 +1,43 @@
-# CELLULAR AGE DEFENSE 2.5%, the desktop film: one unbroken movement, 24 fps, 1274 frames = 53.1 s.
-# Build:  ../tools/film-assemble.sh film-16x9.spec <clips dir> cellular-age-defense-2-5-film.mp4 1280 720   (first version, 720p)
+# CELLULAR AGE DEFENSE 2.5%, the desktop film: clinic -> home -> clinic in one unbroken movement, 24 fps.
+# Build:  ../tools/film-assemble.sh film-16x9.spec <clips dir> cellular-age-defense-2-5-film.mp4 1912 1080
 # Phone:  ../tools/vertical-from-horizontal.py cellular-age-defense-2-5-film.mp4 cellular-age-defense-2-5-film-mobile.mp4 vertical-keys.json
-# The clips dir holds the Kling 4.0 results from Atlas (5 s = 121 frames), launched by ../tools/atlas-clips.py.
-#   T1  the pack in the clinic (C1) -> the same frame, focus on the skin examination (C2); also backwards and once more at the end
-#   --  free dissolve: the pack stays, the clinic behind it becomes her home in the evening (C1 -> H0)
-#   T2  focus from the pack to her at the mirror (H0 -> H1)
+# The clips dir holds the Kling 4.0 results from Atlas (1080p, 5 s = 121 frames) and the still frames:
+#   C1.png, C2.png  the pack in the clinic sharp / the skin examination sharp - one plate, the real box in one place,
+#                   so the focus pulls are free dissolves
+#   H0.png, H1.png  the same box at her home in the evening sharp / she at the mirror sharp - the box stands where it
+#                   stands in C1, so clinic -> home is a free dissolve with the box unmoving
 #   T3  the camera comes closer, the box leaves the frame, the massage begins (H1 -> H2)
 #   D1  the massage, then into the skin of the cheek (H2 -> Yd)
 #   D2  out of the skin: she is smoothing the cream (H3 -> Yd, played backwards)
-#   T5  the camera pulls back, the focus returns to the pack (H3 -> H0)
-#   --  free dissolve: the home becomes the clinic again (H0 -> C1)
-# Film frames:  hold 0-59 | T1 60-179 | T1 backwards x2 180-239 | dissolve 240-287 | hold 288-311 | T2 312-431 |
-#               T3 432-551 | D1 552-672 | hold 673-708 | D2 backwards 709-829 | T5 830-949 | hold 950-985 |
-#               dissolve 986-1033 | hold 1034-1057 | T1 1058-1177 | hold 1178-1273
-# Chapters: 0-105 | 105-265 | 265-640 | 640-770 | 770-890 | 890-1000 | 1000-1110 | 1110-1274
-hold T1.mp4 0 60
-clip T1.mp4 1 120
-clip T1.mp4 0 118 2 rev
-fade T1.mp4 0 T2.mp4 0 48
-hold T2.mp4 0 24
-clip T2.mp4 1 120
+#   H3.png  the cream scene (the first frame of D2), held for a moment before the focus leaves it
+#   The pull-back to the pack is not shot (a clip of that kind gets a hidden cut): the cream scene goes out of focus
+#   and the pack frame H0 comes into focus (piece "blur"). The still tails of D1 and D2 run twice as fast.
+# Film frames:  hold 0-59 | focus 60-99 | hold 100-135 | focus back 136-165 | clinic -> home 166-213 | hold 214-237 |
+#               focus 238-277 | hold 278-289 | settle 290-295 | T3 296-415 | D1 416-520 | hold 521-544 |
+#               settle 545-550 | D2 backwards 551-655 | settle 656-661 | hold 662-673 | soft focus to the pack 674-705 |
+#               hold 706-735 | home -> clinic 736-783 | hold 784-807 | focus 808-843 | hold 844-939
+# Chapters: 0-80 | 80-190 | 190-462 | 462-596 | 596-690 | 690-760 | 760-826 | 826-940
+hold C1.png 0 60
+fade C1.png 0 C2.png 0 40
+hold C2.png 0 36
+fade C2.png 0 C1.png 0 30
+fade C1.png 0 H0.png 0 48
+hold H0.png 0 24
+fade H0.png 0 H1.png 0 40
+hold H1.png 0 12
+fade H1.png 0 T3.mp4 0 6
 clip T3.mp4 1 120
-clip D1.mp4 0 120
-hold D1.mp4 120 36
-clip D2.mp4 0 120 1 rev
-clip T5.mp4 1 120
-hold T5.mp4 120 36
-fade T5.mp4 120 T1.mp4 0 48
-hold T1.mp4 0 24
-clip T1.mp4 1 120
-hold T1.mp4 120 96
+clip D1.mp4 1 90
+clip D1.mp4 92 120 2
+hold D1.mp4 120 24
+fade D1.mp4 120 D2.mp4 120 6
+clip D2.mp4 90 119 2 rev
+clip D2.mp4 0 89 1 rev
+fade D2.mp4 0 H3.png 0 6
+hold H3.png 0 12
+blur H3.png 0 19 H0.png 0 19 8 26
+hold H0.png 0 30
+fade H0.png 0 C1.png 0 48
+hold C1.png 0 24
+fade C1.png 0 C2.png 0 36
+hold C2.png 0 96

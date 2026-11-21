@@ -110,6 +110,22 @@ export const productFilms:Record<string,ProductFilm>={
   {start:746,end:855}, // 06 the mask on the face
   {start:855,end:925}, // 07 the pack, the people behind it
   {start:925,end:995}  // 08 the pack held
+ ]},
+ // A connected film of a home-care serum: the cosmetologist looks at her skin in the clinic, the same box in the evening
+ // at her home, the mirror, the massage, into the skin and out, the cream, the box again, back in the clinic.
+ // 1912x1080 and 1080x1920, 940 frames, a keyframe every 12 (state/films/cellular-age-defense-2-5/film-16x9.spec).
+ // The box is the real pack render placed into the frames, so the focus pulls and both changes of place are
+ // dissolves between frames with an identical box. Chapter 03 (the massage) stands before chapter 04 (what is
+ // inside) because the camera enters the skin from the massage.
+ 'cellular-age-defense-2-5':{desktop:'/assets/world/cellular-age-defense-2-5-film.mp4',mobile:'/assets/world/cellular-age-defense-2-5-film-mobile.mp4',fps:24,frames:940,chapters:[
+  {start:0,end:80},    // 01 the pack in the clinic
+  {start:80,end:190},  // 02 the skin examination
+  {start:190,end:462}, // 03 at home: the mirror, the massage
+  {start:462,end:596}, // 04 inside the skin
+  {start:596,end:690}, // 05 the cream
+  {start:690,end:760}, // 06 the pack at home
+  {start:760,end:826}, // 07 the same pack in the clinic
+  {start:826,end:940}  // 08 the cosmetologist and the patient
  ]}
 };
 // Chapter captions of the series films, in page order, word for word from the approved page copy
@@ -183,5 +199,15 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'מומחי Mitoderm מוסמכים',body:'ה-Micro Boost בריכוז 10% מיושם במרפאה כדי להכין את העור לטיפול אינטנסיבי.',tag:'מצאו מומחה'},
   {title:'מזרק אחד. טיפול אחד.',body:'3\u00a0ml ℮ 0.10\u00a0fl.\u00a0oz. – שליטה מקצועית בכמות החומר לטיפול אחד בקליניקה. לשימוש מקצועי בלבד.',tag:'ערכה ועובדות'},
   {title:'הכניסו אותו לקליניקה שלכם.',body:'לשימוש מקצועי בלבד. לאחר הטיפול ייתכנו אדמומיות זמנית, יובש או קילוף. המומחה שלנו ייעץ לכם על פרוטוקולים ותמחור.',tag:'הצעה'}
+ ],
+ 'cellular-age-defense-2-5':[
+  {title:'CELLULAR AGE DEFENSE 2.5%',body:'עוברים ל-2.5%.',tag:'סרום BIOSPICULE™ · טיפוח ביתי'},
+  {title:'כשהקמטים מתחילים להטריד.',body:'קמטים וקמטוטים, אובדן אלסטיות, עור עייף ועמום – לעור הזקוק לתוכנית טיפוח אינטנסיבית יותר מ-1.5%.',tag:'למי מתאים הסרום?'},
+  {title:'תרגישו את זה. אל תשפשפו.',body:'עשויה להופיע תחושת עקצוץ מורגשת במגע – עסו בעדינות, לעולם לא בחוזקה. לאחר מכן מרחו DERMA\u00a0RECOVERY\u00a0CREAM לשמירה על נוחות העור.',tag:'יתרונות'},
+  {title:'יותר ספיקולות. חמישה פפטידים. Bakuchiol.',body:'ה-Hydrolyzed\u00a0Sponge בריכוז 2.5% מעדן את המרקם ומצמצם את הנקבוביות; Bakuchiol ו-Adenosine פועלים על הקמטוטים; חמישה פפטידים תומכים במוצקות ובאלסטיות.',tag:'רכיבים פעילים'},
+  {title:'מריחה. שיקום. הגנה.',body:'על עור נקי ויבש, עסו בעדינות; לאחר מכן DERMA\u00a0RECOVERY\u00a0CREAM; בשעות היום – מסנן קרינה. העור עדיין לא מורגל בספיקולות? התחילו ב-CELL\u00a0RENEW\u00a01.5%.',tag:'אופן השימוש'},
+  {title:'30\u00a0מ״ל. התוכנית האינטנסיבית.',body:'CELLULAR\u00a0AGE\u00a0DEFENSE\u00a02.5% – 30\u00a0ml ℮ 1.0\u00a0fl.\u00a0oz. Advanced\u00a0Biospicule\u00a0Technology. מתאים לכל סוגי העור.',tag:'נפח'},
+  {title:'משדרגים את השגרה.',body:'זמין דרך הקליניקות השותפות של מיטודרם. לאחריו יש למרוח תמיד DERMA\u00a0RECOVERY\u00a0CREAM. לקליניקות: פנו אלינו בנוגע לתמחור ולשלבי הטיפוח הביתי.',tag:'הצעה'},
+  {title:'מומחי Mitoderm מוסמכים',body:'כל מומחה כאן מוכשר ומוסמך להעניק פרוטוקולים מקוריים של Mitoderm. מצאו מרפאה מהימנה בקרבתכם וקבעו ייעוץ.',tag:'מצאו מומחה'}
  ]
 };

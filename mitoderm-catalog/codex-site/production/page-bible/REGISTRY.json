@@ -1071,53 +1071,60 @@
       "ctaHE": "למידע על התאמה מקצועית",
       "shots": [
         {
-          "title": "Белая коробка BIOSPICULE 2.5%",
-          "seconds": 4,
-          "vh": 1.3,
+          "title": "Упаковка в клинике",
+          "seconds": 3.33,
+          "vh": 1.1,
           "type": "pack",
           "index": 1
         },
         {
-          "title": "Подбор по потребностям, не только возрасту",
-          "seconds": 4.5,
-          "vh": 1.25,
+          "title": "Осмотр кожи в клинике",
+          "seconds": 4.58,
+          "vh": 1.3,
           "type": "patient",
           "index": 2
         },
         {
-          "title": "Та же пациентка дома",
-          "seconds": 4,
-          "vh": 1.15,
+          "title": "Дома вечером: у зеркала, массаж сыворотки",
+          "seconds": 11.33,
+          "vh": 3.25,
           "type": "home",
           "index": 3
         },
         {
-          "title": "Крупный план продукта",
-          "seconds": 4,
-          "vh": 1.2,
-          "type": "pack",
+          "title": "Внутри кожи: больше спикул, формула идёт по путям",
+          "seconds": 5.58,
+          "vh": 1.6,
+          "type": "procedure",
           "index": 4
         },
         {
-          "title": "Нанесение по инструкции",
-          "seconds": 5.5,
-          "vh": 1.55,
-          "type": "procedure",
+          "title": "Крем после сыворотки",
+          "seconds": 3.92,
+          "vh": 1.1,
+          "type": "home",
           "index": 5
         },
         {
-          "title": "Рутина без AI-эффекта",
-          "seconds": 3.5,
-          "vh": 0.95,
-          "type": "patient",
+          "title": "Упаковка дома",
+          "seconds": 2.92,
+          "vh": 1.1,
+          "type": "pack",
           "index": 6
         },
         {
-          "title": "CELLULAR AGE DEFENSE + CTA",
-          "seconds": 5,
-          "vh": 1.5,
+          "title": "Та же упаковка в клинике",
+          "seconds": 2.75,
+          "vh": 1.1,
           "type": "pack",
           "index": 7
+        },
+        {
+          "title": "Косметолог и пациентка",
+          "seconds": 4.75,
+          "vh": 1.35,
+          "type": "patient",
+          "index": 8
         }
       ],
       "isFrozen": false,
