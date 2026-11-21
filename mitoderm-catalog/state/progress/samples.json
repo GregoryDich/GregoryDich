@@ -1,6 +1,19 @@
 {
  "rows": [
   {
+   "page": "EXOSIGNAL HAIR — пробные кадры по замечаниям 21/11 (ждут «ок»)",
+   "links": [
+    {
+     "label": "Осмотр: зонд MITOSCAN передним концом на проборе, заколок нет",
+     "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261121_004135_ac962b09-1b11-4008-94c0-e80dd0eaf3ed.png"
+    },
+    {
+     "label": "Процедура: ручка и шприц, заколок нет",
+     "url": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261121_004135_29ddfcc5-c524-4a70-92f4-eaac608f8de2.png"
+    }
+   ]
+  },
+  {
    "page": "Готовые страницы — запись прокрутки (видео)",
    "links": [
     {
@@ -251,7 +264,7 @@
  "meta": [
   {
    "label": "Обновлено",
-   "value": "21/11/2026 02:38"
+   "value": "21/11/2026 03:05"
   }
  ]
 }
