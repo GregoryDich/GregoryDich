@@ -13,7 +13,8 @@
 #                                          A goes out of focus, its last <overlap> frames dissolve into the first
 #                                          <overlap> frames of B while both are fully blurred (no double image), then
 #                                          B comes into focus. Length: framesA + framesB - overlap. Defaults: overlap
-#                                          8 frames, sigma 26 px of the output frame.
+#                                          8 frames, sigma 26 px of the output frame. A range written backwards
+#                                          (19 0) plays that shot backwards; a still picture is held for its range.
 # A <file> may also be a still picture (PNG): it counts as a one-frame clip, frame 0.
 # Lines starting with # and empty lines are ignored. Output: 24 fps, a keyframe every 12 frames.
 set -euo pipefail
@@ -26,6 +27,17 @@ soften() {   # <in.png> <sigma> <out.png>: a gaussian blur; a strong one is made
   read -r f s <<< "$(awk -v s="$2" 'BEGIN{f=(s>=12)?4:(s>=6)?2:1; printf "%d %.2f", f, s/f}')"
   if [ "$f" = 1 ]; then convert "$1" -blur "0x$s" "$3"
   else convert "$1" -resize "$((100/f))%" -blur "0x$s" -resize "${W}x${H}!" "$3"; fi
+}
+grab() {     # <file> <from> <to> <dir> <prefix>: the frames from..to as <dir>/<prefix>000.png ...; from > to = backwards;
+  local lo hi n have k idx          # a still picture (one frame) is held for the whole range
+  lo=$(( $2 < $3 ? $2 : $3 )); hi=$(( $2 < $3 ? $3 : $2 )); n=$((hi-lo+1))
+  ffmpeg -nostdin -v error -y -i "$C/$1" -vf "select='between(n,$lo,$hi)',setpts=N/24/TB,scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1" -start_number 0 "$4/t%03d.png"
+  have=$(find "$4" -name 't[0-9]*.png' | wc -l)
+  for ((k=0; k<n; k++)); do
+    idx=$(( $2 > $3 ? n-1-k : k )); idx=$(( idx < have ? idx : have-1 ))
+    cp "$(printf '%s/t%03d.png' "$4" "$idx")" "$(printf '%s/%s%03d.png' "$4" "$5" "$k")"
+  done
+  find "$4" -name 't[0-9]*.png' -delete
 }
 i=0; total=0; : > "$T/list.txt"
 while read -r kind f a b c d; do
@@ -47,10 +59,8 @@ while read -r kind f a b c d; do
     # f=fileA a=fromA b=toA c=fileB d="fromB toB [overlap] [sigma]"
     read -r fb tb ov sg <<< "$d"; ov=${ov:-8}; sg=${sg:-26}
     D="$T/blur$i"; mkdir -p "$D"
-    X="scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1"
-    ffmpeg -nostdin -v error -y -i "$C/$f" -vf "select='between(n,$a,$b)',setpts=N/24/TB,${X}" -start_number 0 "$D/a%03d.png"
-    ffmpeg -nostdin -v error -y -i "$C/$c" -vf "select='between(n,$fb,$tb)',setpts=N/24/TB,${X}" -start_number 0 "$D/b%03d.png"
-    na=$((b-a+1)); nb=$((tb-fb+1)); n=$((na+nb-ov))
+    grab "$f" "$a" "$b" "$D" a; grab "$c" "$fb" "$tb" "$D" b
+    na=$(( a < b ? b-a+1 : a-b+1 )); nb=$(( fb < tb ? tb-fb+1 : fb-tb+1 )); n=$((na+nb-ov))
     for ((k=0; k<n; k++)); do
       if ((k < na-ov)); then          # A goes out of focus
         s=$(awk -v k="$k" -v m="$((na-ov))" -v g="$sg" 'BEGIN{t=(k+1)/(m+1); printf "%.2f", g*t*t*(3-2*t)}')
