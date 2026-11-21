@@ -1,0 +1,56 @@
+{
+  "note": "MITOTECH CELL BOOSTER: a \"coming soon\" page with an intro only, so the film is short: the real box in the clinic and one focus pull (2 frames, 1 paid clip). Both frames are ready; the sheet went to the owner on 21/11, 20:22. The clip only after the owner's ok (the money rule of 21/11).",
+  "tool": "../tools/atlas.py (stills: openai/gpt-image-2.6-sunburst/edit 2688x1520 high; clips: kwaivgi/kling-v4.0/image-to-video 720p 5 s)",
+  "references": {
+    "patient P5 sheet": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/6dbf5621-c5ca-4c4e-92d4-a2ba10bb1bd3.jpg",
+    "cosmetologist photo": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/90121c86-7093-44bb-a03d-ebc0648e392c.jpg",
+    "clinic room (MICRO BOOST K0)": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261121_064115_8231f212-8f68-4043-b77e-9125749fbc6a.png"
+  },
+  "box_rule": "the model never draws the box: the scene is generated without it and the real render (codex-site/public/assets/products/mitotech-cell-booster.webp) is placed by ../tools/place-pack.py. Vials, ampoules and applicators are never in the frame: there are no real photos of them.",
+  "stills": {
+    "C": {
+      "what": "clinic plate WITHOUT the box: a professional treatment - the cosmetologist works on the face of the lying patient",
+      "images": [
+        "clinic room (MICRO BOOST K0)",
+        "cosmetologist photo",
+        "patient P5 sheet"
+      ],
+      "prompt": "Photorealistic cinematic still, 16:9, soft natural daylight. The bright treatment room of a skin-care clinic from the first reference image - pale warm-beige walls, the large white-framed window with green foliage outside, the white leather treatment couch, the potted ficus - seen from a low camera at the height of a light marble table whose polished top runs along the bottom 15 percent of the frame. The table top is empty and clean: the carton box of the reference image is not there, nothing stands on the table. Behind the table, in sharp focus: the patient lies on her back on the reclined white treatment couch, her head toward the left of the frame, her face turned up and slightly toward the camera, eyes closed, relaxed. She is the woman from the third reference image (late fifties, very short cropped platinum-blond hair under a white disposable cap, a plain white T-shirt); mature skin with fine lines, natural, not exaggerated. The cosmetologist is the woman from the second reference image (about 30, long dark wavy hair, white uniform with thin pink piping, a pendant with a blue stone on a black cord, white disposable gloves on both hands); she sits at the head of the couch, behind the patient's head, leaning over her, and with the gloved fingertips of both hands she works gently on the patient's cheeks - calm, precise, professional. The cosmetologist's face is at about 40 percent of the frame width and the patient's face at about 52 percent; between the left edge and 31 percent of the frame width there is only the empty table top and the softly lit room behind it. The right third of the frame is calm empty background. No box, no vials, no ampoules, no syringes, no bottles, no devices, no products anywhere, no captions, no text."
+    }
+  },
+  "clips": {
+    "T1": {
+      "from_to": "C1 -> C2 (played forwards, then backwards)",
+      "prompt": "One continuous shot, no cuts; the camera stays in place with only a barely noticeable drift. The focus moves smoothly from the dark green carton box in the left foreground to the two women behind it: the box goes softly out of focus and the women become sharp. The cosmetologist in the white uniform and white gloves, sitting at the head of the treatment couch, works gently on the cheeks of the patient lying with her eyes closed - calm, slow, precise movements of her fingertips. Natural small movements, soft daylight. The box does not move and its print does not change. No text, no captions."
+    }
+  },
+  "estimate": "Atlas Cloud: 1 generated still 0.07 USD; 1 clip 0.55 USD; total about 0.6 USD.",
+  "atlas": {
+    "stills": {
+      "C": {
+        "prediction": "baecdf16f0f347f384cdc4d5c18271c8",
+        "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-2acdfa2e07b744d7bb24a790dde155de15b45ff07c5ea521cafb5f3d0f7cc3ab/baecdf16f0f347f384cdc4d5c18271c8-29dffaa8992b6235.png",
+        "verdict": "clinic plate without the box: good"
+      }
+    },
+    "spent": "one generation: 0.069 USD (balance 16.085 -> 16.015)",
+    "pack_frames": {
+      "cut-out": "mitoderm-catalog/codex-site/public/assets/products/mitotech-cell-booster.webp",
+      "C1": "place-pack.py <C plate> <cut-out> C1.png at=110,960 height=492 plate_blur=9",
+      "C2": "place-pack.py <C plate> <cut-out> C2.png at=110,960 height=492 pack_blur=7"
+    }
+  },
+  "frames": {
+    "C1": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/f6bf2ec0-51da-4173-8da0-d6ad160ef329.png",
+    "C2": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/dac4fbb1-6686-4b76-a397-c41ffb1975b0.png"
+  },
+  "launch": {
+    "T1": [
+      "C1",
+      "C2"
+    ]
+  },
+  "clip_resolution": "720p",
+  "clip_seconds": 5,
+  "how_to_launch": "after the owner's ok: python3 ../tools/atlas-clips.py requests.json <clips dir>   (1 clip, 0.55 USD); then ../tools/film-assemble.sh film-16x9.spec <clips dir> film.mp4 1280 720"
+}
