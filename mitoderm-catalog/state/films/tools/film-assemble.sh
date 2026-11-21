@@ -4,6 +4,8 @@
 #   clip <file> <from> <to> [step] [rev]   frames from..to (inclusive) of <file>; step N keeps every Nth frame
 #                                          (2 = twice as fast); rev plays the piece backwards
 #   hold <file> <frame> <count>            one frame of <file> held for <count> frames
+#   fade <fileA> <frameA> <fileB> <frameB> <count>   a dissolve from one still frame to another over <count> frames
+#                                          (free transition between two places when the pack is identical in both)
 # Lines starting with # and empty lines are ignored. Output: 24 fps, a keyframe every 12 frames.
 set -euo pipefail
 SPEC=${1:?spec}; C=${2:?clips dir}; O=${3:?output}; W=${4:?width}; H=${5:?height}
@@ -17,6 +19,12 @@ while read -r kind f a b c d; do
   if [ "$kind" = hold ]; then
     ffmpeg -nostdin -v error -y -i "$C/$f" -vf "select='eq(n,$a)',${N},loop=loop=$((b-1)):size=1:start=0,setpts=N/24/TB" -frames:v "$b" $ENC "$P"
     n=$b
+  elif [ "$kind" = fade ]; then
+    # f=fileA a=frameA b=fileB c=frameB d=count; smooth (eased) blend of the two frames
+    ffmpeg -nostdin -v error -y -i "$C/$f" -i "$C/$b" -filter_complex \
+      "[0:v]select='eq(n,$a)',${N},loop=loop=$((d-1)):size=1:start=0,setpts=N/24/TB[x];[1:v]select='eq(n,$c)',${N},loop=loop=$((d-1)):size=1:start=0,setpts=N/24/TB[y];[x][y]blend=all_expr='A+(B-A)*(3*pow(N/$((d-1)),2)-2*pow(N/$((d-1)),3))',format=yuv420p" \
+      -frames:v "$d" $ENC "$P"
+    n=$d
   else
     step=${c:-1}; rev=${d:-}; [ "$step" = rev ] && { step=1; rev=rev; }
     R=""; [ "$rev" = rev ] && R="reverse,"

@@ -442,5 +442,53 @@
         ]
       }
     }
-  }
+  },
+  "frames": {
+    "K0": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261121_064115_8231f212-8f68-4043-b77e-9125749fbc6a.png",
+    "K1": "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261121_064251_74d32227-8a32-4d30-9b77-2b4863f0ccfd.png",
+    "K2": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-4b807f5a6bb1d13e2c26d4a4514f380322ae21448a0642a185e9c8bfc92217ae/3175e260db654b14a012095c02cf84b9-90a845b577b6b53a.png",
+    "K3": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-2befb91eb227b996161bec396e55732f8f8d3d5dfbe8453b575b61affbbd9a77/14c98b38889f4889b07b3938239bf2d6-1efa0d67246b13f5.png",
+    "K4": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-50661733a3538458dbcda5f8feab5e19889d24dfc1821d78b56512e25b69fe88/0ebc6996836743128bb666e069585e30-f1efe87b08736bd8.png",
+    "Y1": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-c04642abeaed1232eec439db23ea2cbe50c04d695cd9dac5eb7fe6aba8c16d14/4a2db7ee92644596b9be6fb3596d7404-a9e9739a60c00042.png",
+    "Y2": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-07a2c19a61414f1de9d814f457648e830eea5bf81a60d4426151f14f48c12afc/7be8845559da4527a745b207af02f865-317056795c87ef39.png",
+    "K6": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-aed77925e9ea542a321559e85661d11306f3b4fe5ed791d4ca77ad317ec07180/26d5184863834cf4994ad2613c4c33ba-fdd5a6346fc6b194.png",
+    "K7": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/d4959cc4-0320-46ce-b84c-60ea188d0a88.png"
+  },
+  "launch": {
+    "T1": [
+      "K0",
+      "K1"
+    ],
+    "T2": [
+      "K1",
+      "K2"
+    ],
+    "T3": [
+      "K2",
+      "K3"
+    ],
+    "T4": [
+      "K3",
+      "K4"
+    ],
+    "D1": [
+      "K4",
+      "Y1"
+    ],
+    "BL": [
+      "Y1",
+      "Y2"
+    ],
+    "D2": [
+      "K6",
+      "Y2"
+    ],
+    "T7": [
+      "K6",
+      "K7"
+    ]
+  },
+  "clip_resolution": "720p",
+  "clip_seconds": 5,
+  "how_to_launch": "after the owner's ok: python3 ../tools/atlas-clips.py requests.json <clips dir>   (8 clips x 0.55 = 4.40 USD); then ../tools/film-assemble.sh film-16x9.spec <clips dir> film.mp4 1280 720"
 }
