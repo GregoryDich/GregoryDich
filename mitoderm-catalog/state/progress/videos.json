@@ -2,7 +2,7 @@
   "meta": [
     {
       "label": "Обновлено",
-      "value": "22/11/2026 16:18"
+      "value": "22/11/2026 23:36"
     },
     {
       "label": "Источник",
@@ -157,7 +157,12 @@
     "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261119_164230_d42294a1-0f7c-435b-9606-f14df7b069bc.mp4": 13.3,
     "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261119_163420_d876df41-d62c-4d59-a9cf-43f99eb0abaa.mp4": 14.7,
     "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261119_163422_facb6759-cce4-4981-8f9f-47e5b9aa87a8.mp4": 11.5,
-    "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261119_163558_68239fc4-1302-4ac8-abfe-2ce88261b30d.mp4": 8.3
+    "https://d8j0ntlcm91z4.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/hf_20261119_163558_68239fc4-1302-4ac8-abfe-2ce88261b30d.mp4": 8.3,
+    "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/924b099b-3196-4f40-8452-fac1dfa452dc.mp4": 10.8,
+    "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/14eae525-abc5-49fa-ac6f-4997dd39ee47.mp4": 8.3,
+    "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/44f49e53-a0ea-4df0-9211-b565aa7a37c1.mp4": 6.9,
+    "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/2ea80ba5-d6df-4ee6-8699-423e0edca2de.mp4": 4.3,
+    "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/7766df7a-0379-4ce7-b15b-5f6edbcf4fab.mp4": 9.3
   },
   "pages": [
     {
@@ -723,18 +728,23 @@
       "where": "клиника",
       "note": "Телефонный фильм вырезан из широкого, поэтому ролики только 16:9.",
       "record": {
-        "desktop": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/9ca19b6b-0a87-4f35-8e8d-7ce03961f2b3.mp4",
-        "phone": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/ce05303a-a3e4-4214-8aa1-f3d52b0be490.mp4"
+        "desktop": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/44f49e53-a0ea-4df0-9211-b565aa7a37c1.mp4",
+        "phone": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/2ea80ba5-d6df-4ee6-8699-423e0edca2de.mp4"
       },
       "film": {
-        "desktop": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/c9412b98-147f-46ff-b7aa-9e1189f768b3.mp4",
-        "phone": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/bb3850d8-0677-4389-8284-f9b832a3ea7a.mp4"
+        "desktop": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/924b099b-3196-4f40-8452-fac1dfa452dc.mp4",
+        "phone": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/14eae525-abc5-49fa-ac6f-4997dd39ee47.mp4"
       },
       "clips": [
         {
           "code": "T1",
           "what": "коробка в клинике: фокус с коробки на людей (в фильме вперёд и назад)",
           "wide": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/8cef1e06-f239-4328-a9bd-49a4eddd51c9.mp4"
+        },
+        {
+          "code": "O",
+          "what": "набор открывается на столе: расчёт по точной 3D-модели из макетов печати (не генерация)",
+          "wide": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/7766df7a-0379-4ce7-b15b-5f6edbcf4fab.mp4"
         },
         {
           "code": "W",

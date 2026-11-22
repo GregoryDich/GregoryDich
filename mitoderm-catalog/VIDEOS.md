@@ -1,6 +1,6 @@
 # Видео страниц MITODERM
 
-Обновлено 22/11/2026 16:18. 14 страниц, 26 фильмов, 86 файлов роликов, 1224 МБ. Каждая ссылка проверена: файл открывается.
+Обновлено 22/11/2026 23:36. 14 страниц, 26 фильмов, 87 файлов роликов, 1240 МБ. Каждая ссылка проверена: файл открывается.
 
 **Как скачать.** Ссылка открывает сам файл. На компьютере: меню «⋮» в углу плеера → «Скачать» (или правой кнопкой по видео → «Сохранить видео как»). На телефоне: долгое нажатие на видео → «Сохранить» или «Скачать видео».
 
@@ -187,12 +187,13 @@
 
 ## MITOTECH CELL BOOSTER — клиника
 
-- **Фильм страницы:** [компьютер, 16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/c9412b98-147f-46ff-b7aa-9e1189f768b3.mp4) — 8,7 МБ · [телефон, 9:16](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/bb3850d8-0677-4389-8284-f9b832a3ea7a.mp4) — 6,5 МБ
-- **Страница целиком (запись прокрутки):** [компьютер](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/9ca19b6b-0a87-4f35-8e8d-7ce03961f2b3.mp4) — 4,6 МБ · [телефон](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/ce05303a-a3e4-4214-8aa1-f3d52b0be490.mp4) — 3 МБ
+- **Фильм страницы:** [компьютер, 16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/924b099b-3196-4f40-8452-fac1dfa452dc.mp4) — 10,8 МБ · [телефон, 9:16](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/14eae525-abc5-49fa-ac6f-4997dd39ee47.mp4) — 8,3 МБ
+- **Страница целиком (запись прокрутки):** [компьютер](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/44f49e53-a0ea-4df0-9211-b565aa7a37c1.mp4) — 6,9 МБ · [телефон](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/2ea80ba5-d6df-4ee6-8699-423e0edca2de.mp4) — 4,3 МБ
 - Телефонный фильм вырезан из широкого, поэтому ролики только 16:9.
 
 | Ролик | Что в кадре | Файлы |
 |---|---|---|
 | T1 | коробка в клинике: фокус с коробки на людей (в фильме вперёд и назад) | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/8cef1e06-f239-4328-a9bd-49a4eddd51c9.mp4) — 3,3 МБ |
+| O | набор открывается на столе: расчёт по точной 3D-модели из макетов печати (не генерация) | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/7766df7a-0379-4ce7-b15b-5f6edbcf4fab.mp4) — 9,3 МБ |
 | W | капли раствора и перо MITOPEN на щеке | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/54acb3a5-0f74-4d9b-98bb-cb6bc322b4b7.mp4) — 3,9 МБ |
 | BL | раствор в микроканалах | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/8fb8f93b-f9ed-4f15-ad46-5b228b915419.mp4) — 4,5 МБ |
