@@ -92,9 +92,11 @@ function proxy() {
   const flight = await page.evaluate(() => {
     const v = document.querySelector('video.pc-film');
     const r = v ? v.getBoundingClientRect() : null;
-    return { samples: window.__entry, film: v ? { rect: [r.left, r.top, r.width, r.height], video: [v.videoWidth, v.videoHeight], position: getComputedStyle(v).objectPosition } : null };
+    return { samples: window.__entry || [], film: v ? { rect: [r.left, r.top, r.width, r.height], video: [v.videoWidth, v.videoHeight], position: getComputedStyle(v).objectPosition } : null };
   });
   // The place of the pack in the film, by the same rule as film-entry.ts (its table is read from the source).
+  // On a static copy of the site the product opens by a full page load and the record of the flight goes with the
+  // page: then "land" stays null.
   let land = null;
   const table = fs.readFileSync(pathLib.join(__dirname, '..', '..', 'codex-site', 'mitoderm', 'pilot', 'film-entry.ts'), 'utf8');
   const row = table.match(new RegExp(`'${slug}':\\{desktop:\\[([^\\]]+)\\],mobile:\\[([^\\]]+)\\]`));
