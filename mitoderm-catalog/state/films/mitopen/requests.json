@@ -42,5 +42,81 @@
     "wire": "wire.json",
     "state": "draft: no paid clips; the look waits for the owner (question 27)",
     "checked": "1440x900 and 390x664: eight chapters follow the frames, no errors (21/11)"
+  },
+  "own_scenes_22_11": {
+    "why": "The owner's word of 21/11: 'Mitopen - show microneedling'. The page's own scene with its own patient P2 replaces the three clips borrowed from EXOSIGNAL HAIR.",
+    "references": {
+      "look (plate A: the room, M and P2)": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/b17a8133-16f6-4dda-9200-54eadb6a5400.png",
+      "the real pen on white": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/dd54ecd5-2db4-454c-91ce-329ada6dcd79.png",
+      "how the pen is held (a crop of the accepted EXOSIGNAL HAIR clip T5b)": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/b7e9543e-fabe-4add-b305-19d5f3719782.png",
+      "arrangement of the two people (clinic plate of DERMA RECOVERY CREAM)": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/0ca500b5-1fda-49c9-b9e7-eccdfc5bec6f.png",
+      "inside-skin style (MICRO BOOST 10% Y2)": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/56ab552f-9de0-4de9-8436-5d9fe9ece0fd.png"
+    },
+    "stills": {
+      "K3": {
+        "prediction": "b4bb7218045e4fd3bd8fe64c8424f288",
+        "verdict": "rejected by me: the lettering on the pen is garbled, the patient is in the right third, the pen is at the lips"
+      },
+      "K3b": {
+        "prediction": "3068b6f0a7514e02b5ffc7cbdeac2b17",
+        "verdict": "rejected: the people are in place and the pen has no lettering, but the pen is still at the corner of the mouth and her hand covers his eye"
+      },
+      "K3c": {
+        "prediction": "a7aa7ca08f4044ada29d32ccdbdb1fc9",
+        "verdict": "rejected: a second pen-like object appeared, the pen is hidden by the hand"
+      },
+      "K3d": {
+        "prediction": "60df4c47dc5544f2973cfe9766823969",
+        "prompt": "Photorealistic cinematic still, 16:9, soft natural daylight. The bright treatment room, the cosmetologist and the patient of the first reference image, a few minutes later. The two people are arranged as the two people in the third reference image: the patient lies on his back on the reclined white treatment couch, his head toward the left of the frame, his face turned up and slightly toward the camera, eyes closed, relaxed; the cosmetologist sits at the head of the couch, behind his head, leaning over him. Take from the third reference image only this arrangement and the camera angle - not its people, not the cream, not the cap, not the table.\nThe patient is the man of the first reference image (30-35, short black hair, light stubble, a black turtleneck sweater, a thin silver chain; a few faint reddish marks left by old inflammation on his cheeks - natural, not exaggerated). The cosmetologist is the woman of the first reference image (about 30, long dark wavy hair, white uniform with thin pink piping, a pendant with a blue stone on a black cord, white disposable gloves on both hands). Her face is at about 34 percent of the frame width and his face at about 50 percent; no part of either person lies beyond 64 percent of the frame width. The right 36 percent of the frame is calm softly blurred room: the pale wall and the white-framed window with green foliage.\nIn her right hand she holds the microneedling pen of the second reference image - exactly that device: the same champagne-gold body with its waist, the same faceted rose-gold ring, the same champagne front part between the ring and the short clear cartridge, the same small round button, indicator dot and flared end cap. The side of the pen with the lettering is turned away from the camera: no lettering and no text on the visible side. Do not change the device itself: the same proportions and thickness as in the photo, not thinner, not longer, not tapered, no cone, no nozzle, no cable, nothing added. She holds it like a thick pencil, nearly upright, around the middle of its body, so that the whole pen is clearly seen from the clear cartridge to the flared end cap and her fingers do not hide the rose-gold ring. The clear cartridge end rests on the middle of his cheek that faces the camera, halfway between the cheekbone and the jaw line. The gloved fingertips of her left hand rest on the same cheek a little higher, near the cheekbone, and gently stretch the skin. His eyes, nose and lips are not touched and not covered. There is one pen only and nothing else in her hands.\nNo cap on his head, no table, no towel, no box, no bottle, no syringe, no second device. No text, no captions.",
+        "verdict": "good: the patient lies with the head to the left, the cosmetologist at the head of the couch, the pen stands on the cheek; the pen checked against the real photo (end cap, mark, dot, button, waist, ring, clear cartridge; no lettering turned to the camera). A translucent streak at the working end was patched by hand with neighbouring skin -> K3e, the frame used in the film"
+      },
+      "Y1": {
+        "prediction": "76dd05e094374c8bbde9edcc5a821532",
+        "prompt": "Scientific skin-care illustration in exactly the visual style of the first reference image: the same clean cut-away of the skin, the same rounded cells of the upper layer and pink wavy fibres of the deeper layer, the same soft warm light and the same empty softly blurred area on the right 40 percent of the frame. Facial skin: no hair, no follicles. Differences from the reference: there are no spicules and no gold at all. Instead, the upper layer is crossed by one neat even row of seven thin, straight, vertical micro-channels of exactly equal depth, evenly spaced: each is a fine clean narrow opening that goes from the skin surface straight down through the layer of rounded cells and ends at the same level in the upper part of the pink layer - precise, uniform and gentle, as made by a precise instrument. The channels are empty and clean. No needles, no instrument, no device, no blood, no redness, no arrows, no text, no labels, no numbers, no hands, no people.",
+        "verdict": "good: a row of seven thin vertical micro-channels of equal depth, no needles"
+      },
+      "Y2": {
+        "prediction": "da72baf78b8c4a47863b0778de99b2e7",
+        "prompt": "The same illustration as in the first reference image - the same cut-away of the skin, the same row of seven thin vertical micro-channels, the same rounded cells and pink fibres, the same framing, light and empty softly blurred area on the right. Change only this: a translucent golden serum now lies as a thin glossy film on the skin surface above the channels and flows down inside every one of the seven channels as fine golden droplets, filling them to their lower ends, where a soft warm golden glow spreads gently into the surrounding tissue. Everything else stays exactly as it is: the channels keep their place, number, width and depth. No needles, no instrument, no device, no text, no labels, no arrows, no numbers, no hands, no people.",
+        "verdict": "good: the same channels, the golden product goes down them"
+      }
+    },
+    "frames": {
+      "K1": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/b0637ba2-32b2-4f3b-a778-04bdc5a93c17.png",
+      "K3e": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/4a819a54-bce2-48eb-ac77-db2d77c0884d.png",
+      "Y1": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/49567758-c39a-4239-8e52-53b9c09e7c5c.png",
+      "Y2": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/56ab552f-9de0-4de9-8436-5d9fe9ece0fd.png"
+    },
+    "sheet": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/77b89f13-32e1-4f46-9b9f-58c223f26772.jpg",
+    "clips": {
+      "E": {
+        "from_to": "K1 -> K1 (the live examination; ends where it starts)",
+        "prompt": "One continuous shot, no cuts; the camera stays in place with only a barely noticeable drift. The cosmetologist in the white uniform and white gloves examines the skin of the patient's face before the treatment: her gloved fingertips move gently from his cheek to the line of his jaw and up to his forehead, she looks closely, then her hand returns to his cheek; he sits calm and upright, blinks naturally and turns his face slightly for her. Natural small movements, soft daylight. The softly blurred pen on the white towel in the left foreground does not move and does not change. The shot ends in the same position as it begins. No text, no captions."
+      },
+      "D": {
+        "from_to": "K3e -> Y1 (the pen works, then the camera goes into the skin)",
+        "prompt": "One continuous shot, no cuts. For the first two seconds the cosmetologist keeps working with the microneedling pen: with short gentle stamping touches she moves the pen step by step along the patient's cheek while her other hand keeps the skin taut; the pen itself does not change. Then the camera pushes in smoothly toward the skin of the cheek beside the clear end of the pen: the skin grows large and fills the frame, the camera comes down to the level of the skin surface, and the view opens into a clean scientific skin-care illustration: a cut-away of the skin crossed by one neat even row of thin vertical micro-channels of equal depth. One continuous camera move with no jump; soft warm light. No needles in the illustration, no blood, no text, no labels, no arrows."
+      },
+      "BL": {
+        "from_to": "Y1 -> Y2 (the product flows down the micro-channels)",
+        "prompt": "One continuous shot, no cuts; the camera stays almost still with a barely noticeable slow drift. The scientific illustration of the skin cut-away with the row of thin vertical micro-channels stays as it is. A translucent golden serum spreads as a thin glossy film over the skin surface above the channels and then flows slowly down inside each channel as fine golden droplets, one channel after another, until all the channels are filled to their lower ends and a soft warm golden glow spreads gently into the tissue around them. The channels keep their place, number and depth. No needles, no instruments, no text, no labels, no arrows."
+      }
+    },
+    "launch": {
+      "E": [
+        "K1",
+        "K1"
+      ],
+      "D": [
+        "K3e",
+        "Y1"
+      ],
+      "BL": [
+        "Y1",
+        "Y2"
+      ]
+    },
+    "state": "NOT LAUNCHED: the clips wait for the owner's ok on the sheet (sent 22/11, 02:20). Three 1080p clips, 5 s, 1.07 USD each = 3.21 USD. Launch each with tools/atlas.py video <out.mp4> <prompt.txt> 1080p 5 <first url> <last url> in the background with its own log.",
+    "spent_stills": "0.42 USD for six stills (three of them rejected tries of K3)"
   }
 }

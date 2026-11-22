@@ -1,0 +1,63 @@
+{
+  "note": "MITOSCAN, the page's own film (22/11): four stills of one look - the cosmetologist M and the patient of the accepted EXOSIGNAL HAIR film, no hair clips, the handset held as on the owner's real frame. It replaces the draft assembled from EXOSIGNAL HAIR clips (film-draft-16x9.spec), where the handset is held the way the owner rejected on 21/11.",
+  "tool": "../tools/atlas.py (stills: openai/gpt-image-2.6-sunburst/edit 2688x1520 high; clips: kwaivgi/kling-v4.0/image-to-video 1080p 5 s)",
+  "handset_rule": "The handset is never redesigned (SERIES-BRIEF.md, 'the real device in the frame'): the wide curved white body lies almost flat along the head, the head end with the black oval Mitoscan panel on the parting, panel up, the cable from the opposite end at the wrist. The base still is K3q of the EXOSIGNAL HAIR fix (Higgsfield job 2852f9f9-901f-44cd-adea-a33f3ab89f5f), built on the owner's real frame.",
+  "limits": "There is still no large photo of the system (the only one is 340x288 px) and no real screen captures, so the system and the picture on its screen are generated 'after the real look', as in the accepted EXOSIGNAL HAIR film. When the owner sends the photo and the captures, the screen picture is replaced by the real ones.",
+  "references": {
+    "K3q (the handset on the parting)": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/c8b387df-a99e-4ab0-bd8c-fd52f53c4025.png",
+    "the last frame of the accepted clip S1c (the screen in front)": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/f9998e04-a019-4c75-82ab-273ef9202d1e.png"
+  },
+  "stills": {
+    "K3q": {
+      "what": "the handset on the parting, held correctly",
+      "source": "ready: the sample of the EXOSIGNAL HAIR fix, free"
+    },
+    "S": {
+      "prediction": "4829cdfd0e0b42b793def3349c24fbe1",
+      "what": "the screen of the system in the left foreground, the handset on the parting behind it",
+      "prompt": "Reproduce the first reference image exactly - the same screen of the diagnostic system in the left foreground with the same magnified image of the scalp on it, the same silver cylinder base under it, the same two women with the same faces, hair and clothes, the same room, window, plant, light and framing. Change only two things.\n1. The white handset in the cosmetologist's hand and its position are exactly as in the second reference image: the same wide curved white body lying almost flat along the top of the patient's head, its head end with the black oval Mitoscan panel resting on the parting, the panel facing up, the cable leaving the opposite end near her wrist. Do not change the handset itself: the same shape and thickness, not thinner, not longer, no cone, no nozzle, nothing added.\n2. There are no hair clips in the patient's hair: her hair is simply parted in the middle and held by the same brown headband, as in the second reference image.\nNothing else changes. Photorealistic. No text except the word Mitoscan on the handset panel; no captions, no overlays.",
+      "verdict": "good: the handset as in K3q, no hair clips, the screen and the base as in the accepted film"
+    },
+    "N": {
+      "prediction": "b62481cd726441b0bb9b13385ff39370",
+      "what": "the look with the naked eye: both hands part the hair, no device",
+      "prompt": "Reproduce the first reference image exactly - the same two women with the same faces, hair and clothes, the same brown headband, the same room, window, plant, light and framing. Change only this: there is no handset and no cable anywhere in the frame - the cosmetologist's hands are empty. With the gloved fingertips of both hands she gently parts the patient's hair along the parting and looks closely at the scalp with the naked eye, leaning a little closer. The patient sits calm, looking down as before. No device, no instrument, no screen in the frame. Nothing else changes. Photorealistic. No text, no captions.",
+      "verdict": "good"
+    },
+    "E": {
+      "prediction": "0bb90d63966f4e5db06a3eca1b895e40",
+      "what": "the end of the visit: both smile, no device",
+      "prompt": "Reproduce the first reference image exactly - the same two women with the same faces, hair and clothes, the same brown headband, the same room, window, plant, light and framing. Change only this: the examination is finished. There is no handset and no cable anywhere in the frame. The cosmetologist stands in the same place beside the patient, her gloved hands lowered and relaxed, one hand resting lightly on the back of the chair; she looks at the patient with a warm calm smile, explaining. The patient has raised her head and looks up at the cosmetologist with a calm content smile. No device, no instrument, no screen in the frame. Nothing else changes. Photorealistic. No text, no captions.",
+      "verdict": "good"
+    }
+  },
+  "sheet": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/b48593a3-4d16-40d7-9198-b1d3b560b058.jpg",
+  "clips": {
+    "C1": {
+      "from_to": "N (one start frame, no end frame)",
+      "prompt": "One continuous shot, no cuts; the camera stays in place with only a barely noticeable drift. The cosmetologist in the white uniform and white gloves examines the patient's scalp with the naked eye: with the gloved fingertips of both hands she gently parts the hair along the parting, moves a little further along it, leans closer and looks carefully; the patient sits calm, looking down, and breathes quietly. Natural small movements, soft daylight. No device, no instrument, no screen appears. No text, no captions."
+    },
+    "C2": {
+      "from_to": "K3q -> S",
+      "prompt": "One continuous shot, no cuts. For the first second the cosmetologist slowly glides the white handset a little along the parting; the handset stays as it is - lying almost flat on the top of the head, the black oval panel facing up, the cable at her wrist - and does not change its shape. Then the camera moves smoothly back and to the left and comes down to table height, so that the screen of the diagnostic system enters the frame in the left foreground, showing the magnified image of the scalp, with the silver base under it; the two women stay in the frame behind it and the cosmetologist keeps the handset on the parting. One continuous camera move with no jump. No text, no captions."
+    },
+    "C3": {
+      "from_to": "S (one start frame, no end frame)",
+      "prompt": "One continuous shot, no cuts; the camera stays in place with only a barely noticeable drift. The cosmetologist keeps the white handset on the parting with one hand and moves it very slightly; on the screen in the left foreground the magnified image of the scalp shifts a little as the handset moves. The patient raises her eyes and looks at the screen with interest; the cosmetologist glances at the screen too and nods slightly, explaining. The handset, the screen and its base do not change their shape. Natural small movements, soft daylight. No text, no captions."
+    }
+  },
+  "launch": {
+    "C1": [
+      "N"
+    ],
+    "C2": [
+      "K3q",
+      "S"
+    ],
+    "C3": [
+      "S"
+    ]
+  },
+  "state": "NOT LAUNCHED: the clips wait for the owner's ok on the sheet (sent 22/11, 02:25). Three 1080p clips, 5 s, 1.07 USD each = 3.21 USD.",
+  "estimate": "stills 0.26 USD (spent) + three clips 3.21 USD = 3.47 USD; with one retake 4.54 USD (the page ceiling is 8 USD)"
+}
