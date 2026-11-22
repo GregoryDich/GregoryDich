@@ -180,6 +180,16 @@
    and lose its sides - and a pack stands close to the left side. So the film keeps its whole width at the top of the
    stage; what is left below it lies under the caption. On a stage of 9:16 or lower nothing changes. */
 @media(max-width:860px){.pc-film{height:min(100%,calc(100vw*16/9))}}
+/* The same on a wide window that is narrower than the film (a tablet held sideways, a tall browser window): enlarged
+   to the height of the stage the film would lose its sides - a pack at the left edge is cut and the people move under
+   the caption. So the film keeps its whole width at the top of the stage and fades into a band of the page colour that
+   carries the foot of the caption and the chapter line. From 16:10 up nothing changes. In a window much taller than
+   the film (a large tablet held upright) the caption stays next to the film instead of dropping to the far bottom. */
+@media(min-width:861px) and (max-aspect-ratio:159/100){
+ .pc-film{height:min(100%,calc(100vw*9/16))}
+ .pc-scene{padding-bottom:max(110px,calc(100svh - 100vw*9/16 - 200px))}
+ .pc-film.is-painted~.pc-scenes::before{content:'';position:absolute;inset:calc(100vw*9/16 - 150px) 0 0;background:linear-gradient(180deg,transparent,var(--pc-bg) 150px);pointer-events:none}
+}
 /* EXO-NAD procedure shots (03-05) put the caption and steps over the patient's
    light sweater; a low scrim keeps them readable without reaching her face. */
 @media(min-width:861px){.pc-film.is-painted~.pc-scenes .pc-scene[data-kind=procedure]{background:linear-gradient(0deg,rgba(0,0,0,.5),transparent 40%),linear-gradient(270deg,rgba(0,0,0,.43),transparent 52%)}}
