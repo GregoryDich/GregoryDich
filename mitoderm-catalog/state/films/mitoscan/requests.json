@@ -69,7 +69,7 @@
       "Sr"
     ]
   },
-  "state": "NOT LAUNCHED: the clips wait for the owner's ok on the sheet (version 2 sent 22/11, 03:15). Three 1080p clips, 5 s, 1.07 USD each = 3.21 USD.",
+  "state": "LAUNCHED 22/11, 09:11: three 1080p clips, 5 s, 1.07 USD each (jobs).",
   "estimate": "stills 0.49 USD (spent: S, N, E, P1, SC) + three clips 3.21 USD = 3.70 USD; with one retake 4.77 USD (the page ceiling is 8 USD)",
   "built_without_generation": {
     "system-scan.png": "the real photo with SC fitted into its display: convert -distort Perspective \"0,0 188,42  W,0 822,58  W,H 749,502  0,H 101,444\"",
@@ -110,5 +110,11 @@
     "N.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/448be68d-48b8-47f4-a673-a652c22b1b00.png",
     "K3q.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/b354aa3c-4462-4f8a-b8be-8b8d3f9f1c71.png",
     "E.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/77b0bd8b-328c-4057-a974-97f1a7e4b951.png"
+  },
+  "jobs": {
+    "launched": "22/11, 09:11, after the owner's \"ok\" on the sheet (22/11, 09:10)",
+    "C1": "df252ac6ccf142e39eb83ba9d1476b74",
+    "C2": "6eaa07e1ab794794a14bc5df11c85402",
+    "C3": "220aa4869b16494ab052ed44baf8edc2"
   }
 }

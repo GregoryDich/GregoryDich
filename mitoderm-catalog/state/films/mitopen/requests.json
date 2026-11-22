@@ -116,9 +116,15 @@
         "Y2"
       ]
     },
-    "state": "NOT LAUNCHED: the clips wait for the owner's ok on the sheet (sent 22/11, 02:20). Three 1080p clips, 5 s, 1.07 USD each = 3.21 USD. Launch each with tools/atlas.py video <out.mp4> <prompt.txt> 1080p 5 <first url> <last url> in the background with its own log. The film is ready for them: see film_v3.",
+    "state": "LAUNCHED 22/11, 09:11: three 1080p clips, 5 s, 1.07 USD each (jobs). The film is ready for them: see film_v3.",
     "spent_stills": "0.42 USD for six stills (three of them rejected tries of K3)",
-    "frames_note": "Uploaded again on 22/11, 03:20, under unambiguous names (mitopen-K1.png ...): two different files named Y2.png had been uploaded that night - the style reference of MICRO BOOST 10% and the page's own Y2 - and the record had mixed their addresses. Use only these four addresses for the clips."
+    "frames_note": "Uploaded again on 22/11, 03:20, under unambiguous names (mitopen-K1.png ...): two different files named Y2.png had been uploaded that night - the style reference of MICRO BOOST 10% and the page's own Y2 - and the record had mixed their addresses. Use only these four addresses for the clips.",
+    "jobs": {
+      "launched": "22/11, 09:11, after the owner's \"ok\" on the sheet (22/11, 09:10)",
+      "E": "0cdacfbe45db4cc28cd86c070c9dac6a",
+      "D": "b8bdc295dc1d44beab428809c3e9ad82",
+      "BL": "57aa8f6291874b5c9907634cf1b1a374"
+    }
   },
   "film_v3": {
     "what": "Version 3 of the film, on the page since 22/11, 04:10: the page's own scenes with P2 (film-16x9.spec, vertical-keys.json, wire.json). 974 frames, 40.6 s. Free: no generation.",
