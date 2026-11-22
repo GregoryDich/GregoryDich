@@ -62,9 +62,16 @@ def page_row(r):
 
 
 def sample_block(group):
+    """One group of sample links. A group with "pairs" is the acceptance list: one row per page, with its desktop and
+    its phone recording side by side."""
     links = ''.join(f'<li><a href="{esc(s["url"])}" target="_blank" rel="noopener">{esc(s["label"])}</a></li>'
                     for s in group['links'])
-    return f'<section class="samples"><h3>{esc(group["page"])}</h3><ul>{links}</ul></section>'
+    pairs = ''.join(
+        f'<li><b>{esc(p["name"])}</b><span><a href="{esc(p["desktop"])}" target="_blank" rel="noopener">компьютер</a>'
+        f'<a href="{esc(p["phone"])}" target="_blank" rel="noopener">телефон</a></span></li>' for p in group.get('pairs', []))
+    note = f'<p class="muted">{esc(group["note"])}</p>' if group.get('note') else ''
+    return (f'<section class="samples"><h3>{esc(group["page"])}</h3>{note}'
+            + (f'<ul class="pairs">{pairs}</ul>' if pairs else '') + (f'<ul>{links}</ul>' if links else '') + '</section>')
 
 
 legend = ''.join(f'<li><span class="num">{i + 1}</span>{esc(s)}</li>' for i, s in enumerate(steps))
@@ -170,6 +177,12 @@ tr:last-child td {{ border-bottom: 0; }}
 .verdict[data-v="no"] {{ background: var(--warn-soft); }}
 .needs {{ margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 8px; }}
 .samples ul {{ margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 4px; }}
+.samples ul.pairs {{ list-style: none; padding: 0; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }}
+.pairs li {{ display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 16px;
+  padding: 9px 14px; border-bottom: 1px solid var(--line); }}
+.pairs li:last-child {{ border-bottom: 0; }}
+.pairs b {{ font-weight: 600; min-width: 0; }}
+.pairs span {{ display: inline-flex; gap: 16px; white-space: nowrap; }}
 a {{ color: var(--accent); text-underline-offset: 3px; }}
 a:focus-visible {{ outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }}
 </style>

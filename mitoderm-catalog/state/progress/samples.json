@@ -1,6 +1,83 @@
 {
   "rows": [
     {
+      "page": "Приёмка: главная и все 13 страниц — запись прокрутки",
+      "note": "Каждая запись — страница от первого экрана до конца, как её видит посетитель. Порядок тот же, что на шкале. «Ок» можно сказать на все разом или по одной.",
+      "pairs": [
+        {
+          "name": "Главная: выбор средства и вход в его фильм",
+          "desktop": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/9ee6a107-8302-4e93-b3f1-90517c0bc1d5.mp4",
+          "phone": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/aabad4a0-0e67-467a-b3ae-0babfa3477da.mp4"
+        },
+        {
+          "name": "V-TECH SYSTEM",
+          "desktop": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/0f9711db-60a8-477c-afd1-e444cbc4e3eb.mp4",
+          "phone": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/12ad6e26-12bf-4b73-9faf-9fbd281e893b.mp4"
+        },
+        {
+          "name": "EXO-NAD",
+          "desktop": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/676f079b-8244-4725-9869-4591c4ed2d3b.mp4",
+          "phone": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/940421aa-2f48-47b6-878f-ef2885257c6e.mp4"
+        },
+        {
+          "name": "EXOCELL MASK",
+          "desktop": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/25ce73de-5923-4329-a0a5-e9a2e816e0cf.mp4",
+          "phone": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/32725ad9-5950-4da4-9663-f229c3bfa799.mp4"
+        },
+        {
+          "name": "EXOTECH GEL",
+          "desktop": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/6aecf606-ba2e-46a9-b22a-ab0ef266bf27.mp4",
+          "phone": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/b801bafb-6576-4a9b-8b27-447e8f3efa96.mp4"
+        },
+        {
+          "name": "EXOSIGNAL HAIR",
+          "desktop": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/20ed43d8-81fa-4fe6-93e8-68eba11660a4.mp4",
+          "phone": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/4daf79cb-9865-4595-bbdb-8df2b59f3ea5.mp4"
+        },
+        {
+          "name": "EXOSIGNAL SPRAY",
+          "desktop": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/d4513659-f3e9-420d-8ab5-8d8f8ae7a89f.mp4",
+          "phone": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/7de04322-0ce3-4c92-82eb-f1005e595901.mp4"
+        },
+        {
+          "name": "MICRO BOOST 10%",
+          "desktop": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/83bdc5e3-77b8-49fd-b431-610d3379f24d.mp4",
+          "phone": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/99888a5a-4afe-425a-af55-846afd3f008c.mp4"
+        },
+        {
+          "name": "CELL RENEW 1.5%",
+          "desktop": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/16de4ecb-fb9d-46cc-bc23-348d6b79eb08.mp4",
+          "phone": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/d5a839d1-02f2-4e66-8d95-69fbc8bf2c89.mp4"
+        },
+        {
+          "name": "CELLULAR AGE DEFENSE 2.5%",
+          "desktop": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/8f856bb5-912d-474e-a014-e2aee0e232a8.mp4",
+          "phone": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/2ad81426-07ea-4ce4-9690-b0bfae3669dd.mp4"
+        },
+        {
+          "name": "DERMA RECOVERY CREAM",
+          "desktop": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/3baeda6f-17c5-403f-9292-5c787d14907c.mp4",
+          "phone": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/b3bb7c85-b4d1-44f2-8301-96e3ac11a135.mp4"
+        },
+        {
+          "name": "MITOPEN",
+          "desktop": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/1ad43826-a8e7-4b3b-b3c2-b632d7e05b7d.mp4",
+          "phone": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/4c1e1017-7cdd-42a5-8af6-c61638b1658d.mp4"
+        },
+        {
+          "name": "MITOSCAN",
+          "desktop": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/eb9fd09e-5640-4232-8e49-8ce9ae66d85f.mp4",
+          "phone": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/0bda3985-8266-4899-884d-b9eb4850ccf8.mp4"
+        },
+        {
+          "name": "MITOTECH CELL BOOSTER",
+          "desktop": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/4698ed3d-8d2f-4f72-87cc-e07b51eebf12.mp4",
+          "phone": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/514e57e4-4f2f-46fb-b4fc-b1f5df589cc7.mp4"
+        }
+      ],
+      "links": []
+    },
+    {
       "page": "Главная — новый баннер и вход в средство (ждёт просмотра)",
       "links": [
         {
@@ -219,35 +296,6 @@
         {
           "label": "Семь кадров страницы: клиника — дом — клиника; коробка — настоящий рендер",
           "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/1670141e-d5ca-4558-87ef-85a7e0f3d46b.jpg"
-        }
-      ]
-    },
-    {
-      "page": "Готовые страницы — запись прокрутки (видео)",
-      "links": [
-        {
-          "label": "EXOSIGNAL HAIR, страница целиком, компьютер",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/20ed43d8-81fa-4fe6-93e8-68eba11660a4.mp4"
-        },
-        {
-          "label": "EXOSIGNAL HAIR, страница целиком, телефон",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/4daf79cb-9865-4595-bbdb-8df2b59f3ea5.mp4"
-        },
-        {
-          "label": "EXOTECH GEL, страница целиком, компьютер",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/23693e8e-7105-4c72-b2c6-385d20051618.mp4"
-        },
-        {
-          "label": "EXOCELL MASK, страница целиком, компьютер (фильм версии 3, 22/11)",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/25ce73de-5923-4329-a0a5-e9a2e816e0cf.mp4"
-        },
-        {
-          "label": "EXO-NAD, страница целиком, компьютер",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/9ef121f8-4218-4361-97f0-68bbfb888304.mp4"
-        },
-        {
-          "label": "V-TECH SYSTEM, страница целиком, компьютер",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/276001f2-9fb3-44bd-bbaf-4e32e1c44356.mp4"
         }
       ]
     },
@@ -473,7 +521,7 @@
   "meta": [
     {
       "label": "Обновлено",
-      "value": "22/11/2026 14:50"
+      "value": "22/11/2026 15:44"
     }
   ]
 }
