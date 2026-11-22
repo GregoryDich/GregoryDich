@@ -600,16 +600,27 @@
     "url": "https://atlas-media.oss-us-west-1.aliyuncs.com/assetd-history/v1/a-07f49db71fac9783463bd77999232ff2bc9c78d32b33f3c86cce74d3577cecc5/u-96fcdf2cda5d641a6e62882494f9fd312b257b1518c5a7ba8b7d39b967447ab0/s-3f8cb8f48b263ee3c53a85c7498ac3bdf357ba99b47ef24abe2827df89aedb26/df563c60d0ed42ff80104e3bfe13fb55-a972d082fa7913b2.png",
     "cost_usd": 0.0695,
     "verdict": "good on the first take: the print is the photo's letter for letter (MITODERM, BIOSPICULE PROFESSIONAL), no other print, clear flange and plunger, no needle; proportions of the barrel and the flange as on the photo"
+   },
+   "K3c2": {
+    "what": "the end frame of clip C: the same close-up a few seconds later - the syringe has moved about two centimetres along the cheekbone, five drops on the skin, none at the tip",
+    "state": "not launched: only after the owner's ok on K3c (0.07 USD)",
+    "images": [
+     "K3c"
+    ],
+    "prompt": "Reproduce the first reference image exactly: the same camera position and framing, the same patient with her eyes closed, the same white disposable cap, the same gloved hand, sleeve, room and daylight, and exactly the same syringe - the same slim clear syringe with the white paper label and the black print MITODERM and BIOSPICULE PROFESSIONAL, the same clear round flange and clear plunger, no needle. Change only this: the hand has moved the syringe about two centimetres toward the ear along the cheekbone, keeping the same angle and the same grip, and the plunger is pressed a little further in; there are now five small glossy, almost colourless translucent drops on the cheek and cheekbone, about two centimetres apart - the three from the reference image exactly where they were, and two new ones along the cheekbone; there is no drop at the tip of the syringe. The tip does not touch the skin. Nothing else changes. Photorealistic, natural skin texture. The only text in the image is the print on the syringe label. No captions, no watermark."
    }
   },
   "clips": {
    "C": {
-    "what": "K3c -> K3c: the camera stands; the syringe lays two more drops along the cheekbone, drop by drop, and returns to where it started",
-    "state": "not launched: waits for the owner's ok on the still (the frames-before-clips rule)",
-    "price_usd": 1.07
+    "what": "K3c -> K3c2: the camera stands; the syringe lays two more drops along the cheekbone, drop by drop",
+    "state": "not launched: waits for the owner's ok on the still K3c (the frames-before-clips rule)",
+    "model": "kwaivgi/kling-v4.0/image-to-video, 1080p, 5 s",
+    "price_usd": 1.07,
+    "prompt": "The clip starts exactly on the first image and ends exactly on the last image. One continuous shot with no cuts, no dissolves and no fades. The camera is locked off, with only a barely noticeable drift. The cosmetologist's gloved hand holds the syringe just above the patient's cheek and lays the serum on the skin drop by drop: her thumb presses the plunger a little, the drop at the tip grows, touches the cheek and stays on the skin as a small glossy drop; the hand moves the syringe about one centimetre along the cheekbone and lays the next drop the same way, and once more. The drops already on the skin stay exactly where they are and keep their shape. The patient lies still with her eyes closed, breathing calmly. The syringe never changes shape, size or colour: the same slim clear syringe with the white label, the black print on it stays sharp and unchanged, the same clear flange and plunger; no needle appears and the tip never touches the skin. Her face, the white disposable cap, the glove and the sleeve never change; the room and the daylight stay the same. Calm, precise, unhurried movement. No text appears, no captions.",
+    "check": "frame by frame against the owner's photos: the syringe keeps its shape and print; no hidden cut (check-clip.sh); the hand keeps five fingers"
    }
   },
   "film_plan": "T2 (dry skin) -> soft focus -> C (the syringe) -> soft focus -> the massage (the tail of T3, then T4); the rest of the film does not change",
-  "estimate_usd": "still 0.07 (spent) + clip 1.07 = 1.14; with one retake of the clip 2.21; allowed about 2.4"
+  "estimate_usd": "still K3c 0.07 (spent) + end still K3c2 0.07 + clip 1.07 = 1.21; with one retake of the clip 2.28; allowed about 2.4"
  }
 }

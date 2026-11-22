@@ -2,7 +2,7 @@
  "comment": [
   "MICRO BOOST 10%, the phone film, version 2: a moving window over the desktop film (tools/vertical-from-horizontal.py).",
   "Each key: frame, left edge of the window (% of the frame width), window width (%), top of the window on the phone canvas (%).",
-  "0-149 the pack and both faces; 182-240 the people without the box; 262-352 the close-up with the syringe (the face",
+  "0-149 the pack and both faces; 182-240 the people without the box; 262-352 the close-up with the syringe, a wider window (the face",
   "from the nose to the ear and the whole label); 375-556 the people again; 586 the face in the push-in; 612-786 the skin",
   "cross-section; 808-828 the way out through the fingertip; 846-886 the mask scene; 922-1080 the window comes back to the box."
  ],
@@ -11,8 +11,8 @@
   [149, 7.5, 57, 10],
   [182, 19, 52, 12],
   [240, 19, 52, 12],
-  [262, 9, 58, 9],
-  [352, 9, 58, 9],
+  [262, 8, 62, 10],
+  [352, 8, 62, 10],
   [375, 19, 52, 12],
   [556, 19, 52, 12],
   [586, 34, 54, 11],
