@@ -16,8 +16,8 @@
     {"start": 0, "end": 134, "note": "01 the pen close, the camera pulls back", "shot": "Перо крупно на полотенце, камера отходит", "type": "device", "section": 1},
     {"start": 134, "end": 289, "note": "02 the examination", "shot": "Осмотр зон лица", "type": "patient", "section": 2},
     {"start": 289, "end": 409, "note": "03 the ring and the button", "shot": "Перо крупно: кольцо глубины и кнопка скорости", "type": "device", "section": 3},
-    {"start": 409, "end": 505, "note": "04 microneedling: the pen works on the cheek", "shot": "Микронидлинг: перо работает по щеке", "type": "procedure", "section": 4},
-    {"start": 505, "end": 672, "note": "05 into the skin: micro-channels", "shot": "Внутрь кожи: микроканалы, средство уходит вглубь", "type": "procedure", "section": 5},
+    {"start": 409, "end": 505, "note": "04 microneedling: the pen works on the cheek", "shot": "Микронидлинг: перо работает по щеке", "type": "procedure", "section": 4, "quiet": [0.62, 1]},
+    {"start": 505, "end": 672, "note": "05 into the skin: micro-channels", "shot": "Внутрь кожи: микроканалы, средство уходит вглубь", "type": "procedure", "section": 5, "quiet": [0, 0.16]},
     {"start": 672, "end": 736, "note": "06 the pen", "shot": "Перо на полотенце", "type": "device", "section": 6},
     {"start": 736, "end": 838, "note": "07 the pen, the consultation behind it", "shot": "Перо резко, консультация за ним", "type": "device", "section": 7},
     {"start": 838, "end": 952, "note": "08 the cosmetologist and the patient", "shot": "Косметолог и пациент", "type": "patient", "section": 8}

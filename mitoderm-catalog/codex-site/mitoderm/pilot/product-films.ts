@@ -5,7 +5,9 @@
 // an entry keeps the image-only stage.
 // anchor:'left' keeps the left edge of the desktop film when the window is narrower than 16:9: for a film whose pack
 // stands at the very left and whose right third is empty background.
-export type ProductFilm={desktop:string;mobile:string;fps:number;frames:number;anchor?:'left';chapters:Array<{start:number;end:number}>};
+// quiet:[from,to] (parts of a chapter, 0..1) names the stretch where the camera brings a face under the caption: on a
+// wide screen the caption fades for that stretch (ProductCinema, data-caption-quiet); on a phone it stays.
+export type ProductFilm={desktop:string;mobile:string;fps:number;frames:number;anchor?:'left';chapters:Array<{start:number;end:number;quiet?:[from:number,to:number]}>};
 export const productFilms:Record<string,ProductFilm>={
  // 1912x1080, 834 frames, a keyframe every 12. The 9:16 film is not cut yet:
  // its URL in media-urls.json is empty, so phones stay image-only until it is set.
@@ -136,23 +138,6 @@ export const productFilms:Record<string,ProductFilm>={
   {start:760,end:826}, // 07 the same pack in the clinic
   {start:826,end:940}  // 08 the cosmetologist and the patient
  ]},
- // A connected film of a device page, version 3 (22/11): the page's own scenes with its own patient. The pen on the
- // towel is the customer's cut-out photo placed on a plate generated without any device; the camera moves on it are
- // rendered frame by frame (state/films/mitopen/build-pen-frames.py, film-16x9.spec). The live examination (E), the
- // pen at work on the cheek with the way into the skin (D) and the product in the micro-channels (BL) are three
- // Kling 4.0 clips shot in native 1080p on Atlas Cloud after the owner's ok on the still sheet
- // (state/films/mitopen/requests.json, own_scenes_22_11). 1912x1080 and 1080x1920, 952 frames. Version 2 (wire-v2.json)
- // borrowed three clips of the EXOSIGNAL HAIR film.
- 'mitopen':{desktop:'/assets/world/mitopen-film.mp4',mobile:'/assets/world/mitopen-film-mobile.mp4',fps:24,frames:952,chapters:[
-  {start:0,end:134},   // 01 the pen close, the camera pulls back
-  {start:134,end:289}, // 02 the examination
-  {start:289,end:409}, // 03 the ring and the button
-  {start:409,end:505}, // 04 microneedling: the pen works on the cheek
-  {start:505,end:672}, // 05 into the skin: micro-channels
-  {start:672,end:736}, // 06 the pen
-  {start:736,end:838}, // 07 the pen, the consultation behind it
-  {start:838,end:952}  // 08 the cosmetologist and the patient
- ]},
  // A connected film of a device page made of the page's own scenes (22/11). The system in the frame is the customer's
  // real photo (protocols/print/img/mitoscan.webp) placed on a plate generated without any device; the camera move to
  // the system and back is rendered frame by frame from the full-size photo (state/films/mitoscan/build-system-frames.py,
@@ -179,6 +164,23 @@ export const productFilms:Record<string,ProductFilm>={
  // the page copy has an intro only (state/films/mitotech-cell-booster/). Version 1 (clinic, then home): wire-v1.json.
  'mitotech-cell-booster':{desktop:'/assets/world/mitotech-cell-booster-film.mp4',mobile:'/assets/world/mitotech-cell-booster-film-mobile.mp4',fps:24,frames:505,anchor:'left',chapters:[
   {start:0,end:505}  // 01 the box in the clinic, the drops and the pen, the solution in the micro-channels, the box
+ ]},
+ // A connected film of a device page, version 3 (22/11): the page's own scenes with its own patient. The pen on the
+ // towel is the customer's cut-out photo placed on a plate generated without any device; the camera moves on it are
+ // rendered frame by frame (state/films/mitopen/build-pen-frames.py, film-16x9.spec). The live examination (E), the
+ // pen at work on the cheek with the way into the skin (D) and the product in the micro-channels (BL) are three
+ // Kling 4.0 clips shot in native 1080p on Atlas Cloud after the owner's ok on the still sheet
+ // (state/films/mitopen/requests.json, own_scenes_22_11). 1912x1080 and 1080x1920, 952 frames. Version 2 (wire-v2.json)
+ // borrowed three clips of the EXOSIGNAL HAIR film.
+ 'mitopen':{desktop:'/assets/world/mitopen-film.mp4',mobile:'/assets/world/mitopen-film-mobile.mp4',fps:24,frames:952,chapters:[
+  {start:0,end:134},                  // 01 the pen close, the camera pulls back
+  {start:134,end:289},                // 02 the examination
+  {start:289,end:409},                // 03 the ring and the button
+  {start:409,end:505,quiet:[0.62,1]}, // 04 microneedling: the pen works on the cheek
+  {start:505,end:672,quiet:[0,0.16]}, // 05 into the skin: micro-channels
+  {start:672,end:736},                // 06 the pen
+  {start:736,end:838},                // 07 the pen, the consultation behind it
+  {start:838,end:952}                 // 08 the cosmetologist and the patient
  ]}
 };
 // Chapter captions of the series films, in page order, word for word from the approved page copy
@@ -270,16 +272,6 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'השלימו כל פרוטוקול בשיקום.',body:'זמין דרך הקליניקות השותפות של מיטודרם. לאחר MICRO\u00a0BOOST\u00a010% הקרם חובה גם בבית. קליניקות: פנו אלינו לפרטים על מחירים.',tag:'הצעה'},
   {title:'מומחי Mitoderm מוסמכים',body:'כל מומחה כאן מוכשר ומוסמך להעניק פרוטוקולים מקוריים של Mitoderm. מצאו מרפאה מהימנה בקרבתכם וקבעו ייעוץ.',tag:'מצאו מומחה'}
  ],
- 'mitopen':[
-  {title:'MITOPEN',body:'מסלול החדירה לרכיבים הפעילים.',tag:'מכשור מקצועי לקליניקה'},
-  {title:'דיוק שאפשר לשחזר.',body:'האזור, עובי העור והאינדיקציה – כל אחד מהם דורש עומק וצפיפות משלו. פרוטוקול מדויק ואחיד מתחיל בכלי העבודה.',tag:'אינדיקציות'},
-  {title:'מ-0.25 עד 2.5\u00a0מ״מ. חמש מהירויות.',body:'עומק מתכוונן 0.25–2.5\u00a0מ״מ בהתאם לאזור ולאינדיקציה; עד חמש מהירויות לשליטה בצפיפות המיקרו־תעלות ובעוצמת הגירוי.',tag:'מפרט טכני'},
-  {title:'שקט. אלחוטי. בשליטה.',body:'ארגונומי, אלחוטי ושקט – נוח לקוסמטיקאית, מדויק עבור המטופלת, ותוכנן לתמוך בהחדרת החומרים הפעילים.',tag:'יתרונות'},
-  {title:'הגדרה. מיקרונידלינג. החדרה.',body:'בחרו עומק ומהירות בהתאם לאזור, צרו מיקרו־תעלות אחידות ולאחר מכן יישמו את V-TECH\u00a0SYSTEM בפנים או את EXOSIGNAL\u00a0HAIR בקרקפת.',tag:'פרוטוקול'},
-  {title:'עט אחד. פנים וקרקפת.',body:'1× MITOPEN – עט מיקרונידלינג מקצועי ואלחוטי עם עומק מחט ומהירות מתכווננים. לשימוש מקצועי בלבד.',tag:'ערכה ועובדות'},
-  {title:'הכניסו את MITOPEN לקליניקה שלכם',body:'לשימוש מקצועי בלבד. המומחה שלנו ייעץ לכם בנושאי הדרכה, פרוטוקולים ותמחור.',tag:'הצעה'},
-  {title:'מומחי Mitoderm מוסמכים',body:'שני המכשירים מופעלים בידי אנשי מקצוע שעברו הכשרה, כחלק מפרוטוקול קליני.',tag:'מצאו מומחה'}
- ],
  'mitoscan':[
   {title:'MITOSCAN',body:'מודדים את מה שחשוב.',tag:'MITOSCAN'},
   {title:'התרשמות אינה תוכנית.',body:'בעין בלתי מזוינת, צפיפות השיער, מספר הזקיקים וקוטר השערה נשארים סמויים – כך שהמטרות וסדרת הטיפולים נשענות על התרשמות בלבד.',tag:'למה?'},
@@ -292,5 +284,15 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
  ],
  'mitotech-cell-booster':[
   {title:'MITOTECH CELL BOOSTER',body:'בוסטר תאי בשני בקבוקונים לפרוטוקולים בקליניקה בשילוב עם MITOPEN או MICRO\u00a0BOOST\u00a010%.',tag:'מקצועי'}
+ ],
+ 'mitopen':[
+  {title:'MITOPEN',body:'מסלול החדירה לרכיבים הפעילים.',tag:'מכשור מקצועי לקליניקה'},
+  {title:'דיוק שאפשר לשחזר.',body:'האזור, עובי העור והאינדיקציה – כל אחד מהם דורש עומק וצפיפות משלו. פרוטוקול מדויק ואחיד מתחיל בכלי העבודה.',tag:'אינדיקציות'},
+  {title:'מ-0.25 עד 2.5\u00a0מ״מ. חמש מהירויות.',body:'עומק מתכוונן 0.25–2.5\u00a0מ״מ בהתאם לאזור ולאינדיקציה; עד חמש מהירויות לשליטה בצפיפות המיקרו־תעלות ובעוצמת הגירוי.',tag:'מפרט טכני'},
+  {title:'שקט. אלחוטי. בשליטה.',body:'ארגונומי, אלחוטי ושקט – נוח לקוסמטיקאית, מדויק עבור המטופלת, ותוכנן לתמוך בהחדרת החומרים הפעילים.',tag:'יתרונות'},
+  {title:'הגדרה. מיקרונידלינג. החדרה.',body:'בחרו עומק ומהירות בהתאם לאזור, צרו מיקרו־תעלות אחידות ולאחר מכן יישמו את V-TECH\u00a0SYSTEM בפנים או את EXOSIGNAL\u00a0HAIR בקרקפת.',tag:'פרוטוקול'},
+  {title:'עט אחד. פנים וקרקפת.',body:'1× MITOPEN – עט מיקרונידלינג מקצועי ואלחוטי עם עומק מחט ומהירות מתכווננים. לשימוש מקצועי בלבד.',tag:'ערכה ועובדות'},
+  {title:'הכניסו את MITOPEN לקליניקה שלכם',body:'לשימוש מקצועי בלבד. המומחה שלנו ייעץ לכם בנושאי הדרכה, פרוטוקולים ותמחור.',tag:'הצעה'},
+  {title:'מומחי Mitoderm מוסמכים',body:'שני המכשירים מופעלים בידי אנשי מקצוע שעברו הכשרה, כחלק מפרוטוקול קליני.',tag:'מצאו מומחה'}
  ]
 };

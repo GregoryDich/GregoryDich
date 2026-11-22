@@ -183,4 +183,10 @@
 /* EXO-NAD procedure shots (03-05) put the caption and steps over the patient's
    light sweater; a low scrim keeps them readable without reaching her face. */
 @media(min-width:861px){.pc-film.is-painted~.pc-scenes .pc-scene[data-kind=procedure]{background:linear-gradient(0deg,rgba(0,0,0,.5),transparent 40%),linear-gradient(270deg,rgba(0,0,0,.43),transparent 52%)}}
+/* A chapter may name the stretch where the camera brings a face under its caption (product-films.ts, quiet): on a
+   wide screen the caption fades for that stretch; on a phone the caption stands under the film and stays. */
+@media(min-width:861px){
+ .pc-film.is-painted~.pc-scenes .pc-caption{transition:opacity .3s ease}
+ .pc-story[data-caption-quiet=true] .pc-film.is-painted~.pc-scenes .pc-scene[data-visible=true] .pc-caption{opacity:0}
+}
 @media(prefers-reduced-motion:reduce){.pc-page .pc-film{display:none}}

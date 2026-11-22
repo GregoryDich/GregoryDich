@@ -21,6 +21,8 @@ Captions are taken from codex-site/mitoderm/content.json word for word: section 
 name, body = intro.title, tag = intro.eyebrow), section N is the section whose "index" is N (title, body, eyebrow).
 An optional "body" must be an exact part of that section's body - the tool refuses anything else. Spaces inside
 Latin product names and between a number and its unit become non-breaking, so a name is never split across lines.
+An optional "quiet": [from, to] (parts of the chapter, 0..1) names the stretch where the camera brings a face under
+the caption: on a wide screen the caption fades for that stretch (on a phone it stands under the film and stays).
 
 It edits three files of codex-site: mitoderm/media-urls.json, mitoderm/pilot/product-films.ts and
 production/page-bible/REGISTRY.json. With --replace an existing entry of the slug is replaced.
@@ -125,12 +127,15 @@ def main(argv):
         text, found = remove_entry(text, slug, opener, closer)
         if found and not replace:
             sys.exit('the slug is already wired; use --replace')
-    width = max(len('{start:%d,end:%d}%s' % (c['start'], c['end'], ',')) for c in chapters)
+    def span(c):
+        quiet = ',quiet:[%g,%g]' % tuple(c['quiet']) if c.get('quiet') else ''
+        return '{start:%d,end:%d%s}' % (c['start'], c['end'], quiet)
+    width = max(len(span(c) + ',') for c in chapters)
     lines = [' // ' + line for line in wire.get('comment', [])]
     anchor = "anchor:'left'," if wire.get('anchor') == 'left' else ''
     lines.append(" '%s':{desktop:'%s',mobile:'%s',fps:24,frames:%d,%schapters:[" % (slug, desktop, mobile, wire['frames'], anchor))
     for index, chapter in enumerate(chapters):
-        item = '{start:%d,end:%d}%s' % (chapter['start'], chapter['end'], ',' if index < len(chapters) - 1 else '')
+        item = span(chapter) + (',' if index < len(chapters) - 1 else '')
         lines.append('  %s // %s' % (item.ljust(width), chapter['note']))
     lines.append(' ]}')
     marker = '\n};\n// Chapter captions'

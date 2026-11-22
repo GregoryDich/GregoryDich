@@ -180,6 +180,7 @@ export default function ProductCinema({product}:{product:Product}){
    s.style.setProperty('--pc-local',local.toFixed(4));
    if(i!==last){last=i;setActive(i);}
    const c=film?.chapters[i];
+   r.dataset.captionQuiet=String(Boolean(c?.quiet&&local>=c.quiet[0]&&local<=c.quiet[1]));
    if(film&&c){
     const box=r.getBoundingClientRect();
     setTarget(Math.min((c.start+(c.end-c.start)*local)/film.fps,Math.max(0,film.frames-1)/film.fps),box.top<=v&&box.bottom>=0);
