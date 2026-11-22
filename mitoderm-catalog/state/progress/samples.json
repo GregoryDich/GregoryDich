@@ -1,6 +1,23 @@
 {
   "rows": [
     {
+      "page": "Главная — новый баннер и вход в средство (ждёт просмотра)",
+      "links": [
+        {
+          "label": "ВИДЕО 23 с: наведение, выбор средства, открывается его фильм (Full HD)",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/a80f7b2f-92ad-455b-843b-54ec149256f0.mp4"
+        },
+        {
+          "label": "Баннер на Full HD (1920×1080): две ровные линейки",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/1b855d9c-8c5b-4b72-ab94-766a87e4a363.jpg"
+        },
+        {
+          "label": "Баннер на 2560×1440",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/66d8bb5b-7d68-4b39-bd5f-aa88f322fd7a.jpg"
+        }
+      ]
+    },
+    {
       "page": "MITOPEN — лист новых кадров (ждёт «ок») и фильм с микронидлингом",
       "links": [
         {
@@ -406,7 +423,7 @@
   "meta": [
     {
       "label": "Обновлено",
-      "value": "22/11/2026 02:19"
+      "value": "22/11/2026 02:57"
     }
   ]
 }
