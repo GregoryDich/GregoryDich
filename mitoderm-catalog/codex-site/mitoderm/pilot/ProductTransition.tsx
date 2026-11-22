@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect,useRef,type CSSProperties} from 'react';
-import {getEntryMedia,type EntryRect} from './vtech-entry';
+import {getEntryMedia,getFilmHeight,type EntryRect} from './vtech-entry';
 
 export type ProductFlight={id:number;slug:string;src:string;rect:EntryRect;box:EntryRect;href:string;photo?:{rect:EntryRect;silhouette:string};canonical?:boolean;backdrop?:{src:string;rect:EntryRect;cleanSrc?:string;cleanMask?:string}};
 
@@ -63,7 +63,10 @@ export function ProductTransition({flight,onNavigate,onFinish}:{flight:ProductFl
    const story=destination.closest<HTMLElement>('[data-vtech-story]');
    const stageElement=document.querySelector<HTMLElement>('[data-vtech-stage]');
    const target=destination.getBoundingClientRect();
-   const stage=stageElement?.getBoundingClientRect()??{left:0,top:0,width:window.innerWidth,height:window.innerHeight};
+   const stageBox=stageElement?.getBoundingClientRect()??{left:0,top:0,width:window.innerWidth,height:window.innerHeight};
+   // The room is the film's first frame, so it takes the film's box: the whole stage, or its upper part where the
+   // film keeps its full width (a tablet held sideways).
+   const stage={left:stageBox.left,top:stageBox.top,width:stageBox.width,height:getFilmHeight(stageBox.width,stageBox.height)};
    const entry=getEntryMedia(window.innerWidth),cover=Math.max(stage.width/entry.width,stage.height/entry.height);
    const renderedWidth=entry.width*cover,renderedHeight=entry.height*cover;
    const offsetX=(stage.width-renderedWidth)/2,offsetY=(stage.height-renderedHeight)/2;
@@ -109,7 +112,7 @@ export function ProductTransition({flight,onNavigate,onFinish}:{flight:ProductFl
    if(backdrop.current)tracked(backdrop.current,[{opacity:.24,offset:0},{opacity:.12,offset:.22},{opacity:0,offset:.46},{opacity:0,offset:1}]);
    const entryUnits=Number(story?.dataset.entryUnits)||.9;
    const entryStart=()=>Number(story?.dataset.entryStart)||0;
-   const entryDistance=()=>Math.max(1,(stageElement?.clientHeight??stage.height)*entryUnits);
+   const entryDistance=()=>Math.max(1,(stageElement?.clientHeight??stageBox.height)*entryUnits);
    root.current?.setAttribute('data-phase','awaiting-scroll');enterButton.current?.focus({preventScroll:true});
    const finish=async()=>{if(finishing||cancelled)return;finishing=true;root.current?.setAttribute('data-phase','settled');animate(root.current!,[{opacity:1},{opacity:0}],{duration:160});await delay(170);if(!cancelled)onFinish();};
    readScroll=()=>{

@@ -22,12 +22,21 @@ export const mobileMedia={
 
 export function getEntryMedia(width:number){return width<=860?mobileMedia:entryMedia;}
 
+/** The height the film takes on a stage of this size. A wide window narrower than 16:10 (a tablet held sideways)
+ * keeps the whole film width at the top of the stage instead of enlarging it to the stage height - the same media
+ * query as in vtech-story.css; everywhere else the film covers the stage. */
+export function getFilmHeight(width:number,height:number){
+ if(typeof window==='undefined'||!window.matchMedia('(min-width:861px) and (max-aspect-ratio:159/100)').matches)return height;
+ return Math.min(height,width*9/16);
+}
+
 export function getEntryBoxRect(width:number,height:number):EntryRect{
  const media=getEntryMedia(typeof window==='undefined'?width:window.innerWidth);
- const scale=Math.max(width/media.width,height/media.height);
+ const film=getFilmHeight(width,height);
+ const scale=Math.max(width/media.width,film/media.height);
  return {
   left:(width-media.width*scale)/2+media.box.left*scale,
-  top:(height-media.height*scale)/2+media.box.top*scale,
+  top:(film-media.height*scale)/2+media.box.top*scale,
   width:media.box.width*scale,
   height:media.box.height*scale,
  };

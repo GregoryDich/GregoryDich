@@ -226,3 +226,22 @@ html[data-product-transit] [data-vtech-hud]{opacity:0!important;pointer-events:n
  .vts-story[data-mode=cinema] .vts-stage[data-active-chapter=vtech-hero] .vts-counter{display:none}
  .vts-story[data-mode=cinema] .vts-stage[data-active-chapter=vtech-hero] .vts-disclosure{grid-row:1;grid-column:1;justify-self:start}
 }
+
+/* A wide window that is narrower than the film (a tablet held sideways, a tall browser window): enlarged to the
+   height of the stage the film would lose its sides and the close-ups would move under the copy - the caption lay on
+   the chin, on the hand with the pen, on the ear. So the film keeps its whole width at the top of the stage and fades
+   into the dark band below it, and the caption stands in that band. The pack's place (vtech-entry.ts, getFilmHeight)
+   follows the same media query, so the entry from the home page and the opening of the kit still meet the box.
+   From 16:10 up and on phones nothing changes. */
+@media(min-width:861px) and (max-aspect-ratio:159/100){
+ .vts-media{height:min(100%,calc(100vw*9/16))}
+ /* One soft lower edge for every chapter, whatever scrim its scene carries. It stays light over its upper half, so
+    the lettering low on the box keeps its colour. */
+ .vts-camera-media::after{content:'';position:absolute;inset:auto 0 0;height:170px;background:linear-gradient(180deg,transparent,rgba(8,8,10,.28) 50%,rgba(8,8,10,.8) 82%,#08080a 97%);pointer-events:none}
+ /* The lower darkening of the full-stage scrim is not needed: the copy stands in the band. The results and the kit
+    chapters keep their own scrims (vtech-cinema.css). */
+ .vts-story[data-mode=cinema] .vts-scene:not([data-kind=evidence])::after{background:linear-gradient(180deg,rgba(8,8,10,.66),transparent calc(100vw*9/64)),linear-gradient(270deg,rgba(8,8,10,.42),transparent 44%)}
+ /* In a window much taller than the film the copy stays next to the film (the two low blocks of the mask and the
+    results chapters follow in vtech-cinema.css). */
+ .vts-caption{bottom:max(58px,calc(100svh - 100vw*9/16 - 205px))}
+}

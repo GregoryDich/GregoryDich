@@ -279,6 +279,13 @@ html:not([data-vtech-immersed=true]) .vc-section-nav{transform:translateY(-100%)
  .vts-story[data-mode=cinema] .vc-story-evidence-panel:not(.vc-story-evidence-approved) .vc-story-panel-body{max-width:none;margin-top:8px;font-size:16px;line-height:1.55}
  .vts-story[data-mode=cinema] .vc-story-evidence-panel:not(.vc-story-evidence-approved) .vc-story-panel-note{margin-top:10px}
 }
+/* A tablet held sideways and other wide windows narrower than 16:10: the film keeps its whole width at the top of the
+   stage (vtech-story.css), so the two low blocks stand in the band under it like every other caption - also in a
+   window much taller than the film, where "64px from the bottom" would leave them far below the picture. */
+@media(min-width:861px) and (max-aspect-ratio:159/100){
+ .vts-story[data-mode=cinema] .vts-stage #vtech-mask .vts-caption,
+ .vts-story[data-mode=cinema] .vts-stage .vc-story-evidence-panel:not(.vc-story-evidence-approved){bottom:max(58px,calc(100svh - 100vw*9/16 - 205px))}
+}
 @media(max-width:860px) and (orientation:portrait){
  .vts-story[data-mode=cinema] #vtech-serum .vts-caption{inset-inline-end:34%}
  .vts-story[data-mode=cinema] :is(#vtech-consultation .vts-caption,.vc-story-evidence-panel:not(.vc-story-evidence-approved)){transition:opacity .3s,visibility .3s}

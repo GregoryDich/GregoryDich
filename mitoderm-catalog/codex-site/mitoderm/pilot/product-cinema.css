@@ -189,6 +189,10 @@
  .pc-film{height:min(100%,calc(100vw*9/16))}
  .pc-scene{padding-bottom:max(110px,calc(100svh - 100vw*9/16 - 200px))}
  .pc-film.is-painted~.pc-scenes::before{content:'';position:absolute;inset:calc(100vw*9/16 - 150px) 0 0;background:linear-gradient(180deg,transparent,var(--pc-bg) 150px);pointer-events:none}
+ /* Where the browser can mix colours the edge stays light over its upper half, so the foot of a pack keeps its colour. */
+ @supports (color:color-mix(in srgb,red,blue)){
+  .pc-film.is-painted~.pc-scenes::before{background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--pc-bg) 28%,transparent) 75px,color-mix(in srgb,var(--pc-bg) 80%,transparent) 123px,var(--pc-bg) 146px)}
+ }
 }
 /* EXO-NAD procedure shots (03-05) put the caption and steps over the patient's
    light sweater; a low scrim keeps them readable without reaching her face. */
