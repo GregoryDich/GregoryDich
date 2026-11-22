@@ -22,40 +22,53 @@
       ]
     },
     {
-      "page": "MITOPEN — лист кадров (ждёт «ок») и страница с фильмом из собственных сцен",
+      "page": "MITOTECH CELL BOOSTER — лист кадров пересъёмки (ждёт «ок»)",
       "links": [
         {
-          "label": "ЛИСТ КАДРОВ 22/11: перо на щеке пациента, «внутри кожи» — нужен «ок»",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/77b89f13-32e1-4f46-9b9f-58c223f26772.jpg"
+          "label": "ЛИСТ КАДРОВ 22/11: перо MITOPEN и капли раствора на щеке, раствор в микроканалах — нужен «ок»",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/28be9c2f-5d55-42a8-83d2-f1e555be0eb6.jpg"
         },
         {
-          "label": "СТРАНИЦА СЕЙЧАС, компьютер (запись прокрутки): три места пока без живых роликов",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/b5b6c423-d0bf-4f0a-a441-e1a51d0dc9b7.mp4"
+          "label": "Сейчас на странице (прежний фильм «клиника → дом»): запись страницы, компьютер",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/291d5f98-bed5-46f0-ad8a-0cc0c563b508.mp4"
         },
         {
-          "label": "Страница сейчас, телефон (запись прокрутки)",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/ee1e6b23-c826-4290-8ab7-86aca436726e.mp4"
-        },
-        {
-          "label": "Прежний фильм (версия 2): микронидлинг роликами EXOSIGNAL HAIR",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/30055f5e-ea32-4569-992a-f44e8e3a2a6f.mp4"
+          "label": "Сейчас на странице (прежний фильм «клиника → дом»): запись страницы, телефон",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/450956b2-8bda-4bfb-95e9-57a633aec832.mp4"
         }
       ]
     },
     {
-      "page": "MITOSCAN — лист кадров (ждёт «ок») и страница с фильмом из собственных сцен",
+      "page": "MITOPEN — страница с живым фильмом (ждёт просмотра)",
       "links": [
         {
-          "label": "ЛИСТ КАДРОВ 22/11: настоящая система, снимок на экране, зонд на проборе — нужен «ок»",
+          "label": "СТРАНИЦА, компьютер (запись прокрутки 22/11): живой осмотр, перо на щеке, средство в микроканалах",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/6803925c-92f5-447e-8952-3d6fbadcec76.mp4"
+        },
+        {
+          "label": "Страница, телефон (запись прокрутки 22/11)",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/4c1e1017-7cdd-42a5-8af6-c61638b1658d.mp4"
+        },
+        {
+          "label": "Лист кадров (принят 22/11)",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/77b89f13-32e1-4f46-9b9f-58c223f26772.jpg"
+        }
+      ]
+    },
+    {
+      "page": "MITOSCAN — страница с живым фильмом (ждёт просмотра)",
+      "links": [
+        {
+          "label": "СТРАНИЦА, компьютер (запись прокрутки 22/11): осмотр глазами, зонд на проборе, снимок на экране, система крупным планом",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/eb9fd09e-5640-4232-8e49-8ce9ae66d85f.mp4"
+        },
+        {
+          "label": "Страница, телефон (запись прокрутки 22/11)",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/0bda3985-8266-4899-884d-b9eb4850ccf8.mp4"
+        },
+        {
+          "label": "Лист кадров (принят 22/11)",
           "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/4c58df70-540e-4063-b8a6-613510797193.jpg"
-        },
-        {
-          "label": "СТРАНИЦА СЕЙЧАС, компьютер (запись прокрутки): настоящая система крупным планом",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/c8723047-15ce-409b-acd8-13ed3a1e8b3f.mp4"
-        },
-        {
-          "label": "Страница сейчас, телефон (запись прокрутки)",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/2bcfee3b-a904-4854-be21-414176c9b1d7.mp4"
         }
       ]
     },
@@ -156,31 +169,6 @@
         {
           "label": "Семь кадров страницы: клиника — дом — клиника; коробка — настоящий рендер",
           "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/1670141e-d5ca-4558-87ef-85a7e0f3d46b.jpg"
-        }
-      ]
-    },
-    {
-      "page": "MITOTECH CELL BOOSTER — страница с фильмом (ждёт просмотра)",
-      "links": [
-        {
-          "label": "Запись страницы, компьютер",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/291d5f98-bed5-46f0-ad8a-0cc0c563b508.mp4"
-        },
-        {
-          "label": "Запись страницы, телефон",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/450956b2-8bda-4bfb-95e9-57a633aec832.mp4"
-        },
-        {
-          "label": "ФИЛЬМ ЦЕЛИКОМ, компьютер (16:9)",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/0ab11250-77eb-4730-adec-e6dbae23660b.mp4"
-        },
-        {
-          "label": "ФИЛЬМ ЦЕЛИКОМ, телефон (9:16)",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/a8b3dd9d-e414-4899-a7ee-7bb4a4b743d6.mp4"
-        },
-        {
-          "label": "Два кадра: настоящая коробка в клинике и процедура",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/4f1e292f-9856-4bb9-8622-a10c642de4ae.jpg"
         }
       ]
     },
@@ -435,7 +423,7 @@
   "meta": [
     {
       "label": "Обновлено",
-      "value": "22/11/2026 05:12"
+      "value": "22/11/2026 10:13"
     }
   ]
 }
