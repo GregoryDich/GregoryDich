@@ -182,5 +182,31 @@
       }
     },
     "spent": "re-shoot 22/11: stills 0.289 + clips 2.138 = 2.427 USD (estimate 2.3-2.5, approved about 4.6). The page in total: 1.14 + 2.427 = 3.57 USD of the 8 USD ceiling."
+  },
+  "opening_22_11": {
+    "what": "Scene O of film version 3 - the kit opens on the clinic table, as on the owner's example of 22/11. Rendered from the exact 3D model (kit3d.py, Blender Cycles); no paid generation, 0 USD.",
+    "textures": "kit-textures.sh <textures dir> <C-plate.png>  (the plate: reshoot_22_11.backup)",
+    "render": "kit3d.py <textures dir> <frames dir> w=1920 h=1080 spp=40 clip=121 holdin=24 holdout=22 name=o  -> o-0000.png .. o-0120.png (0-23 closed, 24-98 the lid goes back, 99-120 open); 85 minutes on 4 cores",
+    "margins": {
+      "why": "The site header hides the top of the film: 90 px on a computer (10 % of the frame at 1440x900, 12-13 % on 768-720 px high screens), 78 px on a phone (13.4 % of the phone canvas at 390x664). The rendered kit fills rows 0.8-95 % of the frame, so the open lid went under the header on every screen (page shots of 22/11, 22:46).",
+      "still": "kit3d.py <textures dir> <dir> w=1920 h=1080 spp=40 angles=0 name=ext extend=0,240,151,-16  -> one still 2160x1215 of the closed kit with more field at the top and right (66 s). Its inner 1920x1064 part equals frame o-0000: mean difference 0.55 of 255, best offset 0,0.",
+      "paste": "extend-frames.py <still> <frames dir> <out dir> 0 151 6  -> x-0000.png .. x-0120.png: each frame pasted at (0,151), the bottom 16 rows cut, scaled to 1920x1080 (0.889)",
+      "encode": "ffmpeg -framerate 24 -i x-%04d.png -vf format=yuv420p -c:v libx264 -preset slow -crf 8 -g 12 -r 24 O.mp4",
+      "checked": "The clip does not change inside the seam band (largest change 1.0 of 255): the top strip is the room picture, the right strip table and room. The left border carries the lid's moving shadow (mean change up to 8, 99th percentile 30 of 255), so no field is added on the left. Rejected on the way: shrinking with mirrored borders (a mirrored piece of the lid, a kink in the table edge) and static strips on all four sides (a seam through the shadow on the left).",
+      "result": "the kit in the film frame: rows 13.1-95.3 %, columns 9.4-49.5 %"
+    },
+    "phone": "vertical-keys.json: during the opening the window is the left 63 % of the frame, placed at 8.5 % of the phone canvas - the whole kit stands between the header and the caption at 390x664 and 360x640; the other scenes keep 2 / 58 / 7. The change happens inside the two soft-focus joins.",
+    "backup": {
+      "O.mp4 (the film's clip, with margins, 1920x1080, 121 frames)": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/7766df7a-0379-4ce7-b15b-5f6edbcf4fab.mp4",
+      "the render as it came (the kit full size, 1920x1080, 121 frames) - the source for other margins": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/c98bb1ce-d1fe-472f-b2ab-91efa47aca80.mp4",
+      "the extended still (2160x1215)": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/5cbaf9c1-c6ac-4f33-9902-bbebe349bdf9.png",
+      "rebuild": "rebuild-clips.sh <clips dir> fetches O.mp4 with T1, W and BL (tested 22/11, 23:28: byte for byte the same as the local files)"
+    },
+    "film": {
+      "desktop_media": "924b099b-3196-4f40-8452-fac1dfa452dc",
+      "mobile_media": "14eae525-abc5-49fa-ac6f-4997dd39ee47",
+      "superseded": "b9177205-77a0-4f33-a7e0-7a455d1d8378 and 4993bd6d-97b4-4586-9ada-98131d605447 - the same film with the kit full size: the open lid under the header"
+    },
+    "checked_on_page": "22/11, 23:25, state/tasks/film-phone-check.cjs with 8 shots at 1440x900, 1366x768, 1280x720, 1024x768, 390x664, 390x844 and 360x640: the new files are served, frames 0-653, painted 129/129, no errors. The open kit is whole on every size; on 1280x720 the lid's corner touches the header's edge, on 1024x768 the tip of that corner (about 10 px) is under it."
   }
 }

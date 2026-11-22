@@ -175,14 +175,17 @@ export const productFilms:Record<string,ProductFilm>={
   {start:736,end:838},                // 07 the pen, the consultation behind it
   {start:838,end:952}                 // 08 the cosmetologist and the patient
  ]},
- // A film for a coming-soon page, version 2 (22/11) - a clinic procedure with microneedling, as the owner asked on 21/11:
- // the real box in the clinic, a focus pull to the two women, clear drops of the solution and the pen at work on the
- // cheek, the solution going down the micro-channels, back to the box. Three live clips (Kling 4.0, 1080p): T1 (21/11),
- // W and BL (22/11, after the owner's ok to the still sheet); the scenes meet in soft focus, so the camera never closes in
- // on the face under the page heading. 1912x1080 and 1080x1920, 505 frames, one chapter: the page copy has an intro only
- // (state/films/mitotech-cell-booster/). Version 1 (clinic, then home): wire-v1.json.
- 'mitotech-cell-booster':{desktop:'/assets/world/mitotech-cell-booster-film.mp4',mobile:'/assets/world/mitotech-cell-booster-film-mobile.mp4',fps:24,frames:505,anchor:'left',chapters:[
-  {start:0,end:505}  // 01 the box in the clinic, the drops and the pen, the solution in the micro-channels, the box
+ // A film for a coming-soon page, version 3 (22/11) - a clinic procedure with microneedling, and the kit opens as on the
+ // owner's example of 22/11: the real box in the clinic, a focus pull to the two women, the kit opening on the table (an
+ // exact 3D model built from his print files: the lid goes back on a ribbon, the guide inside the lid, four powder vials
+ // and four ampoules that look as on his card), clear drops of the solution and the pen at work on the cheek, the solution
+ // going down the micro-channels, back to the box. Live clips T1, W, BL (Kling 4.0, 1080p); the opening O is rendered, not
+ // generated; in the film the kit stands lower and at 0.89 of its rendered size, so the open lid clears the site header
+ // (extra field at the top and right from one still of the same shot). The scenes meet in soft focus. 1912x1080 and
+ // 1080x1920, 654 frames, one chapter: the page copy has an intro only (state/films/mitotech-cell-booster/). Version 2
+ // (no opening): wire-v2.json; version 1: wire-v1.json.
+ 'mitotech-cell-booster':{desktop:'/assets/world/mitotech-cell-booster-film.mp4',mobile:'/assets/world/mitotech-cell-booster-film-mobile.mp4',fps:24,frames:654,anchor:'left',chapters:[
+  {start:0,end:654}  // 01 the box in the clinic, the kit opens, the drops and the pen, the solution in the micro-channels, the box
  ]}
 };
 // Chapter captions of the series films, in page order, word for word from the approved page copy

@@ -32,6 +32,9 @@ usage:  kit3d.py <textures dir> <out dir> [key=value ...]
   first,last  with clip: render only frames first..last (to resume or to split the work)
   name        file name stem (kit)
   border      x0,x1,y0,y1 - render only this part of the frame (fractions, y from the bottom), to look closely
+  extend      left,right,top,bottom - px of extra field around the w x h frame: the same camera and the same
+              picture inside, more table and room around it (to give a finished clip wider margins); a negative
+              value cuts that side. Where the field outgrows the room picture, the picture continues mirrored
 Each frame is written as <out dir>/<name>-<index>.png.
 """
 import math
@@ -44,6 +47,7 @@ from mathutils import Vector
 TEX, OUT = sys.argv[1], sys.argv[2]
 ARG = dict(a.split('=', 1) for a in sys.argv[3:] if '=' in a)
 W_PX, H_PX, SPP = int(ARG.get('w', 1344)), int(ARG.get('h', 760)), int(ARG.get('spp', 48))
+EXT_L, EXT_R, EXT_T, EXT_B = [int(v) for v in ARG.get('extend', '0,0,0,0').split(',')]
 OPEN = float(ARG.get('open', 102))
 NAME = ARG.get('name', 'kit')
 
@@ -71,7 +75,8 @@ cy.max_bounces, cy.glossy_bounces, cy.transmission_bounces, cy.transparent_max_b
 cy.caustics_reflective = cy.caustics_refractive = False
 scene.render.threads_mode = 'FIXED'
 scene.render.threads = int(ARG.get('threads', 4))
-scene.render.resolution_x, scene.render.resolution_y, scene.render.resolution_percentage = W_PX, H_PX, 100
+scene.render.resolution_x, scene.render.resolution_y = W_PX + EXT_L + EXT_R, H_PX + EXT_T + EXT_B
+scene.render.resolution_percentage = 100
 scene.render.image_settings.file_format = 'PNG'
 if 'border' in ARG:                                 # a part of the frame only: x0,x1,y0,y1 as fractions, y from the bottom
     b = [float(v) for v in ARG['border'].split(',')]
@@ -471,6 +476,7 @@ def build_camera():
     data = bpy.data.cameras.new('camera')
     data.lens, data.sensor_width = float(ARG.get('lens', 58)), 36
     data.shift_x, data.shift_y = float(ARG.get('shiftx', 0.17)), float(ARG.get('shifty', 0.0))
+    base_x, base_y = data.shift_x * 36, data.shift_y * 36      # the frame's own shift, in mm of the 36 mm sensor
     ob = bpy.data.objects.new('camera', data)
     scene.collection.objects.link(ob)
     scene.camera = ob
@@ -486,8 +492,8 @@ def build_camera():
     far = float(ARG.get('roomdist', 4.2))
     half_w = far * 18 / data.lens * float(ARG.get('roomscale', 1.12))
     half_h = half_w * H_PX / W_PX
-    cx = data.shift_x * 36 / data.lens * far
-    cyy = (data.shift_y * 36 / data.lens * far) + 2 * half_h * float(ARG.get('roomshift', 0.25))
+    cx = base_x / data.lens * far
+    cyy = (base_y / data.lens * far) + 2 * half_h * float(ARG.get('roomshift', 0.25))
     backdrop = material('room')
     tree = backdrop.node_tree
     tree.nodes.remove(tree.nodes['Principled BSDF'])
@@ -498,9 +504,31 @@ def build_camera():
     emit.inputs['Strength'].default_value = float(ARG.get('room', 1.0))
     tree.links.new(tex.outputs['Color'], emit.inputs['Color'])
     tree.links.new(emit.outputs['Emission'], tree.nodes['Material Output'].inputs['Surface'])
-    wall = sheet('room', [(cx - half_w, cyy - half_h, -far), (cx + half_w, cyy - half_h, -far), (cx + half_w, cyy + half_h, -far),
-                          (cx - half_w, cyy + half_h, -far)], backdrop, parent=ob)
+    # extra field (extend) may look past the sheet: it grows on those sides, and the soft picture continues
+    # mirrored beyond its own edges, so the part inside the w x h frame stays exactly as it was
+    frame_w = far * 18 / data.lens                       # half of the w x h frame at the sheet's distance
+    frame_h, per_px = frame_w * H_PX / W_PX, 2 * frame_w / W_PX
+    base_cy, spare = base_y / data.lens * far, 40 * per_px
+    grow_l = max(0.0, frame_w + EXT_L * per_px + spare - half_w)
+    grow_r = max(0.0, frame_w + EXT_R * per_px + spare - half_w)
+    grow_t = max(0.0, base_cy + frame_h + EXT_T * per_px + spare - (cyy + half_h))
+    grow_b = max(0.0, (cyy - half_h) - (base_cy - frame_h - EXT_B * per_px - spare))
+    if grow_l or grow_r or grow_t or grow_b:
+        tex.extension = 'MIRROR'
+    x0, x1, y0, y1 = cx - half_w - grow_l, cx + half_w + grow_r, cyy - half_h - grow_b, cyy + half_h + grow_t
+    u0, u1 = -grow_l / (2 * half_w), 1 + grow_r / (2 * half_w)
+    v0, v1 = -grow_b / (2 * half_h), 1 + grow_t / (2 * half_h)
+    wall = mesh_object('room', [(x0, y0, -far), (x1, y0, -far), (x1, y1, -far), (x0, y1, -far)], [(0, 1, 2, 3)], backdrop,
+                       uvs=[(u0, v0), (u1, v0), (u1, v1), (u0, v1)], parent=ob)
     wall.visible_shadow = wall.visible_diffuse = False      # a picture of the room, not a lamp
+    if EXT_L or EXT_R or EXT_T or EXT_B:
+        # more field around the same picture: a wider sensor at the same lens keeps every pixel of the w x h frame
+        # where it was; the shifts move the frame to its place inside the larger one (a positive shift moves the
+        # picture left / down)
+        wide = W_PX + EXT_L + EXT_R
+        data.sensor_width = 36 * wide / W_PX
+        data.shift_x = (base_x / 36 * W_PX + (EXT_R - EXT_L) / 2) / wide
+        data.shift_y = (base_y / 36 * W_PX + (EXT_T - EXT_B) / 2) / wide
     return ob
 
 
