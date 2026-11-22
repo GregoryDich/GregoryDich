@@ -32,7 +32,7 @@
         "verdict": "good on the first try: the same cosmetologist, patient (black headband, hoop earring), couch, towel and room; the wet white mask hangs between her gloved fingertips, its openings are seen; the patient's face is bare, eyes closed. A small round bit on the nose flap of the mask is left as it is."
       }
     },
-    "spent_stills": "0.145 USD for two generations; Atlas balance 14.307 -> 14.162 USD",
+    "spent_stills": "0.113 USD for two generations (Atlas balance 14.307 -> 14.194 USD by the service's own figure; the log of the parallel launch showed a lower transient reading)",
     "sheet": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/db2c0f60-d589-4831-922d-281d853f4b64.jpg",
     "sheet_cells": "KL (kept), KW (new), KP (new), K2 (kept); built by ../tools/still-sheet.py",
     "clips_after_ok": {
@@ -52,6 +52,18 @@
       "KP.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/55724692-a344-4a87-b288-0e47945ffcee.png",
       "KL, K2 and the clips of 20/11": "Higgsfield generations of the account (job numbers in STORYBOARD.md)"
     },
-    "state": "22/11, 10:36: the two stills are ready and checked, the sheet is with the owner (question 33). The clips L and P (2.14 USD) only after his ok on the sheet; the frames for them are uploaded again right before the launch under the names mask-KL.png, mask-KW.png, mask-KP.png, mask-K2.png."
+    "state": "LAUNCHED 22/11, 10:58: two 1080p clips, 5 s, 1.07 USD each (jobs).",
+    "frames": {
+      "uploaded": "22/11, 10:57, under unambiguous names; checksums compared with the source files before the launch",
+      "KL": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/2387102e-05e8-4186-a6ff-138c0dd1cca6.png",
+      "KW": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/dc1a3aa6-ccdf-449d-841f-e74ade11156e.png",
+      "KP": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/27f52241-f3f0-483e-a042-a6dba836df92.png",
+      "K2": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/f31a8fb0-18de-4d40-a810-37022ca6b649.png"
+    },
+    "jobs": {
+      "launched": "22/11, 10:58, after the owner's word 'Доделывай' (22/11, 10:56) in answer to the message with the sheet and the price",
+      "L": "9368d7a55d3145c08f71f7892b734b26",
+      "P": "fc0f6797339c479a88db962c6ea23aa2"
+    }
   }
 }
