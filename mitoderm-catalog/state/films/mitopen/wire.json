@@ -1,23 +1,25 @@
 {
   "slug": "mitopen",
-  "frames": 887,
-  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/30055f5e-ea32-4569-992a-f44e8e3a2a6f.mp4",
-  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/84837e4b-0a94-4a52-b960-0c4253e7cb48.mp4",
+  "frames": 974,
+  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/45260156-c7ba-48ac-8f22-fc34375b9d90.mp4",
+  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/cfea219c-78f7-4b09-a681-672c57eb1e7d.mp4",
   "comment": [
-    "A draft film of a device page, version 2 (22/11): it shows microneedling, as the owner asked on 21/11. The pen on",
-    "the towel is the customer's cut-out photo placed on a plate generated without any device; the camera moves are",
-    "rendered frame by frame (state/films/mitopen/build-pen-frames.py, film-16x9.spec). The work of the pen, the dive",
-    "into the skin and the micro-channels are three accepted clips of the EXOSIGNAL HAIR film (T5b, D1c, BL3), so the",
-    "patient of that scene is the hair page's until the page's own scene is shot. 1912x1080 and 1080x1920, 887 frames."
+    "A draft film of a device page, version 3 (22/11): the page's own scenes with its own patient. The pen on the towel",
+    "is the customer's cut-out photo placed on a plate generated without any device; the camera moves on it are rendered",
+    "frame by frame (state/films/mitopen/build-pen-frames.py, film-16x9.spec). Microneedling on the cheek, the way into",
+    "the skin and the micro-channels are the page's own stills K3e, Y1, Y2; until the owner says ok to the still sheet",
+    "they are shown with free camera moves and dissolves, and three paid clips (E, D, BL) then replace those pieces",
+    "without changing the film's plan. 1912x1080 and 1080x1920, 974 frames. Version 2 (wire-v2.json) borrowed three",
+    "clips of the EXOSIGNAL HAIR film."
   ],
   "chapters": [
     {"start": 0, "end": 134, "note": "01 the pen close, the camera pulls back", "shot": "Перо крупно на полотенце, камера отходит", "type": "device", "section": 1},
-    {"start": 134, "end": 235, "note": "02 the examination", "shot": "Осмотр зон лица", "type": "patient", "section": 2},
-    {"start": 235, "end": 355, "note": "03 the ring and the button", "shot": "Перо крупно: кольцо глубины и кнопка скорости", "type": "device", "section": 3},
-    {"start": 355, "end": 430, "note": "04 microneedling: the pen works along the parting", "shot": "Микронидлинг: перо работает по пробору", "type": "procedure", "section": 4},
-    {"start": 430, "end": 607, "note": "05 into the skin: micro-channels", "shot": "Внутрь кожи: микроканалы, средство уходит вглубь", "type": "procedure", "section": 5},
-    {"start": 607, "end": 671, "note": "06 the pen", "shot": "Перо на полотенце", "type": "device", "section": 6},
-    {"start": 671, "end": 773, "note": "07 the pen, the consultation behind it", "shot": "Перо резко, консультация за ним", "type": "device", "section": 7},
-    {"start": 773, "end": 887, "note": "08 the cosmetologist and the patient", "shot": "Косметолог и пациент", "type": "patient", "section": 8}
+    {"start": 134, "end": 289, "note": "02 the examination", "shot": "Осмотр зон лица", "type": "patient", "section": 2},
+    {"start": 289, "end": 409, "note": "03 the ring and the button", "shot": "Перо крупно: кольцо глубины и кнопка скорости", "type": "device", "section": 3},
+    {"start": 409, "end": 520, "note": "04 microneedling: the pen works on the cheek", "shot": "Микронидлинг: перо работает по щеке", "type": "procedure", "section": 4},
+    {"start": 520, "end": 694, "note": "05 into the skin: micro-channels", "shot": "Внутрь кожи: микроканалы, средство уходит вглубь", "type": "procedure", "section": 5},
+    {"start": 694, "end": 758, "note": "06 the pen", "shot": "Перо на полотенце", "type": "device", "section": 6},
+    {"start": 758, "end": 860, "note": "07 the pen, the consultation behind it", "shot": "Перо резко, консультация за ним", "type": "device", "section": 7},
+    {"start": 860, "end": 974, "note": "08 the cosmetologist and the patient", "shot": "Косметолог и пациент", "type": "patient", "section": 8}
   ]
 }

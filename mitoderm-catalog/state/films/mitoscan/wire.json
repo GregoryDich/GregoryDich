@@ -1,0 +1,27 @@
+{
+  "slug": "mitoscan",
+  "frames": 837,
+  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/d85c3a45-67ed-4fdc-b255-dfce0dac6b43.mp4",
+  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/a91712f9-e290-4b1f-a28d-8e4d5653e9ca.mp4",
+  "anchor": "left",
+  "comment": [
+    "A draft film of a device page made of the page's own scenes (22/11). The system in the frame is the customer's real",
+    "photo (protocols/print/img/mitoscan.webp) placed on a plate generated without any device; the camera move to the",
+    "system and back is rendered frame by frame from the full-size photo (state/films/mitoscan/build-system-frames.py,",
+    "film-16x9.spec). The look with the naked eye, the handset on the parting and the look at the screen are the page's",
+    "own stills N, K3q, Sr; until the owner says ok to the still sheet they are shown with a slow camera move, and three",
+    "paid clips (C1, C2, C3) then replace those pieces without changing the film's plan. The picture on the display is a",
+    "stand-in until real screen captures arrive. 1912x1080 and 1080x1920, 837 frames. The earlier draft (wire-draft.json)",
+    "was built of the diagnosis clips of the EXOSIGNAL HAIR film, where the system was drawn by a model."
+  ],
+  "chapters": [
+    {"start": 0, "end": 124, "note": "01 the system on the table", "shot": "Система на столе — настоящее фото прибора", "type": "device", "section": 1},
+    {"start": 124, "end": 237, "note": "02 the look with the naked eye", "shot": "Осмотр глазами: пробор, без прибора", "type": "patient", "section": 2},
+    {"start": 237, "end": 350, "note": "03 the handset on the parting", "shot": "Зонд на проборе", "type": "procedure", "section": 3},
+    {"start": 350, "end": 463, "note": "04 the patient sees the screen", "shot": "Пациентка видит снимок на экране", "type": "patient", "section": 4},
+    {"start": 463, "end": 573, "note": "05 the system close: the scan on its display", "shot": "Система крупно: снимок на экране", "type": "device", "section": 5},
+    {"start": 573, "end": 651, "note": "06 the system: one screen", "shot": "Система: зонд и экран", "type": "device", "section": 6},
+    {"start": 651, "end": 721, "note": "07 the system, the consultation behind it", "shot": "Система резко, консультация за ней", "type": "device", "section": 7},
+    {"start": 721, "end": 837, "note": "08 the cosmetologist and the patient", "shot": "Косметолог и пациентка", "type": "patient", "section": 8}
+  ]
+}

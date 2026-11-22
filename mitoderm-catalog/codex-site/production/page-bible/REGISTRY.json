@@ -602,8 +602,8 @@
         },
         {
           "title": "Осмотр зон лица",
-          "seconds": 4.21,
-          "vh": 1.2,
+          "seconds": 6.46,
+          "vh": 1.85,
           "type": "patient",
           "index": 2
         },
@@ -615,16 +615,16 @@
           "index": 3
         },
         {
-          "title": "Микронидлинг: перо работает по пробору",
-          "seconds": 3.12,
-          "vh": 1.1,
+          "title": "Микронидлинг: перо работает по щеке",
+          "seconds": 4.62,
+          "vh": 1.3,
           "type": "procedure",
           "index": 4
         },
         {
           "title": "Внутрь кожи: микроканалы, средство уходит вглубь",
-          "seconds": 7.38,
-          "vh": 2.1,
+          "seconds": 7.25,
+          "vh": 2.05,
           "type": "procedure",
           "index": 5
         },
@@ -677,58 +677,58 @@
       "ctaHE": "לתיאום הדגמה",
       "shots": [
         {
-          "title": "Экран системы со снимком кожи головы",
-          "seconds": 3.17,
-          "vh": 1.1,
+          "title": "Система на столе — настоящее фото прибора",
+          "seconds": 5.17,
+          "vh": 1.45,
           "type": "device",
           "index": 1
         },
         {
           "title": "Осмотр глазами: пробор, без прибора",
-          "seconds": 2.88,
-          "vh": 1.1,
+          "seconds": 4.71,
+          "vh": 1.35,
           "type": "patient",
           "index": 2
         },
         {
-          "title": "Зонд на проборе, экран выходит вперёд",
-          "seconds": 7.0,
-          "vh": 2.0,
+          "title": "Зонд на проборе",
+          "seconds": 4.71,
+          "vh": 1.35,
           "type": "procedure",
           "index": 3
         },
         {
           "title": "Пациентка видит снимок на экране",
-          "seconds": 4.21,
-          "vh": 1.2,
+          "seconds": 4.71,
+          "vh": 1.35,
           "type": "patient",
           "index": 4
         },
         {
-          "title": "Повторный осмотр тех же зон",
-          "seconds": 5.46,
-          "vh": 1.55,
-          "type": "procedure",
+          "title": "Система крупно: снимок на экране",
+          "seconds": 4.58,
+          "vh": 1.3,
+          "type": "device",
           "index": 5
         },
         {
           "title": "Система: зонд и экран",
-          "seconds": 2.42,
+          "seconds": 3.25,
           "vh": 1.1,
           "type": "device",
           "index": 6
         },
         {
-          "title": "Конец визита",
-          "seconds": 4.04,
-          "vh": 1.15,
-          "type": "patient",
+          "title": "Система резко, консультация за ней",
+          "seconds": 2.92,
+          "vh": 1.1,
+          "type": "device",
           "index": 7
         },
         {
           "title": "Косметолог и пациентка",
-          "seconds": 4.21,
-          "vh": 1.2,
+          "seconds": 4.83,
+          "vh": 1.4,
           "type": "patient",
           "index": 8
         }

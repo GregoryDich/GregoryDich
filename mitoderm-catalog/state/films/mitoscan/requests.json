@@ -75,8 +75,31 @@
     "system-scan.png": "the real photo with SC fitted into its display: convert -distort Perspective \"0,0 188,42  W,0 822,58  W,H 749,502  0,H 101,444\"",
     "Sr": "place-pack.py P1.png system-scan.png Sr.png at=36,985 height=470 mirror=0.10,50 contact=0.25 - the look at the screen",
     "K0r": "place-pack.py P1.png <real photo> K0r.png at=36,985 height=470 plate_blur=9 ... - the system sharp, the people soft (the opening)",
-    "K1r": "place-pack.py P1.png <real photo> K1r.png at=36,985 height=470 pack_blur=5 ... - the people sharp, the system soft"
+    "K1r": "place-pack.py P1.png <real photo> K1r.png at=36,985 height=470 pack_blur=5 ... - the people sharp, the system soft",
+    "ZS, ZS0": "build-system-frames.py P1.png system-scan.png <dir> sequence=1,2,72 blur=0,9 size=1912x1080 and sequence=2,1,48 blur=9,9 - the camera comes to the system and goes back",
+    "K0s, K0b": "build-system-frames.py P1.png <system-scan.png | real photo> <dir> zoom=1 blur=9 size=1912x1080 - the last frame of ZS0 with the scan and with the logo on the display"
   },
   "sheet_first_version": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/b48593a3-4d16-40d7-9198-b1d3b560b058.jpg (S with the model-drawn system; superseded)",
-  "film_plan": "01 K0r held with a slow push-in (free) | 02 soft-focus join to N, clip C1 | 03 soft-focus join to K3q, clip C2 | 04 soft-focus join to Sr, clip C3 | 05 a slow push-in onto the screen of Sr (free) | 06 dissolve Sr -> K0r: the same system, pixel for pixel (free) | 07-08 soft-focus join to E, held with a slow move (free). Three paid clips."
+  "film_plan": "On the page since 22/11, 04:10 (film-16x9.spec, vertical-keys.json, wire.json; 837 frames, 34.9 s): 01 K0r, focus pull to K1r | 02 soft-focus join, C1 (the look with the naked eye) | 03 soft-focus join, C2 (the handset on the parting) | 04 soft-focus join, C3 (she points at the screen) | 05 soft-focus join, the camera comes to the real system with the scan on its display (ZS, free) | 06 the camera goes back (ZS0), the display goes from the scan to the Mitoscan logo (K0s -> K0b) | 07 the system, the consultation behind it | 08 soft-focus join to E with a slow move (ZE). Three paid clips: C1, C2, C3.",
+  "frames": {
+    "N": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/899e919d-9ad4-4914-a7c4-58d290d96e01.png",
+    "K3q": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/c8b387df-a99e-4ab0-bd8c-fd52f53c4025.png",
+    "Sr": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/1bb72d85-365f-4db0-a226-6c0f53ba9665.png"
+  },
+  "film_own": {
+    "what": "A draft of the page's own film, free: the real system in every frame where the system is seen; the camera move to the system is rendered from the full-size photo (build-system-frames.py), zoom 1 -> 2.",
+    "stand_ins": "Until the clips are shot, C1.mp4, C2.mp4 and C3.mp4 in the clips dir are free stand-ins: a slow camera move on the stills N, K3q and Sr (tools/still-zoom.sh, 121 frames).",
+    "anchor": "wire.json has \"anchor\": \"left\": the system stands 26 px from the left edge of the film, and a 1440x900 window otherwise cuts 77 px off each side. For the same reason the camera stops at zoom 2 (at 2.25 the system reached the caption).",
+    "desktop_media": "d85c3a45-67ed-4fdc-b255-dfce0dac6b43",
+    "mobile_media": "a91712f9-e290-4b1f-a28d-8e4d5653e9ca",
+    "after_ok": [
+      "launch C1, C2, C3 (frames above; prompts in clips; each from one start frame, no end frame)",
+      "check each clip (tools/check-clip.sh, a frame sheet): the handset in C2 and the system in C3 must not change",
+      "put the three files into the clips dir in place of the stand-ins",
+      "tools/film-assemble.sh film-16x9.spec, tools/vertical-from-horizontal.py with vertical-keys.json",
+      "upload both files, put the new addresses into wire.json, tools/wire-film.py wire.json --replace",
+      "build the site, state/tasks/film-phone-check.cjs mitoscan 1440x900 and 390x664 with 3 shots per scene"
+    ],
+    "previous": "The first draft (film-draft-16x9.spec, vertical-keys-draft.json, wire-draft.json) was built of the diagnosis clips of the EXOSIGNAL HAIR film, where the system was drawn by a model."
+  }
 }

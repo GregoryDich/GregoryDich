@@ -1,24 +1,24 @@
 {
   "comment": [
-    "MITOPEN, the phone film: a moving window over the desktop film (tools/vertical-from-horizontal.py).",
+    "MITOPEN, the phone film of version 3 (film-16x9.spec): a moving window over the desktop film.",
     "Each key: frame, left edge of the window (% of the frame width), window width (%), top of the window on the phone canvas (%).",
-    "0-54 the pen close; 102-250 the pen and both faces; 303-339 the ring and the button; 371-440 the hands, the pen",
-    "and the parting; 491-590 the skin cut-away; 623-671 the pen close; 719-886 the pen and both faces."
+    "0-54 the pen close; 102-303 the pen and both faces; 357-392 the ring and the button; 425-504 her face, the pen",
+    "and his face on the couch; 560-694 the skin cut-away; 710-757 the pen close; 806-973 the pen and both faces."
   ],
   "keys": [
     [0, 8, 54, 12],
     [54, 8, 54, 12],
     [102, 7.5, 60, 10],
-    [250, 7.5, 60, 10],
-    [303, 13, 56, 11],
-    [339, 13, 56, 11],
-    [371, 18, 58, 10],
-    [440, 18, 58, 10],
-    [491, 3, 58, 9],
-    [590, 3, 58, 9],
-    [623, 8, 54, 12],
-    [671, 8, 54, 12],
-    [719, 7.5, 60, 10],
-    [886, 7.5, 60, 10]
+    [303, 7.5, 60, 10],
+    [357, 13, 56, 11],
+    [392, 13, 56, 11],
+    [425, 14, 58, 10],
+    [504, 14, 58, 10],
+    [560, 3, 58, 9],
+    [694, 3, 58, 9],
+    [710, 8, 54, 12],
+    [757, 8, 54, 12],
+    [806, 7.5, 60, 10],
+    [973, 7.5, 60, 10]
   ]
 }

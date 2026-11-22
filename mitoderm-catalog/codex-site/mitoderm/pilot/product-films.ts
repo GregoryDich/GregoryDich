@@ -127,36 +127,6 @@ export const productFilms:Record<string,ProductFilm>={
   {start:760,end:826}, // 07 the same pack in the clinic
   {start:826,end:940}  // 08 the cosmetologist and the patient
  ]},
- // A draft film of a device page, version 2 (22/11): it shows microneedling, as the owner asked on 21/11. The pen on
- // the towel is the customer's cut-out photo placed on a plate generated without any device; the camera moves are
- // rendered frame by frame (state/films/mitopen/build-pen-frames.py, film-16x9.spec). The work of the pen, the dive
- // into the skin and the micro-channels are three accepted clips of the EXOSIGNAL HAIR film (T5b, D1c, BL3), so the
- // patient of that scene is the hair page's until the page's own scene is shot. 1912x1080 and 1080x1920, 887 frames.
- 'mitopen':{desktop:'/assets/world/mitopen-film.mp4',mobile:'/assets/world/mitopen-film-mobile.mp4',fps:24,frames:887,chapters:[
-  {start:0,end:134},   // 01 the pen close, the camera pulls back
-  {start:134,end:235}, // 02 the examination
-  {start:235,end:355}, // 03 the ring and the button
-  {start:355,end:430}, // 04 microneedling: the pen works along the parting
-  {start:430,end:607}, // 05 into the skin: micro-channels
-  {start:607,end:671}, // 06 the pen
-  {start:671,end:773}, // 07 the pen, the consultation behind it
-  {start:773,end:887}  // 08 the cosmetologist and the patient
- ]},
- // A DRAFT film of a device page, built without a single new paid clip: the diagnosis scenes of the accepted
- // EXOSIGNAL HAIR film (T2, S1c, S1b, E2b, E3b and a few frames of BE3) in a new order - the screen with the scan,
- // the look with the naked eye, the probe on the parting and the screen, the patient sees it, the follow-up scan,
- // the end of the visit (state/films/mitoscan/film-draft-16x9.spec). It stands on the page until the owner sends a
- // large photo of the system and real screen captures for the page's own film. 1912x1080 and 1080x1920, 801 frames.
- 'mitoscan':{desktop:'/assets/world/mitoscan-film.mp4',mobile:'/assets/world/mitoscan-film-mobile.mp4',fps:24,frames:801,chapters:[
-  {start:0,end:76},    // 01 the screen with the scan
-  {start:76,end:145},  // 02 the look with the naked eye
-  {start:145,end:313}, // 03 the probe on the parting, the screen comes forward
-  {start:313,end:414}, // 04 the patient sees the screen
-  {start:414,end:545}, // 05 the follow-up scan
-  {start:545,end:603}, // 06 the system: one screen
-  {start:603,end:700}, // 07 the end of the visit
-  {start:700,end:801}  // 08 the cosmetologist and the patient
- ]},
  // A connected film: the cream as the last step in the clinic, the same box in the morning at her home, she applies the
  // cream herself, into the skin and out, the box, the clinic again. Three Kling 4.0 clips shot in native 1080p on
  // Atlas Cloud (T3, D1, D2 - state/films/derma-recovery-cream/requests.json); the focus pulls and both changes of place
@@ -171,6 +141,41 @@ export const productFilms:Record<string,ProductFilm>={
   {start:690,end:760}, // 06 the pack at home
   {start:760,end:826}, // 07 the same pack in the clinic
   {start:826,end:940}  // 08 the cosmetologist and the patient
+ ]},
+ // A draft film of a device page, version 3 (22/11): the page's own scenes with its own patient. The pen on the towel
+ // is the customer's cut-out photo placed on a plate generated without any device; the camera moves on it are rendered
+ // frame by frame (state/films/mitopen/build-pen-frames.py, film-16x9.spec). Microneedling on the cheek, the way into
+ // the skin and the micro-channels are the page's own stills K3e, Y1, Y2; until the owner says ok to the still sheet
+ // they are shown with free camera moves and dissolves, and three paid clips (E, D, BL) then replace those pieces
+ // without changing the film's plan. 1912x1080 and 1080x1920, 974 frames. Version 2 (wire-v2.json) borrowed three
+ // clips of the EXOSIGNAL HAIR film.
+ 'mitopen':{desktop:'/assets/world/mitopen-film.mp4',mobile:'/assets/world/mitopen-film-mobile.mp4',fps:24,frames:974,chapters:[
+  {start:0,end:134},   // 01 the pen close, the camera pulls back
+  {start:134,end:289}, // 02 the examination
+  {start:289,end:409}, // 03 the ring and the button
+  {start:409,end:520}, // 04 microneedling: the pen works on the cheek
+  {start:520,end:694}, // 05 into the skin: micro-channels
+  {start:694,end:758}, // 06 the pen
+  {start:758,end:860}, // 07 the pen, the consultation behind it
+  {start:860,end:974}  // 08 the cosmetologist and the patient
+ ]},
+ // A draft film of a device page made of the page's own scenes (22/11). The system in the frame is the customer's real
+ // photo (protocols/print/img/mitoscan.webp) placed on a plate generated without any device; the camera move to the
+ // system and back is rendered frame by frame from the full-size photo (state/films/mitoscan/build-system-frames.py,
+ // film-16x9.spec). The look with the naked eye, the handset on the parting and the look at the screen are the page's
+ // own stills N, K3q, Sr; until the owner says ok to the still sheet they are shown with a slow camera move, and three
+ // paid clips (C1, C2, C3) then replace those pieces without changing the film's plan. The picture on the display is a
+ // stand-in until real screen captures arrive. 1912x1080 and 1080x1920, 837 frames. The earlier draft (wire-draft.json)
+ // was built of the diagnosis clips of the EXOSIGNAL HAIR film, where the system was drawn by a model.
+ 'mitoscan':{desktop:'/assets/world/mitoscan-film.mp4',mobile:'/assets/world/mitoscan-film-mobile.mp4',fps:24,frames:837,anchor:'left',chapters:[
+  {start:0,end:124},   // 01 the system on the table
+  {start:124,end:237}, // 02 the look with the naked eye
+  {start:237,end:350}, // 03 the handset on the parting
+  {start:350,end:463}, // 04 the patient sees the screen
+  {start:463,end:573}, // 05 the system close: the scan on its display
+  {start:573,end:651}, // 06 the system: one screen
+  {start:651,end:721}, // 07 the system, the consultation behind it
+  {start:721,end:837}  // 08 the cosmetologist and the patient
  ]}
 };
 // Chapter captions of the series films, in page order, word for word from the approved page copy
@@ -255,6 +260,16 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'משדרגים את השגרה.',body:'זמין דרך הקליניקות השותפות של מיטודרם. לאחריו יש למרוח תמיד DERMA\u00a0RECOVERY\u00a0CREAM. לקליניקות: פנו אלינו בנוגע לתמחור ולשלבי הטיפוח הביתי.',tag:'הצעה'},
   {title:'מומחי Mitoderm מוסמכים',body:'כל מומחה כאן מוכשר ומוסמך להעניק פרוטוקולים מקוריים של Mitoderm. מצאו מרפאה מהימנה בקרבתכם וקבעו ייעוץ.',tag:'מצאו מומחה'}
  ],
+ 'derma-recovery-cream':[
+  {title:'DERMA RECOVERY CREAM',body:'כל פרוטוקול מסתיים כאן.',tag:'סדרת BIOSPICULE™ · SNAIL COLLAGEN'},
+  {title:'לחידוש יש גם אחרי.',body:'לאחר שימוש בספיקולות או פרוצדורה בקליניקה, העור עשוי להרגיש יבש, מתוח או מתקלף. זה הרגע שבו שגרת הטיפוח זקוקה לשלב המשלים.',tag:'למה?'},
+  {title:'אחרי הסרומים. אחרי הקליניקה. מדי יום.',body:'לאחר CELL\u00a0RENEW\u00a01.5% או CELLULAR\u00a0AGE\u00a0DEFENSE\u00a02.5%; לאחר פרוטוקולי V-TECH, EXO-NAD ו-MICRO\u00a0BOOST\u00a010%; בוקר וערב, על עור נקי.',tag:'מתי למרוח'},
+  {title:'ללא ספיקולות. שבעה רכיבים פעילים מרכזיים.',body:'ללא ספיקולות כלל – פנתנול, Madecassoside, אלנטואין, חמאת שיאה, ניאצינאמיד, קולגן מפורק ופוליסכרידים מטוהרים מריר החילזון.',tag:'מה בפנים'},
+  {title:'נוחות בזמן שהעור מתחדש.',body:'לחות, רכות ונוחות בזמן שהעור מתחדש – פחות חספוס, קילוף ותחושת מתיחה, ותמיכה במחסום הלחות.',tag:'הרגישו'},
+  {title:'50\u00a0מ״ל. בוקר וערב.',body:'DERMA\u00a0RECOVERY\u00a0CREAM, 50\u00a0ml ℮ 1.69\u00a0fl.\u00a0oz – קרם קולגן מזין לשימוש יומיומי, למראה עור בריא וזוהר. לכל סוגי העור.',tag:'ערכה ועובדות'},
+  {title:'השלימו כל פרוטוקול בשיקום.',body:'זמין דרך הקליניקות השותפות של מיטודרם. לאחר MICRO\u00a0BOOST\u00a010% הקרם חובה גם בבית. קליניקות: פנו אלינו לפרטים על מחירים.',tag:'הצעה'},
+  {title:'מומחי Mitoderm מוסמכים',body:'כל מומחה כאן מוכשר ומוסמך להעניק פרוטוקולים מקוריים של Mitoderm. מצאו מרפאה מהימנה בקרבתכם וקבעו ייעוץ.',tag:'מצאו מומחה'}
+ ],
  'mitopen':[
   {title:'MITOPEN',body:'מסלול החדירה לרכיבים הפעילים.',tag:'מכשור מקצועי לקליניקה'},
   {title:'דיוק שאפשר לשחזר.',body:'האזור, עובי העור והאינדיקציה – כל אחד מהם דורש עומק וצפיפות משלו. פרוטוקול מדויק ואחיד מתחיל בכלי העבודה.',tag:'אינדיקציות'},
@@ -274,15 +289,5 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'מערכת אחת. מסך אחד.',body:'1× MITOSCAN – מערכת מתקדמת לאבחון הקרקפת והשיער: הגדלה ×50 ו-×200, הדמיית HD. לשימוש מקצועי בלבד.',tag:'מפרט טכני'},
   {title:'הכניסו את MITOSCAN לקליניקה שלכם',body:'לשימוש מקצועי בלבד. המומחה שלנו ייעץ לכם בנושאי הדרכה ותמחור.',tag:'הצעה'},
   {title:'מומחי Mitoderm מוסמכים',body:'שני המכשירים מופעלים בידי אנשי מקצוע שעברו הכשרה, כחלק מפרוטוקול קליני.',tag:'מצאו מומחה'}
- ],
- 'derma-recovery-cream':[
-  {title:'DERMA RECOVERY CREAM',body:'כל פרוטוקול מסתיים כאן.',tag:'סדרת BIOSPICULE™ · SNAIL COLLAGEN'},
-  {title:'לחידוש יש גם אחרי.',body:'לאחר שימוש בספיקולות או פרוצדורה בקליניקה, העור עשוי להרגיש יבש, מתוח או מתקלף. זה הרגע שבו שגרת הטיפוח זקוקה לשלב המשלים.',tag:'למה?'},
-  {title:'אחרי הסרומים. אחרי הקליניקה. מדי יום.',body:'לאחר CELL\u00a0RENEW\u00a01.5% או CELLULAR\u00a0AGE\u00a0DEFENSE\u00a02.5%; לאחר פרוטוקולי V-TECH, EXO-NAD ו-MICRO\u00a0BOOST\u00a010%; בוקר וערב, על עור נקי.',tag:'מתי למרוח'},
-  {title:'ללא ספיקולות. שבעה רכיבים פעילים מרכזיים.',body:'ללא ספיקולות כלל – פנתנול, Madecassoside, אלנטואין, חמאת שיאה, ניאצינאמיד, קולגן מפורק ופוליסכרידים מטוהרים מריר החילזון.',tag:'מה בפנים'},
-  {title:'נוחות בזמן שהעור מתחדש.',body:'לחות, רכות ונוחות בזמן שהעור מתחדש – פחות חספוס, קילוף ותחושת מתיחה, ותמיכה במחסום הלחות.',tag:'הרגישו'},
-  {title:'50\u00a0מ״ל. בוקר וערב.',body:'DERMA\u00a0RECOVERY\u00a0CREAM, 50\u00a0ml ℮ 1.69\u00a0fl.\u00a0oz – קרם קולגן מזין לשימוש יומיומי, למראה עור בריא וזוהר. לכל סוגי העור.',tag:'ערכה ועובדות'},
-  {title:'השלימו כל פרוטוקול בשיקום.',body:'זמין דרך הקליניקות השותפות של מיטודרם. לאחר MICRO\u00a0BOOST\u00a010% הקרם חובה גם בבית. קליניקות: פנו אלינו לפרטים על מחירים.',tag:'הצעה'},
-  {title:'מומחי Mitoderm מוסמכים',body:'כל מומחה כאן מוכשר ומוסמך להעניק פרוטוקולים מקוריים של Mitoderm. מצאו מרפאה מהימנה בקרבתכם וקבעו ייעוץ.',tag:'מצאו מומחה'}
  ]
 };
