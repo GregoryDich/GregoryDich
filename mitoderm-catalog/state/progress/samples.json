@@ -4,8 +4,12 @@
       "page": "Главная — новый баннер и вход в средство (ждёт просмотра)",
       "links": [
         {
-          "label": "ВИДЕО 23 с: наведение, выбор средства, открывается его фильм (Full HD)",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/a80f7b2f-92ad-455b-843b-54ec149256f0.mp4"
+          "label": "ВИДЕО 34 с, компьютер: наведение, выбор средства — оно садится в первый кадр своего фильма",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/9ee6a107-8302-4e93-b3f1-90517c0bc1d5.mp4"
+        },
+        {
+          "label": "ВИДЕО 18 с, телефон: то же (перо MITOPEN ложится на полотенце)",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/aabad4a0-0e67-467a-b3ae-0babfa3477da.mp4"
         },
         {
           "label": "Баннер на Full HD (1920×1080): две ровные линейки",
@@ -431,7 +435,7 @@
   "meta": [
     {
       "label": "Обновлено",
-      "value": "22/11/2026 04:32"
+      "value": "22/11/2026 05:12"
     }
   ]
 }
