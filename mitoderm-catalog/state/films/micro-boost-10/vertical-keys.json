@@ -1,24 +1,28 @@
 {
-  "comment": [
-    "MICRO BOOST 10%, the phone film: a moving window over the desktop film (tools/vertical-from-horizontal.py).",
-    "Each key: frame, left edge of the window (% of the frame width), window width (%), top of the window on the phone canvas (%).",
-    "0-149 the pack and both faces; 182-470 the people without the box (it would be cut in half); 500 the face in the",
-    "push-in; 526-700 the skin cross-section; 722-742 the way out through the fingertip; 760-800 the mask scene;",
-    "836-994 the window comes back to the box before the focus moves to it."
-  ],
-  "keys": [
-    [0, 7.5, 57, 10],
-    [149, 7.5, 57, 10],
-    [182, 19, 52, 12],
-    [470, 19, 52, 12],
-    [500, 34, 54, 11],
-    [526, 3, 58, 9],
-    [700, 3, 58, 9],
-    [722, 14, 54, 10],
-    [742, 36, 54, 11],
-    [760, 19, 52, 12],
-    [800, 19, 52, 12],
-    [836, 5, 58, 10],
-    [994, 5, 58, 10]
-  ]
+ "comment": [
+  "MICRO BOOST 10%, the phone film, version 2: a moving window over the desktop film (tools/vertical-from-horizontal.py).",
+  "Each key: frame, left edge of the window (% of the frame width), window width (%), top of the window on the phone canvas (%).",
+  "0-149 the pack and both faces; 182-240 the people without the box; 262-352 the close-up with the syringe (the face",
+  "from the nose to the ear and the whole label); 375-556 the people again; 586 the face in the push-in; 612-786 the skin",
+  "cross-section; 808-828 the way out through the fingertip; 846-886 the mask scene; 922-1080 the window comes back to the box."
+ ],
+ "keys": [
+  [0, 7.5, 57, 10],
+  [149, 7.5, 57, 10],
+  [182, 19, 52, 12],
+  [240, 19, 52, 12],
+  [262, 9, 58, 9],
+  [352, 9, 58, 9],
+  [375, 19, 52, 12],
+  [556, 19, 52, 12],
+  [586, 34, 54, 11],
+  [612, 3, 58, 9],
+  [786, 3, 58, 9],
+  [808, 14, 54, 10],
+  [828, 36, 54, 11],
+  [846, 19, 52, 12],
+  [886, 19, 52, 12],
+  [922, 5, 58, 10],
+  [1080, 5, 58, 10]
+ ]
 }

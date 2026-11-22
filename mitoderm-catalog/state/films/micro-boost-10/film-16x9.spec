@@ -1,23 +1,18 @@
-# MICRO BOOST 10%, the desktop film: one visit to the clinic in one unbroken movement, 24 fps, 995 frames = 41.5 s.
+# MICRO BOOST 10%, the desktop film, version 2 (22/11): the white syringe is in the film. 24 fps, 1081 frames = 45.0 s.
+# Version 1 (no syringe) is kept as film-v1-16x9.spec; everything not named here is as in version 1.
 # Build:  ../tools/film-assemble.sh film-16x9.spec <clips dir> micro-boost-10-film.mp4 1912 1080
 # Phone:  ../tools/vertical-from-horizontal.py micro-boost-10-film.mp4 micro-boost-10-film-mobile.mp4 vertical-keys.json
-# The clips dir holds the Kling 4.0 results from Atlas (1080p, 5 s = 121 frames) and the still frames:
-#   K0p.png, K1.png  the pack sharp / the skin examination sharp - K0p is built from K1 (build-k7.py), so the opening
-#                    focus pull is a free dissolve
-#   T2  she lies down on the reclined couch, the cheek is patted dry (K1 -> K2). The clip has a hidden cut at frame 52
-#       (wide framing with a large box -> closer framing with a smaller box) and the cosmetologist's head leaves the
-#       frame around frames 43-70, so frames 27-81 are replaced by a soft-focus join: 27-46 go out of focus, dissolve
-#       into 62-81 while fully blurred, and those come into focus
-#   T3  the tissue goes, the fingertips of both hands massage the cheek (K2 -> K3)
-#   T4  the hands lift, she opens her eyes: "does it tingle?" (K3 -> K4)
-#   D1  into the skin of the cheek (K4 -> Y1); the still tail of the clip runs twice as fast
-#   BL  the golden product goes down along the spicules (Y1 -> Y2)
-#   D2  out of the skin: the mask is on the face (K6 -> Y2, played backwards; its still part twice as fast)
-#   K6.png, K7.png   the mask scene sharp / the pack sharp - K7 is built from K6 (build-k7.py): a free dissolve
+# New in version 2 (the owner's photos of the real syringe, 22/11):
+#   C   a close-up: the cosmetologist's gloved hand lays the serum on the cheek from the real syringe, drop by drop
+#       (K3c -> K3c, the camera stands). Kling 4.0, 1080p, 5 s. Until the owner says ok to the still K3c the clip is
+#       not paid for: C.mp4 is then a stand-in, the still with a slow push-in (C-standin.mp4)
+#   T3  is cut in two: frames 1-19 the tissue goes away (her hand goes down, out of the frame), frames 69-120 the
+#       massage with both hands; between them stands the close-up, joined by soft focus on both sides
 # Film frames:  hold 0-59 | focus 60-99 | hold 100-117 | settle 118-123 | T2 124-149 | soft-focus join 150-181 |
-#               T2 182-220 | T3 221-340 | T4 341-460 | D1 461-560 | BL 561-680 | settle 681-686 |
-#               D2 backwards 687-786 | settle 787-792 | hold 793-834 | focus 835-874 | hold 875-994
-# Chapters: 0-82 | 82-166 | 166-341 | 341-500 | 500-746 | 746-855 | 855-925 | 925-995
+#               T2 182-220 | T3 221-239 | soft focus 240-261 | C 262-352 | soft focus 353-374 | T3 375-426 |
+#               T4 427-546 | D1 547-646 | BL 647-766 | settle 767-772 | D2 backwards 773-872 | settle 873-878 |
+#               hold 879-920 | focus 921-960 | hold 961-1080
+# Chapters: 0-82 | 82-166 | 166-427 | 427-586 | 586-832 | 832-941 | 941-1011 | 1011-1081
 hold K0p.png 0 60
 fade K0p.png 0 K1.png 0 40
 hold K1.png 0 18
@@ -25,7 +20,11 @@ fade K1.png 0 T2.mp4 0 6
 clip T2.mp4 1 26
 blur T2.mp4 27 46 T2.mp4 62 81 8 26
 clip T2.mp4 82 120
-clip T3.mp4 1 120
+clip T3.mp4 1 19
+blur T3.mp4 20 34 C.mp4 0 14 8 26
+clip C.mp4 15 105
+blur C.mp4 106 120 T3.mp4 54 68 8 26
+clip T3.mp4 69 120
 clip T4.mp4 1 120
 clip D1.mp4 1 80
 clip D1.mp4 82 120 2

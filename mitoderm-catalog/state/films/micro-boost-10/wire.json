@@ -1,23 +1,79 @@
 {
   "slug": "micro-boost-10",
-  "frames": 995,
-  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/2c17ea1d-722a-4e73-8cdf-84b2c459f8ca.mp4",
-  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/3e485759-561f-4bdd-919c-a035bc51c39d.mp4",
+  "frames": 1081,
+  "desktop_url": "PENDING",
+  "mobile_url": "PENDING",
   "comment": [
-    "A connected film of one visit to the clinic: the pack, the skin examination, dry skin and the massage, the question",
-    "about tingling, into the skin (spicules of two lengths, the next product going down along them), the mask, the pack",
-    "again. 1912x1080 and 1080x1920, 995 frames, a keyframe every 12 (state/films/micro-boost-10/film-16x9.spec).",
-    "The chapters follow the treatment, not the order of the page sections: 'two lengths, two depths' stands after the",
-    "massage, where the spicules are already in the skin."
+    "A connected film of one visit to the clinic, version 2 (22/11): the pack, the skin examination, dry skin, the serum",
+    "laid on the cheek from the real syringe (a close-up; the owner's photos of 22/11), the massage, the question about",
+    "tingling, into the skin (spicules of two lengths, the next product going down along them), the mask, the pack again.",
+    "1912x1080 and 1080x1920, 1081 frames, a keyframe every 12 (state/films/micro-boost-10/film-16x9.spec).",
+    "The chapters follow the treatment, not the order of the page sections. Version 1 (no syringe): wire-v1.json."
   ],
   "chapters": [
-    {"start": 0, "end": 82, "note": "01 the pack in the clinic", "shot": "Упаковка в клинике", "type": "pack", "section": 1},
-    {"start": 82, "end": 166, "note": "02 the skin examination", "shot": "Осмотр кожи", "type": "patient", "section": 2},
-    {"start": 166, "end": 341, "note": "03 dry skin, the massage", "shot": "Сухая кожа и массаж подушечками пальцев", "type": "procedure", "section": 5},
-    {"start": 341, "end": 500, "note": "04 does it tingle?", "shot": "Вопрос об ощущениях: покалывание", "type": "patient", "section": 4},
-    {"start": 500, "end": 746, "note": "05 inside the skin", "shot": "Внутри кожи: спикулы двух длин, средство уходит вглубь", "type": "procedure", "section": 3},
-    {"start": 746, "end": 855, "note": "06 the mask on the face", "shot": "Маска на лице", "type": "procedure", "section": 8},
-    {"start": 855, "end": 925, "note": "07 the pack, the people behind it", "shot": "Упаковка резко, люди за ней", "type": "pack", "section": 6},
-    {"start": 925, "end": 995, "note": "08 the pack held", "shot": "Упаковка, удержание", "type": "pack", "section": 7}
+    {
+      "start": 0,
+      "end": 82,
+      "note": "01 the pack in the clinic",
+      "shot": "Упаковка в клинике",
+      "type": "pack",
+      "section": 1
+    },
+    {
+      "start": 82,
+      "end": 166,
+      "note": "02 the skin examination",
+      "shot": "Осмотр кожи",
+      "type": "patient",
+      "section": 2
+    },
+    {
+      "start": 166,
+      "end": 427,
+      "note": "03 dry skin, the syringe, the massage",
+      "shot": "Сухая кожа, средство из шприца каплями, массаж подушечками пальцев",
+      "type": "procedure",
+      "section": 5
+    },
+    {
+      "start": 427,
+      "end": 586,
+      "note": "04 does it tingle?",
+      "shot": "Вопрос об ощущениях: покалывание",
+      "type": "patient",
+      "section": 4
+    },
+    {
+      "start": 586,
+      "end": 832,
+      "note": "05 inside the skin",
+      "shot": "Внутри кожи: спикулы двух длин, средство уходит вглубь",
+      "type": "procedure",
+      "section": 3
+    },
+    {
+      "start": 832,
+      "end": 941,
+      "note": "06 the mask on the face",
+      "shot": "Маска на лице",
+      "type": "procedure",
+      "section": 8
+    },
+    {
+      "start": 941,
+      "end": 1011,
+      "note": "07 the pack, the people behind it",
+      "shot": "Упаковка резко, люди за ней",
+      "type": "pack",
+      "section": 6
+    },
+    {
+      "start": 1011,
+      "end": 1081,
+      "note": "08 the pack held",
+      "shot": "Упаковка, удержание",
+      "type": "pack",
+      "section": 7
+    }
   ]
 }
