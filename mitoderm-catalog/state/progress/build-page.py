@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-"""Builds progress.html (the owner's readiness scale) from pages.json, compliance.json, improvements.json,
-needs.json and samples.json in this folder. Run it after changing any of them, then republish the artifact."""
+"""Builds progress.html (the owner's readiness scale) from pages.json, remaining.json, compliance.json,
+improvements.json, needs.json and samples.json in this folder. Run it after changing any of them, then republish the
+artifact. remaining.json is the short answer to "what is left until the site is finished": the steps in order, whose
+move each one is and what happens after it."""
 import html
 import json
 import os
@@ -22,8 +24,25 @@ improvements = load('improvements.json')['rows']
 needs = load('needs.json')['rows']
 samples = load('samples.json')['rows'] if os.path.exists(os.path.join(HERE, 'samples.json')) else []
 compliance = load('compliance.json')['rows'] if os.path.exists(os.path.join(HERE, 'compliance.json')) else []
+remaining = load('remaining.json') if os.path.exists(os.path.join(HERE, 'remaining.json')) else None
 rows = pages['rows']
 meta = {m['label']: m['value'] for m in pages['meta']}
+
+
+def stamp(name):
+    """The "Обновлено" value of one data file as (sortable key, text); None when the file or the value is missing."""
+    if not os.path.exists(os.path.join(HERE, name)):
+        return None
+    text = {m['label']: m['value'] for m in load(name).get('meta', [])}.get('Обновлено')
+    if not text:
+        return None
+    day, clock = text.split(' ')
+    d, m, y = day.split('/')
+    return (y, m, d, clock), text
+
+
+updated = max(filter(None, map(stamp, ('pages.json', 'remaining.json', 'compliance.json', 'improvements.json',
+                                         'needs.json', 'samples.json'))))[1]
 steps = [part.split(' — ')[0].split('. ', 1)[1] for part in meta['Шаги и веса'].split('; ')]
 overall = round(sum(r['percent'] for r in rows) / len(rows))
 review = sum(1 for r in rows if r['percent'] >= 90)
@@ -63,6 +82,17 @@ comp_html = (f'''<section>
   меняются только после вашего «да» на названную цену.</p>
   <div class="table"><table><thead><tr><th>Страница</th><th>По списку</th><th>В фильме сейчас</th><th>Итог</th><th>Что сделать</th></tr></thead><tbody>{comp_rows}</tbody></table></div>
  </section>''' if compliance else '')
+rem_rows = ''.join(
+    f'<li><span class="left-num">{i + 1}</span><div class="left-body">'
+    f'<div class="left-head"><h3>{esc(r["step"])}</h3><span class="left-who">{esc(r["who"])}</span></div>'
+    f'<p>{esc(r["what"])}</p><p class="left-after"><b>После:</b> {esc(r["after"])}</p></div></li>'
+    for i, r in enumerate(remaining['rows'])) if remaining else ''
+rem_html = (f'''<section>
+  <h2>Что осталось до 100&nbsp;%</h2>
+  <p class="muted">{esc(remaining["intro"])}</p>
+  <ol class="left">{rem_rows}</ol>
+  <p class="muted">{esc(remaining["note"])}</p>
+ </section>''' if remaining else '')
 need_rows = ''.join(f'<li><b>{esc(n["topic"])}.</b> {esc(n["need"])} <small>{esc(n["why"])}</small></li>' for n in needs)
 sample_html = ''.join(sample_block(g) for g in samples) or '<p class="muted">Ссылки появятся здесь по мере работы над страницей.</p>'
 
@@ -124,6 +154,16 @@ th {{ color: var(--muted); font-weight: 500; font-size: 12px; letter-spacing: .0
 tr:last-child td {{ border-bottom: 0; }}
 .t-page {{ white-space: nowrap; font-weight: 600; }} .t-eff, .t-st {{ color: var(--muted); white-space: nowrap; }}
 .t-where {{ white-space: nowrap; }}
+.left {{ list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }}
+.left li {{ display: grid; grid-template-columns: 1.6em minmax(0, 1fr); gap: 0 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); }}
+.left li:last-child {{ border-bottom: 0; }}
+.left-num {{ font: 700 17px/1.35 var(--display); font-variant-numeric: tabular-nums; color: var(--accent); }}
+.left-body {{ display: flex; flex-direction: column; gap: 4px; min-width: 0; }}
+.left-head {{ display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }}
+.left-who {{ white-space: nowrap; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  background: var(--accent-soft); color: var(--ink); }}
+.left-after {{ color: var(--muted); font-size: 13px; }}
+.left-after b {{ font-weight: 600; color: var(--ink); }}
 .verdict {{ display: inline-block; white-space: nowrap; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
   background: var(--accent-soft); color: var(--ink); }}
 .verdict[data-v="ok"] {{ background: var(--good-soft); }}
@@ -136,13 +176,14 @@ a:focus-visible {{ outline: 2px solid var(--accent); outline-offset: 2px; border
 <div class="wrap">
  <header>
   <h1>Шкала страниц MITODERM</h1>
-  <p class="updated">Обновлено {esc(meta["Обновлено"])}. Страницы средств делаются по одной, сверху вниз.</p>
+  <p class="updated">Обновлено {esc(updated)}. Страницы средств делаются по одной, сверху вниз.</p>
  </header>
  <div class="summary">
   <div><b>{overall}%</b><span>готовность 13 страниц средств в среднем</span></div>
   <div><b>{review}</b><span>ждут вашего просмотра</span></div>
   <div><b>{working}</b><span>в работе и в очереди</span></div>
  </div>
+ {rem_html}
  <section>
   <h2>Страницы средств</h2>
   <ol class="pages">{''.join(page_row(r) for r in rows)}</ol>
