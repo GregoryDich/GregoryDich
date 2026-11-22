@@ -176,6 +176,10 @@
    appears only after its first decoded frame is painted. */
 .pc-film{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;opacity:0;transition:opacity .45s ease;pointer-events:none}
 .pc-film.is-painted{opacity:1}
+/* A phone taller than 9:16 (most Android phones, in-app browsers): the film would be enlarged to the height of the stage
+   and lose its sides - and a pack stands close to the left side. So the film keeps its whole width at the top of the
+   stage; what is left below it lies under the caption. On a stage of 9:16 or lower nothing changes. */
+@media(max-width:860px){.pc-film{height:min(100%,calc(100vw*16/9))}}
 /* EXO-NAD procedure shots (03-05) put the caption and steps over the patient's
    light sweater; a low scrim keeps them readable without reaching her face. */
 @media(min-width:861px){.pc-film.is-painted~.pc-scenes .pc-scene[data-kind=procedure]{background:linear-gradient(0deg,rgba(0,0,0,.5),transparent 40%),linear-gradient(270deg,rgba(0,0,0,.43),transparent 52%)}}
