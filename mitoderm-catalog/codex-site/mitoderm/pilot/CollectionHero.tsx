@@ -72,7 +72,10 @@ function PhotoFrame({variant,products,viewport,onChoose}:{variant:Variant;produc
     // Where the pack stands, as parts of the picture; on wide screens also its separate cut-out. Both feed
     // the entry into the product (ProductEntry.tsx): the chosen pack lifts off the collection.
     const packRect=[spot.x/size.width,spot.y/size.height,spot.width/size.width,spot.height/size.height].map(value=>value.toFixed(5)).join(',');
-    return <a key={spot.slug} className={'mc-photo-hotspot'+(isVTech?' mc-photo-hotspot-vtech':'')} href={product.href} data-product={spot.slug} data-flight={isVTech?'true':undefined} data-flight-photo={isVTech?'true':undefined} data-pack-rect={isVTech?undefined:packRect} data-pack-src={isVTech?undefined:'/assets/hero/pack-'+spot.slug+'.webp'} aria-label={'לפרטי '+product.name} onClick={onChoose}
+    const packSrc=isVTech?undefined:'/assets/hero/pack-'+spot.slug+'.webp';
+    // The cut-out is fetched when the pointer reaches the product, so it is there when the product is chosen.
+    const warm=()=>{if(packSrc){const image=new Image();image.decoding='async';image.src=packSrc;}};
+    return <a key={spot.slug} className={'mc-photo-hotspot'+(isVTech?' mc-photo-hotspot-vtech':'')} href={product.href} data-product={spot.slug} data-flight={isVTech?'true':undefined} data-flight-photo={isVTech?'true':undefined} data-pack-rect={isVTech?undefined:packRect} data-pack-src={packSrc} aria-label={'לפרטי '+product.name} onClick={onChoose} onPointerEnter={warm} onPointerDown={warm} onFocus={warm}
      style={{left:`${(spot.x+spot.width/2)/size.width*100}%`,top:`${(spot.y+spot.height/2)/size.height*100}%`,width:`${spot.width/size.width*100}%`,height:`${spot.height/size.height*100}%`}}>
      {box&&<span className="mc-canonical-pack" data-flight-box="true" data-canonical-pack="true" data-canonical-src={media.poster} data-canonical-width={media.width} data-canonical-height={media.height} data-canonical-left={media.box.left} data-canonical-top={media.box.top} data-canonical-box-width={media.box.width} data-canonical-box-height={media.box.height} data-photo-silhouette={media.silhouette} aria-hidden="true"
       style={{left:`${(x-spot.x)/spot.width*100}%`,top:`${(box.y-spot.y)/spot.height*100}%`,width:`${width/spot.width*100}%`,height:`${box.height/spot.height*100}%`,clipPath:media.silhouette}}>
