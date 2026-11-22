@@ -95,14 +95,16 @@ export function ProductEntry({flight,onNavigate,onFinish}:{flight:ProductEntryFl
     // The pack comes down onto its own place in the first frame and, once there, dissolves into the pack that
     // stands in the film. The move and the dissolve are two animations: an offset inside one would count the way
     // covered, not the time, and the pack would fade while still on its way - two packs side by side.
-    animate(item,[{transform:forward},{transform:landed}],{duration:700,easing:'cubic-bezier(.45,0,.2,1)'});
-    animate(item,[{opacity:1},{opacity:0}],{duration:200,delay:640,easing:'linear'});
+    const move=animate(item,[{transform:forward},{transform:landed}],{duration:700,easing:'cubic-bezier(.45,0,.2,1)'});
+    const fade=animate(item,[{opacity:1},{opacity:0}],{duration:200,delay:640,easing:'linear'});
     animate(veil,[{opacity:1},{opacity:0}],{duration:600,easing:'ease-in-out'});
-    await delay(860);
+    // Wait for the pack itself, not for a clock: the page under the overlay is still settling, and a busy browser
+    // starts an animation late. A fixed 860 ms ended the entry with the pack still 20-60 px from its place.
+    await Promise.race([Promise.all([move.finished,fade.finished]).catch(()=>undefined),delay(2600)]);
    }else{
-    animate(item,[{transform:forward,opacity:1},{transform:away,opacity:0}],{duration:skipped?220:620,easing:'cubic-bezier(.5,0,.75,.4)'});
-    animate(veil,[{opacity:1},{opacity:0}],{duration:skipped?260:760,easing:'ease-in-out'});
-    await delay(skipped?270:780);
+    const leave=animate(item,[{transform:forward,opacity:1},{transform:away,opacity:0}],{duration:skipped?220:620,easing:'cubic-bezier(.5,0,.75,.4)'});
+    const clear=animate(veil,[{opacity:1},{opacity:0}],{duration:skipped?260:760,easing:'ease-in-out'});
+    await Promise.race([Promise.all([leave.finished,clear.finished]).catch(()=>undefined),delay(2600)]);
    }
    finish();
   };

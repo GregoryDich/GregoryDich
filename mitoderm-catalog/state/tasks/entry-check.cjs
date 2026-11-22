@@ -8,6 +8,8 @@
 // "land": place = the pack's place in the film on the screen, last = the pack in its last frame (the box around it,
 // so a turned pen reads wider), off = distance between their middles in px, fit = how the last box fills the place
 // (1 = exactly; a cut-out fitted inside a window of the phone photograph reads larger).
+// With ENTRY_TAIL=<n> in the environment the last n records of the flight are printed too; ENTRY_NOSHOTS=1 takes no
+// screenshots while the pack comes down (use it when "off" is not zero: see the note at the landing shots).
 const { chromium } = require('playwright');
 const fs = require('fs');
 const pathLib = require('path');
@@ -81,7 +83,9 @@ function proxy() {
   // The pack comes down when the film of the product is ready: wait for that, then look at the way down.
   await page.waitForFunction(() => document.querySelector('.pe-entry')?.dataset.phase === 'landing' || !document.querySelector('.pe-entry'), null, { timeout: 9000 }).catch(() => {});
   const down = Date.now();
-  for (const [name, mark] of [['land-a', 200], ['land-b', 430], ['land-c', 640]]) {
+  // ENTRY_NOSHOTS=1: no screenshots on the way down. A screenshot holds the page for 100-200 ms, and when that falls
+  // on the end of the flight the last records are missing and "off" reads too large; without them the record is whole.
+  for (const [name, mark] of process.env.ENTRY_NOSHOTS ? [] : [['land-a', 200], ['land-b', 430], ['land-c', 640]]) {
     const wait = mark - (Date.now() - down);
     if (wait > 0) await page.waitForTimeout(wait);
     await shot(name);
@@ -112,6 +116,8 @@ function proxy() {
     land = { place: place.map(Math.round), last: last.rect.map(Math.round), opacity: last.opacity, off: off.map(v => Math.round(v * 10) / 10),
       fit: Math.round(Math.max(last.rect[2] / place[2], last.rect[3] / place[3]) * 100) / 100, frames: flight.samples.length };
   }
-  console.log(JSON.stringify({ slug, size, source, seen, land, errs }));
+  // ENTRY_TAIL=<n> adds the last n records of the flight (time, phase, box, opacity): how the pack arrives.
+  const tail = process.env.ENTRY_TAIL ? flight.samples.slice(-Number(process.env.ENTRY_TAIL)) : undefined;
+  console.log(JSON.stringify({ slug, size, source, seen, land, errs, tail }));
   await browser.close();
 })();
