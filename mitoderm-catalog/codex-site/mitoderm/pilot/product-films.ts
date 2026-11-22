@@ -75,12 +75,6 @@ export const productFilms:Record<string,ProductFilm>={
   {start:938,end:1100},  // 07 the follow-up visit
   {start:1100,end:1208}  // 08 pack
  ]},
- // A short film for a coming-soon page: the real box in the clinic, one focus pull (Kling 4.0, 1080p), then the same
- // box at the client's home - the protocol gives the rest of the solution for home use and an 8-week home programme.
- // 1912x1080 and 1080x1920, 468 frames, one chapter: the page copy has an intro only (state/films/mitotech-cell-booster/).
- 'mitotech-cell-booster':{desktop:'/assets/world/mitotech-cell-booster-film.mp4',mobile:'/assets/world/mitotech-cell-booster-film-mobile.mp4',fps:24,frames:468,anchor:'left',chapters:[
-  {start:0,end:468}  // 01 the box in the clinic, the treatment, the same box at her home
- ]},
  // A connected film of a home-care serum: her morning at the mirror, into the skin and out, the cream, then the same
  // box in the clinic. 1912x1080 and 1080x1920, 849 frames, a keyframe every 12 (state/films/cell-renew-1-5/
  // film-16x9.spec). The box is the real pack render placed into the frames, so the two focus pulls and the change of
@@ -176,6 +170,15 @@ export const productFilms:Record<string,ProductFilm>={
   {start:566,end:644}, // 06 the system: one screen
   {start:644,end:714}, // 07 the system, the consultation behind it
   {start:714,end:830}  // 08 the cosmetologist and the patient
+ ]},
+ // A film for a coming-soon page, version 2 (22/11) - a clinic procedure with microneedling, as the owner asked on 21/11:
+ // the real box in the clinic, a focus pull to the two women (Kling 4.0, 1080p), clear drops of the solution and the pen
+ // at work on the cheek, the solution in the micro-channels, back to the box. A DRAFT until the owner says ok to the still
+ // sheet: the pen scene and the inside-skin scene are free stand-ins made of the page's own stills K3m, Y1, Y2m; two paid
+ // clips (W, BL) then replace those pieces without changing the plan. 1912x1080 and 1080x1920, 505 frames, one chapter:
+ // the page copy has an intro only (state/films/mitotech-cell-booster/). Version 1 (clinic, then home): wire-v1.json.
+ 'mitotech-cell-booster':{desktop:'/assets/world/mitotech-cell-booster-film.mp4',mobile:'/assets/world/mitotech-cell-booster-film-mobile.mp4',fps:24,frames:505,anchor:'left',chapters:[
+  {start:0,end:505}  // 01 the box in the clinic, the drops and the pen, the solution in the micro-channels, the box
  ]}
 };
 // Chapter captions of the series films, in page order, word for word from the approved page copy
@@ -226,9 +229,6 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'15\u00a0מ״ל. יומיומי. ללא שטיפה.',body:'1× EXOSIGNAL\u00a0SPRAY, 15\u00a0מ״ל – ספריי להזנה עמוקה של הקרקפת, לשימוש ביתי. סדרת האקסוזומים הסינתטיים.',tag:'פורמט'},
   {title:'מומחי Mitoderm מוסמכים',body:'כל מומחה כאן מוכשר ומוסמך להעניק פרוטוקולים מקוריים של Mitoderm.',tag:'מצאו מומחה'},
   {title:'תמיכה רציפה בזקיקים בין הביקורים',body:'זמין דרך הקליניקות השותפות של מיטודרם. התייעצו עם המומחה שלכם כיצד EXOSIGNAL\u00a0SPRAY משתלב בתוכנית הטיפול שלכם.',tag:'הצעה'}
- ],
- 'mitotech-cell-booster':[
-  {title:'MITOTECH CELL BOOSTER',body:'בוסטר תאי בשני בקבוקונים לפרוטוקולים בקליניקה בשילוב עם MITOPEN או MICRO\u00a0BOOST\u00a010%.',tag:'מקצועי'}
  ],
  'cell-renew-1-5':[
   {title:'CELL RENEW 1.5%',body:'חידוש, בכל יום.',tag:'סרום BIOSPICULE™ · טיפוח ביתי'},
@@ -289,5 +289,8 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'מערכת אחת. מסך אחד.',body:'1× MITOSCAN – מערכת מתקדמת לאבחון הקרקפת והשיער: הגדלה ×50 ו-×200, הדמיית HD. לשימוש מקצועי בלבד.',tag:'מפרט טכני'},
   {title:'הכניסו את MITOSCAN לקליניקה שלכם',body:'לשימוש מקצועי בלבד. המומחה שלנו ייעץ לכם בנושאי הדרכה ותמחור.',tag:'הצעה'},
   {title:'מומחי Mitoderm מוסמכים',body:'שני המכשירים מופעלים בידי אנשי מקצוע שעברו הכשרה, כחלק מפרוטוקול קליני.',tag:'מצאו מומחה'}
+ ],
+ 'mitotech-cell-booster':[
+  {title:'MITOTECH CELL BOOSTER',body:'בוסטר תאי בשני בקבוקונים לפרוטוקולים בקליניקה בשילוב עם MITOPEN או MICRO\u00a0BOOST\u00a010%.',tag:'מקצועי'}
  ]
 };

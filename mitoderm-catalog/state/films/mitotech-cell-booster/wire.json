@@ -1,20 +1,23 @@
 {
   "slug": "mitotech-cell-booster",
-  "frames": 468,
-  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/0ab11250-77eb-4730-adec-e6dbae23660b.mp4",
-  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/a8b3dd9d-e414-4899-a7ee-7bb4a4b743d6.mp4",
+  "frames": 505,
+  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/45ce697b-7c76-439b-9d33-fcb57049ccdd.mp4",
+  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/ba1552f7-99bf-4f2f-b592-e008be7365ac.mp4",
   "anchor": "left",
   "comment": [
-    "A short film for a coming-soon page: the real box in the clinic, one focus pull (Kling 4.0, 1080p), then the same",
-    "box at the client's home - the protocol gives the rest of the solution for home use and an 8-week home programme.",
-    "1912x1080 and 1080x1920, 468 frames, one chapter: the page copy has an intro only (state/films/mitotech-cell-booster/)."
+    "A film for a coming-soon page, version 2 (22/11) - a clinic procedure with microneedling, as the owner asked on 21/11:",
+    "the real box in the clinic, a focus pull to the two women (Kling 4.0, 1080p), clear drops of the solution and the pen",
+    "at work on the cheek, the solution in the micro-channels, back to the box. A DRAFT until the owner says ok to the still",
+    "sheet: the pen scene and the inside-skin scene are free stand-ins made of the page's own stills K3m, Y1, Y2m; two paid",
+    "clips (W, BL) then replace those pieces without changing the plan. 1912x1080 and 1080x1920, 505 frames, one chapter:",
+    "the page copy has an intro only (state/films/mitotech-cell-booster/). Version 1 (clinic, then home): wire-v1.json."
   ],
   "chapters": [
     {
       "start": 0,
-      "end": 468,
-      "note": "01 the box in the clinic, the treatment, the same box at her home",
-      "shot": "Настоящая коробка в клинике; процедура; та же коробка у клиентки дома",
+      "end": 505,
+      "note": "01 the box in the clinic, the drops and the pen, the solution in the micro-channels, the box",
+      "shot": "Настоящая коробка в клинике; капли раствора и перо MITOPEN на щеке; раствор в микроканалах; коробка",
       "type": "pack",
       "section": 1,
       "body": "בוסטר תאי בשני בקבוקונים לפרוטוקולים בקליניקה בשילוב עם MITOPEN או MICRO BOOST 10%."

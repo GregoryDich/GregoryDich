@@ -134,6 +134,22 @@
       "T1.mp4 (the clip of 21/11, 1912x1080, 121 frames)": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/8cef1e06-f239-4328-a9bd-49a4eddd51c9.mp4",
       "Y1.png": "the MITOPEN copy: https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/695caf1d-2dc1-497a-865f-053119f8d863.png",
       "C1.png and C2.png": "rebuilt from the plate: atlas.pack_frames above"
+    },
+    "film_v2_draft": {
+      "what": "The film of version 2 as a DRAFT, on the page since 22/11, 10:24 (film-16x9.spec, vertical-keys.json, wire.json): 505 frames, 21.0 s, one chapter. Free: no generation.",
+      "stand_ins": "W.mp4 and BL.mp4 in the clips dir are free stand-ins until the clips are shot: W - ../tools/still-zoom.sh K3m.png W.mp4 121 1.00 1.05 0.47 0.55 (a slow camera move on the still); BL - a dissolve from Y1.png to Y2m.png over 121 frames (the ffmpeg blend of mitopen/rebuild-clips.sh before 22/11). T1.mp4 is the real clip of 21/11.",
+      "desktop_media": "45ce697b-7c76-439b-9d33-fcb57049ccdd",
+      "mobile_media": "ba1552f7-99bf-4f2f-b592-e008be7365ac",
+      "checked": "22/11, 10:25, state/tasks/film-phone-check.cjs with 6 shots at 1440x900, 390x664 and 390x844: film painted 129/129, no errors. On the desktop the large page title lies over the cap and the headrest in the close-up - the face, the pen and the drops are clear of it; on the phone the close-up fits the window. So the clip W can be shot from K3m as it is.",
+      "after_ok": [
+        "upload K3m, Y1, Y2m again under the names mitotech-K3m.png, mitotech-Y1.png, mitotech-Y2m.png (tools/atlas.py upload)",
+        "launch W (K3m -> K3m) and BL (Y1 -> Y2m): prompts in clips_after_ok; record the job numbers in PROGRESS.md at once",
+        "check each clip (tools/check-clip.sh, a frame sheet, a zoomed crop of the pen against the real photo)",
+        "put W.mp4 and BL.mp4 into the clips dir in place of the stand-ins; keep durable copies and write rebuild-clips.sh as on the device pages",
+        "tools/film-assemble.sh film-16x9.spec, tools/vertical-from-horizontal.py with vertical-keys.json, upload, wire.json, tools/wire-film.py wire.json --replace",
+        "build the site, film-phone-check.cjs mitotech-cell-booster at 1440x900, 390x664, 390x844; record the page scroll"
+      ],
+      "previous": "Version 1 (film-v1-16x9.spec, vertical-keys-v1.json, wire-v1.json): the clinic, then her home; media 0ab11250-77eb-4730-adec-e6dbae23660b and a8b3dd9d-e414-4899-a7ee-7bb4a4b743d6. A way back: wire-film.py wire-v1.json --replace."
     }
   }
 }
