@@ -42,8 +42,8 @@
       "page": "MITOSCAN — лист кадров (ждёт «ок») и черновой фильм",
       "links": [
         {
-          "label": "ЛИСТ КАДРОВ 22/11: зонд на проборе, экран системы, осмотр глазами — нужен «ок»",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/b48593a3-4d16-40d7-9198-b1d3b560b058.jpg"
+          "label": "ЛИСТ КАДРОВ 22/11 (обновлён): настоящая система, снимок на экране, зонд на проборе — нужен «ок»",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/4c58df70-540e-4063-b8a6-613510797193.jpg"
         },
         {
           "label": "Черновой фильм, компьютер (16:9): сцены диагностики из EXOSIGNAL HAIR",
@@ -133,6 +133,14 @@
     {
       "page": "DERMA RECOVERY CREAM — живой фильм (ждёт просмотра)",
       "links": [
+        {
+          "label": "Запись страницы, компьютер",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/3baeda6f-17c5-403f-9292-5c787d14907c.mp4"
+        },
+        {
+          "label": "Запись страницы, телефон",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/b3bb7c85-b4d1-44f2-8301-96e3ac11a135.mp4"
+        },
         {
           "label": "ФИЛЬМ ЦЕЛИКОМ, компьютер (16:9)",
           "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/48224103-9b99-470d-97b5-f2a3e517eaf9.mp4"
@@ -423,7 +431,7 @@
   "meta": [
     {
       "label": "Обновлено",
-      "value": "22/11/2026 02:57"
+      "value": "22/11/2026 03:03"
     }
   ]
 }
