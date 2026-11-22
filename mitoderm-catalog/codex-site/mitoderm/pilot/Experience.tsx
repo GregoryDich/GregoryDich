@@ -5,6 +5,7 @@ import {usePathname,useRouter} from 'next/navigation';
 import {products,assets} from '../data';
 import {LeadForm,type LeadDraft} from './LeadForm';
 import {ProductTransition,type ProductFlight} from './ProductTransition';
+import {ProductEntry,type ProductEntryFlight} from './ProductEntry';
 import './product-flight.css';
 
 type Inquiry={productSlug:string;sourceBlock:string;comment:string;topic:string};
@@ -13,6 +14,7 @@ export function SiteExperience({children}:{children:ReactNode}){
  const pathname=usePathname();
  const router=useRouter();
  const [inquiry,setInquiry]=useState<Inquiry|null>(null),[flight,setFlight]=useState<ProductFlight|null>(null);
+ const [entry,setEntry]=useState<ProductEntryFlight|null>(null);
  const dialog=useRef<HTMLDialogElement>(null),returnFocus=useRef<HTMLElement|null>(null);
  const inquiryDrafts=useRef(new Map<string,LeadDraft>());
  const navigationTimer=useRef<number|null>(null);
@@ -21,7 +23,7 @@ export function SiteExperience({children}:{children:ReactNode}){
  const finishFlight=useCallback(()=>{
   const destination=pendingHref.current;
   if(navigationTimer.current!==null)window.clearTimeout(navigationTimer.current);
-  navigationTimer.current=null;pendingHref.current=null;setFlight(null);
+  navigationTimer.current=null;pendingHref.current=null;setFlight(null);setEntry(null);
   // Finishing a visual effect must never cancel the user's chosen navigation.
   if(destination&&window.location.pathname!==destination)window.location.assign(destination);
  },[]);
@@ -29,7 +31,7 @@ export function SiteExperience({children}:{children:ReactNode}){
   pendingHref.current=href;
   navigationTimer.current=window.setTimeout(()=>{
    if(pendingHref.current!==href)return;
-   navigationTimer.current=null;pendingHref.current=null;setFlight(null);
+   navigationTimer.current=null;pendingHref.current=null;setFlight(null);setEntry(null);
    if(window.location.pathname!==href)window.location.assign(href);
   },8000);
   try{router.push(href,{scroll:true});}
@@ -42,7 +44,7 @@ export function SiteExperience({children}:{children:ReactNode}){
   previousPathname.current=pathname;
   if(navigationTimer.current!==null)window.clearTimeout(navigationTimer.current);
   navigationTimer.current=null;setInquiry(null);
-  if(pendingHref.current!==pathname||!flight){pendingHref.current=null;setFlight(null);}
+  if(pendingHref.current!==pathname||!(flight||entry)){pendingHref.current=null;setFlight(null);setEntry(null);}
  },[pathname]);
 
  useEffect(()=>{
@@ -64,9 +66,9 @@ export function SiteExperience({children}:{children:ReactNode}){
    const slug=href.slice('/products/'.length);
    if(!products.some(product=>product.slug===slug))return;
    event.preventDefault();
-   if(flight||pendingHref.current!==null)return;
+   if(flight||entry||pendingHref.current!==null)return;
    // A same-page link cannot clear a flight through a pathname change.
-   if(pathname===href){setFlight(null);window.scrollTo({top:0,left:0,behavior:'instant'});return;}
+   if(pathname===href){setFlight(null);setEntry(null);window.scrollTo({top:0,left:0,behavior:'instant'});return;}
 
    if(slug==='v-tech-system'&&anchor.dataset.flightPhoto==='true'&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
     const frame=anchor.closest('[data-collection-frame]');
@@ -95,6 +97,38 @@ export function SiteExperience({children}:{children:ReactNode}){
      }
     }
    }
+   // Every other product: the chosen pack lifts off the collection and its film opens under it.
+   if(slug!=='v-tech-system'&&pathname==='/'&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    const name=products.find(product=>product.slug===slug)?.name??'';
+    const box=(element:Element)=>{const r=element.getBoundingClientRect();return {left:r.left,top:r.top,width:r.width,height:r.height};};
+    if(anchor.classList.contains('mc-photo-hotspot')){
+     const frame=anchor.closest('[data-collection-frame]');
+     const poster=Array.from(frame?.querySelectorAll<HTMLImageElement>('img[data-collection-poster]')??[]).find(item=>item.getBoundingClientRect().width>0);
+     // The pack's own place inside the picture (the link may be padded to a finger-sized target).
+     const part=anchor.dataset.packRect?.split(',').map(Number),sheet=poster?box(poster):undefined;
+     const rect=part?.length===4&&part.every(Number.isFinite)&&sheet?{left:sheet.left+part[0]*sheet.width,top:sheet.top+part[1]*sheet.height,width:part[2]*sheet.width,height:part[3]*sheet.height}:box(anchor);
+     const packSrc=anchor.dataset.packSrc;
+     if(rect.width>0&&rect.height>0&&(packSrc||(poster?.complete&&poster.naturalWidth>0))){
+      pendingHref.current=href;
+      // The wide banner is built of separate packs: the cut-out is the pack. The phone banner is one
+      // photograph: its window lifts off and turns into the cut-out on the way.
+      const wide=frame?.getAttribute('data-collection-frame')==='desktop';
+      setEntry({id:performance.now(),slug,name,href,rect,pack:packSrc?{src:packSrc}:undefined,photo:(wide&&packSrc)||!poster?undefined:{src:poster.currentSrc||poster.src,rect:box(poster)}});
+      return;
+     }
+    }
+    const cutout=anchor.dataset.flight==='true'?anchor.querySelector<HTMLImageElement>('img[data-flight-image]'):null;
+    if(cutout?.complete&&cutout.naturalWidth>0){
+     const area=box(cutout),fit=Math.min(area.width/cutout.naturalWidth,area.height/cutout.naturalHeight);
+     const width=cutout.naturalWidth*fit,height=cutout.naturalHeight*fit;
+     if(width>1&&height>1){
+      pendingHref.current=href;
+      // Three catalog pictures have no transparent background: they leave through a soft window.
+      setEntry({id:performance.now(),slug,name,href,rect:{left:area.left+(area.width-width)/2,top:area.top+(area.height-height)/2,width,height},pack:{src:cutout.currentSrc||cutout.src},feather:['exo-nad','exocell-mask','mitoscan'].includes(slug)});
+      return;
+     }
+    }
+   }
    const image=anchor.querySelector<HTMLImageElement>('[data-flight-image],img');
    if(slug!=='v-tech-system'||anchor.dataset.flightSkip==='true'||!image||window.matchMedia('(prefers-reduced-motion: reduce)').matches){openProduct(href);return;}
    const rect=image.getBoundingClientRect();
@@ -109,7 +143,7 @@ export function SiteExperience({children}:{children:ReactNode}){
   };
   document.addEventListener('click',onClick);
   return()=>document.removeEventListener('click',onClick);
- },[pathname,router,flight,openProduct]);
+ },[pathname,router,flight,entry,openProduct]);
 
  useEffect(()=>()=>{
   if(navigationTimer.current!==null)window.clearTimeout(navigationTimer.current);
@@ -132,5 +166,6 @@ export function SiteExperience({children}:{children:ReactNode}){
    {inquiry&&<div className="inquiry-panel"><button className="inquiry-close" type="button" onClick={close} aria-label="סגירה">×</button><p className="inquiry-brand" dir="ltr">{selected?.name??'MITODERM'}</p><h2 id="inquiry-heading">{inquiryTitles[inquiry.topic]??inquiryTitles.offer}</h2><p className="inquiry-intro">השאירו פרטים לשיחה על התאמה, מידע ותנאים מקצועיים.</p><LeadForm key={inquiryKey} productSlug={inquiry.productSlug} sourceBlock={inquiry.sourceBlock} initialComment={inquiry.comment} initialDraft={inquiryDrafts.current.get(inquiryKey)} onDraftChange={draft=>inquiryDrafts.current.set(inquiryKey,draft)} onSuccess={()=>inquiryDrafts.current.delete(inquiryKey)}/></div>}
   </dialog>
   {flight&&<ProductTransition flight={flight} onNavigate={openProduct} onFinish={finishFlight}/>}
+  {entry&&<ProductEntry flight={entry} onNavigate={openProduct} onFinish={finishFlight}/>}
  </>;
 }

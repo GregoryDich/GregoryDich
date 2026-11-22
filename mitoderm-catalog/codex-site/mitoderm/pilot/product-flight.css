@@ -22,3 +22,15 @@ html[data-product-transit="v-tech-system"] .mc-home [data-canonical-pack]{visibi
 html[data-product-transit] [data-vtech-story] .vs-copy,html[data-product-transit] [data-vtech-story] .vs-navigation{opacity:0!important;transition:none!important}
 .lead-product-context{border:1px solid rgba(223,186,116,.22);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:15px;min-height:48px;font-size:12px;color:#bcb5a8}.lead-product-context bdi{color:#e4c48c;font-size:12px}.lead-fields>.lead-product-context{align-self:end}
 @media(prefers-reduced-motion:reduce){.vc-product-flight{display:none}}
+
+/* Home -> product for every product (ProductEntry.tsx): the chosen pack comes forward over a dark ground. */
+.pe-entry{position:fixed;inset:0;z-index:9998;isolation:isolate;overflow:hidden;pointer-events:auto}
+.pe-ground{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 56%,#241d13,#09090b 70%);opacity:0}
+.pe-pack{position:absolute;z-index:2;max-width:none!important;transform-origin:50% 50%;will-change:transform,opacity;pointer-events:none}
+.pe-pack-layer{position:absolute;inset:0;background-repeat:no-repeat;will-change:opacity}
+.pe-pack-layer[data-kind=pack]{filter:drop-shadow(0 22px 26px #0009)}
+.pe-pack-layer[data-kind=photo]{mask-image:radial-gradient(ellipse 52% 52% at 50% 50%,#000 58%,transparent 100%)}
+.pe-caption{position:absolute;z-index:3;inset:auto 24px max(8svh,44px);display:flex;flex-direction:column;gap:11px;text-align:center;color:#e7d4a9;opacity:0;pointer-events:none}
+.pe-caption>span{font-size:9px;letter-spacing:.25em}.pe-caption>bdi{font-size:clamp(17px,2vw,26px);letter-spacing:.14em;font-weight:300}
+@media(min-width:861px){.pe-caption{inset:auto auto 12svh 5vw;text-align:start;align-items:flex-start}}
+@media(prefers-reduced-motion:reduce){.pe-entry{display:none}}

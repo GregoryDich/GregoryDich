@@ -7,30 +7,33 @@ export type CollectionHeroProduct={slug:string;name:string;href:string;number:st
 type Rect={x:number;y:number;width:number;height:number};
 type Hotspot=Rect&{slug:string;box?:Rect};
 type Variant='desktop'|'mobile';
-const desktopSize = {width:1672, height:941};
+// Wide screens (22/11): two even rows on an empty stage, built by state/tasks/build-hero-rows.py from the real
+// cut-outs. V-TECH is one of the row, not the centre; its box is not in the picture - it is drawn below from the
+// first frame of its film, so it has no old footprint to clean. The picture's edges fall into the page colour.
+const desktopSize = {width:3840, height:2160};
 const mobileSize = {width:1049, height:1500};
-// Replace only the old V-TECH footprint. Every other pack keeps its approved
+const desktopWidths=[1920,2560,3840];
+const desktopSrc=(width:number)=>'/assets/hero/collection-rows-desktop-'+width+'.webp';
+// The phone photograph: replace only the old V-TECH footprint. Every other pack keeps its approved
 // original pixels; the generated clean plate supplies the empty podium only.
-const cleanMasks={
- desktop:'linear-gradient(90deg,transparent 42.34%,#000 43.48%,#000 63.52%,transparent 64.6%),linear-gradient(transparent 20.19%,#000 22%,#000 86.4%,transparent 88.31%)',
- mobile:'linear-gradient(90deg,transparent 37.18%,#000 39.47%,#000 62.73%,transparent 64.73%),linear-gradient(transparent 14.2%,#000 15.4%,#000 42.2%,transparent 43.4%)',
-};
+const mobileCleanMask='linear-gradient(90deg,transparent 37.18%,#000 39.47%,#000 62.73%,transparent 64.73%),linear-gradient(transparent 14.2%,#000 15.4%,#000 42.2%,transparent 43.4%)';
 
-// Coordinates refer to the complete approved photographs, never a cropped cover.
+// Coordinates refer to the complete pictures, never a cropped cover. The wide-screen ones are the exact
+// places of the packs (hero-rows-map.json of the builder), left to right, upper row then lower row.
 const desktopHotspots: Hotspot[] = [
-  {slug:'v-tech-system', x:777,y:470,width:156,height:300, box:{x:790,y:478,width:129,height:280}},
-  {slug:'exo-nad', x:76,y:300,width:203,height:219},
-  {slug:'exocell-mask', x:297,y:337,width:215,height:182},
-  {slug:'exotech-gel', x:519,y:307,width:178,height:212},
-  {slug:'exosignal-hair', x:51,y:568,width:245,height:194},
-  {slug:'exosignal-spray', x:301,y:555,width:109,height:211},
-  {slug:'mitotech-cell-booster', x:415,y:582,width:289,height:186},
-  {slug:'cell-renew-1-5', x:1095,y:276,width:95,height:266},
-  {slug:'cellular-age-defense-2-5', x:1210,y:272,width:95,height:270},
-  {slug:'micro-boost-10', x:1328,y:265,width:96,height:277},
-  {slug:'derma-recovery-cream', x:1434,y:318,width:166,height:224},
-  {slug:'mitoscan', x:1087,y:581,width:303,height:219},
-  {slug:'mitopen', x:1430,y:548,width:147,height:252},
+  {slug:'exosignal-spray', x:269,y:581,width:304,height:499},
+  {slug:'exosignal-hair', x:725,y:716,width:553,height:364},
+  {slug:'exotech-gel', x:1430,y:633,width:334,height:447},
+  {slug:'exocell-mask', x:1915,y:664,width:520,height:416},
+  {slug:'exo-nad', x:2587,y:716,width:593,height:364},
+  {slug:'v-tech-system', x:3332,y:560,width:239,height:520, box:{x:3332,y:560,width:239,height:520}},
+  {slug:'mitoscan', x:269,y:1328,width:589,height:400},
+  {slug:'mitopen', x:1009,y:1231,width:462,height:497},
+  {slug:'mitotech-cell-booster', x:1622,y:1339,width:513,height:389},
+  {slug:'derma-recovery-cream', x:2286,y:1264,width:337,height:464},
+  {slug:'cellular-age-defense-2-5', x:2774,y:1188,width:163,height:540},
+  {slug:'cell-renew-1-5', x:3088,y:1188,width:166,height:540},
+  {slug:'micro-boost-10', x:3405,y:1188,width:166,height:540},
 ];
 const mobileHotspots: Hotspot[] = [
   {slug:'v-tech-system', x:408,y:230,width:213,height:395, box:{x:420,y:242,width:186,height:369}},
@@ -52,10 +55,13 @@ function PhotoFrame({variant,products,viewport,onChoose}:{variant:Variant;produc
  const size=variant==='desktop'?desktopSize:mobileSize;
  const hotspots=variant==='desktop'?desktopHotspots:mobileHotspots;
  const media=viewport?getEntryMedia(viewport):entryMedia;
- const cleanSrc='/assets/hero/collection-clean-'+variant+'-v7.webp';
+ const wide=variant==='desktop';
+ const cleanSrc=wide?undefined:'/assets/hero/collection-clean-mobile-v7.webp';
  return <div className={'mc-collection-frame mc-collection-frame-'+variant} data-collection-frame={variant} style={{'--collection-ratio':`${size.width} / ${size.height}`} as CSSProperties}>
-  <img data-collection-poster="true" data-clean-src={cleanSrc} data-clean-mask={cleanMasks[variant]} className="mc-collection-photo" src={'/assets/hero/collection-atelier-'+variant+'.webp'} width={size.width} height={size.height} alt="קולקציית MITODERM: שלושה עשר מוצרים מקצועיים" fetchPriority="high" loading="eager" decoding="async"/>
-  <img className="mc-collection-photo mc-collection-clean" src={cleanSrc} width={size.width} height={size.height} alt="" aria-hidden="true" loading="eager" decoding="async" style={{maskImage:cleanMasks[variant],maskComposite:'intersect',WebkitMaskComposite:'source-in'}}/>
+  {wide
+   ?<img data-collection-poster="true" className="mc-collection-photo" src={desktopSrc(1920)} srcSet={desktopWidths.map(width=>desktopSrc(width)+' '+width+'w').join(', ')} sizes="(max-width: 900px) 1px, 100vw" width={size.width} height={size.height} alt="קולקציית MITODERM: שלושה עשר מוצרים מקצועיים" fetchPriority="high" loading="eager" decoding="async"/>
+   :<img data-collection-poster="true" data-clean-src={cleanSrc} data-clean-mask={mobileCleanMask} className="mc-collection-photo" src="/assets/hero/collection-atelier-mobile.webp" width={size.width} height={size.height} alt="קולקציית MITODERM: שלושה עשר מוצרים מקצועיים" fetchPriority="high" loading="eager" decoding="async"/>}
+  {cleanSrc&&<img className="mc-collection-photo mc-collection-clean" src={cleanSrc} width={size.width} height={size.height} alt="" aria-hidden="true" loading="eager" decoding="async" style={{maskImage:mobileCleanMask,maskComposite:'intersect',WebkitMaskComposite:'source-in'}}/>}
   <div className="mc-collection-ambient" aria-hidden="true"/>
   <nav className="mc-photo-hotspots" aria-label="בחרו מוצר מתוך הקולקציה">
    {hotspots.map(spot=>{
@@ -63,7 +69,10 @@ function PhotoFrame({variant,products,viewport,onChoose}:{variant:Variant;produc
     const isVTech=spot.slug==='v-tech-system',box=spot.box;
     const width=box?box.height*media.box.width/media.box.height:0;
     const x=box?box.x+(box.width-width)/2:0;
-    return <a key={spot.slug} className={'mc-photo-hotspot'+(isVTech?' mc-photo-hotspot-vtech':'')} href={product.href} data-product={spot.slug} data-flight={isVTech?'true':undefined} data-flight-photo={isVTech?'true':undefined} aria-label={'לפרטי '+product.name} onClick={onChoose}
+    // Where the pack stands, as parts of the picture; on wide screens also its separate cut-out. Both feed
+    // the entry into the product (ProductEntry.tsx): the chosen pack lifts off the collection.
+    const packRect=[spot.x/size.width,spot.y/size.height,spot.width/size.width,spot.height/size.height].map(value=>value.toFixed(5)).join(',');
+    return <a key={spot.slug} className={'mc-photo-hotspot'+(isVTech?' mc-photo-hotspot-vtech':'')} href={product.href} data-product={spot.slug} data-flight={isVTech?'true':undefined} data-flight-photo={isVTech?'true':undefined} data-pack-rect={isVTech?undefined:packRect} data-pack-src={isVTech?undefined:'/assets/hero/pack-'+spot.slug+'.webp'} aria-label={'לפרטי '+product.name} onClick={onChoose}
      style={{left:`${(spot.x+spot.width/2)/size.width*100}%`,top:`${(spot.y+spot.height/2)/size.height*100}%`,width:`${spot.width/size.width*100}%`,height:`${spot.height/size.height*100}%`}}>
      {box&&<span className="mc-canonical-pack" data-flight-box="true" data-canonical-pack="true" data-canonical-src={media.poster} data-canonical-width={media.width} data-canonical-height={media.height} data-canonical-left={media.box.left} data-canonical-top={media.box.top} data-canonical-box-width={media.box.width} data-canonical-box-height={media.box.height} data-photo-silhouette={media.silhouette} aria-hidden="true"
       style={{left:`${(x-spot.x)/spot.width*100}%`,top:`${(box.y-spot.y)/spot.height*100}%`,width:`${width/spot.width*100}%`,height:`${box.height/spot.height*100}%`,clipPath:media.silhouette}}>

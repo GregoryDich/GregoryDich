@@ -40,7 +40,10 @@
 .pc-caption{width:min(430px,35vw);margin-inline-end:auto;text-align:right;text-shadow:0 3px 24px #0008}
 .pc-kicker{display:flex;gap:14px;align-items:center;color:var(--pc-accent);font-size:12px;letter-spacing:.06em;margin:0 0 18px}
 .pc-kicker span{font-variant-numeric:tabular-nums}
-.pc-caption h1{font-size:clamp(42px,5vw,86px);letter-spacing:.012em;line-height:1.02;font-weight:450;color:var(--pc-ink);overflow-wrap:anywhere}
+/* A product name is never broken inside a word: nine letters (EXOSIGNAL) fit the 430px box up to 73px, and on
+   screens from 1700px the box is wider and the name returns to its full size. */
+.pc-caption h1{font-size:clamp(42px,5vw,73px);letter-spacing:.012em;line-height:1.02;font-weight:450;color:var(--pc-ink);overflow-wrap:anywhere}
+@media(min-width:1700px){.pc-caption{width:min(520px,30vw)}.pc-caption h1{font-size:86px}}
 .pc-caption h2{font-size:clamp(32px,3.5vw,59px);letter-spacing:-.03em;line-height:1.13;font-weight:450;color:var(--pc-ink);max-width:17ch;text-wrap:balance}
 .pc-caption>p:not(.pc-kicker){font-size:clamp(15px,1.3vw,19px);margin-top:18px;line-height:1.75;color:color-mix(in srgb,var(--pc-ink) 88%,transparent)}
 .pc-actions{display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-top:28px}

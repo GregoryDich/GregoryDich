@@ -106,3 +106,8 @@
 @keyframes mc-collection-breathe{0%,100%{transform:scale(1) translateY(0)}50%{transform:scale(1.009) translateY(-3px)}}
 @keyframes mc-collection-light{0%,100%{opacity:.4;transform:translateX(-8%)}50%{opacity:1;transform:translateX(8%)}}
 @media(prefers-reduced-motion:reduce){.mc-collection-frame,.mc-collection-ambient{animation:none}.mc-collection-ambient{opacity:.4}}
+
+/* Wide screens (22/11): the banner is one 16:9 picture up to 4K whose edges fall into the page colour, so it has
+   no box on any screen. It takes the whole first screen but leaves room for the caption strip under it. */
+.mc-collection-frame-desktop{max-width:calc((100svh - 76px)*16/9);background:#0b0b0b}
+.mc-collection-frame-desktop .mc-collection-ambient{mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
