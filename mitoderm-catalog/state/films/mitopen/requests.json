@@ -116,36 +116,42 @@
         "Y2"
       ]
     },
-    "state": "LAUNCHED 22/11, 09:11: three 1080p clips, 5 s, 1.07 USD each (jobs). The film is ready for them: see film_v3.",
+    "state": "DONE 22/11: three 1080p clips (5 s, 1.069 USD each) launched at 09:11 after the owner's ok on the sheet, all three accepted on the first take, no retakes. In the film since 09:45 (film_v3).",
     "spent_stills": "0.42 USD for six stills (three of them rejected tries of K3)",
     "frames_note": "Uploaded again on 22/11, 03:20, under unambiguous names (mitopen-K1.png ...): two different files named Y2.png had been uploaded that night - the style reference of MICRO BOOST 10% and the page's own Y2 - and the record had mixed their addresses. Use only these four addresses for the clips.",
     "jobs": {
       "launched": "22/11, 09:11, after the owner's \"ok\" on the sheet (22/11, 09:10)",
       "E": "0cdacfbe45db4cc28cd86c070c9dac6a",
       "D": "b8bdc295dc1d44beab428809c3e9ad82",
-      "BL": "57aa8f6291874b5c9907634cf1b1a374"
-    }
+      "BL": "57aa8f6291874b5c9907634cf1b1a374",
+      "verdicts": {
+        "E": "accepted: the same two people and room, her fingertips go from the cheek to the jaw and the forehead and come back; the pen on the towel does not move. Used: frames 1-120, then a 30-frame dissolve back to K0.",
+        "D": "accepted: the pen keeps its shape while it works (ring, button and clear cartridge as in the photo), then the camera goes down into the cheek and opens into Y1 with no jump. The camera drifts from the very first frame, so the forwards-back-forwards turn planned for the stand-in is not used: frames 20-49 are shown twice as slow, frames 50-120 as shot.",
+        "BL": "accepted: the channels keep their place, number and depth, the golden serum goes down channel after channel. Used: frames 1-100, the last 20 go under the soft-focus join back to the pen."
+      }
+    },
+    "spent_clips": "3.21 USD: three clips at 1.069 USD, no retakes (Atlas balance for both device pages together 21.012 -> 14.597 USD)",
+    "spent_page": "stills 0.42 USD + clips 3.21 USD = 3.63 USD of the 8 USD page ceiling"
   },
   "film_v3": {
-    "what": "Version 3 of the film, on the page since 22/11, 04:10: the page's own scenes with P2 (film-16x9.spec, vertical-keys.json, wire.json). 974 frames, 40.6 s. Free: no generation.",
-    "stand_ins": "Until the clips are shot, E.mp4, D.mp4 and BL.mp4 in the clips dir are free stand-ins made of the page's own stills: E - a slow camera move on K1 that ends where it starts; D - K3e almost still for 48 frames, then a push-in toward the working end of the pen and a soft-focus join into Y1; BL - Y1 dissolving into Y2.",
-    "desktop_media": "45260156-c7ba-48ac-8f22-fc34375b9d90",
-    "mobile_media": "cfea219c-78f7-4b09-a681-672c57eb1e7d",
-    "after_ok": [
-      "launch E, D, BL (frames above; prompts in clips)",
-      "check each clip (tools/check-clip.sh, a frame sheet); in D find the frame where the camera starts to move and keep the forwards-back-forwards turn before it (the spec turns at frames 47 and 21)",
-      "put the three files into the clips dir in place of the stand-ins",
-      "tools/film-assemble.sh film-16x9.spec, tools/vertical-from-horizontal.py with vertical-keys.json",
-      "upload both files, put the new addresses into wire.json, tools/wire-film.py wire.json --replace",
-      "build the site, state/tasks/film-phone-check.cjs mitopen 1440x900 and 390x664 with 3 shots per scene"
-    ],
+    "what": "Version 3 of the film with the live clips, on the page since 22/11, 09:45: the page's own scenes with P2 (film-16x9.spec, vertical-keys.json, wire.json). 952 frames, 39.7 s, 1912x1080 and 1080x1920.",
+    "pieces": "pen close 0-53 | camera back 54-101 | hold 102-113 | focus to the people 114-153 | examination E 154-273 | focus back 274-303 | camera to the ring and the button 304-356 | hold 357-392 | soft-focus join 393-424 | the pen works (D 20-49 slowed twice) 425-484 | into the skin (D 50-120) 485-555 | micro-channels BL 556-655 | soft-focus join back to the pen 656-687 | hold 688-735 | camera back 736-783 | hold 784-819 | focus 820-855 | examination 856-951",
+    "chapters": "01 0-134 | 02 134-289 | 03 289-409 | 04 409-505 | 05 505-672 | 06 672-736 | 07 736-838 | 08 838-952",
+    "desktop_media": "136980ed-fa8e-4b85-a6e1-3c3000f24b51",
+    "mobile_media": "6c807cef-1ae9-41ad-ac29-0deb8c579f95",
+    "checked": "22/11, 09:46, state/tasks/film-phone-check.cjs with 3 shots per scene at 1440x900, 390x664 and 390x844: film painted 129/129, eight scenes, no errors; the scene shots were looked at. Known: on a desktop window the caption of chapter 04 and of the first frames of chapter 05 lies over the patient's jaw and neck while the camera comes to the cheek (eyes, lips, the cheek and the pen stay open) - listed in state/progress/improvements.json.",
+    "rebuild": "rebuild-clips.sh <dir> restores the clips dir: the stills and the three paid clips from the durable copies (backup), the frames with the real pen and the camera moves by build-pen-frames.py; a clip that is already there is never overwritten. Then tools/film-assemble.sh film-16x9.spec, tools/vertical-from-horizontal.py with vertical-keys.json, upload, wire.json, tools/wire-film.py wire.json --replace.",
+    "draft": "Until 22/11, 09:45 the page showed the same plan with free stand-ins in place of E, D and BL (974 frames; media 45260156-c7ba-48ac-8f22-fc34375b9d90 and cfea219c-78f7-4b09-a681-672c57eb1e7d).",
     "previous": "Version 2 (film-v2-16x9.spec, vertical-keys-v2.json, wire-v2.json): microneedling shown with three clips borrowed from the EXOSIGNAL HAIR film - another patient, the scalp. A way back: wire-film.py wire-v2.json --replace."
   },
   "backup": {
-    "why": "Durable copies of the stills that cannot be rebuilt from the repository (22/11, 05:20): the temporary folder goes with a container restart, and the storage of the generation service is not reachable from the session. rebuild-clips.sh <clips dir> fetches them and rebuilds the rest (K0, K1, K2, the three camera moves, the stand-ins).",
+    "why": "Durable copies of everything that cannot be rebuilt from the repository: the stills (22/11, 05:20) and the three paid clips (22/11, 09:52; byte for byte equal to the files the service returned). The temporary folder goes with a container restart, and the storage of the generation service is not reachable from the session. rebuild-clips.sh <clips dir> fetches them and rebuilds the rest (K0, K1, K2, the three camera moves).",
     "A-plate.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/99ae1715-38b7-432c-a371-561e58cd10ad.png",
     "K3e.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/961a3230-80cd-4f4e-bf60-3e49e9b5ad73.png",
     "Y1.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/695caf1d-2dc1-497a-865f-053119f8d863.png",
-    "Y2.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/23f1d615-bf1c-4efa-af37-f29884fbc001.png"
+    "Y2.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/23f1d615-bf1c-4efa-af37-f29884fbc001.png",
+    "E.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/3a578e61-38d6-46f1-9b54-5e7ec4ec3080.mp4",
+    "D.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/b272c02a-49ed-4f3a-bb70-939b3198fc44.mp4",
+    "BL.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/72b10e13-36f8-4281-834f-b512fbf759ed.mp4"
   }
 }
