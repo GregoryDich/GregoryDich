@@ -23,6 +23,7 @@ pages = load('pages.json')
 improvements = load('improvements.json')['rows']
 needs = load('needs.json')['rows']
 samples = load('samples.json')['rows'] if os.path.exists(os.path.join(HERE, 'samples.json')) else []
+library = load('samples.json').get('library') if os.path.exists(os.path.join(HERE, 'samples.json')) else None
 compliance = load('compliance.json')['rows'] if os.path.exists(os.path.join(HERE, 'compliance.json')) else []
 remaining = load('remaining.json') if os.path.exists(os.path.join(HERE, 'remaining.json')) else None
 rows = pages['rows']
@@ -101,6 +102,8 @@ rem_html = (f'''<section>
   <p class="muted">{esc(remaining["note"])}</p>
  </section>''' if remaining else '')
 need_rows = ''.join(f'<li><b>{esc(n["topic"])}.</b> {esc(n["need"])} <small>{esc(n["why"])}</small></li>' for n in needs)
+library_html = (f'<p class="library"><a href="{esc(library["url"])}" target="_blank" rel="noopener">{esc(library["label"])}</a>'
+                f' — {esc(library["note"])}.</p>' if library else '')
 sample_html = ''.join(sample_block(g) for g in samples) or '<p class="muted">Ссылки появятся здесь по мере работы над страницей.</p>'
 
 page = f'''<title>Шкала страниц MITODERM</title>
@@ -176,6 +179,8 @@ tr:last-child td {{ border-bottom: 0; }}
 .verdict[data-v="ok"] {{ background: var(--good-soft); }}
 .verdict[data-v="no"] {{ background: var(--warn-soft); }}
 .needs {{ margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 8px; }}
+.library {{ font-size: 14px; }}
+.library a {{ font-weight: 600; }}
 .samples ul {{ margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 4px; }}
 .samples ul.pairs {{ list-style: none; padding: 0; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }}
 .pairs li {{ display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 16px;
@@ -190,6 +195,7 @@ a:focus-visible {{ outline: 2px solid var(--accent); outline-offset: 2px; border
  <header>
   <h1>Шкала страниц MITODERM</h1>
   <p class="updated">Обновлено {esc(updated)}. Страницы средств делаются по одной, сверху вниз.</p>
+  {library_html}
  </header>
  <div class="summary">
   <div><b>{overall}%</b><span>готовность 13 страниц средств в среднем</span></div>
@@ -205,6 +211,7 @@ a:focus-visible {{ outline: 2px solid var(--accent); outline-offset: 2px; border
  {comp_html}
  <section>
   <h2>Пробники: ссылки на промежуточные материалы</h2>
+  {library_html}
   {sample_html}
  </section>
  <section>

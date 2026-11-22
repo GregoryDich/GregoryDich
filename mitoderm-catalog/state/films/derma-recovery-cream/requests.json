@@ -175,5 +175,12 @@
     "wire": "wire.json",
     "checked": "1440x900 and 390x664: eight chapters follow the frames, no errors (22/11); largest scene score 0.017",
     "spent_page": "3.56 USD of the 8 USD ceiling (stills 0.35, clips 3.21), nothing on retakes"
+  },
+  "backup": {
+    "why": "Durable copies of the paid clips (22/11): the temporary folder goes with a container restart. The stills are not copied: the finished film is on durable storage, the stills are needed only to assemble it again.",
+    "T3.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/9d897655-b3c3-4c25-b8d1-b2e9094efa5a.mp4",
+    "D1.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/0ff6e221-1370-48d4-994b-686d3b9a4441.mp4",
+    "D2.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/551c4c28-90d3-4333-9a93-408dc4ddcf1b.mp4",
+    "restore": "curl -o <clips dir>/<name> <address> for each clip; the owner-facing list of all clips is state/progress/videos.json"
   }
 }

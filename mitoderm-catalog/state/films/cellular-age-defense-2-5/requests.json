@@ -180,5 +180,12 @@
     "phone_keys": "vertical-keys.json",
     "wire": "wire.json",
     "checked": "1440x900 and 390x664: eight chapters follow the frames, captions clear of the faces and the box, no errors (21/11)"
+  },
+  "backup": {
+    "why": "Durable copies of the paid clips (22/11): the temporary folder goes with a container restart. The stills are not copied: the finished film is on durable storage, the stills are needed only to assemble it again.",
+    "T3.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/a72ab3bd-c557-4e66-8c65-8de5f10b0d59.mp4",
+    "D1.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/9ead7047-4b83-44ab-9345-7225bcec492a.mp4",
+    "D2.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/b6d388ca-1e52-4ff6-85df-92f8f1a8f582.mp4",
+    "restore": "curl -o <clips dir>/<name> <address> for each clip; the owner-facing list of all clips is state/progress/videos.json"
   }
 }

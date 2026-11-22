@@ -568,5 +568,15 @@
     "phone_keys": "vertical-keys.json",
     "wire": "wire.json",
     "checked": "1440x900 and 390x664: eight chapters follow the frames, captions clear of the faces and the box, no errors (21/11)"
+  },
+  "backup": {
+    "why": "Durable copies of the paid clips (22/11): the temporary folder goes with a container restart. The stills are not copied: the finished film is on durable storage, the stills are needed only to assemble it again.",
+    "T2.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/04cb8241-43b5-4daf-8922-c99b4d935677.mp4",
+    "T3.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/b0ff6094-86bc-4918-b223-a5cc42c9b561.mp4",
+    "T4.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/077440b1-b8d7-44cd-8e25-84e822cb7f82.mp4",
+    "D1.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/930fdd86-e839-4ddc-b8be-af61f267e6ba.mp4",
+    "BL.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/e27c5e16-7888-4d3e-90d0-02ccad6f6380.mp4",
+    "D2.mp4": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/e9f42332-5f5d-423f-8abe-2cbe06329d30.mp4",
+    "restore": "curl -o <clips dir>/<name> <address> for each clip; the owner-facing list of all clips is state/progress/videos.json"
   }
 }
