@@ -1,0 +1,23 @@
+{
+  "comment": [
+    "DERMA RECOVERY CREAM, the phone film: a moving window over the desktop film (tools/vertical-from-horizontal.py).",
+    "Each key: frame, left edge of the window (% of the frame width), window width (%), top of the window on the phone canvas (%).",
+    "0-295 the box and the faces, the window does not move while the clinic becomes her home; 400-462 she in a medium",
+    "close-up with both hands at her cheeks; 490-580 the skin cut-away; 602-674 her cheek, then she after the cream;",
+    "706-939 the window is back on the box, at home and in the clinic."
+  ],
+  "keys": [
+    [0, 5, 58, 10],
+    [295, 5, 58, 10],
+    [400, 23, 54, 11],
+    [462, 23, 54, 11],
+    [490, 3, 58, 9],
+    [580, 3, 58, 9],
+    [602, 24, 54, 11],
+    [616, 22, 54, 11],
+    [640, 22, 52, 12],
+    [674, 22, 52, 12],
+    [706, 5, 58, 10],
+    [939, 5, 58, 10]
+  ]
+}

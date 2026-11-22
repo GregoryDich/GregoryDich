@@ -1,0 +1,23 @@
+{
+  "slug": "derma-recovery-cream",
+  "frames": 940,
+  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/48224103-9b99-470d-97b5-f2a3e517eaf9.mp4",
+  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/74f60bea-4f77-40f1-940b-6eab5dea78fd.mp4",
+  "comment": [
+    "A connected film: the cream as the last step in the clinic, the same box in the morning at her home, she applies the",
+    "cream herself, into the skin and out, the box, the clinic again. Three Kling 4.0 clips shot in native 1080p on",
+    "Atlas Cloud (T3, D1, D2 - state/films/derma-recovery-cream/requests.json); the focus pulls and both changes of place",
+    "are dissolves between frames with the real box unmoving, the way back to the box is a soft-focus join",
+    "(film-16x9.spec). 1912x1080 and 1080x1920, 940 frames. Replaces the draft built of stills (wire-draft.json)."
+  ],
+  "chapters": [
+    {"start": 0, "end": 80, "note": "01 the pack in the clinic", "shot": "Упаковка в клинике", "type": "pack", "section": 1},
+    {"start": 80, "end": 190, "note": "02 the cream after the treatment", "shot": "Крем — последний шаг процедуры", "type": "procedure", "section": 2},
+    {"start": 190, "end": 462, "note": "03 at home in the morning: she applies the cream", "shot": "Дома утром: у зеркала, сама наносит крем", "type": "home", "section": 5},
+    {"start": 462, "end": 596, "note": "04 inside the skin", "shot": "Внутри кожи: без спикул, защитный слой", "type": "procedure", "section": 3},
+    {"start": 596, "end": 690, "note": "05 after: the skin is comfortable", "shot": "После: коже комфортно, она улыбается", "type": "home", "section": 4},
+    {"start": 690, "end": 760, "note": "06 the pack at home", "shot": "Упаковка дома", "type": "pack", "section": 6},
+    {"start": 760, "end": 826, "note": "07 the same pack in the clinic", "shot": "Та же упаковка в клинике", "type": "pack", "section": 7},
+    {"start": 826, "end": 940, "note": "08 the cosmetologist and the patient", "shot": "Косметолог и пациентка", "type": "patient", "section": 8}
+  ]
+}

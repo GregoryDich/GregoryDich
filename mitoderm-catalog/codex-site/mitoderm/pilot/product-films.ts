@@ -127,21 +127,6 @@ export const productFilms:Record<string,ProductFilm>={
   {start:760,end:826}, // 07 the same pack in the clinic
   {start:826,end:940}  // 08 the cosmetologist and the patient
  ]},
- // A DRAFT film, built without paid clips, that stands on the page until the three clips are shot: the cream as the
- // last step in the clinic, the same box in the morning at her home, the cream, into the skin and out, the box,
- // the clinic again. Every frame is an approved still with the real box placed into it; the camera moves are
- // enlargements of the stills and the scenes are joined by soft focus, so the people do not move yet
- // (state/films/derma-recovery-cream/film-draft-16x9.spec). 1912x1080 and 1080x1920, 881 frames.
- 'derma-recovery-cream':{desktop:'/assets/world/derma-recovery-cream-film.mp4',mobile:'/assets/world/derma-recovery-cream-film-mobile.mp4',fps:24,frames:881,chapters:[
-  {start:0,end:80},    // 01 the pack in the clinic
-  {start:80,end:190},  // 02 the cream after the treatment
-  {start:190,end:422}, // 03 at home in the morning: the cream
-  {start:422,end:510}, // 04 inside the skin
-  {start:510,end:630}, // 05 after: the skin is comfortable
-  {start:630,end:700}, // 06 the pack at home
-  {start:700,end:767}, // 07 the same pack in the clinic
-  {start:767,end:881}  // 08 the cosmetologist and the patient
- ]},
  // A draft film of a device page, version 2 (22/11): it shows microneedling, as the owner asked on 21/11. The pen on
  // the towel is the customer's cut-out photo placed on a plate generated without any device; the camera moves are
  // rendered frame by frame (state/films/mitopen/build-pen-frames.py, film-16x9.spec). The work of the pen, the dive
@@ -171,6 +156,21 @@ export const productFilms:Record<string,ProductFilm>={
   {start:545,end:603}, // 06 the system: one screen
   {start:603,end:700}, // 07 the end of the visit
   {start:700,end:801}  // 08 the cosmetologist and the patient
+ ]},
+ // A connected film: the cream as the last step in the clinic, the same box in the morning at her home, she applies the
+ // cream herself, into the skin and out, the box, the clinic again. Three Kling 4.0 clips shot in native 1080p on
+ // Atlas Cloud (T3, D1, D2 - state/films/derma-recovery-cream/requests.json); the focus pulls and both changes of place
+ // are dissolves between frames with the real box unmoving, the way back to the box is a soft-focus join
+ // (film-16x9.spec). 1912x1080 and 1080x1920, 940 frames. Replaces the draft built of stills (wire-draft.json).
+ 'derma-recovery-cream':{desktop:'/assets/world/derma-recovery-cream-film.mp4',mobile:'/assets/world/derma-recovery-cream-film-mobile.mp4',fps:24,frames:940,chapters:[
+  {start:0,end:80},    // 01 the pack in the clinic
+  {start:80,end:190},  // 02 the cream after the treatment
+  {start:190,end:462}, // 03 at home in the morning: she applies the cream
+  {start:462,end:596}, // 04 inside the skin
+  {start:596,end:690}, // 05 after: the skin is comfortable
+  {start:690,end:760}, // 06 the pack at home
+  {start:760,end:826}, // 07 the same pack in the clinic
+  {start:826,end:940}  // 08 the cosmetologist and the patient
  ]}
 };
 // Chapter captions of the series films, in page order, word for word from the approved page copy
@@ -255,16 +255,6 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'משדרגים את השגרה.',body:'זמין דרך הקליניקות השותפות של מיטודרם. לאחריו יש למרוח תמיד DERMA\u00a0RECOVERY\u00a0CREAM. לקליניקות: פנו אלינו בנוגע לתמחור ולשלבי הטיפוח הביתי.',tag:'הצעה'},
   {title:'מומחי Mitoderm מוסמכים',body:'כל מומחה כאן מוכשר ומוסמך להעניק פרוטוקולים מקוריים של Mitoderm. מצאו מרפאה מהימנה בקרבתכם וקבעו ייעוץ.',tag:'מצאו מומחה'}
  ],
- 'derma-recovery-cream':[
-  {title:'DERMA RECOVERY CREAM',body:'כל פרוטוקול מסתיים כאן.',tag:'סדרת BIOSPICULE™ · SNAIL COLLAGEN'},
-  {title:'לחידוש יש גם אחרי.',body:'לאחר שימוש בספיקולות או פרוצדורה בקליניקה, העור עשוי להרגיש יבש, מתוח או מתקלף. זה הרגע שבו שגרת הטיפוח זקוקה לשלב המשלים.',tag:'למה?'},
-  {title:'אחרי הסרומים. אחרי הקליניקה. מדי יום.',body:'לאחר CELL\u00a0RENEW\u00a01.5% או CELLULAR\u00a0AGE\u00a0DEFENSE\u00a02.5%; לאחר פרוטוקולי V-TECH, EXO-NAD ו-MICRO\u00a0BOOST\u00a010%; בוקר וערב, על עור נקי.',tag:'מתי למרוח'},
-  {title:'ללא ספיקולות. שבעה רכיבים פעילים מרכזיים.',body:'ללא ספיקולות כלל – פנתנול, Madecassoside, אלנטואין, חמאת שיאה, ניאצינאמיד, קולגן מפורק ופוליסכרידים מטוהרים מריר החילזון.',tag:'מה בפנים'},
-  {title:'נוחות בזמן שהעור מתחדש.',body:'לחות, רכות ונוחות בזמן שהעור מתחדש – פחות חספוס, קילוף ותחושת מתיחה, ותמיכה במחסום הלחות.',tag:'הרגישו'},
-  {title:'50\u00a0מ״ל. בוקר וערב.',body:'DERMA\u00a0RECOVERY\u00a0CREAM, 50\u00a0ml ℮ 1.69\u00a0fl.\u00a0oz – קרם קולגן מזין לשימוש יומיומי, למראה עור בריא וזוהר. לכל סוגי העור.',tag:'ערכה ועובדות'},
-  {title:'השלימו כל פרוטוקול בשיקום.',body:'זמין דרך הקליניקות השותפות של מיטודרם. לאחר MICRO\u00a0BOOST\u00a010% הקרם חובה גם בבית. קליניקות: פנו אלינו לפרטים על מחירים.',tag:'הצעה'},
-  {title:'מומחי Mitoderm מוסמכים',body:'כל מומחה כאן מוכשר ומוסמך להעניק פרוטוקולים מקוריים של Mitoderm. מצאו מרפאה מהימנה בקרבתכם וקבעו ייעוץ.',tag:'מצאו מומחה'}
- ],
  'mitopen':[
   {title:'MITOPEN',body:'מסלול החדירה לרכיבים הפעילים.',tag:'מכשור מקצועי לקליניקה'},
   {title:'דיוק שאפשר לשחזר.',body:'האזור, עובי העור והאינדיקציה – כל אחד מהם דורש עומק וצפיפות משלו. פרוטוקול מדויק ואחיד מתחיל בכלי העבודה.',tag:'אינדיקציות'},
@@ -284,5 +274,15 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'מערכת אחת. מסך אחד.',body:'1× MITOSCAN – מערכת מתקדמת לאבחון הקרקפת והשיער: הגדלה ×50 ו-×200, הדמיית HD. לשימוש מקצועי בלבד.',tag:'מפרט טכני'},
   {title:'הכניסו את MITOSCAN לקליניקה שלכם',body:'לשימוש מקצועי בלבד. המומחה שלנו ייעץ לכם בנושאי הדרכה ותמחור.',tag:'הצעה'},
   {title:'מומחי Mitoderm מוסמכים',body:'שני המכשירים מופעלים בידי אנשי מקצוע שעברו הכשרה, כחלק מפרוטוקול קליני.',tag:'מצאו מומחה'}
+ ],
+ 'derma-recovery-cream':[
+  {title:'DERMA RECOVERY CREAM',body:'כל פרוטוקול מסתיים כאן.',tag:'סדרת BIOSPICULE™ · SNAIL COLLAGEN'},
+  {title:'לחידוש יש גם אחרי.',body:'לאחר שימוש בספיקולות או פרוצדורה בקליניקה, העור עשוי להרגיש יבש, מתוח או מתקלף. זה הרגע שבו שגרת הטיפוח זקוקה לשלב המשלים.',tag:'למה?'},
+  {title:'אחרי הסרומים. אחרי הקליניקה. מדי יום.',body:'לאחר CELL\u00a0RENEW\u00a01.5% או CELLULAR\u00a0AGE\u00a0DEFENSE\u00a02.5%; לאחר פרוטוקולי V-TECH, EXO-NAD ו-MICRO\u00a0BOOST\u00a010%; בוקר וערב, על עור נקי.',tag:'מתי למרוח'},
+  {title:'ללא ספיקולות. שבעה רכיבים פעילים מרכזיים.',body:'ללא ספיקולות כלל – פנתנול, Madecassoside, אלנטואין, חמאת שיאה, ניאצינאמיד, קולגן מפורק ופוליסכרידים מטוהרים מריר החילזון.',tag:'מה בפנים'},
+  {title:'נוחות בזמן שהעור מתחדש.',body:'לחות, רכות ונוחות בזמן שהעור מתחדש – פחות חספוס, קילוף ותחושת מתיחה, ותמיכה במחסום הלחות.',tag:'הרגישו'},
+  {title:'50\u00a0מ״ל. בוקר וערב.',body:'DERMA\u00a0RECOVERY\u00a0CREAM, 50\u00a0ml ℮ 1.69\u00a0fl.\u00a0oz – קרם קולגן מזין לשימוש יומיומי, למראה עור בריא וזוהר. לכל סוגי העור.',tag:'ערכה ועובדות'},
+  {title:'השלימו כל פרוטוקול בשיקום.',body:'זמין דרך הקליניקות השותפות של מיטודרם. לאחר MICRO\u00a0BOOST\u00a010% הקרם חובה גם בבית. קליניקות: פנו אלינו לפרטים על מחירים.',tag:'הצעה'},
+  {title:'מומחי Mitoderm מוסמכים',body:'כל מומחה כאן מוכשר ומוסמך להעניק פרוטוקולים מקוריים של Mitoderm. מצאו מרפאה מהימנה בקרבתכם וקבעו ייעוץ.',tag:'מצאו מומחה'}
  ]
 };

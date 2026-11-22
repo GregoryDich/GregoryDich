@@ -1,7 +1,7 @@
 # DERMA RECOVERY CREAM, the desktop film: clinic -> home -> clinic in one unbroken movement, 24 fps.
-# PLAN, NOT YET BUILT: the three clips are not shot (the Atlas balance is spent). The pieces repeat the finished film
-# of CELLULAR AGE DEFENSE 2.5%; after the clips arrive, check where D1 enters the skin and where D2 leaves it and
-# move the two "twice as fast" tails and the chapter borders accordingly.
+# BUILT on 22/11 from the three clips shot that night (jobs in requests.json). The pieces repeat the finished film
+# of CELLULAR AGE DEFENSE 2.5%; D1 is inside the skin from its frame 72 and D2 from its frame 68, so the two
+# "twice as fast" tails and the chapter borders stay as planned.
 # Build:  ../tools/film-assemble.sh film-16x9.spec <clips dir> derma-recovery-cream-film.mp4 1912 1080
 # Phone:  ../tools/vertical-from-horizontal.py derma-recovery-cream-film.mp4 derma-recovery-cream-film-mobile.mp4 vertical-keys.json
 # The clips dir holds the Kling 4.0 results from Atlas (1080p, 5 s = 121 frames) and the still frames:
@@ -15,11 +15,11 @@
 #   H3.png  the last home scene (the first frame of D2), held for a moment before the focus leaves it
 #   The pull-back to the pack is not shot (a clip of that kind gets a hidden cut): the scene goes out of focus and the
 #   pack frame H0 comes into focus (piece "blur").
-# Film frames (as planned): hold 0-59 | focus 60-99 | hold 100-135 | focus back 136-165 | clinic -> home 166-213 |
+# Film frames: hold 0-59 | focus 60-99 | hold 100-135 | focus back 136-165 | clinic -> home 166-213 |
 #               hold 214-237 | focus 238-277 | hold 278-289 | settle 290-295 | T3 296-415 | D1 416-520 | hold 521-544 |
 #               settle 545-550 | D2 backwards 551-655 | settle 656-661 | hold 662-673 | soft focus to the pack 674-705 |
 #               hold 706-735 | home -> clinic 736-783 | hold 784-807 | focus 808-843 | hold 844-939
-# Chapters (as planned): 0-80 | 80-190 | 190-462 | 462-596 | 596-690 | 690-760 | 760-826 | 826-940
+# Chapters: 0-80 | 80-190 | 190-462 | 462-596 | 596-690 | 690-760 | 760-826 | 826-940
 # Captions in film order: page sections 1, 2, 5, 3, 4, 6, 7, 8 (STORYBOARD.md).
 hold C1.png 0 60
 fade C1.png 0 C2.png 0 40

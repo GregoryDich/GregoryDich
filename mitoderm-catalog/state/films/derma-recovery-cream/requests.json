@@ -112,6 +112,20 @@
       "C2": "place-pack.py <C plate> <cut-out> C2.png at=170,700 height=752 pack_blur=7 gain=1.0,1.0,0.965",
       "H0": "place-pack.py <H plate> <cut-out> H0.png at=170,700 height=752 plate_blur=9 gain=1.0,1.0,0.965",
       "H1": "place-pack.py <H plate> <cut-out> H1.png at=170,700 height=752 pack_blur=7 gain=1.0,1.0,0.965"
+    },
+    "clips": {
+      "T3": {
+        "prediction": "ad11a74182ec4528b104d3d860381990",
+        "verdict": "good: the camera comes closer, the soft box slides out with its print intact, she applies the cream"
+      },
+      "D1": {
+        "prediction": "8ad5e9eba46a4d6d98a3cb5acd8c7c23",
+        "verdict": "good: the cream, then into the skin (inside from frame 72)"
+      },
+      "D2": {
+        "prediction": "3da7b234651a41faa46db29b89ef3cc9",
+        "verdict": "good: her smile, then into the skin (inside from frame 68); played backwards in the film"
+      }
     }
   },
   "frames": {
@@ -141,7 +155,7 @@
   "clip_seconds": 5,
   "how_to_launch": "after the owner's ok: python3 ../tools/atlas-clips.py requests.json <clips dir>   (6 clips x 0.55 = 3.30 USD); then ../tools/film-assemble.sh film-16x9.spec <clips dir> film.mp4 1280 720",
   "clip_price_note": "native 1080p, 5 s: 1.07 USD a clip (measured 21/11); focus pulls between two frames built on one plate are free dissolves at assembly",
-  "launch_note": "Three paid 1080p clips, 1.069 USD each = 3.21 USD; not launched: the Atlas balance is 0.14 USD (21/11). T1, T2 and T5 are not shot: the focus pulls and both changes of place are dissolves between frames with an identical box, and the pull-back is replaced by a soft-focus join onto the pack frame (film-16x9.spec). Launch each clip with tools/atlas.py video <out.mp4> <prompt.txt> 1080p 5 <first frame url> <last frame url> in the background with its own log, so that the job id is on disk at once.",
+  "launch_note": "Three paid 1080p clips, shot on 22/11 after the owner's top-up: 3.208 USD for the three (balance 25.057 -> 21.850). T1, T2 and T5 are not shot: the focus pulls and both changes of place are dissolves between frames with an identical box, and the pull-back is replaced by a soft-focus join onto the pack frame (film-16x9.spec).",
   "draft_film": {
     "frames": 881,
     "desktop_media": "ce60ba8d-dc84-4023-9c50-cb21ede04b1e",
@@ -149,7 +163,17 @@
     "spec": "film-draft-16x9.spec",
     "phone_keys": "vertical-keys-draft.json",
     "wire": "wire-draft.json",
-    "state": "stands on the page until T3, D1 and D2 are shot; no paid clips, the people do not move",
+    "state": "replaced on 22/11 by the live film (wire.json); kept for the record",
     "checked": "1440x900 and 390x664: eight chapters follow the frames, no errors (21/11)"
+  },
+  "film": {
+    "frames": 940,
+    "desktop_media": "48224103-9b99-470d-97b5-f2a3e517eaf9",
+    "mobile_media": "74f60bea-4f77-40f1-940b-6eab5dea78fd",
+    "spec": "film-16x9.spec",
+    "phone_keys": "vertical-keys.json",
+    "wire": "wire.json",
+    "checked": "1440x900 and 390x664: eight chapters follow the frames, no errors (22/11); largest scene score 0.017",
+    "spent_page": "3.56 USD of the 8 USD ceiling (stills 0.35, clips 3.21), nothing on retakes"
   }
 }
