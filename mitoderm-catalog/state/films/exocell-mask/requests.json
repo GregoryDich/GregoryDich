@@ -1,0 +1,57 @@
+{
+  "note": "EXOCELL MASK: records of the paid Atlas Cloud jobs of the re-shoot of 22/11. The film of 20/11 was shot on Higgsfield; its jobs are in STORYBOARD.md and storyboard.json.",
+  "tool": "../tools/atlas.py (stills: openai/gpt-image-2.6-sunburst/edit 2688x1520 high; clips: kwaivgi/kling-v4.0/image-to-video 1080p 5 s)",
+  "reshoot_22_11": {
+    "why": "The owner's word of 21/11, 23:51: 'EXOCELL MASK - one mask with two layers, only the white one is put on the face, the impregnated paper parts are removed'. His 'yes' to the re-shoot at the named price (about 2.4 USD): 22/11, 09:10. Plan: STORYBOARD.md, the addendum of 22/11.",
+    "kept": "K0, K1, KS, KL, K2, K3 and the clips A, B, S, C, D stay as they are. Two live clips are added: L in place of the held still KL (chapter 04), P before C (chapter 05).",
+    "assumption": "There is no photo of the step itself. The paper part is shown coming off in the hands, before the mask is laid on the face - the way the layers are held on the owner's frame o3. Named on the sheet; changed before the clips if the owner says the step looks different.",
+    "estimate": "stills KW and KP 0.15-0.18 USD; clips L and P 2.14 USD; total 2.3-2.4 USD. Approved: about 2.4 USD. A clip retake (1.07 USD) only after a separate line to the owner with the price.",
+    "references": {
+      "KL (accepted 19/11), uploaded as mask-KL.png": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/a0e0fc51-149f-4aa3-90dc-c60e9d2b7294.png",
+      "K2 (accepted 20/11), uploaded as mask-K2.png": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/64fe9c0e-43a6-4c44-8526-619886adc7b5.png"
+    },
+    "stills": {
+      "KW": {
+        "what": "the frame KL a moment later: the pale-blue layer is gone, the hands hold only the white mask, opened, with openings for the eyes, the nose and the mouth",
+        "images": [
+          "KL"
+        ],
+        "prediction": "0b2fc7a004c049ae820fdf9373d5da05",
+        "launched": "22/11, 10:31",
+        "prompt": "The same picture a moment later. Keep everything exactly as it is - the same two hands in white disposable gloves, the same white uniform with thin pink piping, the same pendant with the blue stone, the same cream sleeves, the same softly blurred room, window and couch, the same framing and light. Change only this: the pale-blue layer has been peeled off the mask and is completely gone from the frame. The hands now hold only the white layer, opened to its full shape and hanging flat between them, facing the camera: one thin white matte sheet mask in the shape of a face, with openings for the two eyes, the nose and the mouth, and with the same rows of tiny dots along its edge as in the picture. Her upper hand holds it by its top edge and her lower hand by its lower edge, with the fingertips only. One white mask only: no blue film, no blue layer, no second sheet, no sachet, no box, no face, no text.",
+        "verdict": "good on the first try: the same hands, uniform, pendant and room; one white sheet mask with the dotted rows along its edge. Retouched by hand (free): through the left eye opening a dark lock of hair read as a stain - the clean opening of the other eye was mirrored into its place (KWr.png, the frame used)."
+      },
+      "KP": {
+        "what": "the frame K2 a few seconds earlier: the patient's face is bare, the cosmetologist holds the white mask by its upper edge above the face",
+        "images": [
+          "K2"
+        ],
+        "prediction": "3158fd86211f47e5b85f216d5e8f9204",
+        "launched": "22/11, 10:31",
+        "prompt": "The same picture a few seconds earlier. Keep everything exactly as it is - the same cosmetologist (white uniform with thin pink piping, pendant with the blue stone, long dark wavy hair behind her shoulders, white disposable gloves), the same patient lying on the white couch under the white towel with the black headband and the gold hoop earring, the same room, window, framing and light. Change only this: the mask is not on the patient's face yet. Her face is bare, clean and relaxed, eyes closed, lips closed, natural skin. The cosmetologist holds the white sheet mask with the gloved fingertips of both hands by its upper edge, a few centimetres above the patient's face, about to lay it down: one thin white, slightly translucent wet sheet mask in the shape of a face, hanging open in the air between her hands, with its openings for the eyes, the nose and the mouth clearly seen; its lower edge is close to the patient's chin, its upper edge over her forehead. One white mask only: no blue film, no blue layer, no paper, no sachet, no box, no text.",
+        "verdict": "good on the first try: the same cosmetologist, patient (black headband, hoop earring), couch, towel and room; the wet white mask hangs between her gloved fingertips, its openings are seen; the patient's face is bare, eyes closed. A small round bit on the nose flap of the mask is left as it is."
+      }
+    },
+    "spent_stills": "0.145 USD for two generations; Atlas balance 14.307 -> 14.162 USD",
+    "sheet": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/db2c0f60-d589-4831-922d-281d853f4b64.jpg",
+    "sheet_cells": "KL (kept), KW (new), KP (new), K2 (kept); built by ../tools/still-sheet.py",
+    "clips_after_ok": {
+      "L": {
+        "from_to": "KL -> KW (the layers come apart, the pale-blue paper part leaves the frame)",
+        "prompt": "One continuous shot, no cuts; the camera stays in place with only a barely noticeable drift. The cosmetologist's gloved hands slowly peel the two layers apart: the pale-blue layer comes off the white one, is drawn down and to the left and leaves the frame; the white layer stays in her upper hand, opens to its full shape and hangs flat between both hands - a white sheet mask in the shape of a face with openings for the eyes, the nose and the mouth. Calm, precise movements; soft daylight. Nothing else appears: no sachet, no box, no face. No text, no captions."
+      },
+      "P": {
+        "from_to": "KP -> K2 (the white mask is laid on the face; the clip C then starts from the same frame K2)",
+        "prompt": "One continuous shot, no cuts; the camera stays in place with only a barely noticeable drift. The cosmetologist gently lowers the white sheet mask onto the patient's face and lays it down, from the forehead to the chin, so that its openings come over her eyes, nose and mouth; the wet mask clings to the skin; then her gloved fingertips come to rest at the patient's temples. The patient lies calm with her eyes closed. Natural small movements, soft daylight. One white mask only; no blue film, no paper. No text, no captions."
+      }
+    },
+    "phone": "The vertical film of this page was shot separately. The two new clips go to the phone as full-height windows cut from the horizontal clips (the hands and the layers in L; the patient's face and the hands with the mask in P). A separate vertical shoot would cost about 2.3 USD more - only at the owner's word.",
+    "backup": {
+      "why": "durable copies (22/11): the temporary folder goes with a container restart",
+      "KW.png (retouched)": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/e6358898-1679-46f3-bf0a-847278558a01.png",
+      "KP.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/55724692-a344-4a87-b288-0e47945ffcee.png",
+      "KL, K2 and the clips of 20/11": "Higgsfield generations of the account (job numbers in STORYBOARD.md)"
+    },
+    "state": "22/11, 10:36: the two stills are ready and checked, the sheet is with the owner (question 33). The clips L and P (2.14 USD) only after his ok on the sheet; the frames for them are uploaded again right before the launch under the names mask-KL.png, mask-KW.png, mask-KP.png, mask-K2.png."
+  }
+}

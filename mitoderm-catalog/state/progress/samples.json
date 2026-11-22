@@ -29,12 +29,25 @@
           "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/28be9c2f-5d55-42a8-83d2-f1e555be0eb6.jpg"
         },
         {
-          "label": "Сейчас на странице (прежний фильм «клиника → дом»): запись страницы, компьютер",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/291d5f98-bed5-46f0-ad8a-0cc0c563b508.mp4"
+          "label": "СТРАНИЦА С ЧЕРНОВИКОМ НОВОГО ФИЛЬМА, компьютер (запись прокрутки 22/11): два места пока без живых роликов",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/2bf1cc05-42bb-4fd9-942c-a1a6ae7dff3c.mp4"
         },
         {
-          "label": "Сейчас на странице (прежний фильм «клиника → дом»): запись страницы, телефон",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/450956b2-8bda-4bfb-95e9-57a633aec832.mp4"
+          "label": "Страница с черновиком, телефон (запись прокрутки 22/11)",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/8a93e058-6420-4d10-83ec-be63150228f5.mp4"
+        },
+        {
+          "label": "Прежний фильм «клиника → дом» (для сравнения)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/0ab11250-77eb-4730-adec-e6dbae23660b.mp4"
+        }
+      ]
+    },
+    {
+      "page": "EXOCELL MASK — лист кадров пересъёмки (ждёт «ок»)",
+      "links": [
+        {
+          "label": "ЛИСТ КАДРОВ 22/11: бумажная часть снята — одна белая маска; маска ложится на лицо — нужен «ок»",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/db2c0f60-d589-4831-922d-281d853f4b64.jpg"
         }
       ]
     },
@@ -423,7 +436,7 @@
   "meta": [
     {
       "label": "Обновлено",
-      "value": "22/11/2026 10:13"
+      "value": "22/11/2026 10:36"
     }
   ]
 }
