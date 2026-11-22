@@ -22,19 +22,27 @@
       ]
     },
     {
-      "page": "MITOTECH CELL BOOSTER — лист кадров пересъёмки (ждёт «ок»)",
+      "page": "MITOTECH CELL BOOSTER — живой фильм на странице (ждёт просмотра)",
       "links": [
         {
-          "label": "ЛИСТ КАДРОВ 22/11: перо MITOPEN и капли раствора на щеке, раствор в микроканалах — нужен «ок»",
+          "label": "СТРАНИЦА ЦЕЛИКОМ, компьютер (запись прокрутки 22/11): коробка в клинике → капли раствора и перо MITOPEN → раствор в микроканалах → коробка",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/4698ed3d-8d2f-4f72-87cc-e07b51eebf12.mp4"
+        },
+        {
+          "label": "Страница целиком, телефон (запись прокрутки 22/11)",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/514e57e4-4f2f-46fb-b4fc-b1f5df589cc7.mp4"
+        },
+        {
+          "label": "Фильм отдельно, компьютер (16:9)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/c9412b98-147f-46ff-b7aa-9e1189f768b3.mp4"
+        },
+        {
+          "label": "Фильм отдельно, телефон (9:16)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/bb3850d8-0677-4389-8284-f9b832a3ea7a.mp4"
+        },
+        {
+          "label": "Лист кадров, по которому сняты ролики",
           "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/28be9c2f-5d55-42a8-83d2-f1e555be0eb6.jpg"
-        },
-        {
-          "label": "СТРАНИЦА С ЧЕРНОВИКОМ НОВОГО ФИЛЬМА, компьютер (запись прокрутки 22/11): два места пока без живых роликов",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/2bf1cc05-42bb-4fd9-942c-a1a6ae7dff3c.mp4"
-        },
-        {
-          "label": "Страница с черновиком, телефон (запись прокрутки 22/11)",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/8a93e058-6420-4d10-83ec-be63150228f5.mp4"
         },
         {
           "label": "Прежний фильм «клиника → дом» (для сравнения)",
@@ -43,10 +51,26 @@
       ]
     },
     {
-      "page": "EXOCELL MASK — лист кадров пересъёмки (ждёт «ок»)",
+      "page": "EXOCELL MASK — фильм версии 3 на странице (ждёт просмотра)",
       "links": [
         {
-          "label": "ЛИСТ КАДРОВ 22/11: бумажная часть снята — одна белая маска; маска ложится на лицо — нужен «ок»",
+          "label": "СТРАНИЦА ЦЕЛИКОМ, компьютер (запись прокрутки 22/11): слои расходятся, бумажная часть уходит, на лицо ложится одна белая маска",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/25ce73de-5923-4329-a0a5-e9a2e816e0cf.mp4"
+        },
+        {
+          "label": "Страница целиком, телефон (запись прокрутки 22/11)",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/32725ad9-5950-4da4-9663-f229c3bfa799.mp4"
+        },
+        {
+          "label": "Фильм отдельно, компьютер (16:9)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/a7715572-7b1e-47c2-b2c8-81acba565495.mp4"
+        },
+        {
+          "label": "Фильм отдельно, телефон (9:16)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/397b62f2-67d7-4ae0-9cfa-5a008b3b7a98.mp4"
+        },
+        {
+          "label": "Лист кадров, по которому сняты ролики",
           "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/db2c0f60-d589-4831-922d-281d853f4b64.jpg"
         }
       ]
@@ -201,8 +225,8 @@
           "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/23693e8e-7105-4c72-b2c6-385d20051618.mp4"
         },
         {
-          "label": "EXOCELL MASK, страница целиком, компьютер",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/9e2486dc-3498-47e7-8fa7-75ce7aaacaac.mp4"
+          "label": "EXOCELL MASK, страница целиком, компьютер (фильм версии 3, 22/11)",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/25ce73de-5923-4329-a0a5-e9a2e816e0cf.mp4"
         },
         {
           "label": "EXO-NAD, страница целиком, компьютер",
@@ -277,14 +301,14 @@
       ]
     },
     {
-      "page": "EXOCELL MASK — готова (фильм и пробники по шагам)",
+      "page": "EXOCELL MASK — пробники по шагам (съёмка 19–20/11) и фильм версии 2",
       "links": [
         {
-          "label": "ФИЛЬМ ЦЕЛИКОМ, компьютер (16:9)",
+          "label": "Фильм версии 2 (до 22/11), компьютер (16:9)",
           "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/c9e5a253-6135-4830-837c-0b9e3a179ca4.mp4"
         },
         {
-          "label": "ФИЛЬМ ЦЕЛИКОМ, телефон (9:16)",
+          "label": "Фильм версии 2 (до 22/11), телефон (9:16)",
           "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/99409a3b-c60a-4a35-a031-7ae1c7e39ad8.mp4"
         },
         {
@@ -436,7 +460,7 @@
   "meta": [
     {
       "label": "Обновлено",
-      "value": "22/11/2026 10:54"
+      "value": "22/11/2026 11:48"
     }
   ]
 }
