@@ -2,7 +2,7 @@
   "meta": [
     {
       "label": "Обновлено",
-      "value": "22/11/2026 16:22"
+      "value": "22/11/2026 21:12"
     }
   ],
   "library": {
@@ -87,6 +87,32 @@
         }
       ],
       "links": []
+    },
+    {
+      "page": "Шприц MICRO BOOST 10% и набор MITOTECH — образцы 22/11 (ждут «ок»)",
+      "note": "По вашим фото шприца, примеру открывания и карточке с флаконами. Ролик со шприцем снимается после «ок» на кадр (1,07 $); набор MITOTECH посчитан 3D-моделью из ваших макетов печати — бесплатно.",
+      "links": [
+        {
+          "label": "ЛИСТ КАДРОВ: шприц рядом с вашим фото; набор закрыт, открывается, открыт — рядом с вашим примером",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/bba45e9b-a9cf-4c8f-a3c3-8c23800bb31f.jpg"
+        },
+        {
+          "label": "MICRO BOOST 10%: шприц у щеки, средство ложится каплями (кадр целиком)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/50ebe104-7473-41b4-a9a3-1729e305bf71.jpg"
+        },
+        {
+          "label": "MITOTECH: набор открыт (кадр целиком)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/c5f30080-a540-4d39-aeab-5d3f6bbca00f.jpg"
+        },
+        {
+          "label": "MITOTECH: набор закрыт (кадр целиком)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/1214e8d7-ef44-44e0-a02e-c305cf81bc6f.jpg"
+        },
+        {
+          "label": "ВИДЕО 5 с: набор MITOTECH открывается (пробник в малом размере)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/3ffeb034-36e6-4a54-9c8a-d53437dcc59a.mp4"
+        }
+      ]
     },
     {
       "page": "Главная — новый баннер и вход в средство (ждёт просмотра)",

@@ -1,0 +1,26 @@
+{
+  "slug": "mitotech-cell-booster",
+  "frames": 505,
+  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/c9412b98-147f-46ff-b7aa-9e1189f768b3.mp4",
+  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/bb3850d8-0677-4389-8284-f9b832a3ea7a.mp4",
+  "anchor": "left",
+  "comment": [
+    "A film for a coming-soon page, version 2 (22/11) - a clinic procedure with microneedling, as the owner asked on 21/11:",
+    "the real box in the clinic, a focus pull to the two women, clear drops of the solution and the pen at work on the",
+    "cheek, the solution going down the micro-channels, back to the box. Three live clips (Kling 4.0, 1080p): T1 (21/11),",
+    "W and BL (22/11, after the owner's ok to the still sheet); the scenes meet in soft focus, so the camera never closes in",
+    "on the face under the page heading. 1912x1080 and 1080x1920, 505 frames, one chapter: the page copy has an intro only",
+    "(state/films/mitotech-cell-booster/). Version 1 (clinic, then home): wire-v1.json."
+  ],
+  "chapters": [
+    {
+      "start": 0,
+      "end": 505,
+      "note": "01 the box in the clinic, the drops and the pen, the solution in the micro-channels, the box",
+      "shot": "Настоящая коробка в клинике; капли раствора и перо MITOPEN на щеке; раствор в микроканалах; коробка",
+      "type": "pack",
+      "section": 1,
+      "body": "בוסטר תאי בשני בקבוקונים לפרוטוקולים בקליניקה בשילוב עם MITOPEN או MICRO BOOST 10%."
+    }
+  ]
+}
