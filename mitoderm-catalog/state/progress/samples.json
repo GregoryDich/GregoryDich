@@ -18,40 +18,40 @@
       ]
     },
     {
-      "page": "MITOPEN — лист новых кадров (ждёт «ок») и фильм с микронидлингом",
+      "page": "MITOPEN — лист кадров (ждёт «ок») и страница с фильмом из собственных сцен",
       "links": [
         {
           "label": "ЛИСТ КАДРОВ 22/11: перо на щеке пациента, «внутри кожи» — нужен «ок»",
           "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/77b89f13-32e1-4f46-9b9f-58c223f26772.jpg"
         },
         {
-          "label": "Фильм сейчас, компьютер (16:9): микронидлинг пока роликами EXOSIGNAL HAIR",
+          "label": "СТРАНИЦА СЕЙЧАС, компьютер (запись прокрутки): три места пока без живых роликов",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/b5b6c423-d0bf-4f0a-a441-e1a51d0dc9b7.mp4"
+        },
+        {
+          "label": "Страница сейчас, телефон (запись прокрутки)",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/ee1e6b23-c826-4290-8ab7-86aca436726e.mp4"
+        },
+        {
+          "label": "Прежний фильм (версия 2): микронидлинг роликами EXOSIGNAL HAIR",
           "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/30055f5e-ea32-4569-992a-f44e8e3a2a6f.mp4"
-        },
-        {
-          "label": "Фильм сейчас, телефон (9:16)",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/84837e4b-0a94-4a52-b960-0c4253e7cb48.mp4"
-        },
-        {
-          "label": "Первые три кадра: настоящее перо крупно, общий план, фокус на осмотре",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/99fc0d32-15a4-400e-ad90-3efc40290419.jpg"
         }
       ]
     },
     {
-      "page": "MITOSCAN — лист кадров (ждёт «ок») и черновой фильм",
+      "page": "MITOSCAN — лист кадров (ждёт «ок») и страница с фильмом из собственных сцен",
       "links": [
         {
-          "label": "ЛИСТ КАДРОВ 22/11 (обновлён): настоящая система, снимок на экране, зонд на проборе — нужен «ок»",
+          "label": "ЛИСТ КАДРОВ 22/11: настоящая система, снимок на экране, зонд на проборе — нужен «ок»",
           "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/4c58df70-540e-4063-b8a6-613510797193.jpg"
         },
         {
-          "label": "Черновой фильм, компьютер (16:9): сцены диагностики из EXOSIGNAL HAIR",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/c0361ff8-d6e3-44c1-9705-c15a56e1d602.mp4"
+          "label": "СТРАНИЦА СЕЙЧАС, компьютер (запись прокрутки): настоящая система крупным планом",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/c8723047-15ce-409b-acd8-13ed3a1e8b3f.mp4"
         },
         {
-          "label": "Черновой фильм, телефон (9:16)",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/c6f1696e-ccc3-40b5-994e-c7121dad4e88.mp4"
+          "label": "Страница сейчас, телефон (запись прокрутки)",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/2bcfee3b-a904-4854-be21-414176c9b1d7.mp4"
         }
       ]
     },
@@ -431,7 +431,7 @@
   "meta": [
     {
       "label": "Обновлено",
-      "value": "22/11/2026 03:03"
+      "value": "22/11/2026 04:32"
     }
   ]
 }
