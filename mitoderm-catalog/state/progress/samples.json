@@ -1,27 +1,40 @@
 {
   "rows": [
     {
-      "page": "MITOPEN — пробный образ и черновой фильм (ждёт «ок»)",
+      "page": "MITOPEN — лист новых кадров (ждёт «ок») и фильм с микронидлингом",
       "links": [
         {
-          "label": "Запись страницы, компьютер",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/07237c66-0ad2-4100-b22d-a60842b1f111.mp4"
+          "label": "ЛИСТ КАДРОВ 22/11: перо на щеке пациента, «внутри кожи» — нужен «ок»",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/77b89f13-32e1-4f46-9b9f-58c223f26772.jpg"
         },
         {
-          "label": "Запись страницы, телефон",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/60d636b4-051c-463c-849a-3e0a01aad48e.mp4"
+          "label": "Фильм сейчас, компьютер (16:9): микронидлинг пока роликами EXOSIGNAL HAIR",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/30055f5e-ea32-4569-992a-f44e8e3a2a6f.mp4"
         },
         {
-          "label": "ЧЕРНОВОЙ ФИЛЬМ, компьютер (16:9)",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/9f559771-d068-4fb9-b703-654381949a08.mp4"
+          "label": "Фильм сейчас, телефон (9:16)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/84837e4b-0a94-4a52-b960-0c4253e7cb48.mp4"
         },
         {
-          "label": "ЧЕРНОВОЙ ФИЛЬМ, телефон (9:16)",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/701ac49d-59c3-46ae-9be7-5b7798ae6f2d.mp4"
-        },
-        {
-          "label": "Три кадра: настоящее перо крупно, общий план, фокус на осмотре",
+          "label": "Первые три кадра: настоящее перо крупно, общий план, фокус на осмотре",
           "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/99fc0d32-15a4-400e-ad90-3efc40290419.jpg"
+        }
+      ]
+    },
+    {
+      "page": "MITOSCAN — лист кадров (ждёт «ок») и черновой фильм",
+      "links": [
+        {
+          "label": "ЛИСТ КАДРОВ 22/11: зонд на проборе, экран системы, осмотр глазами — нужен «ок»",
+          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/b48593a3-4d16-40d7-9198-b1d3b560b058.jpg"
+        },
+        {
+          "label": "Черновой фильм, компьютер (16:9): сцены диагностики из EXOSIGNAL HAIR",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/c0361ff8-d6e3-44c1-9705-c15a56e1d602.mp4"
+        },
+        {
+          "label": "Черновой фильм, телефон (9:16)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/c6f1696e-ccc3-40b5-994e-c7121dad4e88.mp4"
         }
       ]
     },
@@ -101,23 +114,15 @@
       ]
     },
     {
-      "page": "DERMA RECOVERY CREAM — черновой фильм без роликов (живые ролики после пополнения)",
+      "page": "DERMA RECOVERY CREAM — живой фильм (ждёт просмотра)",
       "links": [
         {
-          "label": "Запись страницы, компьютер",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/b1363912-aa51-497d-bf21-73bfe0c03c09.mp4"
+          "label": "ФИЛЬМ ЦЕЛИКОМ, компьютер (16:9)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/48224103-9b99-470d-97b5-f2a3e517eaf9.mp4"
         },
         {
-          "label": "Запись страницы, телефон",
-          "url": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/13bcb43a-2d01-4419-ac4d-c6a5a87ef276.mp4"
-        },
-        {
-          "label": "ЧЕРНОВОЙ ФИЛЬМ, компьютер (16:9)",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/ce60ba8d-dc84-4023-9c50-cb21ede04b1e.mp4"
-        },
-        {
-          "label": "ЧЕРНОВОЙ ФИЛЬМ, телефон (9:16)",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/ec7ee343-f634-4fc2-ab7f-b01a510f9ecf.mp4"
+          "label": "ФИЛЬМ ЦЕЛИКОМ, телефон (9:16)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/74f60bea-4f77-40f1-940b-6eab5dea78fd.mp4"
         },
         {
           "label": "Семь кадров страницы: клиника — дом — клиника; коробка — настоящий рендер",
@@ -401,7 +406,7 @@
   "meta": [
     {
       "label": "Обновлено",
-      "value": "21/11/2026 08:44"
+      "value": "22/11/2026 02:19"
     }
   ]
 }

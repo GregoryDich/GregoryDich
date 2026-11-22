@@ -380,7 +380,7 @@
       "slug": "exocell-mask",
       "name": "EXOCELL MASK",
       "palette": "vm_exocell",
-      "track": "clinic/home",
+      "track": "clinic",
       "cast": {
         "suggestedFemaleCosmetologistBand": "18–35",
         "referenceStatus": "awaiting_user_images",
@@ -534,7 +534,7 @@
         }
       ],
       "isFrozen": false,
-      "status": "storyboard_only",
+      "status": "film_wired",
       "packImage": "/assets/products/micro-boost-10.webp",
       "timeline": {
         "seconds": 34.5,
@@ -568,7 +568,7 @@
         }
       ],
       "isFrozen": false,
-      "status": "storyboard_only",
+      "status": "film_wired_mismatch_owner_list",
       "packImage": "/assets/products/mitotech-cell-booster.webp",
       "timeline": {
         "seconds": 38,
@@ -651,7 +651,7 @@
         }
       ],
       "isFrozen": false,
-      "status": "storyboard_only",
+      "status": "draft_film_wired",
       "packImage": "/assets/products/mitopen.webp",
       "timeline": {
         "seconds": 33.5,
@@ -734,7 +734,7 @@
         }
       ],
       "isFrozen": false,
-      "status": "storyboard_only",
+      "status": "draft_film_wired",
       "packImage": "/assets/products/mitoscan.webp",
       "timeline": {
         "seconds": 32,
@@ -900,7 +900,7 @@
         }
       ],
       "isFrozen": false,
-      "status": "storyboard_only",
+      "status": "film_wired",
       "packImage": "/assets/products/derma-recovery-cream.webp",
       "timeline": {
         "seconds": 30.5,
@@ -1066,7 +1066,7 @@
         }
       ],
       "isFrozen": false,
-      "status": "storyboard_only",
+      "status": "film_wired",
       "packImage": "/assets/products/cell-renew-1-5.webp",
       "timeline": {
         "seconds": 30.5,
@@ -1149,7 +1149,7 @@
         }
       ],
       "isFrozen": false,
-      "status": "storyboard_only",
+      "status": "film_wired",
       "packImage": "/assets/products/cellular-age-defense-2-5.webp",
       "timeline": {
         "seconds": 30.5,

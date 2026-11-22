@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Builds progress.html (the owner's readiness scale) from pages.json, improvements.json, needs.json
-and samples.json in this folder. Run it after changing any of them, then republish the artifact."""
+"""Builds progress.html (the owner's readiness scale) from pages.json, compliance.json, improvements.json,
+needs.json and samples.json in this folder. Run it after changing any of them, then republish the artifact."""
 import html
 import json
 import os
@@ -21,6 +21,7 @@ pages = load('pages.json')
 improvements = load('improvements.json')['rows']
 needs = load('needs.json')['rows']
 samples = load('samples.json')['rows'] if os.path.exists(os.path.join(HERE, 'samples.json')) else []
+compliance = load('compliance.json')['rows'] if os.path.exists(os.path.join(HERE, 'compliance.json')) else []
 rows = pages['rows']
 meta = {m['label']: m['value'] for m in pages['meta']}
 steps = [part.split(' — ')[0].split('. ', 1)[1] for part in meta['Шаги и веса'].split('; ')]
@@ -51,6 +52,17 @@ legend = ''.join(f'<li><span class="num">{i + 1}</span>{esc(s)}</li>' for i, s i
 imp_rows = ''.join(
     f'<tr><td class="t-page">{esc(i["page"])}</td><td>{esc(i["what"])}<small>{esc(i["why"])}</small></td>'
     f'<td class="t-eff">{esc(i["effort"])}</td><td class="t-st">{esc(i["status"])}</td></tr>' for i in improvements)
+VERDICT = {'совпадает': 'ok', 'частично': 'part', 'не совпадает': 'no'}
+comp_rows = ''.join(
+    f'<tr><td class="t-page">{esc(c["page"])}</td><td class="t-where">{esc(c["where"])}</td><td>{esc(c["film"])}</td>'
+    f'<td><span class="verdict" data-v="{VERDICT.get(c["verdict"], "part")}">{esc(c["verdict"])}</span></td>'
+    f'<td>{esc(c["todo"])}</td></tr>' for c in compliance)
+comp_html = (f'''<section>
+  <h2>Клиника или дом — по вашему списку 21/11</h2>
+  <p class="muted">Где применяется средство по вашему слову и что сейчас показывает фильм страницы. Готовые фильмы
+  меняются только после вашего «да» на названную цену.</p>
+  <div class="table"><table><thead><tr><th>Страница</th><th>По списку</th><th>В фильме сейчас</th><th>Итог</th><th>Что сделать</th></tr></thead><tbody>{comp_rows}</tbody></table></div>
+ </section>''' if compliance else '')
 need_rows = ''.join(f'<li><b>{esc(n["topic"])}.</b> {esc(n["need"])} <small>{esc(n["why"])}</small></li>' for n in needs)
 sample_html = ''.join(sample_block(g) for g in samples) or '<p class="muted">Ссылки появятся здесь по мере работы над страницей.</p>'
 
@@ -62,15 +74,15 @@ page = f'''<title>Шкала страниц MITODERM</title>
    then what to improve and what is needed from the owner. */
 :root {{
   --bg: #f6f4ef; --surface: #ffffff; --ink: #1d1a15; --muted: #6b655a; --line: #e2ddd2;
-  --accent: #a9792b; --accent-soft: #ead9b8; --good: #2f7d62; --good-soft: #cfe6dc; --track: #e9e5db;
+  --accent: #a9792b; --accent-soft: #ead9b8; --good: #2f7d62; --good-soft: #cfe6dc; --track: #e9e5db; --warn-soft: #f1cfc6;
   --display: "Manrope", "Inter", system-ui, sans-serif; --text: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 }}
 @media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) {{
   --bg: #15130f; --surface: #1e1b16; --ink: #f1ece2; --muted: #a39c8d; --line: #332e26;
-  --accent: #d7b579; --accent-soft: #4a3d24; --good: #6cc3a3; --good-soft: #23443a; --track: #2b2721; color-scheme: dark }} }}
+  --accent: #d7b579; --accent-soft: #4a3d24; --good: #6cc3a3; --good-soft: #23443a; --track: #2b2721; --warn-soft: #5a2f27; color-scheme: dark }} }}
 :root[data-theme="dark"] {{
   --bg: #15130f; --surface: #1e1b16; --ink: #f1ece2; --muted: #a39c8d; --line: #332e26;
-  --accent: #d7b579; --accent-soft: #4a3d24; --good: #6cc3a3; --good-soft: #23443a; --track: #2b2721; color-scheme: dark }}
+  --accent: #d7b579; --accent-soft: #4a3d24; --good: #6cc3a3; --good-soft: #23443a; --track: #2b2721; --warn-soft: #5a2f27; color-scheme: dark }}
 body {{ background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--text); }}
 .wrap {{ max-width: 860px; margin: 0 auto; padding-block: 28px 56px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
@@ -111,6 +123,11 @@ th, td {{ text-align: left; vertical-align: top; padding: 10px 12px; border-bott
 th {{ color: var(--muted); font-weight: 500; font-size: 12px; letter-spacing: .03em; text-transform: uppercase; }}
 tr:last-child td {{ border-bottom: 0; }}
 .t-page {{ white-space: nowrap; font-weight: 600; }} .t-eff, .t-st {{ color: var(--muted); white-space: nowrap; }}
+.t-where {{ white-space: nowrap; }}
+.verdict {{ display: inline-block; white-space: nowrap; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  background: var(--accent-soft); color: var(--ink); }}
+.verdict[data-v="ok"] {{ background: var(--good-soft); }}
+.verdict[data-v="no"] {{ background: var(--warn-soft); }}
 .needs {{ margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 8px; }}
 .samples ul {{ margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 4px; }}
 a {{ color: var(--accent); text-underline-offset: 3px; }}
@@ -131,6 +148,7 @@ a:focus-visible {{ outline: 2px solid var(--accent); outline-offset: 2px; border
   <ol class="pages">{''.join(page_row(r) for r in rows)}</ol>
   <ul class="legend" aria-label="Девять шагов страницы">{legend}</ul>
  </section>
+ {comp_html}
  <section>
   <h2>Пробники: ссылки на промежуточные материалы</h2>
   {sample_html}
