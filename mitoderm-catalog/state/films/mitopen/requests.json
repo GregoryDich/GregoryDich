@@ -134,5 +134,12 @@
       "build the site, state/tasks/film-phone-check.cjs mitopen 1440x900 and 390x664 with 3 shots per scene"
     ],
     "previous": "Version 2 (film-v2-16x9.spec, vertical-keys-v2.json, wire-v2.json): microneedling shown with three clips borrowed from the EXOSIGNAL HAIR film - another patient, the scalp. A way back: wire-film.py wire-v2.json --replace."
+  },
+  "backup": {
+    "why": "Durable copies of the stills that cannot be rebuilt from the repository (22/11, 05:20): the temporary folder goes with a container restart, and the storage of the generation service is not reachable from the session. rebuild-clips.sh <clips dir> fetches them and rebuilds the rest (K0, K1, K2, the three camera moves, the stand-ins).",
+    "A-plate.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/99ae1715-38b7-432c-a371-561e58cd10ad.png",
+    "K3e.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/961a3230-80cd-4f4e-bf60-3e49e9b5ad73.png",
+    "Y1.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/695caf1d-2dc1-497a-865f-053119f8d863.png",
+    "Y2.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/23f1d615-bf1c-4efa-af37-f29884fbc001.png"
   }
 }

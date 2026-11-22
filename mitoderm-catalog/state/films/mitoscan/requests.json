@@ -101,5 +101,14 @@
       "build the site, state/tasks/film-phone-check.cjs mitoscan 1440x900 and 390x664 with 3 shots per scene"
     ],
     "previous": "The first draft (film-draft-16x9.spec, vertical-keys-draft.json, wire-draft.json) was built of the diagnosis clips of the EXOSIGNAL HAIR film, where the system was drawn by a model."
+  },
+  "backup": {
+    "why": "Durable copies of the stills that cannot be rebuilt from the repository (22/11, 05:20): the temporary folder goes with a container restart, and the storage of the generation service is not reachable from the session. rebuild-clips.sh <clips dir> fetches them and rebuilds the rest (K0r, K1r, Sr, ZS, ZS0, K0s, K0b, ZE, the stand-ins); checked 22/11: the rebuilt stills equal the originals pixel for pixel.",
+    "P1.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/1d922c8f-9416-4a9a-88fa-92d7c397e33d.png",
+    "SC.png (the flat scan picture)": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/7875844d-6005-4703-a4b0-b391b457ce5f.png",
+    "system-scan.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/7f40ac5b-6aa2-4983-89f9-c344188b6a21.png",
+    "N.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/448be68d-48b8-47f4-a673-a652c22b1b00.png",
+    "K3q.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/b354aa3c-4462-4f8a-b8be-8b8d3f9f1c71.png",
+    "E.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/77b0bd8b-328c-4057-a974-97f1a7e4b951.png"
   }
 }
