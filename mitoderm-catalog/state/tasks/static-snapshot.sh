@@ -6,6 +6,7 @@
 #   index.html, catalog/index.html, privacy/index.html, products/<slug>/index.html   the rendered pages
 #   404.html                                                                         the not-found page
 #   _next/                                                                           the built scripts and styles
+#   robots.txt                                                                       closes the test copy to search robots
 # The images and fonts are NOT copied: they are codex-site/public, which the deploy step lays under the same root.
 # Films are loaded from their own addresses (mitoderm/media-urls.json), so they work from any host.
 set -euo pipefail
@@ -41,4 +42,7 @@ fetch /catalog "$OUT/catalog/index.html" 200
 fetch /privacy "$OUT/privacy/index.html" 200
 for s in $SLUGS; do fetch "/products/$s" "$OUT/products/$s/index.html" 200; done
 fetch /no-such-page "$OUT/404.html" 404
+# A test copy must stay out of search results: its pages name the live site as their canonical address, and this keeps
+# robots out altogether. The live site serves its own robots.txt and sitemap.xml (codex-site/app/robots.ts, sitemap.ts).
+printf 'User-agent: *\nDisallow: /\n' > "$OUT/robots.txt"
 echo "pages: $(find "$OUT" -name '*.html' | wc -l); size: $(du -sh "$OUT" | cut -f1)"

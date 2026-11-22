@@ -152,7 +152,7 @@ export default function ProductCinema({product}:{product:Product}){
  const [filmOn,setFilmOn]=useState(false),[mobile,setMobile]=useState(false);
  const filmSrc=film?mediaUrl(mobile?film.mobile:film.desktop):'';
  const nad=product.slug==='exo-nad';
- const pack=nad?'/assets/product-cinema/exo-nad/NAD.png':(assets[product.slug]?.src??'/assets/brand/cover.webp');
+ const pack=nad?'/assets/product-cinema/exo-nad/NAD.webp':(assets[product.slug]?.src??'/assets/brand/cover.webp');
  // Approved real-pack photo must not morph into older invented vial colors.
  // Match original product types during scene closeups; true kit photo used only in final kit shot.
  const vials=pack;

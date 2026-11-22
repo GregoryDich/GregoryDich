@@ -5,14 +5,20 @@ engine would. Reads the rendered HTML from the running site; changes nothing and
 Usage (site running on 8787):  site-qa.py [base url=http://127.0.0.1:8787] [--json <file>]
 
 Per page: HTTP status, <title>, meta description, <html lang/dir>, number of <h1>, Open Graph title and picture,
-pictures without an alt attribute, ids used twice, links inside the page (#id) that point nowhere.
+whether title, description and canonical address stand inside <head> (robots that do not run scripts read them only
+there), Cyrillic letters in the page text (working titles are Russian and must never reach a Hebrew page),
+pictures without an alt attribute, ids used twice, links inside the page (#id) that point nowhere (#contact is
+opened by the site's script as the inquiry dialog and is not counted).
 For the whole site: every internal link and every picture, script and stylesheet address is requested once and
-must answer 200 (films are checked by their first bytes); titles and descriptions used on more than one page.
+must answer 200 (films are checked by their first bytes); titles and descriptions used on more than one page;
+robots.txt must answer, and the sitemap must list exactly the pages checked here. A static test copy is closed to
+robots on purpose ("Disallow: /") and has no sitemap: that is reported and not counted as a problem.
 The pages are the same list the static copy is made of: home, catalogue, privacy and every product of
 codex-site/production/page-bible/REGISTRY.json.
 """
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.parse
@@ -20,6 +26,9 @@ import urllib.request
 from html.parser import HTMLParser
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# Links the site's own click handler takes over (codex-site/mitoderm/pilot/Experience.tsx opens the inquiry dialog), so
+# a page without a contact section (privacy, V-TECH) has no element with this id and needs none.
+SCRIPTED = {'#contact'}
 REGISTRY = os.path.join(HERE, '..', '..', 'codex-site', 'production', 'page-bible', 'REGISTRY.json')
 
 
@@ -44,19 +53,30 @@ class Page(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.title, self.in_title = '', False
+        self.in_head, self.skip, self.outside_head, self.text = False, 0, [], []
         self.meta, self.html = {}, {}
         self.h1, self.ids, self.links, self.assets, self.no_alt = 0, [], [], [], []
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
+        if tag in ('script', 'style'):
+            self.skip += 1
         if tag == 'html':
             self.html = a
+        elif tag == 'head':
+            self.in_head = True
         elif tag == 'title':
             self.in_title = True
+            if not self.in_head:
+                self.outside_head.append('title')
         elif tag == 'meta':
             key = a.get('name') or a.get('property')
             if key:
                 self.meta[key] = a.get('content', '')
+                if key == 'description' and not self.in_head:
+                    self.outside_head.append('description')
+        elif tag == 'link' and a.get('rel') == 'canonical' and not self.in_head:
+            self.outside_head.append('canonical')
         elif tag == 'h1':
             self.h1 += 1
         elif tag == 'a' and a.get('href'):
@@ -85,10 +105,16 @@ class Page(HTMLParser):
     def handle_endtag(self, tag):
         if tag == 'title':
             self.in_title = False
+        elif tag == 'head':
+            self.in_head = False
+        elif tag in ('script', 'style') and self.skip:
+            self.skip -= 1
 
     def handle_data(self, data):
         if self.in_title:
             self.title += data
+        if not self.skip:
+            self.text.append(data)
 
 
 def fetch(url, head_bytes=None):
@@ -118,11 +144,13 @@ def main(argv):
         row = {'status': status, 'title': page.title.strip(), 'description': page.meta.get('description', ''),
                'lang': page.html.get('lang'), 'dir': page.html.get('dir'), 'h1': page.h1,
                'og': bool(page.meta.get('og:title')) and bool(page.meta.get('og:image')),
-               'robots': page.meta.get('robots', ''), 'no_alt': page.no_alt, 'ids_twice': twice}
+               'robots': page.meta.get('robots', ''), 'no_alt': page.no_alt, 'ids_twice': twice,
+               'outside_head': page.outside_head,
+               'cyrillic': sorted(set(re.findall(r'[\u0400-\u04ff]+', ' '.join(page.text))))[:6]}
         dead = []
         for href in page.links:
             if href.startswith('#'):
-                if len(href) > 1 and href[1:] not in page.ids:
+                if len(href) > 1 and href[1:] not in page.ids and href not in SCRIPTED:
                     dead.append(href)
             elif href.startswith('/') and not href.startswith('//'):
                 targets.setdefault(href.split('#')[0], set()).add(path)
@@ -140,6 +168,8 @@ def main(argv):
         if row['lang'] != 'he' or row['dir'] != 'rtl': problems.append('%s: <html lang=%s dir=%s>' % (path, row['lang'], row['dir']))
         if row['no_alt']: problems.append('%s: %d pictures without alt: %s' % (path, len(row['no_alt']), row['no_alt'][:3]))
         if twice: problems.append('%s: ids used twice: %s' % (path, twice[:6]))
+        if row['outside_head']: problems.append('%s: outside <head>: %s' % (path, ', '.join(row['outside_head'])))
+        if row['cyrillic']: problems.append('%s: Cyrillic text on the page: %s' % (path, row['cyrillic']))
         if row['dead_anchors']: problems.append('%s: links to missing ids: %s' % (path, row['dead_anchors'][:6]))
     broken = []
     for target in sorted(targets):
@@ -158,9 +188,28 @@ def main(argv):
         for text, where in used.items():
             if len(where) > 1:
                 problems.append('the same %s on %s: "%s"' % (field, ', '.join(where), text[:60]))
+    status, body = fetch(base + '/robots.txt')
+    robots = body.decode('utf-8', 'replace') if status == 200 else ''
+    closed = bool(re.search(r'(?mi)^disallow:[ \t]*/[ \t]*$', robots))
+    if status != 200:
+        problems.append('/robots.txt answers %s' % status)
+    elif closed:
+        sitemap_note = 'closed to robots (a test copy), no sitemap expected'
+    if status == 200 and not closed:
+        status, body = fetch(base + '/sitemap.xml')
+        listed = {urllib.parse.urlparse(u).path or '/' for u in re.findall(r'<loc>([^<]+)</loc>', body.decode('utf-8', 'replace'))}
+        sitemap_note = '%d addresses' % len(listed)
+        if status != 200:
+            problems.append('/sitemap.xml answers %s' % status)
+        elif listed != set(paths):
+            problems.append('the sitemap and the page list differ: %s' % sorted(listed ^ set(paths)))
+        if 'sitemap:' not in robots.lower():
+            problems.append('robots.txt does not name the sitemap')
     for path, row in pages.items():
         print('%-36s %s  h1=%d  og=%s  robots=%-18s title=%s' % (path, row['status'], row['h1'], 'yes' if row['og'] else 'NO ',
                                                                  row['robots'] or '-', row['title'][:58]))
+    if robots:
+        print('robots.txt and sitemap: %s' % sitemap_note)
     print('addresses requested: %d, not answering: %d' % (len(targets), len(broken)))
     print('PROBLEMS: %d' % len(problems))
     for line in problems:

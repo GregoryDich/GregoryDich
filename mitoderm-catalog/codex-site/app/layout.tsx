@@ -2,13 +2,13 @@ import type {Metadata,Viewport} from 'next';
 import type {ReactNode} from 'react';
 import {SiteExperience} from '@/mitoderm/pilot/Experience';
 import {SmoothScroll} from '@/mitoderm/pilot/SmoothScroll';
+import {SITE_ORIGIN} from '@/mitoderm/site';
 import './globals.css';
 
-const origin='https://mitoderm-cinematic.evenradish1.chatgpt.site';
 const description='מוצרים מקצועיים לעור ולקרקפת, טיפוח ביתי משלים ומכשור לקליניקות. הכירו את MITODERM וקבלו ייעוץ והצעה מקצועית.';
 
 export const metadata:Metadata={
- metadataBase:new URL(origin),
+ metadataBase:new URL(SITE_ORIGIN),
  title:{default:'MITODERM',template:'%s | MITODERM'},
  description,
  authors:[{name:'MITODERM'}],
@@ -20,5 +20,5 @@ export const metadata:Metadata={
 export const viewport:Viewport={width:'device-width',initialScale:1,themeColor:'#08080a',colorScheme:'dark'};
 
 export default function RootLayout({children}:Readonly<{children:ReactNode}>){
- return <html lang="he" dir="rtl"><head><link rel="preload" as="font" type="font/ttf" href="/fonts/Rubik-400.ttf" crossOrigin="anonymous"/></head><body><SmoothScroll/><SiteExperience>{children}</SiteExperience></body></html>;
+ return <html lang="he" dir="rtl"><head><link rel="preload" as="font" type="font/woff2" href="/fonts/Rubik-400.woff2" crossOrigin="anonymous"/></head><body><SmoothScroll/><SiteExperience>{children}</SiteExperience></body></html>;
 }
