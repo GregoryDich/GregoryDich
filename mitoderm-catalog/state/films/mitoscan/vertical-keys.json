@@ -3,7 +3,7 @@
     "MITOSCAN, the phone film of the page's own scenes (film-16x9.spec): a moving window over the desktop film.",
     "Each key: frame, left edge of the window (% of the frame width), window width (%), top of the window on the phone canvas (%).",
     "0-107 the system and both faces; 140-333 the cosmetologist, her hands and the patient (the look with the naked",
-    "eye, the handset on the parting); 366-704 the system and both faces, the system close; 737-836 the end of the visit."
+    "eye, the handset on the parting); 366-697 the system and both faces, the system close; 730-829 the end of the visit."
   ],
   "keys": [
     [0, 0, 65, 10],
@@ -11,8 +11,8 @@
     [140, 3, 58, 10],
     [333, 3, 58, 10],
     [366, 0, 65, 10],
-    [704, 0, 65, 10],
-    [737, 3, 58, 10],
-    [836, 3, 58, 10]
+    [697, 0, 65, 10],
+    [730, 3, 58, 10],
+    [829, 3, 58, 10]
   ]
 }

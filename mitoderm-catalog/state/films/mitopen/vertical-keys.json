@@ -2,8 +2,8 @@
   "comment": [
     "MITOPEN, the phone film of version 3 (film-16x9.spec): a moving window over the desktop film.",
     "Each key: frame, left edge of the window (% of the frame width), window width (%), top of the window on the phone canvas (%).",
-    "0-54 the pen close; 102-303 the pen and both faces; 357-392 the ring and the button; 425-504 her face, the pen",
-    "and his face on the couch; 560-694 the skin cut-away; 710-757 the pen close; 806-973 the pen and both faces."
+    "0-54 the pen close; 102-303 the pen and both faces; 357-392 the ring and the button; 425-484 her face, the pen",
+    "and his face on the couch; 523-672 the cheek close and the skin cut-away; 688-735 the pen close; 784-951 the pen and both faces."
   ],
   "keys": [
     [0, 8, 54, 12],
@@ -13,12 +13,12 @@
     [357, 13, 56, 11],
     [392, 13, 56, 11],
     [425, 14, 58, 10],
-    [504, 14, 58, 10],
-    [560, 3, 58, 9],
-    [694, 3, 58, 9],
-    [710, 8, 54, 12],
-    [757, 8, 54, 12],
-    [806, 7.5, 60, 10],
-    [973, 7.5, 60, 10]
+    [484, 14, 58, 10],
+    [523, 3, 58, 9],
+    [672, 3, 58, 9],
+    [688, 8, 54, 12],
+    [735, 8, 54, 12],
+    [784, 7.5, 60, 10],
+    [951, 7.5, 60, 10]
   ]
 }

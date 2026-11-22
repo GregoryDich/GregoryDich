@@ -616,15 +616,15 @@
         },
         {
           "title": "Микронидлинг: перо работает по щеке",
-          "seconds": 4.62,
-          "vh": 1.3,
+          "seconds": 4.0,
+          "vh": 1.15,
           "type": "procedure",
           "index": 4
         },
         {
           "title": "Внутрь кожи: микроканалы, средство уходит вглубь",
-          "seconds": 7.25,
-          "vh": 2.05,
+          "seconds": 6.96,
+          "vh": 2.0,
           "type": "procedure",
           "index": 5
         },
@@ -651,7 +651,7 @@
         }
       ],
       "isFrozen": false,
-      "status": "draft_film_wired",
+      "status": "film_wired",
       "packImage": "/assets/products/mitopen.webp",
       "timeline": {
         "seconds": 33.5,
@@ -699,14 +699,14 @@
         },
         {
           "title": "Пациентка видит снимок на экране",
-          "seconds": 4.71,
-          "vh": 1.35,
+          "seconds": 4.46,
+          "vh": 1.25,
           "type": "patient",
           "index": 4
         },
         {
           "title": "Система крупно: снимок на экране",
-          "seconds": 4.58,
+          "seconds": 4.54,
           "vh": 1.3,
           "type": "device",
           "index": 5
@@ -734,7 +734,7 @@
         }
       ],
       "isFrozen": false,
-      "status": "draft_film_wired",
+      "status": "film_wired",
       "packImage": "/assets/products/mitoscan.webp",
       "timeline": {
         "seconds": 32,

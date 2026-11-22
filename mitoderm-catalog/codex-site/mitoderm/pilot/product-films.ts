@@ -142,40 +142,40 @@ export const productFilms:Record<string,ProductFilm>={
   {start:760,end:826}, // 07 the same pack in the clinic
   {start:826,end:940}  // 08 the cosmetologist and the patient
  ]},
- // A draft film of a device page, version 3 (22/11): the page's own scenes with its own patient. The pen on the towel
- // is the customer's cut-out photo placed on a plate generated without any device; the camera moves on it are rendered
- // frame by frame (state/films/mitopen/build-pen-frames.py, film-16x9.spec). Microneedling on the cheek, the way into
- // the skin and the micro-channels are the page's own stills K3e, Y1, Y2; until the owner says ok to the still sheet
- // they are shown with free camera moves and dissolves, and three paid clips (E, D, BL) then replace those pieces
- // without changing the film's plan. 1912x1080 and 1080x1920, 974 frames. Version 2 (wire-v2.json) borrowed three
- // clips of the EXOSIGNAL HAIR film.
- 'mitopen':{desktop:'/assets/world/mitopen-film.mp4',mobile:'/assets/world/mitopen-film-mobile.mp4',fps:24,frames:974,chapters:[
+ // A connected film of a device page, version 3 (22/11): the page's own scenes with its own patient. The pen on the
+ // towel is the customer's cut-out photo placed on a plate generated without any device; the camera moves on it are
+ // rendered frame by frame (state/films/mitopen/build-pen-frames.py, film-16x9.spec). The live examination (E), the
+ // pen at work on the cheek with the way into the skin (D) and the product in the micro-channels (BL) are three
+ // Kling 4.0 clips shot in native 1080p on Atlas Cloud after the owner's ok on the still sheet
+ // (state/films/mitopen/requests.json, own_scenes_22_11). 1912x1080 and 1080x1920, 952 frames. Version 2 (wire-v2.json)
+ // borrowed three clips of the EXOSIGNAL HAIR film.
+ 'mitopen':{desktop:'/assets/world/mitopen-film.mp4',mobile:'/assets/world/mitopen-film-mobile.mp4',fps:24,frames:952,chapters:[
   {start:0,end:134},   // 01 the pen close, the camera pulls back
   {start:134,end:289}, // 02 the examination
   {start:289,end:409}, // 03 the ring and the button
-  {start:409,end:520}, // 04 microneedling: the pen works on the cheek
-  {start:520,end:694}, // 05 into the skin: micro-channels
-  {start:694,end:758}, // 06 the pen
-  {start:758,end:860}, // 07 the pen, the consultation behind it
-  {start:860,end:974}  // 08 the cosmetologist and the patient
+  {start:409,end:505}, // 04 microneedling: the pen works on the cheek
+  {start:505,end:672}, // 05 into the skin: micro-channels
+  {start:672,end:736}, // 06 the pen
+  {start:736,end:838}, // 07 the pen, the consultation behind it
+  {start:838,end:952}  // 08 the cosmetologist and the patient
  ]},
- // A draft film of a device page made of the page's own scenes (22/11). The system in the frame is the customer's real
- // photo (protocols/print/img/mitoscan.webp) placed on a plate generated without any device; the camera move to the
- // system and back is rendered frame by frame from the full-size photo (state/films/mitoscan/build-system-frames.py,
- // film-16x9.spec). The look with the naked eye, the handset on the parting and the look at the screen are the page's
- // own stills N, K3q, Sr; until the owner says ok to the still sheet they are shown with a slow camera move, and three
- // paid clips (C1, C2, C3) then replace those pieces without changing the film's plan. The picture on the display is a
- // stand-in until real screen captures arrive. 1912x1080 and 1080x1920, 837 frames. The earlier draft (wire-draft.json)
- // was built of the diagnosis clips of the EXOSIGNAL HAIR film, where the system was drawn by a model.
- 'mitoscan':{desktop:'/assets/world/mitoscan-film.mp4',mobile:'/assets/world/mitoscan-film-mobile.mp4',fps:24,frames:837,anchor:'left',chapters:[
+ // A connected film of a device page made of the page's own scenes (22/11). The system in the frame is the customer's
+ // real photo (protocols/print/img/mitoscan.webp) placed on a plate generated without any device; the camera move to
+ // the system and back is rendered frame by frame from the full-size photo (state/films/mitoscan/build-system-frames.py,
+ // film-16x9.spec). The look with the naked eye (C1), the handset on the parting (C2) and the look at the screen (C3)
+ // are three Kling 4.0 clips shot in native 1080p on Atlas Cloud after the owner's ok on the still sheet
+ // (state/films/mitoscan/requests.json). The picture on the display is a stand-in until real screen captures arrive.
+ // 1912x1080 and 1080x1920, 830 frames. The earlier draft (wire-draft.json) was built of the diagnosis clips of the
+ // EXOSIGNAL HAIR film, where the system was drawn by a model.
+ 'mitoscan':{desktop:'/assets/world/mitoscan-film.mp4',mobile:'/assets/world/mitoscan-film-mobile.mp4',fps:24,frames:830,anchor:'left',chapters:[
   {start:0,end:124},   // 01 the system on the table
   {start:124,end:237}, // 02 the look with the naked eye
   {start:237,end:350}, // 03 the handset on the parting
-  {start:350,end:463}, // 04 the patient sees the screen
-  {start:463,end:573}, // 05 the system close: the scan on its display
-  {start:573,end:651}, // 06 the system: one screen
-  {start:651,end:721}, // 07 the system, the consultation behind it
-  {start:721,end:837}  // 08 the cosmetologist and the patient
+  {start:350,end:457}, // 04 the patient sees the screen
+  {start:457,end:566}, // 05 the system close: the scan on its display
+  {start:566,end:644}, // 06 the system: one screen
+  {start:644,end:714}, // 07 the system, the consultation behind it
+  {start:714,end:830}  // 08 the cosmetologist and the patient
  ]}
 };
 // Chapter captions of the series films, in page order, word for word from the approved page copy

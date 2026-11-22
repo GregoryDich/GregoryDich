@@ -1,25 +1,25 @@
 {
   "slug": "mitopen",
-  "frames": 974,
-  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/45260156-c7ba-48ac-8f22-fc34375b9d90.mp4",
-  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/cfea219c-78f7-4b09-a681-672c57eb1e7d.mp4",
+  "frames": 952,
+  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/136980ed-fa8e-4b85-a6e1-3c3000f24b51.mp4",
+  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/6c807cef-1ae9-41ad-ac29-0deb8c579f95.mp4",
   "comment": [
-    "A draft film of a device page, version 3 (22/11): the page's own scenes with its own patient. The pen on the towel",
-    "is the customer's cut-out photo placed on a plate generated without any device; the camera moves on it are rendered",
-    "frame by frame (state/films/mitopen/build-pen-frames.py, film-16x9.spec). Microneedling on the cheek, the way into",
-    "the skin and the micro-channels are the page's own stills K3e, Y1, Y2; until the owner says ok to the still sheet",
-    "they are shown with free camera moves and dissolves, and three paid clips (E, D, BL) then replace those pieces",
-    "without changing the film's plan. 1912x1080 and 1080x1920, 974 frames. Version 2 (wire-v2.json) borrowed three",
-    "clips of the EXOSIGNAL HAIR film."
+    "A connected film of a device page, version 3 (22/11): the page's own scenes with its own patient. The pen on the",
+    "towel is the customer's cut-out photo placed on a plate generated without any device; the camera moves on it are",
+    "rendered frame by frame (state/films/mitopen/build-pen-frames.py, film-16x9.spec). The live examination (E), the",
+    "pen at work on the cheek with the way into the skin (D) and the product in the micro-channels (BL) are three",
+    "Kling 4.0 clips shot in native 1080p on Atlas Cloud after the owner's ok on the still sheet",
+    "(state/films/mitopen/requests.json, own_scenes_22_11). 1912x1080 and 1080x1920, 952 frames. Version 2 (wire-v2.json)",
+    "borrowed three clips of the EXOSIGNAL HAIR film."
   ],
   "chapters": [
     {"start": 0, "end": 134, "note": "01 the pen close, the camera pulls back", "shot": "Перо крупно на полотенце, камера отходит", "type": "device", "section": 1},
     {"start": 134, "end": 289, "note": "02 the examination", "shot": "Осмотр зон лица", "type": "patient", "section": 2},
     {"start": 289, "end": 409, "note": "03 the ring and the button", "shot": "Перо крупно: кольцо глубины и кнопка скорости", "type": "device", "section": 3},
-    {"start": 409, "end": 520, "note": "04 microneedling: the pen works on the cheek", "shot": "Микронидлинг: перо работает по щеке", "type": "procedure", "section": 4},
-    {"start": 520, "end": 694, "note": "05 into the skin: micro-channels", "shot": "Внутрь кожи: микроканалы, средство уходит вглубь", "type": "procedure", "section": 5},
-    {"start": 694, "end": 758, "note": "06 the pen", "shot": "Перо на полотенце", "type": "device", "section": 6},
-    {"start": 758, "end": 860, "note": "07 the pen, the consultation behind it", "shot": "Перо резко, консультация за ним", "type": "device", "section": 7},
-    {"start": 860, "end": 974, "note": "08 the cosmetologist and the patient", "shot": "Косметолог и пациент", "type": "patient", "section": 8}
+    {"start": 409, "end": 505, "note": "04 microneedling: the pen works on the cheek", "shot": "Микронидлинг: перо работает по щеке", "type": "procedure", "section": 4},
+    {"start": 505, "end": 672, "note": "05 into the skin: micro-channels", "shot": "Внутрь кожи: микроканалы, средство уходит вглубь", "type": "procedure", "section": 5},
+    {"start": 672, "end": 736, "note": "06 the pen", "shot": "Перо на полотенце", "type": "device", "section": 6},
+    {"start": 736, "end": 838, "note": "07 the pen, the consultation behind it", "shot": "Перо резко, консультация за ним", "type": "device", "section": 7},
+    {"start": 838, "end": 952, "note": "08 the cosmetologist and the patient", "shot": "Косметолог и пациент", "type": "patient", "section": 8}
   ]
 }
