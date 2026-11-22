@@ -1058,5 +1058,90 @@
   "K1": "64d750bc-cd75-4808-8f82-e0b6c4ae2c53",
   "K1v": "c7e47194-91bb-481b-8a30-3aa5b2083c18"
  },
- "refsRule": "New stills: at most 5 references, named in the prompt by their order; refs_16x9 / refs_9x16 give the order. A 9:16 still takes the accepted 16:9 still of the same moment as reference 1. K0/K1 keep their v1 reference lists."
+ "refsRule": "New stills: at most 5 references, named in the prompt by their order; refs_16x9 / refs_9x16 give the order. A 9:16 still takes the accepted 16:9 still of the same moment as reference 1. K0/K1 keep their v1 reference lists.",
+ "version3_22_11": {
+  "note": "Version 3 (22/11): everything above describes version 2 and stays true except chapters 04-08. Two live clips were added as the owner asked on 21/11: L in chapter 04 in place of the held still KL, P in chapter 05 before C. Source: STORYBOARD.md (the addition of 22/11) and requests.json (reshoot_22_11.film_v3).",
+  "totalFrames": 984,
+  "seconds": 41.0,
+  "productFilmsEntry": [
+   [
+    0,
+    108
+   ],
+   [
+    108,
+    228
+   ],
+   [
+    228,
+    348
+   ],
+   [
+    348,
+    468
+   ],
+   [
+    468,
+    666
+   ],
+   [
+    666,
+    738
+   ],
+   [
+    738,
+    846
+   ],
+   [
+    846,
+    984
+   ]
+  ],
+  "timeline": [
+   {
+    "scene": "04",
+    "chapter": 4,
+    "clip": "L frames 0-119 (cut in): the layers come apart, the pale-blue paper part leaves, the white mask stays",
+    "startFrame": 348,
+    "endFrame": 468
+   },
+   {
+    "scene": "05",
+    "chapter": 5,
+    "clip": "P frames 0-119 (cut in): the white mask is laid on the face",
+    "startFrame": 468,
+    "endFrame": 588
+   },
+   {
+    "scene": "05",
+    "chapter": 5,
+    "clip": "C frames 6-83 (desktop: the last 6 frames of P cross-fade into C 0-5; phone: a cut to the wider vertical take)",
+    "startFrame": 588,
+    "endFrame": 666
+   },
+   {
+    "scene": "06",
+    "chapter": 6,
+    "clip": "C frames 84-120 and a hold of its last frame, as in version 2",
+    "startFrame": 666,
+    "endFrame": 738
+   },
+   {
+    "scene": "07",
+    "chapter": 7,
+    "clip": "D forward and backwards, as in version 2",
+    "startFrame": 738,
+    "endFrame": 846
+   },
+   {
+    "scene": "08",
+    "chapter": 8,
+    "clip": "A backwards with a hold of its first frame, as in version 2",
+    "startFrame": 846,
+    "endFrame": 984
+   }
+  ],
+  "captions": "unchanged",
+  "assembly": "assemble.sh <c16> out.mp4 1912 1080 desktop 54 6 ; assemble.sh <c9> out.mp4 1080 1912 mobile 56 6 ; clips come back with rebuild-clips.sh <dir>"
+ }
 }

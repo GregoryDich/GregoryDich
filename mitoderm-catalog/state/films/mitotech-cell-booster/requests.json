@@ -122,7 +122,7 @@
         "prompt": "One continuous shot, no cuts; the camera stays almost still with a barely noticeable slow drift. The scientific illustration of the skin cut-away with the row of thin vertical micro-channels stays as it is. A clear colourless solution, transparent like water, spreads as a thin glossy film over the skin surface above the channels and then flows slowly down inside each channel as fine clear droplets with small bright highlights, one channel after another, until all the channels are filled to their lower ends and a soft pearly-white glow spreads gently into the tissue around them. The channels keep their place, number and depth. No needles, no instruments, no text, no labels, no arrows."
       }
     },
-    "state": "LAUNCHED 22/11, 10:58: two 1080p clips, 5 s, 1.07 USD each (jobs). The draft film on the page is ready for them: film_v2_draft.",
+    "state": "DONE 22/11, 11:44: both clips shot once and accepted, the live film of version 2 is on the page, checked at three sizes and recorded (film_v2_live). No retakes.",
     "spent_stills": "0.289 USD for four generations (K3m_try1 and Y2m 0.140, K3n 0.083, K3m 0.066); Atlas balance 14.597 -> 14.307 USD",
     "sheet": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/images/28be9c2f-5d55-42a8-83d2-f1e555be0eb6.jpg",
     "sheet_cells": "C1 (kept), C2 (kept), K3m (new), Y1 (the MITOPEN still), Y2m (new); built by ../tools/still-sheet.py",
@@ -133,7 +133,10 @@
       "Y2m.png": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/e76138aa-89d4-4ead-ad3b-7c8d303d7670.png",
       "T1.mp4 (the clip of 21/11, 1912x1080, 121 frames)": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/8cef1e06-f239-4328-a9bd-49a4eddd51c9.mp4",
       "Y1.png": "the MITOPEN copy: https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/695caf1d-2dc1-497a-865f-053119f8d863.png",
-      "C1.png and C2.png": "rebuilt from the plate: atlas.pack_frames above"
+      "C1.png and C2.png": "rebuilt from the plate: atlas.pack_frames above",
+      "W.mp4 (the clip of 22/11, 1912x1080, 121 frames)": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/54acb3a5-0f74-4d9b-98bb-cb6bc322b4b7.mp4",
+      "BL.mp4 (the clip of 22/11, 1912x1080, 121 frames)": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/8fb8f93b-f9ed-4f15-ad46-5b228b915419.mp4",
+      "rebuild": "rebuild-clips.sh <clips dir> fetches T1, W and BL (tested 22/11: byte for byte the same as the shot files)"
     },
     "film_v2_draft": {
       "what": "The film of version 2 as a DRAFT, on the page since 22/11, 10:24 (film-16x9.spec, vertical-keys.json, wire.json): 505 frames, 21.0 s, one chapter. Free: no generation.",
@@ -149,7 +152,8 @@
         "tools/film-assemble.sh film-16x9.spec, tools/vertical-from-horizontal.py with vertical-keys.json, upload, wire.json, tools/wire-film.py wire.json --replace",
         "build the site, film-phone-check.cjs mitotech-cell-booster at 1440x900, 390x664, 390x844; record the page scroll"
       ],
-      "previous": "Version 1 (film-v1-16x9.spec, vertical-keys-v1.json, wire-v1.json): the clinic, then her home; media 0ab11250-77eb-4730-adec-e6dbae23660b and a8b3dd9d-e414-4899-a7ee-7bb4a4b743d6. A way back: wire-film.py wire-v1.json --replace."
+      "previous": "Version 1 (film-v1-16x9.spec, vertical-keys-v1.json, wire-v1.json): the clinic, then her home; media 0ab11250-77eb-4730-adec-e6dbae23660b and a8b3dd9d-e414-4899-a7ee-7bb4a4b743d6. A way back: wire-film.py wire-v1.json --replace.",
+      "superseded": "22/11, 11:20 - replaced on the page by the live film (film_v2_live); the stand-ins are no longer used"
     },
     "frames": {
       "uploaded": "22/11, 10:57, under unambiguous names; checksums compared with the source files before the launch",
@@ -160,7 +164,23 @@
     "jobs": {
       "launched": "22/11, 10:58, after the owner's word 'Доделывай' (22/11, 10:56) in answer to the message with the sheet and the price",
       "W": "15f355b4313143bc870cceb2ff4d7ed4",
-      "BL": "d29d806944934fe0b9e7d0de0d6c52bc"
-    }
+      "BL": "d29d806944934fe0b9e7d0de0d6c52bc",
+      "cost": "1.069 USD each, 2.138 USD for the two (Atlas balance 14.194 -> 9.917 USD for the four clips of both pages, the service's own figure)",
+      "W_verdict": "ACCEPTED 22/11, 11:04 (tools/check-clip.sh: 1912x1080, 121 frames, RMSE of the first and the last frame against K3m 0.012 / 0.013; six enlarged frames of the pen against the real photo): the pen keeps its shape, colour and size, walks down the cheek towards the jaw in short touches and comes back, the drops stay on the skin, the syringe stays without a needle.",
+      "BL_verdict": "ACCEPTED 22/11, 11:04 (RMSE 0.023 / 0.028 against Y1 and Y2m): the channels keep their place and number, clear droplets go down them one after another, a soft pearly glow at the end; no instruments, no text.",
+      "fetch_note": "results were taken with tools/atlas.py get <job> <file.mp4>"
+    },
+    "film_v2_live": {
+      "what": "The film of version 2 with the three live clips (film-16x9.spec, vertical-keys.json, wire.json): 505 frames, 21.0 s, one chapter. The plan of the draft did not change: W and BL stand where the stand-ins stood.",
+      "frames": "hold 0-47 | T1 48-147 | soft focus 148-179 | W 180-260 | soft focus 261-292 | BL 293-373 | soft focus 374-405 | T1 backwards 406-456 | hold 457-504",
+      "desktop_media": "c9412b98-147f-46ff-b7aa-9e1189f768b3",
+      "mobile_media": "bb3850d8-0677-4389-8284-f9b832a3ea7a",
+      "checked": "22/11, 11:20, state/tasks/film-phone-check.cjs with 6 shots at 1440x900, 390x664 and 390x844: the page serves the new files, film painted 129/129, no errors. Desktop: the page title lies over the cap and the headrest, the face, the pen, the syringe and the drops are clear of it. Phone: the close-up and the skin section fit the window at both heights.",
+      "page_recording": {
+        "desktop": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/4698ed3d-8d2f-4f72-87cc-e07b51eebf12.mp4",
+        "phone": "https://atlas-img.oss-accelerate-overseas.aliyuncs.com/videos/514e57e4-4f2f-46fb-b4fc-b1f5df589cc7.mp4"
+      }
+    },
+    "spent": "re-shoot 22/11: stills 0.289 + clips 2.138 = 2.427 USD (estimate 2.3-2.5, approved about 4.6). The page in total: 1.14 + 2.427 = 3.57 USD of the 8 USD ceiling."
   }
 }

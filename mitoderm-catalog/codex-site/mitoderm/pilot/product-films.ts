@@ -21,16 +21,18 @@ export const productFilms:Record<string,ProductFilm>={
   {start:616,end:707}, // 07 evidence
   {start:707,end:834}  // 08 complete system
  ]},
- // 1912x1080 and 1080x1912, 822 frames, a keyframe every 12 (state/films/exocell-mask/assemble.sh).
- 'exocell-mask':{desktop:'/assets/world/exocell-mask-film.mp4',mobile:'/assets/world/exocell-mask-film-mobile.mp4',fps:24,frames:822,chapters:[
+ // 1912x1080 and 1080x1912, 984 frames, a keyframe every 12 (state/films/exocell-mask/assemble.sh). Version 3 (22/11):
+ // two live clips added as the owner asked on 21/11 - the layers come apart and the paper part leaves (04), the white
+ // mask is laid on the face (05, running into the smoothing); version 2 held a still in 04 and cut straight to 05.
+ 'exocell-mask':{desktop:'/assets/world/exocell-mask-film.mp4',mobile:'/assets/world/exocell-mask-film-mobile.mp4',fps:24,frames:984,chapters:[
   {start:0,end:108},   // 01 pack
   {start:108,end:228}, // 02 consultation
   {start:228,end:348}, // 03 the sachet is open, the mask comes out
-  {start:348,end:420}, // 04 the layers
-  {start:420,end:504}, // 05 the mask on the face
-  {start:504,end:576}, // 06 absorption
-  {start:576,end:684}, // 07 finish
-  {start:684,end:822}  // 08 pack
+  {start:348,end:468}, // 04 the layers come apart, the white mask stays
+  {start:468,end:666}, // 05 the white mask is laid on the face and smoothed
+  {start:666,end:738}, // 06 absorption
+  {start:738,end:846}, // 07 finish
+  {start:846,end:984}  // 08 pack
  ]},
  // 1912x1080 and 1080x1912, 822 frames, a keyframe every 12 (state/films/exotech-gel/assemble.sh).
  'exotech-gel':{desktop:'/assets/world/exotech-gel-film.mp4',mobile:'/assets/world/exotech-gel-film-mobile.mp4',fps:24,frames:822,chapters:[
@@ -156,15 +158,6 @@ export const productFilms:Record<string,ProductFilm>={
   {start:644,end:714}, // 07 the system, the consultation behind it
   {start:714,end:830}  // 08 the cosmetologist and the patient
  ]},
- // A film for a coming-soon page, version 2 (22/11) - a clinic procedure with microneedling, as the owner asked on 21/11:
- // the real box in the clinic, a focus pull to the two women (Kling 4.0, 1080p), clear drops of the solution and the pen
- // at work on the cheek, the solution in the micro-channels, back to the box. A DRAFT until the owner says ok to the still
- // sheet: the pen scene and the inside-skin scene are free stand-ins made of the page's own stills K3m, Y1, Y2m; two paid
- // clips (W, BL) then replace those pieces without changing the plan. 1912x1080 and 1080x1920, 505 frames, one chapter:
- // the page copy has an intro only (state/films/mitotech-cell-booster/). Version 1 (clinic, then home): wire-v1.json.
- 'mitotech-cell-booster':{desktop:'/assets/world/mitotech-cell-booster-film.mp4',mobile:'/assets/world/mitotech-cell-booster-film-mobile.mp4',fps:24,frames:505,anchor:'left',chapters:[
-  {start:0,end:505}  // 01 the box in the clinic, the drops and the pen, the solution in the micro-channels, the box
- ]},
  // A connected film of a device page, version 3 (22/11): the page's own scenes with its own patient. The pen on the
  // towel is the customer's cut-out photo placed on a plate generated without any device; the camera moves on it are
  // rendered frame by frame (state/films/mitopen/build-pen-frames.py, film-16x9.spec). The live examination (E), the
@@ -181,6 +174,15 @@ export const productFilms:Record<string,ProductFilm>={
   {start:672,end:736},                // 06 the pen
   {start:736,end:838},                // 07 the pen, the consultation behind it
   {start:838,end:952}                 // 08 the cosmetologist and the patient
+ ]},
+ // A film for a coming-soon page, version 2 (22/11) - a clinic procedure with microneedling, as the owner asked on 21/11:
+ // the real box in the clinic, a focus pull to the two women, clear drops of the solution and the pen at work on the
+ // cheek, the solution going down the micro-channels, back to the box. Three live clips (Kling 4.0, 1080p): T1 (21/11),
+ // W and BL (22/11, after the owner's ok to the still sheet); the scenes meet in soft focus, so the camera never closes in
+ // on the face under the page heading. 1912x1080 and 1080x1920, 505 frames, one chapter: the page copy has an intro only
+ // (state/films/mitotech-cell-booster/). Version 1 (clinic, then home): wire-v1.json.
+ 'mitotech-cell-booster':{desktop:'/assets/world/mitotech-cell-booster-film.mp4',mobile:'/assets/world/mitotech-cell-booster-film-mobile.mp4',fps:24,frames:505,anchor:'left',chapters:[
+  {start:0,end:505}  // 01 the box in the clinic, the drops and the pen, the solution in the micro-channels, the box
  ]}
 };
 // Chapter captions of the series films, in page order, word for word from the approved page copy
@@ -282,9 +284,6 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'הכניסו את MITOSCAN לקליניקה שלכם',body:'לשימוש מקצועי בלבד. המומחה שלנו ייעץ לכם בנושאי הדרכה ותמחור.',tag:'הצעה'},
   {title:'מומחי Mitoderm מוסמכים',body:'שני המכשירים מופעלים בידי אנשי מקצוע שעברו הכשרה, כחלק מפרוטוקול קליני.',tag:'מצאו מומחה'}
  ],
- 'mitotech-cell-booster':[
-  {title:'MITOTECH CELL BOOSTER',body:'בוסטר תאי בשני בקבוקונים לפרוטוקולים בקליניקה בשילוב עם MITOPEN או MICRO\u00a0BOOST\u00a010%.',tag:'מקצועי'}
- ],
  'mitopen':[
   {title:'MITOPEN',body:'מסלול החדירה לרכיבים הפעילים.',tag:'מכשור מקצועי לקליניקה'},
   {title:'דיוק שאפשר לשחזר.',body:'האזור, עובי העור והאינדיקציה – כל אחד מהם דורש עומק וצפיפות משלו. פרוטוקול מדויק ואחיד מתחיל בכלי העבודה.',tag:'אינדיקציות'},
@@ -294,5 +293,8 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'עט אחד. פנים וקרקפת.',body:'1× MITOPEN – עט מיקרונידלינג מקצועי ואלחוטי עם עומק מחט ומהירות מתכווננים. לשימוש מקצועי בלבד.',tag:'ערכה ועובדות'},
   {title:'הכניסו את MITOPEN לקליניקה שלכם',body:'לשימוש מקצועי בלבד. המומחה שלנו ייעץ לכם בנושאי הדרכה, פרוטוקולים ותמחור.',tag:'הצעה'},
   {title:'מומחי Mitoderm מוסמכים',body:'שני המכשירים מופעלים בידי אנשי מקצוע שעברו הכשרה, כחלק מפרוטוקול קליני.',tag:'מצאו מומחה'}
+ ],
+ 'mitotech-cell-booster':[
+  {title:'MITOTECH CELL BOOSTER',body:'בוסטר תאי בשני בקבוקונים לפרוטוקולים בקליניקה בשילוב עם MITOPEN או MICRO\u00a0BOOST\u00a010%.',tag:'מקצועי'}
  ]
 };

@@ -415,16 +415,16 @@
           "index": 3
         },
         {
-          "title": "Слои маски: голубая плёнка и белый лист",
-          "seconds": 3.0,
-          "vh": 0.9,
+          "title": "Слои маски: слои расходятся, голубая бумажная часть уходит, белая маска остаётся",
+          "seconds": 5.0,
+          "vh": 1.45,
           "type": "pack",
           "index": 4
         },
         {
-          "title": "Маска на лице: разглаживание",
-          "seconds": 3.5,
-          "vh": 1.0,
+          "title": "Маска на лице: белую маску кладут и разглаживают",
+          "seconds": 8.25,
+          "vh": 2.4,
           "type": "procedure",
           "index": 5
         },
@@ -451,11 +451,11 @@
         }
       ],
       "isFrozen": false,
-      "status": "film_v2_wired",
+      "status": "film_v3_wired",
       "packImage": "/assets/products/exocell-mask.webp",
       "timeline": {
-        "seconds": 34.25,
-        "scrollVh": 9.95
+        "seconds": 41.0,
+        "scrollVh": 11.9
       },
       "line": "VM — белая биоцеллюлозная маска"
     },
@@ -568,7 +568,7 @@
         }
       ],
       "isFrozen": false,
-      "status": "film_wired_mismatch_owner_list",
+      "status": "film_v2_wired",
       "packImage": "/assets/products/mitotech-cell-booster.webp",
       "timeline": {
         "seconds": 38,
