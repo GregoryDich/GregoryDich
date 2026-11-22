@@ -4,11 +4,16 @@
 Why a model: the owner's rule is that a pack opens in a film only by a real photo or an exact 3D model, and that the
 image model never draws a pack. Everything printed here is the owner's own print, rasterised from his vector files:
   box-front.png, box-metal.png   the lid's face, print R15 (site/proto/img/mitotech-cell-booster-3d, make_textures.py)
-  label-powder.png, label-booster.png   the two vial labels (CONCENTRATED_POWDER_PRINT2, BOOSTING_AMPOULE_PRINT2)
+  label-card-powder.png, label-card-ampoule.png   the vial labels as on the owner's card of 22/11 (see below)
   guide.png                      the user guide R7 (USER_GUIDE_PRINT_R7.pdf, 297 x 232 mm) - inside the lid
   plate-soft.jpg                 the film's own clinic plate without the pack, blurred: the room behind the table
-The vial, its cap, crimp ring, stopper and the applicator are the profiles of the owner's render R15, as fitted in
-site/proto/scenes/mitotech-cell-booster.js (fractions of the vial's height).
+The textures are built by kit-textures.sh. The vial's glass and the applicator are the profiles of the owner's
+render R15, as fitted in site/proto/scenes/mitotech-cell-booster.js (fractions of the vial's height).
+
+The look of the vials is the owner's word of 22/11 ("this is how our ampoules look", his card with the two vials),
+and it overrides the print file R15 with its dark green labels and white caps: the clear vial has a frosted white
+label with black text and loose white powder, the amber vial has white text straight on the glass, both have a
+silver-grey cap over a dark crimp and a black stopper. The lines of the labels are the card's, word for word.
 
 What the print files do not say is taken from the owner's example photo of 22/11 (another brand's kit of the same
 construction, "how MITOTECH opens") and is an assumption until he sends photos of his own open box:
@@ -105,8 +110,9 @@ def image(file, data=False):
     return img
 
 
-def printed(name, file, rough=0.5, metal_map=None):
-    """A printed sheet: the picture as the colour; with metal_map (G roughness, B metalness) a foil under inks."""
+def printed(name, file, rough=0.5, metal_map=None, alpha=False):
+    """A printed sheet: the picture as the colour; with metal_map (G roughness, B metalness) a foil under inks;
+    with alpha the picture's own transparency (a frosted label, text printed on bare glass)."""
     mat = material(name, rough=rough)
     tree = mat.node_tree
     bsdf = tree.nodes['Principled BSDF']
@@ -114,6 +120,9 @@ def printed(name, file, rough=0.5, metal_map=None):
     tex.image = image(file)
     tex.extension = 'EXTEND'
     tree.links.new(tex.outputs['Color'], bsdf.inputs['Base Color'])
+    if alpha:
+        tex.image.alpha_mode = 'STRAIGHT'
+        tree.links.new(tex.outputs['Alpha'], bsdf.inputs['Alpha'])
     if metal_map:
         mtex = tree.nodes.new('ShaderNodeTexImage')
         mtex.image = image(metal_map, data=True)
@@ -162,14 +171,14 @@ M_RIBBON = material('ribbon', (0.96, 0.96, 0.95), rough=0.38, **{'Sheen Weight':
 M_GLASS = glass('glass')
 M_AMBER = glass('amber', tint=(0.80, 0.47, 0.17), shadow=0.55)
 M_PLASTIC = material('applicator', (0.93, 0.94, 0.94), rough=0.32, **{'Transmission Weight': float(ARG.get('appclear', 0.45)), 'IOR': 1.49})
-M_CAP = material('cap', (0.95, 0.95, 0.945), rough=0.36)
-M_RING = material('ring', (0.86, 0.87, 0.88), rough=0.34, metal=1.0)
-M_STOP = material('stopper', (0.47, 0.47, 0.48), rough=0.6)
-# the cake glows a little: with caustics off, the light that real glass lets in around the label is missing
-M_CAKE = material('cake', (0.97, 0.97, 0.96), rough=0.9, **{'Emission Color': (1, 1, 1, 1), 'Emission Strength': float(ARG.get('cake', 0.35))})
+M_CAP = material('cap', (0.70, 0.71, 0.73), rough=0.42, metal=0.85)        # silver-grey, matte
+M_RING = material('ring', (0.10, 0.10, 0.11), rough=0.3, metal=0.7)         # the dark crimp under the cap
+M_STOP = material('stopper', (0.03, 0.03, 0.035), rough=0.55)               # black rubber
+# the powder glows a little: with caustics off, the light that real glass lets through to it is missing
+M_CAKE = material('powder', (0.97, 0.97, 0.96), rough=0.95, **{'Emission Color': (1, 1, 1, 1), 'Emission Strength': float(ARG.get('cake', 0.3))})
 M_TIP = material('tip', (0.96, 0.96, 0.955), rough=0.4)
-M_LABEL = {'P': printed('label-powder', 'label-powder.png', rough=0.42),
-           'B': printed('label-booster', 'label-booster.png', rough=0.42)}
+M_LABEL = {'P': printed('label-powder', 'label-card-powder.png', rough=0.5, alpha=True),
+           'B': printed('label-ampoule', 'label-card-ampoule.png', rough=0.5, alpha=True)}
 
 
 # ---- meshes
@@ -246,17 +255,17 @@ GLASS_OUT = ([(0, 0), (RV - 0.035, 0)] + arc(RV - 0.035, 0.035, 0.035, -math.pi 
                 (0.128, 0.83), (0.15, 0.836), (0.15, 0.864), (0.142, 0.868), (0.1, 0.868)])
 GLASS_IN = ([(0.1, 0.84), (0.105, 0.806), (0.118, 0.796), (0.155, 0.787), (0.19, 0.775), (RI - 0.008, 0.758), (RI, 0.735)]
             + arc(RI - 0.03, 0.058, 0.03, 0, -math.pi / 2, 6) + [(0, 0.028)])
-RING = [(0.1, 0.872), (0.152, 0.872), (0.156, 0.866), (0.156, 0.82), (0.15, 0.815), (0.135, 0.815), (0.135, 0.86), (0.1, 0.866)]
-CAP = ([(0, 0.872), (0.19, 0.872), (0.196, 0.878)] + arc(0.172, 0.976, 0.024, 0, math.pi / 2, 8)
-       + [(0.11, 0.999), (0.07, 0.997), (0.06, 0.992), (0, 0.991)])
-STOP = [(0, 0.80), (0.1, 0.80), (0.105, 0.806), (0.105, 0.866), (0.146, 0.866), (0.15, 0.872), (0.15, 0.882), (0.14, 0.888), (0, 0.888)]
-CAKE = [(0, 0.03), (0.196, 0.03), (0.2, 0.036), (0.2, 0.235), (0.19, 0.25), (0, 0.25)]
+RING = [(0.1, 0.915), (0.176, 0.915), (0.18, 0.909), (0.18, 0.822), (0.174, 0.815), (0.135, 0.815), (0.135, 0.86), (0.1, 0.866)]
+CAP = ([(0, 0.915), (0.186, 0.915), (0.192, 0.921)] + arc(0.172, 0.978, 0.02, 0, math.pi / 2, 8)
+       + [(0.11, 0.9985), (0, 1.0)])
+STOP = [(0, 0.725), (0.092, 0.725), (0.1, 0.735), (0.1, 0.80), (0.105, 0.806), (0.105, 0.866), (0.146, 0.866), (0.15, 0.872), (0.15, 0.905),
+        (0, 0.905)]
 APP = [(0.13, 0.80), (0.192, 0.80), (0.198, 0.81), (0.198, 0.98), (0.19, 1.0), (0.15, 1.035), (0.09, 1.06), (0.063, 1.075),
        (0.05, 1.15), (0.036, 1.27), (0.0, 1.27)]
 APP_IN = [(0.0, 1.262), (0.03, 1.262), (0.044, 1.15), (0.057, 1.07), (0.085, 1.052), (0.143, 1.028), (0.183, 0.995),
           (0.188, 0.98), (0.188, 0.80), (0.13, 0.80)]
 TIP = [(0, 1.262), (0.037, 1.262)] + arc(0.017, 1.3, 0.02, -0.2, math.pi / 2, 6) + [(0, 1.32)]
-LABEL_BAND, LABEL_TURN = (0.03, 0.488), 0.74 * 2 * math.pi
+LABEL_BAND, LABEL_HALF = (0.126, 0.63), math.radians(56)      # a front label, as on the owner's card
 
 
 def vial(kind, x, y_foot, z_axis):
@@ -268,12 +277,12 @@ def vial(kind, x, y_foot, z_axis):
     lathe('cap', scaled(CAP), M_CAP, parent=root)
     lathe('stopper', scaled(STOP), M_STOP, parent=root)
     if kind == 'P':
-        lathe('cake', scaled(CAKE), M_CAKE, segs=48, parent=root)
-    n, r = 96, RV * 1.006 * L
+        powder(root)
+    n, r = 64, RV * 1.006 * L
     z0, z1 = LABEL_BAND[0] * L, LABEL_BAND[1] * L
     verts, uvs, faces = [], [], []
     for i in range(n + 1):
-        phi = -0.24 * LABEL_TURN + LABEL_TURN * i / n      # from the front (-y) toward +x
+        phi = -LABEL_HALF + 2 * LABEL_HALF * i / n         # from the front (-y) toward +x
         for z, v in ((z0, 0.0), (z1, 1.0)):
             verts.append((r * math.sin(phi), -r * math.cos(phi), z))
             uvs.append((i / n, v))
@@ -283,6 +292,32 @@ def vial(kind, x, y_foot, z_axis):
     root.rotation_euler = (-math.pi / 2, 0, 0)          # the top to +y, the front up
     root.location = (x, y_foot, z_axis)
     return root
+
+
+def powder(root):
+    """Loose powder in a vial that lies on its side: a shallow uneven layer along the lower wall (the vial's back,
+    +y, is down once it lies). About the amount of the card's heap: a seventh of the vial's cross-section."""
+    r, stations, arc_n = (RI - 0.004) * L, 60, 20
+    verts, faces = [], []
+    for k in range(stations + 1):
+        z = (0.04 + 0.60 * k / stations) * L
+        wave = 0.035 * math.sin(k * 0.41) + 0.025 * math.sin(k * 0.17 + 1.0)   # a gently uneven surface, no ridges
+        taper = min(1.0, k / 5.0, (stations - k) / 8.0)          # the layer thins out toward both ends
+        half = math.radians(62) * (0.35 + 0.65 * taper) * (1 + wave)
+        for j in range(arc_n + 1):
+            a = -half + 2 * half * j / arc_n
+            verts.append((r * math.sin(a), r * math.cos(a), z))
+    row = arc_n + 1
+    for k in range(stations):
+        for j in range(arc_n):
+            a, b = k * row + j, (k + 1) * row + j
+            faces.append((a, a + 1, b + 1, b))                   # against the glass
+        faces.append((k * row, (k + 1) * row, (k + 1) * row + arc_n, k * row + arc_n))   # the powder's own surface
+    faces.append(tuple(range(row)))
+    faces.append(tuple(range(stations * row, stations * row + row)))
+    ob = mesh_object('powder', verts, faces, M_CAKE, parent=root)
+    ob.data.polygons.foreach_set('use_smooth', [True] * len(ob.data.polygons))
+    return ob
 
 
 def applicator(x, y_mid, z_axis):
