@@ -26,6 +26,17 @@
   запущен 23/11, 16:38, задание `794cbc4d1b0b4e1b931bedf88fdb0a69`, готов 16:42, списано 1,0693 $; 1912×1080, 121 кадр.
   **Остаток Atlas 8,720471 $ (сервис, 23/11, 16:50).** На пересъёмку MICRO BOOST всего: 0,0695 + 0,0579 + 1,0693 =
   1,1967 $ из разрешённых ≈ 2,4 $.
+- **MICRO BOOST 10% — фильм версии 2 со шприцем на странице (23/11, 17:15).** Ролик проверен: 1912×1080, 121 кадр, первый
+  кадр против K3c 1,6 %, последний против K3c2 1,7 %, скрытых склеек нет (скачок между кадрами: среднее 0,56, наибольший
+  1,93), шприц и надпись целы в кадрах 41, 66, 96. Фильм собран по `film-16x9.spec` (1081 кадр, 45 с, восемь глав) и
+  вырезан для телефона (`vertical-keys.json`): компьютер — https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/46e0b0a4-862a-4a2a-852c-5355e42fc088.mp4 ,
+  телефон — https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/ed57bc76-6518-4e47-b742-dfa83d6d61fe.mp4 . Подключён (`wire.json`), сайт пересобран.
+  Проверка `film-phone-check.cjs`, по 3 снимка на сцену, 1440×900 и 390×664: новые файлы, восемь сцен, 129/129, ошибок
+  нет; в главе 03 крупный план со шприцем — надпись «MITODERM / BIOSPICULE PROFESSIONAL» читается, заголовок её не
+  закрывает. Запись прокрутки: компьютер — https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/0259982f-79da-4ece-a11e-0ef12893624f.mp4 ,
+  телефон — https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/52aad022-cff6-486d-8233-091dd7a07f35.mp4 .
+  Постоянные копии: ролик C — https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/5b1d5b85-ea5f-417b-9316-bca981978c43.mp4 , кадр K3c2 —
+  https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/034fb966-e018-43b9-bcf4-b237ce4c364a.png . Прежний фильм — `film-v1-16x9.spec`, `wire-v1.json`.
 
 ## MITOTECH CELL BOOSTER — фильм версии 3 с открыванием набора стоит на странице (22/11, 23:32; бесплатно)
 - **Что на странице:** фильм версии 3 — 654 кадра, 27,3 с, одна глава: коробка в клинике → осмотр → **набор открывается

@@ -94,21 +94,6 @@ export const productFilms:Record<string,ProductFilm>={
   {start:655,end:725}, // 07 the same pack in the clinic
   {start:725,end:849}  // 08 the cosmetologist explains the home care
  ]},
- // A connected film of one visit to the clinic: the pack, the skin examination, dry skin and the massage, the question
- // about tingling, into the skin (spicules of two lengths, the next product going down along them), the mask, the pack
- // again. 1912x1080 and 1080x1920, 995 frames, a keyframe every 12 (state/films/micro-boost-10/film-16x9.spec).
- // The chapters follow the treatment, not the order of the page sections: 'two lengths, two depths' stands after the
- // massage, where the spicules are already in the skin.
- 'micro-boost-10':{desktop:'/assets/world/micro-boost-10-film.mp4',mobile:'/assets/world/micro-boost-10-film-mobile.mp4',fps:24,frames:995,chapters:[
-  {start:0,end:82},    // 01 the pack in the clinic
-  {start:82,end:166},  // 02 the skin examination
-  {start:166,end:341}, // 03 dry skin, the massage
-  {start:341,end:500}, // 04 does it tingle?
-  {start:500,end:746}, // 05 inside the skin
-  {start:746,end:855}, // 06 the mask on the face
-  {start:855,end:925}, // 07 the pack, the people behind it
-  {start:925,end:995}  // 08 the pack held
- ]},
  // A connected film of a home-care serum: the cosmetologist looks at her skin in the clinic, the same box in the evening
  // at her home, the mirror, the massage, into the skin and out, the cream, the box again, back in the clinic.
  // 1912x1080 and 1080x1920, 940 frames, a keyframe every 12 (state/films/cellular-age-defense-2-5/film-16x9.spec).
@@ -186,6 +171,21 @@ export const productFilms:Record<string,ProductFilm>={
  // (no opening): wire-v2.json; version 1: wire-v1.json.
  'mitotech-cell-booster':{desktop:'/assets/world/mitotech-cell-booster-film.mp4',mobile:'/assets/world/mitotech-cell-booster-film-mobile.mp4',fps:24,frames:654,anchor:'left',chapters:[
   {start:0,end:654}  // 01 the box in the clinic, the kit opens, the drops and the pen, the solution in the micro-channels, the box
+ ]},
+ // A connected film of one visit to the clinic, version 2 (22/11): the pack, the skin examination, dry skin, the serum
+ // laid on the cheek from the real syringe (a close-up; the owner's photos of 22/11), the massage, the question about
+ // tingling, into the skin (spicules of two lengths, the next product going down along them), the mask, the pack again.
+ // 1912x1080 and 1080x1920, 1081 frames, a keyframe every 12 (state/films/micro-boost-10/film-16x9.spec).
+ // The chapters follow the treatment, not the order of the page sections. Version 1 (no syringe): wire-v1.json.
+ 'micro-boost-10':{desktop:'/assets/world/micro-boost-10-film.mp4',mobile:'/assets/world/micro-boost-10-film-mobile.mp4',fps:24,frames:1081,chapters:[
+  {start:0,end:82},      // 01 the pack in the clinic
+  {start:82,end:166},    // 02 the skin examination
+  {start:166,end:427},   // 03 dry skin, the syringe, the massage
+  {start:427,end:586},   // 04 does it tingle?
+  {start:586,end:832},   // 05 inside the skin
+  {start:832,end:941},   // 06 the mask on the face
+  {start:941,end:1011},  // 07 the pack, the people behind it
+  {start:1011,end:1081}  // 08 the pack held
  ]}
 };
 // Chapter captions of the series films, in page order, word for word from the approved page copy
@@ -247,16 +247,6 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'התחילו את שגרת הטיפוח בבית.',body:'זמין דרך הקליניקות השותפות של מיטודרם. עברו ל-CELLULAR\u00a0AGE\u00a0DEFENSE\u00a02.5% ככל שהעור מסתגל; לאחריו יש למרוח תמיד DERMA\u00a0RECOVERY\u00a0CREAM.',tag:'הצעה'},
   {title:'מומחי Mitoderm מוסמכים',body:'כל מומחה כאן מוכשר ומוסמך להעניק פרוטוקולים מקוריים של Mitoderm. מצאו מרפאה מהימנה בקרבתכם וקבעו ייעוץ.',tag:'מצאו מומחה'}
  ],
- 'micro-boost-10':[
-  {title:'MICRO BOOST 10%',body:'מיליוני מיקרו-מחטים. מזרק אחד.',tag:'BIOSPICULE™ · טיפול מקצועי לקליניקה'},
-  {title:'יותר מפילינג.',body:'פילינג מסתפק בחידוש פני העור. המטופלים מבקשים חידוש והובלת חומרים בביקור אחד – תחליף לטיפול המסורתי במיקרונידלינג.',tag:'אינדיקציות'},
-  {title:'שלושה שלבים. ההחלטה שלכם.',body:'כמות החומר, משך העיסוי ועוצמת הטיפול נקבעים בהתאם לאבחון העור שאתם מבצעים; לאחר מכן המסלולים המיקרוסקופיים הפתוחים מובילים פנימה את V-TECH או Longevity\u00a0Serum ואת EXOCELL\u00a0MASK.',tag:'פרוטוקול הטיפול בקליניקה'},
-  {title:'צפו לעקצוץ.',body:'תחושת עקצוץ אופיינית במהלך העיסוי – והספיקולות עשויות להמשיך לעורר את העור עד 72 שעות לאחר שהמטופלת עוזבת.',tag:'הרגישו'},
-  {title:'שני אורכים. שני עומקים.',body:'40% ספיקולות קצרות (80–100 מיקרון) פועלות באזור החיצוני של האפידרמיס; 60% ארוכות (300–360 מיקרון) מגיעות עמוק יותר. מטוהרות וממוינות – לא אבקה גולמית.',tag:'רכיבים פעילים'},
-  {title:'מומחי Mitoderm מוסמכים',body:'ה-Micro Boost בריכוז 10% מיושם במרפאה כדי להכין את העור לטיפול אינטנסיבי.',tag:'מצאו מומחה'},
-  {title:'מזרק אחד. טיפול אחד.',body:'3\u00a0ml ℮ 0.10\u00a0fl.\u00a0oz. – שליטה מקצועית בכמות החומר לטיפול אחד בקליניקה. לשימוש מקצועי בלבד.',tag:'ערכה ועובדות'},
-  {title:'הכניסו אותו לקליניקה שלכם.',body:'לשימוש מקצועי בלבד. לאחר הטיפול ייתכנו אדמומיות זמנית, יובש או קילוף. המומחה שלנו ייעץ לכם על פרוטוקולים ותמחור.',tag:'הצעה'}
- ],
  'cellular-age-defense-2-5':[
   {title:'CELLULAR AGE DEFENSE 2.5%',body:'עוברים ל-2.5%.',tag:'סרום BIOSPICULE™ · טיפוח ביתי'},
   {title:'כשהקמטים מתחילים להטריד.',body:'קמטים וקמטוטים, אובדן אלסטיות, עור עייף ועמום – לעור הזקוק לתוכנית טיפוח אינטנסיבית יותר מ-1.5%.',tag:'למי מתאים הסרום?'},
@@ -299,5 +289,15 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
  ],
  'mitotech-cell-booster':[
   {title:'MITOTECH CELL BOOSTER',body:'בוסטר תאי בשני בקבוקונים לפרוטוקולים בקליניקה בשילוב עם MITOPEN או MICRO\u00a0BOOST\u00a010%.',tag:'מקצועי'}
+ ],
+ 'micro-boost-10':[
+  {title:'MICRO BOOST 10%',body:'מיליוני מיקרו-מחטים. מזרק אחד.',tag:'BIOSPICULE™ · טיפול מקצועי לקליניקה'},
+  {title:'יותר מפילינג.',body:'פילינג מסתפק בחידוש פני העור. המטופלים מבקשים חידוש והובלת חומרים בביקור אחד – תחליף לטיפול המסורתי במיקרונידלינג.',tag:'אינדיקציות'},
+  {title:'שלושה שלבים. ההחלטה שלכם.',body:'כמות החומר, משך העיסוי ועוצמת הטיפול נקבעים בהתאם לאבחון העור שאתם מבצעים; לאחר מכן המסלולים המיקרוסקופיים הפתוחים מובילים פנימה את V-TECH או Longevity\u00a0Serum ואת EXOCELL\u00a0MASK.',tag:'פרוטוקול הטיפול בקליניקה'},
+  {title:'צפו לעקצוץ.',body:'תחושת עקצוץ אופיינית במהלך העיסוי – והספיקולות עשויות להמשיך לעורר את העור עד 72 שעות לאחר שהמטופלת עוזבת.',tag:'הרגישו'},
+  {title:'שני אורכים. שני עומקים.',body:'40% ספיקולות קצרות (80–100 מיקרון) פועלות באזור החיצוני של האפידרמיס; 60% ארוכות (300–360 מיקרון) מגיעות עמוק יותר. מטוהרות וממוינות – לא אבקה גולמית.',tag:'רכיבים פעילים'},
+  {title:'מומחי Mitoderm מוסמכים',body:'ה-Micro Boost בריכוז 10% מיושם במרפאה כדי להכין את העור לטיפול אינטנסיבי.',tag:'מצאו מומחה'},
+  {title:'מזרק אחד. טיפול אחד.',body:'3\u00a0ml ℮ 0.10\u00a0fl.\u00a0oz. – שליטה מקצועית בכמות החומר לטיפול אחד בקליניקה. לשימוש מקצועי בלבד.',tag:'ערכה ועובדות'},
+  {title:'הכניסו אותו לקליניקה שלכם.',body:'לשימוש מקצועי בלבד. לאחר הטיפול ייתכנו אדמומיות זמנית, יובש או קילוף. המומחה שלנו ייעץ לכם על פרוטוקולים ותמחור.',tag:'הצעה'}
  ]
 };
