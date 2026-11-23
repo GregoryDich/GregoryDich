@@ -4,8 +4,8 @@
 # Phone:  ../tools/vertical-from-horizontal.py micro-boost-10-film.mp4 micro-boost-10-film-mobile.mp4 vertical-keys.json
 # New in version 2 (the owner's photos of the real syringe, 22/11):
 #   C   a close-up: the cosmetologist's gloved hand lays the serum on the cheek from the real syringe, drop by drop
-#       (K3c -> K3c, the camera stands). Kling 4.0, 1080p, 5 s. Until the owner says ok to the still K3c the clip is
-#       not paid for: C.mp4 is then a stand-in, the still with a slow push-in (C-standin.mp4)
+#       (K3c -> K3c2, the camera stands). Kling 4.0, 1080p, 5 s, shot 23/11 after the owner's ok to the still K3c
+#       (one take). Before that C.mp4 was a stand-in, the still with a slow push-in
 #   T3  is cut in two: frames 1-19 the tissue goes away (her hand goes down, out of the frame), frames 69-120 the
 #       massage with both hands; between them stands the close-up, joined by soft focus on both sides
 # Film frames:  hold 0-59 | focus 60-99 | hold 100-117 | settle 118-123 | T2 124-149 | soft-focus join 150-181 |
