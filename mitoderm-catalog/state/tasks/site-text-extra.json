@@ -1,0 +1,231 @@
+{
+ "note": [
+  "Texts of the site that are not in a page when it loads: they appear only after the visitor does something (sends",
+  "the form, opens the inquiry panel, enters V-TECH from the home page). site-text-export.cjs cannot see them and the",
+  "lead form is never submitted in a test, so they are listed here word for word from the code. site-text-xlsx.py",
+  "checks that every fragment still stands in its file (a changed text stops the build) and reports any other Hebrew",
+  "text of the code that is neither on a page nor here. A placeholder in the text is written between ‹ and ›."
+ ],
+ "after_action": [
+  {
+   "area": "form-errors",
+   "kind": "message",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "יש לבדוק את השדה."
+  },
+  {
+   "area": "form-errors",
+   "kind": "message",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "בדקו את מספר הטלפון."
+  },
+  {
+   "area": "form-errors",
+   "kind": "message",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "יש לאשר יצירת קשר בנוגע לפנייה."
+  },
+  {
+   "area": "form-errors",
+   "kind": "message",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "בדקו את הפרטים המסומנים ונסו שוב."
+  },
+  {
+   "area": "form-errors",
+   "kind": "message",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "התקבלו מספר פניות בזמן קצר. נסו שוב מאוחר יותר או פנו ב-WhatsApp."
+  },
+  {
+   "area": "form-errors",
+   "kind": "message",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "הפנייה לא נשלחה. הפרטים נשמרו בטופס. אפשר לנסות שוב או לפנות ב-WhatsApp."
+  },
+  {
+   "area": "form-errors",
+   "kind": "message",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "לא התקבל אישור לשליחה. הפרטים נשמרו בטופס ואפשר לנסות שוב."
+  },
+  {
+   "area": "form-sent",
+   "kind": "button",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "שולחים את הפנייה…"
+  },
+  {
+   "area": "form-sent",
+   "kind": "heading",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "הפנייה התקבלה"
+  },
+  {
+   "area": "form-sent",
+   "kind": "paragraph",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "תודה שפניתם ל-MITODERM."
+  },
+  {
+   "area": "form-sent",
+   "kind": "paragraph",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "הבקשה נשמרה בנושא ‹שם המוצר›.",
+   "fragments": [
+    "הבקשה נשמרה בנושא "
+   ]
+  },
+  {
+   "area": "form-sent",
+   "kind": "paragraph",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "לשיחה ישירה עם הצוות אפשר להמשיך ב-WhatsApp."
+  },
+  {
+   "area": "form-sent",
+   "kind": "paragraph",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "מספר פנייה: ‹מספר›",
+   "fragments": [
+    "מספר פנייה: "
+   ]
+  },
+  {
+   "area": "form-sent",
+   "kind": "link",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "להמשך שיחה ב-WhatsApp"
+  },
+  {
+   "area": "whatsapp-message",
+   "kind": "message",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "שלום, אשמח לקבל מידע מקצועי והצעה לקליניקה בנושא ‹שם המוצר›.",
+   "fragments": [
+    "שלום, אשמח לקבל מידע מקצועי והצעה לקליניקה בנושא "
+   ]
+  },
+  {
+   "area": "whatsapp-message",
+   "kind": "message",
+   "file": "mitoderm/pilot/LeadForm.tsx",
+   "text": "שלום, אשמח לקבל מידע מקצועי והצעה לקליניקה בנושא מוצרי MITODERM.",
+   "fragments": [
+    "שלום, אשמח לקבל מידע מקצועי והצעה לקליניקה בנושא ",
+    "מוצרי MITODERM"
+   ]
+  },
+  {
+   "area": "inquiry-panel",
+   "kind": "heading",
+   "file": "mitoderm/pilot/Experience.tsx",
+   "text": "הצעה מקצועית לקליניקה"
+  },
+  {
+   "area": "inquiry-panel",
+   "kind": "heading",
+   "file": "mitoderm/pilot/Experience.tsx",
+   "text": "הדרכה וליווי מקצועי"
+  },
+  {
+   "area": "inquiry-panel",
+   "kind": "heading",
+   "file": "mitoderm/pilot/Experience.tsx",
+   "text": "מידע על הפרוטוקול"
+  },
+  {
+   "area": "inquiry-panel",
+   "kind": "heading",
+   "file": "mitoderm/pilot/Experience.tsx",
+   "text": "מקרי טיפול ומידע מקצועי"
+  },
+  {
+   "area": "inquiry-panel",
+   "kind": "paragraph",
+   "file": "mitoderm/pilot/Experience.tsx",
+   "text": "השאירו פרטים לשיחה על התאמה, מידע ותנאים מקצועיים."
+  },
+  {
+   "area": "inquiry-panel",
+   "kind": "aria",
+   "file": "mitoderm/pilot/Experience.tsx",
+   "text": "סגירה"
+  },
+  {
+   "area": "inquiry-comment",
+   "kind": "message",
+   "file": "mitoderm/pilot/Experience.tsx",
+   "text": "אשמח לקבל מידע על הדרכה ושילוב ‹שם המוצר› בעבודה המקצועית.",
+   "fragments": [
+    "אשמח לקבל מידע על הדרכה ושילוב ",
+    " בעבודה המקצועית."
+   ]
+  },
+  {
+   "area": "inquiry-comment",
+   "kind": "message",
+   "file": "mitoderm/pilot/Experience.tsx",
+   "text": "אשמח לקבל מידע על הפרוטוקול המקצועי של ‹שם המוצר›.",
+   "fragments": [
+    "אשמח לקבל מידע על הפרוטוקול המקצועי של "
+   ]
+  },
+  {
+   "area": "inquiry-comment",
+   "kind": "message",
+   "file": "mitoderm/pilot/Experience.tsx",
+   "text": "אשמח לקבל מקרי טיפול מתועדים ומידע מקצועי על ‹שם המוצר›.",
+   "fragments": [
+    "אשמח לקבל מקרי טיפול מתועדים ומידע מקצועי על "
+   ]
+  },
+  {
+   "area": "vtech-entry",
+   "kind": "aria",
+   "file": "mitoderm/pilot/ProductTransition.tsx",
+   "text": "כניסה לחוויית V-TECH"
+  },
+  {
+   "area": "vtech-entry",
+   "kind": "short",
+   "file": "mitoderm/pilot/ProductTransition.tsx",
+   "text": "MITODERM · THE CLINIC EXPERIENCE"
+  },
+  {
+   "area": "vtech-entry",
+   "kind": "paragraph",
+   "file": "mitoderm/pilot/ProductTransition.tsx",
+   "text": "גללו כדי להיכנס לקליניקה",
+   "fragments": [
+    "גללו כדי להיכנס לקליניקה "
+   ]
+  },
+  {
+   "area": "vtech-entry",
+   "kind": "button",
+   "file": "mitoderm/pilot/ProductTransition.tsx",
+   "text": "למעבר ישיר",
+   "fragments": [
+    "למעבר ישיר "
+   ]
+  },
+  {
+   "area": "vtech-kit-alt",
+   "kind": "alt",
+   "file": "mitoderm/pilot/VTechStory.tsx",
+   "text": "אריזת V-TECH SYSTEM נפתחת ומציגה את הסרום ומסכת הג׳ל"
+  }
+ ],
+ "not_on_site": {
+  "why": "Hebrew texts that stand in the code but are not shown by the site as it is now; the build reports anything else.",
+  "files": {
+   "mitoderm/pilot/CinematicStage.tsx": "the component is not used by any page",
+   "mitoderm/pilot/HomeSections.tsx": "ProductDiscovery and VTechInvitation are not used by the home page; SupportSection is on the page and is collected there",
+   "mitoderm/pilot/VTechDetails.tsx": "the case carousel shows only when there are approved cases; there are none",
+   "mitoderm/pilot/case-data.ts": "approved cases - none are published",
+   "mitoderm/lead-labels.ts": "the same words as in the form, used in the e-mail to the team",
+   "mitoderm/pilot/Experience.tsx": "the inquiry topic \"demo\" (its title and its ready-made question) is not used by any button of the site"
+  }
+ }
+}
