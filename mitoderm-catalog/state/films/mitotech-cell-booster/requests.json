@@ -208,5 +208,34 @@
       "superseded": "b9177205-77a0-4f33-a7e0-7a455d1d8378 and 4993bd6d-97b4-4586-9ada-98131d605447 - the same film with the kit full size: the open lid under the header"
     },
     "checked_on_page": "22/11, 23:25, state/tasks/film-phone-check.cjs with 8 shots at 1440x900, 1366x768, 1280x720, 1024x768, 390x664, 390x844 and 360x640: the new files are served, frames 0-653, painted 129/129, no errors. The open kit is whole on every size; on 1280x720 the lid's corner touches the header's edge, on 1024x768 the tip of that corner (about 10 px) is under it."
+  },
+  "print_r15_23_11": {
+    "what": "The box on the site carries the owner's current print R15 everywhere (his word of 23/11: yes to question 35). Nothing was generated or re-shot: 0 USD.",
+    "prints": "site/design/mitotech/print/BOX_FRONT_PRINT_R7.pdf and BOX_FRONT_PRINT_R15.pdf -> pdftoppm -r 200 -png -singlefile <pdf> r7 (r15)",
+    "product_picture": "pack-r15.py <codex-site/public/assets/products/mitotech-cell-booster.webp as it was> r7.png r15.png out.webp -> the same render, angle and light with the R15 front; saved with Pillow, WebP quality 93, method 6 (1207x916, 138 470 bytes). Used by the catalog card, the related blocks and the home banner builder.",
+    "home_banner_large": "state/tasks/build-hero-rows.py site/design/home/hero/stage-rows-plate.webp <out dir> (it takes the product pictures from codex-site/public/assets/products) -> collection-rows-desktop-{1920,2560,3840}.webp and pack-mitotech-cell-booster.webp; the other 12 pack cut-outs came out byte for byte as before, the spot of the box in the map did not move.",
+    "home_banner_phone": {
+      "found": "In codex-site/public/assets/hero/collection-atelier-mobile.webp (1049x1500) the MITOTECH box was drawn by an image model: the side said MTODERM and the layout matched no print.",
+      "how": "the area 430x280+320+620 of the photo enlarged 3 times; pack-r15.py <crop> r7.png r15.png out.webp check.png quad=148,156,1147,156,1147,705,148,705 flat=1 (the real R15 front fitted to the drawn front; its edges were read from brightness profiles of the crop); the result reduced back and pasted through a mask of the front only: the changed area of the photo is x 369-702, y 671-855; the box's side, its reflection and every other product are untouched.",
+      "encode": "Pillow, WebP quality 94, method 6: 194 862 bytes (before 204 962); outside the box the photo differs from the old file by PSNR 48.1 dB (quality 90: 44.0, quality 92: 45.3)",
+      "not_changed": "collection-clean-mobile-v7.webp is shown only inside the V-TECH mask (above 43.4 % of the height) - the MITOTECH box of that file is never on screen."
+    },
+    "film": {
+      "why": "Clip T1 (the box in the clinic, the focus goes to the two women) was shot 21/11 from frame C1 with the earlier print; the box does not move in it, only its focus changes.",
+      "frames_old_new": "tools/place-pack.py <C-plate.png> <cut-out> C1.png at=110,960 height=492 plate_blur=9 - once with the old cut-out, once with the R15 cut-out (2688x1520 each)",
+      "change": "pack-print-in-clip.py <T1 frames f-001.png..f-121.png> C1-old.png C1-new.png <out dir> at=110,960 height=492 -> per frame the blur and the gain of the box are measured against C1-old and the difference of the two prints is added with the same blur and gain; where letters changed, the fine detail of the frame is replaced. Measured: blur 0.60 in frames 1-41, growing to 5.25 from frame 81 on; gain 0.98-0.99.",
+      "encode": "ffmpeg -framerate 24 -i f-%03d.png -vf format=yuv420p -c:v libx264 -preset slow -crf 10 -g 12 -r 24 T1.mp4 (1912x1080, 121 frames, 8 437 185 bytes)",
+      "build": "rebuild-clips.sh <clips dir> (T1 now the R15 clip), tools/film-assemble.sh film-16x9.spec <clips dir> <film> 1912 1080, tools/vertical-from-horizontal.py <film> <phone film> vertical-keys.json -> 654 frames each: 10 974 834 and 8 339 967 bytes",
+      "checked": "frames 0, 48, 100, 140, 600, 653 of both films viewed: the new print is sharp in the sharp frames, blurred like the rest in the focus pull, no trace of the old letters; the print of the box (frame 20) and of the kit's lid in the opening (frame 190) is now the same R15.",
+      "media": {
+        "film 16:9": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/ad93f64a-0622-40e1-908b-f41890d46356.mp4",
+        "film 9:16": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/b62764c2-eb7b-443e-9e90-e4fe5c611703.mp4",
+        "T1 with the R15 print": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/3bab1ca4-4f00-4cb1-9cb5-1c5533a4f3df.mp4",
+        "T1 as shot (earlier print)": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/8cef1e06-f239-4328-a9bd-49a4eddd51c9.mp4",
+        "film before the change 16:9": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/924b099b-3196-4f40-8452-fac1dfa452dc.mp4",
+        "film before the change 9:16": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/14eae525-abc5-49fa-ac6f-4997dd39ee47.mp4"
+      }
+    },
+    "checked_on_site": "23/11, 17:45-17:50, build with all of the above: the product page at 1440x900 and 390x664 (film plays frames 0-653, no errors), the home banner at 1920x1080 and 390x664, the catalog card, the entry from the home banner into the film at 1920x1080, 1440x900 and 390x664 (the flying box lands 0 px off)."
   }
 }

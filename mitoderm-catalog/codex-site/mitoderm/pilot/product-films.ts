@@ -160,18 +160,6 @@ export const productFilms:Record<string,ProductFilm>={
   {start:736,end:838},                // 07 the pen, the consultation behind it
   {start:838,end:952}                 // 08 the cosmetologist and the patient
  ]},
- // A film for a coming-soon page, version 3 (22/11) - a clinic procedure with microneedling, and the kit opens as on the
- // owner's example of 22/11: the real box in the clinic, a focus pull to the two women, the kit opening on the table (an
- // exact 3D model built from his print files: the lid goes back on a ribbon, the guide inside the lid, four powder vials
- // and four ampoules that look as on his card), clear drops of the solution and the pen at work on the cheek, the solution
- // going down the micro-channels, back to the box. Live clips T1, W, BL (Kling 4.0, 1080p); the opening O is rendered, not
- // generated; in the film the kit stands lower and at 0.89 of its rendered size, so the open lid clears the site header
- // (extra field at the top and right from one still of the same shot). The scenes meet in soft focus. 1912x1080 and
- // 1080x1920, 654 frames, one chapter: the page copy has an intro only (state/films/mitotech-cell-booster/). Version 2
- // (no opening): wire-v2.json; version 1: wire-v1.json.
- 'mitotech-cell-booster':{desktop:'/assets/world/mitotech-cell-booster-film.mp4',mobile:'/assets/world/mitotech-cell-booster-film-mobile.mp4',fps:24,frames:654,anchor:'left',chapters:[
-  {start:0,end:654}  // 01 the box in the clinic, the kit opens, the drops and the pen, the solution in the micro-channels, the box
- ]},
  // A connected film of one visit to the clinic, version 2 (22/11): the pack, the skin examination, dry skin, the serum
  // laid on the cheek from the real syringe (a close-up; the owner's photos of 22/11), the massage, the question about
  // tingling, into the skin (spicules of two lengths, the next product going down along them), the mask, the pack again.
@@ -186,6 +174,20 @@ export const productFilms:Record<string,ProductFilm>={
   {start:832,end:941},   // 06 the mask on the face
   {start:941,end:1011},  // 07 the pack, the people behind it
   {start:1011,end:1081}  // 08 the pack held
+ ]},
+ // A film for a coming-soon page, version 3 (22/11) - a clinic procedure with microneedling, and the kit opens as on the
+ // owner's example of 22/11: the real box in the clinic, a focus pull to the two women, the kit opening on the table (an
+ // exact 3D model built from his print files: the lid goes back on a ribbon, the guide inside the lid, four powder vials
+ // and four ampoules that look as on his card), clear drops of the solution and the pen at work on the cheek, the solution
+ // going down the micro-channels, back to the box. Live clips T1, W, BL (Kling 4.0, 1080p); the opening O is rendered, not
+ // generated; in the film the kit stands lower and at 0.89 of its rendered size, so the open lid clears the site header
+ // (extra field at the top and right from one still of the same shot). The scenes meet in soft focus. 1912x1080 and
+ // 1080x1920, 654 frames, one chapter: the page copy has an intro only (state/films/mitotech-cell-booster/). Version 2
+ // (no opening): wire-v2.json; version 1: wire-v1.json. 23/11: the box in the first and last scene carries the owner's
+ // current print R15 (his word of 23/11), changed in the frames of clip T1 without a re-shoot (pack-print-in-clip.py);
+ // the film before that: desktop 924b099b-3196-4f40-8452-fac1dfa452dc.mp4, phone 14eae525-abc5-49fa-ac6f-4997dd39ee47.mp4.
+ 'mitotech-cell-booster':{desktop:'/assets/world/mitotech-cell-booster-film.mp4',mobile:'/assets/world/mitotech-cell-booster-film-mobile.mp4',fps:24,frames:654,anchor:'left',chapters:[
+  {start:0,end:654}  // 01 the box in the clinic, the kit opens, the drops and the pen, the solution in the micro-channels, the box
  ]}
 };
 // Chapter captions of the series films, in page order, word for word from the approved page copy
@@ -287,9 +289,6 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'הכניסו את MITOPEN לקליניקה שלכם',body:'לשימוש מקצועי בלבד. המומחה שלנו ייעץ לכם בנושאי הדרכה, פרוטוקולים ותמחור.',tag:'הצעה'},
   {title:'מומחי Mitoderm מוסמכים',body:'שני המכשירים מופעלים בידי אנשי מקצוע שעברו הכשרה, כחלק מפרוטוקול קליני.',tag:'מצאו מומחה'}
  ],
- 'mitotech-cell-booster':[
-  {title:'MITOTECH CELL BOOSTER',body:'בוסטר תאי בשני בקבוקונים לפרוטוקולים בקליניקה בשילוב עם MITOPEN או MICRO\u00a0BOOST\u00a010%.',tag:'מקצועי'}
- ],
  'micro-boost-10':[
   {title:'MICRO BOOST 10%',body:'מיליוני מיקרו-מחטים. מזרק אחד.',tag:'BIOSPICULE™ · טיפול מקצועי לקליניקה'},
   {title:'יותר מפילינג.',body:'פילינג מסתפק בחידוש פני העור. המטופלים מבקשים חידוש והובלת חומרים בביקור אחד – תחליף לטיפול המסורתי במיקרונידלינג.',tag:'אינדיקציות'},
@@ -299,5 +298,8 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'מומחי Mitoderm מוסמכים',body:'ה-Micro Boost בריכוז 10% מיושם במרפאה כדי להכין את העור לטיפול אינטנסיבי.',tag:'מצאו מומחה'},
   {title:'מזרק אחד. טיפול אחד.',body:'3\u00a0ml ℮ 0.10\u00a0fl.\u00a0oz. – שליטה מקצועית בכמות החומר לטיפול אחד בקליניקה. לשימוש מקצועי בלבד.',tag:'ערכה ועובדות'},
   {title:'הכניסו אותו לקליניקה שלכם.',body:'לשימוש מקצועי בלבד. לאחר הטיפול ייתכנו אדמומיות זמנית, יובש או קילוף. המומחה שלנו ייעץ לכם על פרוטוקולים ותמחור.',tag:'הצעה'}
+ ],
+ 'mitotech-cell-booster':[
+  {title:'MITOTECH CELL BOOSTER',body:'בוסטר תאי בשני בקבוקונים לפרוטוקולים בקליניקה בשילוב עם MITOPEN או MICRO\u00a0BOOST\u00a010%.',tag:'מקצועי'}
  ]
 };

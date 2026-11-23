@@ -14,8 +14,13 @@ How:
      each smoothed over a wide neighbourhood so that no letter of the old text survives in it;
   3. the R15 print is warped into the picture and multiplied by that light, inside the front face only.
 
-usage: pack-r15.py <site picture.webp> <print R7.png> <print R15.png> <out.webp> [check.png]
+usage: pack-r15.py <site picture.webp> <print R7.png> <print R15.png> <out.webp> [check.png] [quad=x,y,x,y,x,y,x,y]
        (the prints: pdftoppm -r 200 -png -singlefile BOX_FRONT_PRINT_R7.pdf r7, the same for R15)
+  quad=  the four corners of the box's front in the picture (top left, top right, bottom right, bottom left):
+         for a picture whose box was drawn by an image model - its plates stand in other places than on the real
+         print, so they cannot place it; the real front is then fitted to the drawn front as a whole
+  flat=1 one light per ink for the whole front instead of a light that follows the picture: a drawn box differs
+         from the print in too many places to read a local light from it
 Needs numpy and Pillow (the bpy environment has both).
 """
 import sys
@@ -24,7 +29,10 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 picture_path, r7_path, r15_path, out_path = sys.argv[1:5]
-check_path = sys.argv[5] if len(sys.argv) > 5 else None
+rest = sys.argv[5:]
+QUAD = next((a[5:] for a in rest if a.startswith('quad=')), None)
+FLAT = any(a == 'flat=1' for a in rest)
+check_path = next((a for a in rest if '=' not in a), None)
 
 
 def mint(rgb):
@@ -106,8 +114,15 @@ def blur(array, sigma):
 picture = Image.open(picture_path).convert('RGBA')
 A = np.asarray(picture, float)
 r7, r15 = Image.open(r7_path).convert('RGB'), Image.open(r15_path).convert('RGB')
-src = [p for plate in plates(np.asarray(r15), 40000) for p in plate]
-dst = [p for plate in plates(A[..., :3], 4000) for p in plate]
+FACE = (0.139, 0.178, 0.849, 0.855)                       # the front's window on the print sheet (make_textures.py)
+if QUAD:
+    q = [float(v) for v in QUAD.split(',')]
+    fw, fh = r15.size
+    src = [(FACE[0] * fw, FACE[1] * fh), (FACE[2] * fw, FACE[1] * fh), (FACE[2] * fw, FACE[3] * fh), (FACE[0] * fw, FACE[3] * fh)]
+    dst = list(zip(q[0::2], q[1::2]))
+else:
+    src = [p for plate in plates(np.asarray(r15), 40000) for p in plate]
+    dst = [p for plate in plates(A[..., :3], 4000) for p in plate]
 H = homography(src, dst)
 size = picture.size
 W7, W15 = warp(r7, H, size), warp(r15, H, size)
@@ -126,7 +141,7 @@ def inside(x0, y0, x1, y1):
 
 
 pw, ph = r15.size
-face = [0.139 * pw, 0.178 * ph, 0.849 * pw, 0.855 * ph]      # the face's window on the print sheet (make_textures.py)
+face = [FACE[0] * pw, FACE[1] * ph, FACE[2] * pw, FACE[3] * ph]
 quad = inside(*face)
 mask_image = Image.new('L', size, 0)
 ImageDraw.Draw(mask_image).polygon(quad, fill=255)
@@ -156,7 +171,7 @@ def light_of(same, sigmas):
                 value = np.where(sure, value, ratio)
                 sure = sure | (weight > 0.01)
         total = (A[..., channel] * same).sum() / max((W7[..., channel] * same).sum(), 1e-6)
-        fields.append(np.where(sure, value, total))
+        fields.append(np.full(value.shape, total) if FLAT else np.where(sure, value, total))
     return np.stack(fields, axis=2)
 
 

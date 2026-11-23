@@ -1,8 +1,8 @@
 {
   "slug": "mitotech-cell-booster",
   "frames": 654,
-  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/924b099b-3196-4f40-8452-fac1dfa452dc.mp4",
-  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/14eae525-abc5-49fa-ac6f-4997dd39ee47.mp4",
+  "desktop_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/ad93f64a-0622-40e1-908b-f41890d46356.mp4",
+  "mobile_url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/b62764c2-eb7b-443e-9e90-e4fe5c611703.mp4",
   "anchor": "left",
   "comment": [
     "A film for a coming-soon page, version 3 (22/11) - a clinic procedure with microneedling, and the kit opens as on the",
@@ -13,7 +13,9 @@
     "generated; in the film the kit stands lower and at 0.89 of its rendered size, so the open lid clears the site header",
     "(extra field at the top and right from one still of the same shot). The scenes meet in soft focus. 1912x1080 and",
     "1080x1920, 654 frames, one chapter: the page copy has an intro only (state/films/mitotech-cell-booster/). Version 2",
-    "(no opening): wire-v2.json; version 1: wire-v1.json."
+    "(no opening): wire-v2.json; version 1: wire-v1.json. 23/11: the box in the first and last scene carries the owner's",
+    "current print R15 (his word of 23/11), changed in the frames of clip T1 without a re-shoot (pack-print-in-clip.py);",
+    "the film before that: desktop 924b099b-3196-4f40-8452-fac1dfa452dc.mp4, phone 14eae525-abc5-49fa-ac6f-4997dd39ee47.mp4."
   ],
   "chapters": [
     {
