@@ -1,6 +1,6 @@
 # Видео страниц MITODERM
 
-Обновлено 22/11/2026 23:36. 14 страниц, 26 фильмов, 87 файлов роликов, 1240 МБ. Каждая ссылка проверена: файл открывается.
+Обновлено 23/11/2026 17:52. 14 страниц, 26 фильмов, 88 файлов роликов, 1254 МБ. Каждая ссылка проверена: файл открывается.
 
 **Как скачать.** Ссылка открывает сам файл. На компьютере: меню «⋮» в углу плеера → «Скачать» (или правой кнопкой по видео → «Сохранить видео как»). На телефоне: долгое нажатие на видео → «Сохранить» или «Скачать видео».
 
@@ -111,14 +111,15 @@
 
 ## MICRO BOOST 10% — клиника
 
-- **Фильм страницы:** [компьютер, 16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/2c17ea1d-722a-4e73-8cdf-84b2c459f8ca.mp4) — 19,2 МБ · [телефон, 9:16](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/3e485759-561f-4bdd-919c-a035bc51c39d.mp4) — 15 МБ
-- **Страница целиком (запись прокрутки):** [компьютер](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/92e8f268-bed1-44cd-a095-f5145908fb6e.mp4) — 8,5 МБ · [телефон](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/50486fbc-57c9-4718-bba1-698e1bd7a194.mp4) — 5,9 МБ
+- **Фильм страницы:** [компьютер, 16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/46e0b0a4-862a-4a2a-852c-5355e42fc088.mp4) — 20,9 МБ · [телефон, 9:16](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/ed57bc76-6518-4e47-b742-dfa83d6d61fe.mp4) — 16,3 МБ
+- **Страница целиком (запись прокрутки):** [компьютер](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/0259982f-79da-4ece-a11e-0ef12893624f.mp4) — 9,2 МБ · [телефон](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/52aad022-cff6-486d-8233-091dd7a07f35.mp4) — 6,5 МБ
 - Телефонный фильм вырезан из широкого, поэтому ролики только 16:9.
 
 | Ролик | Что в кадре | Файлы |
 |---|---|---|
 | T2 | кушетка опускается, пациентка ложится, косметолог берёт салфетку | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/04cb8241-43b5-4daf-8922-c99b4d935677.mp4) — 6,9 МБ |
-| T3 | салфетка уходит, подушечки пальцев начинают массаж | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/b0ff6094-86bc-4918-b223-a5cc42c9b561.mp4) — 4,6 МБ |
+| C | крупный план: средство из шприца MICRO BOOST 10% ложится каплями на щёку (снят 23/11) | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/5b1d5b85-ea5f-417b-9316-bca981978c43.mp4) — 4,4 МБ |
+| T3 | салфетка уходит, подушечки пальцев начинают массаж (в фильме разрезан надвое: между частями — шприц) | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/b0ff6094-86bc-4918-b223-a5cc42c9b561.mp4) — 4,6 МБ |
 | T4 | руки поднимаются, пациентка открывает глаза | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/077440b1-b8d7-44cd-8e25-84e822cb7f82.mp4) — 3,5 МБ |
 | D1 | камера уходит в кожу щеки (в фильме вдвое быстрее) | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/930fdd86-e839-4ddc-b8be-af61f267e6ba.mp4) — 8,4 МБ |
 | BL | следующее средство идёт вниз по открытым путям | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/e27c5e16-7888-4d3e-90d0-02ccad6f6380.mp4) — 6,1 МБ |
@@ -187,13 +188,13 @@
 
 ## MITOTECH CELL BOOSTER — клиника
 
-- **Фильм страницы:** [компьютер, 16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/924b099b-3196-4f40-8452-fac1dfa452dc.mp4) — 10,8 МБ · [телефон, 9:16](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/14eae525-abc5-49fa-ac6f-4997dd39ee47.mp4) — 8,3 МБ
-- **Страница целиком (запись прокрутки):** [компьютер](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/44f49e53-a0ea-4df0-9211-b565aa7a37c1.mp4) — 6,9 МБ · [телефон](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/2ea80ba5-d6df-4ee6-8699-423e0edca2de.mp4) — 4,3 МБ
+- **Фильм страницы:** [компьютер, 16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/ad93f64a-0622-40e1-908b-f41890d46356.mp4) — 11 МБ · [телефон, 9:16](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/b62764c2-eb7b-443e-9e90-e4fe5c611703.mp4) — 8,3 МБ
+- **Страница целиком (запись прокрутки):** [компьютер](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/3eccbb5a-dcc4-40c8-a553-a4659d9bc107.mp4) — 6,9 МБ · [телефон](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/561bb8ba-04e6-45f0-9417-5ac0d3038ae8.mp4) — 4,3 МБ
 - Телефонный фильм вырезан из широкого, поэтому ролики только 16:9.
 
 | Ролик | Что в кадре | Файлы |
 |---|---|---|
-| T1 | коробка в клинике: фокус с коробки на людей (в фильме вперёд и назад) | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/8cef1e06-f239-4328-a9bd-49a4eddd51c9.mp4) — 3,3 МБ |
+| T1 | коробка в клинике (печать R15): фокус с коробки на людей (в фильме вперёд и назад) | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/3bab1ca4-4f00-4cb1-9cb5-1c5533a4f3df.mp4) — 8,4 МБ |
 | O | набор открывается на столе: расчёт по точной 3D-модели из макетов печати (не генерация) | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/7766df7a-0379-4ce7-b15b-5f6edbcf4fab.mp4) — 9,3 МБ |
 | W | капли раствора и перо MITOPEN на щеке | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/54acb3a5-0f74-4d9b-98bb-cb6bc322b4b7.mp4) — 3,9 МБ |
 | BL | раствор в микроканалах | [16:9](https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/8fb8f93b-f9ed-4f15-ad46-5b228b915419.mp4) — 4,5 МБ |

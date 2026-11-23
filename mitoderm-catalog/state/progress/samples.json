@@ -2,7 +2,7 @@
   "meta": [
     {
       "label": "Обновлено",
-      "value": "22/11/2026 23:36"
+      "value": "23/11/2026 17:52"
     }
   ],
   "library": {
@@ -52,8 +52,8 @@
         },
         {
           "name": "MICRO BOOST 10%",
-          "desktop": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/92e8f268-bed1-44cd-a095-f5145908fb6e.mp4",
-          "phone": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/50486fbc-57c9-4718-bba1-698e1bd7a194.mp4"
+          "desktop": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/0259982f-79da-4ece-a11e-0ef12893624f.mp4",
+          "phone": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/52aad022-cff6-486d-8233-091dd7a07f35.mp4"
         },
         {
           "name": "CELL RENEW 1.5%",
@@ -82,51 +82,57 @@
         },
         {
           "name": "MITOTECH CELL BOOSTER",
-          "desktop": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/44f49e53-a0ea-4df0-9211-b565aa7a37c1.mp4",
-          "phone": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/2ea80ba5-d6df-4ee6-8699-423e0edca2de.mp4"
+          "desktop": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/3eccbb5a-dcc4-40c8-a553-a4659d9bc107.mp4",
+          "phone": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/561bb8ba-04e6-45f0-9417-5ac0d3038ae8.mp4"
         }
       ],
       "links": []
     },
     {
-      "page": "Шприц MICRO BOOST 10% и набор MITOTECH — образцы 22/11 (ждут «ок»)",
-      "note": "По вашим фото шприца, примеру открывания и карточке с флаконами. Ролик со шприцем снимается после «ок» на кадр (1,07 $); набор MITOTECH посчитан 3D-моделью из ваших макетов печати — бесплатно, и сцена открывания уже стоит в фильме страницы (три верхние ссылки).",
+      "page": "Свод всех текстов сайта — файл Excel (23/11)",
+      "note": "Весь текст сайта, как его видит посетитель: главная, каталог, 13 страниц средств, конфиденциальность — по страницам и блокам. 1 300 текстов, 6 849 слов, 40 386 знаков. Файл на иврите; правки команда вписывает в жёлтую колонку «הערות ותיקונים» и возвращает файл. Отдельный лист — тексты из файла содержания, которых на сайте нет.",
       "links": [
         {
-          "label": "ВИДЕО 58 с, компьютер: страница MITOTECH с новым фильмом — набор открывается на столе",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/44f49e53-a0ea-4df0-9211-b565aa7a37c1.mp4"
+          "label": "ФАЙЛ Excel: все тексты сайта (135 КБ)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/4678c87e-1f3c-41d4-95bc-668da7b9ad31.xlsx"
+        }
+      ]
+    },
+    {
+      "page": "Шприц MICRO BOOST 10% и коробка MITOTECH с печатью R15 — сделано 23/11 по вашему «ок»",
+      "note": "Ролик со шприцем снят одним дублем после вашего «ок» на кадр (1,13 $ вместе с кадром финала; остаток Atlas 8,72 $) и стоит в фильме страницы. Коробка MITOTECH — с вашей печатью R15: на картинке средства, в баннере главной (компьютер и телефон) и в первой и последней сцене фильма; печать заменена в кадрах без пересъёмки, бесплатно.",
+      "links": [
+        {
+          "label": "ВИДЕО 58 с, компьютер: страница MICRO BOOST 10% — шприц крупным планом, средство ложится каплями",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/0259982f-79da-4ece-a11e-0ef12893624f.mp4"
         },
         {
           "label": "ВИДЕО 58 с, телефон: та же страница",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/2ea80ba5-d6df-4ee6-8699-423e0edca2de.mp4"
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/52aad022-cff6-486d-8233-091dd7a07f35.mp4"
         },
         {
-          "label": "ВИДЕО 27 с: сам фильм MITOTECH с открыванием набора (файл, как его играет страница)",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/924b099b-3196-4f40-8452-fac1dfa452dc.mp4"
+          "label": "ВИДЕО 5 с: ролик со шприцем, как снят",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/5b1d5b85-ea5f-417b-9316-bca981978c43.mp4"
         },
         {
-          "label": "ЛИСТ КАДРОВ: шприц рядом с вашим фото; набор закрыт, открывается, открыт — рядом с вашим примером",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/bba45e9b-a9cf-4c8f-a3c3-8c23800bb31f.jpg"
+          "label": "ВИДЕО 58 с, компьютер: страница MITOTECH — коробка с печатью R15, набор открывается",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/3eccbb5a-dcc4-40c8-a553-a4659d9bc107.mp4"
         },
         {
-          "label": "MICRO BOOST 10%: шприц у щеки, средство ложится каплями (кадр целиком)",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/50ebe104-7473-41b4-a9a3-1729e305bf71.jpg"
+          "label": "ВИДЕО 58 с, телефон: та же страница",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/561bb8ba-04e6-45f0-9417-5ac0d3038ae8.mp4"
         },
         {
-          "label": "MITOTECH: набор открыт (кадр целиком)",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/c5f30080-a540-4d39-aeab-5d3f6bbca00f.jpg"
+          "label": "ВИДЕО 27 с: сам фильм MITOTECH (файл, как его играет страница)",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/ad93f64a-0622-40e1-908b-f41890d46356.mp4"
         },
         {
-          "label": "MITOTECH: набор закрыт (кадр целиком)",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/1214e8d7-ef44-44e0-a02e-c305cf81bc6f.jpg"
-        },
-        {
-          "label": "ВИДЕО 5 с: набор MITOTECH открывается (первый пробник в малом размере)",
-          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/3ffeb034-36e6-4a54-9c8a-d53437dcc59a.mp4"
-        },
-        {
-          "label": "MITOTECH, коробка: сейчас на сайте (давняя печать) и та же коробка с вашей последней печатью R15 — заменить?",
+          "label": "MITOTECH, коробка: была на сайте (давняя печать) и стала (ваша печать R15)",
           "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/f7738ec9-46fd-4064-8e87-319b03709e39.jpg"
+        },
+        {
+          "label": "ЛИСТ КАДРОВ 22/11: шприц рядом с вашим фото; набор закрыт, открывается, открыт — рядом с вашим примером",
+          "url": "https://d2ol7oe51mr4n9.cloudfront.net/user_2wup4xNeevN3QH5Pxv4g6PWRmPW/bba45e9b-a9cf-4c8f-a3c3-8c23800bb31f.jpg"
         }
       ]
     },
