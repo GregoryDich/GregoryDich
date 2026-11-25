@@ -2,7 +2,27 @@
 
 **Use the user's supplied character references and product-specific choices below. Do not generate random replacement people.**
 
-## 2026-11-25 — SPRAY replacement and supplementary library
+## 2026-11-25 — LATEST: keep original SPRAY man, retouch cheek only
+
+User changed the decision after reviewing the recasting previews: **«оставь того человека» →
+«просто пятно замаж»**. Keep the existing **P2 in the black turtleneck and silver chain** in SPRAY.
+The bearded man is supplementary reference material, no longer the selected replacement.
+Retouch only the conspicuous red/purple cheek patch; preserve identity, natural skin texture,
+hair/part, hands, body, wardrobe, product, gesture and environment. Do not turn this into a
+new recasting or deliberately widen the part to suggest hair loss. No clinical before/after.
+
+A static retouch preview was shown: workspace-root
+`review-work/user-2026-11-25/cheek-retouch/old-actor-cheek-preview.png`.
+The site's film remains unchanged. This generated still is a visual preview, not a pixel-preserving
+replacement master; product lettering/detail must not be carried into the film from this redraw.
+The earlier bearded-man versions v1/v2/v3 are retained outside Git as superseded trials.
+The subsequent local **motion** preview is
+`review-work/user-2026-11-25/cheek-retouch/cheek-preview-v2.mp4` (source interval 20–25 s, 720p).
+It uses the original frames and a moving local skin-color correction, not generated replacements.
+The first local color test was rejected for a green tint. v2 is pending user evaluation; the other
+intervals of the film still need retouching and motion review.
+
+## 2026-11-25 — earlier replacement request, superseded above; supplementary library retained
 
 - User decision: «образ мужчины лучше поменять на наш». For **EXOSIGNAL SPRAY only**, the selected
   reference is **SPRAY-MALE-2026-11-25**, the bearded man in the gray heather T-shirt from the original
@@ -25,7 +45,7 @@
   `references/characters/user-2026-11-25/manifest.json`. Preserve the intended diversity in faces, age,
   build, clothing and skin texture; do not infer medical indications from appearance.
 
-This section overrides the older `awaiting_user_images` status for the selected SPRAY patient only.
+The latest decision above overrides this earlier replacement request. The supplementary library remains available.
 
 ## Women cosmetologists — three deliberate age-cohort options
 - **18–35** — young professional cosmetologist. Show genuine competence, protective wear and consistent technique. Not a stand-in for a younger patient.
