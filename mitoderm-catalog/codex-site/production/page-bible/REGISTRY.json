@@ -915,8 +915,11 @@
       "track": "home",
       "cast": {
         "suggestedFemaleCosmetologistBand": "35–50",
-        "referenceStatus": "awaiting_user_images",
-        "patientReference": "awaiting_user_images",
+        "referenceStatus": "user_selected_patient_preview_pending",
+        "patientReference": "SPRAY-MALE-2026-11-25",
+        "castingRecord": "CASTING-REFERENCES.md",
+        "currentFilmPatient": "P2",
+        "replacementFilmStatus": "not_generated",
         "meaning": "Age band is CASTING, not medical indication; maintain same person through entire page"
       },
       "source": "Product catalog; MITODERM-Protocols-HE.pdf",

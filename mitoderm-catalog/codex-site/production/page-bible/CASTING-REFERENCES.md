@@ -1,6 +1,31 @@
 # Casting + character reference locks
 
-**The user will provide the ideal characters. Do not generate random new cosmetologist models before receiving and approving the cast references.**
+**Use the user's supplied character references and product-specific choices below. Do not generate random replacement people.**
+
+## 2026-11-25 — SPRAY replacement and supplementary library
+
+- User decision: «образ мужчины лучше поменять на наш». For **EXOSIGNAL SPRAY only**, the selected
+  reference is **SPRAY-MALE-2026-11-25**, the bearded man in the gray heather T-shirt from the original
+  scalp-examination screenshot. Local original, outside Git: workspace-root
+  `references/hair/user-2026-11-25/male-original-scalp-examination.png`; provenance/hash in adjacent `manifest.json`.
+- Preserve his facial proportions, full beard, short dark hair/hairline, natural skin texture and shirt
+  consistently across clinic, home, application and return-to-clinic shots. Do not transfer the old P2's
+  red cheek patches. User explicitly flagged the distracting cheek patch on 25/11; this is a visual
+  correction, not a medical diagnosis or a clinical before/after.
+- The previous P2 remains a historical character and retains its other page assignments. This is not a
+  global P2 rename. M remains the existing SPRAY clinician; the additional device-presenter photo is not
+  an automatic replacement of M or the NAD patient.
+- **Preview status:** one built-in GPT Image still generated from the current SPRAY home shot and the
+  original male reference. Workspace-root `review-work/user-2026-11-25/male-recast/spray-male-preview-v1.png`.
+  Likeness approval is pending; no replacement video generated or published. Product hardware/scale
+  and identity continuity in motion still require review before a film is accepted.
+- The 19 character sheets supplied again on 25/11 are **supplementary references**, not 19 newly cast
+  people and not permission to change existing page assignments. User clarified: «не сбивайся, это
+  всего лишь дополнение». Local source index: workspace-root
+  `references/characters/user-2026-11-25/manifest.json`. Preserve the intended diversity in faces, age,
+  build, clothing and skin texture; do not infer medical indications from appearance.
+
+This section overrides the older `awaiting_user_images` status for the selected SPRAY patient only.
 
 ## Women cosmetologists — three deliberate age-cohort options
 - **18–35** — young professional cosmetologist. Show genuine competence, protective wear and consistent technique. Not a stand-in for a younger patient.
