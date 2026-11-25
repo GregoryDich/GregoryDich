@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect,useMemo,useRef,useState,type CSSProperties} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState,type CSSProperties} from 'react';
 import type {Product} from '../types';
 import {products,assets} from '../data';
 import {SiteHeader,SiteFooter,ContactBlock} from '../shared';
@@ -9,6 +9,8 @@ import {nadCaptions,nadProtocol,nadQuestions} from './exo-nad-content';
 import {mediaUrl} from '../media';
 import {productFilms,productCaptions} from './product-films';
 import {productProof} from './product-proof';
+import {productQuestions} from './product-questions';
+import {filmFraming} from './film-framing';
 import {useScrollFilm} from './useScrollFilm';
 import {jumpTo} from './SmoothScroll';
 import './product-cinema.css';
@@ -75,6 +77,8 @@ function NadProtocol(){
 
 function Evidence({product}:{product:Product}){
  const proof=productProof[product.slug];
+ // An empty evidence section repeats the offer without showing evidence.
+ if(!proof?.length)return null;
  return <section id="pc-evidence" className="pc-evidence" aria-labelledby="pc-evidence-title">
   <div className="pc-width pc-evidence-grid"><div>
    <p className="pc-eyebrow"><bdi dir="ltr">{product.name}</bdi> · תיעוד</p>
@@ -125,7 +129,7 @@ function Offer({product,pack,openKit,usp}:{product:Product;pack:string;openKit:s
 }
 function Professional({product}:{product:Product}){
  const questions=product.slug==='exo-nad'?
- nadQuestions:
+ nadQuestions:productQuestions[product.slug]??
  [{q:'למי מיועד המוצר?',a:'התאמה מקצועית או המלצה להמשך טיפוח לפי הייעוד וההנחיות של המוצר.'},
   {q:'כיצד מקבלים מידע על הפרוטוקול?',a:'מוזמנים להשאיר פרטים ולבקש מידע מקצועי, הדרכה ותנאי רכישה.'},
   {q:'האם התמונות מציגות תוצאה טיפולית?',a:'המחשת מוצר אינה תיעוד קליני. מקרים יוצגו רק לאחר אישור המקור וההסכמה לפרסום.'}];
@@ -151,18 +155,25 @@ function Related({slug}:{slug:string}){
 
 export default function ProductCinema({product}:{product:Product}){
  const config=registry.pages.find(p=>p.slug===product.slug);
+ const film=productFilms[product.slug];
  const palettes:Record<string,{bg:string;surface:string;accent:string;text:string;source:string}>=registry.paletteByFamily;
  const theme=palettes[config?.palette??'vm_gold']??palettes.vm_gold;
- const chapters:Chapter[]=useMemo(()=>config?.shots.map((s,i)=>({...s,index:i+1}))??[],[config]);
+ const chapters:Chapter[]=useMemo(()=>config?.shots.map((s,i)=>({...s,vh:film?.scrollVh?.[i]??s.vh,index:i+1}))??[],[config,film]);
  const starts=useMemo(()=>chapters.map((_,i)=>chapters.slice(0,i).reduce((n,x)=>n+x.vh,0)),[chapters]);
  const total=chapters.reduce((n,c)=>n+c.vh,0);
  const [active,setActive]=useState(0),[linear,setLinear]=useState(false);
  const root=useRef<HTMLElement>(null),stage=useRef<HTMLDivElement>(null);
  // Optional scroll film behind the stages; the images stay underneath as posters.
- const film=productFilms[product.slug];
  const {video,state:filmState,setTarget,handlers}=useScrollFilm();
  const [filmOn,setFilmOn]=useState(false),[mobile,setMobile]=useState(false);
  const filmSrc=film?mediaUrl(mobile?film.mobile:film.desktop):'';
+ const frameShown=useCallback((v:HTMLVideoElement)=>{
+  const s=stage.current;if(!film||!s||v.seeking)return;
+  // A scroll target may be ahead of the decoder. Reframe only its decoded frame.
+  const framing=filmFraming(product.slug,v.currentTime*film.fps,window.matchMedia('(max-width: 860px)').matches);
+  s.style.setProperty('--pc-film-scale',framing.scale.toFixed(4));
+  s.style.setProperty('--pc-film-origin',`${framing.x}% ${framing.y}%`);
+ },[film,product.slug]);
  const nad=product.slug==='exo-nad';
  const pack=nad?'/assets/product-cinema/exo-nad/NAD.webp':(assets[product.slug]?.src??'/assets/brand/cover.webp');
  // Approved real-pack photo must not morph into older invented vial colors.
@@ -195,7 +206,9 @@ export default function ProductCinema({product}:{product:Product}){
    r.dataset.captionQuiet=String(Boolean(c?.quiet&&local>=c.quiet[0]&&local<=c.quiet[1]));
    if(film&&c){
     const box=r.getBoundingClientRect();
-    setTarget(Math.min((c.start+(c.end-c.start)*local)/film.fps,Math.max(0,film.frames-1)/film.fps),box.top<=v&&box.bottom>=0);
+    const frame=Math.min(c.start+(c.end-c.start)*local,film.frames-1);
+    if(video.current)frameShown(video.current);
+    setTarget(frame/film.fps,box.top<=v&&box.bottom>=0);
    }
   };
   const schedule=()=>{if(!raf)raf=requestAnimationFrame(read);};
@@ -207,7 +220,7 @@ export default function ProductCinema({product}:{product:Product}){
   window.addEventListener('resize',schedule);
   motion();read();
   return()=>{cancelAnimationFrame(raf);mm.removeEventListener('change',motion);narrow.removeEventListener('change',size);window.removeEventListener('scroll',schedule);window.removeEventListener('resize',schedule);};
- },[chapters,starts,total,film,setTarget]);
+ },[chapters,starts,total,film,setTarget,frameShown,video]);
  if(!config||!chapters.length)return null;
  const current=chapters[active];
  const style={'--pc-bg':theme.bg,'--pc-surface':theme.surface,'--pc-accent':theme.accent,'--pc-ink':theme.text,'--pc-scroll':total+1} as CSSProperties;
@@ -232,7 +245,7 @@ export default function ProductCinema({product}:{product:Product}){
        <figure className="pc-nad-kit" data-visible={mediaPhase==='kit'}><img src="/assets/product-cinema/exo-nad/kit.webp" alt="" width="800" height="1361"/></figure>
       </>}
      </div>
-     {filmSrc&&filmOn&&filmState.phase!=='error'&&<video ref={video} className={'pc-film'+(filmState.painted?' is-painted':'')} src={filmSrc} style={!mobile&&film?.anchor==='left'?{objectPosition:'left center'}:undefined} muted playsInline preload="auto" aria-hidden="true" tabIndex={-1} {...handlers}/>}
+     {filmSrc&&filmOn&&filmState.phase!=='error'&&<video ref={video} className={'pc-film'+(filmState.painted?' is-painted':'')} src={filmSrc} style={!mobile&&film?.anchor==='left'?{objectPosition:'left center'}:undefined} muted playsInline preload="auto" aria-hidden="true" tabIndex={-1} {...handlers} onLoadedData={e=>{frameShown(e.currentTarget);handlers.onLoadedData();}} onSeeked={e=>{frameShown(e.currentTarget);handlers.onSeeked();}}/>}
      <div className="pc-scenes">
       {chapters.map((chapter,i)=>{const copy=chapterName(i),Heading=i===0?'h1':'h2';return <article key={i} id={'pc-shot-'+(i+1)} className="pc-scene" data-visible={active===i} data-kind={chapter.type} aria-hidden={!linear&&active!==i} inert={!linear&&active!==i}>
        {linear&&<div className="pc-linear-product"><img src={nad&&i===7?'/assets/product-cinema/exo-nad/kit.webp':pack} alt={'מוצר '+product.name} loading={i===0?'eager':'lazy'}/></div>}
@@ -247,7 +260,7 @@ export default function ProductCinema({product}:{product:Product}){
      <div className="pc-hud" aria-label="ניווט בין שלבי ההמחשה">
       <div className="pc-steps">{chapters.map((chapter,i)=><button key={i} className="pc-step" aria-label={'שלב '+(i+1)+': '+chapterName(i).tag} aria-current={active===i?'step':undefined} onClick={()=>jump(i)}><span>{String(i+1).padStart(2,'0')}</span></button>)}</div>
       <span className="pc-hud-note">{current.index} / {chapters.length} · גללו להמשך</span>
-      {nad&&<span className="pc-illustration-note">המחשה חזותית · AI</span>}
+      {film&&<span className="pc-illustration-note">המחשה חזותית · AI</span>}
      </div>
      <div className="pc-line" aria-hidden="true"><i/></div>
     </div>

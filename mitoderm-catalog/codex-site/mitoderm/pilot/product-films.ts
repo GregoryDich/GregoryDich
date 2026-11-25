@@ -7,15 +7,15 @@
 // stands at the very left and whose right third is empty background.
 // quiet:[from,to] (parts of a chapter, 0..1) names the stretch where the camera brings a face under the caption: on a
 // wide screen the caption fades for that stretch (ProductCinema, data-caption-quiet); on a phone it stays.
-export type ProductFilm={desktop:string;mobile:string;fps:number;frames:number;anchor?:'left';chapters:Array<{start:number;end:number;quiet?:[from:number,to:number]}>};
+export type ProductFilm={desktop:string;mobile:string;fps:number;frames:number;anchor?:'left';scrollVh?:number[];chapters:Array<{start:number;end:number;quiet?:[from:number,to:number]}>};
 export const productFilms:Record<string,ProductFilm>={
- // 1912x1080, 834 frames, a keyframe every 12. The 9:16 film is not cut yet:
- // its URL in media-urls.json is empty, so phones stay image-only until it is set.
- 'exo-nad':{desktop:'/assets/world/exo-nad-film.mp4',mobile:'/assets/world/exo-nad-film-mobile.mp4',fps:24,frames:834,chapters:[
+ // Desktop and portrait films: 834 frames, a keyframe every 12. The page skips the
+ // rejected wiping segment in both versions; the original media itself is unchanged.
+ 'exo-nad':{desktop:'/assets/world/exo-nad-film.mp4',mobile:'/assets/world/exo-nad-film-mobile.mp4',fps:24,frames:834,scrollVh:[1.15,.8,1.4,.7,1.3,.6,.55,1.2],chapters:[
   {start:0,end:108},   // 01 kit
   {start:108,end:198}, // 02 consultation
   {start:198,end:306}, // 03 EXO BIPHASIC PEEL
-  {start:306,end:427}, // 04 pH NORMALIZER, rinse, dry
+  {start:306,end:338}, // 04 neutralizer only; excluded cloth/wiping tail (owner correction, 25 Nov)
   {start:427,end:520}, // 05 LONGEVITY SERUM
   {start:520,end:616}, // 06 close
   {start:616,end:707}, // 07 evidence
@@ -69,7 +69,7 @@ export const productFilms:Record<string,ProductFilm>={
  // every 12 (state/films/exosignal-spray/film-16x9.spec). Twice the product stays in the frame while the place behind
  // it changes (clinic to home, home to clinic): the spray is what links the two. The phone film is a moving window
  // cut out of the desktop one (vertical-keys.json).
- 'exosignal-spray':{desktop:'/assets/world/exosignal-spray-film.mp4',mobile:'/assets/world/exosignal-spray-film-mobile.mp4',fps:24,frames:1208,chapters:[
+ 'exosignal-spray':{desktop:'/assets/world/exosignal-spray-film.mp4',mobile:'/assets/world/exosignal-spray-film-mobile.mp4',fps:24,frames:1208,scrollVh:[1.15,1.2,1.05,1.5,2.4,1.1,1,1],chapters:[
   {start:0,end:105},     // 01 pack in the clinic
   {start:105,end:262},   // 02 consultation
   {start:262,end:370},   // 03 the bottle in his hand
@@ -219,24 +219,24 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'EXOSIGNAL HAIR',body:'האות שזקיקי השיער מחכים לו',tag:'אקסוזומים סינתטיים · טיפולי קרקפת'},
   {title:'לנשירת שיער יש נקודת פתיחה',body:'המטופלים שלכם רואים את זה במראה. תנו להם תוכנית שמתחילה במדידה.',tag:'למה?'},
   {title:'אבחון · MITOSCAN',body:'ניתן להשתמש במצלמת MITOSCAN לסקירת הקרקפת, מצב הזקיקים, דלילות ודלקות',tag:'אבחון'},
-  {title:'הנתונים על המסך',body:'נשירת שיער מסטרס · אלופציה אנדרוגנטית · איזון הקרקפת (עודף סבום, גרד, אדמומיות) · שיער דק/שביר/יבש',tag:'מה רואים על המסך'},
+  {title:'מתעדים את נקודת המוצא.',body:'בוחנים את מראה הקרקפת והשיער ומתעדים את האזורים שנבחרו למעקב.',tag:'תיעוד מקצועי'},
   {title:'אמפולה אחת, שמונה פפטידים',body:'מבנים אקסוזומליים סינתטיים נושאים PDRN\u00a02%, חומצה היאלורונית, שמונה פפטידים ביומימטיים, תאי גזע מתפוח וויטמיני\u00a0B.',tag:'מה בפנים'},
   {title:'מודדים, פותחים, מחדירים',body:'MITOPEN פותח את מסלול החדירה ו-\u2060EXOSIGNAL\u00a0HAIR מיושם על הקרקפת המטופלת',tag:'פרוטוקול'},
-  {title:'3 = 1 + 1',body:'לאחר פציעה מבוקרת מטפטפים את החומר על העור ולמעשה נותנים לעור מחסן של פקטורי גדילה, פפטידים, חלבונים ותאי גזע מצמחים כך שהעור משתמש במאגרים חדשים ובונה את עצמו מחדש.',tag:'בתוך העור'},
+  {title:'מהפעולה להמחשה.',body:'הדמיה סכמטית של אזור העבודה ושל יישום הסרום על הקרקפת.',tag:'המחשה חזותית'},
   {title:'ספיגת הסרום',body:'לאחר העבודה יש לעסות עם הכפפות את הקרקפת בעדינות עד לספיגה מלאה של החומר.',tag:'ספיגת הסרום'},
   {title:'תדירות וסדרת טיפולים',body:'טיפול אחד בכל 14 יום. מומלץ לבצע לפחות 4 טיפולים רצופים.',tag:'סדרת טיפולים'},
-  {title:'מעקב לפני / אחרי',body:'הפחתת נשירה ודלקת מקומית · שיפור מצב הקרקפת והמיקרו-סירקולציה · שיפור בנפח, מרקם וברק · תמיכה בהארכת שלב האנגן (צמיחה)',tag:'מעקב'},
+  {title:'חוזרים לאותו אזור.',body:'מתעדים את הקרקפת באזורים שנבחרו למעקב. הסרט מדגים ביקור; תיעוד המקרים מופיע בהמשך העמוד.',tag:'מעקב מקצועי'},
   {title:'מומחי Mitoderm מוסמכים',body:'Exosignal\u00a0Hair הוא טיפול אמפולות מדויק המיושם במפגשים במרפאה.',tag:'ערכה ועובדות'},
   {title:'הכניסו את EXOSIGNAL\u00a0HAIR לקליניקה שלכם',body:'לשימוש מקצועי בלבד, מיועד לשילוב עם MITOPEN ו-\u2060MITOSCAN.',tag:'הצעה'}
  ],
  'exosignal-spray':[
   {title:'EXOSIGNAL SPRAY',body:'תמיכה בקרקפת בין הביקורים.',tag:'טיפוח ביתי'},
   {title:'הימים שבין הטיפולים חשובים.',body:'EXOSIGNAL\u00a0HAIR הוא הטיפול בקליניקה. דלילות שיער, שיער שביר וחוסר איזון בקרקפת דורשים תמיכה בימים שבין הטיפולים.',tag:'למי מומלץ'},
-  {title:'התזה אחת. שלוש משימות.',body:'שומר על סביבה מאוזנת בקרקפת, מזין את השיער ותומך במחזור צמיחת השיער הטבעי — נספג במהירות, ללא שטיפה.',tag:'מה הספריי עושה'},
-  {title:'קליל על הקרקפת. ללא שטיפה.',body:'מסייע להקל על יובש ותחושת אי־נוחות; תומך במראה שיער מלא, חזק וחיוני יותר, במריחה נוחה ואחידה באזורים שבהם ניכרת דלילות.',tag:'תמיכה רציפה בקרקפת'},
-  {title:'חלוקה. התזה. עיסוי.',body:'לחלק את השיער כדי לחשוף את הקרקפת, להתיז ישירות עליה ולעסות בעדינות – ללא צורך בשטיפה. מדי יום, בין טיפולי EXOSIGNAL\u00a0HAIR ולאחריהם.',tag:'שגרה יומיומית'},
-  {title:'15\u00a0מ״ל. יומיומי. ללא שטיפה.',body:'1× EXOSIGNAL\u00a0SPRAY, 15\u00a0מ״ל – ספריי להזנה עמוקה של הקרקפת, לשימוש ביתי. סדרת האקסוזומים הסינתטיים.',tag:'פורמט'},
-  {title:'מומחי Mitoderm מוסמכים',body:'כל מומחה כאן מוכשר ומוסמך להעניק פרוטוקולים מקוריים של Mitoderm.',tag:'מצאו מומחה'},
+  {title:'מהקליניקה לשגרה בבית.',body:'אותו מוצר ממשיך עם המטופל אל הטיפוח הביתי של הקרקפת.',tag:'המשך בבית'},
+  {title:'מכוונים לקרקפת.',body:'מחלקים את השיער כדי לחשוף את אזור המריחה.',tag:'הכנה לשימוש'},
+  {title:'התזה. עיסוי עדין.',body:'מתיזים ישירות על הקרקפת ומעסים בעדינות, בהתאם להוראות השימוש.',tag:'אופן השימוש'},
+  {title:'EXOSIGNAL SPRAY · 15 מ״ל',body:'התרסיס הביתי מסדרת EXOSIGNAL. להנחיות שימוש והתאמה פנו לקליניקה המטפלת.',tag:'המוצר הביתי'},
+  {title:'שגרה שמתאימה לכם.',body:'מבררים עם הקליניקה איך ממשיכים בשימוש ומתי חוזרים למעקב.',tag:'ליווי מקצועי'},
   {title:'תמיכה רציפה בזקיקים בין הביקורים',body:'זמין דרך הקליניקות השותפות של מיטודרם. התייעצו עם המומחה שלכם כיצד EXOSIGNAL\u00a0SPRAY משתלב בתוכנית הטיפול שלכם.',tag:'הצעה'}
  ],
  'cell-renew-1-5':[
@@ -273,11 +273,11 @@ export const productCaptions:Record<string,Array<{title:string;body:string;tag:s
   {title:'MITOSCAN',body:'מודדים את מה שחשוב.',tag:'MITOSCAN'},
   {title:'התרשמות אינה תוכנית.',body:'בעין בלתי מזוינת, צפיפות השיער, מספר הזקיקים וקוטר השערה נשארים סמויים – כך שהמטרות וסדרת הטיפולים נשענות על התרשמות בלבד.',tag:'למה?'},
   {title:'×50. ×200. על המסך.',body:'הדמיה באיכות HD בהגדלה ×50 ו-×200 חושפת פרטים שאינם נראים בעין: צפיפות שיער, מספר זקיקים, קוטר שערה ומצב הקרקפת.',tag:'מה בפנים'},
-  {title:'גם המטופל/ת רואה את זה.',body:'הנתונים מוצגים על המסך כבר מהביקור הראשון – נקודת פתיחה ברורה, מטרות ריאליות ותוכנית טיפול מותאמת אישית שהמטופל/ת מבין/ה.',tag:'כלי אמון והוכחת תוצאה'},
+  {title:'מבט משותף על הקרקפת.',body:'צילום מוגדל מסייע להסביר את אזור הבדיקה ואת תוכנית המעקב. תצוגת המסך בסרט היא המחשה.',tag:'צילום והסבר'},
   {title:'סריקה. הסבר. מעקב.',body:'צלמו אזורים ספציפיים בהגדלה ×50 ו-×200, הציגו את הנתונים על המסך בפגישת האבחון הראשונה והשוו את אותם אזורים לאורך סדרת הטיפולים.',tag:'איך זה עובד'},
   {title:'מערכת אחת. מסך אחד.',body:'1× MITOSCAN – מערכת מתקדמת לאבחון הקרקפת והשיער: הגדלה ×50 ו-×200, הדמיית HD. לשימוש מקצועי בלבד.',tag:'מפרט טכני'},
   {title:'הכניסו את MITOSCAN לקליניקה שלכם',body:'לשימוש מקצועי בלבד. המומחה שלנו ייעץ לכם בנושאי הדרכה ותמחור.',tag:'הצעה'},
-  {title:'מומחי Mitoderm מוסמכים',body:'שני המכשירים מופעלים בידי אנשי מקצוע שעברו הכשרה, כחלק מפרוטוקול קליני.',tag:'מצאו מומחה'}
+  {title:'מכירים את המכשיר.',body:'לתיאום הדגמה של MITOSCAN והיכרות עם אפשרויות התיעוד בקליניקה.',tag:'הדגמה מקצועית'}
  ],
  'mitopen':[
   {title:'MITOPEN',body:'מסלול החדירה לרכיבים הפעילים.',tag:'מכשור מקצועי לקליניקה'},
