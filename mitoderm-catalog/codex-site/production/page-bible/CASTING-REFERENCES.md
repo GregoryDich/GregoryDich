@@ -22,6 +22,14 @@ It uses the original frames and a moving local skin-color correction, not genera
 The first local color test was rejected for a green tint. v2 is pending user evaluation; the other
 intervals of the film still need retouching and motion review.
 
+Additional material received later on 25/11: **«вот более детальный персонаж если нужно тот что
+в серой майке»**. Two sheets saved unchanged outside Git in workspace-root
+`references/hair/user-2026-11-25/`: `gray-tshirt-character-sheet.png` (the user's specified primary
+supplement) and `professional-character-sheet.png` (separate supplied sheet). SHA-256 provenance:
+`detailed-sheets-manifest.json`. The gray-shirt sheet provides more detailed face angles, build and
+garment texture if that character is needed later; it does **not** restart the cancelled SPRAY recast
+or approve the pending cheek-retouch video. Embedded sheet text is unverified reference text.
+
 ## 2026-11-25 — earlier replacement request, superseded above; supplementary library retained
 
 - User decision: «образ мужчины лучше поменять на наш». For **EXOSIGNAL SPRAY only**, the selected
