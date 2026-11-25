@@ -1,7 +1,8 @@
-"""Refine an existing lift-off model in a separate background Blender process.
+"""Preview the owner's 25 Nov correction: slide the gold cover along the box.
 
 Usage: blender -b --python refine-pack-preview.py -- source.blend output-directory
-Original geometry/artwork and the user's open scene are never overwritten.
+Original artwork/source model and the user's open scene are never overwritten.
+This is a review candidate, not a measured manufacturing reconstruction.
 """
 import bpy
 import json
@@ -50,28 +51,42 @@ bpy.context.object.data.materials.append(floor_mat)
 camera = scene.camera
 camera.animation_data_clear()
 camera.data.lens = 48
-for frame, position, target in [
-    (1, (.21, -.60, .51), (0, 0, .06)),
-    (11, (.21, -.60, .51), (0, 0, .06)),
-    (97, (.10, -.75, .66), (0, 0, .175)),
-    (121, (.10, -.75, .66), (0, 0, .175)),
-]:
-    camera.location = position
-    camera.rotation_euler = (Vector(target) - camera.location).to_track_quat('-Z', 'Y').to_euler()
-    camera.keyframe_insert(data_path='location', frame=frame)
-    camera.keyframe_insert(data_path='rotation_euler', frame=frame)
+camera.location = (.13, -.65, .77)
+camera.rotation_euler = (Vector((0, .055, .025)) - camera.location).to_track_quat('-Z', 'Y').to_euler()
 
 lid = bpy.data.objects['LID_HINGE']
+scene.frame_set(1)
+closed_z = lid.location.z
+lid.animation_data_clear()
+lid.rotation_euler = (0, 0, 0)
+lid['mechanism_note'] = '25 Nov owner correction: upper gold cover slides along the box like the outer V-TECH sleeve. Review candidate; no perpendicular lift or inner hinge.'
+# The former front/rear lips would cut through the stationary tray on this path.
+# Open ends make the gold shell slide; preserve its original printed upper face.
+for name in ['Lid_front_fold', 'Lid_back_fold']:
+    obj = bpy.data.objects.get(name)
+    if obj:
+        bpy.data.objects.remove(obj, do_unlink=True)
+for name in ['Lid_left_fold', 'Lid_right_fold']:
+    side = bpy.data.objects[name]
+    side.dimensions.z = .047
+    side.location.z = -.0235
+for frame, travel in [(1, 0), (11, 0), (97, .386), (121, .386)]:
+    lid.location = (0, travel, closed_z)
+    lid.keyframe_insert(data_path='location', frame=frame)
+base = bpy.data.objects['BASE_AND_TRAY']
+base_transform = base.matrix_world.copy()
 samples = []
-for frame in [1, 11, 36, 61, 86, 97, 121]:
+for frame in range(1, 122):
     scene.frame_set(frame)
-    assert max(abs(v) for v in lid.rotation_euler) < 1e-6, 'Lid must not rotate'
-    assert abs(lid.location.x) < 1e-6 and abs(lid.location.y) < 1e-6, 'Lid must lift vertically'
-    samples.append({'frame': frame, 'height': round(lid.location.z, 6)})
-assert samples[-1]['height'] > samples[0]['height']
-(output / 'motion-check.json').write_text(json.dumps({'lid': samples, 'rotation': 0, 'status': 'draft'}, indent=2))
+    assert max(abs(v) for v in lid.rotation_euler) < 1e-6, 'Cover must not rotate'
+    assert abs(lid.location.x) < 1e-6 and abs(lid.location.z - closed_z) < 1e-6, 'Slide must stay parallel to the tray'
+    assert base.matrix_world == base_transform, 'Tray must stay fixed'
+    samples.append({'frame': frame, 'travel': round(lid.location.y, 6), 'height': round(lid.location.z, 6)})
+assert all(b['travel'] >= a['travel'] for a, b in zip(samples, samples[1:]))
+assert samples[-1]['travel'] > .286, 'Cover must fully clear the box'
+(output / 'motion-check.json').write_text(json.dumps({'cover': samples, 'rotation': 0, 'axis': 'local Y, along box', 'status': 'review_candidate'}, indent=2))
 
-bpy.ops.wm.save_as_mainfile(filepath=str(output / 'exo-nad-lift-off-preview.blend'))
+bpy.ops.wm.save_as_mainfile(filepath=str(output / 'exo-nad-slide-off-preview.blend'))
 for frame, name in [(1, 'closed'), (61, 'opening'), (121, 'open')]:
     scene.frame_set(frame)
     scene.render.filepath = str(output / (name + '.png'))
