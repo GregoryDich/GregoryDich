@@ -5,7 +5,7 @@ import type {Product} from '../types';
 import {products,assets} from '../data';
 import {SiteHeader,SiteFooter,ContactBlock} from '../shared';
 import registry from '../../production/page-bible/REGISTRY.json';
-import nadStoryboard from '../../production/page-bible/pages/exo-nad/STORYBOARD.json';
+import {nadCaptions,nadProtocol,nadQuestions} from './exo-nad-content';
 import {mediaUrl} from '../media';
 import {productFilms,productCaptions} from './product-films';
 import {productProof} from './product-proof';
@@ -46,8 +46,8 @@ const scriptTitles:Record<string,string[]>={
 };
 function sceneryCopy(slug:string,chapter:Chapter,i:number){
  if(slug==='exo-nad'){
-  const shot=nadStoryboard.shots[i];
-  if(shot)return {title:shot.headlineHE,body:shot.copyHE,tag:shot.titleHE};
+  const caption=nadCaptions[i];
+  if(caption)return caption;
  }
  const caption=productCaptions[slug]?.[i];
  if(caption)return caption;
@@ -59,6 +59,18 @@ function sceneryCopy(slug:string,chapter:Chapter,i:number){
   chapter.type==='evidence'||chapter.type==='record'?'תיעוד אמיתי והערכה מקצועית, ללא הבטחות לתוצאה.':
   'מכירים את המוצר המקורי ואת מקומו בתוכנית העבודה.';
  return {title,body,tag:chapter.type==='home'?'טיפוח בבית':'MITODERM · לשימוש מקצועי'};
+}
+
+function NadProtocol(){
+ return <section className="pc-nad-protocol" aria-labelledby="pc-nad-protocol-title"><div className="pc-width">
+  <p className="pc-eyebrow">EXO-NAD · רצף העבודה</p>
+  <h2 id="pc-nad-protocol-title">שלושה שלבים.<br/>לכל אחד התפקיד שלו.</h2>
+  <ol className="pc-nad-protocol-list">{nadProtocol.map(step=><li key={step.number}>
+   <span className="pc-nad-protocol-number" aria-hidden="true">{step.number}</span>
+   <div><h3><bdi dir="ltr">{step.name}</bdi></h3><strong>{step.detail}</strong><p>{step.body}</p></div>
+  </li>)}</ol>
+  <a className="pc-link" href="#contact" data-product="exo-nad" data-source="pc-protocol" data-topic="training">לתיאום הדרכה מקצועית <span aria-hidden="true">←</span></a>
+ </div></section>;
 }
 
 function Evidence({product}:{product:Product}){
@@ -113,7 +125,7 @@ function Offer({product,pack,openKit,usp}:{product:Product;pack:string;openKit:s
 }
 function Professional({product}:{product:Product}){
  const questions=product.slug==='exo-nad'?
- nadStoryboard.lower.find(section=>section.id==='10')?.faq:
+ nadQuestions:
  [{q:'למי מיועד המוצר?',a:'התאמה מקצועית או המלצה להמשך טיפוח לפי הייעוד וההנחיות של המוצר.'},
   {q:'כיצד מקבלים מידע על הפרוטוקול?',a:'מוזמנים להשאיר פרטים ולבקש מידע מקצועי, הדרכה ותנאי רכישה.'},
   {q:'האם התמונות מציגות תוצאה טיפולית?',a:'המחשת מוצר אינה תיעוד קליני. מקרים יוצגו רק לאחר אישור המקור וההסכמה לפרסום.'}];
@@ -235,10 +247,12 @@ export default function ProductCinema({product}:{product:Product}){
      <div className="pc-hud" aria-label="ניווט בין שלבי ההמחשה">
       <div className="pc-steps">{chapters.map((chapter,i)=><button key={i} className="pc-step" aria-label={'שלב '+(i+1)+': '+chapterName(i).tag} aria-current={active===i?'step':undefined} onClick={()=>jump(i)}><span>{String(i+1).padStart(2,'0')}</span></button>)}</div>
       <span className="pc-hud-note">{current.index} / {chapters.length} · גללו להמשך</span>
+      {nad&&<span className="pc-illustration-note">המחשה חזותית · AI</span>}
      </div>
      <div className="pc-line" aria-hidden="true"><i/></div>
     </div>
    </section>
+   {nad&&<NadProtocol/>}
    <Evidence product={product}/>
    <Offer product={product} pack={pack} openKit={openKit} usp={config.uspHE}/>
    <Professional product={product}/>
