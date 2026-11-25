@@ -2,7 +2,21 @@
 
 **Use the user's supplied character references and product-specific choices below. Do not generate random replacement people.**
 
-## 2026-11-25 — LATEST: keep original SPRAY man, retouch cheek only
+## 2026-11-25 — LATEST: gray-shirt anatomy preview explicitly reopened
+
+After supplying the detailed gray-shirt sheet, the user explicitly requested: «переделай парня
+в серой футболке, его геометрия тела плохая», then clarified that the action is correct but the
+arms look like tentacles and the torso/back need coherent proportions, rotation and muscle anatomy.
+This authorizes a new **static anatomy correction**, superseding the earlier stop for this preview.
+
+One new still, v4, was generated using v1 for the face/hands/action and the detailed gray-shirt
+sheet for build. The elbows are raised substantially, replacing the excessively long forearms;
+upper arms, shoulder girdle and shirt drape are rebuilt. Output outside Git, workspace-root:
+`review-work/user-2026-11-25/male-recast/spray-male-preview-v4.png`; prompt and review record adjacent.
+The image has been shown and is pending evaluation. No new video, series or actor replacement
+has been integrated. The running film still contains P2; the cheek-retouch work remains separate.
+
+## 2026-11-25 — earlier decision: keep original SPRAY man, retouch cheek only
 
 User changed the decision after reviewing the recasting previews: **«оставь того человека» →
 «просто пятно замаж»**. Keep the existing **P2 in the black turtleneck and silver chain** in SPRAY.
